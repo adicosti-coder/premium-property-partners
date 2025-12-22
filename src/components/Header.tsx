@@ -1,35 +1,80 @@
 import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
 
 const Header = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "#beneficii", label: "Beneficii" },
+    { href: "#calculator", label: "Calculator" },
+    { href: "#portofoliu", label: "Proprietăți" },
+    { href: "#oaspeti", label: "Oaspeți" },
+    { href: "#contact", label: "Contact" },
+  ];
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-cream/10">
+    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
-            <span className="text-xl md:text-2xl font-serif font-semibold text-cream">
-              Real<span className="text-gold">Trust</span>
+            <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
+              Real<span className="text-primary">Trust</span>
             </span>
           </a>
           
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#beneficii" className="text-cream/70 hover:text-cream transition-colors text-sm font-medium font-sans">
-              Beneficii
-            </a>
-            <a href="#cum-functioneaza" className="text-cream/70 hover:text-cream transition-colors text-sm font-medium font-sans">
-              Cum Funcționează
-            </a>
-            <a href="#de-ce-noi" className="text-cream/70 hover:text-cream transition-colors text-sm font-medium font-sans">
-              De Ce Noi
-            </a>
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+              >
+                {link.label}
+              </a>
+            ))}
           </nav>
           
-          {/* CTA */}
-          <Button variant="hero" size="default" className="hidden sm:inline-flex">
-            Contactează-ne
-          </Button>
+          {/* CTA & Mobile Menu */}
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="hero" 
+              size="default" 
+              className="hidden sm:inline-flex"
+              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Contactează-ne
+            </Button>
+            
+            {/* Mobile menu button */}
+            <button
+              className="md:hidden text-foreground"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden py-4 border-t border-border animate-fade-in">
+            <div className="flex flex-col gap-4">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
       </div>
     </header>
   );
