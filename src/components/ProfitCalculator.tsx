@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
-import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles } from "lucide-react";
+import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import LeadCaptureForm from "./LeadCaptureForm";
 
 const ProfitCalculator = () => {
   const [adr, setAdr] = useState(80); // Average Daily Rate in EUR
@@ -9,6 +11,7 @@ const ProfitCalculator = () => {
   const [managementFee, setManagementFee] = useState(18); // Management fee percentage
   const [platformFee, setPlatformFee] = useState(15); // Platform fee percentage
   const [avgStayDuration, setAvgStayDuration] = useState(3); // Average stay duration in days
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
 
   const calculations = useMemo(() => {
     const daysPerMonth = 30;
@@ -263,9 +266,34 @@ const ProfitCalculator = () => {
                 <p className="text-sm text-muted-foreground">Sejururi/Lună</p>
               </div>
             </div>
+
+            {/* Lead Capture CTA */}
+            <Button 
+              onClick={() => setIsLeadFormOpen(true)}
+              className="w-full py-6 text-lg"
+              size="lg"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Obține o Analiză Detaliată
+            </Button>
           </div>
         </div>
       </div>
+
+      <LeadCaptureForm
+        isOpen={isLeadFormOpen}
+        onClose={() => setIsLeadFormOpen(false)}
+        calculatedNetProfit={calculations.netProfit}
+        calculatedYearlyProfit={calculations.yearlyNet}
+        simulationData={{
+          adr,
+          occupancy,
+          cleaningCost,
+          managementFee,
+          platformFee,
+          avgStayDuration,
+        }}
+      />
     </section>
   );
 };
