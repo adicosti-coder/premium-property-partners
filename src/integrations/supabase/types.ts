@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      leads: {
+        Row: {
+          calculated_net_profit: number
+          calculated_yearly_profit: number
+          created_at: string
+          id: string
+          name: string
+          property_area: number
+          property_type: string
+          simulation_data: Json | null
+          whatsapp_number: string
+        }
+        Insert: {
+          calculated_net_profit: number
+          calculated_yearly_profit: number
+          created_at?: string
+          id?: string
+          name: string
+          property_area: number
+          property_type: string
+          simulation_data?: Json | null
+          whatsapp_number: string
+        }
+        Update: {
+          calculated_net_profit?: number
+          calculated_yearly_profit?: number
+          created_at?: string
+          id?: string
+          name?: string
+          property_area?: number
+          property_type?: string
+          simulation_data?: Json | null
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           booking_url: string
