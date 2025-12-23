@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Shield } from "lucide-react";
 import { useState } from "react";
-
+import { Link } from "react-router-dom";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -39,6 +39,16 @@ const Header = () => {
           
           {/* CTA & Mobile Menu */}
           <div className="flex items-center gap-4">
+            <Link to="/auth">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
+            </Link>
             <Button 
               variant="hero" 
               size="default" 
