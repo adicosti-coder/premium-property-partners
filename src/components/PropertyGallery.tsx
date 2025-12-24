@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart } from "lucide-react";
+import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -9,9 +9,9 @@ import { useSharedFavorites } from "@/hooks/useSharedFavorites";
 import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
+import PropertyCompareModal from "./PropertyCompareModal";
 import { properties, Property } from "@/data/properties";
 import { toast } from "sonner";
-import { exportFavoritesPdf } from "@/utils/exportFavoritesPdf";
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -35,6 +35,8 @@ const PropertyGallery = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<number[]>([]);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,6 +65,7 @@ const PropertyGallery = () => {
   };
 
   const handleExportPdf = () => {
+    const { exportFavoritesPdf } = require("@/utils/exportFavoritesPdf");
     const favoriteProperties = properties.filter((p) => favorites.includes(String(p.id)));
     if (favoriteProperties.length === 0) return;
 
@@ -82,6 +85,35 @@ const PropertyGallery = () => {
       },
     });
   };
+
+  const handleToggleCompare = (propertyId: number) => {
+    setSelectedForCompare((prev) => {
+      if (prev.includes(propertyId)) {
+        return prev.filter((id) => id !== propertyId);
+      }
+      if (prev.length >= 4) {
+        toast.error(t.portfolio.compare.maxReached);
+        return prev;
+      }
+      return [...prev, propertyId];
+    });
+  };
+
+  const handleOpenCompare = () => {
+    if (selectedForCompare.length >= 2) {
+      setCompareModalOpen(true);
+    } else {
+      toast.info(t.portfolio.compare.selectToCompare);
+    }
+  };
+
+  const handleRemoveFromCompare = (propertyId: number) => {
+    setSelectedForCompare((prev) => prev.filter((id) => id !== propertyId));
+  };
+
+  const compareProperties = useMemo(() => {
+    return properties.filter((p) => selectedForCompare.includes(p.id));
+  }, [selectedForCompare]);
 
   // Simulate loading state for demonstration
   useEffect(() => {
@@ -162,6 +194,7 @@ const PropertyGallery = () => {
     setSelectedFeature("all");
     setSortBy("default");
     setShowFavoritesOnly(false);
+    setSelectedForCompare([]);
   };
 
   const openBookingForm = (propertyName: string) => {
@@ -218,6 +251,7 @@ const PropertyGallery = () => {
             sortBy={sortBy}
             showFavoritesOnly={showFavoritesOnly}
             favoritesCount={favorites.length}
+            compareCount={selectedForCompare.length}
             onSearchChange={setSearchQuery}
             onLocationChange={setSelectedLocation}
             onCapacityChange={setSelectedCapacity}
@@ -227,6 +261,7 @@ const PropertyGallery = () => {
             onShareFavorites={handleShareFavorites}
             onExportPdf={handleExportPdf}
             onClearFilters={clearFilters}
+            onCompare={handleOpenCompare}
           />
         )}
 
@@ -316,6 +351,25 @@ const PropertyGallery = () => {
                     >
                       <Heart className={`w-4 h-4 ${isFavorite(String(property.id)) ? "fill-current" : ""}`} />
                     </button>
+
+                    {/* Compare checkbox - only show if property is favorite */}
+                    {isFavorite(String(property.id)) && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleToggleCompare(property.id);
+                        }}
+                        className={`absolute bottom-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                          selectedForCompare.includes(property.id)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:border-primary hover:text-primary"
+                        }`}
+                        title={t.portfolio.compare.button}
+                      >
+                        <Check className={`w-4 h-4 ${selectedForCompare.includes(property.id) ? "" : "opacity-50"}`} />
+                      </button>
+                    )}
 
                     {/* View details overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -440,6 +494,14 @@ const PropertyGallery = () => {
         isOpen={bookingOpen} 
         onClose={() => setBookingOpen(false)} 
         propertyName={selectedProperty}
+      />
+
+      {/* Compare Modal */}
+      <PropertyCompareModal
+        open={compareModalOpen}
+        onOpenChange={setCompareModalOpen}
+        properties={compareProperties}
+        onRemoveProperty={handleRemoveFromCompare}
       />
     </section>
   );
