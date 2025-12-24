@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye } from "lucide-react";
+import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
-import { properties } from "@/data/properties";
+import PropertyFilters from "./PropertyFilters";
+import { properties, Property } from "@/data/properties";
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -28,6 +29,12 @@ const PropertyGallery = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Filter states
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedCapacity, setSelectedCapacity] = useState("all");
+  const [selectedFeature, setSelectedFeature] = useState("all");
+  
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
 
@@ -38,6 +45,37 @@ const PropertyGallery = () => {
     }, 1200);
     return () => clearTimeout(timer);
   }, []);
+
+  // Filter properties based on selected filters
+  const filteredProperties = useMemo(() => {
+    return properties.filter((property) => {
+      // Location filter
+      if (selectedLocation !== "all" && property.location !== selectedLocation) {
+        return false;
+      }
+      
+      // Capacity filter
+      if (selectedCapacity !== "all") {
+        const capacity = property.capacity;
+        if (selectedCapacity === "1-2" && capacity > 2) return false;
+        if (selectedCapacity === "3-4" && (capacity < 3 || capacity > 4)) return false;
+        if (selectedCapacity === "5+" && capacity < 5) return false;
+      }
+      
+      // Feature filter
+      if (selectedFeature !== "all" && !property.features.includes(selectedFeature)) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [selectedLocation, selectedCapacity, selectedFeature]);
+
+  const clearFilters = () => {
+    setSelectedLocation("all");
+    setSelectedCapacity("all");
+    setSelectedFeature("all");
+  };
 
   const openBookingForm = (propertyName: string) => {
     setSelectedProperty(propertyName);
@@ -54,11 +92,11 @@ const PropertyGallery = () => {
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % properties.length);
+    setCurrentImageIndex((prev) => (prev + 1) % filteredProperties.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + properties.length) % properties.length);
+    setCurrentImageIndex((prev) => (prev - 1 + filteredProperties.length) % filteredProperties.length);
   };
 
   return (
@@ -83,6 +121,19 @@ const PropertyGallery = () => {
           </p>
         </div>
 
+        {/* Filters */}
+        {!isLoading && (
+          <PropertyFilters
+            selectedLocation={selectedLocation}
+            selectedCapacity={selectedCapacity}
+            selectedFeature={selectedFeature}
+            onLocationChange={setSelectedLocation}
+            onCapacityChange={setSelectedCapacity}
+            onFeatureChange={setSelectedFeature}
+            onClearFilters={clearFilters}
+          />
+        )}
+
         {/* Property Grid */}
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {isLoading ? (
@@ -96,9 +147,23 @@ const PropertyGallery = () => {
                 <PropertyCardSkeleton />
               </div>
             ))
+          ) : filteredProperties.length === 0 ? (
+            // No results state
+            <div className="col-span-full text-center py-16">
+              <SearchX className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-xl font-serif font-semibold text-foreground mb-2">
+                {t.portfolio.filters.noResults}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {t.portfolio.filters.noResultsMessage}
+              </p>
+              <Button variant="outline" onClick={clearFilters}>
+                {t.portfolio.filters.clearFilters}
+              </Button>
+            </div>
           ) : (
             // Actual property cards
-            properties.map((property, index) => (
+            filteredProperties.map((property, index) => (
               <div
                 key={property.id}
                 className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
@@ -223,17 +288,17 @@ const PropertyGallery = () => {
 
           <div className="max-w-4xl w-full">
             <img
-              src={properties[currentImageIndex].images[0]}
-              alt={properties[currentImageIndex].name}
+              src={filteredProperties[currentImageIndex]?.images[0]}
+              alt={filteredProperties[currentImageIndex]?.name}
               className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
             />
             <div className="text-center mt-4">
               <h3 className="text-xl font-serif font-semibold text-foreground">
-                {properties[currentImageIndex].name}
+                {filteredProperties[currentImageIndex]?.name}
               </h3>
               <p className="text-muted-foreground flex items-center justify-center gap-1 mt-1">
                 <MapPin className="w-4 h-4" />
-                {properties[currentImageIndex].location}
+                {filteredProperties[currentImageIndex]?.location}
               </p>
             </div>
           </div>
