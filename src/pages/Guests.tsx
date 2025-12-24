@@ -1,0 +1,317 @@
+import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import { properties } from "@/data/properties";
+import { toast } from "sonner";
+
+const getFeatureIcon = (feature: string) => {
+  switch (feature.toLowerCase()) {
+    case "wifi":
+      return <Wifi className="w-4 h-4" />;
+    case "parcare":
+      return <Car className="w-4 h-4" />;
+    case "auto check-in":
+      return <Key className="w-4 h-4" />;
+    default:
+      return null;
+  }
+};
+
+const Guests = () => {
+  const { t, language } = useLanguage();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedCapacity, setSelectedCapacity] = useState("all");
+
+  const locations = useMemo(() => {
+    const locs = [...new Set(properties.map(p => p.location))];
+    return locs.sort();
+  }, []);
+
+  const filteredProperties = useMemo(() => {
+    return properties.filter((property) => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = property.name.toLowerCase().includes(query);
+        const matchesLocation = property.location.toLowerCase().includes(query);
+        if (!matchesName && !matchesLocation) return false;
+      }
+      
+      if (selectedLocation !== "all" && property.location !== selectedLocation) {
+        return false;
+      }
+      
+      if (selectedCapacity !== "all") {
+        const capacity = property.capacity;
+        if (selectedCapacity === "1-2" && capacity > 2) return false;
+        if (selectedCapacity === "3-4" && (capacity < 3 || capacity > 4)) return false;
+        if (selectedCapacity === "5+" && capacity < 5) return false;
+      }
+      
+      return true;
+    });
+  }, [searchQuery, selectedLocation, selectedCapacity]);
+
+  const handleToggleFavorite = (propertyId: string, propertyName: string) => {
+    const wasFavorite = isFavorite(propertyId);
+    toggleFavorite(propertyId);
+    toast(wasFavorite ? t.portfolio.favorites.removed : t.portfolio.favorites.added, {
+      description: propertyName,
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.1),transparent_70%)]" />
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Home className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                {language === 'ro' ? 'Apartamente Premium' : 'Premium Apartments'}
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6">
+              {language === 'ro' ? 'Găsește' : 'Find'}{' '}
+              <span className="text-gradient-gold">
+                {language === 'ro' ? 'Apartamentul Perfect' : 'Your Perfect Stay'}
+              </span>
+            </h1>
+            <p className="text-lg text-muted-foreground mb-8">
+              {language === 'ro' 
+                ? 'Descoperă colecția noastră de apartamente premium în cele mai căutate zone din București. Rezervare directă, fără comisioane ascunse.'
+                : 'Discover our collection of premium apartments in Bucharest\'s most sought-after locations. Direct booking, no hidden fees.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Filters Section */}
+      <section className="py-8 border-b border-border bg-card/50">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+            <div className="relative flex-1 max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={language === 'ro' ? 'Caută apartamente...' : 'Search apartments...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder={language === 'ro' ? 'Locație' : 'Location'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'ro' ? 'Toate locațiile' : 'All locations'}</SelectItem>
+                {locations.map((loc) => (
+                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedCapacity} onValueChange={setSelectedCapacity}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <Users className="w-4 h-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder={language === 'ro' ? 'Capacitate' : 'Capacity'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'ro' ? 'Orice capacitate' : 'Any capacity'}</SelectItem>
+                <SelectItem value="1-2">1-2 {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
+                <SelectItem value="3-4">3-4 {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
+                <SelectItem value="5+">5+ {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="text-center mt-4">
+            <p className="text-sm text-muted-foreground">
+              {language === 'ro' 
+                ? `${filteredProperties.length} apartamente disponibile`
+                : `${filteredProperties.length} apartments available`}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Properties Grid */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProperties.map((property) => (
+              <article 
+                key={property.id}
+                className="group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant"
+              >
+                {/* Image */}
+                <div className="relative h-56 overflow-hidden">
+                  <img
+                    src={property.images[0]}
+                    alt={property.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+                  
+                  {/* Location badge */}
+                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-medium text-foreground">{property.location}</span>
+                  </div>
+
+                  {/* Rating badge */}
+                  <div className="absolute top-4 right-14 px-2.5 py-1.5 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-primary-foreground text-primary-foreground" />
+                    <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
+                  </div>
+
+                  {/* Favorite button */}
+                  <button
+                    onClick={() => handleToggleFavorite(String(property.id), property.name)}
+                    className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      isFavorite(String(property.id))
+                        ? "bg-red-500 text-white"
+                        : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
+                    }`}
+                    aria-label={isFavorite(String(property.id)) ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    <Heart className={`w-4 h-4 ${isFavorite(String(property.id)) ? "fill-current" : ""}`} />
+                  </button>
+
+                  {/* Price badge */}
+                  <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-background/90 backdrop-blur-sm border border-border">
+                    <span className="text-lg font-bold text-primary">€{property.pricePerNight}</span>
+                    <span className="text-xs text-muted-foreground ml-1">/{language === 'ro' ? 'noapte' : 'night'}</span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {property.name}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {language === 'en' ? property.descriptionEn : property.description}
+                  </p>
+
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                      <Users className="w-3.5 h-3.5" />
+                      {property.capacity} {language === 'ro' ? 'oaspeți' : 'guests'}
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                      <BedDouble className="w-3.5 h-3.5" />
+                      {property.bedrooms} {property.bedrooms === 1 ? (language === 'ro' ? 'dormitor' : 'bedroom') : (language === 'ro' ? 'dormitoare' : 'bedrooms')}
+                    </div>
+                    {property.features.slice(0, 2).map((feature) => (
+                      <div key={feature} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                        {getFeatureIcon(feature)}
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Reviews */}
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {property.reviews} {language === 'ro' ? 'recenzii' : 'reviews'}
+                  </p>
+
+                  {/* CTA Buttons */}
+                  <div className="flex gap-3">
+                    <Link to={`/proprietate/${property.slug}`} className="flex-1">
+                      <Button variant="outline" className="w-full">
+                        {language === 'ro' ? 'Detalii' : 'Details'}
+                      </Button>
+                    </Link>
+                    <a 
+                      href={`https://www.airbnb.com/rooms/${property.id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
+                      <Button variant="hero" className="w-full group/btn">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {language === 'ro' ? 'Rezervă' : 'Book'}
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {filteredProperties.length === 0 && (
+            <div className="text-center py-16">
+              <Filter className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-xl font-serif font-semibold text-foreground mb-2">
+                {language === 'ro' ? 'Niciun rezultat găsit' : 'No results found'}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {language === 'ro' ? 'Încearcă să modifici filtrele' : 'Try adjusting your filters'}
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedLocation("all");
+                  setSelectedCapacity("all");
+                }}
+              >
+                {language === 'ro' ? 'Resetează filtrele' : 'Reset filters'}
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+            {language === 'ro' ? 'Ai nevoie de ajutor?' : 'Need help?'}
+          </h2>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+            {language === 'ro' 
+              ? 'Contactează-ne pentru recomandări personalizate sau întrebări despre disponibilitate.'
+              : 'Contact us for personalized recommendations or availability questions.'}
+          </p>
+          <a 
+            href="https://wa.me/40723154520?text=Bună! Sunt interesat de unul dintre apartamentele voastre." 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <Button variant="hero" size="lg">
+              {language === 'ro' ? 'Contactează-ne pe WhatsApp' : 'Contact us on WhatsApp'}
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </a>
+        </div>
+      </section>
+
+      <Footer />
+      <FloatingWhatsApp />
+    </div>
+  );
+};
+
+export default Guests;
