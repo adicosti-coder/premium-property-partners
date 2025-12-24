@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX } from "lucide-react";
+import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useFavorites } from "@/hooks/useFavorites";
 import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import { properties, Property } from "@/data/properties";
+import { toast } from "sonner";
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -24,6 +26,7 @@ const getFeatureIcon = (feature: string) => {
 
 const PropertyGallery = () => {
   const { t, language } = useLanguage();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -39,6 +42,14 @@ const PropertyGallery = () => {
   
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
+
+  const handleToggleFavorite = (propertyId: string, propertyName: string) => {
+    const wasFavorite = isFavorite(propertyId);
+    toggleFavorite(propertyId);
+    toast(wasFavorite ? t.portfolio.favorites.removed : t.portfolio.favorites.added, {
+      description: propertyName,
+    });
+  };
 
   // Simulate loading state for demonstration
   useEffect(() => {
@@ -242,10 +253,26 @@ const PropertyGallery = () => {
                     </div>
 
                     {/* Rating badge */}
-                    <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
+                    <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
                       <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
                       <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
                     </div>
+
+                    {/* Favorite button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleFavorite(String(property.id), property.name);
+                      }}
+                      className={`absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                        isFavorite(String(property.id))
+                          ? "bg-red-500 text-white"
+                          : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite(String(property.id)) ? "fill-current" : ""}`} />
+                    </button>
 
                     {/* View details overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
