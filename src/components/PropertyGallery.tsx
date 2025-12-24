@@ -6,7 +6,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
-import PropertyFilters from "./PropertyFilters";
+import PropertyFilters, { SortOption } from "./PropertyFilters";
 import { properties, Property } from "@/data/properties";
 
 const getFeatureIcon = (feature: string) => {
@@ -35,6 +35,7 @@ const PropertyGallery = () => {
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedCapacity, setSelectedCapacity] = useState("all");
   const [selectedFeature, setSelectedFeature] = useState("all");
+  const [sortBy, setSortBy] = useState<SortOption>("default");
   
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
@@ -47,9 +48,9 @@ const PropertyGallery = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Filter properties based on selected filters and search query
+  // Filter and sort properties
   const filteredProperties = useMemo(() => {
-    return properties.filter((property) => {
+    let result = properties.filter((property) => {
       // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -84,13 +85,34 @@ const PropertyGallery = () => {
       
       return true;
     });
-  }, [searchQuery, selectedLocation, selectedCapacity, selectedFeature]);
+
+    // Sort properties
+    if (sortBy !== "default") {
+      result = [...result].sort((a, b) => {
+        switch (sortBy) {
+          case "rating-desc":
+            return b.rating - a.rating;
+          case "rating-asc":
+            return a.rating - b.rating;
+          case "reviews-desc":
+            return b.reviews - a.reviews;
+          case "reviews-asc":
+            return a.reviews - b.reviews;
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return result;
+  }, [searchQuery, selectedLocation, selectedCapacity, selectedFeature, sortBy]);
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedLocation("all");
     setSelectedCapacity("all");
     setSelectedFeature("all");
+    setSortBy("default");
   };
 
   const openBookingForm = (propertyName: string) => {
@@ -144,10 +166,12 @@ const PropertyGallery = () => {
             selectedLocation={selectedLocation}
             selectedCapacity={selectedCapacity}
             selectedFeature={selectedFeature}
+            sortBy={sortBy}
             onSearchChange={setSearchQuery}
             onLocationChange={setSelectedLocation}
             onCapacityChange={setSelectedCapacity}
             onFeatureChange={setSelectedFeature}
+            onSortChange={setSortBy}
             onClearFilters={clearFilters}
           />
         )}
