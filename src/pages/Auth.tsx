@@ -7,16 +7,19 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
 import { z } from "zod";
-
-const emailSchema = z.string().email("Adresă de email invalidă");
-const passwordSchema = z.string().min(6, "Parola trebuie să aibă minim 6 caractere");
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const emailSchema = z.string().email(t.auth.invalidEmailMessage);
+  const passwordSchema = z.string().min(6, t.auth.invalidPasswordMessage);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -43,7 +46,7 @@ const Auth = () => {
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
       toast({
-        title: "Email invalid",
+        title: t.auth.invalidEmail,
         description: emailResult.error.errors[0].message,
         variant: "destructive",
       });
@@ -53,7 +56,7 @@ const Auth = () => {
     const passwordResult = passwordSchema.safeParse(password);
     if (!passwordResult.success) {
       toast({
-        title: "Parolă invalidă",
+        title: t.auth.invalidPassword,
         description: passwordResult.error.errors[0].message,
         variant: "destructive",
       });
@@ -69,7 +72,7 @@ const Auth = () => {
           password,
         });
         if (error) throw error;
-        toast({ title: "Autentificare reușită!" });
+        toast({ title: t.auth.loginSuccess });
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -80,22 +83,22 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "Cont creat!",
-          description: "Te poți autentifica acum.",
+          title: t.auth.signupSuccess,
+          description: t.auth.signupSuccessMessage,
         });
         setIsLogin(true);
       }
     } catch (error: any) {
-      let message = "A apărut o eroare. Încearcă din nou.";
+      let message = t.auth.genericError;
       if (error.message?.includes("Invalid login credentials")) {
-        message = "Email sau parolă incorectă.";
+        message = t.auth.invalidCredentials;
       } else if (error.message?.includes("User already registered")) {
-        message = "Acest email este deja înregistrat.";
+        message = t.auth.alreadyRegistered;
       } else if (error.message?.includes("Email not confirmed")) {
-        message = "Confirmă adresa de email înainte de a te autentifica.";
+        message = t.auth.emailNotConfirmed;
       }
       toast({
-        title: "Eroare",
+        title: t.auth.error,
         description: message,
         variant: "destructive",
       });
@@ -107,36 +110,37 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-8 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Înapoi la site
-        </Button>
+        <div className="flex items-center justify-between mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t.auth.backToSite}
+          </Button>
+          <LanguageSwitcher />
+        </div>
 
         <div className="bg-card p-8 rounded-2xl border border-border shadow-elegant">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-serif font-semibold text-foreground mb-2">
-              {isLogin ? "Autentificare" : "Creează cont"}
+              {isLogin ? t.auth.login : t.auth.signup}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin
-                ? "Intră în panoul de administrare"
-                : "Înregistrează-te pentru acces"}
+              {isLogin ? t.auth.loginSubtitle : t.auth.signupSubtitle}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.auth.email}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="email@exemplu.ro"
+                  placeholder={t.auth.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -147,7 +151,7 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Parolă</Label>
+              <Label htmlFor="password">{t.auth.password}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -168,12 +172,12 @@ const Auth = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Se procesează...
+                  {t.auth.processing}
                 </>
               ) : isLogin ? (
-                "Autentificare"
+                t.auth.login
               ) : (
-                "Creează cont"
+                t.auth.signup
               )}
             </Button>
           </form>
@@ -184,9 +188,7 @@ const Auth = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary hover:underline text-sm"
             >
-              {isLogin
-                ? "Nu ai cont? Înregistrează-te"
-                : "Ai deja cont? Autentifică-te"}
+              {isLogin ? t.auth.noAccount : t.auth.hasAccount}
             </button>
           </div>
         </div>
