@@ -31,6 +31,7 @@ const PropertyGallery = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedCapacity, setSelectedCapacity] = useState("all");
   const [selectedFeature, setSelectedFeature] = useState("all");
@@ -46,9 +47,23 @@ const PropertyGallery = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Filter properties based on selected filters
+  // Filter properties based on selected filters and search query
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
+      // Search query filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = property.name.toLowerCase().includes(query);
+        const matchesLocation = property.location.toLowerCase().includes(query);
+        const matchesDescription = property.description.toLowerCase().includes(query) || 
+                                   property.descriptionEn.toLowerCase().includes(query);
+        const matchesFeatures = property.features.some(f => f.toLowerCase().includes(query));
+        
+        if (!matchesName && !matchesLocation && !matchesDescription && !matchesFeatures) {
+          return false;
+        }
+      }
+      
       // Location filter
       if (selectedLocation !== "all" && property.location !== selectedLocation) {
         return false;
@@ -69,9 +84,10 @@ const PropertyGallery = () => {
       
       return true;
     });
-  }, [selectedLocation, selectedCapacity, selectedFeature]);
+  }, [searchQuery, selectedLocation, selectedCapacity, selectedFeature]);
 
   const clearFilters = () => {
+    setSearchQuery("");
     setSelectedLocation("all");
     setSelectedCapacity("all");
     setSelectedFeature("all");
@@ -124,9 +140,11 @@ const PropertyGallery = () => {
         {/* Filters */}
         {!isLoading && (
           <PropertyFilters
+            searchQuery={searchQuery}
             selectedLocation={selectedLocation}
             selectedCapacity={selectedCapacity}
             selectedFeature={selectedFeature}
+            onSearchChange={setSearchQuery}
             onLocationChange={setSelectedLocation}
             onCapacityChange={setSelectedCapacity}
             onFeatureChange={setSelectedFeature}
