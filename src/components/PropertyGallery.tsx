@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { MapPin, Wifi, Car, Key, ExternalLink, X, ChevronLeft, ChevronRight, Star, Users, BedDouble } from "lucide-react";
+import { MapPin, Wifi, Car, Key, ExternalLink, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import BookingForm from "./BookingForm";
 
 // Import all apartment images
 import apt01 from "@/assets/apt-01.jpg";
@@ -178,8 +179,15 @@ const getFeatureIcon = (feature: string) => {
 const PropertyGallery = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
+
+  const openBookingForm = (propertyName: string) => {
+    setSelectedProperty(propertyName);
+    setBookingOpen(true);
+  };
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index);
@@ -295,16 +303,25 @@ const PropertyGallery = () => {
                   ))}
                 </div>
 
-                {/* CTA */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all"
-                  onClick={() => window.open(property.bookingUrl, "_blank")}
-                >
-                  Rezervă pe Booking.com
-                  <ExternalLink className="w-4 h-4 ml-2" />
-                </Button>
+                {/* CTAs */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => openBookingForm(property.name)}
+                  >
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Rezervă Direct
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(property.bookingUrl, "_blank")}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -353,6 +370,13 @@ const PropertyGallery = () => {
           </button>
         </div>
       )}
+
+      {/* Booking Form Modal */}
+      <BookingForm 
+        isOpen={bookingOpen} 
+        onClose={() => setBookingOpen(false)} 
+        propertyName={selectedProperty}
+      />
     </section>
   );
 };
