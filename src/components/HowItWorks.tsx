@@ -1,4 +1,5 @@
 import { ClipboardCheck, Settings, BarChart3, Banknote } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const steps = [
   {
@@ -28,10 +29,18 @@ const steps = [
 ];
 
 const HowItWorks = () => {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
+
   return (
-    <section className="py-24 bg-background">
+    <section id="cum-functioneaza" className="py-24 bg-background">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-16 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-4 font-sans">Proces Simplu</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
             Cum Funcționează
@@ -42,9 +51,15 @@ const HowItWorks = () => {
         </div>
         
         <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div ref={gridRef} className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((step, index) => (
-              <div key={index} className="relative group">
+              <div 
+                key={index} 
+                className={`relative group transition-all duration-500 ${
+                  gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
+              >
                 {/* Connector line (hidden on last item) */}
                 {index < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-10 left-[60%] w-full h-px bg-gradient-to-r from-border to-transparent" />
