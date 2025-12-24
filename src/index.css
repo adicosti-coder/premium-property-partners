@@ -70,6 +70,45 @@
     --sidebar-ring: 45 93% 58%;
   }
 
+  .light {
+    --background: 45 30% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 45 93% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 30% 92%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 45 20% 93%;
+    --muted-foreground: 222 20% 40%;
+
+    --accent: 45 80% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 45 20% 88%;
+    --input: 45 20% 88%;
+    --ring: 45 93% 45%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 45 93% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 30% 95%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 45 20% 88%;
+    --sidebar-ring: 45 93% 45%;
+  }
+
   .dark {
     --background: 222 47% 6%;
     --foreground: 45 100% 96%;
