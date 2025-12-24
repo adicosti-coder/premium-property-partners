@@ -13,8 +13,11 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
-  ZoomIn
+  ZoomIn,
+  Check,
+  AlertCircle
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import {
   DndContext,
   closestCenter,
@@ -44,6 +47,14 @@ interface PropertyImage {
   display_order: number;
   is_primary: boolean;
   created_at: string;
+}
+
+interface UploadingFile {
+  id: string;
+  name: string;
+  preview: string;
+  status: 'pending' | 'compressing' | 'uploading' | 'done' | 'error';
+  progress: number;
 }
 
 interface PropertyImageGalleryProps {
@@ -166,6 +177,7 @@ export default function PropertyImageGallery({
 }: PropertyImageGalleryProps) {
   const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<PropertyImage | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -244,71 +256,111 @@ export default function PropertyImageGallery({
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const maxSize = 10 * 1024 * 1024; // 10MB before compression
 
+    // Create upload tracking entries
+    const filesToUpload: { file: File; uploadId: string }[] = [];
+    const initialUploadingFiles: UploadingFile[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const uploadId = `upload-${Date.now()}-${i}`;
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: t.admin.error,
+          description: `${file.name}: ${t.admin.properties?.invalidFileType || "Invalid file type"}`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      if (file.size > maxSize) {
+        toast({
+          title: t.admin.error,
+          description: `${file.name}: ${t.admin.properties?.fileTooLarge || "File too large (max 10MB)"}`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      filesToUpload.push({ file, uploadId });
+      initialUploadingFiles.push({
+        id: uploadId,
+        name: file.name,
+        preview: URL.createObjectURL(file),
+        status: 'pending',
+        progress: 0,
+      });
+    }
+
+    if (filesToUpload.length === 0) return;
+
     setIsUploading(true);
+    setUploadingFiles(initialUploadingFiles);
     const newImages: PropertyImage[] = [];
 
+    const updateFileStatus = (uploadId: string, status: UploadingFile['status'], progress: number) => {
+      setUploadingFiles(prev => 
+        prev.map(f => f.id === uploadId ? { ...f, status, progress } : f)
+      );
+    };
+
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-
-        if (!allowedTypes.includes(file.type)) {
-          toast({
-            title: t.admin.error,
-            description: `${file.name}: ${t.admin.properties?.invalidFileType || "Invalid file type"}`,
-            variant: "destructive",
+      for (const { file, uploadId } of filesToUpload) {
+        try {
+          // Compressing
+          updateFileStatus(uploadId, 'compressing', 25);
+          
+          const compressedFile = await compressImage(file, {
+            maxWidth: 1920,
+            maxHeight: 1920,
+            quality: 0.85,
+            outputType: 'image/webp',
           });
-          continue;
+
+          // Uploading
+          updateFileStatus(uploadId, 'uploading', 60);
+
+          const fileExt = compressedFile.name.split('.').pop() || 'webp';
+          const fileName = `${propertyId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(fileName, compressedFile);
+
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            updateFileStatus(uploadId, 'error', 0);
+            continue;
+          }
+
+          updateFileStatus(uploadId, 'uploading', 85);
+
+          const isPrimary = images.length === 0 && newImages.length === 0;
+          const displayOrder = images.length + newImages.length;
+
+          const { data: insertedData, error: insertError } = await supabase
+            .from('property_images')
+            .insert({
+              property_id: propertyId,
+              image_path: fileName,
+              display_order: displayOrder,
+              is_primary: isPrimary,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error("Insert error:", insertError);
+            updateFileStatus(uploadId, 'error', 0);
+            continue;
+          }
+
+          updateFileStatus(uploadId, 'done', 100);
+          newImages.push(insertedData);
+        } catch (err) {
+          console.error("Error processing file:", file.name, err);
+          updateFileStatus(uploadId, 'error', 0);
         }
-
-        if (file.size > maxSize) {
-          toast({
-            title: t.admin.error,
-            description: `${file.name}: ${t.admin.properties?.fileTooLarge || "File too large (max 10MB)"}`,
-            variant: "destructive",
-          });
-          continue;
-        }
-
-        // Compress the image before uploading
-        const compressedFile = await compressImage(file, {
-          maxWidth: 1920,
-          maxHeight: 1920,
-          quality: 0.85,
-          outputType: 'image/webp',
-        });
-
-        const fileExt = compressedFile.name.split('.').pop() || 'webp';
-        const fileName = `${propertyId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(fileName, compressedFile);
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          continue;
-        }
-
-        const isPrimary = images.length === 0 && newImages.length === 0;
-        const displayOrder = images.length + newImages.length;
-
-        const { data: insertedData, error: insertError } = await supabase
-          .from('property_images')
-          .insert({
-            property_id: propertyId,
-            image_path: fileName,
-            display_order: displayOrder,
-            is_primary: isPrimary,
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error("Insert error:", insertError);
-          continue;
-        }
-
-        newImages.push(insertedData);
       }
 
       if (newImages.length > 0) {
@@ -326,7 +378,13 @@ export default function PropertyImageGallery({
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      // Clean up previews
+      setTimeout(() => {
+        uploadingFiles.forEach(f => URL.revokeObjectURL(f.preview));
+        setUploadingFiles([]);
+        setIsUploading(false);
+      }, 1500);
+      
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -484,7 +542,44 @@ export default function PropertyImageGallery({
         className="hidden"
       />
 
-      {images.length === 0 ? (
+      {/* Upload progress cards */}
+      {uploadingFiles.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          {uploadingFiles.map((file) => (
+            <div
+              key={file.id}
+              className="relative rounded-lg overflow-hidden border-2 border-border bg-muted/30"
+            >
+              <img
+                src={file.preview}
+                alt={file.name}
+                className="w-full h-24 object-cover opacity-60"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 p-2">
+                {file.status === 'error' ? (
+                  <AlertCircle className="w-6 h-6 text-destructive mb-1" />
+                ) : file.status === 'done' ? (
+                  <Check className="w-6 h-6 text-green-500 mb-1" />
+                ) : (
+                  <Loader2 className="w-6 h-6 text-primary animate-spin mb-1" />
+                )}
+                <span className="text-xs text-white font-medium text-center truncate w-full px-1">
+                  {file.status === 'compressing' && (t.admin.properties?.compressing || 'Compressing...')}
+                  {file.status === 'uploading' && (t.admin.properties?.uploading || 'Uploading...')}
+                  {file.status === 'done' && (t.admin.properties?.done || 'Done!')}
+                  {file.status === 'error' && (t.admin.properties?.uploadFailed || 'Failed')}
+                  {file.status === 'pending' && (t.admin.properties?.pending || 'Pending...')}
+                </span>
+                {file.status !== 'done' && file.status !== 'error' && (
+                  <Progress value={file.progress} className="w-full h-1.5 mt-2" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {images.length === 0 && uploadingFiles.length === 0 ? (
         <div
           onClick={() => fileInputRef.current?.click()}
           className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
@@ -503,12 +598,12 @@ export default function PropertyImageGallery({
                 {t.admin.properties?.dragDropHint || "Click to upload images"}
               </p>
               <p className="text-xs text-muted-foreground">
-                JPG, PNG, WebP, GIF (max 5MB)
+                JPG, PNG, WebP, GIF (max 10MB)
               </p>
             </div>
           )}
         </div>
-      ) : (
+      ) : images.length > 0 ? (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -546,7 +641,7 @@ export default function PropertyImageGallery({
             </div>
           </SortableContext>
         </DndContext>
-      )}
+      ) : null}
       
       {images.length > 1 && (
         <p className="text-xs text-muted-foreground text-center">
