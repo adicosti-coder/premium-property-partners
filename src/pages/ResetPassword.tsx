@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, CheckCircle, Check, X } from "lucide-react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -214,12 +214,46 @@ const ResetPassword = () => {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 pr-10 ${
+                    confirmPassword && password
+                      ? password === confirmPassword
+                        ? "border-green-500 focus-visible:ring-green-500"
+                        : "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }`}
                   required
                   minLength={6}
                   maxLength={72}
                 />
+                {/* Password match indicator */}
+                {confirmPassword && password && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {password === confirmPassword ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <X className="w-4 h-4 text-destructive" />
+                    )}
+                  </div>
+                )}
               </div>
+              {/* Password match message */}
+              {confirmPassword && password && (
+                <p className={`text-xs flex items-center gap-1 ${
+                  password === confirmPassword ? "text-green-500" : "text-destructive"
+                }`}>
+                  {password === confirmPassword ? (
+                    <>
+                      <Check className="w-3 h-3" />
+                      {t.auth.passwordsMatch}
+                    </>
+                  ) : (
+                    <>
+                      <X className="w-3 h-3" />
+                      {t.auth.passwordsDoNotMatch}
+                    </>
+                  )}
+                </p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
