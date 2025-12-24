@@ -549,6 +549,20 @@ Mulțumesc!`,
       viewAll: "Vezi tot",
       loading: "Se încarcă...",
     },
+
+    // Favorites page
+    favorites: {
+      title: "Proprietăți Favorite",
+      backToHome: "Înapoi",
+      empty: "Nu ai proprietăți favorite",
+      emptyMessage: "Adaugă proprietăți la favorite pentru a le vedea aici.",
+      browseProperties: "Explorează Proprietăți",
+      selectHint: "Click pe o proprietate pentru a o selecta pentru comparare (2-4 proprietăți)",
+      selected: "Selectat ✓",
+      selectToCompare: "Click pentru a selecta",
+      clearAll: "Șterge toate favoritele",
+      clearedAll: "Toate favoritele au fost șterse",
+    },
   },
   
   en: {
@@ -1100,6 +1114,20 @@ Thank you!`,
       learnMore: "Learn more",
       viewAll: "View all",
       loading: "Loading...",
+    },
+
+    // Favorites page
+    favorites: {
+      title: "Favorite Properties",
+      backToHome: "Back",
+      empty: "No favorite properties",
+      emptyMessage: "Add properties to favorites to see them here.",
+      browseProperties: "Browse Properties",
+      selectHint: "Click on a property to select it for comparison (2-4 properties)",
+      selected: "Selected ✓",
+      selectToCompare: "Click to select",
+      clearAll: "Clear all favorites",
+      clearedAll: "All favorites have been cleared",
     },
   },
 };

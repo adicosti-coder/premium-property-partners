@@ -29,5 +29,9 @@ export const useFavorites = () => {
     [favorites]
   );
 
-  return { favorites, toggleFavorite, isFavorite };
+  const clearFavorites = useCallback(() => {
+    setFavorites([]);
+  }, []);
+
+  return { favorites, toggleFavorite, isFavorite, clearFavorites };
 };
