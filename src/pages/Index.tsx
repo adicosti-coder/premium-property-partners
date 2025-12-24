@@ -9,6 +9,7 @@ import ProfitCalculator from "@/components/ProfitCalculator";
 import PropertyGallery from "@/components/PropertyGallery";
 import Testimonials from "@/components/Testimonials";
 import GuestSection from "@/components/GuestSection";
+import FAQ from "@/components/FAQ";
 import ContactSection from "@/components/ContactSection";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
@@ -36,6 +37,7 @@ const Index = () => {
         <PropertyGallery />
         <Testimonials />
         <GuestSection />
+        <FAQ />
         <ContactSection />
         <CTA />
       </main>
