@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X, ArrowUpDown, TrendingUp, TrendingDown, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,9 +32,12 @@ const getFeatureIcon = (feature: string) => {
 const Guests = () => {
   const { t, language } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("all");
-  const [selectedCapacity, setSelectedCapacity] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL params
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
+  const [selectedLocation, setSelectedLocation] = useState(() => searchParams.get("location") || "all");
+  const [selectedCapacity, setSelectedCapacity] = useState(() => searchParams.get("capacity") || "all");
   
   // Price filter
   const priceRange = useMemo(() => {
@@ -42,14 +45,57 @@ const Guests = () => {
     return { min: Math.min(...prices), max: Math.max(...prices) };
   }, []);
   
-  const [priceFilter, setPriceFilter] = useState<[number, number]>([priceRange.min, priceRange.max]);
+  const [priceFilter, setPriceFilter] = useState<[number, number]>(() => {
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+    return [
+      minPrice ? parseInt(minPrice) : priceRange.min,
+      maxPrice ? parseInt(maxPrice) : priceRange.max
+    ];
+  });
   const isPriceFiltered = priceFilter[0] !== priceRange.min || priceFilter[1] !== priceRange.max;
   
   // Sort
-  const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "rating-desc">("default");
+  const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "rating-desc">(() => {
+    const sort = searchParams.get("sort");
+    return (sort as typeof sortBy) || "default";
+  });
   
   // Rating filter
-  const [minRating, setMinRating] = useState<string>("all");
+  const [minRating, setMinRating] = useState<string>(() => searchParams.get("rating") || "all");
+
+  // Sync state to URL
+  const updateURL = useCallback(() => {
+    const params = new URLSearchParams();
+    
+    if (searchQuery) params.set("q", searchQuery);
+    if (selectedLocation !== "all") params.set("location", selectedLocation);
+    if (selectedCapacity !== "all") params.set("capacity", selectedCapacity);
+    if (priceFilter[0] !== priceRange.min) params.set("minPrice", priceFilter[0].toString());
+    if (priceFilter[1] !== priceRange.max) params.set("maxPrice", priceFilter[1].toString());
+    if (sortBy !== "default") params.set("sort", sortBy);
+    if (minRating !== "all") params.set("rating", minRating);
+    
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating, priceRange, setSearchParams]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    updateURL();
+  }, [updateURL]);
+
+  // Share URL function
+  const shareFilters = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success(language === 'ro' ? 'Link copiat!' : 'Link copied!', {
+        description: language === 'ro' ? 'Poți partaja acest link pentru a arăta căutarea ta.' : 'You can share this link to show your search.'
+      });
+    } catch {
+      toast.error(language === 'ro' ? 'Eroare la copiere' : 'Failed to copy');
+    }
+  };
+
   // Scroll animations
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: filtersRef, isVisible: filtersVisible } = useScrollAnimation({ threshold: 0.1 });
@@ -113,7 +159,7 @@ const Guests = () => {
     return result;
   }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
 
-  const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
+const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
 
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -122,6 +168,7 @@ const Guests = () => {
     setPriceFilter([priceRange.min, priceRange.max]);
     setSortBy("default");
     setMinRating("all");
+    setSearchParams({}, { replace: true });
   };
 
   const handleToggleFavorite = (propertyId: string, propertyName: string) => {
@@ -372,6 +419,19 @@ const Guests = () => {
                 </SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Share search */}
+            {hasActiveFilters && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={shareFilters}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Share2 className="w-4 h-4 mr-1" />
+                {language === 'ro' ? 'Partajează' : 'Share'}
+              </Button>
+            )}
 
             {/* Clear all filters */}
             {hasActiveFilters && (
