@@ -9,6 +9,7 @@ import { Loader2, Lock, ArrowLeft, CheckCircle } from "lucide-react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -200,6 +201,7 @@ const ResetPassword = () => {
                   maxLength={72}
                 />
               </div>
+              <PasswordStrengthIndicator password={password} />
             </div>
 
             <div className="space-y-2">
