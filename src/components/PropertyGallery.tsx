@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import BookingForm from "./BookingForm";
+import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import { properties } from "@/data/properties";
 
 const getFeatureIcon = (feature: string) => {
@@ -26,8 +27,17 @@ const PropertyGallery = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
+
+  // Simulate loading state for demonstration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   const openBookingForm = (propertyName: string) => {
     setSelectedProperty(propertyName);
@@ -75,108 +85,122 @@ const PropertyGallery = () => {
 
         {/* Property Grid */}
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {properties.map((property, index) => (
-            <div
-              key={property.id}
-              className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
-                gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
-            >
-              {/* Image */}
-              <Link to={`/proprietate/${property.slug}`}>
-                <div className="relative h-48 overflow-hidden cursor-pointer">
-                  <img
-                    src={property.images[0]}
-                    alt={property.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Location badge */}
-                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-primary" />
-                    <span className="text-xs font-medium text-foreground">{property.location}</span>
-                  </div>
-
-                  {/* Rating badge */}
-                  <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-                    <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
-                  </div>
-
-                  {/* View details overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-2">
-                      <Eye className="w-4 h-4" />
-                      {t.portfolio.viewDetails}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Content */}
-              <div className="p-5">
+          {isLoading ? (
+            // Skeleton loading state
+            Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <PropertyCardSkeleton />
+              </div>
+            ))
+          ) : (
+            // Actual property cards
+            properties.map((property, index) => (
+              <div
+                key={property.id}
+                className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
+                  gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
+              >
+                {/* Image */}
                 <Link to={`/proprietate/${property.slug}`}>
-                  <h3 className="text-lg font-serif font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-                    {property.name}
-                  </h3>
+                  <div className="relative h-48 overflow-hidden cursor-pointer">
+                    <img
+                      src={property.images[0]}
+                      alt={property.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Location badge */}
+                    <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-primary" />
+                      <span className="text-xs font-medium text-foreground">{property.location}</span>
+                    </div>
+
+                    {/* Rating badge */}
+                    <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
+                      <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
+                    </div>
+
+                    {/* View details overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-2">
+                        <Eye className="w-4 h-4" />
+                        {t.portfolio.viewDetails}
+                      </span>
+                    </div>
+                  </div>
                 </Link>
 
-                {/* Description */}
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {language === 'en' ? property.descriptionEn : property.description}
-                </p>
-
-                {/* Capacity info */}
-                <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {property.capacity} {t.portfolio.guests}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <BedDouble className="w-4 h-4" />
-                    {property.bedrooms} {property.bedrooms === 1 ? t.portfolio.bedroom : t.portfolio.bedrooms}
-                  </span>
-                  <span className="text-xs text-muted-foreground/70">
-                    ({property.reviews} {t.portfolio.reviews})
-                  </span>
-                </div>
-
-                {/* Features */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {property.features.slice(0, 3).map((feature, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"
-                    >
-                      {getFeatureIcon(feature)}
-                      {feature}
-                    </span>
-                  ))}
-                </div>
-
-                {/* CTAs */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => openBookingForm(property.name)}
-                  >
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {t.portfolio.bookDirect}
-                  </Button>
+                {/* Content */}
+                <div className="p-5">
                   <Link to={`/proprietate/${property.slug}`}>
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                    <h3 className="text-lg font-serif font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+                      {property.name}
+                    </h3>
                   </Link>
+
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    {language === 'en' ? property.descriptionEn : property.description}
+                  </p>
+
+                  {/* Capacity info */}
+                  <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {property.capacity} {t.portfolio.guests}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BedDouble className="w-4 h-4" />
+                      {property.bedrooms} {property.bedrooms === 1 ? t.portfolio.bedroom : t.portfolio.bedrooms}
+                    </span>
+                    <span className="text-xs text-muted-foreground/70">
+                      ({property.reviews} {t.portfolio.reviews})
+                    </span>
+                  </div>
+
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {property.features.slice(0, 3).map((feature, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"
+                      >
+                        {getFeatureIcon(feature)}
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* CTAs */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openBookingForm(property.name)}
+                    >
+                      <Calendar className="w-4 h-4 mr-1" />
+                      {t.portfolio.bookDirect}
+                    </Button>
+                    <Link to={`/proprietate/${property.slug}`}>
+                      <Button variant="outline" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
