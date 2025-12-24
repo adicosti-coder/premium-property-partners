@@ -6,19 +6,30 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Home, Loader2, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Property coordinates in Timișoara
+// Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
-  'ring-apart-hotel-spacious-deluxe': [21.2087, 45.7489],
-  'green-forest-apart-hotel': [21.2650, 45.7320],
+  // Strada Loichița Vasile - zona Circumvalațiunii/City of Mara
+  'ring-apart-hotel-spacious-deluxe': [21.2175, 45.7510],
+  // Denya Forest - Strada Constructorilor 52, lângă Amazonia (nord-vest)
+  'green-forest-apart-hotel': [21.1950, 45.7750],
+  // Fructus Plaza - ultracentral Timișoara
   'fructus-plaza-ultracentral-apart-hotel': [21.2260, 45.7565],
-  'fullview-studio-deluxe': [21.2180, 45.7520],
-  'avenue-of-mara-apart-hotel': [21.2175, 45.7515],
-  'helios-apart-hotel': [21.2320, 45.7580],
-  'ateneo-trevi-2-apart-hotel': [21.1890, 45.7680],
-  'sunset-da-ra-studio-deluxe': [21.2185, 45.7525],
-  'mara-luxury-golden-apart-hotel': [21.2280, 45.7540],
-  'ateneo-apart-hotel-studio-deluxe': [21.1895, 45.7675],
-  'modern-studio-apart-hotel': [21.2450, 45.7420],
+  // City of Mara M9 - zona Circumvalațiunii
+  'fullview-studio-deluxe': [21.2170, 45.7505],
+  // City of Mara M8 - Calea Circumvalațiunii nr.1
+  'avenue-of-mara-apart-hotel': [21.2165, 45.7500],
+  // Strada Argeș 4 - aproape de centru
+  'helios-apart-hotel': [21.2280, 45.7490],
+  // Calea Torontalului 104K - nord Timișoara
+  'ateneo-trevi-2-apart-hotel': [21.2050, 45.7780],
+  // Circumvalațiunii M11 - zona City of Mara
+  'sunset-da-ra-studio-deluxe': [21.2180, 45.7495],
+  // Strada Sinaia nr.2B - ultracentral
+  'mara-luxury-golden-apart-hotel': [21.2240, 45.7555],
+  // Calea Torontalului 104K, Trevi 2 - nord Timișoara
+  'ateneo-apart-hotel-studio-deluxe': [21.2055, 45.7785],
+  // Complex Maurer Residence - sud-vest
+  'modern-studio-apart-hotel': [21.2100, 45.7350],
 };
 
 interface PropertyMapProps {
