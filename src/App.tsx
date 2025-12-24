@@ -12,6 +12,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import ResetPassword from "./pages/ResetPassword";
 import Favorites from "./pages/Favorites";
 import Guests from "./pages/Guests";
+import Imobiliare from "./pages/Imobiliare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/favorite" element={<Favorites />} />
               <Route path="/oaspeti" element={<Guests />} />
+              <Route path="/imobiliare" element={<Imobiliare />} />
               <Route path="/proprietate/:slug" element={<PropertyDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
