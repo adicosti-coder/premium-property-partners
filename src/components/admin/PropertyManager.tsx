@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,10 @@ import {
   MapPin,
   Eye,
   EyeOff,
-  GripVertical
+  GripVertical,
+  Upload,
+  Image as ImageIcon,
+  X
 } from "lucide-react";
 
 interface Property {
@@ -100,6 +103,86 @@ export default function PropertyManager() {
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getPublicUrl = (path: string) => {
+    if (!path) return null;
+    // Check if it's already a full URL
+    if (path.startsWith('http')) return path;
+    // Check if it's a storage path
+    if (path.startsWith('property-images/')) {
+      const { data } = supabase.storage.from('property-images').getPublicUrl(path.replace('property-images/', ''));
+      return data.publicUrl;
+    }
+    // Otherwise assume it's a local asset
+    return path;
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: t.admin.error,
+        description: t.admin.properties?.invalidFileType || "Invalid file type. Use JPG, PNG, WebP or GIF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: t.admin.error,
+        description: t.admin.properties?.fileTooLarge || "File too large. Maximum 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage.from('property-images').getPublicUrl(fileName);
+      
+      setFormData({ ...formData, image_path: data.publicUrl });
+      setImagePreview(data.publicUrl);
+      
+      toast({ title: t.admin.properties?.uploadSuccess || "Image uploaded!" });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: t.admin.error,
+        description: t.admin.properties?.uploadError || "Could not upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, image_path: "" });
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const fetchProperties = async () => {
     setIsLoading(true);
@@ -161,7 +244,7 @@ export default function PropertyManager() {
 
       toast({ title: t.admin.properties?.addSuccess || "Property added!" });
       setIsAddOpen(false);
-      setFormData(initialFormData);
+      resetForm();
       fetchProperties();
     } catch (error) {
       console.error("Error adding property:", error);
@@ -208,7 +291,7 @@ export default function PropertyManager() {
       toast({ title: t.admin.properties?.editSuccess || "Property updated!" });
       setIsEditOpen(false);
       setEditingProperty(null);
-      setFormData(initialFormData);
+      resetForm();
       fetchProperties();
     } catch (error) {
       console.error("Error updating property:", error);
@@ -285,7 +368,16 @@ export default function PropertyManager() {
       is_active: property.is_active,
       display_order: property.display_order,
     });
+    setImagePreview(property.image_path ? getPublicUrl(property.image_path) : null);
     setIsEditOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const PropertyFormFields = () => (
@@ -370,13 +462,55 @@ export default function PropertyManager() {
         />
       </div>
 
+      {/* Image Upload */}
       <div className="space-y-2">
-        <Label>{t.admin.properties?.imagePath || "Image Path"}</Label>
-        <Input
-          value={formData.image_path}
-          onChange={(e) => setFormData({ ...formData, image_path: e.target.value })}
-          placeholder="/apt-01.jpg"
+        <Label>{t.admin.properties?.uploadImage || "Upload Image"}</Label>
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleImageUpload}
+          className="hidden"
         />
+        
+        {(imagePreview || formData.image_path) ? (
+          <div className="relative">
+            <img
+              src={imagePreview || getPublicUrl(formData.image_path) || ""}
+              alt="Property preview"
+              className="w-full h-40 object-cover rounded-lg border border-border"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2"
+              onClick={removeImage}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+          >
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Uploading...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {t.admin.properties?.dragDropHint || "Click to upload an image"}
+                </p>
+                <p className="text-xs text-muted-foreground">JPG, PNG, WebP, GIF (max 5MB)</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
