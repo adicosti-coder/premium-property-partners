@@ -99,6 +99,17 @@ export const translations = {
       bedroom: "dormitor",
       bedrooms: "dormitoare",
       reviews: "recenzii",
+      filters: {
+        location: "Locație",
+        allLocations: "Toate locațiile",
+        capacity: "Capacitate",
+        allCapacities: "Orice capacitate",
+        features: "Facilități",
+        allFeatures: "Toate facilitățile",
+        clearFilters: "Șterge filtrele",
+        noResults: "Nu am găsit proprietăți",
+        noResultsMessage: "Încearcă să modifici filtrele pentru a vedea mai multe rezultate.",
+      },
     },
     
     // Testimonials
@@ -603,6 +614,17 @@ Mulțumesc!`,
       bedroom: "bedroom",
       bedrooms: "bedrooms",
       reviews: "reviews",
+      filters: {
+        location: "Location",
+        allLocations: "All locations",
+        capacity: "Capacity",
+        allCapacities: "Any capacity",
+        features: "Features",
+        allFeatures: "All features",
+        clearFilters: "Clear filters",
+        noResults: "No properties found",
+        noResultsMessage: "Try adjusting your filters to see more results.",
+      },
     },
     
     // Testimonials
