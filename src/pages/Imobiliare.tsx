@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -232,6 +233,9 @@ const Imobiliare = () => {
         </div>
       </section>
 
+      {/* Contact Form Section */}
+      <RealEstateContactForm />
+
       {/* CTA Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-6">
@@ -249,7 +253,7 @@ const Imobiliare = () => {
                 <Button 
                   variant="hero" 
                   size="lg"
-                  onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank')}
+                  onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })}
                   className="group"
                 >
                   <Phone className="w-5 h-5 mr-2" />
