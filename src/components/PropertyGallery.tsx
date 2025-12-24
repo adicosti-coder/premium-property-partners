@@ -173,7 +173,18 @@ const PropertyGallery = () => {
             onFeatureChange={setSelectedFeature}
             onSortChange={setSortBy}
             onClearFilters={clearFilters}
-          />
+        />
+        )}
+
+        {/* Results counter */}
+        {!isLoading && (
+          <div className="text-center mb-6">
+            <p className="text-sm text-muted-foreground">
+              {t.portfolio.filters.showingResults
+                .replace("{count}", filteredProperties.length.toString())
+                .replace("{total}", properties.length.toString())}
+            </p>
+          </div>
         )}
 
         {/* Property Grid */}

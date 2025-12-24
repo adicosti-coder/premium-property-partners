@@ -116,6 +116,7 @@ export const translations = {
         clearFilters: "Șterge filtrele",
         noResults: "Nu am găsit proprietăți",
         noResultsMessage: "Încearcă să modifici filtrele pentru a vedea mai multe rezultate.",
+        showingResults: "Se afișează {count} din {total} proprietăți",
       },
     },
     
@@ -638,6 +639,7 @@ Mulțumesc!`,
         clearFilters: "Clear filters",
         noResults: "No properties found",
         noResultsMessage: "Try adjusting your filters to see more results.",
+        showingResults: "Showing {count} of {total} properties",
       },
     },
     
