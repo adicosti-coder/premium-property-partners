@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeToggle from "./ThemeToggle";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -73,6 +74,8 @@ const Header = () => {
                 </Button>
               </Link>
             )}
+            {/* Theme toggle */}
+            <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
             <Link to="/auth">
