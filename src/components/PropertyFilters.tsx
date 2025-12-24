@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { MapPin, Users, Sparkles, X, Search, ArrowUpDown, Heart, Share2, FileDown } from "lucide-react";
+import { MapPin, Users, Sparkles, X, Search, ArrowUpDown, Heart, Share2, FileDown, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +28,7 @@ interface PropertyFiltersProps {
   sortBy: SortOption;
   showFavoritesOnly: boolean;
   favoritesCount: number;
+  compareCount: number;
   onSearchChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onCapacityChange: (value: string) => void;
@@ -37,6 +38,7 @@ interface PropertyFiltersProps {
   onShareFavorites: () => void;
   onExportPdf: () => void;
   onClearFilters: () => void;
+  onCompare: () => void;
 }
 
 const PropertyFilters = ({
@@ -47,6 +49,7 @@ const PropertyFilters = ({
   sortBy,
   showFavoritesOnly,
   favoritesCount,
+  compareCount,
   onSearchChange,
   onLocationChange,
   onCapacityChange,
@@ -56,6 +59,7 @@ const PropertyFilters = ({
   onShareFavorites,
   onExportPdf,
   onClearFilters,
+  onCompare,
 }: PropertyFiltersProps) => {
   const { t } = useLanguage();
 
@@ -191,6 +195,20 @@ const PropertyFilters = ({
           <Heart className={`w-4 h-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
           {t.portfolio.filters.favorites} ({favoritesCount})
         </Button>
+
+        {/* Compare Button */}
+        {favoritesCount >= 2 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onCompare}
+            className="bg-card border-border flex items-center gap-2"
+            disabled={compareCount < 2}
+          >
+            <GitCompare className="w-4 h-4" />
+            {t.portfolio.compare.button} ({compareCount})
+          </Button>
+        )}
 
         {/* Export Favorites Dropdown */}
         {favoritesCount > 0 && (
