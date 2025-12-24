@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Home } from "lucide-react";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Home, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { properties } from "@/data/properties";
 import { toast } from "sonner";
 
@@ -31,6 +32,12 @@ const Guests = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedCapacity, setSelectedCapacity] = useState("all");
+
+  // Scroll animations
+  const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: filtersRef, isVisible: filtersVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
+  const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation({ threshold: 0.2 });
 
   const locations = useMemo(() => {
     const locs = [...new Set(properties.map(p => p.location))];
@@ -76,21 +83,46 @@ const Guests = () => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.1),transparent_70%)]" />
-        <div className="container mx-auto px-6 relative z-10">
+        {/* Floating decorations */}
+        <div className="absolute top-40 left-10 w-20 h-20 bg-primary/10 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute top-60 right-20 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-primary/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        <div 
+          ref={heroRef}
+          className={`container mx-auto px-6 relative z-10 transition-all duration-1000 ${
+            heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+          }`}
+        >
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <Home className="w-4 h-4 text-primary" />
+            <div 
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 transition-all duration-700 ${
+                heroVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+              }`}
+              style={{ transitionDelay: '200ms' }}
+            >
+              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm font-medium text-primary">
                 {language === 'ro' ? 'Apartamente Premium' : 'Premium Apartments'}
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6">
+            <h1 
+              className={`text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 transition-all duration-700 ${
+                heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '300ms' }}
+            >
               {language === 'ro' ? 'Găsește' : 'Find'}{' '}
               <span className="text-gradient-gold">
                 {language === 'ro' ? 'Apartamentul Perfect' : 'Your Perfect Stay'}
               </span>
             </h1>
-            <p className="text-lg text-muted-foreground mb-8">
+            <p 
+              className={`text-lg text-muted-foreground mb-8 transition-all duration-700 ${
+                heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: '400ms' }}
+            >
               {language === 'ro' 
                 ? 'Descoperă colecția noastră de apartamente premium în cele mai căutate zone din București. Rezervare directă, fără comisioane ascunse.'
                 : 'Discover our collection of premium apartments in Bucharest\'s most sought-after locations. Direct booking, no hidden fees.'}
@@ -100,21 +132,31 @@ const Guests = () => {
       </section>
 
       {/* Filters Section */}
-      <section className="py-8 border-b border-border bg-card/50">
+      <section 
+        ref={filtersRef}
+        className={`py-8 border-b border-border bg-card/50 transition-all duration-700 ${
+          filtersVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
+      >
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+          <div 
+            className={`flex flex-col md:flex-row gap-4 items-center justify-center transition-all duration-500 ${
+              filtersVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+            style={{ transitionDelay: '150ms' }}
+          >
             <div className="relative flex-1 max-w-md w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder={language === 'ro' ? 'Caută apartamente...' : 'Search apartments...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 transition-shadow duration-300 focus:shadow-lg focus:shadow-primary/10"
               />
             </div>
             
             <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px] transition-shadow duration-300 hover:shadow-md">
                 <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder={language === 'ro' ? 'Locație' : 'Location'} />
               </SelectTrigger>
@@ -127,7 +169,7 @@ const Guests = () => {
             </Select>
 
             <Select value={selectedCapacity} onValueChange={setSelectedCapacity}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px] transition-shadow duration-300 hover:shadow-md">
                 <Users className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder={language === 'ro' ? 'Capacitate' : 'Capacity'} />
               </SelectTrigger>
@@ -140,7 +182,12 @@ const Guests = () => {
             </Select>
           </div>
           
-          <div className="text-center mt-4">
+          <div 
+            className={`text-center mt-4 transition-all duration-500 ${
+              filtersVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ transitionDelay: '300ms' }}
+          >
             <p className="text-sm text-muted-foreground">
               {language === 'ro' 
                 ? `${filteredProperties.length} apartamente disponibile`
@@ -151,13 +198,20 @@ const Guests = () => {
       </section>
 
       {/* Properties Grid */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
+      <section className="py-16 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-20 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        
+        <div ref={gridRef} className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProperties.map((property) => (
+            {filteredProperties.map((property, index) => (
               <article 
                 key={property.id}
-                className="group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant"
+                className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant hover:-translate-y-2 ${
+                  gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
+                style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
               >
                 {/* Image */}
                 <div className="relative h-56 overflow-hidden">
@@ -285,12 +339,34 @@ const Guests = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+      <section 
+        ref={ctaRef}
+        className="py-20 bg-gradient-to-r from-primary/10 to-primary/5 relative overflow-hidden"
+      >
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.15),transparent_70%)]" />
+        <div className="absolute top-10 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-1/4 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        
+        <div 
+          className={`container mx-auto px-6 text-center relative z-10 transition-all duration-1000 ${
+            ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+          }`}
+        >
+          <h2 
+            className={`text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 transition-all duration-700 ${
+              ctaVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+            style={{ transitionDelay: '150ms' }}
+          >
             {language === 'ro' ? 'Ai nevoie de ajutor?' : 'Need help?'}
           </h2>
-          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+          <p 
+            className={`text-muted-foreground mb-8 max-w-xl mx-auto transition-all duration-700 ${
+              ctaVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ transitionDelay: '300ms' }}
+          >
             {language === 'ro' 
               ? 'Contactează-ne pentru recomandări personalizate sau întrebări despre disponibilitate.'
               : 'Contact us for personalized recommendations or availability questions.'}
@@ -299,10 +375,14 @@ const Guests = () => {
             href="https://wa.me/40723154520?text=Bună! Sunt interesat de unul dintre apartamentele voastre." 
             target="_blank" 
             rel="noopener noreferrer"
+            className={`inline-block transition-all duration-700 ${
+              ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+            style={{ transitionDelay: '450ms' }}
           >
-            <Button variant="hero" size="lg">
+            <Button variant="hero" size="lg" className="group/cta hover:shadow-glow transition-shadow duration-300">
               {language === 'ro' ? 'Contactează-ne pe WhatsApp' : 'Contact us on WhatsApp'}
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-5 h-5 ml-2 group-hover/cta:translate-x-1 transition-transform" />
             </Button>
           </a>
         </div>
