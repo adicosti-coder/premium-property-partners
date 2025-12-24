@@ -10,10 +10,12 @@ import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
+type AuthMode = "login" | "signup" | "reset";
+
 const Auth = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -39,8 +41,49 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      toast({
+        title: t.auth.invalidEmail,
+        description: emailResult.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin`,
+      });
+      if (error) throw error;
+      toast({
+        title: t.auth.resetEmailSent,
+        description: t.auth.resetEmailSentMessage,
+      });
+      setMode("login");
+      setEmail("");
+    } catch (error: any) {
+      toast({
+        title: t.auth.error,
+        description: t.auth.genericError,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (mode === "reset") {
+      return handlePasswordReset(e);
+    }
 
     // Validate inputs
     const emailResult = emailSchema.safeParse(email);
@@ -66,7 +109,7 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -86,7 +129,7 @@ const Auth = () => {
           title: t.auth.signupSuccess,
           description: t.auth.signupSuccessMessage,
         });
-        setIsLogin(true);
+        setMode("login");
       }
     } catch (error: any) {
       let message = t.auth.genericError;
@@ -104,6 +147,47 @@ const Auth = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getTitle = () => {
+    switch (mode) {
+      case "login":
+        return t.auth.login;
+      case "signup":
+        return t.auth.signup;
+      case "reset":
+        return t.auth.resetPassword;
+    }
+  };
+
+  const getSubtitle = () => {
+    switch (mode) {
+      case "login":
+        return t.auth.loginSubtitle;
+      case "signup":
+        return t.auth.signupSubtitle;
+      case "reset":
+        return t.auth.resetPasswordSubtitle;
+    }
+  };
+
+  const getButtonText = () => {
+    if (isLoading) {
+      return (
+        <>
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          {t.auth.processing}
+        </>
+      );
+    }
+    switch (mode) {
+      case "login":
+        return t.auth.login;
+      case "signup":
+        return t.auth.signup;
+      case "reset":
+        return t.auth.sendResetLink;
     }
   };
 
@@ -125,10 +209,10 @@ const Auth = () => {
         <div className="bg-card p-8 rounded-2xl border border-border shadow-elegant">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-serif font-semibold text-foreground mb-2">
-              {isLogin ? t.auth.login : t.auth.signup}
+              {getTitle()}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin ? t.auth.loginSubtitle : t.auth.signupSubtitle}
+              {getSubtitle()}
             </p>
           </div>
 
@@ -150,46 +234,60 @@ const Auth = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">{t.auth.password}</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={6}
-                  maxLength={72}
-                />
+            {mode !== "reset" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">{t.auth.password}</Label>
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={() => setMode("reset")}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {t.auth.forgotPassword}
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                    minLength={6}
+                    maxLength={72}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t.auth.processing}
-                </>
-              ) : isLogin ? (
-                t.auth.login
-              ) : (
-                t.auth.signup
-              )}
+              {getButtonText()}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline text-sm"
-            >
-              {isLogin ? t.auth.noAccount : t.auth.hasAccount}
-            </button>
+          <div className="mt-6 text-center space-y-2">
+            {mode === "reset" ? (
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="text-primary hover:underline text-sm"
+              >
+                {t.auth.backToLogin}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-primary hover:underline text-sm"
+              >
+                {mode === "login" ? t.auth.noAccount : t.auth.hasAccount}
+              </button>
+            )}
           </div>
         </div>
       </div>
