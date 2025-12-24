@@ -21,13 +21,13 @@ const ContactSection = () => {
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(t.contactSection.whatsappMessage);
-    window.open(`https://wa.me/40756123456?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
   };
 
   const handleEmail = () => {
     const subject = encodeURIComponent("Solicitare Evaluare Gratuită - RealTrust");
     const body = encodeURIComponent(t.contactSection.template);
-    window.location.href = `mailto:contact@realtrust.ro?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:adicosti@gmail.com?subject=${subject}&body=${body}`;
   };
 
   return (
@@ -56,7 +56,7 @@ const ContactSection = () => {
               
               <div className="space-y-6">
                 <a
-                  href="tel:+40756123456"
+                  href="tel:+40723154520"
                   className="flex items-center gap-4 group"
                 >
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -65,13 +65,13 @@ const ContactSection = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">{t.contactSection.phone}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
-                      +40 756 123 456
+                      0723 154 520
                     </p>
                   </div>
                 </a>
 
                 <a
-                  href="mailto:contact@realtrust.ro"
+                  href="mailto:adicosti@gmail.com"
                   className="flex items-center gap-4 group"
                 >
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -80,7 +80,7 @@ const ContactSection = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">{t.contactSection.email}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
-                      contact@realtrust.ro
+                      adicosti@gmail.com
                     </p>
                   </div>
                 </a>

@@ -15,6 +15,7 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import AboutFounder from "@/components/AboutFounder";
 
 const Index = () => {
   return (
@@ -36,6 +37,7 @@ const Index = () => {
         </section>
         <PropertyGallery />
         <Testimonials />
+        <AboutFounder />
         <GuestSection />
         <FAQ />
         <ContactSection />

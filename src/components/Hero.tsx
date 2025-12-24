@@ -2,19 +2,38 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useState } from "react";
 
 const Hero = () => {
   const { t } = useLanguage();
+  const [videoError, setVideoError] = useState(false);
+
+  // Video URL - can be replaced with actual hosted video
+  const videoUrl = "https://www.realtrust.ro/video/apart-hotel-timisoara-hero.mp4";
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Video or Fallback Image */}
       <div className="absolute inset-0">
-        <img
-          src={heroImage}
-          alt="Apartament de lux Timișoara"
-          className="w-full h-full object-cover"
-        />
+        {!videoError ? (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+            onError={() => setVideoError(true)}
+            poster={heroImage}
+          >
+            <source src={videoUrl} type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            src={heroImage}
+            alt="Apartament de lux Timișoara"
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
       </div>
       
@@ -40,15 +59,27 @@ const Hero = () => {
             {t.hero.subtitle}
           </p>
           
-          {/* CTAs */}
+          {/* CTAs - Differentiated like realtrust.ro */}
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
             <Button variant="hero" size="xl" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>
               {t.hero.cta}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="heroOutline" size="xl" onClick={() => document.getElementById('cum-functioneaza')?.scrollIntoView({ behavior: 'smooth' })}>
-              {t.hero.ctaSecondary}
+            <Button variant="heroOutline" size="xl" onClick={() => document.getElementById('oaspeti')?.scrollIntoView({ behavior: 'smooth' })}>
+              {t.hero.ctaGuests || "Pentru Oaspeți"}
             </Button>
+          </div>
+          
+          {/* Feature tags like realtrust.ro */}
+          <div className="flex flex-wrap gap-2 mt-8 animate-fade-up" style={{ animationDelay: '0.45s' }}>
+            {[t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
+              t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
+              t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
+              t.hero.tags?.cleaning || "Curățenie profesională"].map((tag, index) => (
+              <span key={index} className="px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80">
+                {tag}
+              </span>
+            ))}
           </div>
           
           {/* Trust indicators */}

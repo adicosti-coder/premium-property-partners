@@ -6,7 +6,7 @@ const FloatingWhatsApp = () => {
   
   const handleClick = () => {
     const message = encodeURIComponent(t.floatingWhatsapp.message);
-    window.open(`https://wa.me/40756123456?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
   };
 
   return (
