@@ -704,6 +704,92 @@ Mulțumesc!`,
       saveError: "Nu s-au putut salva preferințele",
       noZonesHint: "Selectează cel puțin o zonă pentru a activa notificările",
     },
+    
+    // Real Estate Page
+    realEstatePage: {
+      hero: {
+        badge: "Servicii Imobiliare Complete",
+        title: "Tranzacții Imobiliare",
+        titleHighlight: "Fără Complicații",
+        subtitle: "RealTrust te ajută să vinzi, cumperi sau închiriezi proprietăți în Timișoara. Experiență, transparență și rezultate concrete.",
+      },
+      services: {
+        label: "Servicii",
+        title: "Servicii Imobiliare",
+        titleHighlight: "Premium",
+        subtitle: "Oferim o gamă completă de servicii imobiliare, de la evaluare până la finalizarea tranzacției.",
+        selling: {
+          title: "Vânzare Proprietăți",
+          description: "Vindem proprietatea ta la cel mai bun preț, în cel mai scurt timp posibil.",
+          features: [
+            "Evaluare gratuită și realistă",
+            "Fotografii și video profesionale",
+            "Promovare pe platformele de top",
+            "Negociere în interesul tău",
+          ],
+        },
+        buying: {
+          title: "Cumpărare Proprietăți",
+          description: "Te ajutăm să găsești proprietatea potrivită, la prețul corect.",
+          features: [
+            "Căutare personalizată",
+            "Verificare juridică completă",
+            "Asistență la negociere",
+            "Suport până la notar",
+          ],
+        },
+        renting: {
+          title: "Închiriere Termen Lung",
+          description: "Găsim chiriași de încredere sau apartamentul perfect pentru tine.",
+          features: [
+            "Verificare chiriași",
+            "Contracte conforme legislației",
+            "Inventar și predare-primire",
+            "Suport pe durata închirierii",
+          ],
+        },
+        consulting: {
+          title: "Consultanță Imobiliară",
+          description: "Sfaturi profesionale pentru decizii imobiliare informate.",
+          features: [
+            "Analiză de piață",
+            "Evaluări profesionale",
+            "Consultanță investiții",
+            "Due diligence complet",
+          ],
+        },
+      },
+      benefits: {
+        label: "De Ce Noi",
+        title: "Avantajele",
+        titleHighlight: "RealTrust",
+        subtitle: "Cu experiență în piața imobiliară din Timișoara, oferim servicii de top la standarde europene.",
+        experience: "Experiență dovedită în piață",
+        transparency: "Transparență totală în comunicare",
+        personalized: "Abordare personalizată",
+        localExpertise: "Expertiză locală Timișoara",
+        fullSupport: "Suport complet în tranzacție",
+        results: "Rezultate măsurabile",
+      },
+      process: {
+        label: "Procesul Nostru",
+        title: "Cum Funcționează",
+        subtitle: "Un proces simplu și transparent, de la prima întâlnire până la finalizarea tranzacției.",
+        steps: [
+          { title: "Consultare Inițială", description: "Discutăm obiectivele tale și analizăm opțiunile disponibile." },
+          { title: "Evaluare & Strategie", description: "Evaluăm proprietatea sau căutăm oferte potrivite nevoilor tale." },
+          { title: "Implementare", description: "Promovăm, negociem și gestionăm toate aspectele tranzacției." },
+          { title: "Finalizare", description: "Te asistăm la notar și ne asigurăm că totul este în regulă." },
+        ],
+      },
+      cta: {
+        title: "Pregătit să Faci Pasul Următor?",
+        subtitle: "Contactează-ne pentru o consultare gratuită și descoperă cum te putem ajuta.",
+        contact: "Contactează-ne",
+        learnMore: "Află Mai Multe",
+        whatsappMessage: "Bună! Sunt interesat de serviciile imobiliare RealTrust.",
+      },
+    },
   },
   
   en: {
@@ -1410,6 +1496,92 @@ Thank you!`,
       saving: "Saving...",
       saveError: "Failed to save preferences",
       noZonesHint: "Select at least one zone to enable notifications",
+    },
+    
+    // Real Estate Page
+    realEstatePage: {
+      hero: {
+        badge: "Complete Real Estate Services",
+        title: "Real Estate Transactions",
+        titleHighlight: "Made Simple",
+        subtitle: "RealTrust helps you sell, buy, or rent properties in Timișoara. Experience, transparency, and concrete results.",
+      },
+      services: {
+        label: "Services",
+        title: "Premium Real Estate",
+        titleHighlight: "Services",
+        subtitle: "We offer a complete range of real estate services, from evaluation to transaction completion.",
+        selling: {
+          title: "Property Sales",
+          description: "We sell your property at the best price, in the shortest time possible.",
+          features: [
+            "Free and realistic evaluation",
+            "Professional photos and video",
+            "Promotion on top platforms",
+            "Negotiation in your interest",
+          ],
+        },
+        buying: {
+          title: "Property Purchase",
+          description: "We help you find the right property at the right price.",
+          features: [
+            "Personalized search",
+            "Complete legal verification",
+            "Negotiation assistance",
+            "Support until notary",
+          ],
+        },
+        renting: {
+          title: "Long-Term Rental",
+          description: "We find reliable tenants or the perfect apartment for you.",
+          features: [
+            "Tenant verification",
+            "Legally compliant contracts",
+            "Inventory and handover",
+            "Support during rental",
+          ],
+        },
+        consulting: {
+          title: "Real Estate Consulting",
+          description: "Professional advice for informed real estate decisions.",
+          features: [
+            "Market analysis",
+            "Professional evaluations",
+            "Investment consulting",
+            "Complete due diligence",
+          ],
+        },
+      },
+      benefits: {
+        label: "Why Us",
+        title: "RealTrust",
+        titleHighlight: "Advantages",
+        subtitle: "With experience in the Timișoara real estate market, we offer top services at European standards.",
+        experience: "Proven market experience",
+        transparency: "Total transparency in communication",
+        personalized: "Personalized approach",
+        localExpertise: "Local Timișoara expertise",
+        fullSupport: "Complete transaction support",
+        results: "Measurable results",
+      },
+      process: {
+        label: "Our Process",
+        title: "How It Works",
+        subtitle: "A simple and transparent process, from the first meeting to transaction completion.",
+        steps: [
+          { title: "Initial Consultation", description: "We discuss your objectives and analyze available options." },
+          { title: "Evaluation & Strategy", description: "We evaluate the property or search for offers matching your needs." },
+          { title: "Implementation", description: "We promote, negotiate, and manage all aspects of the transaction." },
+          { title: "Completion", description: "We assist you at the notary and ensure everything is in order." },
+        ],
+      },
+      cta: {
+        title: "Ready to Take the Next Step?",
+        subtitle: "Contact us for a free consultation and discover how we can help you.",
+        contact: "Contact Us",
+        learnMore: "Learn More",
+        whatsappMessage: "Hello! I'm interested in RealTrust real estate services.",
+      },
     },
   },
 };

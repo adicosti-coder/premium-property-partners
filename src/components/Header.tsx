@@ -16,7 +16,7 @@ const Header = () => {
     { href: "#beneficii", label: t.nav.benefits },
     { href: "#calculator", label: "Calculator" },
     { href: "#portofoliu", label: t.nav.portfolio },
-    { href: "https://www.realtrust.ro/imobiliare-realtrust.html", label: t.nav.realEstate, external: true },
+    { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/oaspeti", label: t.nav.guests, isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
@@ -47,8 +47,6 @@ const Header = () => {
                 <a
                   key={link.href}
                   href={link.href}
-                  target={link.external ? "_blank" : undefined}
-                  rel={link.external ? "noopener noreferrer" : undefined}
                   className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
                 >
                   {link.label}
@@ -125,8 +123,6 @@ const Header = () => {
                   <a
                     key={link.href}
                     href={link.href}
-                    target={link.external ? "_blank" : undefined}
-                    rel={link.external ? "noopener noreferrer" : undefined}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
