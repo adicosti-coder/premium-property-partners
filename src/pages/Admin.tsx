@@ -37,6 +37,7 @@ import {
   CalendarDays,
   ShieldAlert,
   Building,
+  LayoutDashboard,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -44,6 +45,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import BookingManager from "@/components/admin/BookingManager";
 import PropertyManager from "@/components/admin/PropertyManager";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -77,7 +79,7 @@ const Admin = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("leads");
+  const [activeTab, setActiveTab] = useState("dashboard");
   
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
   const dateLocale = language === 'ro' ? ro : enUS;
@@ -214,6 +216,10 @@ const Admin = () => {
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-card border border-border">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="w-4 h-4" />
+              {t.admin.tabs?.dashboard || "Dashboard"}
+            </TabsTrigger>
             <TabsTrigger value="leads" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               {t.admin.tabs?.leads || "Leads"}
@@ -227,6 +233,11 @@ const Admin = () => {
               {t.admin.tabs?.properties || "Properties"}
             </TabsTrigger>
           </TabsList>
+
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            <AdminDashboard />
+          </TabsContent>
 
           {/* Leads Tab */}
           <TabsContent value="leads" className="space-y-6">
