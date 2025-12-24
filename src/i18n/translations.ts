@@ -454,6 +454,13 @@ Mulțumesc!`,
       },
     },
     
+    // NotFound (404)
+    notFound: {
+      title: "404",
+      message: "Ups! Pagina nu a fost găsită",
+      backHome: "Înapoi la pagina principală",
+    },
+    
     // Common
     common: {
       learnMore: "Află mai mult",
@@ -915,6 +922,13 @@ Thank you!`,
         penthouse: "Penthouse",
         vila: "Villa",
       },
+    },
+    
+    // NotFound (404)
+    notFound: {
+      title: "404",
+      message: "Oops! Page not found",
+      backHome: "Return to Home",
     },
     
     // Common
