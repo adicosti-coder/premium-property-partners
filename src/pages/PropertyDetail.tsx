@@ -13,6 +13,7 @@ import BookingForm from "@/components/BookingForm";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const PropertyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -21,17 +22,18 @@ const PropertyDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   if (!property) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-serif font-bold text-foreground mb-4">Proprietate Negăsită</h1>
-          <p className="text-muted-foreground mb-8">Ne pare rău, această proprietate nu există.</p>
+          <h1 className="text-4xl font-serif font-bold text-foreground mb-4">{t.propertyDetail.notFound}</h1>
+          <p className="text-muted-foreground mb-8">{t.propertyDetail.notFoundMessage}</p>
           <Link to="/#portofoliu">
             <Button variant="default">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi la Portofoliu
+              {t.propertyDetail.backToPortfolio}
             </Button>
           </Link>
         </div>
@@ -48,20 +50,25 @@ const PropertyDetail = () => {
   };
 
   const handleShare = async () => {
+    const description = language === 'en' ? property.descriptionEn : property.description;
     if (navigator.share) {
       await navigator.share({
         title: property.name,
-        text: property.description,
+        text: description,
         url: window.location.href,
       });
     } else {
       await navigator.clipboard.writeText(window.location.href);
       toast({
-        title: "Link copiat!",
-        description: "Poți trimite link-ul prietenilor tăi.",
+        title: language === 'en' ? "Link copied!" : "Link copiat!",
+        description: language === 'en' ? "You can send this link to your friends." : "Poți trimite link-ul prietenilor tăi.",
       });
     }
   };
+
+  const longDescription = language === 'en' ? property.longDescriptionEn : property.longDescription;
+  const amenities = language === 'en' ? property.amenitiesEn : property.amenities;
+  const houseRules = language === 'en' ? property.houseRulesEn : property.houseRules;
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,7 +82,7 @@ const PropertyDetail = () => {
             className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Înapoi la toate proprietățile
+            {t.propertyDetail.backToPortfolio}
           </Link>
         </div>
 
@@ -95,7 +102,7 @@ const PropertyDetail = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
-                  Apasă pentru galerie completă
+                  {t.propertyDetail.clickForGallery}
                 </Badge>
               </div>
             </div>
@@ -141,7 +148,7 @@ const PropertyDetail = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-primary text-primary" />
-                        {property.rating} ({property.reviews} recenzii)
+                        {property.rating} ({property.reviews} {t.propertyDetail.reviews})
                       </span>
                     </div>
                   </div>
@@ -159,15 +166,15 @@ const PropertyDetail = () => {
                 <div className="flex flex-wrap gap-6 py-4 border-y border-border">
                   <div className="flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
-                    <span className="text-foreground">{property.capacity} oaspeți</span>
+                    <span className="text-foreground">{property.capacity} {t.propertyDetail.guests}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <BedDouble className="w-5 h-5 text-primary" />
-                    <span className="text-foreground">{property.bedrooms} {property.bedrooms === 1 ? 'dormitor' : 'dormitoare'}</span>
+                    <span className="text-foreground">{property.bedrooms} {property.bedrooms === 1 ? t.propertyDetail.bedroom : t.propertyDetail.bedrooms}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Bath className="w-5 h-5 text-primary" />
-                    <span className="text-foreground">{property.bathrooms} {property.bathrooms === 1 ? 'baie' : 'băi'}</span>
+                    <span className="text-foreground">{property.bathrooms} {property.bathrooms === 1 ? t.propertyDetail.bathroom : t.propertyDetail.bathrooms}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Maximize2 className="w-5 h-5 text-primary" />
@@ -178,15 +185,15 @@ const PropertyDetail = () => {
 
               {/* Description */}
               <div>
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">Despre Proprietate</h2>
-                <p className="text-muted-foreground leading-relaxed">{property.longDescription}</p>
+                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">{t.propertyDetail.about}</h2>
+                <p className="text-muted-foreground leading-relaxed">{longDescription}</p>
               </div>
 
               {/* Amenities */}
               <div>
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">Dotări și Facilități</h2>
+                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">{t.propertyDetail.amenities}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {property.amenities.map((amenity, index) => (
+                  {amenities.map((amenity, index) => (
                     <div key={index} className="flex items-center gap-2 text-muted-foreground">
                       <Check className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="text-sm">{amenity}</span>
@@ -197,9 +204,9 @@ const PropertyDetail = () => {
 
               {/* House Rules */}
               <div>
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">Reguli de Cazare</h2>
+                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">{t.propertyDetail.houseRules}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {property.houseRules.map((rule, index) => (
+                  {houseRules.map((rule, index) => (
                     <div key={index} className="flex items-center gap-2 text-muted-foreground">
                       <X className="w-4 h-4 text-destructive flex-shrink-0" />
                       <span className="text-sm">{rule}</span>
@@ -215,8 +222,8 @@ const PropertyDetail = () => {
                     <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Check-in</p>
-                    <p className="font-semibold text-foreground">După {property.checkInTime}</p>
+                    <p className="text-sm text-muted-foreground">{t.propertyDetail.checkIn}</p>
+                    <p className="font-semibold text-foreground">{t.propertyDetail.after} {property.checkInTime}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -224,8 +231,8 @@ const PropertyDetail = () => {
                     <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Check-out</p>
-                    <p className="font-semibold text-foreground">Până la {property.checkOutTime}</p>
+                    <p className="text-sm text-muted-foreground">{t.propertyDetail.checkOut}</p>
+                    <p className="font-semibold text-foreground">{t.propertyDetail.until} {property.checkOutTime}</p>
                   </div>
                 </div>
               </div>
@@ -238,7 +245,7 @@ const PropertyDetail = () => {
                   <div className="flex items-center gap-1">
                     <Star className="w-5 h-5 fill-primary text-primary" />
                     <span className="font-semibold text-foreground">{property.rating}</span>
-                    <span className="text-muted-foreground">({property.reviews} recenzii)</span>
+                    <span className="text-muted-foreground">({property.reviews} {t.propertyDetail.reviews})</span>
                   </div>
                 </div>
 
@@ -247,15 +254,15 @@ const PropertyDetail = () => {
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <Key className="w-5 h-5 text-primary" />
-                    <span>Auto check-in disponibil</span>
+                    <span>{t.propertyDetail.autoCheckIn}</span>
                   </div>
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <Wifi className="w-5 h-5 text-primary" />
-                    <span>WiFi de mare viteză inclus</span>
+                    <span>{t.propertyDetail.wifiIncluded}</span>
                   </div>
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <Car className="w-5 h-5 text-primary" />
-                    <span>Parcare privată</span>
+                    <span>{t.propertyDetail.privateParking}</span>
                   </div>
                 </div>
 
@@ -265,7 +272,7 @@ const PropertyDetail = () => {
                   onClick={() => setBookingOpen(true)}
                 >
                   <Calendar className="w-5 h-5 mr-2" />
-                  Rezervă Direct
+                  {t.propertyDetail.bookDirect}
                 </Button>
 
                 <Button 
@@ -274,11 +281,11 @@ const PropertyDetail = () => {
                   onClick={() => window.open(property.bookingUrl, "_blank")}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Vezi pe Booking.com
+                  {t.propertyDetail.viewOnBooking}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  Rezervând direct, beneficiezi de cel mai bun preț garantat
+                  {t.propertyDetail.bestPrice}
                 </p>
               </div>
             </div>
