@@ -7,19 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-
-const bookingSchema = z.object({
-  name: z.string().min(2, "Numele trebuie să aibă minim 2 caractere").max(100),
-  phone: z.string().min(10, "Număr de telefon invalid").max(20),
-  email: z.string().email("Email invalid").max(255),
-  checkIn: z.string().min(1, "Selectează data de check-in"),
-  checkOut: z.string().min(1, "Selectează data de check-out"),
-  guests: z.string().min(1, "Selectează numărul de oaspeți"),
-  country: z.string().min(1, "Selectează țara de proveniență"),
-  message: z.string().max(500).optional(),
-});
 
 interface BookingFormProps {
   isOpen: boolean;
@@ -27,14 +17,21 @@ interface BookingFormProps {
   propertyName?: string;
 }
 
-const countries = [
+const countriesRo = [
   "România", "Germania", "Franța", "Italia", "Spania", "Marea Britanie",
   "Olanda", "Belgia", "Austria", "Elveția", "Polonia", "Ungaria",
   "SUA", "Canada", "Australia", "Altă țară"
 ];
 
+const countriesEn = [
+  "Romania", "Germany", "France", "Italy", "Spain", "United Kingdom",
+  "Netherlands", "Belgium", "Austria", "Switzerland", "Poland", "Hungary",
+  "USA", "Canada", "Australia", "Other country"
+];
+
 const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   const { toast } = useToast();
+  const { t, language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -47,6 +44,19 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const countries = language === 'en' ? countriesEn : countriesRo;
+
+  const bookingSchema = z.object({
+    name: z.string().min(2, language === 'en' ? "Name must have at least 2 characters" : "Numele trebuie să aibă minim 2 caractere").max(100),
+    phone: z.string().min(10, language === 'en' ? "Invalid phone number" : "Număr de telefon invalid").max(20),
+    email: z.string().email(language === 'en' ? "Invalid email" : "Email invalid").max(255),
+    checkIn: z.string().min(1, language === 'en' ? "Select check-in date" : "Selectează data de check-in"),
+    checkOut: z.string().min(1, language === 'en' ? "Select check-out date" : "Selectează data de check-out"),
+    guests: z.string().min(1, language === 'en' ? "Select number of guests" : "Selectează numărul de oaspeți"),
+    country: z.string().min(1, language === 'en' ? "Select country of origin" : "Selectează țara de proveniență"),
+    message: z.string().max(500).optional(),
+  });
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -86,7 +96,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
           guests: formData.guests,
           country: formData.country,
           message: formData.message,
-          propertyName: propertyName || "Orice proprietate disponibilă",
+          propertyName: propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă"),
         }
       });
     } catch (error) {
@@ -99,8 +109,8 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     
     if (!validateForm()) {
       toast({
-        title: "Eroare",
-        description: "Verifică câmpurile marcate cu roșu",
+        title: t.booking.error,
+        description: t.booking.errorMessage,
         variant: "destructive",
       });
       return;
@@ -112,8 +122,23 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     await sendEmailNotification();
 
     // Build WhatsApp message
-    const property = propertyName || "Orice proprietate disponibilă";
-    const whatsappMessage = `🏠 *Cerere de Rezervare - RealTrust*
+    const property = propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă");
+    const whatsappMessage = language === 'en' 
+      ? `🏠 *Booking Request - RealTrust*
+
+👤 *Name:* ${formData.name}
+📧 *Email:* ${formData.email}
+📱 *Phone:* ${formData.phone}
+🌍 *Country:* ${formData.country}
+
+📅 *Check-in:* ${formData.checkIn}
+📅 *Check-out:* ${formData.checkOut}
+👥 *Number of guests:* ${formData.guests}
+
+🏡 *Property:* ${property}
+
+💬 *Message:* ${formData.message || "No additional message"}`
+      : `🏠 *Cerere de Rezervare - RealTrust*
 
 👤 *Nume:* ${formData.name}
 📧 *Email:* ${formData.email}
@@ -135,8 +160,8 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     window.open(whatsappUrl, "_blank");
 
     toast({
-      title: "Cerere trimisă!",
-      description: "Te vom contacta în curând pentru confirmare.",
+      title: t.booking.success,
+      description: t.booking.successMessage,
     });
 
     setIsSubmitting(false);
@@ -162,13 +187,13 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
         <DialogHeader>
           <DialogTitle className="text-2xl font-serif text-foreground flex items-center gap-2">
             <Calendar className="w-6 h-6 text-primary" />
-            Rezervă Acum
+            {t.booking.title}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
             {propertyName ? (
-              <>Completează formularul pentru <span className="text-primary font-medium">{propertyName}</span></>
+              <>{t.booking.subtitleWithProperty} <span className="text-primary font-medium">{propertyName}</span></>
             ) : (
-              "Completează formularul și te vom contacta pentru a găsi proprietatea perfectă"
+              t.booking.subtitle
             )}
           </DialogDescription>
         </DialogHeader>
@@ -178,13 +203,13 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
           <div className="space-y-2">
             <Label htmlFor="name" className="text-foreground flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" />
-              Nume complet *
+              {t.booking.name} *
             </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Ion Popescu"
+              placeholder={language === 'en' ? "John Smith" : "Ion Popescu"}
               className={errors.name ? "border-destructive" : ""}
             />
             {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
@@ -195,7 +220,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-foreground flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                Telefon *
+                {t.booking.phone} *
               </Label>
               <Input
                 id="phone"
@@ -211,14 +236,14 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                Email *
+                {t.booking.email} *
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                placeholder="email@exemplu.com"
+                placeholder="email@example.com"
                 className={errors.email ? "border-destructive" : ""}
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
@@ -230,7 +255,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             <div className="space-y-2">
               <Label htmlFor="checkIn" className="text-foreground flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
-                Check-in *
+                {t.booking.checkIn} *
               </Label>
               <Input
                 id="checkIn"
@@ -246,7 +271,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             <div className="space-y-2">
               <Label htmlFor="checkOut" className="text-foreground flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
-                Check-out *
+                {t.booking.checkOut} *
               </Label>
               <Input
                 id="checkOut"
@@ -265,16 +290,16 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             <div className="space-y-2">
               <Label className="text-foreground flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
-                Număr oaspeți *
+                {t.booking.guests} *
               </Label>
               <Select value={formData.guests} onValueChange={(value) => handleChange("guests", value)}>
                 <SelectTrigger className={errors.guests ? "border-destructive" : ""}>
-                  <SelectValue placeholder="Selectează" />
+                  <SelectValue placeholder={t.booking.selectGuests} />
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
                     <SelectItem key={num} value={num.toString()}>
-                      {num} {num === 1 ? "oaspete" : "oaspeți"}
+                      {num} {num === 1 ? t.booking.guest : t.booking.guestsLabel}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -285,11 +310,11 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             <div className="space-y-2">
               <Label className="text-foreground flex items-center gap-2">
                 <Globe className="w-4 h-4 text-primary" />
-                Țara de proveniență *
+                {t.booking.country} *
               </Label>
               <Select value={formData.country} onValueChange={(value) => handleChange("country", value)}>
                 <SelectTrigger className={errors.country ? "border-destructive" : ""}>
-                  <SelectValue placeholder="Selectează" />
+                  <SelectValue placeholder={t.booking.selectCountry} />
                 </SelectTrigger>
                 <SelectContent>
                   {countries.map(country => (
@@ -307,13 +332,13 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
           <div className="space-y-2">
             <Label htmlFor="message" className="text-foreground flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-primary" />
-              Cerințe speciale (opțional)
+              {t.booking.message}
             </Label>
             <Textarea
               id="message"
               value={formData.message}
               onChange={(e) => handleChange("message", e.target.value)}
-              placeholder="Menționează orice cerințe speciale: pat suplimentar, parcare, etc."
+              placeholder={t.booking.messagePlaceholder}
               rows={3}
               className="resize-none"
             />
@@ -327,7 +352,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
               onClick={onClose}
               className="flex-1"
             >
-              Anulează
+              {t.booking.cancel}
             </Button>
             <Button
               type="submit"
@@ -335,11 +360,11 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
               className="flex-1 bg-primary hover:bg-primary/90"
             >
               {isSubmitting ? (
-                "Se trimite..."
+                t.booking.sending
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Trimite pe WhatsApp
+                  {t.booking.submit}
                 </>
               )}
             </Button>
