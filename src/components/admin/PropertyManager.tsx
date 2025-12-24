@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,10 +45,9 @@ import {
   Eye,
   EyeOff,
   GripVertical,
-  Upload,
-  Image as ImageIcon,
-  X
+  Image as ImageIcon
 } from "lucide-react";
+import PropertyImageGallery from "./PropertyImageGallery";
 
 interface Property {
   id: string;
@@ -66,6 +65,15 @@ interface Property {
   updated_at: string;
 }
 
+interface PropertyImage {
+  id: string;
+  property_id: string;
+  image_path: string;
+  display_order: number;
+  is_primary: boolean;
+  created_at: string;
+}
+
 interface PropertyFormData {
   name: string;
   location: string;
@@ -74,7 +82,6 @@ interface PropertyFormData {
   features: string;
   booking_url: string;
   tag: string;
-  image_path: string;
   is_active: boolean;
   display_order: number;
 }
@@ -87,13 +94,12 @@ const initialFormData: PropertyFormData = {
   features: "",
   booking_url: "",
   tag: "",
-  image_path: "",
   is_active: true,
   display_order: 0,
 };
 
 export default function PropertyManager() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -103,86 +109,7 @@ export default function PropertyManager() {
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const getPublicUrl = (path: string) => {
-    if (!path) return null;
-    // Check if it's already a full URL
-    if (path.startsWith('http')) return path;
-    // Check if it's a storage path
-    if (path.startsWith('property-images/')) {
-      const { data } = supabase.storage.from('property-images').getPublicUrl(path.replace('property-images/', ''));
-      return data.publicUrl;
-    }
-    // Otherwise assume it's a local asset
-    return path;
-  };
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: t.admin.error,
-        description: t.admin.properties?.invalidFileType || "Invalid file type. Use JPG, PNG, WebP or GIF.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t.admin.error,
-        description: t.admin.properties?.fileTooLarge || "File too large. Maximum 5MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data } = supabase.storage.from('property-images').getPublicUrl(fileName);
-      
-      setFormData({ ...formData, image_path: data.publicUrl });
-      setImagePreview(data.publicUrl);
-      
-      toast({ title: t.admin.properties?.uploadSuccess || "Image uploaded!" });
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: t.admin.error,
-        description: t.admin.properties?.uploadError || "Could not upload image",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeImage = () => {
-    setFormData({ ...formData, image_path: "" });
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
 
   const fetchProperties = async () => {
     setIsLoading(true);
@@ -203,6 +130,22 @@ export default function PropertyManager() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchPropertyImages = async (propertyId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("property_images")
+        .select("*")
+        .eq("property_id", propertyId)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      setPropertyImages(data || []);
+    } catch (error) {
+      console.error("Error fetching property images:", error);
+      setPropertyImages([]);
     }
   };
 
@@ -235,7 +178,6 @@ export default function PropertyManager() {
         features: featuresArray,
         booking_url: formData.booking_url,
         tag: formData.tag,
-        image_path: formData.image_path || null,
         is_active: formData.is_active,
         display_order: formData.display_order,
       });
@@ -270,6 +212,10 @@ export default function PropertyManager() {
         .map((f) => f.trim())
         .filter((f) => f.length > 0);
 
+      // Get primary image for image_path
+      const primaryImage = propertyImages.find(img => img.is_primary);
+      const imagePath = primaryImage?.image_path || (propertyImages.length > 0 ? propertyImages[0].image_path : null);
+
       const { error } = await supabase
         .from("properties")
         .update({
@@ -280,7 +226,7 @@ export default function PropertyManager() {
           features: featuresArray,
           booking_url: formData.booking_url,
           tag: formData.tag,
-          image_path: formData.image_path || null,
+          image_path: imagePath,
           is_active: formData.is_active,
           display_order: formData.display_order,
         })
@@ -354,7 +300,7 @@ export default function PropertyManager() {
     }
   };
 
-  const openEditDialog = (property: Property) => {
+  const openEditDialog = async (property: Property) => {
     setEditingProperty(property);
     setFormData({
       name: property.name,
@@ -364,23 +310,19 @@ export default function PropertyManager() {
       features: property.features.join(", "),
       booking_url: property.booking_url,
       tag: property.tag,
-      image_path: property.image_path || "",
       is_active: property.is_active,
       display_order: property.display_order,
     });
-    setImagePreview(property.image_path ? getPublicUrl(property.image_path) : null);
+    await fetchPropertyImages(property.id);
     setIsEditOpen(true);
   };
 
   const resetForm = () => {
     setFormData(initialFormData);
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setPropertyImages([]);
   };
 
-  const PropertyFormFields = () => (
+  const PropertyFormFields = ({ showGallery = false }: { showGallery?: boolean }) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -462,56 +404,25 @@ export default function PropertyManager() {
         />
       </div>
 
-      {/* Image Upload */}
-      <div className="space-y-2">
-        <Label>{t.admin.properties?.uploadImage || "Upload Image"}</Label>
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleImageUpload}
-          className="hidden"
+      {/* Image Gallery - only show for editing existing properties */}
+      {showGallery && editingProperty && (
+        <PropertyImageGallery
+          propertyId={editingProperty.id}
+          images={propertyImages}
+          onImagesChange={setPropertyImages}
         />
-        
-        {(imagePreview || formData.image_path) ? (
-          <div className="relative">
-            <img
-              src={imagePreview || getPublicUrl(formData.image_path) || ""}
-              alt="Property preview"
-              className="w-full h-40 object-cover rounded-lg border border-border"
-            />
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2"
-              onClick={removeImage}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+      )}
+
+      {!showGallery && (
+        <div className="p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <ImageIcon className="w-5 h-5" />
+            <p className="text-sm">
+              {t.admin.properties?.gallery || "Image Gallery"}: Disponibilă după salvarea proprietății
+            </p>
           </div>
-        ) : (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
-          >
-            {isUploading ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Uploading...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="w-8 h-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  {t.admin.properties?.dragDropHint || "Click to upload an image"}
-                </p>
-                <p className="text-xs text-muted-foreground">JPG, PNG, WebP, GIF (max 5MB)</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <Switch
@@ -550,7 +461,7 @@ export default function PropertyManager() {
                 {t.admin.properties?.addDescription || "Add a new property to the portfolio"}
               </DialogDescription>
             </DialogHeader>
-            <PropertyFormFields />
+            <PropertyFormFields showGallery={false} />
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddOpen(false)}>
                 {t.admin.cancel}
@@ -734,7 +645,7 @@ export default function PropertyManager() {
               {t.admin.properties?.editDescription || "Update the property details"}
             </DialogDescription>
           </DialogHeader>
-          <PropertyFormFields />
+          <PropertyFormFields showGallery={true} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               {t.admin.cancel}
