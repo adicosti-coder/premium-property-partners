@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-booking-notification]
 verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.get-vapid-public-key]
+verify_jwt = false

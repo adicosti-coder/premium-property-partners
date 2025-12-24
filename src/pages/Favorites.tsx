@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Heart, Trash2, MapPin, Star, Users, BedDouble, Calendar, Eye, GitCompare, Share2, FileDown, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { exportFavoritesPdf } from "@/utils/exportFavoritesPdf";
 import PropertyCompareModal from "@/components/PropertyCompareModal";
 import BookingForm from "@/components/BookingForm";
+import NotificationSettings from "@/components/NotificationSettings";
+import { supabase } from "@/integrations/supabase/client";
 
 const Favorites = () => {
   const { t, language } = useLanguage();
@@ -19,6 +21,21 @@ const Favorites = () => {
   const [compareModalOpen, setCompareModalOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const favoriteProperties = useMemo(() => {
     return properties.filter((p) => favorites.includes(String(p.id)));
@@ -155,6 +172,13 @@ const Favorites = () => {
           </div>
         ) : (
           <>
+            {/* Notification Settings for authenticated users */}
+            {isAuthenticated && (
+              <div className="mb-6">
+                <NotificationSettings />
+              </div>
+            )}
+
             {/* Selection hint */}
             <div className="mb-6 p-4 bg-secondary/50 rounded-lg">
               <p className="text-sm text-muted-foreground text-center">
