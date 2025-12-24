@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles } from "lucide-react";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
@@ -33,6 +35,15 @@ const Guests = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedCapacity, setSelectedCapacity] = useState("all");
+  
+  // Price filter
+  const priceRange = useMemo(() => {
+    const prices = properties.map(p => p.pricePerNight);
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+  }, []);
+  
+  const [priceFilter, setPriceFilter] = useState<[number, number]>([priceRange.min, priceRange.max]);
+  const isPriceFiltered = priceFilter[0] !== priceRange.min || priceFilter[1] !== priceRange.max;
 
   // Scroll animations
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
@@ -65,9 +76,23 @@ const Guests = () => {
         if (selectedCapacity === "5+" && capacity < 5) return false;
       }
       
+      // Price filter
+      if (property.pricePerNight < priceFilter[0] || property.pricePerNight > priceFilter[1]) {
+        return false;
+      }
+      
       return true;
     });
-  }, [searchQuery, selectedLocation, selectedCapacity]);
+  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter]);
+
+  const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered;
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedLocation("all");
+    setSelectedCapacity("all");
+    setPriceFilter([priceRange.min, priceRange.max]);
+  };
 
   const handleToggleFavorite = (propertyId: string, propertyName: string) => {
     const wasFavorite = isFavorite(propertyId);
@@ -181,6 +206,89 @@ const Guests = () => {
                 <SelectItem value="5+">5+ {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Price Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className={`w-full md:w-[180px] justify-start transition-shadow duration-300 hover:shadow-md ${
+                    isPriceFiltered ? 'border-primary text-primary' : ''
+                  }`}
+                >
+                  <Euro className="w-4 h-4 mr-2 text-muted-foreground" />
+                  {isPriceFiltered 
+                    ? `€${priceFilter[0]} - €${priceFilter[1]}`
+                    : (language === 'ro' ? 'Preț' : 'Price')
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4 bg-popover border border-border" align="start">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-sm text-foreground">
+                      {language === 'ro' ? 'Interval de preț' : 'Price range'}
+                    </h4>
+                    {isPriceFiltered && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setPriceFilter([priceRange.min, priceRange.max])}
+                        className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {language === 'ro' ? 'Resetează' : 'Reset'}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="px-2">
+                    <Slider
+                      value={priceFilter}
+                      onValueChange={(value) => setPriceFilter(value as [number, number])}
+                      min={priceRange.min}
+                      max={priceRange.max}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground mb-1 block">Min</label>
+                      <div className="flex items-center gap-1 px-3 py-2 rounded-md border border-input bg-background">
+                        <Euro className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm font-medium">{priceFilter[0]}</span>
+                      </div>
+                    </div>
+                    <div className="text-muted-foreground mt-4">—</div>
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground mb-1 block">Max</label>
+                      <div className="flex items-center gap-1 px-3 py-2 rounded-md border border-input bg-background">
+                        <Euro className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm font-medium">{priceFilter[1]}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    {language === 'ro' ? 'per noapte' : 'per night'}
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Clear all filters */}
+            {hasActiveFilters && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4 mr-1" />
+                {language === 'ro' ? 'Șterge' : 'Clear'}
+              </Button>
+            )}
           </div>
           
           <div 
