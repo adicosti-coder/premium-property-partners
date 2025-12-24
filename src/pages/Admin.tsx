@@ -35,7 +35,9 @@ import {
   Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ro } from "date-fns/locale";
+import { ro, enUS } from "date-fns/locale";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface Lead {
   id: string;
@@ -60,21 +62,16 @@ type LeadFromDB = Omit<Lead, 'simulation_data'> & {
   simulation_data: unknown;
 };
 
-const propertyTypeLabels: Record<string, string> = {
-  apartament: "Apartament",
-  casa: "Casă",
-  studio: "Studio",
-  penthouse: "Penthouse",
-  vila: "Vilă",
-};
-
 const Admin = () => {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const dateLocale = language === 'ro' ? ro : enUS;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -117,8 +114,8 @@ const Admin = () => {
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast({
-        title: "Eroare",
-        description: "Nu s-au putut încărca lead-urile.",
+        title: t.admin.error,
+        description: t.admin.loadError,
         variant: "destructive",
       });
     } finally {
@@ -132,12 +129,12 @@ const Admin = () => {
       const { error } = await supabase.from("leads").delete().eq("id", id);
       if (error) throw error;
       setLeads(leads.filter((lead) => lead.id !== id));
-      toast({ title: "Lead șters cu succes!" });
+      toast({ title: t.admin.deleteSuccess });
     } catch (error) {
       console.error("Error deleting lead:", error);
       toast({
-        title: "Eroare",
-        description: "Nu s-a putut șterge lead-ul.",
+        title: t.admin.error,
+        description: t.admin.deleteError,
         variant: "destructive",
       });
     } finally {
@@ -171,19 +168,20 @@ const Admin = () => {
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Site
+              {t.admin.backToSite}
             </Button>
             <div className="h-6 w-px bg-border" />
             <h1 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              Panou Admin - Lead-uri
+              {t.admin.title}
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user.email}</span>
+            <LanguageSwitcher />
+            <span className="text-sm text-muted-foreground hidden sm:inline">{user.email}</span>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              Deconectare
+              <span className="hidden sm:inline">{t.admin.logout}</span>
             </Button>
           </div>
         </div>
@@ -201,7 +199,7 @@ const Admin = () => {
                 <p className="text-2xl font-serif font-bold text-foreground">
                   {leads.length}
                 </p>
-                <p className="text-sm text-muted-foreground">Total Lead-uri</p>
+                <p className="text-sm text-muted-foreground">{t.admin.totalLeads}</p>
               </div>
             </div>
           </div>
@@ -220,7 +218,7 @@ const Admin = () => {
                     : 0}{" "}
                   m²
                 </p>
-                <p className="text-sm text-muted-foreground">Suprafață Medie</p>
+                <p className="text-sm text-muted-foreground">{t.admin.avgArea}</p>
               </div>
             </div>
           </div>
@@ -241,7 +239,7 @@ const Admin = () => {
                     : 0}{" "}
                   €
                 </p>
-                <p className="text-sm text-muted-foreground">Profit Mediu/Lună</p>
+                <p className="text-sm text-muted-foreground">{t.admin.avgProfit}</p>
               </div>
             </div>
           </div>
@@ -258,7 +256,7 @@ const Admin = () => {
                       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                   ).length}
                 </p>
-                <p className="text-sm text-muted-foreground">Săptămâna Aceasta</p>
+                <p className="text-sm text-muted-foreground">{t.admin.thisWeek}</p>
               </div>
             </div>
           </div>
@@ -274,23 +272,22 @@ const Admin = () => {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Users className="w-16 h-16 text-muted-foreground/30 mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">
-                Nu există lead-uri încă
+                {t.admin.noLeads}
               </h3>
               <p className="text-muted-foreground">
-                Lead-urile vor apărea aici după ce utilizatorii completează
-                formularul din calculator.
+                {t.admin.noLeadsDescription}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nume</TableHead>
-                  <TableHead>WhatsApp</TableHead>
-                  <TableHead>Proprietate</TableHead>
-                  <TableHead>Profit Estimat</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="w-[80px]">Acțiuni</TableHead>
+                  <TableHead>{t.admin.tableHeaders.name}</TableHead>
+                  <TableHead>{t.admin.tableHeaders.whatsapp}</TableHead>
+                  <TableHead>{t.admin.tableHeaders.property}</TableHead>
+                  <TableHead>{t.admin.tableHeaders.estimatedProfit}</TableHead>
+                  <TableHead>{t.admin.tableHeaders.date}</TableHead>
+                  <TableHead className="w-[80px]">{t.admin.tableHeaders.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -311,7 +308,7 @@ const Admin = () => {
                     <TableCell>
                       <div>
                         <span className="font-medium">
-                          {propertyTypeLabels[lead.property_type] ||
+                          {t.admin.propertyTypes[lead.property_type as keyof typeof t.admin.propertyTypes] ||
                             lead.property_type}
                         </span>
                         <span className="text-muted-foreground ml-2">
@@ -322,16 +319,16 @@ const Admin = () => {
                     <TableCell>
                       <div>
                         <span className="font-semibold text-primary">
-                          {lead.calculated_net_profit.toLocaleString()} €/lună
+                          {lead.calculated_net_profit.toLocaleString()} €{t.admin.perMonth}
                         </span>
                         <p className="text-sm text-muted-foreground">
-                          {lead.calculated_yearly_profit.toLocaleString()} €/an
+                          {lead.calculated_yearly_profit.toLocaleString()} €{t.admin.perYear}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {format(new Date(lead.created_at), "d MMM yyyy, HH:mm", {
-                        locale: ro,
+                        locale: dateLocale,
                       })}
                     </TableCell>
                     <TableCell>
@@ -351,19 +348,18 @@ const Admin = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Șterge lead-ul?</AlertDialogTitle>
+                            <AlertDialogTitle>{t.admin.deleteLead}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Această acțiune nu poate fi anulată. Lead-ul va fi
-                              șters permanent.
+                              {t.admin.deleteDescription}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Anulează</AlertDialogCancel>
+                            <AlertDialogCancel>{t.admin.cancel}</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(lead.id)}
                               className="bg-destructive hover:bg-destructive/90"
                             >
-                              Șterge
+                              {t.admin.delete}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
