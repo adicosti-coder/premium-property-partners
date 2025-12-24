@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X } from "lucide-react";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,6 +44,9 @@ const Guests = () => {
   
   const [priceFilter, setPriceFilter] = useState<[number, number]>([priceRange.min, priceRange.max]);
   const isPriceFiltered = priceFilter[0] !== priceRange.min || priceFilter[1] !== priceRange.max;
+  
+  // Sort
+  const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "rating-desc">("default");
 
   // Scroll animations
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
@@ -57,7 +60,7 @@ const Guests = () => {
   }, []);
 
   const filteredProperties = useMemo(() => {
-    return properties.filter((property) => {
+    let result = properties.filter((property) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = property.name.toLowerCase().includes(query);
@@ -83,15 +86,34 @@ const Guests = () => {
       
       return true;
     });
-  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter]);
 
-  const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered;
+    // Sort
+    if (sortBy !== "default") {
+      result = [...result].sort((a, b) => {
+        switch (sortBy) {
+          case "price-asc":
+            return a.pricePerNight - b.pricePerNight;
+          case "price-desc":
+            return b.pricePerNight - a.pricePerNight;
+          case "rating-desc":
+            return b.rating - a.rating;
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return result;
+  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy]);
+
+  const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default";
 
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedLocation("all");
     setSelectedCapacity("all");
     setPriceFilter([priceRange.min, priceRange.max]);
+    setSortBy("default");
   };
 
   const handleToggleFavorite = (propertyId: string, propertyName: string) => {
@@ -276,6 +298,39 @@ const Guests = () => {
                 </div>
               </PopoverContent>
             </Popover>
+
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
+              <SelectTrigger className={`w-full md:w-[180px] transition-shadow duration-300 hover:shadow-md ${
+                sortBy !== "default" ? 'border-primary text-primary' : ''
+              }`}>
+                <ArrowUpDown className="w-4 h-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder={language === 'ro' ? 'Sortare' : 'Sort'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">
+                  {language === 'ro' ? 'Implicit' : 'Default'}
+                </SelectItem>
+                <SelectItem value="price-asc">
+                  <span className="flex items-center gap-2">
+                    <TrendingUp className="w-3 h-3" />
+                    {language === 'ro' ? 'Preț crescător' : 'Price: Low to High'}
+                  </span>
+                </SelectItem>
+                <SelectItem value="price-desc">
+                  <span className="flex items-center gap-2">
+                    <TrendingDown className="w-3 h-3" />
+                    {language === 'ro' ? 'Preț descrescător' : 'Price: High to Low'}
+                  </span>
+                </SelectItem>
+                <SelectItem value="rating-desc">
+                  <span className="flex items-center gap-2">
+                    <Star className="w-3 h-3" />
+                    {language === 'ro' ? 'Rating' : 'Top Rated'}
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Clear all filters */}
             {hasActiveFilters && (
