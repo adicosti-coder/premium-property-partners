@@ -1,5 +1,8 @@
-import { Key, Clock, Sparkles, ShieldCheck, Wifi, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Key, Clock, Sparkles, ShieldCheck, Wifi, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import BookingForm from "./BookingForm";
 
 const features = [
   {
@@ -35,6 +38,11 @@ const features = [
 ];
 
 const GuestSection = () => {
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
+
   return (
     <section id="oaspeti" className="py-24 bg-card relative overflow-hidden">
       {/* Background pattern */}
@@ -48,7 +56,12 @@ const GuestSection = () => {
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-16 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <Key className="w-4 h-4 text-primary" />
             <span className="text-primary text-sm font-semibold">Pentru Oaspeți</span>
@@ -61,11 +74,17 @@ const GuestSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
+        <div 
+          ref={gridRef}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12"
+        >
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group p-6 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border hover:border-primary/20 transition-all duration-300"
+              className={`group p-6 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border hover:border-primary/20 transition-all duration-500 ${
+                gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
             >
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                 <feature.icon className="w-6 h-6 text-primary" />
@@ -80,15 +99,38 @@ const GuestSection = () => {
           ))}
         </div>
 
-        <div className="text-center">
-          <Button variant="premium" size="xl" onClick={() => {
-            const portfolioSection = document.getElementById('portofoliu');
-            portfolioSection?.scrollIntoView({ behavior: 'smooth' });
-          }}>
-            Vezi Apartamentele Disponibile
+        <div 
+          ref={ctaRef}
+          className={`text-center flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 ${
+            ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          <Button 
+            variant="hero" 
+            size="xl" 
+            onClick={() => setBookingOpen(true)}
+          >
+            <Calendar className="w-5 h-5 mr-2" />
+            Rezervă Acum
+          </Button>
+          <Button 
+            variant="heroOutline" 
+            size="xl" 
+            onClick={() => {
+              const portfolioSection = document.getElementById('portofoliu');
+              portfolioSection?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            Vezi Apartamentele
           </Button>
         </div>
       </div>
+
+      {/* Booking Form Modal */}
+      <BookingForm 
+        isOpen={bookingOpen} 
+        onClose={() => setBookingOpen(false)} 
+      />
     </section>
   );
 };
