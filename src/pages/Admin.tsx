@@ -36,12 +36,14 @@ import {
   Calendar,
   CalendarDays,
   ShieldAlert,
+  Building,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import BookingManager from "@/components/admin/BookingManager";
+import PropertyManager from "@/components/admin/PropertyManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -219,6 +221,10 @@ const Admin = () => {
             <TabsTrigger value="bookings" className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4" />
               {t.admin.tabs?.bookings || "Bookings"}
+            </TabsTrigger>
+            <TabsTrigger value="properties" className="flex items-center gap-2">
+              <Building className="w-4 h-4" />
+              {t.admin.tabs?.properties || "Properties"}
             </TabsTrigger>
           </TabsList>
 
@@ -412,6 +418,11 @@ const Admin = () => {
           {/* Bookings Tab */}
           <TabsContent value="bookings">
             <BookingManager />
+          </TabsContent>
+
+          {/* Properties Tab */}
+          <TabsContent value="properties">
+            <PropertyManager />
           </TabsContent>
         </Tabs>
       </div>
