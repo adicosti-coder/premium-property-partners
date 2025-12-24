@@ -27,6 +27,7 @@ export interface Property {
   bedrooms: number;
   bathrooms: number;
   size: number;
+  pricePerNight: number;
   amenities: string[];
   amenitiesEn: string[];
   houseRules: string[];
@@ -58,6 +59,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "55\" Smart TV", "Air conditioning", "Washing machine", "Fully equipped kitchen", "Free underground parking", "Self check-in", "Large terrace", "Premium linens", "Airport shuttle"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Fără petreceri", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "No parties", "Quiet hours after 10 PM"],
+    pricePerNight: 85,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -83,6 +85,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Fully equipped kitchen", "Free parking", "Self check-in", "Balcony", "Airport shuttle", "Panoramic view"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 75,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -108,6 +111,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Fully equipped kitchen", "Free parking", "Self check-in", "Large balcony", "Airport shuttle", "Private bathroom"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 95,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -133,6 +137,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Equipped kitchen", "Free underground parking", "Self check-in", "Balcony", "Airport shuttle", "Panoramic view"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 65,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -158,6 +163,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Equipped kitchen", "Free underground parking", "Self check-in", "Balcony", "Airport shuttle", "Private bathroom"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 60,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -183,6 +189,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Fully equipped kitchen", "Parking", "Balcony", "Airport shuttle", "View", "Non-smoking rooms"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 55,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -208,6 +215,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Washing machine", "Fully equipped kitchen", "Free parking", "Self check-in", "Large terrace", "Airport shuttle"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Fără petreceri", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "No parties", "Quiet hours after 10 PM"],
+    pricePerNight: 80,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -233,6 +241,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Equipped kitchen", "Free underground parking", "Balcony", "Private bathroom", "Non-smoking rooms", "Shower"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 58,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -258,6 +267,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Fully equipped kitchen", "Free parking", "Airport shuttle", "View", "Non-smoking rooms", "Private bathroom"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Fără petreceri", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "No parties", "Quiet hours after 10 PM"],
+    pricePerNight: 90,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -283,6 +293,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Equipped kitchen", "Free parking", "Large balcony", "Airport shuttle", "Private bathroom"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Fără petreceri", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "No parties", "Quiet hours after 10 PM"],
+    pricePerNight: 68,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },
@@ -308,6 +319,7 @@ export const properties: Property[] = [
     amenitiesEn: ["High-speed WiFi", "Smart TV", "Air conditioning", "Equipped kitchen", "Free parking", "Balcony", "Private bathroom", "Non-smoking rooms", "Shower"],
     houseRules: ["Fără fumat", "Fără animale de companie", "Liniște după ora 22:00"],
     houseRulesEn: ["No smoking", "No pets", "Quiet hours after 10 PM"],
+    pricePerNight: 52,
     checkInTime: "15:00",
     checkOutTime: "11:00",
   },

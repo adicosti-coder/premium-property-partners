@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check, Map } from "lucide-react";
+import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check, Map, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -397,11 +397,17 @@ const PropertyGallery = () => {
 
                 {/* Content */}
                 <div className="p-5">
-                  <Link to={`/proprietate/${property.slug}`}>
-                    <h3 className="text-lg font-serif font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-                      {property.name}
-                    </h3>
-                  </Link>
+                  <div className="flex items-start justify-between mb-1">
+                    <Link to={`/proprietate/${property.slug}`}>
+                      <h3 className="text-lg font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {property.name}
+                      </h3>
+                    </Link>
+                    <div className="flex items-baseline gap-1 ml-2 flex-shrink-0">
+                      <span className="text-lg font-bold text-primary">€{property.pricePerNight}</span>
+                      <span className="text-xs text-muted-foreground">/{language === 'ro' ? 'noapte' : 'night'}</span>
+                    </div>
+                  </div>
 
                   {/* Description */}
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">

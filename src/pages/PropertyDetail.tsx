@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getPropertyBySlug } from "@/data/properties";
 import BookingForm from "@/components/BookingForm";
+import StayCalculator from "@/components/StayCalculator";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -238,9 +239,16 @@ const PropertyDetail = () => {
               </div>
             </div>
 
-            {/* Right Column - Booking Card */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 bg-card rounded-2xl border border-border p-6 shadow-elegant">
+            {/* Right Column - Stay Calculator & Booking Card */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Stay Calculator */}
+              <StayCalculator 
+                property={property} 
+                onBook={() => setBookingOpen(true)} 
+              />
+
+              {/* Quick Info Card */}
+              <div className="bg-card rounded-2xl border border-border p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-1">
                     <Star className="w-5 h-5 fill-primary text-primary" />
@@ -265,15 +273,6 @@ const PropertyDetail = () => {
                     <span>{t.propertyDetail.privateParking}</span>
                   </div>
                 </div>
-
-                <Button 
-                  className="w-full mb-3" 
-                  size="lg"
-                  onClick={() => setBookingOpen(true)}
-                >
-                  <Calendar className="w-5 h-5 mr-2" />
-                  {t.propertyDetail.bookDirect}
-                </Button>
 
                 <Button 
                   variant="outline" 
