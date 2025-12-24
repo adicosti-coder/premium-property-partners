@@ -20,11 +20,18 @@ export const translations = {
       subtitle: "Transformăm apartamentul tău din Timișoara într-o investiție profitabilă. Gestionăm totul — de la rezervări la curățenie — pentru ca tu să te bucuri doar de rezultate.",
       cta: "Solicită o Evaluare Gratuită",
       ctaSecondary: "Află Cum Funcționează",
+      ctaGuests: "Pentru Oaspeți",
       trustTitle: "De Încredere Pentru",
       stats: {
         properties: "Proprietăți Gestionate",
         occupancy: "Rată de Ocupare",
         rating: "Rating Mediu",
+      },
+      tags: {
+        hotelManagement: "Administrare regim hotelier",
+        dynamicPricing: "Prețuri dinamice",
+        selfCheckIn: "Self check-in 24/7",
+        cleaning: "Curățenie profesională",
       },
     },
     
@@ -720,11 +727,18 @@ Mulțumesc!`,
       subtitle: "We transform your Timișoara apartment into a profitable investment. We handle everything — from bookings to cleaning — so you can just enjoy the results.",
       cta: "Request a Free Evaluation",
       ctaSecondary: "Learn How It Works",
+      ctaGuests: "For Guests",
       trustTitle: "Trusted For",
       stats: {
         properties: "Properties Managed",
         occupancy: "Occupancy Rate",
         rating: "Average Rating",
+      },
+      tags: {
+        hotelManagement: "Hotel-style management",
+        dynamicPricing: "Dynamic pricing",
+        selfCheckIn: "Self check-in 24/7",
+        cleaning: "Professional cleaning",
       },
     },
     
