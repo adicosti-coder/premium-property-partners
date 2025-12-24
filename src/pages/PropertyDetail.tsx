@@ -35,6 +35,11 @@ const PropertyDetail = () => {
   const { t, language } = useLanguage();
   const [dbImages, setDbImages] = useState<PropertyImage[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
+  const [isAutoplay, setIsAutoplay] = useState(false);
+  const autoplayRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 50;
 
   // Fetch images from database based on property name/slug
   useEffect(() => {
@@ -85,6 +90,14 @@ const PropertyDetail = () => {
     ? dbImages.map(img => getPublicUrl(img.image_path))
     : property?.images || [];
 
+  const nextImage = useCallback(() => {
+    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
+  }, [galleryImages.length]);
+
+  const prevImage = useCallback(() => {
+    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  }, [galleryImages.length]);
+
   if (!property) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -101,20 +114,6 @@ const PropertyDetail = () => {
       </div>
     );
   }
-
-  const [isAutoplay, setIsAutoplay] = useState(false);
-  const autoplayRef = useRef<NodeJS.Timeout | null>(null);
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-  const minSwipeDistance = 50;
-
-  const nextImage = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-  }, [galleryImages.length]);
-
-  const prevImage = useCallback(() => {
-    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-  }, [galleryImages.length]);
 
   // Keyboard navigation
   useEffect(() => {
