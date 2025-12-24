@@ -432,6 +432,21 @@ Mulțumesc!`,
       redirectingMessage: "Vei fi redirecționat în curând...",
       invalidResetLink: "Link invalid",
       invalidResetLinkMessage: "Linkul de resetare este invalid sau a expirat. Te rugăm să soliciți unul nou.",
+      passwordStrength: {
+        label: "Puterea parolei",
+        weak: "Slabă",
+        fair: "Acceptabilă",
+        good: "Bună",
+        strong: "Puternică",
+        veryStrong: "Foarte puternică",
+      },
+      passwordCriteria: {
+        minLength: "Minim 6 caractere",
+        hasUppercase: "O literă mare",
+        hasLowercase: "O literă mică",
+        hasNumber: "O cifră",
+        hasSpecial: "Un caracter special (!@#$%^&*)",
+      },
     },
     
     // Admin
@@ -920,6 +935,21 @@ Thank you!`,
       redirectingMessage: "You will be redirected shortly...",
       invalidResetLink: "Invalid Link",
       invalidResetLinkMessage: "The reset link is invalid or has expired. Please request a new one.",
+      passwordStrength: {
+        label: "Password strength",
+        weak: "Weak",
+        fair: "Fair",
+        good: "Good",
+        strong: "Strong",
+        veryStrong: "Very strong",
+      },
+      passwordCriteria: {
+        minLength: "At least 6 characters",
+        hasUppercase: "One uppercase letter",
+        hasLowercase: "One lowercase letter",
+        hasNumber: "One number",
+        hasSpecial: "One special character (!@#$%^&*)",
+      },
     },
     
     // Admin

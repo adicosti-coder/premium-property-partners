@@ -9,6 +9,7 @@ import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -262,6 +263,7 @@ const Auth = () => {
                     maxLength={72}
                   />
                 </div>
+                {mode === "signup" && <PasswordStrengthIndicator password={password} />}
               </div>
             )}
 
