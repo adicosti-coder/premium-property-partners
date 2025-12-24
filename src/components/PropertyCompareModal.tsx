@@ -1,4 +1,4 @@
-import { X, MapPin, Users, BedDouble, Star, Bath, Maximize } from "lucide-react";
+import { X, MapPin, Users, BedDouble, Star, Bath, Maximize, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Property } from "@/data/properties";
+import { jsPDF } from "jspdf";
 
 interface PropertyCompareModalProps {
   open: boolean;
@@ -120,6 +121,96 @@ const PropertyCompareModal = ({
     },
   ];
 
+  const exportToPdf = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text(t.portfolio.compare.title, 14, 20);
+    
+    // Date
+    doc.setFontSize(10);
+    doc.text(`${t.portfolio.filters.generatedOn}: ${new Date().toLocaleDateString(language === "ro" ? "ro-RO" : "en-US")}`, 14, 28);
+    
+    let yPos = 40;
+    const colWidth = (pageWidth - 50) / properties.length;
+    const labelWidth = 35;
+    
+    // Property names header
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    properties.forEach((p, idx) => {
+      const xPos = labelWidth + 14 + idx * colWidth;
+      doc.text(p.name, xPos, yPos, { maxWidth: colWidth - 5 });
+    });
+    
+    yPos += 15;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    
+    // Comparison rows
+    const rows = [
+      { label: t.portfolio.compare.location, getValue: (p: Property) => p.location },
+      { label: t.portfolio.compare.rating, getValue: (p: Property) => `${p.rating} (${p.reviews} ${t.portfolio.reviews})` },
+      { label: t.portfolio.compare.capacity, getValue: (p: Property) => `${p.capacity} ${t.portfolio.guests}` },
+      { label: t.portfolio.compare.bedrooms, getValue: (p: Property) => `${p.bedrooms}` },
+      { label: t.portfolio.compare.bathrooms, getValue: (p: Property) => `${p.bathrooms}` },
+      { label: t.portfolio.compare.size, getValue: (p: Property) => `${p.size} m²` },
+      { label: t.portfolio.compare.checkIn, getValue: (p: Property) => p.checkInTime },
+      { label: t.portfolio.compare.checkOut, getValue: (p: Property) => p.checkOutTime },
+      { label: t.portfolio.filters.features, getValue: (p: Property) => p.features.join(", ") },
+    ];
+    
+    rows.forEach((row, rowIdx) => {
+      if (yPos > 180) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      // Alternate row background
+      if (rowIdx % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(14, yPos - 5, pageWidth - 28, 12, "F");
+      }
+      
+      doc.setFont("helvetica", "bold");
+      doc.text(row.label, 14, yPos);
+      doc.setFont("helvetica", "normal");
+      
+      properties.forEach((p, idx) => {
+        const xPos = labelWidth + 14 + idx * colWidth;
+        const value = row.getValue(p);
+        doc.text(value, xPos, yPos, { maxWidth: colWidth - 5 });
+      });
+      
+      yPos += 12;
+    });
+    
+    // Amenities section
+    if (yPos > 140) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    yPos += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text(t.portfolio.compare.amenities, 14, yPos);
+    yPos += 8;
+    doc.setFont("helvetica", "normal");
+    
+    properties.forEach((p, idx) => {
+      const xPos = labelWidth + 14 + idx * colWidth;
+      const amenities = (language === "en" ? p.amenitiesEn : p.amenities).slice(0, 6);
+      amenities.forEach((amenity, aIdx) => {
+        if (yPos + aIdx * 5 > 190) return;
+        doc.text(`• ${amenity}`, xPos, yPos + aIdx * 5, { maxWidth: colWidth - 5 });
+      });
+    });
+    
+    doc.save(`comparison-${Date.now()}.pdf`);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] p-0 overflow-hidden">
@@ -184,7 +275,11 @@ const PropertyCompareModal = ({
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
 
-        <div className="p-4 border-t border-border flex justify-end">
+        <div className="p-4 border-t border-border flex justify-end gap-2">
+          <Button variant="outline" onClick={exportToPdf}>
+            <FileDown className="w-4 h-4 mr-2" />
+            {t.portfolio.filters.exportPdf}
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t.portfolio.compare.close}
           </Button>
