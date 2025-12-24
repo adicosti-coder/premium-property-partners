@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { compressImage } from "@/utils/imageCompression";
 import { 
   Loader2, 
   Upload, 
@@ -212,7 +213,7 @@ export default function PropertyImageGallery({
     if (!files || files.length === 0) return;
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 10 * 1024 * 1024; // 10MB before compression
 
     setIsUploading(true);
     const newImages: PropertyImage[] = [];
@@ -233,18 +234,26 @@ export default function PropertyImageGallery({
         if (file.size > maxSize) {
           toast({
             title: t.admin.error,
-            description: `${file.name}: ${t.admin.properties?.fileTooLarge || "File too large"}`,
+            description: `${file.name}: ${t.admin.properties?.fileTooLarge || "File too large (max 10MB)"}`,
             variant: "destructive",
           });
           continue;
         }
 
-        const fileExt = file.name.split('.').pop();
+        // Compress the image before uploading
+        const compressedFile = await compressImage(file, {
+          maxWidth: 1920,
+          maxHeight: 1920,
+          quality: 0.85,
+          outputType: 'image/webp',
+        });
+
+        const fileExt = compressedFile.name.split('.').pop() || 'webp';
         const fileName = `${propertyId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(fileName, file);
+          .upload(fileName, compressedFile);
 
         if (uploadError) {
           console.error("Upload error:", uploadError);
@@ -277,7 +286,7 @@ export default function PropertyImageGallery({
         onImagesChange([...images, ...newImages]);
         toast({ 
           title: t.admin.properties?.uploadSuccess || "Images uploaded!",
-          description: `${newImages.length} ${t.admin.properties?.imagesUploaded || "image(s) uploaded"}`
+          description: `${newImages.length} ${t.admin.properties?.imagesUploaded || "image(s) uploaded and compressed"}`
         });
       }
     } catch (error) {
