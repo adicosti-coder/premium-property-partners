@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield } from "lucide-react";
+import { Menu, X, Shield, Heart } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useFavorites } from "@/hooks/useFavorites";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
+  const { favorites } = useFavorites();
 
   const navLinks = [
     { href: "#beneficii", label: t.nav.benefits },
@@ -43,6 +45,21 @@ const Header = () => {
           
           {/* CTA & Language & Mobile Menu */}
           <div className="flex items-center gap-2 md:gap-4">
+            {/* Favorites link */}
+            {favorites.length > 0 && (
+              <Link to="/favorite">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="relative text-muted-foreground hover:text-foreground"
+                >
+                  <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                    {favorites.length}
+                  </span>
+                </Button>
+              </Link>
+            )}
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
             <Link to="/auth">
