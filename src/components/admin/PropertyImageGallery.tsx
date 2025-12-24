@@ -9,7 +9,10 @@ import {
   X, 
   Star,
   GripVertical,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn
 } from "lucide-react";
 import {
   DndContext,
@@ -28,6 +31,10 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 
 interface PropertyImage {
   id: string;
@@ -49,6 +56,7 @@ interface SortableImageItemProps {
   getPublicUrl: (path: string) => string | null;
   onSetPrimary: (image: PropertyImage) => void;
   onDelete: (image: PropertyImage) => void;
+  onPreview: (image: PropertyImage) => void;
   deletingId: string | null;
   t: any;
 }
@@ -58,6 +66,7 @@ function SortableImageItem({
   getPublicUrl, 
   onSetPrimary, 
   onDelete, 
+  onPreview,
   deletingId,
   t 
 }: SortableImageItemProps) {
@@ -97,16 +106,27 @@ function SortableImageItem({
       <img
         src={getPublicUrl(image.image_path) || ""}
         alt="Property"
-        className="w-full h-24 object-cover"
+        className="w-full h-24 object-cover cursor-pointer"
+        onClick={() => onPreview(image)}
       />
       
       {/* Overlay with actions */}
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
         <Button
           type="button"
           variant="secondary"
           size="icon"
-          className="h-8 w-8"
+          className="h-8 w-8 pointer-events-auto"
+          onClick={() => onPreview(image)}
+          title={t.admin.properties?.preview || "Preview"}
+        >
+          <ZoomIn className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8 pointer-events-auto"
           onClick={() => onSetPrimary(image)}
           title={t.admin.properties?.setPrimary || "Set as primary"}
         >
@@ -116,7 +136,7 @@ function SortableImageItem({
           type="button"
           variant="destructive"
           size="icon"
-          className="h-8 w-8"
+          className="h-8 w-8 pointer-events-auto"
           onClick={() => onDelete(image)}
           disabled={deletingId === image.id}
         >
@@ -146,6 +166,7 @@ export default function PropertyImageGallery({
   const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<PropertyImage | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
@@ -164,6 +185,26 @@ export default function PropertyImageGallery({
     if (path.startsWith('http')) return path;
     const { data } = supabase.storage.from('property-images').getPublicUrl(path);
     return data.publicUrl;
+  };
+
+  const sortedImages = [...images].sort((a, b) => a.display_order - b.display_order);
+
+  const handlePreview = (image: PropertyImage) => {
+    setPreviewImage(image);
+  };
+
+  const handlePrevImage = () => {
+    if (!previewImage) return;
+    const currentIndex = sortedImages.findIndex(img => img.id === previewImage.id);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : sortedImages.length - 1;
+    setPreviewImage(sortedImages[prevIndex]);
+  };
+
+  const handleNextImage = () => {
+    if (!previewImage) return;
+    const currentIndex = sortedImages.findIndex(img => img.id === previewImage.id);
+    const nextIndex = currentIndex < sortedImages.length - 1 ? currentIndex + 1 : 0;
+    setPreviewImage(sortedImages[nextIndex]);
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -370,7 +411,9 @@ export default function PropertyImageGallery({
     }
   };
 
-  const sortedImages = [...images].sort((a, b) => a.display_order - b.display_order);
+  const currentPreviewIndex = previewImage 
+    ? sortedImages.findIndex(img => img.id === previewImage.id) + 1 
+    : 0;
 
   return (
     <div className="space-y-4">
@@ -445,6 +488,7 @@ export default function PropertyImageGallery({
                   getPublicUrl={getPublicUrl}
                   onSetPrimary={handleSetPrimary}
                   onDelete={handleDeleteImage}
+                  onPreview={handlePreview}
                   deletingId={deletingId}
                   t={t}
                 />
@@ -471,6 +515,63 @@ export default function PropertyImageGallery({
           {t.admin.properties?.dragToReorder || "Drag images to reorder"}
         </p>
       )}
+
+      {/* Lightbox Preview */}
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+          <div className="relative flex items-center justify-center min-h-[60vh]">
+            {/* Close button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 text-white hover:bg-white/20"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X className="w-6 h-6" />
+            </Button>
+
+            {/* Navigation - Previous */}
+            {sortedImages.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-2 z-10 text-white hover:bg-white/20 h-12 w-12"
+                onClick={handlePrevImage}
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </Button>
+            )}
+
+            {/* Image */}
+            {previewImage && (
+              <img
+                src={getPublicUrl(previewImage.image_path) || ""}
+                alt="Preview"
+                className="max-h-[80vh] max-w-full object-contain"
+              />
+            )}
+
+            {/* Navigation - Next */}
+            {sortedImages.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 z-10 text-white hover:bg-white/20 h-12 w-12"
+                onClick={handleNextImage}
+              >
+                <ChevronRight className="w-8 h-8" />
+              </Button>
+            )}
+
+            {/* Image counter */}
+            {sortedImages.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+                {currentPreviewIndex} / {sortedImages.length}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
