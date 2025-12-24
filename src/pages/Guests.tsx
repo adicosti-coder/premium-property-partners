@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Home, Sparkles } from "lucide-react";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import PropertyImageCarousel from "@/components/PropertyImageCarousel";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -213,24 +214,22 @@ const Guests = () => {
                 }`}
                 style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
               >
-                {/* Image */}
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={property.images[0]}
-                    alt={property.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                {/* Image Carousel */}
+                <div className="relative">
+                  <PropertyImageCarousel 
+                    images={property.images} 
+                    propertyName={property.name}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent pointer-events-none" />
                   
                   {/* Location badge */}
-                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5">
+                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5 z-20">
                     <MapPin className="w-3.5 h-3.5 text-primary" />
                     <span className="text-xs font-medium text-foreground">{property.location}</span>
                   </div>
 
                   {/* Rating badge */}
-                  <div className="absolute top-4 right-14 px-2.5 py-1.5 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
+                  <div className="absolute top-4 right-14 px-2.5 py-1.5 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1 z-20">
                     <Star className="w-3.5 h-3.5 fill-primary-foreground text-primary-foreground" />
                     <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
                   </div>
@@ -238,7 +237,7 @@ const Guests = () => {
                   {/* Favorite button */}
                   <button
                     onClick={() => handleToggleFavorite(String(property.id), property.name)}
-                    className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-20 ${
                       isFavorite(String(property.id))
                         ? "bg-red-500 text-white"
                         : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
@@ -249,7 +248,7 @@ const Guests = () => {
                   </button>
 
                   {/* Price badge */}
-                  <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-background/90 backdrop-blur-sm border border-border">
+                  <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-background/90 backdrop-blur-sm border border-border z-20">
                     <span className="text-lg font-bold text-primary">€{property.pricePerNight}</span>
                     <span className="text-xs text-muted-foreground ml-1">/{language === 'ro' ? 'noapte' : 'night'}</span>
                   </div>
