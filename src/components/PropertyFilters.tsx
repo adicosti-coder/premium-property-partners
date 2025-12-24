@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { MapPin, Users, Sparkles, X, Search } from "lucide-react";
+import { MapPin, Users, Sparkles, X, Search, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,15 +12,19 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { properties } from "@/data/properties";
 
+export type SortOption = "default" | "rating-desc" | "rating-asc" | "reviews-desc" | "reviews-asc";
+
 interface PropertyFiltersProps {
   searchQuery: string;
   selectedLocation: string;
   selectedCapacity: string;
   selectedFeature: string;
+  sortBy: SortOption;
   onSearchChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onCapacityChange: (value: string) => void;
   onFeatureChange: (value: string) => void;
+  onSortChange: (value: SortOption) => void;
   onClearFilters: () => void;
 }
 
@@ -29,10 +33,12 @@ const PropertyFilters = ({
   selectedLocation,
   selectedCapacity,
   selectedFeature,
+  sortBy,
   onSearchChange,
   onLocationChange,
   onCapacityChange,
   onFeatureChange,
+  onSortChange,
   onClearFilters,
 }: PropertyFiltersProps) => {
   const { t } = useLanguage();
@@ -59,7 +65,7 @@ const PropertyFilters = ({
     return uniqueFeatures.sort();
   }, []);
 
-  const hasActiveFilters = searchQuery !== "" || selectedLocation !== "all" || selectedCapacity !== "all" || selectedFeature !== "all";
+  const hasActiveFilters = searchQuery !== "" || selectedLocation !== "all" || selectedCapacity !== "all" || selectedFeature !== "all" || sortBy !== "default";
 
   return (
     <div className="flex flex-col gap-4 mb-10">
@@ -137,6 +143,23 @@ const PropertyFilters = ({
                   {feature}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sort Filter */}
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortOption)}>
+            <SelectTrigger className="w-[180px] bg-card border-border">
+              <SelectValue placeholder={t.portfolio.filters.sortBy} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="default">{t.portfolio.filters.sortDefault}</SelectItem>
+              <SelectItem value="rating-desc">{t.portfolio.filters.sortRatingDesc}</SelectItem>
+              <SelectItem value="rating-asc">{t.portfolio.filters.sortRatingAsc}</SelectItem>
+              <SelectItem value="reviews-desc">{t.portfolio.filters.sortReviewsDesc}</SelectItem>
+              <SelectItem value="reviews-asc">{t.portfolio.filters.sortReviewsAsc}</SelectItem>
             </SelectContent>
           </Select>
         </div>
