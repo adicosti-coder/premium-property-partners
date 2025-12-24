@@ -1,4 +1,8 @@
+import { useLanguage } from "@/i18n/LanguageContext";
+
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-primary py-12 border-t border-cream/10">
       <div className="container mx-auto px-6">
@@ -13,19 +17,19 @@ const Footer = () => {
           {/* Links */}
           <nav className="flex items-center gap-6 text-sm font-sans">
             <a href="#" className="text-cream/60 hover:text-cream transition-colors">
-              Termeni și Condiții
+              {t.footer.terms}
             </a>
             <a href="#" className="text-cream/60 hover:text-cream transition-colors">
-              Politica de Confidențialitate
+              {t.footer.privacy}
             </a>
-            <a href="#" className="text-cream/60 hover:text-cream transition-colors">
-              Contact
+            <a href="#contact" className="text-cream/60 hover:text-cream transition-colors">
+              {t.nav.contact}
             </a>
           </nav>
           
           {/* Copyright */}
           <p className="text-cream/40 text-sm font-sans">
-            © 2024 RealTrust. Toate drepturile rezervate.
+            © 2024 RealTrust. {t.footer.rights}
           </p>
         </div>
       </div>
