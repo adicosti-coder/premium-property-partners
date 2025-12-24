@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { MapPin, Users, Sparkles, X, Search, ArrowUpDown, Heart } from "lucide-react";
+import { MapPin, Users, Sparkles, X, Search, ArrowUpDown, Heart, Share2, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,6 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { properties } from "@/data/properties";
 
@@ -28,6 +34,8 @@ interface PropertyFiltersProps {
   onFeatureChange: (value: string) => void;
   onSortChange: (value: SortOption) => void;
   onFavoritesToggle: () => void;
+  onShareFavorites: () => void;
+  onExportPdf: () => void;
   onClearFilters: () => void;
 }
 
@@ -45,6 +53,8 @@ const PropertyFilters = ({
   onFeatureChange,
   onSortChange,
   onFavoritesToggle,
+  onShareFavorites,
+  onExportPdf,
   onClearFilters,
 }: PropertyFiltersProps) => {
   const { t } = useLanguage();
@@ -181,6 +191,28 @@ const PropertyFilters = ({
           <Heart className={`w-4 h-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
           {t.portfolio.filters.favorites} ({favoritesCount})
         </Button>
+
+        {/* Export Favorites Dropdown */}
+        {favoritesCount > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="bg-card border-border">
+                <Share2 className="w-4 h-4 mr-2" />
+                {t.portfolio.filters.export}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-card border-border">
+              <DropdownMenuItem onClick={onShareFavorites} className="cursor-pointer">
+                <Share2 className="w-4 h-4 mr-2" />
+                {t.portfolio.filters.shareLink}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onExportPdf} className="cursor-pointer">
+                <FileDown className="w-4 h-4 mr-2" />
+                {t.portfolio.filters.exportPdf}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Clear Filters Button */}
         {hasActiveFilters && (

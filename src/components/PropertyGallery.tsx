@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useSharedFavorites } from "@/hooks/useSharedFavorites";
 import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import { properties, Property } from "@/data/properties";
 import { toast } from "sonner";
+import { exportFavoritesPdf } from "@/utils/exportFavoritesPdf";
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -27,6 +29,7 @@ const getFeatureIcon = (feature: string) => {
 const PropertyGallery = () => {
   const { t, language } = useLanguage();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { copyShareableLink } = useSharedFavorites();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -49,6 +52,34 @@ const PropertyGallery = () => {
     toggleFavorite(propertyId);
     toast(wasFavorite ? t.portfolio.favorites.removed : t.portfolio.favorites.added, {
       description: propertyName,
+    });
+  };
+
+  const handleShareFavorites = async () => {
+    const success = await copyShareableLink();
+    if (success) {
+      toast.success(t.portfolio.filters.linkCopied);
+    }
+  };
+
+  const handleExportPdf = () => {
+    const favoriteProperties = properties.filter((p) => favorites.includes(String(p.id)));
+    if (favoriteProperties.length === 0) return;
+
+    exportFavoritesPdf({
+      title: t.portfolio.filters.pdfTitle,
+      properties: favoriteProperties,
+      language: language as "ro" | "en",
+      labels: {
+        guests: t.portfolio.guests,
+        bedroom: t.portfolio.bedroom,
+        bedrooms: t.portfolio.bedrooms,
+        reviews: t.portfolio.reviews,
+        features: t.portfolio.filters.features,
+        rating: "Rating",
+        location: t.portfolio.filters.location,
+        generatedOn: t.portfolio.filters.generatedOn,
+      },
     });
   };
 
@@ -193,6 +224,8 @@ const PropertyGallery = () => {
             onFeatureChange={setSelectedFeature}
             onSortChange={setSortBy}
             onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            onShareFavorites={handleShareFavorites}
+            onExportPdf={handleExportPdf}
             onClearFilters={clearFilters}
           />
         )}
