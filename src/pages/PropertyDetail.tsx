@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
   Wifi, Car, Key, Calendar, Clock, Check, X, ChevronLeft, ChevronRight,
-  ExternalLink, Share2, Heart
+  ExternalLink, Share2, Heart, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+
+interface PropertyImage {
+  id: string;
+  image_path: string;
+  display_order: number;
+  is_primary: boolean;
+}
 
 const PropertyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -25,6 +33,57 @@ const PropertyDetail = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  const [dbImages, setDbImages] = useState<PropertyImage[]>([]);
+  const [isLoadingImages, setIsLoadingImages] = useState(true);
+
+  // Fetch images from database based on property name/slug
+  useEffect(() => {
+    const fetchPropertyImages = async () => {
+      if (!property) return;
+      
+      setIsLoadingImages(true);
+      try {
+        // First, find the property in the database by name
+        const { data: dbProperty } = await supabase
+          .from("properties")
+          .select("id")
+          .eq("name", property.name)
+          .maybeSingle();
+
+        if (dbProperty) {
+          // Fetch images for this property
+          const { data: images } = await supabase
+            .from("property_images")
+            .select("*")
+            .eq("property_id", dbProperty.id)
+            .order("display_order", { ascending: true });
+
+          if (images && images.length > 0) {
+            setDbImages(images);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching property images:", error);
+      } finally {
+        setIsLoadingImages(false);
+      }
+    };
+
+    fetchPropertyImages();
+  }, [property]);
+
+  // Get public URL for storage images
+  const getPublicUrl = (path: string) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const { data } = supabase.storage.from("property-images").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  // Use database images if available, otherwise fallback to static images
+  const galleryImages = dbImages.length > 0 
+    ? dbImages.map(img => getPublicUrl(img.image_path))
+    : property?.images || [];
 
   if (!property) {
     return (
@@ -44,11 +103,11 @@ const PropertyDetail = () => {
   }
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   };
 
   const handleShare = async () => {
@@ -90,45 +149,70 @@ const PropertyDetail = () => {
 
         {/* Image Gallery */}
         <div className="container mx-auto px-6 mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Main Image */}
-            <div 
-              className="relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group"
-              onClick={() => setLightboxOpen(true)}
-            >
-              <img 
-                src={property.images[0]} 
-                alt={property.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
-                  {t.propertyDetail.clickForGallery}
-                </Badge>
+          {isLoadingImages ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : galleryImages.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Main Image */}
+              <div 
+                className="relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group"
+                onClick={() => setLightboxOpen(true)}
+              >
+                <img 
+                  src={galleryImages[0]} 
+                  alt={property.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+                    {t.propertyDetail.clickForGallery}
+                  </Badge>
+                </div>
+                {dbImages.length > 0 && (
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-primary/90 backdrop-blur-sm">
+                      {galleryImages.length} {language === 'en' ? 'photos' : 'fotografii'}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {galleryImages.slice(1, 5).map((image, index) => (
+                  <div 
+                    key={index}
+                    className="relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer group"
+                    onClick={() => {
+                      setCurrentImageIndex(index + 1);
+                      setLightboxOpen(true);
+                    }}
+                  >
+                    <img 
+                      src={image} 
+                      alt={`${property.name} - ${index + 2}`}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    {/* Show "+X more" on last thumbnail if there are more images */}
+                    {index === 3 && galleryImages.length > 5 && (
+                      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-2xl font-semibold text-foreground">
+                          +{galleryImages.length - 5}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* Thumbnail Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {property.images.slice(1, 5).map((image, index) => (
-                <div 
-                  key={index}
-                  className="relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer group"
-                  onClick={() => {
-                    setCurrentImageIndex(index + 1);
-                    setLightboxOpen(true);
-                  }}
-                >
-                  <img 
-                    src={image} 
-                    alt={`${property.name} - ${index + 2}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-              ))}
+          ) : (
+            <div className="aspect-[16/9] rounded-2xl bg-muted flex items-center justify-center">
+              <p className="text-muted-foreground">{language === 'en' ? 'No images available' : 'Nu există imagini'}</p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Content */}
@@ -317,13 +401,13 @@ const PropertyDetail = () => {
 
           <div className="max-w-5xl w-full">
             <img
-              src={property.images[currentImageIndex]}
+              src={galleryImages[currentImageIndex]}
               alt={`${property.name} - ${currentImageIndex + 1}`}
               className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
             />
             <div className="text-center mt-4">
               <p className="text-muted-foreground">
-                {currentImageIndex + 1} / {property.images.length}
+                {currentImageIndex + 1} / {galleryImages.length}
               </p>
             </div>
           </div>
@@ -336,12 +420,12 @@ const PropertyDetail = () => {
           </button>
 
           {/* Thumbnails */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-            {property.images.map((image, index) => (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 max-w-full overflow-x-auto px-4">
+            {galleryImages.slice(0, 10).map((image, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
-                className={`w-16 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
+                className={`w-16 h-12 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0 ${
                   index === currentImageIndex ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'
                 }`}
               >
