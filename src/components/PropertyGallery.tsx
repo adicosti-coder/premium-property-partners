@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check } from "lucide-react";
+import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -10,6 +10,7 @@ import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCompareModal from "./PropertyCompareModal";
+import PropertyMap from "./PropertyMap";
 import { properties, Property } from "@/data/properties";
 import { toast } from "sonner";
 
@@ -273,6 +274,19 @@ const PropertyGallery = () => {
                 .replace("{count}", filteredProperties.length.toString())
                 .replace("{total}", properties.length.toString())}
             </p>
+          </div>
+        )}
+
+        {/* Interactive Map */}
+        {!isLoading && (
+          <div className="mb-12">
+            <div className="flex items-center gap-2 mb-4">
+              <Map className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-serif font-semibold text-foreground">
+                {language === 'ro' ? 'Hartă Proprietăți' : 'Properties Map'}
+              </h3>
+            </div>
+            <PropertyMap className="w-full h-[400px] rounded-xl" />
           </div>
         )}
 
