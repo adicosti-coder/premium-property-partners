@@ -1,5 +1,6 @@
 import { Star, Quote } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Testimonial {
   id: number;
@@ -51,6 +52,7 @@ const testimonials: Testimonial[] = [
 ];
 
 const Testimonials = () => {
+  const { t } = useLanguage();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
@@ -68,12 +70,12 @@ const Testimonials = () => {
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">Testimoniale</p>
+          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">{t.testimonials.label}</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
-            Ce Spun <span className="text-gradient-gold">Proprietarii</span>
+            {t.testimonials.title} <span className="text-gradient-gold">{t.testimonials.titleHighlight}</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Descoperă poveștile de succes ale proprietarilor care au ales să colaboreze cu noi.
+            {t.testimonials.subtitle}
           </p>
         </div>
 
@@ -127,15 +129,15 @@ const Testimonials = () => {
         >
           <div className="text-center">
             <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9/5</p>
-            <p className="text-muted-foreground text-sm">Rating mediu</p>
+            <p className="text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
           </div>
           <div className="text-center" style={{ transitionDelay: '100ms' }}>
             <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">200+</p>
-            <p className="text-muted-foreground text-sm">Recenzii verificate</p>
+            <p className="text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
           </div>
           <div className="text-center" style={{ transitionDelay: '200ms' }}>
             <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
-            <p className="text-muted-foreground text-sm">Clienți mulțumiți</p>
+            <p className="text-muted-foreground text-sm">{t.testimonials.happyClients}</p>
           </div>
         </div>
       </div>

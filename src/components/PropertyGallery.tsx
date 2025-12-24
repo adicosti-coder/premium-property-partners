@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useLanguage } from "@/i18n/LanguageContext";
 import BookingForm from "./BookingForm";
 import { properties } from "@/data/properties";
 
@@ -20,6 +21,7 @@ const getFeatureIcon = (feature: string) => {
 };
 
 const PropertyGallery = () => {
+  const { t, language } = useLanguage();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -62,12 +64,12 @@ const PropertyGallery = () => {
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">Portofoliu</p>
+          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">{t.portfolio.label}</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
-            Proprietăți în <span className="text-gradient-gold">Administrarea Noastră</span>
+            {t.portfolio.title} <span className="text-gradient-gold">{t.portfolio.titleHighlight}</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Descoperă apartamentele premium pe care le gestionăm în Timișoara. Fiecare proprietate este menținută la cele mai înalte standarde.
+            {t.portfolio.subtitle}
           </p>
         </div>
 
@@ -108,7 +110,7 @@ const PropertyGallery = () => {
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-2">
                       <Eye className="w-4 h-4" />
-                      Vezi Detalii
+                      {t.portfolio.viewDetails}
                     </span>
                   </div>
                 </div>
@@ -124,21 +126,21 @@ const PropertyGallery = () => {
 
                 {/* Description */}
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {property.description}
+                  {language === 'en' ? property.descriptionEn : property.description}
                 </p>
 
                 {/* Capacity info */}
                 <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    {property.capacity} oaspeți
+                    {property.capacity} {t.portfolio.guests}
                   </span>
                   <span className="flex items-center gap-1">
                     <BedDouble className="w-4 h-4" />
-                    {property.bedrooms} {property.bedrooms === 1 ? 'dormitor' : 'dormitoare'}
+                    {property.bedrooms} {property.bedrooms === 1 ? t.portfolio.bedroom : t.portfolio.bedrooms}
                   </span>
                   <span className="text-xs text-muted-foreground/70">
-                    ({property.reviews} recenzii)
+                    ({property.reviews} {t.portfolio.reviews})
                   </span>
                 </div>
 
@@ -164,7 +166,7 @@ const PropertyGallery = () => {
                     onClick={() => openBookingForm(property.name)}
                   >
                     <Calendar className="w-4 h-4 mr-1" />
-                    Rezervă Direct
+                    {t.portfolio.bookDirect}
                   </Button>
                   <Link to={`/proprietate/${property.slug}`}>
                     <Button variant="outline" size="sm">
