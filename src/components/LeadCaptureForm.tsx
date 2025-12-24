@@ -72,6 +72,24 @@ const LeadCaptureForm = ({
 
       if (error) throw error;
 
+      // Send email notification (fire and forget - don't block on failure)
+      try {
+        await supabase.functions.invoke("send-lead-notification", {
+          body: {
+            name: name.trim(),
+            whatsappNumber: whatsappNumber.trim(),
+            propertyArea: parseInt(propertyArea),
+            propertyType: propertyType,
+            calculatedNetProfit,
+            calculatedYearlyProfit,
+            simulationData,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't throw - lead was saved successfully
+      }
+
       setIsSuccess(true);
       toast({
         title: "Cerere trimisă cu succes!",
