@@ -100,6 +100,7 @@ export const translations = {
       bedrooms: "dormitoare",
       reviews: "recenzii",
       filters: {
+        searchPlaceholder: "Caută proprietăți...",
         location: "Locație",
         allLocations: "Toate locațiile",
         capacity: "Capacitate",
@@ -615,6 +616,7 @@ Mulțumesc!`,
       bedrooms: "bedrooms",
       reviews: "reviews",
       filters: {
+        searchPlaceholder: "Search properties...",
         location: "Location",
         allLocations: "All locations",
         capacity: "Capacity",
