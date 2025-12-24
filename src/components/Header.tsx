@@ -43,6 +43,7 @@ const Header = () => {
           
           {/* CTA & Language & Mobile Menu */}
           <div className="flex items-center gap-2 md:gap-4">
+            {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
             <Link to="/auth">
               <Button 
