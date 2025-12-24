@@ -118,6 +118,10 @@ export const translations = {
         noResultsMessage: "Încearcă să modifici filtrele pentru a vedea mai multe rezultate.",
         showingResults: "Se afișează {count} din {total} proprietăți",
       },
+      favorites: {
+        added: "Adăugat la favorite",
+        removed: "Eliminat din favorite",
+      },
     },
     
     // Testimonials
@@ -640,6 +644,10 @@ Mulțumesc!`,
         noResults: "No properties found",
         noResultsMessage: "Try adjusting your filters to see more results.",
         showingResults: "Showing {count} of {total} properties",
+      },
+      favorites: {
+        added: "Added to favorites",
+        removed: "Removed from favorites",
       },
     },
     
