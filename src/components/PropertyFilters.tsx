@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { MapPin, Users, Sparkles, X, Search, ArrowUpDown } from "lucide-react";
+import { MapPin, Users, Sparkles, X, Search, ArrowUpDown, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,11 +20,14 @@ interface PropertyFiltersProps {
   selectedCapacity: string;
   selectedFeature: string;
   sortBy: SortOption;
+  showFavoritesOnly: boolean;
+  favoritesCount: number;
   onSearchChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onCapacityChange: (value: string) => void;
   onFeatureChange: (value: string) => void;
   onSortChange: (value: SortOption) => void;
+  onFavoritesToggle: () => void;
   onClearFilters: () => void;
 }
 
@@ -34,11 +37,14 @@ const PropertyFilters = ({
   selectedCapacity,
   selectedFeature,
   sortBy,
+  showFavoritesOnly,
+  favoritesCount,
   onSearchChange,
   onLocationChange,
   onCapacityChange,
   onFeatureChange,
   onSortChange,
+  onFavoritesToggle,
   onClearFilters,
 }: PropertyFiltersProps) => {
   const { t } = useLanguage();
@@ -65,7 +71,7 @@ const PropertyFilters = ({
     return uniqueFeatures.sort();
   }, []);
 
-  const hasActiveFilters = searchQuery !== "" || selectedLocation !== "all" || selectedCapacity !== "all" || selectedFeature !== "all" || sortBy !== "default";
+  const hasActiveFilters = searchQuery !== "" || selectedLocation !== "all" || selectedCapacity !== "all" || selectedFeature !== "all" || sortBy !== "default" || showFavoritesOnly;
 
   return (
     <div className="flex flex-col gap-4 mb-10">
@@ -163,6 +169,18 @@ const PropertyFilters = ({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Favorites Filter */}
+        <Button
+          variant={showFavoritesOnly ? "default" : "outline"}
+          size="sm"
+          onClick={onFavoritesToggle}
+          className={`flex items-center gap-2 ${showFavoritesOnly ? "" : "bg-card border-border"}`}
+          disabled={favoritesCount === 0 && !showFavoritesOnly}
+        >
+          <Heart className={`w-4 h-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
+          {t.portfolio.filters.favorites} ({favoritesCount})
+        </Button>
 
         {/* Clear Filters Button */}
         {hasActiveFilters && (
