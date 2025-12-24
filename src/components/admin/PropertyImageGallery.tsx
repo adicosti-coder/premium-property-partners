@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ZoomIn,
   Check,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -69,7 +70,10 @@ interface SortableImageItemProps {
   onSetPrimary: (image: PropertyImage) => void;
   onDelete: (image: PropertyImage) => void;
   onPreview: (image: PropertyImage) => void;
+  onToggleSelect: (image: PropertyImage) => void;
   deletingId: string | null;
+  isSelectionMode: boolean;
+  isSelected: boolean;
   t: any;
 }
 
@@ -79,7 +83,10 @@ function SortableImageItem({
   onSetPrimary, 
   onDelete, 
   onPreview,
+  onToggleSelect,
   deletingId,
+  isSelectionMode,
+  isSelected,
   t 
 }: SortableImageItemProps) {
   const {
@@ -98,70 +105,97 @@ function SortableImageItem({
     opacity: isDragging ? 0.8 : 1,
   };
 
+  const handleClick = () => {
+    if (isSelectionMode) {
+      onToggleSelect(image);
+    } else {
+      onPreview(image);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`relative group rounded-lg overflow-hidden border-2 ${
+        isSelected ? 'border-destructive ring-2 ring-destructive' :
         image.is_primary ? 'border-primary' : 'border-border'
       } ${isDragging ? 'shadow-xl scale-105' : ''}`}
     >
+      {/* Selection checkbox */}
+      {isSelectionMode && (
+        <div 
+          className="absolute top-1 right-1 z-20 p-1 bg-background/90 rounded cursor-pointer"
+          onClick={() => onToggleSelect(image)}
+        >
+          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+            isSelected ? 'bg-destructive border-destructive' : 'border-muted-foreground'
+          }`}>
+            {isSelected && <Check className="w-3 h-3 text-white" />}
+          </div>
+        </div>
+      )}
+
       {/* Drag handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-1 left-1 z-10 p-1 bg-background/80 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <GripVertical className="w-4 h-4 text-muted-foreground" />
-      </div>
+      {!isSelectionMode && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-1 left-1 z-10 p-1 bg-background/80 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </div>
+      )}
 
       <img
         src={getPublicUrl(image.image_path) || ""}
         alt="Property"
         className="w-full h-24 object-cover cursor-pointer"
-        onClick={() => onPreview(image)}
+        onClick={handleClick}
       />
       
       {/* Overlay with actions */}
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="h-8 w-8 pointer-events-auto"
-          onClick={() => onPreview(image)}
-          title={t.admin.properties?.preview || "Preview"}
-        >
-          <ZoomIn className="w-4 h-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="h-8 w-8 pointer-events-auto"
-          onClick={() => onSetPrimary(image)}
-          title={t.admin.properties?.setPrimary || "Set as primary"}
-        >
-          <Star className={`w-4 h-4 ${image.is_primary ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-        </Button>
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          className="h-8 w-8 pointer-events-auto"
-          onClick={() => onDelete(image)}
-          disabled={deletingId === image.id}
-        >
-          {deletingId === image.id ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <X className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
+      {!isSelectionMode && (
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 pointer-events-auto"
+            onClick={() => onPreview(image)}
+            title={t.admin.properties?.preview || "Preview"}
+          >
+            <ZoomIn className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 pointer-events-auto"
+            onClick={() => onSetPrimary(image)}
+            title={t.admin.properties?.setPrimary || "Set as primary"}
+          >
+            <Star className={`w-4 h-4 ${image.is_primary ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="h-8 w-8 pointer-events-auto"
+            onClick={() => onDelete(image)}
+            disabled={deletingId === image.id}
+          >
+            {deletingId === image.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <X className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* Primary badge */}
-      {image.is_primary && (
+      {image.is_primary && !isSelectionMode && (
         <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
           {t.admin.properties?.primary || "Primary"}
         </div>
@@ -180,6 +214,9 @@ export default function PropertyImageGallery({
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<PropertyImage | null>(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
@@ -204,6 +241,72 @@ export default function PropertyImageGallery({
 
   const handlePreview = (image: PropertyImage) => {
     setPreviewImage(image);
+  };
+
+  const handleToggleSelect = (image: PropertyImage) => {
+    setSelectedImages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(image.id)) {
+        newSet.delete(image.id);
+      } else {
+        newSet.add(image.id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCancelSelection = () => {
+    setIsSelectionMode(false);
+    setSelectedImages(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedImages.size === 0) return;
+    
+    setIsDeletingBulk(true);
+    const imagesToDelete = images.filter(img => selectedImages.has(img.id));
+    
+    try {
+      // Delete from storage
+      const paths = imagesToDelete.map(img => img.image_path);
+      await supabase.storage.from('property-images').remove(paths);
+
+      // Delete from database
+      const { error } = await supabase
+        .from('property_images')
+        .delete()
+        .in('id', Array.from(selectedImages));
+
+      if (error) throw error;
+
+      const remainingImages = images.filter(img => !selectedImages.has(img.id));
+      
+      // If primary was deleted, set new primary
+      const deletedPrimary = imagesToDelete.some(img => img.is_primary);
+      if (deletedPrimary && remainingImages.length > 0) {
+        await supabase
+          .from('property_images')
+          .update({ is_primary: true })
+          .eq('id', remainingImages[0].id);
+        remainingImages[0].is_primary = true;
+      }
+
+      onImagesChange(remainingImages);
+      toast({ 
+        title: t.admin.properties?.bulkDeleteSuccess || "Images deleted",
+        description: `${selectedImages.size} ${t.admin.properties?.imagesDeleted || "image(s) deleted"}`
+      });
+      handleCancelSelection();
+    } catch (error) {
+      console.error("Error deleting images:", error);
+      toast({
+        title: t.admin.error,
+        description: t.admin.properties?.deleteError || "Could not delete images",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingBulk(false);
+    }
   };
 
   const handlePrevImage = useCallback(() => {
@@ -248,6 +351,37 @@ export default function PropertyImageGallery({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewImage, handlePrevImage, handleNextImage, handleCloseLightbox]);
+
+  // Touch swipe navigation for lightbox
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      handleNextImage();
+    } else if (isRightSwipe) {
+      handlePrevImage();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, [handleNextImage, handlePrevImage]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -513,24 +647,68 @@ export default function PropertyImageGallery({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <label className="text-sm font-medium">
           {t.admin.properties?.gallery || "Image Gallery"} ({images.length})
         </label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          {isUploading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Upload className="w-4 h-4 mr-2" />
+        <div className="flex items-center gap-2">
+          {images.length > 1 && !isSelectionMode && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSelectionMode(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t.admin.properties?.bulkSelect || "Select"}
+            </Button>
           )}
-          {t.admin.properties?.addImages || "Add Images"}
-        </Button>
+          {isSelectionMode && (
+            <>
+              <span className="text-sm text-muted-foreground">
+                {selectedImages.size} {t.admin.properties?.selected || "selected"}
+              </span>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={selectedImages.size === 0 || isDeletingBulk}
+              >
+                {isDeletingBulk ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                {t.admin.properties?.deleteSelected || "Delete"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCancelSelection}
+              >
+                {t.admin.cancel || "Cancel"}
+              </Button>
+            </>
+          )}
+          {!isSelectionMode && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 mr-2" />
+              )}
+              {t.admin.properties?.addImages || "Add Images"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <input
@@ -622,7 +800,10 @@ export default function PropertyImageGallery({
                   onSetPrimary={handleSetPrimary}
                   onDelete={handleDeleteImage}
                   onPreview={handlePreview}
+                  onToggleSelect={handleToggleSelect}
                   deletingId={deletingId}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedImages.has(image.id)}
                   t={t}
                 />
               ))}
@@ -652,7 +833,12 @@ export default function PropertyImageGallery({
       {/* Lightbox Preview */}
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
         <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
-          <div className="relative flex items-center justify-center min-h-[60vh]">
+          <div 
+            className="relative flex items-center justify-center min-h-[60vh]"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {/* Close button */}
             <Button
               variant="ghost"
@@ -668,7 +854,7 @@ export default function PropertyImageGallery({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute left-2 z-10 text-white hover:bg-white/20 h-12 w-12"
+                className="absolute left-2 z-10 text-white hover:bg-white/20 h-12 w-12 hidden md:flex"
                 onClick={handlePrevImage}
               >
                 <ChevronLeft className="w-8 h-8" />
@@ -680,7 +866,8 @@ export default function PropertyImageGallery({
               <img
                 src={getPublicUrl(previewImage.image_path) || ""}
                 alt="Preview"
-                className="max-h-[80vh] max-w-full object-contain"
+                className="max-h-[80vh] max-w-full object-contain select-none"
+                draggable={false}
               />
             )}
 
@@ -689,17 +876,19 @@ export default function PropertyImageGallery({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 z-10 text-white hover:bg-white/20 h-12 w-12"
+                className="absolute right-2 z-10 text-white hover:bg-white/20 h-12 w-12 hidden md:flex"
                 onClick={handleNextImage}
               >
                 <ChevronRight className="w-8 h-8" />
               </Button>
             )}
 
-            {/* Image counter */}
+            {/* Image counter & swipe hint on mobile */}
             {sortedImages.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-                {currentPreviewIndex} / {sortedImages.length}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full flex items-center gap-2">
+                <span className="md:hidden text-xs opacity-70">←</span>
+                <span>{currentPreviewIndex} / {sortedImages.length}</span>
+                <span className="md:hidden text-xs opacity-70">→</span>
               </div>
             )}
           </div>

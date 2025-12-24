@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
   Wifi, Car, Key, Calendar, Clock, Check, X, ChevronLeft, ChevronRight,
-  ExternalLink, Share2, Heart, Loader2
+  ExternalLink, Share2, Heart, Loader2, Play, Pause
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,13 +102,95 @@ const PropertyDetail = () => {
     );
   }
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-  };
+  const [isAutoplay, setIsAutoplay] = useState(false);
+  const autoplayRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 50;
 
-  const prevImage = () => {
+  const nextImage = useCallback(() => {
+    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
+  }, [galleryImages.length]);
+
+  const prevImage = useCallback(() => {
     setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-  };
+  }, [galleryImages.length]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          prevImage();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          nextImage();
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setLightboxOpen(false);
+          break;
+        case ' ':
+          e.preventDefault();
+          setIsAutoplay(prev => !prev);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, nextImage, prevImage]);
+
+  // Autoplay slideshow
+  useEffect(() => {
+    if (isAutoplay && lightboxOpen) {
+      autoplayRef.current = setInterval(() => {
+        nextImage();
+      }, 3000);
+    } else {
+      if (autoplayRef.current) {
+        clearInterval(autoplayRef.current);
+        autoplayRef.current = null;
+      }
+    }
+
+    return () => {
+      if (autoplayRef.current) {
+        clearInterval(autoplayRef.current);
+      }
+    };
+  }, [isAutoplay, lightboxOpen, nextImage]);
+
+  // Touch swipe handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextImage();
+    } else if (isRightSwipe) {
+      prevImage();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, [nextImage, prevImage]);
 
   const handleShare = async () => {
     const description = language === 'en' ? property.descriptionEn : property.description;
@@ -384,37 +466,63 @@ const PropertyDetail = () => {
 
       {/* Lightbox */}
       {lightboxOpen && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Close button */}
           <button
-            onClick={() => setLightboxOpen(false)}
+            onClick={() => {
+              setLightboxOpen(false);
+              setIsAutoplay(false);
+            }}
             className="absolute top-6 right-6 text-foreground hover:text-primary transition-colors z-10"
           >
             <X className="w-8 h-8" />
           </button>
 
+          {/* Autoplay button */}
+          <button
+            onClick={() => setIsAutoplay(prev => !prev)}
+            className="absolute top-6 right-20 text-foreground hover:text-primary transition-colors z-10"
+            title={isAutoplay ? (language === 'en' ? 'Pause slideshow' : 'Oprește slideshow') : (language === 'en' ? 'Start slideshow' : 'Pornește slideshow')}
+          >
+            {isAutoplay ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7" />}
+          </button>
+
+          {/* Navigation - Previous (hidden on mobile) */}
           <button
             onClick={prevImage}
-            className="absolute left-4 md:left-8 text-foreground hover:text-primary transition-colors z-10"
+            className="absolute left-4 md:left-8 text-foreground hover:text-primary transition-colors z-10 hidden md:block"
           >
             <ChevronLeft className="w-10 h-10" />
           </button>
 
-          <div className="max-w-5xl w-full">
+          <div className="max-w-5xl w-full select-none">
             <img
               src={galleryImages[currentImageIndex]}
               alt={`${property.name} - ${currentImageIndex + 1}`}
               className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              draggable={false}
             />
-            <div className="text-center mt-4">
+            <div className="text-center mt-4 flex items-center justify-center gap-4">
               <p className="text-muted-foreground">
                 {currentImageIndex + 1} / {galleryImages.length}
               </p>
+              {isAutoplay && (
+                <span className="text-xs text-primary animate-pulse">
+                  {language === 'en' ? 'Slideshow active' : 'Slideshow activ'}
+                </span>
+              )}
             </div>
           </div>
 
+          {/* Navigation - Next (hidden on mobile) */}
           <button
             onClick={nextImage}
-            className="absolute right-4 md:right-8 text-foreground hover:text-primary transition-colors z-10"
+            className="absolute right-4 md:right-8 text-foreground hover:text-primary transition-colors z-10 hidden md:block"
           >
             <ChevronRight className="w-10 h-10" />
           </button>
@@ -432,6 +540,11 @@ const PropertyDetail = () => {
                 <img src={image} alt="" className="w-full h-full object-cover" />
               </button>
             ))}
+          </div>
+
+          {/* Mobile swipe hint */}
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-xs text-muted-foreground md:hidden">
+            ← {language === 'en' ? 'Swipe to navigate' : 'Swipe pentru navigare'} →
           </div>
         </div>
       )}
