@@ -11,6 +11,23 @@ import {
   GripVertical,
   Image as ImageIcon
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface PropertyImage {
   id: string;
@@ -27,6 +44,100 @@ interface PropertyImageGalleryProps {
   onImagesChange: (images: PropertyImage[]) => void;
 }
 
+interface SortableImageItemProps {
+  image: PropertyImage;
+  getPublicUrl: (path: string) => string | null;
+  onSetPrimary: (image: PropertyImage) => void;
+  onDelete: (image: PropertyImage) => void;
+  deletingId: string | null;
+  t: any;
+}
+
+function SortableImageItem({ 
+  image, 
+  getPublicUrl, 
+  onSetPrimary, 
+  onDelete, 
+  deletingId,
+  t 
+}: SortableImageItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: image.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group rounded-lg overflow-hidden border-2 ${
+        image.is_primary ? 'border-primary' : 'border-border'
+      } ${isDragging ? 'shadow-xl scale-105' : ''}`}
+    >
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-1 left-1 z-10 p-1 bg-background/80 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </div>
+
+      <img
+        src={getPublicUrl(image.image_path) || ""}
+        alt="Property"
+        className="w-full h-24 object-cover"
+      />
+      
+      {/* Overlay with actions */}
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onSetPrimary(image)}
+          title={t.admin.properties?.setPrimary || "Set as primary"}
+        >
+          <Star className={`w-4 h-4 ${image.is_primary ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onDelete(image)}
+          disabled={deletingId === image.id}
+        >
+          {deletingId === image.id ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <X className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
+
+      {/* Primary badge */}
+      {image.is_primary && (
+        <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+          {t.admin.properties?.primary || "Primary"}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PropertyImageGallery({ 
   propertyId, 
   images, 
@@ -36,6 +147,17 @@ export default function PropertyImageGallery({
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const getPublicUrl = (path: string) => {
     if (!path) return null;
@@ -211,6 +333,45 @@ export default function PropertyImageGallery({
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = images.findIndex(img => img.id === active.id);
+    const newIndex = images.findIndex(img => img.id === over.id);
+
+    const reorderedImages = arrayMove(images, oldIndex, newIndex).map(
+      (img, index) => ({
+        ...img,
+        display_order: index,
+      })
+    );
+
+    onImagesChange(reorderedImages);
+
+    try {
+      const updates = reorderedImages.map(img =>
+        supabase
+          .from('property_images')
+          .update({ display_order: img.display_order })
+          .eq('id', img.id)
+      );
+
+      await Promise.all(updates);
+      toast({ title: t.admin.properties?.orderUpdated || "Order updated" });
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast({
+        title: t.admin.error,
+        description: t.admin.properties?.updateError || "Could not update order",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const sortedImages = [...images].sort((a, b) => a.display_order - b.display_order);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -267,71 +428,48 @@ export default function PropertyImageGallery({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {images
-            .sort((a, b) => a.display_order - b.display_order)
-            .map((image) => (
-              <div
-                key={image.id}
-                className={`relative group rounded-lg overflow-hidden border-2 ${
-                  image.is_primary ? 'border-primary' : 'border-border'
-                }`}
-              >
-                <img
-                  src={getPublicUrl(image.image_path) || ""}
-                  alt="Property"
-                  className="w-full h-24 object-cover"
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortedImages.map(img => img.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {sortedImages.map((image) => (
+                <SortableImageItem
+                  key={image.id}
+                  image={image}
+                  getPublicUrl={getPublicUrl}
+                  onSetPrimary={handleSetPrimary}
+                  onDelete={handleDeleteImage}
+                  deletingId={deletingId}
+                  t={t}
                 />
-                
-                {/* Overlay with actions */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleSetPrimary(image)}
-                    title={t.admin.properties?.setPrimary || "Set as primary"}
-                  >
-                    <Star className={`w-4 h-4 ${image.is_primary ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleDeleteImage(image)}
-                    disabled={deletingId === image.id}
-                  >
-                    {deletingId === image.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <X className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Primary badge */}
-                {image.is_primary && (
-                  <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
-                    {t.admin.properties?.primary || "Primary"}
-                  </div>
+              ))}
+              
+              {/* Add more button */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+              >
+                {isUploading ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                ) : (
+                  <Upload className="w-6 h-6 text-muted-foreground" />
                 )}
               </div>
-            ))}
-          
-          {/* Add more button */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center justify-center h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
-          >
-            {isUploading ? (
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            ) : (
-              <Upload className="w-6 h-6 text-muted-foreground" />
-            )}
-          </div>
-        </div>
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
+      
+      {images.length > 1 && (
+        <p className="text-xs text-muted-foreground text-center">
+          {t.admin.properties?.dragToReorder || "Drag images to reorder"}
+        </p>
       )}
     </div>
   );
