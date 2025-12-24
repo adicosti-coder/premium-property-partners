@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { getPropertyBySlug } from "@/data/properties";
 import BookingForm from "@/components/BookingForm";
 import StayCalculator from "@/components/StayCalculator";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -246,6 +247,9 @@ const PropertyDetail = () => {
                 property={property} 
                 onBook={() => setBookingOpen(true)} 
               />
+
+              {/* Availability Calendar */}
+              <AvailabilityCalendar propertyId={property.id} />
 
               {/* Quick Info Card */}
               <div className="bg-card rounded-2xl border border-border p-6">
