@@ -2,42 +2,31 @@ import { useState } from "react";
 import { Phone, Mail, MapPin, Copy, Check, Send, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-const quickTemplate = `Bună ziua,
-
-Sunt proprietar al unui apartament în Timișoara și sunt interesat de serviciile de administrare în regim hotelier oferite de RealTrust.
-
-Detalii proprietate:
-- Locație: [zona]
-- Tipul apartamentului: [nr. camere]
-- Suprafață: [mp]
-
-Vă rog să mă contactați pentru o evaluare gratuită.
-
-Mulțumesc!`;
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const ContactSection = () => {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const copyTemplate = async () => {
     try {
-      await navigator.clipboard.writeText(quickTemplate);
+      await navigator.clipboard.writeText(t.contactSection.template);
       setCopied(true);
-      toast.success("Șablon copiat în clipboard!");
+      toast.success(t.contactSection.templateCopied);
       setTimeout(() => setCopied(false), 3000);
     } catch {
-      toast.error("Nu s-a putut copia șablonul");
+      toast.error(t.contactSection.templateCopyError);
     }
   };
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent("Bună ziua! Sunt proprietar și sunt interesat de serviciile de administrare RealTrust.");
+    const message = encodeURIComponent(t.contactSection.whatsappMessage);
     window.open(`https://wa.me/40756123456?text=${message}`, "_blank");
   };
 
   const handleEmail = () => {
     const subject = encodeURIComponent("Solicitare Evaluare Gratuită - RealTrust");
-    const body = encodeURIComponent(quickTemplate);
+    const body = encodeURIComponent(t.contactSection.template);
     window.location.href = `mailto:contact@realtrust.ro?subject=${subject}&body=${body}`;
   };
 
@@ -48,12 +37,12 @@ const ContactSection = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">Contact</p>
+          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">{t.contactSection.sectionLabel}</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
-            Hai Să <span className="text-gradient-gold">Discutăm</span>
+            {t.contactSection.title} <span className="text-gradient-gold">{t.contactSection.titleHighlight}</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Suntem aici să răspundem la toate întrebările tale. Contactează-ne pentru o evaluare gratuită a proprietății.
+            {t.contactSection.subtitle}
           </p>
         </div>
 
@@ -62,7 +51,7 @@ const ContactSection = () => {
           <div className="space-y-8">
             <div className="bg-card p-8 rounded-2xl border border-border">
               <h3 className="text-xl font-serif font-semibold text-foreground mb-6">
-                Informații Contact
+                {t.contactSection.contactInfo}
               </h3>
               
               <div className="space-y-6">
@@ -74,7 +63,7 @@ const ContactSection = () => {
                     <Phone className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Telefon</p>
+                    <p className="text-sm text-muted-foreground">{t.contactSection.phone}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
                       +40 756 123 456
                     </p>
@@ -89,7 +78,7 @@ const ContactSection = () => {
                     <Mail className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="text-sm text-muted-foreground">{t.contactSection.email}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
                       contact@realtrust.ro
                     </p>
@@ -101,7 +90,7 @@ const ContactSection = () => {
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Locație</p>
+                    <p className="text-sm text-muted-foreground">{t.contactSection.location}</p>
                     <p className="text-foreground font-medium">Timișoara, România</p>
                   </div>
                 </div>
@@ -111,11 +100,11 @@ const ContactSection = () => {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="whatsapp" className="flex-1" onClick={handleWhatsApp}>
                     <MessageCircle className="w-4 h-4 mr-2" />
-                    WhatsApp
+                    {t.contactSection.whatsapp}
                   </Button>
                   <Button variant="outline" className="flex-1" onClick={handleEmail}>
                     <Send className="w-4 h-4 mr-2" />
-                    Trimite Email
+                    {t.contactSection.sendEmail}
                   </Button>
                 </div>
               </div>
@@ -123,18 +112,18 @@ const ContactSection = () => {
 
             {/* Working Hours */}
             <div className="bg-secondary/30 p-6 rounded-xl border border-border">
-              <h4 className="font-semibold text-foreground mb-4">Program</h4>
+              <h4 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Luni - Vineri</span>
+                  <span className="text-muted-foreground">{t.contactSection.mondayFriday}</span>
                   <span className="text-foreground">09:00 - 18:00</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sâmbătă</span>
+                  <span className="text-muted-foreground">{t.contactSection.saturday}</span>
                   <span className="text-foreground">10:00 - 14:00</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Suport Oaspeți</span>
+                  <span className="text-muted-foreground">{t.contactSection.guestSupport}</span>
                   <span className="text-primary font-medium">24/7</span>
                 </div>
               </div>
@@ -145,7 +134,7 @@ const ContactSection = () => {
           <div className="bg-card p-8 rounded-2xl border border-border">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-serif font-semibold text-foreground">
-                Șablon Rapid pentru Proprietari
+                {t.contactSection.quickTemplate}
               </h3>
               <Button
                 variant="ghost"
@@ -156,33 +145,33 @@ const ContactSection = () => {
                 {copied ? (
                   <>
                     <Check className="w-4 h-4 text-green-500" />
-                    Copiat!
+                    {t.contactSection.copied}
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    Copiază
+                    {t.contactSection.copy}
                   </>
                 )}
               </Button>
             </div>
 
             <div className="bg-secondary/50 p-6 rounded-xl font-mono text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed border border-border">
-              {quickTemplate}
+              {t.contactSection.template}
             </div>
 
             <p className="mt-4 text-sm text-muted-foreground">
-              Copiază acest șablon și completează-l cu datele proprietății tale. Îl poți trimite prin email sau WhatsApp.
+              {t.contactSection.templateDescription}
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
               <Button variant="premium" className="flex-1" onClick={handleEmail}>
                 <Mail className="w-4 h-4 mr-2" />
-                Trimite prin Email
+                {t.contactSection.sendByEmail}
               </Button>
               <Button variant="whatsapp" className="flex-1" onClick={handleWhatsApp}>
                 <MessageCircle className="w-4 h-4 mr-2" />
-                Trimite pe WhatsApp
+                {t.contactSection.sendByWhatsapp}
               </Button>
             </div>
           </div>

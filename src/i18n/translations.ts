@@ -237,6 +237,144 @@ export const translations = {
       rights: "Toate drepturile rezervate.",
     },
     
+    // Contact Section
+    contactSection: {
+      sectionLabel: "Contact",
+      title: "Hai Să",
+      titleHighlight: "Discutăm",
+      subtitle: "Suntem aici să răspundem la toate întrebările tale. Contactează-ne pentru o evaluare gratuită a proprietății.",
+      contactInfo: "Informații Contact",
+      phone: "Telefon",
+      email: "Email",
+      location: "Locație",
+      whatsapp: "WhatsApp",
+      sendEmail: "Trimite Email",
+      schedule: "Program",
+      mondayFriday: "Luni - Vineri",
+      saturday: "Sâmbătă",
+      guestSupport: "Suport Oaspeți",
+      quickTemplate: "Șablon Rapid pentru Proprietari",
+      copy: "Copiază",
+      copied: "Copiat!",
+      templateCopied: "Șablon copiat în clipboard!",
+      templateCopyError: "Nu s-a putut copia șablonul",
+      templateDescription: "Copiază acest șablon și completează-l cu datele proprietății tale. Îl poți trimite prin email sau WhatsApp.",
+      sendByEmail: "Trimite prin Email",
+      sendByWhatsapp: "Trimite pe WhatsApp",
+      whatsappMessage: "Bună ziua! Sunt proprietar și sunt interesat de serviciile de administrare RealTrust.",
+      template: `Bună ziua,
+
+Sunt proprietar al unui apartament în Timișoara și sunt interesat de serviciile de administrare în regim hotelier oferite de RealTrust.
+
+Detalii proprietate:
+- Locație: [zona]
+- Tipul apartamentului: [nr. camere]
+- Suprafață: [mp]
+
+Vă rog să mă contactați pentru o evaluare gratuită.
+
+Mulțumesc!`,
+    },
+    
+    // Why Us
+    whyUs: {
+      label: "Avantajul RealTrust",
+      title: "De Ce Suntem Alegerea Potrivită",
+      description: "Nu suntem doar o agenție de închirieri. Suntem parteneri în investiția ta, dedicați să îți maximizăm veniturile și să eliminăm orice bătaie de cap.",
+      reasons: [
+        "Experiență dovedită în administrarea a peste 150 de proprietăți premium",
+        "Echipă dedicată disponibilă 24/7 pentru oaspeți și urgențe",
+        "Parteneriate cu cele mai mari platforme: Airbnb, Booking, Expedia",
+        "Fotografii profesionale și descrieri optimizate pentru conversie",
+        "Prețuri dinamice bazate pe cerere și sezonalitate",
+        "Rapoarte financiare transparente și accesibile în timp real",
+      ],
+      performanceLabel: "Performanță Medie",
+      revenueIncrease: "+40%",
+      revenueDescription: "Venit suplimentar față de închirierea clasică",
+      listingTime: "72h",
+      listingTimeLabel: "Timp mediu de listare",
+      commission: "15%",
+      commissionLabel: "Comision transparent",
+    },
+    
+    // CTA
+    cta: {
+      title: "Pregătit să Îți",
+      titleHighlight: "Maximizezi Venitul",
+      subtitle: "Solicită o evaluare gratuită și descoperă cât poți câștiga cu apartamentul tău. Fără obligații, fără costuri ascunse.",
+      primaryButton: "Solicită Evaluare Gratuită",
+      secondaryButton: "Sună-ne Acum",
+      footer: "Răspundem în maximum 24 de ore. Consultanță personalizată, fără presiune.",
+    },
+    
+    // Profit Calculator
+    calculator: {
+      badge: "Calculator Profit",
+      title: "Estimează-ți",
+      titleHighlight: "Venitul Potențial",
+      subtitle: "Ajustează parametrii pentru a vedea cât poți câștiga lunar din închirierea în regim hotelier.",
+      propertyParams: "Parametri Proprietate",
+      adr: "Tarif Mediu/Noapte (ADR)",
+      adrDescription: "Prețul mediu pe noapte pentru proprietatea ta",
+      occupancy: "Rată de Ocupare",
+      occupancyDescription: "Procentul de zile ocupate pe lună",
+      avgStay: "Durată Medie Sejur",
+      days: "zile",
+      costsSection: "Costuri & Comisioane",
+      cleaningCost: "Cost Curățenie/Sejur",
+      managementFee: "Comision Management",
+      platformFee: "Comision Platforme",
+      platformFeeDescription: "Airbnb, Booking.com, etc.",
+      netProfit: "Profit Net Estimat",
+      perMonth: "/lună",
+      approximately: "Aproximativ",
+      perYear: "pe an",
+      grossRevenue: "Venit Brut",
+      totalCosts: "Costuri Totale",
+      costBreakdown: "Detalii Costuri Lunare",
+      cleaning: "Curățenie",
+      stays: "sejururi",
+      managementCommission: "Comision Management",
+      platformCommission: "Comision Platforme",
+      totalCostsLabel: "Total Costuri",
+      occupiedDays: "Zile Ocupate/Lună",
+      staysPerMonth: "Sejururi/Lună",
+      getAnalysis: "Obține o Analiză Detaliată",
+    },
+    
+    // Lead Capture Form
+    leadForm: {
+      title: "Obține Analiza Detaliată",
+      description: "Completează datele și vei primi o analiză personalizată pentru proprietatea ta.",
+      name: "Nume complet",
+      namePlaceholder: "Ion Popescu",
+      whatsapp: "Număr WhatsApp",
+      whatsappPlaceholder: "+40 7XX XXX XXX",
+      propertyArea: "Suprafață proprietate (m²)",
+      propertyAreaPlaceholder: "50",
+      propertyType: "Tip proprietate",
+      selectType: "Selectează tipul",
+      estimatedProfit: "Profit estimat din simulare:",
+      submit: "Trimite Cererea",
+      sending: "Se trimite...",
+      success: "Mulțumim!",
+      successMessage: "Te vom contacta în curând.",
+      successToast: "Cerere trimisă cu succes!",
+      successToastMessage: "Te vom contacta în curând cu analiza detaliată.",
+      error: "Eroare",
+      errorMessage: "A apărut o eroare. Te rugăm să încerci din nou.",
+      fillAllFields: "Completează toate câmpurile",
+      fillAllFieldsMessage: "Te rugăm să completezi toate informațiile necesare.",
+      propertyTypes: {
+        apartament: "Apartament",
+        casa: "Casă",
+        studio: "Studio",
+        penthouse: "Penthouse",
+        vila: "Vilă",
+      },
+    },
+    
     // Common
     common: {
       learnMore: "Află mai mult",
@@ -481,6 +619,144 @@ export const translations = {
       privacy: "Privacy Policy",
       terms: "Terms & Conditions",
       rights: "All rights reserved.",
+    },
+    
+    // Contact Section
+    contactSection: {
+      sectionLabel: "Contact",
+      title: "Let's",
+      titleHighlight: "Talk",
+      subtitle: "We're here to answer all your questions. Contact us for a free property evaluation.",
+      contactInfo: "Contact Information",
+      phone: "Phone",
+      email: "Email",
+      location: "Location",
+      whatsapp: "WhatsApp",
+      sendEmail: "Send Email",
+      schedule: "Schedule",
+      mondayFriday: "Monday - Friday",
+      saturday: "Saturday",
+      guestSupport: "Guest Support",
+      quickTemplate: "Quick Template for Owners",
+      copy: "Copy",
+      copied: "Copied!",
+      templateCopied: "Template copied to clipboard!",
+      templateCopyError: "Could not copy template",
+      templateDescription: "Copy this template and fill in your property details. You can send it via email or WhatsApp.",
+      sendByEmail: "Send by Email",
+      sendByWhatsapp: "Send via WhatsApp",
+      whatsappMessage: "Hello! I'm a property owner and I'm interested in RealTrust management services.",
+      template: `Hello,
+
+I'm the owner of an apartment in Timișoara and I'm interested in the short-term rental management services offered by RealTrust.
+
+Property details:
+- Location: [area]
+- Apartment type: [no. of rooms]
+- Area: [sqm]
+
+Please contact me for a free evaluation.
+
+Thank you!`,
+    },
+    
+    // Why Us
+    whyUs: {
+      label: "The RealTrust Advantage",
+      title: "Why We're the Right Choice",
+      description: "We're not just a rental agency. We're partners in your investment, dedicated to maximizing your revenue and eliminating any hassle.",
+      reasons: [
+        "Proven experience managing over 150 premium properties",
+        "Dedicated team available 24/7 for guests and emergencies",
+        "Partnerships with major platforms: Airbnb, Booking, Expedia",
+        "Professional photos and conversion-optimized descriptions",
+        "Dynamic pricing based on demand and seasonality",
+        "Transparent financial reports accessible in real-time",
+      ],
+      performanceLabel: "Average Performance",
+      revenueIncrease: "+40%",
+      revenueDescription: "Additional revenue compared to traditional rental",
+      listingTime: "72h",
+      listingTimeLabel: "Average listing time",
+      commission: "15%",
+      commissionLabel: "Transparent commission",
+    },
+    
+    // CTA
+    cta: {
+      title: "Ready to",
+      titleHighlight: "Maximize Your Income",
+      subtitle: "Request a free evaluation and discover how much you can earn with your apartment. No obligations, no hidden costs.",
+      primaryButton: "Request Free Evaluation",
+      secondaryButton: "Call Us Now",
+      footer: "We respond within 24 hours. Personalized consultation, no pressure.",
+    },
+    
+    // Profit Calculator
+    calculator: {
+      badge: "Profit Calculator",
+      title: "Estimate Your",
+      titleHighlight: "Potential Income",
+      subtitle: "Adjust the parameters to see how much you can earn monthly from short-term rental.",
+      propertyParams: "Property Parameters",
+      adr: "Average Daily Rate (ADR)",
+      adrDescription: "Average price per night for your property",
+      occupancy: "Occupancy Rate",
+      occupancyDescription: "Percentage of occupied days per month",
+      avgStay: "Average Stay Duration",
+      days: "days",
+      costsSection: "Costs & Commissions",
+      cleaningCost: "Cleaning Cost/Stay",
+      managementFee: "Management Commission",
+      platformFee: "Platform Commission",
+      platformFeeDescription: "Airbnb, Booking.com, etc.",
+      netProfit: "Estimated Net Profit",
+      perMonth: "/month",
+      approximately: "Approximately",
+      perYear: "per year",
+      grossRevenue: "Gross Revenue",
+      totalCosts: "Total Costs",
+      costBreakdown: "Monthly Cost Details",
+      cleaning: "Cleaning",
+      stays: "stays",
+      managementCommission: "Management Commission",
+      platformCommission: "Platform Commission",
+      totalCostsLabel: "Total Costs",
+      occupiedDays: "Occupied Days/Month",
+      staysPerMonth: "Stays/Month",
+      getAnalysis: "Get a Detailed Analysis",
+    },
+    
+    // Lead Capture Form
+    leadForm: {
+      title: "Get Detailed Analysis",
+      description: "Fill in your details and you'll receive a personalized analysis for your property.",
+      name: "Full name",
+      namePlaceholder: "John Smith",
+      whatsapp: "WhatsApp Number",
+      whatsappPlaceholder: "+40 7XX XXX XXX",
+      propertyArea: "Property area (m²)",
+      propertyAreaPlaceholder: "50",
+      propertyType: "Property type",
+      selectType: "Select type",
+      estimatedProfit: "Estimated profit from simulation:",
+      submit: "Submit Request",
+      sending: "Sending...",
+      success: "Thank you!",
+      successMessage: "We'll contact you soon.",
+      successToast: "Request sent successfully!",
+      successToastMessage: "We'll contact you soon with the detailed analysis.",
+      error: "Error",
+      errorMessage: "An error occurred. Please try again.",
+      fillAllFields: "Fill all fields",
+      fillAllFieldsMessage: "Please fill in all required information.",
+      propertyTypes: {
+        apartament: "Apartment",
+        casa: "House",
+        studio: "Studio",
+        penthouse: "Penthouse",
+        vila: "Villa",
+      },
     },
     
     // Common

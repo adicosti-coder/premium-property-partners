@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Loader2, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -23,13 +24,7 @@ interface LeadCaptureFormProps {
   };
 }
 
-const propertyTypes = [
-  { value: "apartament", label: "Apartament" },
-  { value: "casa", label: "Casă" },
-  { value: "studio", label: "Studio" },
-  { value: "penthouse", label: "Penthouse" },
-  { value: "vila", label: "Vilă" },
-];
+const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
 const LeadCaptureForm = ({
   isOpen,
@@ -38,6 +33,7 @@ const LeadCaptureForm = ({
   calculatedYearlyProfit,
   simulationData,
 }: LeadCaptureFormProps) => {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
@@ -50,8 +46,8 @@ const LeadCaptureForm = ({
     
     if (!name.trim() || !whatsappNumber.trim() || !propertyArea || !propertyType) {
       toast({
-        title: "Completează toate câmpurile",
-        description: "Te rugăm să completezi toate informațiile necesare.",
+        title: t.leadForm.fillAllFields,
+        description: t.leadForm.fillAllFieldsMessage,
         variant: "destructive",
       });
       return;
@@ -72,7 +68,6 @@ const LeadCaptureForm = ({
 
       if (error) throw error;
 
-      // Send email notification (fire and forget - don't block on failure)
       try {
         await supabase.functions.invoke("send-lead-notification", {
           body: {
@@ -87,16 +82,14 @@ const LeadCaptureForm = ({
         });
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
-        // Don't throw - lead was saved successfully
       }
 
       setIsSuccess(true);
       toast({
-        title: "Cerere trimisă cu succes!",
-        description: "Te vom contacta în curând cu analiza detaliată.",
+        title: t.leadForm.successToast,
+        description: t.leadForm.successToastMessage,
       });
 
-      // Reset and close after delay
       setTimeout(() => {
         setName("");
         setWhatsappNumber("");
@@ -108,8 +101,8 @@ const LeadCaptureForm = ({
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast({
-        title: "Eroare",
-        description: "A apărut o eroare. Te rugăm să încerci din nou.",
+        title: t.leadForm.error,
+        description: t.leadForm.errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -123,26 +116,26 @@ const LeadCaptureForm = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-serif">
             <FileText className="w-5 h-5 text-primary" />
-            Obține Analiza Detaliată
+            {t.leadForm.title}
           </DialogTitle>
           <DialogDescription>
-            Completează datele și vei primi o analiză personalizată pentru proprietatea ta.
+            {t.leadForm.description}
           </DialogDescription>
         </DialogHeader>
 
         {isSuccess ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">Mulțumim!</h3>
-            <p className="text-muted-foreground">Te vom contacta în curând.</p>
+            <h3 className="text-xl font-semibold text-foreground mb-2">{t.leadForm.success}</h3>
+            <p className="text-muted-foreground">{t.leadForm.successMessage}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nume complet</Label>
+              <Label htmlFor="name">{t.leadForm.name}</Label>
               <Input
                 id="name"
-                placeholder="Ion Popescu"
+                placeholder={t.leadForm.namePlaceholder}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -151,11 +144,11 @@ const LeadCaptureForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="whatsapp">Număr WhatsApp</Label>
+              <Label htmlFor="whatsapp">{t.leadForm.whatsapp}</Label>
               <Input
                 id="whatsapp"
                 type="tel"
-                placeholder="+40 7XX XXX XXX"
+                placeholder={t.leadForm.whatsappPlaceholder}
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
                 required
@@ -164,11 +157,11 @@ const LeadCaptureForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="area">Suprafață proprietate (m²)</Label>
+              <Label htmlFor="area">{t.leadForm.propertyArea}</Label>
               <Input
                 id="area"
                 type="number"
-                placeholder="50"
+                placeholder={t.leadForm.propertyAreaPlaceholder}
                 value={propertyArea}
                 onChange={(e) => setPropertyArea(e.target.value)}
                 required
@@ -178,15 +171,15 @@ const LeadCaptureForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">Tip proprietate</Label>
+              <Label htmlFor="type">{t.leadForm.propertyType}</Label>
               <Select value={propertyType} onValueChange={setPropertyType} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selectează tipul" />
+                  <SelectValue placeholder={t.leadForm.selectType} />
                 </SelectTrigger>
                 <SelectContent>
-                  {propertyTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                  {propertyTypeKeys.map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {t.leadForm.propertyTypes[key]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -195,7 +188,7 @@ const LeadCaptureForm = ({
 
             <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
               <p className="text-sm text-muted-foreground">
-                Profit estimat din simulare:{" "}
+                {t.leadForm.estimatedProfit}{" "}
                 <span className="text-primary font-semibold">
                   {calculatedNetProfit.toLocaleString()} €/lună
                 </span>
@@ -206,10 +199,10 @@ const LeadCaptureForm = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Se trimite...
+                  {t.leadForm.sending}
                 </>
               ) : (
-                "Trimite Cererea"
+                t.leadForm.submit
               )}
             </Button>
           </form>
