@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -194,19 +194,48 @@ export default function PropertyImageGallery({
     setPreviewImage(image);
   };
 
-  const handlePrevImage = () => {
-    if (!previewImage) return;
+  const handlePrevImage = useCallback(() => {
+    if (!previewImage || sortedImages.length <= 1) return;
     const currentIndex = sortedImages.findIndex(img => img.id === previewImage.id);
     const prevIndex = currentIndex > 0 ? currentIndex - 1 : sortedImages.length - 1;
     setPreviewImage(sortedImages[prevIndex]);
-  };
+  }, [previewImage, sortedImages]);
 
-  const handleNextImage = () => {
-    if (!previewImage) return;
+  const handleNextImage = useCallback(() => {
+    if (!previewImage || sortedImages.length <= 1) return;
     const currentIndex = sortedImages.findIndex(img => img.id === previewImage.id);
     const nextIndex = currentIndex < sortedImages.length - 1 ? currentIndex + 1 : 0;
     setPreviewImage(sortedImages[nextIndex]);
-  };
+  }, [previewImage, sortedImages]);
+
+  const handleCloseLightbox = useCallback(() => {
+    setPreviewImage(null);
+  }, []);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!previewImage) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          handlePrevImage();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          handleNextImage();
+          break;
+        case 'Escape':
+          e.preventDefault();
+          handleCloseLightbox();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewImage, handlePrevImage, handleNextImage, handleCloseLightbox]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
