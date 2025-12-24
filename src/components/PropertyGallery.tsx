@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MapPin, Wifi, Car, Key, ExternalLink, X, ChevronLeft, ChevronRight, Star, Users, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 // Import all apartment images
 import apt01 from "@/assets/apt-01.jpg";
@@ -177,6 +178,8 @@ const getFeatureIcon = (feature: string) => {
 const PropertyGallery = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index);
@@ -202,7 +205,12 @@ const PropertyGallery = () => {
       <div className="absolute bottom-20 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-16 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">Portofoliu</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
             Proprietăți în <span className="text-gradient-gold">Administrarea Noastră</span>
@@ -213,11 +221,14 @@ const PropertyGallery = () => {
         </div>
 
         {/* Property Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {properties.map((property, index) => (
             <div
               key={property.id}
-              className="group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant"
+              className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
+                gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
             >
               {/* Image */}
               <div

@@ -8,6 +8,7 @@ import {
   Sparkles,
   CalendarCheck
 } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const benefits = [
   {
@@ -53,6 +54,10 @@ const benefits = [
 ];
 
 const OwnerBenefits = () => {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
+  const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
+
   return (
     <section className="py-24 bg-hero relative overflow-hidden">
       {/* Background pattern */}
@@ -68,7 +73,12 @@ const OwnerBenefits = () => {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-16 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">
             Ce Primești
           </p>
@@ -80,11 +90,14 @@ const OwnerBenefits = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className="group bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elegant"
+              className={`group bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
+                gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                 <benefit.icon className="w-6 h-6 text-primary" />
@@ -100,7 +113,12 @@ const OwnerBenefits = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-16 text-center">
+        <div 
+          ref={ctaRef}
+          className={`mt-16 text-center transition-all duration-700 ${
+            ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10 border border-primary/20">
             <span className="text-foreground font-medium">Comision transparent de doar</span>
             <span className="text-2xl font-serif font-bold text-primary">15%</span>

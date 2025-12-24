@@ -1,4 +1,5 @@
 import { Star, Quote } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 interface Testimonial {
   id: number;
@@ -50,6 +51,10 @@ const testimonials: Testimonial[] = [
 ];
 
 const Testimonials = () => {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
+  const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
+
   return (
     <section className="py-24 bg-background relative overflow-hidden">
       {/* Background decorations */}
@@ -57,7 +62,12 @@ const Testimonials = () => {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-16 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">Testimoniale</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
             Ce Spun <span className="text-gradient-gold">Proprietarii</span>
@@ -67,11 +77,14 @@ const Testimonials = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {testimonials.map((testimonial) => (
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.id}
-              className="bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elegant relative"
+              className={`bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant relative ${
+                gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
             >
               {/* Quote icon */}
               <Quote className="absolute top-6 right-6 w-8 h-8 text-primary/20" />
@@ -106,16 +119,21 @@ const Testimonials = () => {
         </div>
 
         {/* Trust stats */}
-        <div className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16">
+        <div 
+          ref={statsRef}
+          className={`mt-16 flex flex-wrap justify-center gap-8 md:gap-16 transition-all duration-700 ${
+            statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="text-center">
             <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9/5</p>
             <p className="text-muted-foreground text-sm">Rating mediu</p>
           </div>
-          <div className="text-center">
+          <div className="text-center" style={{ transitionDelay: '100ms' }}>
             <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">200+</p>
             <p className="text-muted-foreground text-sm">Recenzii verificate</p>
           </div>
-          <div className="text-center">
+          <div className="text-center" style={{ transitionDelay: '200ms' }}>
             <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
             <p className="text-muted-foreground text-sm">Clienți mulțumiți</p>
           </div>
