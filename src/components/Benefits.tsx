@@ -1,4 +1,5 @@
 import { TrendingUp, Shield, Clock } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const benefits = [
   {
@@ -19,10 +20,18 @@ const benefits = [
 ];
 
 const Benefits = () => {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
+
   return (
     <section className="py-24 bg-gradient-subtle">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-16 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
             De Ce Proprietarii Aleg <span className="text-gradient-gold">RealTrust</span>
           </h2>
@@ -31,12 +40,14 @@ const Benefits = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div ref={gridRef} className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {benefits.map((benefit, index) => (
             <div 
               key={index}
-              className="group relative bg-card p-8 rounded-2xl shadow-card hover:shadow-elegant transition-all duration-500 border border-border hover:border-gold/30"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className={`group relative bg-card p-8 rounded-2xl shadow-card hover:shadow-elegant transition-all duration-500 border border-border hover:border-gold/30 ${
+                gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
             >
               {/* Icon container */}
               <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mb-6 group-hover:bg-gold transition-colors duration-300">
