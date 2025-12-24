@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Wifi, Car, Key, ExternalLink, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Wifi, Car, Key, ExternalLink, X, ChevronLeft, ChevronRight, Star, Users, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Import all apartment images
@@ -21,6 +21,11 @@ interface Property {
   image: string;
   features: string[];
   bookingUrl: string;
+  description: string;
+  rating: number;
+  reviews: number;
+  capacity: number;
+  bedrooms: number;
 }
 
 const properties: Property[] = [
@@ -31,6 +36,11 @@ const properties: Property[] = [
     image: apt01,
     features: ["Auto Check-in", "Parcare", "WiFi"],
     bookingUrl: "https://booking.com",
+    description: "Apartament elegant cu finisaje de lux în inima orașului",
+    rating: 4.9,
+    reviews: 127,
+    capacity: 4,
+    bedrooms: 2,
   },
   {
     id: 2,
@@ -39,6 +49,11 @@ const properties: Property[] = [
     image: apt02,
     features: ["Auto Check-in", "WiFi", "AC"],
     bookingUrl: "https://booking.com",
+    description: "Suită modernă cu vedere panoramică spre piață",
+    rating: 4.8,
+    reviews: 89,
+    capacity: 2,
+    bedrooms: 1,
   },
   {
     id: 3,
@@ -47,6 +62,11 @@ const properties: Property[] = [
     image: apt03,
     features: ["Parcare", "WiFi", "Smart TV"],
     bookingUrl: "https://booking.com",
+    description: "Loft industrial cu design contemporan și dotări premium",
+    rating: 4.9,
+    reviews: 156,
+    capacity: 3,
+    bedrooms: 1,
   },
   {
     id: 4,
@@ -55,6 +75,11 @@ const properties: Property[] = [
     image: apt04,
     features: ["Auto Check-in", "WiFi"],
     bookingUrl: "https://booking.com",
+    description: "Studio confortabil, perfect pentru city breaks",
+    rating: 4.7,
+    reviews: 64,
+    capacity: 2,
+    bedrooms: 1,
   },
   {
     id: 5,
@@ -63,6 +88,11 @@ const properties: Property[] = [
     image: apt05,
     features: ["Parcare", "WiFi", "Balcon"],
     bookingUrl: "https://booking.com",
+    description: "Apartament spațios cu balcon și priveliște spectaculoasă",
+    rating: 4.8,
+    reviews: 92,
+    capacity: 6,
+    bedrooms: 3,
   },
   {
     id: 6,
@@ -71,6 +101,11 @@ const properties: Property[] = [
     image: apt06,
     features: ["Auto Check-in", "Parcare", "WiFi"],
     bookingUrl: "https://booking.com",
+    description: "Suită executivă ideală pentru călătorii de afaceri",
+    rating: 5.0,
+    reviews: 78,
+    capacity: 2,
+    bedrooms: 1,
   },
   {
     id: 7,
@@ -79,6 +114,11 @@ const properties: Property[] = [
     image: apt07,
     features: ["WiFi", "AC", "Bucătărie"],
     bookingUrl: "https://booking.com",
+    description: "Refugiu urban cu toate facilitățile necesare",
+    rating: 4.6,
+    reviews: 45,
+    capacity: 2,
+    bedrooms: 1,
   },
   {
     id: 8,
@@ -87,6 +127,11 @@ const properties: Property[] = [
     image: apt08,
     features: ["Auto Check-in", "Parcare", "WiFi"],
     bookingUrl: "https://booking.com",
+    description: "Apartament deluxe în zona istorică a orașului",
+    rating: 4.9,
+    reviews: 134,
+    capacity: 4,
+    bedrooms: 2,
   },
   {
     id: 9,
@@ -95,6 +140,11 @@ const properties: Property[] = [
     image: apt09,
     features: ["Parcare", "WiFi", "Smart TV"],
     bookingUrl: "https://booking.com",
+    description: "Suită de colț cu lumină naturală abundentă",
+    rating: 4.8,
+    reviews: 67,
+    capacity: 3,
+    bedrooms: 1,
   },
   {
     id: 10,
@@ -103,6 +153,11 @@ const properties: Property[] = [
     image: apt11,
     features: ["Auto Check-in", "Parcare", "WiFi"],
     bookingUrl: "https://booking.com",
+    description: "Lux și confort în centrul vibrant al Timișoarei",
+    rating: 4.9,
+    reviews: 189,
+    capacity: 5,
+    bedrooms: 2,
   },
 ];
 
@@ -166,7 +221,7 @@ const PropertyGallery = () => {
             >
               {/* Image */}
               <div
-                className="relative h-56 overflow-hidden cursor-pointer"
+                className="relative h-48 overflow-hidden cursor-pointer"
                 onClick={() => openLightbox(index)}
               >
                 <img
@@ -182,17 +237,43 @@ const PropertyGallery = () => {
                   <MapPin className="w-3 h-3 text-primary" />
                   <span className="text-xs font-medium text-foreground">{property.location}</span>
                 </div>
+
+                {/* Rating badge */}
+                <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
+                  <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-6">
-                <h3 className="text-lg font-serif font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
+              <div className="p-5">
+                <h3 className="text-lg font-serif font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
                   {property.name}
                 </h3>
 
+                {/* Description */}
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  {property.description}
+                </p>
+
+                {/* Capacity info */}
+                <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {property.capacity} oaspeți
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BedDouble className="w-4 h-4" />
+                    {property.bedrooms} {property.bedrooms === 1 ? 'dormitor' : 'dormitoare'}
+                  </span>
+                  <span className="text-xs text-muted-foreground/70">
+                    ({property.reviews} recenzii)
+                  </span>
+                </div>
+
                 {/* Features */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {property.features.map((feature, idx) => (
+                  {property.features.slice(0, 3).map((feature, idx) => (
                     <span
                       key={idx}
                       className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"
