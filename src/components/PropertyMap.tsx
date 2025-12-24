@@ -1,0 +1,233 @@
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { properties } from '@/data/properties';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { Home, Loader2, MapPin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Property coordinates in Timișoara
+const propertyCoordinates: Record<string, [number, number]> = {
+  'ring-apart-hotel-spacious-deluxe': [21.2087, 45.7489],
+  'green-forest-apart-hotel': [21.2650, 45.7320],
+  'fructus-plaza-ultracentral-apart-hotel': [21.2260, 45.7565],
+  'fullview-studio-deluxe': [21.2180, 45.7520],
+  'avenue-of-mara-apart-hotel': [21.2175, 45.7515],
+  'helios-apart-hotel': [21.2320, 45.7580],
+  'ateneo-trevi-2-apart-hotel': [21.1890, 45.7680],
+  'sunset-da-ra-studio-deluxe': [21.2185, 45.7525],
+  'mara-luxury-golden-apart-hotel': [21.2280, 45.7540],
+  'ateneo-apart-hotel-studio-deluxe': [21.1895, 45.7675],
+  'modern-studio-apart-hotel': [21.2450, 45.7420],
+};
+
+interface PropertyMapProps {
+  onPropertySelect?: (slug: string) => void;
+  selectedProperty?: string;
+  className?: string;
+}
+
+const PropertyMap: React.FC<PropertyMapProps> = ({ 
+  onPropertySelect, 
+  selectedProperty,
+  className = "w-full h-[500px]" 
+}) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const { language } = useLanguage();
+
+  // Fetch Mapbox token
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+        if (error) throw error;
+        if (data?.token) {
+          setMapboxToken(data.token);
+        } else {
+          setError('Token Mapbox nu a fost configurat');
+        }
+      } catch (err) {
+        console.error('Error fetching Mapbox token:', err);
+        setError('Nu s-a putut încărca harta');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchToken();
+  }, []);
+
+  // Initialize map when token is available
+  useEffect(() => {
+    if (!mapContainer.current || !mapboxToken) return;
+
+    mapboxgl.accessToken = mapboxToken;
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [21.2270, 45.7540],
+      zoom: 12,
+      pitch: 0,
+    });
+
+    map.current.addControl(
+      new mapboxgl.NavigationControl({ visualizePitch: true }),
+      'top-right'
+    );
+
+    // Add markers
+    properties.forEach((property) => {
+      const coords = propertyCoordinates[property.slug];
+      if (!coords) return;
+
+      const markerEl = document.createElement('div');
+      markerEl.className = 'property-marker cursor-pointer';
+      markerEl.style.cssText = `
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border: 3px solid white;
+        transition: transform 0.2s ease;
+      `;
+      markerEl.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      `;
+
+      markerEl.addEventListener('mouseenter', () => {
+        markerEl.style.transform = 'scale(1.15)';
+      });
+      markerEl.addEventListener('mouseleave', () => {
+        markerEl.style.transform = 'scale(1)';
+      });
+
+      const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: true,
+        closeOnClick: true,
+        maxWidth: '320px',
+      });
+
+      const popupContent = `
+        <div style="padding: 0; min-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
+          <img src="${property.images[0]}" alt="${property.name}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px 8px 0 0;" />
+          <div style="padding: 12px;">
+            <h3 style="font-weight: 600; font-size: 14px; margin: 0 0 4px 0; color: #1a1a1a;">${property.name}</h3>
+            <p style="font-size: 12px; color: #666; margin: 0 0 8px 0; display: flex; align-items: center; gap: 4px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${property.location}
+            </p>
+            <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #666; margin-bottom: 12px;">
+              <span style="display: flex; align-items: center; gap: 4px; background: #fef3c7; padding: 2px 8px; border-radius: 12px; color: #92400e; font-weight: 600;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                ${property.rating}/10
+              </span>
+              <span>${property.reviews} ${language === 'ro' ? 'recenzii' : 'reviews'}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #888; margin-bottom: 12px;">
+              <span>${property.capacity} ${language === 'ro' ? 'oaspeți' : 'guests'}</span>
+              <span>•</span>
+              <span>${property.bedrooms} ${language === 'ro' ? 'dorm.' : 'bed.'}</span>
+              <span>•</span>
+              <span>${property.size} m²</span>
+            </div>
+            <a href="/proprietate/${property.slug}" style="display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; font-size: 12px; font-weight: 500; padding: 10px 16px; border-radius: 6px; text-decoration: none; transition: opacity 0.2s;">
+              ${language === 'ro' ? 'Vezi Detalii' : 'View Details'}
+            </a>
+          </div>
+        </div>
+      `;
+
+      popup.setHTML(popupContent);
+
+      const marker = new mapboxgl.Marker(markerEl)
+        .setLngLat(coords)
+        .setPopup(popup)
+        .addTo(map.current!);
+
+      markerEl.addEventListener('click', () => {
+        if (onPropertySelect) {
+          onPropertySelect(property.slug);
+        }
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    return () => {
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+      map.current?.remove();
+    };
+  }, [mapboxToken, language, onPropertySelect]);
+
+  // Fly to selected property
+  useEffect(() => {
+    if (selectedProperty && map.current) {
+      const coords = propertyCoordinates[selectedProperty];
+      if (coords) {
+        map.current.flyTo({
+          center: coords,
+          zoom: 15,
+          duration: 1500,
+        });
+      }
+    }
+  }, [selectedProperty]);
+
+  if (isLoading) {
+    return (
+      <div className={`relative ${className} bg-muted rounded-xl flex items-center justify-center`}>
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">
+            {language === 'ro' ? 'Se încarcă harta...' : 'Loading map...'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`relative ${className} bg-muted rounded-xl flex items-center justify-center`}>
+        <div className="flex flex-col items-center gap-3 text-center px-4">
+          <MapPin className="w-8 h-8 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">{error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <div ref={mapContainer} className="absolute inset-0 rounded-xl shadow-lg overflow-hidden" />
+      
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+        <div className="flex items-center gap-2 text-sm">
+          <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+            <Home className="w-3 h-3 text-primary-foreground" />
+          </div>
+          <span className="text-foreground font-medium">
+            {properties.length} {language === 'ro' ? 'proprietăți' : 'properties'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PropertyMap;
