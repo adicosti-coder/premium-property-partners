@@ -26,7 +26,7 @@ const getFeatureIcon = (feature: string) => {
 
 const PropertyGallery = () => {
   const { t, language } = useLanguage();
-  const { toggleFavorite, isFavorite } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -39,6 +39,7 @@ const PropertyGallery = () => {
   const [selectedCapacity, setSelectedCapacity] = useState("all");
   const [selectedFeature, setSelectedFeature] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
@@ -62,6 +63,11 @@ const PropertyGallery = () => {
   // Filter and sort properties
   const filteredProperties = useMemo(() => {
     let result = properties.filter((property) => {
+      // Favorites filter
+      if (showFavoritesOnly && !favorites.includes(String(property.id))) {
+        return false;
+      }
+
       // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -116,7 +122,7 @@ const PropertyGallery = () => {
     }
 
     return result;
-  }, [searchQuery, selectedLocation, selectedCapacity, selectedFeature, sortBy]);
+  }, [searchQuery, selectedLocation, selectedCapacity, selectedFeature, sortBy, showFavoritesOnly, favorites]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -124,6 +130,7 @@ const PropertyGallery = () => {
     setSelectedCapacity("all");
     setSelectedFeature("all");
     setSortBy("default");
+    setShowFavoritesOnly(false);
   };
 
   const openBookingForm = (propertyName: string) => {
@@ -178,13 +185,16 @@ const PropertyGallery = () => {
             selectedCapacity={selectedCapacity}
             selectedFeature={selectedFeature}
             sortBy={sortBy}
+            showFavoritesOnly={showFavoritesOnly}
+            favoritesCount={favorites.length}
             onSearchChange={setSearchQuery}
             onLocationChange={setSelectedLocation}
             onCapacityChange={setSelectedCapacity}
             onFeatureChange={setSelectedFeature}
             onSortChange={setSortBy}
+            onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
             onClearFilters={clearFilters}
-        />
+          />
         )}
 
         {/* Results counter */}
