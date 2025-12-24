@@ -563,6 +563,18 @@ Mulțumesc!`,
       clearAll: "Șterge toate favoritele",
       clearedAll: "Toate favoritele au fost șterse",
     },
+
+    // Push Notifications
+    notifications: {
+      title: "Notificări Push",
+      description: "Primește notificări când apar proprietăți noi în zonele tale favorite",
+      enabled: "Notificările au fost activate",
+      disabled: "Notificările au fost dezactivate",
+      statusEnabled: "Activate",
+      statusDisabled: "Dezactivate",
+      notSupported: "Notificările push nu sunt suportate în acest browser",
+      permissionDenied: "Permisiunea a fost refuzată în setările browserului",
+    },
   },
   
   en: {
@@ -1128,6 +1140,18 @@ Thank you!`,
       selectToCompare: "Click to select",
       clearAll: "Clear all favorites",
       clearedAll: "All favorites have been cleared",
+    },
+
+    // Push Notifications
+    notifications: {
+      title: "Push Notifications",
+      description: "Get notified when new properties are added to your favorite zones",
+      enabled: "Notifications enabled",
+      disabled: "Notifications disabled",
+      statusEnabled: "Enabled",
+      statusDisabled: "Disabled",
+      notSupported: "Push notifications are not supported in this browser",
+      permissionDenied: "Permission denied in browser settings",
     },
   },
 };
