@@ -50,30 +50,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          created_at: string
-          id: string
-          notifications_enabled: boolean | null
-          preferred_locations: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id: string
-          notifications_enabled?: boolean | null
-          preferred_locations?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          notifications_enabled?: boolean | null
-          preferred_locations?: string[] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       properties: {
         Row: {
           booking_url: string
@@ -119,33 +95,6 @@ export type Database = {
           name?: string
           tag?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      push_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          p256dh: string
-          user_id: string
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          endpoint: string
-          id?: string
-          p256dh: string
-          user_id: string
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          endpoint?: string
-          id?: string
-          p256dh?: string
-          user_id?: string
         }
         Relationships: []
       }
