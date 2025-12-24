@@ -375,6 +375,20 @@ Mulțumesc!`,
       },
     },
     
+    // Mobile CTA Bar
+    mobileCta: {
+      call: "Sună",
+      whatsapp: "WhatsApp",
+      owners: "Proprietari",
+      whatsappMessage: "Bună ziua! Sunt interesat de serviciile de administrare RealTrust.",
+    },
+    
+    // Floating WhatsApp
+    floatingWhatsapp: {
+      ariaLabel: "Contactează-ne pe WhatsApp",
+      message: "Bună ziua! Sunt interesat de serviciile RealTrust.",
+    },
+    
     // Common
     common: {
       learnMore: "Află mai mult",
@@ -757,6 +771,20 @@ Thank you!`,
         penthouse: "Penthouse",
         vila: "Villa",
       },
+    },
+    
+    // Mobile CTA Bar
+    mobileCta: {
+      call: "Call",
+      whatsapp: "WhatsApp",
+      owners: "Owners",
+      whatsappMessage: "Hello! I'm interested in RealTrust management services.",
+    },
+    
+    // Floating WhatsApp
+    floatingWhatsapp: {
+      ariaLabel: "Contact us on WhatsApp",
+      message: "Hello! I'm interested in RealTrust services.",
     },
     
     // Common

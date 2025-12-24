@@ -1,13 +1,16 @@
 import { Phone, MessageCircle, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const MobileCTABar = () => {
+  const { t } = useLanguage();
+  
   const handleCall = () => {
     window.location.href = "tel:+40756123456";
   };
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent("Bună ziua! Sunt interesat de serviciile de administrare RealTrust.");
+    const message = encodeURIComponent(t.mobileCta.whatsappMessage);
     window.open(`https://wa.me/40756123456?text=${message}`, "_blank");
   };
 
@@ -26,7 +29,7 @@ const MobileCTABar = () => {
           onClick={handleCall}
         >
           <Phone className="w-4 h-4" />
-          Sună
+          {t.mobileCta.call}
         </Button>
         
         <Button
@@ -36,7 +39,7 @@ const MobileCTABar = () => {
           onClick={handleWhatsApp}
         >
           <MessageCircle className="w-4 h-4" />
-          WhatsApp
+          {t.mobileCta.whatsapp}
         </Button>
         
         <Button
@@ -46,7 +49,7 @@ const MobileCTABar = () => {
           onClick={scrollToContact}
         >
           <Home className="w-4 h-4" />
-          Proprietari
+          {t.mobileCta.owners}
         </Button>
       </div>
     </div>
