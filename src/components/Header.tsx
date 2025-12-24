@@ -2,15 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Shield } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
+
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   const navLinks = [
-    { href: "#beneficii", label: "Beneficii" },
+    { href: "#beneficii", label: t.nav.benefits },
     { href: "#calculator", label: "Calculator" },
-    { href: "#portofoliu", label: "Proprietăți" },
-    { href: "#oaspeti", label: "Oaspeți" },
-    { href: "#contact", label: "Contact" },
+    { href: "#portofoliu", label: t.nav.portfolio },
+    { href: "#oaspeti", label: t.nav.guests },
+    { href: "#contact", label: t.nav.contact },
   ];
 
   return (
@@ -37,8 +41,9 @@ const Header = () => {
             ))}
           </nav>
           
-          {/* CTA & Mobile Menu */}
-          <div className="flex items-center gap-4">
+          {/* CTA & Language & Mobile Menu */}
+          <div className="flex items-center gap-2 md:gap-4">
+            <LanguageSwitcher />
             <Link to="/auth">
               <Button 
                 variant="ghost" 
@@ -55,7 +60,7 @@ const Header = () => {
               className="hidden sm:inline-flex"
               onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              Contactează-ne
+              {t.nav.contact}
             </Button>
             
             {/* Mobile menu button */}

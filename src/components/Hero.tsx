@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Hero = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
@@ -23,47 +26,46 @@ const Hero = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-foreground/80 text-sm font-medium tracking-wide">Administrare Premium în Regim Hotelier</span>
+            <span className="text-foreground/80 text-sm font-medium tracking-wide">{t.hero.badge}</span>
           </div>
           
           {/* Headline */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            Maximizează Venitul.{" "}
-            <span className="text-gradient-gold">Fără Efort.</span>
+            {t.hero.title}{" "}
+            <span className="text-gradient-gold">{t.hero.titleHighlight}</span>
           </h1>
           
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed animate-fade-up" style={{ animationDelay: '0.3s' }}>
-            Transformăm apartamentul tău din Timișoara într-o investiție profitabilă. 
-            Gestionăm totul — de la rezervări la curățenie — pentru ca tu să te bucuri doar de rezultate.
+            {t.hero.subtitle}
           </p>
           
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
             <Button variant="hero" size="xl" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>
-              Solicită o Evaluare Gratuită
+              {t.hero.cta}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button variant="heroOutline" size="xl" onClick={() => document.getElementById('cum-functioneaza')?.scrollIntoView({ behavior: 'smooth' })}>
-              Află Cum Funcționează
+              {t.hero.ctaSecondary}
             </Button>
           </div>
           
           {/* Trust indicators */}
           <div className="mt-16 pt-8 border-t border-border animate-fade-up" style={{ animationDelay: '0.5s' }}>
-            <p className="text-muted-foreground text-sm mb-4 uppercase tracking-widest">De Încredere Pentru</p>
+            <p className="text-muted-foreground text-sm mb-4 uppercase tracking-widest">{t.hero.trustTitle}</p>
             <div className="flex flex-wrap gap-8 md:gap-16">
               <div>
                 <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">150+</p>
-                <p className="text-muted-foreground text-sm">Proprietăți Gestionate</p>
+                <p className="text-muted-foreground text-sm">{t.hero.stats.properties}</p>
               </div>
               <div>
                 <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
-                <p className="text-muted-foreground text-sm">Rată de Ocupare</p>
+                <p className="text-muted-foreground text-sm">{t.hero.stats.occupancy}</p>
               </div>
               <div>
                 <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9★</p>
-                <p className="text-muted-foreground text-sm">Rating Mediu</p>
+                <p className="text-muted-foreground text-sm">{t.hero.stats.rating}</p>
               </div>
             </div>
           </div>
