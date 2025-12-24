@@ -47,7 +47,9 @@ const Guests = () => {
   
   // Sort
   const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "rating-desc">("default");
-
+  
+  // Rating filter
+  const [minRating, setMinRating] = useState<string>("all");
   // Scroll animations
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: filtersRef, isVisible: filtersVisible } = useScrollAnimation({ threshold: 0.1 });
@@ -84,6 +86,11 @@ const Guests = () => {
         return false;
       }
       
+      // Rating filter
+      if (minRating !== "all" && property.rating < parseFloat(minRating)) {
+        return false;
+      }
+      
       return true;
     });
 
@@ -104,9 +111,9 @@ const Guests = () => {
     }
 
     return result;
-  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy]);
+  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
 
-  const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default";
+  const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
 
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -114,6 +121,7 @@ const Guests = () => {
     setSelectedCapacity("all");
     setPriceFilter([priceRange.min, priceRange.max]);
     setSortBy("default");
+    setMinRating("all");
   };
 
   const handleToggleFavorite = (propertyId: string, propertyName: string) => {
@@ -226,6 +234,39 @@ const Guests = () => {
                 <SelectItem value="1-2">1-2 {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
                 <SelectItem value="3-4">3-4 {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
                 <SelectItem value="5+">5+ {language === 'ro' ? 'oaspeți' : 'guests'}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Rating Filter */}
+            <Select value={minRating} onValueChange={setMinRating}>
+              <SelectTrigger className={`w-full md:w-[160px] transition-shadow duration-300 hover:shadow-md ${
+                minRating !== "all" ? 'border-primary text-primary' : ''
+              }`}>
+                <Star className="w-4 h-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Rating" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'ro' ? 'Orice rating' : 'Any rating'}</SelectItem>
+                <SelectItem value="4.9">
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.9+
+                  </span>
+                </SelectItem>
+                <SelectItem value="4.8">
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.8+
+                  </span>
+                </SelectItem>
+                <SelectItem value="4.5">
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.5+
+                  </span>
+                </SelectItem>
+                <SelectItem value="4.0">
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.0+
+                  </span>
+                </SelectItem>
               </SelectContent>
             </Select>
 
