@@ -2,6 +2,7 @@ export const translations = {
   ro: {
     // Header
     nav: {
+      home: "Acasă",
       benefits: "Beneficii",
       howItWorks: "Cum Funcționează",
       whyUs: "De Ce Noi",
@@ -844,6 +845,7 @@ Mulțumesc!`,
   en: {
     // Header
     nav: {
+      home: "Home",
       benefits: "Benefits",
       howItWorks: "How It Works",
       whyUs: "Why Us",
