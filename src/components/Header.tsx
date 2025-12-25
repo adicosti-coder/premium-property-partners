@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Shield, Heart } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -11,8 +11,21 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
   const { favorites } = useFavorites();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleHomeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+    setMobileMenuOpen(false);
+  };
 
   const navLinks = [
+    { href: "/", label: t.nav.home, isHome: true },
     { href: "#beneficii", label: t.nav.benefits },
     { href: "#calculator", label: "Calculator" },
     { href: "#portofoliu", label: t.nav.portfolio },
@@ -35,7 +48,16 @@ const Header = () => {
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              link.isPage ? (
+              link.isHome ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={handleHomeClick}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                >
+                  {link.label}
+                </a>
+              ) : link.isPage ? (
                 <Link
                   key={link.href}
                   to={link.href}
@@ -110,7 +132,16 @@ const Header = () => {
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => (
-                link.isPage ? (
+                link.isHome ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={handleHomeClick}
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+                  >
+                    {link.label}
+                  </a>
+                ) : link.isPage ? (
                   <Link
                     key={link.href}
                     to={link.href}
