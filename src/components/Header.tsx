@@ -92,7 +92,7 @@ const Header = () => {
               const isActive = activeSection === link.href;
               const baseClasses = "text-sm font-medium transition-all duration-300 ease-out";
               const activeClasses = isActive 
-                ? "text-primary font-semibold scale-105" 
+                ? "text-primary font-semibold scale-105 drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]" 
                 : "text-muted-foreground hover:text-foreground hover:scale-105";
 
               return link.isHome ? (
@@ -182,7 +182,7 @@ const Header = () => {
                 const isActive = activeSection === link.href;
                 const baseClasses = "text-sm font-medium py-2 transition-all duration-300 ease-out";
                 const activeClasses = isActive 
-                  ? "text-primary font-semibold translate-x-2" 
+                  ? "text-primary font-semibold translate-x-2 drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]" 
                   : "text-muted-foreground hover:text-foreground hover:translate-x-1";
 
                 return link.isHome ? (
