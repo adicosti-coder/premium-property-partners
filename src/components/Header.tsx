@@ -90,10 +90,10 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
-              const baseClasses = "text-sm font-medium transition-all duration-300 ease-out";
+              const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out";
               const activeClasses = isActive 
-                ? "text-primary font-semibold scale-105 animate-glow-pulse" 
-                : "text-muted-foreground hover:text-foreground hover:scale-105";
+                ? "text-primary font-semibold scale-105 animate-glow-pulse after:w-full" 
+                : "text-muted-foreground hover:text-foreground hover:scale-105 after:w-0 hover:after:w-full";
 
               return link.isHome ? (
                 <a
@@ -180,10 +180,10 @@ const Header = () => {
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => {
                 const isActive = activeSection === link.href;
-                const baseClasses = "text-sm font-medium py-2 transition-all duration-300 ease-out";
+                const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out";
                 const activeClasses = isActive 
-                  ? "text-primary font-semibold translate-x-2 animate-glow-pulse" 
-                  : "text-muted-foreground hover:text-foreground hover:translate-x-1";
+                  ? "text-primary font-semibold translate-x-2 animate-glow-pulse before:opacity-100" 
+                  : "text-muted-foreground hover:text-foreground hover:translate-x-1 before:opacity-0 hover:before:opacity-100";
 
                 return link.isHome ? (
                   <a
