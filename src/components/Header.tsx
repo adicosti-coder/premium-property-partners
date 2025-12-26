@@ -90,10 +90,10 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
-              const baseClasses = "transition-colors text-sm font-medium";
+              const baseClasses = "text-sm font-medium transition-all duration-300 ease-out";
               const activeClasses = isActive 
-                ? "text-primary font-semibold" 
-                : "text-muted-foreground hover:text-foreground";
+                ? "text-primary font-semibold scale-105" 
+                : "text-muted-foreground hover:text-foreground hover:scale-105";
 
               return link.isHome ? (
                 <a
@@ -180,10 +180,10 @@ const Header = () => {
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => {
                 const isActive = activeSection === link.href;
-                const baseClasses = "transition-colors text-sm font-medium py-2";
+                const baseClasses = "text-sm font-medium py-2 transition-all duration-300 ease-out";
                 const activeClasses = isActive 
-                  ? "text-primary font-semibold" 
-                  : "text-muted-foreground hover:text-foreground";
+                  ? "text-primary font-semibold translate-x-2" 
+                  : "text-muted-foreground hover:text-foreground hover:translate-x-1";
 
                 return link.isHome ? (
                   <a
