@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Shield, Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -9,10 +9,51 @@ import ThemeToggle from "./ThemeToggle";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
   const { t } = useLanguage();
   const { favorites } = useFavorites();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Track active section based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      if (location.pathname !== "/") {
+        setActiveSection(location.pathname);
+        return;
+      }
+
+      const sections = ["contact", "portofoliu", "calculator", "beneficii"];
+      const scrollPosition = window.scrollY + 100;
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(`#${section}`);
+            return;
+          }
+        }
+      }
+
+      // If at top of page, set home as active
+      if (window.scrollY < 100) {
+        setActiveSection("/");
+      }
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location.pathname]);
+
+  // Update active section when route changes
+  useEffect(() => {
+    if (location.pathname !== "/") {
+      setActiveSection(location.pathname);
+    }
+  }, [location.pathname]);
 
   const handleHomeClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,13 +88,19 @@ const Header = () => {
           
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              link.isHome ? (
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.href;
+              const baseClasses = "transition-colors text-sm font-medium";
+              const activeClasses = isActive 
+                ? "text-primary font-semibold" 
+                : "text-muted-foreground hover:text-foreground";
+
+              return link.isHome ? (
                 <a
                   key={link.href}
                   href={link.href}
                   onClick={handleHomeClick}
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                  className={`${baseClasses} ${activeClasses}`}
                 >
                   {link.label}
                 </a>
@@ -61,7 +108,7 @@ const Header = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                  className={`${baseClasses} ${activeClasses}`}
                 >
                   {link.label}
                 </Link>
@@ -69,12 +116,12 @@ const Header = () => {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                  className={`${baseClasses} ${activeClasses}`}
                 >
                   {link.label}
                 </a>
-              )
-            ))}
+              );
+            })}
           </nav>
           
           {/* CTA & Language & Mobile Menu */}
@@ -131,13 +178,19 @@ const Header = () => {
         {mobileMenuOpen && (
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                link.isHome ? (
+              {navLinks.map((link) => {
+                const isActive = activeSection === link.href;
+                const baseClasses = "transition-colors text-sm font-medium py-2";
+                const activeClasses = isActive 
+                  ? "text-primary font-semibold" 
+                  : "text-muted-foreground hover:text-foreground";
+
+                return link.isHome ? (
                   <a
                     key={link.href}
                     href={link.href}
                     onClick={handleHomeClick}
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+                    className={`${baseClasses} ${activeClasses}`}
                   >
                     {link.label}
                   </a>
@@ -145,7 +198,7 @@ const Header = () => {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+                    className={`${baseClasses} ${activeClasses}`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
@@ -154,13 +207,13 @@ const Header = () => {
                   <a
                     key={link.href}
                     href={link.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+                    className={`${baseClasses} ${activeClasses}`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
                   </a>
-                )
-              ))}
+                );
+              })}
             </div>
           </nav>
         )}
