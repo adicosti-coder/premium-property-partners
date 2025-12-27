@@ -2,19 +2,38 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Hero = () => {
   const { t } = useLanguage();
   const [videoError, setVideoError] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   // Video URL - can be replaced with actual hosted video
   const videoUrl = "https://www.realtrust.ro/video/apart-hotel-timisoara-hero.mp4";
 
+  // Parallax effect on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const parallaxOffset = scrollY * 0.4;
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background Video or Fallback Image */}
-      <div className="absolute inset-0">
+      {/* Background Video or Fallback Image with Parallax */}
+      <div 
+        className="absolute inset-0 scale-110"
+        style={{ 
+          transform: `translateY(${parallaxOffset}px) scale(1.1)`,
+          willChange: 'transform'
+        }}
+      >
         {!videoError ? (
           <video
             autoPlay
