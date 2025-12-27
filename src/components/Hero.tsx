@@ -23,15 +23,17 @@ const Hero = () => {
   }, []);
 
   const parallaxOffset = scrollY * 0.4;
+  const blurAmount = Math.min(scrollY * 0.02, 10); // Max 10px blur
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Video or Fallback Image with Parallax */}
       <div 
-        className="absolute inset-0 scale-110"
+        className="absolute inset-0 scale-110 transition-[filter] duration-300"
         style={{ 
           transform: `translateY(${parallaxOffset}px) scale(1.1)`,
-          willChange: 'transform'
+          filter: `blur(${blurAmount}px)`,
+          willChange: 'transform, filter'
         }}
       >
         {!videoError ? (
