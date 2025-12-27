@@ -24,6 +24,8 @@ const Hero = () => {
 
   const parallaxOffset = scrollY * 0.4;
   const blurAmount = Math.min(scrollY * 0.02, 10); // Max 10px blur
+  const contentOpacity = Math.max(1 - scrollY * 0.002, 0); // Fade out content
+  const contentTranslate = scrollY * 0.3; // Move content up slightly
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -61,7 +63,14 @@ const Hero = () => {
       {/* Gold accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
-      <div className="container relative z-10 mx-auto px-6 py-20 lg:py-32">
+      <div 
+        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 transition-opacity duration-100"
+        style={{ 
+          opacity: contentOpacity,
+          transform: `translateY(-${contentTranslate}px)`,
+          willChange: 'opacity, transform'
+        }}
+      >
         <div className="max-w-4xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
