@@ -4,6 +4,7 @@ import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const Hero = () => {
   const { t } = useLanguage();
@@ -79,10 +80,9 @@ const Hero = () => {
             <span className="text-foreground/80 text-sm font-medium tracking-wide">{t.hero.badge}</span>
           </div>
           
-          {/* Headline */}
+          {/* Headline with typing animation */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            {t.hero.title}{" "}
-            <span className="text-gradient-gold">{t.hero.titleHighlight}</span>
+            <TypingTitle title={t.hero.title} highlight={t.hero.titleHighlight} />
           </h1>
           
           {/* Subheadline */}
@@ -133,6 +133,32 @@ const Hero = () => {
     </section>
   );
 };
+
+// Typing title component
+const TypingTitle = ({ title, highlight }: { title: string; highlight: string }) => {
+  const { displayedText: titleText, isComplete: titleComplete } = useTypingAnimation({
+    text: title,
+    speed: 40,
+    delay: 300
+  });
+  
+  const { displayedText: highlightText } = useTypingAnimation({
+    text: highlight,
+    speed: 50,
+    delay: 300 + title.length * 40 + 200
+  });
+
+  return (
+    <>
+      {titleText}
+      {titleComplete && " "}
+      <span className="text-gradient-gold">
+        {highlightText}
+        <span className="animate-pulse">|</span>
+      </span>
+    </>
+  );
+}
 
 // Stats section component with counting animations
 const StatsSection = ({ t }: { t: any }) => {
