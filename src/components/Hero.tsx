@@ -92,11 +92,21 @@ const Hero = () => {
           
           {/* CTAs - Differentiated like realtrust.ro */}
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-            <Button variant="hero" size="xl" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Button 
+              variant="hero" 
+              size="xl" 
+              className="relative animate-glow-pulse"
+              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               {t.hero.cta}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="heroOutline" size="xl" onClick={() => document.getElementById('oaspeti')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Button 
+              variant="heroOutline" 
+              size="xl" 
+              className="hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-shadow duration-300"
+              onClick={() => document.getElementById('oaspeti')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               {t.hero.ctaGuests || "Pentru Oaspeți"}
             </Button>
           </div>
