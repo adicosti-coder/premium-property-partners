@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
+import { useCountAnimation } from "@/hooks/useCountAnimation";
 
 const Hero = () => {
   const { t } = useLanguage();
@@ -112,30 +113,62 @@ const Hero = () => {
             ))}
           </div>
           
-          {/* Trust indicators */}
-          <div className="mt-16 pt-8 border-t border-border animate-fade-up" style={{ animationDelay: '0.5s' }}>
-            <p className="text-muted-foreground text-sm mb-4 uppercase tracking-widest">{t.hero.trustTitle}</p>
-            <div className="flex flex-wrap gap-8 md:gap-16">
-              <div>
-                <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">150+</p>
-                <p className="text-muted-foreground text-sm">{t.hero.stats.properties}</p>
-              </div>
-              <div>
-                <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
-                <p className="text-muted-foreground text-sm">{t.hero.stats.occupancy}</p>
-              </div>
-              <div>
-                <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9★</p>
-                <p className="text-muted-foreground text-sm">{t.hero.stats.rating}</p>
-              </div>
-            </div>
-          </div>
+          {/* Trust indicators with counting animation */}
+          <StatsSection t={t} />
         </div>
       </div>
       
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
+  );
+};
+
+// Stats section component with counting animations
+const StatsSection = ({ t }: { t: any }) => {
+  const { count: propertiesCount, elementRef: propertiesRef } = useCountAnimation({ 
+    end: 150, 
+    duration: 2000,
+    delay: 200 
+  });
+  
+  const { count: occupancyCount, elementRef: occupancyRef } = useCountAnimation({ 
+    end: 98, 
+    duration: 2000,
+    delay: 400 
+  });
+  
+  const { count: ratingCount, elementRef: ratingRef } = useCountAnimation({ 
+    end: 4.9, 
+    duration: 2000,
+    delay: 600,
+    decimals: 1 
+  });
+
+  return (
+    <div className="mt-16 pt-8 border-t border-border animate-fade-up" style={{ animationDelay: '0.5s' }}>
+      <p className="text-muted-foreground text-sm mb-4 uppercase tracking-widest">{t.hero.trustTitle}</p>
+      <div className="flex flex-wrap gap-8 md:gap-16">
+        <div ref={propertiesRef}>
+          <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">
+            {propertiesCount}+
+          </p>
+          <p className="text-muted-foreground text-sm">{t.hero.stats.properties}</p>
+        </div>
+        <div ref={occupancyRef}>
+          <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">
+            {occupancyCount}%
+          </p>
+          <p className="text-muted-foreground text-sm">{t.hero.stats.occupancy}</p>
+        </div>
+        <div ref={ratingRef}>
+          <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">
+            {ratingCount}★
+          </p>
+          <p className="text-muted-foreground text-sm">{t.hero.stats.rating}</p>
+        </div>
+      </div>
+    </div>
   );
 };
 
