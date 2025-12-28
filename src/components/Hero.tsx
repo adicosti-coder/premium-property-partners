@@ -112,14 +112,15 @@ const Hero = () => {
           </div>
           
           {/* Feature tags like realtrust.ro */}
-          <div className="flex flex-wrap gap-2 mt-8 animate-fade-up" style={{ animationDelay: '0.45s' }}>
+          <div className="flex flex-wrap gap-2 mt-8">
             {[t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
               t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
               t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
               t.hero.tags?.cleaning || "Curățenie profesională"].map((tag, index) => (
               <span 
                 key={index} 
-                className="px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-200 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground"
+                className="px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-200 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground opacity-0 animate-fade-up"
+                style={{ animationDelay: `${0.5 + index * 0.1}s`, animationFillMode: 'forwards' }}
               >
                 {tag}
               </span>
