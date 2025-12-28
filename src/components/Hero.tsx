@@ -142,7 +142,7 @@ const TypingTitle = ({ title, highlight }: { title: string; highlight: string })
     delay: 300
   });
   
-  const { displayedText: highlightText } = useTypingAnimation({
+  const { displayedText: highlightText, isComplete: highlightComplete } = useTypingAnimation({
     text: highlight,
     speed: 50,
     delay: 300 + title.length * 40 + 200
@@ -154,7 +154,7 @@ const TypingTitle = ({ title, highlight }: { title: string; highlight: string })
       {titleComplete && " "}
       <span className="text-gradient-gold">
         {highlightText}
-        <span className="animate-pulse">|</span>
+        {!highlightComplete && <span className="animate-pulse">|</span>}
       </span>
     </>
   );
