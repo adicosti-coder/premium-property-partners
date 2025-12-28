@@ -1,14 +1,23 @@
 import { CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useParallax } from "@/hooks/useParallax";
 
 const WhyUs = () => {
   const { t } = useLanguage();
+  const { offset: parallaxOffset1 } = useParallax({ speed: 0.12, direction: 'up' });
+  const { offset: parallaxOffset2 } = useParallax({ speed: 0.08, direction: 'down' });
 
   return (
     <section className="py-24 bg-hero relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
+      {/* Decorative elements with parallax */}
+      <div 
+        className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset1}px)` }}
+      />
+      <div 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset2}px)` }}
+      />
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
