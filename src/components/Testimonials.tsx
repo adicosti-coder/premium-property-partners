@@ -1,6 +1,7 @@
 import { Star, Quote } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useParallax } from "@/hooks/useParallax";
 
 interface Testimonial {
   id: number;
@@ -56,12 +57,20 @@ const Testimonials = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
+  const { offset: parallaxOffset1 } = useParallax({ speed: 0.15, direction: 'up' });
+  const { offset: parallaxOffset2 } = useParallax({ speed: 0.1, direction: 'down' });
 
   return (
     <section className="py-24 bg-background relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decorations with parallax */}
+      <div 
+        className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset1}px)` }}
+      />
+      <div 
+        className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset2}px)` }}
+      />
       
       <div className="container mx-auto px-6 relative z-10">
         <div 

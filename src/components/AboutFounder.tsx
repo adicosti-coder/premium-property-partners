@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { CheckCircle, MapPin, Award, Users } from "lucide-react";
+import { useParallax } from "@/hooks/useParallax";
 
 const AboutFounder = () => {
   const { t, language } = useLanguage();
@@ -44,12 +45,20 @@ const AboutFounder = () => {
   };
 
   const tr = translations[language] || translations.en;
+  const { offset: parallaxOffset1 } = useParallax({ speed: 0.12, direction: 'up' });
+  const { offset: parallaxOffset2 } = useParallax({ speed: 0.08, direction: 'down' });
 
   return (
     <section id="despre" className="py-24 bg-card relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decorations with parallax */}
+      <div 
+        className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset1}px)` }}
+      />
+      <div 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset2}px)` }}
+      />
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-12">
