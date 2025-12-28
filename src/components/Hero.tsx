@@ -117,7 +117,10 @@ const Hero = () => {
               t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
               t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
               t.hero.tags?.cleaning || "Curățenie profesională"].map((tag, index) => (
-              <span key={index} className="px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80">
+              <span 
+                key={index} 
+                className="px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-200 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground"
+              >
                 {tag}
               </span>
             ))}
