@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import QuickSelector from "@/components/QuickSelector";
 import PartnerLogos from "@/components/PartnerLogos";
 import Benefits from "@/components/Benefits";
 import HowItWorks from "@/components/HowItWorks";
@@ -23,6 +24,7 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
+        <QuickSelector />
         <PartnerLogos />
         <section id="beneficii">
           <Benefits />
