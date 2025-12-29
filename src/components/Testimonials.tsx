@@ -16,36 +16,36 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     id: 1,
-    name: "Alexandru M.",
-    role: "Proprietar, 2 apartamente",
-    content: "De când colaborez cu RealTrust, veniturile mele au crescut cu 45%. Echipa lor se ocupă de absolut tot, de la comunicare cu oaspeții până la curățenie. Recomand cu încredere!",
+    name: "Oaspete",
+    role: "Recenzie verificată · Booking.com",
+    content: "Apartament complet nou, spațios și foarte confortabil. Totul este impecabil, iar gazda a fost extrem de promptă și atentă la detalii.",
+    rating: 5,
+    source: "Booking.com",
+    sourceIcon: "B",
+  },
+  {
+    id: 2,
+    name: "Oaspete",
+    role: "Recenzie verificată · Booking.com",
+    content: "Check-in self-check-in foarte ușor și comod, apartament foarte curat, iar comunicarea a fost rapidă și prietenoasă. Recomand!",
+    rating: 5,
+    source: "Booking.com",
+    sourceIcon: "B",
+  },
+  {
+    id: 3,
+    name: "Proprietar",
+    role: "Recenzie verificată · Google",
+    content: "Am primit o estimare realistă + plan clar. Exact ce aveam nevoie ca să decid. Colaborarea a fost excelentă de la început.",
     rating: 5,
     source: "Google Reviews",
     sourceIcon: "G",
   },
   {
-    id: 2,
-    name: "Maria P.",
-    role: "Proprietar, 1 apartament",
-    content: "Profesionalism de excepție! Am fost sceptică la început, dar rezultatele vorbesc de la sine. Rata de ocupare a crescut de la 60% la 95% în doar 3 luni.",
-    rating: 5,
-    source: "Facebook",
-    sourceIcon: "f",
-  },
-  {
-    id: 3,
-    name: "Cristian D.",
-    role: "Proprietar, 3 apartamente",
-    content: "Cel mai bun partener pentru administrarea proprietăților. Transparență totală, rapoarte detaliate și comunicare excelentă. Veniturile au depășit așteptările.",
-    rating: 5,
-    source: "Trustpilot",
-    sourceIcon: "★",
-  },
-  {
     id: 4,
-    name: "Elena S.",
-    role: "Proprietar, 1 apartament",
-    content: "Echipa RealTrust m-a ajutat să transform un apartament gol într-o sursă constantă de venit. Fotografiile profesionale și descrierile optimizate au făcut diferența.",
+    name: "Alexandru M.",
+    role: "Proprietar · 2 apartamente",
+    content: "De când colaborez cu echipa, veniturile mele au crescut cu 45%. Se ocupă de absolut tot, de la comunicare cu oaspeții până la curățenie.",
     rating: 5,
     source: "Google Reviews",
     sourceIcon: "G",
@@ -119,10 +119,10 @@ const Testimonials = () => {
                   <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
                 
-                {/* Source badge */}
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-xs text-muted-foreground">
-                  <span className="font-bold">{testimonial.sourceIcon}</span>
-                  <span>{testimonial.source}</span>
+                {/* Source badge - verified style like realtrust */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-xs text-green-400">
+                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="font-medium">Recenzie verificată</span>
                 </div>
               </div>
             </div>
