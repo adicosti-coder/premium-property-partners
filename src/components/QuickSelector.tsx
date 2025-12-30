@@ -1,12 +1,87 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload } from "lucide-react";
+import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { compressImages } from "@/utils/imageCompression";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// Sortable Photo Item Component
+interface SortablePhotoItemProps {
+  id: string;
+  photo: File;
+  index: number;
+  onRemove: (index: number) => void;
+}
+
+const SortablePhotoItem = ({ id, photo, index, onRemove }: SortablePhotoItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  const photoUrl = useMemo(() => URL.createObjectURL(photo), [photo]);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative w-16 h-16 rounded-lg overflow-hidden group ${isDragging ? 'ring-2 ring-primary shadow-lg' : ''}`}
+    >
+      <img
+        src={photoUrl}
+        alt={`Preview ${index + 1}`}
+        className="w-full h-full object-cover"
+      />
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-0 left-0 w-full h-5 bg-gradient-to-b from-black/50 to-transparent flex items-start justify-center cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="w-3 h-3 text-white/80" />
+      </div>
+      {/* Remove button */}
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="absolute bottom-0 right-0 w-5 h-5 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-tl-md"
+      >
+        <X className="w-3 h-3 text-white" />
+      </button>
+    </div>
+  );
+};
 
 const QuickSelector = () => {
   const { language } = useLanguage();
@@ -213,6 +288,26 @@ const QuickSelector = () => {
   };
 
   const [isCompressing, setIsCompressing] = useState(false);
+
+  // DnD sensors and photo IDs
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const photoIds = useMemo(() => 
+    photos.map((_, index) => `photo-${index}`), 
+    [photos.length]
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = photoIds.indexOf(active.id as string);
+      const newIndex = photoIds.indexOf(over.id as string);
+      setPhotos((items) => arrayMove(items, oldIndex, newIndex));
+    }
+  };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -464,42 +559,43 @@ const QuickSelector = () => {
                   className="hidden"
                 />
                 
-                <div className="flex flex-wrap gap-2">
-                  {photos.map((photo, index) => (
-                    <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden group">
-                      <img
-                        src={URL.createObjectURL(photo)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(index)}
-                        className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-4 h-4 text-white" />
-                      </button>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={photoIds} strategy={rectSortingStrategy}>
+                    <div className="flex flex-wrap gap-2">
+                      {photos.map((photo, index) => (
+                        <SortablePhotoItem
+                          key={photoIds[index]}
+                          id={photoIds[index]}
+                          photo={photo}
+                          index={index}
+                          onRemove={removePhoto}
+                        />
+                      ))}
+                      
+                      {isCompressing ? (
+                        <div className="w-16 h-16 rounded-lg border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-1 bg-background">
+                          <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                          <span className="text-[10px] text-primary">
+                            {language === 'ro' ? 'Comprim...' : 'Compressing...'}
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors bg-background"
+                        >
+                          <Upload className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground">+</span>
+                        </button>
+                      )}
                     </div>
-                  ))}
-                  
-                  {isCompressing ? (
-                    <div className="w-16 h-16 rounded-lg border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-1 bg-background">
-                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                      <span className="text-[10px] text-primary">
-                        {language === 'ro' ? 'Comprim...' : 'Compressing...'}
-                      </span>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors bg-background"
-                    >
-                      <Upload className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-[10px] text-muted-foreground">+</span>
-                    </button>
-                  )}
-                </div>
+                  </SortableContext>
+                </DndContext>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
