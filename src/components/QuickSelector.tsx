@@ -20,6 +20,40 @@ const QuickSelector = () => {
   });
   const [photos, setPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; phone?: string; zone?: string; photos?: string }>({});
+
+  const MAX_PHOTO_SIZE_MB = 5;
+  const MAX_PHOTOS = 20;
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = language === 'ro' ? 'Numele este obligatoriu' : 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = language === 'ro' ? 'Numele trebuie să aibă cel puțin 2 caractere' : 'Name must be at least 2 characters';
+    }
+    
+    // Phone validation
+    const phoneRegex = /^(\+40|0)[0-9]{9}$/;
+    const cleanPhone = formData.phone.replace(/\s/g, '');
+    if (!cleanPhone) {
+      newErrors.phone = language === 'ro' ? 'Telefonul este obligatoriu' : 'Phone is required';
+    } else if (!phoneRegex.test(cleanPhone)) {
+      newErrors.phone = language === 'ro' ? 'Format invalid (ex: 07XX XXX XXX)' : 'Invalid format (e.g.: 07XX XXX XXX)';
+    }
+    
+    // Zone validation
+    if (!formData.zone.trim()) {
+      newErrors.zone = language === 'ro' ? 'Zona este obligatorie' : 'Zone is required';
+    } else if (formData.zone.trim().length < 3) {
+      newErrors.zone = language === 'ro' ? 'Zona trebuie să aibă cel puțin 3 caractere' : 'Zone must be at least 3 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const [isSuccess, setIsSuccess] = useState(false);
 
   const translations = {
@@ -180,7 +214,34 @@ const QuickSelector = () => {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    setPhotos(prev => [...prev, ...imageFiles].slice(0, 20));
+    
+    // Check file sizes
+    const oversizedFiles = imageFiles.filter(file => file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setErrors(prev => ({
+        ...prev,
+        photos: language === 'ro' 
+          ? `${oversizedFiles.length} poze depășesc limita de ${MAX_PHOTO_SIZE_MB}MB` 
+          : `${oversizedFiles.length} photos exceed ${MAX_PHOTO_SIZE_MB}MB limit`
+      }));
+      return;
+    }
+    
+    const validFiles = imageFiles.filter(file => file.size <= MAX_PHOTO_SIZE_MB * 1024 * 1024);
+    const newPhotos = [...photos, ...validFiles].slice(0, MAX_PHOTOS);
+    
+    if (photos.length + validFiles.length > MAX_PHOTOS) {
+      setErrors(prev => ({
+        ...prev,
+        photos: language === 'ro' 
+          ? `Maxim ${MAX_PHOTOS} poze permise` 
+          : `Maximum ${MAX_PHOTOS} photos allowed`
+      }));
+    } else {
+      setErrors(prev => ({ ...prev, photos: undefined }));
+    }
+    
+    setPhotos(newPhotos);
   };
 
   const removePhoto = (index: number) => {
@@ -190,9 +251,10 @@ const QuickSelector = () => {
   const handleQuickFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.phone.trim() || !formData.zone.trim()) {
+    if (!validateForm()) {
       toast({
-        title: language === 'ro' ? "Completează toate câmpurile" : "Fill in all fields",
+        title: language === 'ro' ? "Verifică câmpurile" : "Check the fields",
+        description: language === 'ro' ? "Corectează erorile de mai sus" : "Fix the errors above",
         variant: "destructive",
       });
       return;
@@ -305,45 +367,61 @@ const QuickSelector = () => {
           ) : (
             <form onSubmit={handleQuickFormSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
+                <div className="space-y-1">
                   <Input
                     placeholder={t.formLabels.namePlaceholder}
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, name: e.target.value }));
+                      if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                    }}
                     maxLength={100}
-                    className="bg-background"
+                    className={`bg-background ${errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   />
+                  {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Input
                     type="tel"
                     placeholder={t.formLabels.phonePlaceholder}
                     value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, phone: e.target.value }));
+                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
+                    }}
                     maxLength={20}
-                    className="bg-background"
+                    className={`bg-background ${errors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   />
+                  {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Input
                     placeholder={t.formLabels.zonePlaceholder}
                     value={formData.zone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, zone: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, zone: e.target.value }));
+                      if (errors.zone) setErrors(prev => ({ ...prev, zone: undefined }));
+                    }}
                     maxLength={100}
-                    className="bg-background"
+                    className={`bg-background ${errors.zone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   />
+                  {errors.zone && <p className="text-xs text-red-500">{errors.zone}</p>}
                 </div>
               </div>
 
               {/* Photo Upload */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{t.formLabels.photos}</span>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {t.formLabels.photos} 
+                    <span className="text-xs ml-1">({language === 'ro' ? `max ${MAX_PHOTO_SIZE_MB}MB/poză` : `max ${MAX_PHOTO_SIZE_MB}MB/photo`})</span>
+                  </span>
                   {photos.length > 0 && (
                     <span className="text-xs text-primary font-medium">
-                      {photos.length} {t.formLabels.photosSelected}
+                      {photos.length}/{MAX_PHOTOS} {t.formLabels.photosSelected}
                     </span>
                   )}
+                  {errors.photos && <span className="text-xs text-red-500 w-full">{errors.photos}</span>}
                 </div>
                 
                 <input
