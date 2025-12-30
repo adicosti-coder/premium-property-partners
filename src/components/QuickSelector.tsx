@@ -6,6 +6,7 @@ import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loa
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { compressImages } from "@/utils/imageCompression";
 
 const QuickSelector = () => {
   const { language } = useLanguage();
@@ -211,37 +212,67 @@ const QuickSelector = () => {
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
     
-    // Check file sizes
-    const oversizedFiles = imageFiles.filter(file => file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      setErrors(prev => ({
-        ...prev,
-        photos: language === 'ro' 
-          ? `${oversizedFiles.length} poze depășesc limita de ${MAX_PHOTO_SIZE_MB}MB` 
-          : `${oversizedFiles.length} photos exceed ${MAX_PHOTO_SIZE_MB}MB limit`
-      }));
-      return;
-    }
+    if (imageFiles.length === 0) return;
     
-    const validFiles = imageFiles.filter(file => file.size <= MAX_PHOTO_SIZE_MB * 1024 * 1024);
-    const newPhotos = [...photos, ...validFiles].slice(0, MAX_PHOTOS);
-    
-    if (photos.length + validFiles.length > MAX_PHOTOS) {
+    // Check max photos limit before processing
+    if (photos.length + imageFiles.length > MAX_PHOTOS) {
       setErrors(prev => ({
         ...prev,
         photos: language === 'ro' 
           ? `Maxim ${MAX_PHOTOS} poze permise` 
           : `Maximum ${MAX_PHOTOS} photos allowed`
       }));
-    } else {
-      setErrors(prev => ({ ...prev, photos: undefined }));
+      return;
     }
     
-    setPhotos(newPhotos);
+    setIsCompressing(true);
+    setErrors(prev => ({ ...prev, photos: undefined }));
+    
+    try {
+      // Compress all images automatically
+      const compressedFiles = await compressImages(imageFiles, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 0.85,
+        outputType: 'image/webp'
+      });
+      
+      // Check if any compressed file still exceeds limit (edge case)
+      const stillOversized = compressedFiles.filter(file => file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024);
+      if (stillOversized.length > 0) {
+        setErrors(prev => ({
+          ...prev,
+          photos: language === 'ro' 
+            ? `${stillOversized.length} poze sunt prea mari chiar și după compresie` 
+            : `${stillOversized.length} photos are too large even after compression`
+        }));
+        // Still add the ones that fit
+        const validFiles = compressedFiles.filter(file => file.size <= MAX_PHOTO_SIZE_MB * 1024 * 1024);
+        setPhotos(prev => [...prev, ...validFiles].slice(0, MAX_PHOTOS));
+      } else {
+        setPhotos(prev => [...prev, ...compressedFiles].slice(0, MAX_PHOTOS));
+        toast({
+          title: language === 'ro' ? "Poze comprimate" : "Photos compressed",
+          description: language === 'ro' 
+            ? `${compressedFiles.length} poze optimizate automat` 
+            : `${compressedFiles.length} photos automatically optimized`,
+        });
+      }
+    } catch (error) {
+      console.error("Compression error:", error);
+      setErrors(prev => ({
+        ...prev,
+        photos: language === 'ro' ? "Eroare la procesarea pozelor" : "Error processing photos"
+      }));
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -414,7 +445,7 @@ const QuickSelector = () => {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="text-sm text-muted-foreground">
                     {t.formLabels.photos} 
-                    <span className="text-xs ml-1">({language === 'ro' ? `max ${MAX_PHOTO_SIZE_MB}MB/poză` : `max ${MAX_PHOTO_SIZE_MB}MB/photo`})</span>
+                    <span className="text-xs ml-1 text-green-500">({language === 'ro' ? 'compresie automată' : 'auto-compressed'})</span>
                   </span>
                   {photos.length > 0 && (
                     <span className="text-xs text-primary font-medium">
@@ -451,14 +482,23 @@ const QuickSelector = () => {
                     </div>
                   ))}
                   
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors bg-background"
-                  >
-                    <Upload className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">+</span>
-                  </button>
+                  {isCompressing ? (
+                    <div className="w-16 h-16 rounded-lg border-2 border-dashed border-primary/50 flex flex-col items-center justify-center gap-1 bg-background">
+                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      <span className="text-[10px] text-primary">
+                        {language === 'ro' ? 'Comprim...' : 'Compressing...'}
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors bg-background"
+                    >
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">+</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
