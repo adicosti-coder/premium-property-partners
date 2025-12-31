@@ -115,6 +115,7 @@ const QuickSelector = () => {
   });
   const [photos, setPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [errors, setErrors] = useState<{ name?: string; phone?: string; zone?: string; photos?: string }>({});
 
   const MAX_PHOTO_SIZE_MB = 5;
@@ -420,7 +421,11 @@ const QuickSelector = () => {
     try {
       // Upload photos to storage if any
       const photoUrls: string[] = [];
-      for (const photo of photos) {
+      const totalPhotos = photos.length;
+      setUploadProgress({ current: 0, total: totalPhotos });
+      
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
         const fileExt = photo.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `quick-requests/${fileName}`;
@@ -435,6 +440,8 @@ const QuickSelector = () => {
             .getPublicUrl(filePath);
           photoUrls.push(urlData.publicUrl);
         }
+        
+        setUploadProgress({ current: i + 1, total: totalPhotos });
       }
 
       // Save to leads table with simulation_data containing the zone and photos info
@@ -483,6 +490,7 @@ const QuickSelector = () => {
         setFormData({ name: "", phone: "", zone: "" });
         setPhotos([]);
         setIsSuccess(false);
+        setUploadProgress({ current: 0, total: 0 });
       }, 3000);
     } catch (error) {
       console.error("Error submitting quick form:", error);
@@ -629,12 +637,36 @@ const QuickSelector = () => {
                 </DndContext>
               </div>
 
+              {/* Upload Progress */}
+              {isSubmitting && uploadProgress.total > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {language === 'ro' 
+                        ? `Încărcare poze: ${uploadProgress.current}/${uploadProgress.total}` 
+                        : `Uploading photos: ${uploadProgress.current}/${uploadProgress.total}`}
+                    </span>
+                    <span className="text-primary font-medium">
+                      {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                      style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button type="submit" className="flex-1" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t.formLabels.sending}
+                      {uploadProgress.total > 0 && uploadProgress.current < uploadProgress.total
+                        ? (language === 'ro' ? `Încărcare ${uploadProgress.current}/${uploadProgress.total}...` : `Uploading ${uploadProgress.current}/${uploadProgress.total}...`)
+                        : t.formLabels.sending}
                     </>
                   ) : (
                     <>
