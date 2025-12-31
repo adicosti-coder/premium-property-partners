@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical } from "lucide-react";
+import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -31,9 +31,11 @@ interface SortablePhotoItemProps {
   photo: File;
   index: number;
   onRemove: (index: number) => void;
+  onSetPrimary: (index: number) => void;
+  isPrimary: boolean;
 }
 
-const SortablePhotoItem = ({ id, photo, index, onRemove }: SortablePhotoItemProps) => {
+const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, isPrimary }: SortablePhotoItemProps) => {
   const {
     attributes,
     listeners,
@@ -56,13 +58,19 @@ const SortablePhotoItem = ({ id, photo, index, onRemove }: SortablePhotoItemProp
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative w-16 h-16 rounded-lg overflow-hidden group ${isDragging ? 'ring-2 ring-primary shadow-lg' : ''}`}
+      className={`relative w-16 h-16 rounded-lg overflow-hidden group ${isDragging ? 'ring-2 ring-primary shadow-lg' : ''} ${isPrimary ? 'ring-2 ring-yellow-400' : ''}`}
     >
       <img
         src={photoUrl}
         alt={`Preview ${index + 1}`}
         className="w-full h-full object-cover"
       />
+      {/* Primary badge */}
+      {isPrimary && (
+        <div className="absolute top-0 left-0 bg-yellow-400 text-yellow-900 text-[8px] font-bold px-1 rounded-br">
+          1
+        </div>
+      )}
       {/* Drag handle */}
       <div
         {...attributes}
@@ -71,6 +79,17 @@ const SortablePhotoItem = ({ id, photo, index, onRemove }: SortablePhotoItemProp
       >
         <GripVertical className="w-3 h-3 text-white/80" />
       </div>
+      {/* Set as primary button */}
+      {!isPrimary && (
+        <button
+          type="button"
+          onClick={() => onSetPrimary(index)}
+          className="absolute bottom-0 left-0 w-5 h-5 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-tr-md"
+          title="Set as primary"
+        >
+          <Star className="w-3 h-3 text-yellow-400" />
+        </button>
+      )}
       {/* Remove button */}
       <button
         type="button"
@@ -374,6 +393,16 @@ const QuickSelector = () => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  const setAsPrimary = (index: number) => {
+    if (index === 0) return; // Already primary
+    setPhotos(prev => {
+      const newPhotos = [...prev];
+      const [photo] = newPhotos.splice(index, 1);
+      newPhotos.unshift(photo);
+      return newPhotos;
+    });
+  };
+
   const handleQuickFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -573,6 +602,8 @@ const QuickSelector = () => {
                           photo={photo}
                           index={index}
                           onRemove={removePhoto}
+                          onSetPrimary={setAsPrimary}
+                          isPrimary={index === 0}
                         />
                       ))}
                       
