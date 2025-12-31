@@ -1,8 +1,8 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star } from "lucide-react";
+import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star, AlertCircle, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -117,38 +117,110 @@ const QuickSelector = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [errors, setErrors] = useState<{ name?: string; phone?: string; zone?: string; photos?: string }>({});
+  const [touched, setTouched] = useState<{ name?: boolean; phone?: boolean; zone?: boolean }>({});
+  const [validFields, setValidFields] = useState<{ name?: boolean; phone?: boolean; zone?: boolean }>({});
 
   const MAX_PHOTO_SIZE_MB = 5;
   const MAX_PHOTOS = 20;
 
+  // Debounce helper
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+      const handler = setTimeout(() => setDebouncedValue(value), delay);
+      return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+  };
+
+  const debouncedName = useDebounce(formData.name, 400);
+  const debouncedPhone = useDebounce(formData.phone, 400);
+  const debouncedZone = useDebounce(formData.zone, 400);
+
+  // Real-time validation
+  const validateField = useCallback((field: 'name' | 'phone' | 'zone', value: string) => {
+    if (field === 'name') {
+      if (!value.trim()) {
+        return language === 'ro' ? 'Numele este obligatoriu' : 'Name is required';
+      }
+      if (value.trim().length < 2) {
+        return language === 'ro' ? 'Numele trebuie să aibă cel puțin 2 caractere' : 'Name must be at least 2 characters';
+      }
+      return null;
+    }
+    
+    if (field === 'phone') {
+      const phoneRegex = /^(\+40|0)[0-9]{9}$/;
+      const cleanPhone = value.replace(/\s/g, '');
+      if (!cleanPhone) {
+        return language === 'ro' ? 'Telefonul este obligatoriu' : 'Phone is required';
+      }
+      if (!phoneRegex.test(cleanPhone)) {
+        return language === 'ro' ? 'Format invalid (ex: 07XX XXX XXX)' : 'Invalid format (e.g.: 07XX XXX XXX)';
+      }
+      return null;
+    }
+    
+    if (field === 'zone') {
+      if (!value.trim()) {
+        return language === 'ro' ? 'Zona este obligatorie' : 'Zone is required';
+      }
+      if (value.trim().length < 3) {
+        return language === 'ro' ? 'Zona trebuie să aibă cel puțin 3 caractere' : 'Zone must be at least 3 characters';
+      }
+      return null;
+    }
+    
+    return null;
+  }, [language]);
+
+  // Run validation on debounced values
+  useEffect(() => {
+    if (touched.name) {
+      const error = validateField('name', debouncedName);
+      setErrors(prev => ({ ...prev, name: error || undefined }));
+      setValidFields(prev => ({ ...prev, name: !error && debouncedName.trim().length >= 2 }));
+    }
+  }, [debouncedName, touched.name, validateField]);
+
+  useEffect(() => {
+    if (touched.phone) {
+      const error = validateField('phone', debouncedPhone);
+      setErrors(prev => ({ ...prev, phone: error || undefined }));
+      setValidFields(prev => ({ ...prev, phone: !error && debouncedPhone.replace(/\s/g, '').length >= 10 }));
+    }
+  }, [debouncedPhone, touched.phone, validateField]);
+
+  useEffect(() => {
+    if (touched.zone) {
+      const error = validateField('zone', debouncedZone);
+      setErrors(prev => ({ ...prev, zone: error || undefined }));
+      setValidFields(prev => ({ ...prev, zone: !error && debouncedZone.trim().length >= 3 }));
+    }
+  }, [debouncedZone, touched.zone, validateField]);
+
   const validateForm = () => {
-    const newErrors: typeof errors = {};
+    // Mark all fields as touched
+    setTouched({ name: true, phone: true, zone: true });
     
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = language === 'ro' ? 'Numele este obligatoriu' : 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = language === 'ro' ? 'Numele trebuie să aibă cel puțin 2 caractere' : 'Name must be at least 2 characters';
-    }
+    const nameError = validateField('name', formData.name);
+    const phoneError = validateField('phone', formData.phone);
+    const zoneError = validateField('zone', formData.zone);
     
-    // Phone validation
-    const phoneRegex = /^(\+40|0)[0-9]{9}$/;
-    const cleanPhone = formData.phone.replace(/\s/g, '');
-    if (!cleanPhone) {
-      newErrors.phone = language === 'ro' ? 'Telefonul este obligatoriu' : 'Phone is required';
-    } else if (!phoneRegex.test(cleanPhone)) {
-      newErrors.phone = language === 'ro' ? 'Format invalid (ex: 07XX XXX XXX)' : 'Invalid format (e.g.: 07XX XXX XXX)';
-    }
-    
-    // Zone validation
-    if (!formData.zone.trim()) {
-      newErrors.zone = language === 'ro' ? 'Zona este obligatorie' : 'Zone is required';
-    } else if (formData.zone.trim().length < 3) {
-      newErrors.zone = language === 'ro' ? 'Zona trebuie să aibă cel puțin 3 caractere' : 'Zone must be at least 3 characters';
-    }
+    const newErrors = {
+      name: nameError || undefined,
+      phone: phoneError || undefined,
+      zone: zoneError || undefined,
+    };
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setValidFields({
+      name: !nameError,
+      phone: !phoneError,
+      zone: !zoneError,
+    });
+    
+    return !nameError && !phoneError && !zoneError;
   };
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -491,6 +563,9 @@ const QuickSelector = () => {
         setPhotos([]);
         setIsSuccess(false);
         setUploadProgress({ current: 0, total: 0 });
+        setTouched({});
+        setValidFields({});
+        setErrors({});
       }, 3000);
     } catch (error) {
       console.error("Error submitting quick form:", error);
@@ -531,44 +606,98 @@ const QuickSelector = () => {
             <form onSubmit={handleQuickFormSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <Input
-                    placeholder={t.formLabels.namePlaceholder}
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, name: e.target.value }));
-                      if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
-                    }}
-                    maxLength={100}
-                    className={`bg-background ${errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  />
-                  {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+                  <div className="relative">
+                    <Input
+                      placeholder={t.formLabels.namePlaceholder}
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, name: e.target.value }));
+                      }}
+                      onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
+                      maxLength={100}
+                      className={`bg-background pr-8 transition-colors ${
+                        errors.name ? 'border-red-500 focus-visible:ring-red-500' : 
+                        validFields.name ? 'border-green-500 focus-visible:ring-green-500' : ''
+                      }`}
+                    />
+                    {touched.name && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        {errors.name ? (
+                          <AlertCircle className="w-4 h-4 text-red-500" />
+                        ) : validFields.name ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                  {errors.name && touched.name && (
+                    <p className="text-xs text-red-500 flex items-center gap-1 animate-fade-in">
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
-                  <Input
-                    type="tel"
-                    placeholder={t.formLabels.phonePlaceholder}
-                    value={formData.phone}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, phone: e.target.value }));
-                      if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
-                    }}
-                    maxLength={20}
-                    className={`bg-background ${errors.phone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  />
-                  {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                  <div className="relative">
+                    <Input
+                      type="tel"
+                      placeholder={t.formLabels.phonePlaceholder}
+                      value={formData.phone}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, phone: e.target.value }));
+                      }}
+                      onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
+                      maxLength={20}
+                      className={`bg-background pr-8 transition-colors ${
+                        errors.phone ? 'border-red-500 focus-visible:ring-red-500' : 
+                        validFields.phone ? 'border-green-500 focus-visible:ring-green-500' : ''
+                      }`}
+                    />
+                    {touched.phone && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        {errors.phone ? (
+                          <AlertCircle className="w-4 h-4 text-red-500" />
+                        ) : validFields.phone ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                  {errors.phone && touched.phone && (
+                    <p className="text-xs text-red-500 flex items-center gap-1 animate-fade-in">
+                      {errors.phone}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
-                  <Input
-                    placeholder={t.formLabels.zonePlaceholder}
-                    value={formData.zone}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, zone: e.target.value }));
-                      if (errors.zone) setErrors(prev => ({ ...prev, zone: undefined }));
-                    }}
-                    maxLength={100}
-                    className={`bg-background ${errors.zone ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  />
-                  {errors.zone && <p className="text-xs text-red-500">{errors.zone}</p>}
+                  <div className="relative">
+                    <Input
+                      placeholder={t.formLabels.zonePlaceholder}
+                      value={formData.zone}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, zone: e.target.value }));
+                      }}
+                      onBlur={() => setTouched(prev => ({ ...prev, zone: true }))}
+                      maxLength={100}
+                      className={`bg-background pr-8 transition-colors ${
+                        errors.zone ? 'border-red-500 focus-visible:ring-red-500' : 
+                        validFields.zone ? 'border-green-500 focus-visible:ring-green-500' : ''
+                      }`}
+                    />
+                    {touched.zone && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        {errors.zone ? (
+                          <AlertCircle className="w-4 h-4 text-red-500" />
+                        ) : validFields.zone ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                  {errors.zone && touched.zone && (
+                    <p className="text-xs text-red-500 flex items-center gap-1 animate-fade-in">
+                      {errors.zone}
+                    </p>
+                  )}
                 </div>
               </div>
 
