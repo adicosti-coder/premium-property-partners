@@ -2,7 +2,8 @@ import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star, AlertCircle, Check, Trash2 } from "lucide-react";
+import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star, AlertCircle, Check, Trash2, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -42,10 +43,11 @@ interface SortablePhotoItemProps {
   index: number;
   onRemove: (index: number) => void;
   onSetPrimary: (index: number) => void;
+  onPreview: (index: number) => void;
   isPrimary: boolean;
 }
 
-const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, isPrimary }: SortablePhotoItemProps) => {
+const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, onPreview, isPrimary }: SortablePhotoItemProps) => {
   const {
     attributes,
     listeners,
@@ -73,11 +75,18 @@ const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, isPrimary
       <img
         src={photoUrl}
         alt={`Preview ${index + 1}`}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover cursor-pointer"
+        onClick={() => onPreview(index)}
       />
+      {/* Preview zoom icon on hover */}
+      <div 
+        className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer pointer-events-none"
+      >
+        <ZoomIn className="w-5 h-5 text-white" />
+      </div>
       {/* Primary badge */}
       {isPrimary && (
-        <div className="absolute top-0 left-0 bg-yellow-400 text-yellow-900 text-[8px] font-bold px-1 rounded-br">
+        <div className="absolute top-0 left-0 bg-yellow-400 text-yellow-900 text-[8px] font-bold px-1 rounded-br z-10">
           1
         </div>
       )}
@@ -85,7 +94,7 @@ const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, isPrimary
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-0 left-0 w-full h-5 bg-gradient-to-b from-black/50 to-transparent flex items-start justify-center cursor-grab active:cursor-grabbing"
+        className="absolute top-0 left-0 w-full h-5 bg-gradient-to-b from-black/50 to-transparent flex items-start justify-center cursor-grab active:cursor-grabbing z-10"
       >
         <GripVertical className="w-3 h-3 text-white/80" />
       </div>
@@ -93,8 +102,8 @@ const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, isPrimary
       {!isPrimary && (
         <button
           type="button"
-          onClick={() => onSetPrimary(index)}
-          className="absolute bottom-0 left-0 w-5 h-5 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-tr-md"
+          onClick={(e) => { e.stopPropagation(); onSetPrimary(index); }}
+          className="absolute bottom-0 left-0 w-5 h-5 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-tr-md z-10"
           title="Set as primary"
         >
           <Star className="w-3 h-3 text-yellow-400" />
@@ -103,8 +112,8 @@ const SortablePhotoItem = ({ id, photo, index, onRemove, onSetPrimary, isPrimary
       {/* Remove button */}
       <button
         type="button"
-        onClick={() => onRemove(index)}
-        className="absolute bottom-0 right-0 w-5 h-5 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-tl-md"
+        onClick={(e) => { e.stopPropagation(); onRemove(index); }}
+        className="absolute bottom-0 right-0 w-5 h-5 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-tl-md z-10"
       >
         <X className="w-3 h-3 text-white" />
       </button>
@@ -474,6 +483,7 @@ const QuickSelector = () => {
   };
 
   const [photoToDelete, setPhotoToDelete] = useState<number | null>(null);
+  const [previewPhotoIndex, setPreviewPhotoIndex] = useState<number | null>(null);
 
   const removePhoto = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
@@ -482,6 +492,19 @@ const QuickSelector = () => {
 
   const confirmDeletePhoto = (index: number) => {
     setPhotoToDelete(index);
+  };
+
+  const openPhotoPreview = (index: number) => {
+    setPreviewPhotoIndex(index);
+  };
+
+  const navigatePreview = (direction: 'prev' | 'next') => {
+    if (previewPhotoIndex === null) return;
+    if (direction === 'prev') {
+      setPreviewPhotoIndex(previewPhotoIndex > 0 ? previewPhotoIndex - 1 : photos.length - 1);
+    } else {
+      setPreviewPhotoIndex(previewPhotoIndex < photos.length - 1 ? previewPhotoIndex + 1 : 0);
+    }
   };
 
   const setAsPrimary = (index: number) => {
@@ -772,6 +795,7 @@ const QuickSelector = () => {
                           index={index}
                           onRemove={confirmDeletePhoto}
                           onSetPrimary={setAsPrimary}
+                          onPreview={openPhotoPreview}
                           isPrimary={index === 0}
                         />
                       ))}
@@ -954,6 +978,46 @@ const QuickSelector = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Photo Preview Modal */}
+      <Dialog open={previewPhotoIndex !== null} onOpenChange={(open) => !open && setPreviewPhotoIndex(null)}>
+        <DialogContent className="max-w-3xl p-0 bg-black/95 border-border">
+          {previewPhotoIndex !== null && photos[previewPhotoIndex] && (
+            <div className="relative">
+              <img
+                src={URL.createObjectURL(photos[previewPhotoIndex])}
+                alt={`Preview ${previewPhotoIndex + 1}`}
+                className="w-full h-auto max-h-[80vh] object-contain"
+              />
+              
+              {/* Navigation buttons */}
+              {photos.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => navigatePreview('prev')}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigatePreview('next')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                </>
+              )}
+              
+              {/* Counter */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full text-white text-sm">
+                {previewPhotoIndex + 1} / {photos.length}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
