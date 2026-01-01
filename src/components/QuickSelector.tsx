@@ -119,6 +119,7 @@ const QuickSelector = () => {
   const [errors, setErrors] = useState<{ name?: string; phone?: string; zone?: string; photos?: string }>({});
   const [touched, setTouched] = useState<{ name?: boolean; phone?: boolean; zone?: boolean }>({});
   const [validFields, setValidFields] = useState<{ name?: boolean; phone?: boolean; zone?: boolean }>({});
+  const [shakeFields, setShakeFields] = useState<{ name?: boolean; phone?: boolean; zone?: boolean }>({});
 
   const MAX_PHOTO_SIZE_MB = 5;
   const MAX_PHOTOS = 20;
@@ -480,6 +481,20 @@ const QuickSelector = () => {
     e.preventDefault();
     
     if (!validateForm()) {
+      // Trigger shake animation on error fields
+      const nameError = validateField('name', formData.name);
+      const phoneError = validateField('phone', formData.phone);
+      const zoneError = validateField('zone', formData.zone);
+      
+      setShakeFields({
+        name: !!nameError,
+        phone: !!phoneError,
+        zone: !!zoneError,
+      });
+      
+      // Clear shake after animation completes
+      setTimeout(() => setShakeFields({}), 500);
+      
       toast({
         title: language === 'ro' ? "Verifică câmpurile" : "Check the fields",
         description: language === 'ro' ? "Corectează erorile de mai sus" : "Fix the errors above",
@@ -618,7 +633,7 @@ const QuickSelector = () => {
                       className={`bg-background pr-8 transition-colors ${
                         errors.name ? 'border-red-500 focus-visible:ring-red-500' : 
                         validFields.name ? 'border-green-500 focus-visible:ring-green-500' : ''
-                      }`}
+                      } ${shakeFields.name ? 'animate-shake' : ''}`}
                     />
                     {touched.name && (
                       <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -650,7 +665,7 @@ const QuickSelector = () => {
                       className={`bg-background pr-8 transition-colors ${
                         errors.phone ? 'border-red-500 focus-visible:ring-red-500' : 
                         validFields.phone ? 'border-green-500 focus-visible:ring-green-500' : ''
-                      }`}
+                      } ${shakeFields.phone ? 'animate-shake' : ''}`}
                     />
                     {touched.phone && (
                       <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -681,7 +696,7 @@ const QuickSelector = () => {
                       className={`bg-background pr-8 transition-colors ${
                         errors.zone ? 'border-red-500 focus-visible:ring-red-500' : 
                         validFields.zone ? 'border-green-500 focus-visible:ring-green-500' : ''
-                      }`}
+                      } ${shakeFields.zone ? 'animate-shake' : ''}`}
                     />
                     {touched.zone && (
                       <div className="absolute right-2 top-1/2 -translate-y-1/2">
