@@ -2,11 +2,21 @@ import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star, AlertCircle, Check } from "lucide-react";
+import { Building, Users, Home, ArrowRight, Phone, MessageCircle, Camera, X, Loader2, CheckCircle, Upload, GripVertical, Star, AlertCircle, Check, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { compressImages } from "@/utils/imageCompression";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DndContext,
   closestCenter,
@@ -463,8 +473,15 @@ const QuickSelector = () => {
     }
   };
 
+  const [photoToDelete, setPhotoToDelete] = useState<number | null>(null);
+
   const removePhoto = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotoToDelete(null);
+  };
+
+  const confirmDeletePhoto = (index: number) => {
+    setPhotoToDelete(index);
   };
 
   const setAsPrimary = (index: number) => {
@@ -753,7 +770,7 @@ const QuickSelector = () => {
                           id={photoIds[index]}
                           photo={photo}
                           index={index}
-                          onRemove={removePhoto}
+                          onRemove={confirmDeletePhoto}
                           onSetPrimary={setAsPrimary}
                           isPrimary={index === 0}
                         />
@@ -910,6 +927,33 @@ const QuickSelector = () => {
           })}
         </div>
       </div>
+      {/* Delete Photo Confirmation Dialog */}
+      <AlertDialog open={photoToDelete !== null} onOpenChange={(open) => !open && setPhotoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'ro' ? 'Ștergi poza?' : 'Delete photo?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'ro' 
+                ? 'Această acțiune nu poate fi anulată. Poza va fi eliminată din cerere.'
+                : 'This action cannot be undone. The photo will be removed from your request.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {language === 'ro' ? 'Anulează' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => photoToDelete !== null && removePhoto(photoToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {language === 'ro' ? 'Șterge' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 };
