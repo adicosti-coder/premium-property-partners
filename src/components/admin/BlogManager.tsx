@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import RichTextEditor from "./RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,7 +98,7 @@ const BlogManager = () => {
       articleTitle: "Titlu",
       slug: "Slug (URL)",
       excerpt: "Rezumat",
-      content: "Conținut (HTML)",
+      content: "Conținut",
       coverImage: "Imagine Copertă (URL)",
       category: "Categorie",
       tags: "Tag-uri",
@@ -131,7 +132,7 @@ const BlogManager = () => {
       articleTitle: "Title",
       slug: "Slug (URL)",
       excerpt: "Excerpt",
-      content: "Content (HTML)",
+      content: "Content",
       coverImage: "Cover Image (URL)",
       category: "Category",
       tags: "Tags",
@@ -461,16 +462,13 @@ const BlogManager = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content">{t.content} *</Label>
-              <Textarea
-                id="content"
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, content: e.target.value }))
+              <Label>{t.content} *</Label>
+              <RichTextEditor
+                content={formData.content}
+                onChange={(content) =>
+                  setFormData((prev) => ({ ...prev, content }))
                 }
-                placeholder="<p>Conținutul articolului în format HTML...</p>"
-                rows={8}
-                className="font-mono text-sm"
+                placeholder="Scrie conținutul articolului..."
               />
             </div>
 
