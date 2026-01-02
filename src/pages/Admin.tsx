@@ -38,6 +38,7 @@ import {
   ShieldAlert,
   Building,
   LayoutDashboard,
+  FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -46,6 +47,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import BookingManager from "@/components/admin/BookingManager";
 import PropertyManager from "@/components/admin/PropertyManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
+import BlogManager from "@/components/admin/BlogManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -231,6 +233,10 @@ const Admin = () => {
             <TabsTrigger value="properties" className="flex items-center gap-2">
               <Building className="w-4 h-4" />
               {t.admin.tabs?.properties || "Properties"}
+            </TabsTrigger>
+            <TabsTrigger value="blog" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Blog
             </TabsTrigger>
           </TabsList>
 
@@ -434,6 +440,11 @@ const Admin = () => {
           {/* Properties Tab */}
           <TabsContent value="properties">
             <PropertyManager />
+          </TabsContent>
+
+          {/* Blog Tab */}
+          <TabsContent value="blog">
+            <BlogManager />
           </TabsContent>
         </Tabs>
       </div>

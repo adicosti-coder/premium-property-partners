@@ -13,6 +13,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Favorites from "./pages/Favorites";
 import Guests from "./pages/Guests";
 import Imobiliare from "./pages/Imobiliare";
+import Blog from "./pages/Blog";
+import BlogArticle from "./pages/BlogArticle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
               <Route path="/favorite" element={<Favorites />} />
               <Route path="/oaspeti" element={<Guests />} />
               <Route path="/imobiliare" element={<Imobiliare />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/proprietate/:slug" element={<PropertyDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

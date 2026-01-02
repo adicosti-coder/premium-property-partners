@@ -1,0 +1,212 @@
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar, Clock, ArrowLeft, User, Tag, Share2 } from "lucide-react";
+import { format } from "date-fns";
+import { ro, enUS } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
+
+interface BlogArticle {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  cover_image: string | null;
+  category: string;
+  tags: string[];
+  author_name: string;
+  published_at: string | null;
+  created_at: string;
+}
+
+const BlogArticle = () => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dateLocale = language === "ro" ? ro : enUS;
+
+  const { data: article, isLoading, error } = useQuery({
+    queryKey: ["blog-article", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_articles")
+        .select("*")
+        .eq("slug", slug)
+        .eq("is_published", true)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as BlogArticle | null;
+    },
+  });
+
+  const translations = {
+    ro: {
+      backToBlog: "Înapoi la Blog",
+      notFound: "Articol Negăsit",
+      notFoundDescription: "Ne pare rău, acest articol nu există sau nu a fost publicat.",
+      goToBlog: "Mergi la Blog",
+      minRead: "min citire",
+      share: "Distribuie",
+      linkCopied: "Link copiat în clipboard!",
+    },
+    en: {
+      backToBlog: "Back to Blog",
+      notFound: "Article Not Found",
+      notFoundDescription: "Sorry, this article doesn't exist or hasn't been published.",
+      goToBlog: "Go to Blog",
+      minRead: "min read",
+      share: "Share",
+      linkCopied: "Link copied to clipboard!",
+    },
+  };
+
+  const t = translations[language] || translations.ro;
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({ title: t.linkCopied });
+    } catch {
+      console.error("Failed to copy link");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-6 max-w-4xl">
+            <Skeleton className="h-8 w-32 mb-8" />
+            <Skeleton className="h-12 w-full mb-4" />
+            <Skeleton className="h-6 w-2/3 mb-8" />
+            <Skeleton className="h-96 w-full mb-8" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!article || error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-6 text-center">
+            <Tag className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              {t.notFound}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {t.notFoundDescription}
+            </p>
+            <Button onClick={() => navigate("/blog")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t.goToBlog}
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const readingTime = Math.ceil(article.content.length / 1000);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      <main className="pt-24 pb-16">
+        <article className="container mx-auto px-6 max-w-4xl">
+          {/* Back Button */}
+          <Link
+            to="/blog"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t.backToBlog}
+          </Link>
+
+          {/* Article Header */}
+          <header className="mb-8">
+            <Badge className="mb-4">{article.category}</Badge>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-4">
+              {article.title}
+            </h1>
+            <p className="text-lg text-muted-foreground mb-6">
+              {article.excerpt}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="w-4 h-4" />
+                {article.author_name}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {format(
+                  new Date(article.published_at || article.created_at),
+                  "d MMMM yyyy",
+                  { locale: dateLocale }
+                )}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {readingTime} {t.minRead}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleShare}>
+                <Share2 className="w-4 h-4 mr-1" />
+                {t.share}
+              </Button>
+            </div>
+          </header>
+
+          {/* Cover Image */}
+          {article.cover_image && (
+            <div className="relative aspect-video mb-8 rounded-xl overflow-hidden">
+              <img
+                src={article.cover_image}
+                alt={article.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Article Content */}
+          <div
+            className="prose prose-lg dark:prose-invert max-w-none mb-8"
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
+
+          {/* Tags */}
+          {article.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-8 border-t border-border">
+              {article.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </article>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default BlogArticle;

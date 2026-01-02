@@ -72,6 +72,7 @@ const Header = () => {
     { href: "#portofoliu", label: t.nav.portfolio },
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/oaspeti", label: t.nav.guests, isPage: true },
+    { href: "/blog", label: "Blog", isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
 
