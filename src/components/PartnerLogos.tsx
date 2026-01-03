@@ -24,6 +24,8 @@ const PartnerLogos = () => {
                 alt={partner.name}
                 className="h-8 md:h-10 w-auto object-contain"
                 loading="lazy"
+                width={100}
+                height={32}
               />
             </div>
           ))}
