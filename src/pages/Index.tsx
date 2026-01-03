@@ -17,6 +17,7 @@ import Footer from "@/components/Footer";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AboutFounder from "@/components/AboutFounder";
+import BlogPreview from "@/components/BlogPreview";
 
 const Index = () => {
   return (
@@ -40,6 +41,7 @@ const Index = () => {
         <PropertyGallery />
         <Testimonials />
         <AboutFounder />
+        <BlogPreview />
         <GuestSection />
         <FAQ />
         <ContactSection />
