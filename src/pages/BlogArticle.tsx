@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BlogComments from "@/components/BlogComments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -201,6 +202,9 @@ const BlogArticle = () => {
               ))}
             </div>
           )}
+
+          {/* Comments Section */}
+          <BlogComments articleId={article.id} />
         </article>
       </main>
 
