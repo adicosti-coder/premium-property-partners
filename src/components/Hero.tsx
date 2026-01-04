@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
 
 const Hero = () => {
   const { t } = useLanguage();
@@ -129,6 +130,11 @@ const Hero = () => {
                 {tag}
               </span>
             ))}
+          </div>
+          
+          {/* Availability Search Widget */}
+          <div className="mt-10 animate-fade-up" style={{ animationDelay: '0.5s' }}>
+            <AvailabilitySearchWidget variant="hero" />
           </div>
           
           {/* Trust indicators with counting animation */}
