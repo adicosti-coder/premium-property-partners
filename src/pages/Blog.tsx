@@ -55,11 +55,14 @@ const Blog = () => {
 
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
+    const query = searchQuery.toLowerCase().trim();
     return articles.filter((article) => {
       const matchesSearch =
-        searchQuery === "" ||
-        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+        query === "" ||
+        article.title.toLowerCase().includes(query) ||
+        article.excerpt.toLowerCase().includes(query) ||
+        article.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+        article.category.toLowerCase().includes(query);
       const matchesCategory =
         !selectedCategory || article.category === selectedCategory;
       return matchesSearch && matchesCategory;
