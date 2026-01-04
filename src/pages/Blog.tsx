@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Search, Tag, ArrowRight } from "lucide-react";
+import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 
@@ -27,11 +28,14 @@ interface BlogArticle {
   created_at: string;
 }
 
+type SortOption = "newest" | "oldest" | "title";
+
 const Blog = () => {
   const { language } = useLanguage();
   const dateLocale = language === "ro" ? ro : enUS;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["blog-articles"],
@@ -56,7 +60,7 @@ const Blog = () => {
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     const query = searchQuery.toLowerCase().trim();
-    return articles.filter((article) => {
+    const filtered = articles.filter((article) => {
       const matchesSearch =
         query === "" ||
         article.title.toLowerCase().includes(query) ||
@@ -67,7 +71,22 @@ const Blog = () => {
         !selectedCategory || article.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [articles, searchQuery, selectedCategory]);
+
+    // Sort articles
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":
+          return new Date(a.published_at || a.created_at).getTime() - 
+                 new Date(b.published_at || b.created_at).getTime();
+        case "title":
+          return a.title.localeCompare(b.title, language);
+        case "newest":
+        default:
+          return new Date(b.published_at || b.created_at).getTime() - 
+                 new Date(a.published_at || a.created_at).getTime();
+      }
+    });
+  }, [articles, searchQuery, selectedCategory, sortBy, language]);
 
   const translations = {
     ro: {
@@ -79,6 +98,10 @@ const Blog = () => {
       noArticlesDescription: "Încearcă să modifici filtrele de căutare.",
       readMore: "Citește mai mult",
       minRead: "min citire",
+      sortBy: "Sortare",
+      newest: "Cele mai noi",
+      oldest: "Cele mai vechi",
+      titleSort: "Alfabetic",
     },
     en: {
       title: "Blog",
@@ -89,6 +112,10 @@ const Blog = () => {
       noArticlesDescription: "Try adjusting your search filters.",
       readMore: "Read more",
       minRead: "min read",
+      sortBy: "Sort by",
+      newest: "Newest",
+      oldest: "Oldest",
+      titleSort: "Alphabetical",
     },
   };
 
@@ -121,7 +148,7 @@ const Blog = () => {
                 className="pl-10"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               <Button
                 variant={selectedCategory === null ? "default" : "outline"}
                 size="sm"
@@ -139,6 +166,17 @@ const Blog = () => {
                   {cat}
                 </Button>
               ))}
+              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                <SelectTrigger className="w-[160px] h-8">
+                  <ArrowUpDown className="w-3 h-3 mr-2" />
+                  <SelectValue placeholder={t.sortBy} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">{t.newest}</SelectItem>
+                  <SelectItem value="oldest">{t.oldest}</SelectItem>
+                  <SelectItem value="title">{t.titleSort}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
