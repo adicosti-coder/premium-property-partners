@@ -78,6 +78,9 @@ const Footer = () => {
               <a href="#portofoliu" className="text-cream/60 hover:text-cream transition-colors">
                 {t.nav.portfolio}
               </a>
+              <a href="/online-check-in" className="text-cream/60 hover:text-cream transition-colors">
+                {t.nav.onlineCheckIn}
+              </a>
               <a href="#contact" className="text-cream/60 hover:text-cream transition-colors">
                 {t.nav.contact}
               </a>
