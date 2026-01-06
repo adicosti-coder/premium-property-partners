@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import LeadCaptureForm from "./LeadCaptureForm";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -228,27 +229,133 @@ const ProfitCalculator = () => {
               </div>
             </div>
 
-            {/* Cost Breakdown */}
+            {/* Cost Breakdown with Chart */}
             <div className="bg-card p-6 rounded-xl border border-border">
               <h4 className="font-semibold text-foreground mb-4">{t.calculator.costBreakdown}</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t.calculator.cleaning} ({calculations.numberOfStays} {t.calculator.stays})</span>
-                  <span className="text-foreground font-medium">{calculations.cleaningCosts} €</span>
+              
+              {/* Donut Chart */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-32 h-32 flex-shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: t.calculator.cleaning, value: calculations.cleaningCosts, color: "hsl(var(--chart-1))" },
+                          { name: t.calculator.managementCommission, value: calculations.managementCost, color: "hsl(var(--chart-2))" },
+                          { name: t.calculator.platformCommission, value: calculations.platformCost, color: "hsl(var(--chart-3))" },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={35}
+                        outerRadius={55}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {[
+                          { color: "hsl(var(--chart-1))" },
+                          { color: "hsl(var(--chart-2))" },
+                          { color: "hsl(var(--chart-3))" },
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => [`${value} €`, '']}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t.calculator.managementCommission} ({managementFee}%)</span>
-                  <span className="text-foreground font-medium">{calculations.managementCost} €</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t.calculator.platformCommission} ({platformFee}%)</span>
-                  <span className="text-foreground font-medium">{calculations.platformCost} €</span>
-                </div>
-                <div className="border-t border-border pt-3 mt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-foreground font-semibold">{t.calculator.totalCostsLabel}</span>
-                    <span className="text-primary font-bold">{calculations.totalCosts} €</span>
+                
+                {/* Legend & Breakdown */}
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-1))" }} />
+                    <div className="flex-1 flex justify-between">
+                      <span className="text-sm text-muted-foreground">{t.calculator.cleaning}</span>
+                      <span className="text-sm font-medium text-foreground">{calculations.cleaningCosts} €</span>
+                    </div>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-2))" }} />
+                    <div className="flex-1 flex justify-between">
+                      <span className="text-sm text-muted-foreground">{t.calculator.managementCommission?.split(' ')[0] || 'Management'}</span>
+                      <span className="text-sm font-medium text-foreground">{calculations.managementCost} €</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-3))" }} />
+                    <div className="flex-1 flex justify-between">
+                      <span className="text-sm text-muted-foreground">{t.calculator.platformCommission?.split(' ')[0] || 'Platforme'}</span>
+                      <span className="text-sm font-medium text-foreground">{calculations.platformCost} €</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Percentage bars */}
+              <div className="space-y-2">
+                {calculations.totalCosts > 0 && (
+                  <>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{t.calculator.cleaning} ({calculations.numberOfStays} {t.calculator.stays})</span>
+                        <span className="text-foreground">{Math.round((calculations.cleaningCosts / calculations.totalCosts) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500" 
+                          style={{ 
+                            width: `${(calculations.cleaningCosts / calculations.totalCosts) * 100}%`,
+                            backgroundColor: "hsl(var(--chart-1))"
+                          }} 
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{t.calculator.managementCommission} ({managementFee}%)</span>
+                        <span className="text-foreground">{Math.round((calculations.managementCost / calculations.totalCosts) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500" 
+                          style={{ 
+                            width: `${(calculations.managementCost / calculations.totalCosts) * 100}%`,
+                            backgroundColor: "hsl(var(--chart-2))"
+                          }} 
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{t.calculator.platformCommission} ({platformFee}%)</span>
+                        <span className="text-foreground">{Math.round((calculations.platformCost / calculations.totalCosts) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all duration-500" 
+                          style={{ 
+                            width: `${(calculations.platformCost / calculations.totalCosts) * 100}%`,
+                            backgroundColor: "hsl(var(--chart-3))"
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {/* Total */}
+              <div className="border-t border-border pt-3 mt-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground font-semibold">{t.calculator.totalCostsLabel}</span>
+                  <span className="text-primary font-bold text-lg">{calculations.totalCosts} €</span>
                 </div>
               </div>
             </div>
