@@ -138,36 +138,45 @@ export type Database = {
       }
       leads: {
         Row: {
-          calculated_net_profit: number
-          calculated_yearly_profit: number
+          calculated_net_profit: number | null
+          calculated_yearly_profit: number | null
           created_at: string
+          email: string | null
           id: string
+          message: string | null
           name: string
           property_area: number
           property_type: string
           simulation_data: Json | null
+          source: string | null
           whatsapp_number: string
         }
         Insert: {
-          calculated_net_profit: number
-          calculated_yearly_profit: number
+          calculated_net_profit?: number | null
+          calculated_yearly_profit?: number | null
           created_at?: string
+          email?: string | null
           id?: string
+          message?: string | null
           name: string
           property_area: number
           property_type: string
           simulation_data?: Json | null
+          source?: string | null
           whatsapp_number: string
         }
         Update: {
-          calculated_net_profit?: number
-          calculated_yearly_profit?: number
+          calculated_net_profit?: number | null
+          calculated_yearly_profit?: number | null
           created_at?: string
+          email?: string | null
           id?: string
+          message?: string | null
           name?: string
           property_area?: number
           property_type?: string
           simulation_data?: Json | null
+          source?: string | null
           whatsapp_number?: string
         }
         Relationships: []

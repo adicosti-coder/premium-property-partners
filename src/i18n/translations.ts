@@ -434,6 +434,27 @@ Mulțumesc!`,
       },
     },
     
+    // Quick Lead Form (inline on homepage)
+    quickLeadForm: {
+      badge: "Proprietari",
+      title: "Solicită o Evaluare Gratuită",
+      subtitle: "Află în 24 de ore cât poți câștiga din închirierea apartamentului tău.",
+      namePlaceholder: "Numele tău",
+      phonePlaceholder: "Telefon / WhatsApp",
+      typePlaceholder: "Tip proprietate",
+      submit: "Trimite",
+      sending: "Se trimite...",
+      success: "Cerere trimisă cu succes!",
+      successMessage: "Te vom contacta în cel mai scurt timp pentru o evaluare gratuită.",
+      successToast: "Mulțumim!",
+      successToastMessage: "Te vom contacta în curând.",
+      error: "Eroare",
+      errorMessage: "A apărut o eroare. Încearcă din nou.",
+      fillAllFields: "Completează toate câmpurile",
+      fillAllFieldsMessage: "Te rugăm să completezi corect toate câmpurile.",
+      trustText: "🔒 Datele tale sunt în siguranță. Nu le partajăm cu terți.",
+    },
+    
     // Mobile CTA Bar
     mobileCta: {
       call: "Sună",
@@ -1245,6 +1266,27 @@ Thank you!`,
       occupiedDays: "Occupied Days/Month",
       staysPerMonth: "Stays/Month",
       getAnalysis: "Get a Detailed Analysis",
+    },
+    
+    // Quick Lead Form (inline on homepage)
+    quickLeadForm: {
+      badge: "Property Owners",
+      title: "Request a Free Evaluation",
+      subtitle: "Find out in 24 hours how much you can earn from renting your apartment.",
+      namePlaceholder: "Your name",
+      phonePlaceholder: "Phone / WhatsApp",
+      typePlaceholder: "Property type",
+      submit: "Submit",
+      sending: "Sending...",
+      success: "Request sent successfully!",
+      successMessage: "We will contact you as soon as possible for a free evaluation.",
+      successToast: "Thank you!",
+      successToastMessage: "We will contact you soon.",
+      error: "Error",
+      errorMessage: "An error occurred. Please try again.",
+      fillAllFields: "Fill all fields",
+      fillAllFieldsMessage: "Please fill in all fields correctly.",
+      trustText: "🔒 Your data is safe. We do not share it with third parties.",
     },
     
     // Lead Capture Form
