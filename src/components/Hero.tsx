@@ -101,18 +101,18 @@ const Hero = () => {
               variant="hero" 
               size="xl" 
               className="relative animate-glow-pulse btn-shine"
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              {t.hero.cta}
+              {t.hero.ctaQuickStart || "Start rapid"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button 
               variant="heroOutline" 
               size="xl" 
               className="btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-shadow duration-300"
-              onClick={() => document.getElementById('oaspeti')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              {t.hero.ctaGuests || "Pentru Oaspeți"}
+              {t.hero.cta}
             </Button>
           </div>
           

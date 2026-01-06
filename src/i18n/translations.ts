@@ -23,6 +23,7 @@ export const translations = {
       cta: "Solicită o Evaluare Gratuită",
       ctaSecondary: "Află Cum Funcționează",
       ctaGuests: "Pentru Oaspeți",
+      ctaQuickStart: "Start Rapid",
       trustTitle: "De Încredere Pentru",
       stats: {
         properties: "Proprietăți Gestionate",
@@ -867,6 +868,7 @@ Mulțumesc!`,
       cta: "Request a Free Evaluation",
       ctaSecondary: "Learn How It Works",
       ctaGuests: "For Guests",
+      ctaQuickStart: "Quick Start",
       trustTitle: "Trusted For",
       stats: {
         properties: "Properties Managed",
