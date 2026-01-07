@@ -207,7 +207,7 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
             >
               <Sparkles className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-sm font-medium text-primary">
-                {language === 'ro' ? 'Apartamente Premium' : 'Premium Apartments'}
+                ApArt Hotel
               </span>
             </div>
             <h1 
