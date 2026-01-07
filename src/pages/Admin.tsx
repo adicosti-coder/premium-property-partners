@@ -40,6 +40,7 @@ import {
   LayoutDashboard,
   FileText,
   Key,
+  Wrench,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -50,6 +51,7 @@ import PropertyManager from "@/components/admin/PropertyManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import BlogManager from "@/components/admin/BlogManager";
 import OwnerCodeManager from "@/components/admin/OwnerCodeManager";
+import MaintenanceManager from "@/components/admin/MaintenanceManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -243,6 +245,10 @@ const Admin = () => {
             <TabsTrigger value="owner-codes" className="flex items-center gap-2">
               <Key className="w-4 h-4" />
               {t.admin.tabs?.ownerCodes || "Owner Codes"}
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              {t.admin.tabs?.maintenance || "Maintenance"}
             </TabsTrigger>
           </TabsList>
 
@@ -456,6 +462,11 @@ const Admin = () => {
           {/* Owner Codes Tab */}
           <TabsContent value="owner-codes">
             <OwnerCodeManager />
+          </TabsContent>
+
+          {/* Maintenance Tab */}
+          <TabsContent value="maintenance">
+            <MaintenanceManager />
           </TabsContent>
         </Tabs>
       </div>
