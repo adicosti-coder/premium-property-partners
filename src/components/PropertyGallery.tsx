@@ -11,6 +11,7 @@ import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCompareModal from "./PropertyCompareModal";
 import PropertyMap from "./PropertyMap";
+import SmartFeaturesBadge from "./SmartFeaturesBadge";
 import { properties, Property } from "@/data/properties";
 import { toast } from "sonner";
 
@@ -343,6 +344,13 @@ const PropertyGallery = () => {
                       <MapPin className="w-3 h-3 text-primary" />
                       <span className="text-xs font-medium text-foreground">{property.location}</span>
                     </div>
+
+                    {/* Smart Features Badge - Casai style */}
+                    <SmartFeaturesBadge 
+                      features={[...property.features, ...property.amenities]} 
+                      className="absolute bottom-4 left-4"
+                      variant="compact"
+                    />
 
                     {/* Rating badge */}
                     <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
