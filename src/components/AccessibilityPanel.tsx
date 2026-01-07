@@ -1,16 +1,80 @@
-import { useState } from "react";
-import { Settings, X, Sparkles, Sun, Moon, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAnimationPreference } from "@/hooks/useAnimationPreference";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
+type FontSize = "small" | "normal" | "large" | "xlarge";
+
 const AccessibilityPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
   const { animationsEnabled, toggleAnimations } = useAnimationPreference();
   const { theme, setTheme } = useTheme();
+  
+  const [fontSize, setFontSize] = useState<FontSize>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("fontSize") as FontSize) || "normal";
+    }
+    return "normal";
+  });
+  
+  const [highContrast, setHighContrast] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("highContrast") === "true";
+    }
+    return false;
+  });
+  
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("reducedMotion");
+      if (stored !== null) return stored === "true";
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+    return false;
+  });
+
+  // Apply font size
+  useEffect(() => {
+    const root = document.documentElement;
+    const sizes = {
+      small: "14px",
+      normal: "16px",
+      large: "18px",
+      xlarge: "20px"
+    };
+    root.style.fontSize = sizes[fontSize];
+    localStorage.setItem("fontSize", fontSize);
+  }, [fontSize]);
+
+  // Apply high contrast
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrast) {
+      root.classList.add("high-contrast");
+    } else {
+      root.classList.remove("high-contrast");
+    }
+    localStorage.setItem("highContrast", String(highContrast));
+  }, [highContrast]);
+
+  // Apply reduced motion
+  useEffect(() => {
+    const root = document.documentElement;
+    if (reducedMotion) {
+      root.classList.add("reduce-motion");
+      // Also sync with animations preference
+      if (animationsEnabled) {
+        toggleAnimations();
+      }
+    } else {
+      root.classList.remove("reduce-motion");
+    }
+    localStorage.setItem("reducedMotion", String(reducedMotion));
+  }, [reducedMotion]);
 
   const translations = {
     ro: {
@@ -23,6 +87,15 @@ const AccessibilityPanel = () => {
       dark: "Întunecată",
       language: "Limbă",
       close: "Închide",
+      fontSize: "Dimensiune text",
+      small: "Mic",
+      normal: "Normal",
+      large: "Mare",
+      xlarge: "F. Mare",
+      highContrast: "Contrast ridicat",
+      on: "Activat",
+      off: "Dezactivat",
+      reducedMotion: "Reducere mișcare",
     },
     en: {
       accessibility: "Accessibility",
@@ -34,6 +107,15 @@ const AccessibilityPanel = () => {
       dark: "Dark",
       language: "Language",
       close: "Close",
+      fontSize: "Font size",
+      small: "Small",
+      normal: "Normal",
+      large: "Large",
+      xlarge: "X-Large",
+      highContrast: "High contrast",
+      on: "On",
+      off: "Off",
+      reducedMotion: "Reduce motion",
     },
   };
 
@@ -79,35 +161,91 @@ const AccessibilityPanel = () => {
         </div>
 
         {/* Settings */}
-        <div className="p-4 space-y-4">
-          {/* Animations Toggle */}
+        <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Font Size */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-gold" />
-              {tr.animations}
+              <Type className="w-4 h-4 text-gold" />
+              {tr.fontSize}
+            </label>
+            <div className="grid grid-cols-4 gap-1">
+              {(["small", "normal", "large", "xlarge"] as FontSize[]).map((size) => (
+                <Button
+                  key={size}
+                  variant={fontSize === size ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFontSize(size)}
+                  className={cn(
+                    "transition-all duration-200 text-xs px-2",
+                    fontSize === size && "bg-gold text-primary hover:bg-gold/90"
+                  )}
+                >
+                  {tr[size]}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* High Contrast */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Contrast className="w-4 h-4 text-gold" />
+              {tr.highContrast}
             </label>
             <div className="flex gap-2">
               <Button
-                variant={animationsEnabled ? "default" : "outline"}
+                variant={highContrast ? "default" : "outline"}
                 size="sm"
-                onClick={() => !animationsEnabled && toggleAnimations()}
+                onClick={() => setHighContrast(true)}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  animationsEnabled && "bg-gold text-primary hover:bg-gold/90"
+                  highContrast && "bg-gold text-primary hover:bg-gold/90"
                 )}
               >
-                {tr.animationsOn}
+                {tr.on}
               </Button>
               <Button
-                variant={!animationsEnabled ? "default" : "outline"}
+                variant={!highContrast ? "default" : "outline"}
                 size="sm"
-                onClick={() => animationsEnabled && toggleAnimations()}
+                onClick={() => setHighContrast(false)}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  !animationsEnabled && "bg-muted-foreground text-background"
+                  !highContrast && "bg-muted-foreground text-background"
                 )}
               >
-                {tr.animationsOff}
+                {tr.off}
+              </Button>
+            </div>
+          </div>
+
+          {/* Reduced Motion */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Zap className="w-4 h-4 text-gold" />
+              {tr.reducedMotion}
+            </label>
+            <div className="flex gap-2">
+              <Button
+                variant={reducedMotion ? "default" : "outline"}
+                size="sm"
+                onClick={() => setReducedMotion(true)}
+                className={cn(
+                  "flex-1 transition-all duration-200",
+                  reducedMotion && "bg-gold text-primary hover:bg-gold/90"
+                )}
+              >
+                {tr.on}
+              </Button>
+              <Button
+                variant={!reducedMotion ? "default" : "outline"}
+                size="sm"
+                onClick={() => setReducedMotion(false)}
+                className={cn(
+                  "flex-1 transition-all duration-200",
+                  !reducedMotion && "bg-muted-foreground text-background"
+                )}
+              >
+                {tr.off}
               </Button>
             </div>
           </div>
