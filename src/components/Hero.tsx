@@ -15,6 +15,7 @@ interface HeroSettings {
   customHighlight: string | null;
   customSubtitle: string | null;
   customBadge: string | null;
+  customTags: string[] | null;
 }
 
 const Hero = () => {
@@ -30,6 +31,7 @@ const Hero = () => {
     customHighlight: null,
     customSubtitle: null,
     customBadge: null,
+    customTags: null,
   });
 
   // Fetch hero settings from database
@@ -38,7 +40,7 @@ const Hero = () => {
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en")
+          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en")
           .eq("id", "default")
           .single();
         
@@ -50,6 +52,7 @@ const Hero = () => {
             customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
             customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
             customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
+            customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
           });
         }
       } catch (err) {
@@ -156,12 +159,15 @@ const Hero = () => {
             highlightLength={(heroSettings.customHighlight || t.hero.titleHighlight).length}
             ctaQuickStart={t.hero.ctaQuickStart || "Start rapid"}
             cta={t.hero.cta}
-            tags={[
-              t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
-              t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
-              t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
-              t.hero.tags?.cleaning || "Curățenie profesională"
-            ]}
+            tags={heroSettings.customTags && heroSettings.customTags.length > 0 
+              ? heroSettings.customTags 
+              : [
+                  t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
+                  t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
+                  t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
+                  t.hero.tags?.cleaning || "Curățenie profesională"
+                ]
+            }
             t={t}
           />
         </div>

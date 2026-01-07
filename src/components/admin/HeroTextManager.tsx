@@ -18,8 +18,12 @@ import {
   Loader2, 
   Save,
   RotateCcw,
-  Languages
+  Languages,
+  Plus,
+  X,
+  Tag
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface HeroTextSettings {
   hero_title_ro: string | null;
@@ -30,6 +34,8 @@ interface HeroTextSettings {
   hero_subtitle_en: string | null;
   hero_badge_ro: string | null;
   hero_badge_en: string | null;
+  hero_tags_ro: string[] | null;
+  hero_tags_en: string[] | null;
 }
 
 const defaultTexts = {
@@ -43,6 +49,11 @@ const defaultTexts = {
   hero_badge_en: "Premium Property Management",
 };
 
+const defaultTags = {
+  ro: ["Administrare regim hotelier", "Prețuri dinamice", "Self check-in 24/7", "Curățenie profesională"],
+  en: ["Hotel-style management", "Dynamic pricing", "Self check-in 24/7", "Professional cleaning"],
+};
+
 const HeroTextManager = () => {
   const [settings, setSettings] = useState<HeroTextSettings>({
     hero_title_ro: null,
@@ -53,10 +64,14 @@ const HeroTextManager = () => {
     hero_subtitle_en: null,
     hero_badge_ro: null,
     hero_badge_en: null,
+    hero_tags_ro: null,
+    hero_tags_en: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("ro");
+  const [newTagRo, setNewTagRo] = useState("");
+  const [newTagEn, setNewTagEn] = useState("");
 
   useEffect(() => {
     fetchSettings();
@@ -67,7 +82,7 @@ const HeroTextManager = () => {
     try {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en")
+        .select("hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en")
         .eq("id", "default")
         .single();
 
@@ -83,6 +98,8 @@ const HeroTextManager = () => {
           hero_subtitle_en: data.hero_subtitle_en,
           hero_badge_ro: data.hero_badge_ro,
           hero_badge_en: data.hero_badge_en,
+          hero_tags_ro: data.hero_tags_ro,
+          hero_tags_en: data.hero_tags_en,
         });
       }
     } catch (error) {
@@ -133,11 +150,13 @@ const HeroTextManager = () => {
       newSettings.hero_highlight_ro = null;
       newSettings.hero_subtitle_ro = null;
       newSettings.hero_badge_ro = null;
+      newSettings.hero_tags_ro = null;
     } else {
       newSettings.hero_title_en = null;
       newSettings.hero_highlight_en = null;
       newSettings.hero_subtitle_en = null;
       newSettings.hero_badge_en = null;
+      newSettings.hero_tags_en = null;
     }
 
     setSettings(newSettings);
@@ -173,6 +192,49 @@ const HeroTextManager = () => {
     }));
   };
 
+  const addTag = (lang: "ro" | "en") => {
+    const tagValue = lang === "ro" ? newTagRo.trim() : newTagEn.trim();
+    if (!tagValue) return;
+
+    const field = lang === "ro" ? "hero_tags_ro" : "hero_tags_en";
+    const currentTags = settings[field] || [];
+    
+    if (currentTags.includes(tagValue)) {
+      toast({
+        title: "Tag duplicat",
+        description: "Acest tag există deja.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSettings(prev => ({
+      ...prev,
+      [field]: [...currentTags, tagValue],
+    }));
+
+    if (lang === "ro") {
+      setNewTagRo("");
+    } else {
+      setNewTagEn("");
+    }
+  };
+
+  const removeTag = (lang: "ro" | "en", index: number) => {
+    const field = lang === "ro" ? "hero_tags_ro" : "hero_tags_en";
+    const currentTags = settings[field] || [];
+    
+    setSettings(prev => ({
+      ...prev,
+      [field]: currentTags.filter((_, i) => i !== index),
+    }));
+  };
+
+  const getDisplayTags = (lang: "ro" | "en") => {
+    const field = lang === "ro" ? "hero_tags_ro" : "hero_tags_en";
+    return settings[field] || [];
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -189,7 +251,7 @@ const HeroTextManager = () => {
           Text Hero
         </CardTitle>
         <CardDescription>
-          Personalizează textele din secțiunea hero a paginii principale.
+          Personalizează textele și tag-urile din secțiunea hero a paginii principale.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -259,6 +321,55 @@ const HeroTextManager = () => {
               </p>
             </div>
 
+            {/* Tags Section RO */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                Tag-uri (afișate sub butoane)
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {getDisplayTags("ro").length > 0 ? (
+                  getDisplayTags("ro").map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1 py-1.5">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag("ro", index)}
+                        className="ml-1 hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Se folosesc tag-urile implicite: {defaultTags.ro.join(", ")}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={newTagRo}
+                  onChange={(e) => setNewTagRo(e.target.value)}
+                  placeholder="Adaugă un tag nou..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTag("ro");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => addTag("ro")}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
             <Button
               variant="outline"
               onClick={() => handleReset("ro")}
@@ -321,6 +432,55 @@ const HeroTextManager = () => {
               <p className="text-xs text-muted-foreground">
                 Default: {defaultTexts.hero_subtitle_en}
               </p>
+            </div>
+
+            {/* Tags Section EN */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                Tags (displayed below buttons)
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {getDisplayTags("en").length > 0 ? (
+                  getDisplayTags("en").map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1 py-1.5">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag("en", index)}
+                        className="ml-1 hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Using default tags: {defaultTags.en.join(", ")}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={newTagEn}
+                  onChange={(e) => setNewTagEn(e.target.value)}
+                  placeholder="Add a new tag..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTag("en");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => addTag("en")}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <Button
