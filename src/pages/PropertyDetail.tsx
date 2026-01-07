@@ -12,6 +12,7 @@ import { getPropertyBySlug } from "@/data/properties";
 import BookingForm from "@/components/BookingForm";
 import StayCalculator from "@/components/StayCalculator";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
+import PriceCompareWidget from "@/components/PriceCompareWidget";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -407,6 +408,9 @@ const PropertyDetail = () => {
 
             {/* Right Column - Stay Calculator & Booking Card */}
             <div className="lg:col-span-1 space-y-6">
+              {/* Price Compare Widget */}
+              <PriceCompareWidget basePrice={property.pricePerNight} />
+              
               {/* Stay Calculator */}
               <StayCalculator 
                 property={property} 
