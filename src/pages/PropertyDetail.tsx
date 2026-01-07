@@ -16,6 +16,7 @@ import PriceCompareWidget from "@/components/PriceCompareWidget";
 import SmartFeaturesBadge from "@/components/SmartFeaturesBadge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -572,6 +573,7 @@ const PropertyDetail = () => {
         onClose={() => setBookingOpen(false)} 
         propertyName={property.name}
       />
+      <AccessibilityPanel />
     </div>
   );
 };

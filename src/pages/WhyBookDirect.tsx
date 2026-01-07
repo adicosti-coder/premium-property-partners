@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import QuickBookingForm from "@/components/QuickBookingForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -549,6 +550,7 @@ const WhyBookDirect = () => {
       </main>
 
       <Footer />
+      <AccessibilityPanel />
     </div>
   );
 };

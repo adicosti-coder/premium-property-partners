@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { exportFavoritesPdf } from "@/utils/exportFavoritesPdf";
 import PropertyCompareModal from "@/components/PropertyCompareModal";
 import BookingForm from "@/components/BookingForm";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import NotificationSettings from "@/components/NotificationSettings";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -319,6 +320,7 @@ const Favorites = () => {
         onClose={() => setBookingOpen(false)}
         propertyName={selectedProperty}
       />
+      <AccessibilityPanel />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogComments from "@/components/BlogComments";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -224,6 +225,7 @@ const BlogArticle = () => {
       </main>
 
       <Footer />
+      <AccessibilityPanel />
     </div>
   );
 };

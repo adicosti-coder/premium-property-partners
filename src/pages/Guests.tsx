@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import PropertyImageCarousel from "@/components/PropertyImageCarousel";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -653,6 +654,7 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
 
       <Footer />
       <FloatingWhatsApp />
+      <AccessibilityPanel />
     </div>
   );
 };
