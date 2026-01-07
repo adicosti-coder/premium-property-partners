@@ -15,7 +15,9 @@ import {
   CreditCard,
   HeadphonesIcon,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Quote,
+  Star
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -24,7 +26,32 @@ const WhyBookDirect = () => {
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: comparisonRef, isVisible: comparisonVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: benefitsRef, isVisible: benefitsVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: testimonialsRef, isVisible: testimonialsVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  const directBookingTestimonials = [
+    {
+      name: "Maria D.",
+      location: "București",
+      text: t.whyBookDirect?.testimonials?.maria || "Am economisit 45€ rezervând direct! Plus, am primit early check-in gratuit care pe Booking ar fi costat extra. Comunicarea a fost mult mai rapidă și personalizată.",
+      savings: "45€",
+      rating: 5,
+    },
+    {
+      name: "Andrei P.",
+      location: "Cluj-Napoca",
+      text: t.whyBookDirect?.testimonials?.andrei || "Prima dată când am rezervat direct și nu regret! Codul DIRECT5 mi-a adus reducere, iar când am avut nevoie să schimb data, totul s-a rezolvat în 5 minute.",
+      savings: "38€",
+      rating: 5,
+    },
+    {
+      name: "Elena S.",
+      location: "Iași",
+      text: t.whyBookDirect?.testimonials?.elena || "Apreciez transparența prețurilor - fără taxe ascunse ca pe platforme. Am primit și un upgrade gratuit la apartament pentru că era disponibil. Super experiență!",
+      savings: "52€",
+      rating: 5,
+    },
+  ];
 
   const benefits = [
     {
@@ -282,6 +309,63 @@ const WhyBookDirect = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section ref={testimonialsRef} className="section-padding bg-secondary/30">
+          <div className="container mx-auto px-6">
+            <div className={`text-center section-header-spacing transition-all duration-700 ${
+              testimonialsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}>
+              <h2 className="heading-premium text-3xl md:text-4xl mb-4">
+                {t.whyBookDirect?.testimonialsTitle || "Ce Spun Oaspeții Noștri"}
+              </h2>
+              <p className="text-premium text-muted-foreground max-w-2xl mx-auto">
+                {t.whyBookDirect?.testimonialsSubtitle || "Experiențe reale de la oaspeți care au rezervat direct"}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+              {directBookingTestimonials.map((testimonial, index) => (
+                <Card 
+                  key={index}
+                  className={`relative overflow-hidden border-2 hover:border-primary/30 transition-all duration-500 ${
+                    testimonialsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                  }`}
+                  style={{ transitionDelay: `${150 + index * 100}ms` }}
+                >
+                  <CardContent className="p-6 md:p-8">
+                    {/* Quote icon */}
+                    <Quote className="w-10 h-10 text-primary/20 mb-4" />
+                    
+                    {/* Rating */}
+                    <div className="flex gap-1 mb-4">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    
+                    {/* Text */}
+                    <p className="text-foreground mb-6 leading-relaxed italic">
+                      "{testimonial.text}"
+                    </p>
+                    
+                    {/* Author & Savings */}
+                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                      <div>
+                        <p className="font-semibold">{testimonial.name}</p>
+                        <p className="text-sm text-muted-foreground">{testimonial.location}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">{t.whyBookDirect?.saved || "A economisit"}</p>
+                        <p className="font-bold text-green-500 text-lg">{testimonial.savings}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
