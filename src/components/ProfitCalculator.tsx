@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import LeadCaptureForm from "./LeadCaptureForm";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useParallax } from "@/hooks/useParallax";
 
 const ProfitCalculator = () => {
   const { t } = useLanguage();
@@ -15,6 +17,15 @@ const ProfitCalculator = () => {
   const [platformFee, setPlatformFee] = useState(15);
   const [avgStayDuration, setAvgStayDuration] = useState(3);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+
+  // Scroll animations
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: slidersRef, isVisible: slidersVisible } = useScrollAnimation({ threshold: 0.05 });
+  const { ref: resultsRef, isVisible: resultsVisible } = useScrollAnimation({ threshold: 0.05 });
+  
+  // Parallax effects
+  const { offset: parallaxOffset1 } = useParallax({ speed: 0.15, direction: 'up' });
+  const { offset: parallaxOffset2 } = useParallax({ speed: 0.1, direction: 'down' });
 
   const calculations = useMemo(() => {
     const daysPerMonth = 30;
@@ -49,12 +60,23 @@ const ProfitCalculator = () => {
 
   return (
     <section id="calculator" className="py-24 bg-background relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decorations with parallax */}
+      <div 
+        className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100" 
+        style={{ transform: `translateY(${parallaxOffset1}px)` }}
+      />
+      <div 
+        className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        style={{ transform: `translateY(${parallaxOffset2}px)` }}
+      />
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
+        <div 
+          ref={headerRef}
+          className={`text-center mb-12 transition-all duration-700 ${
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <Calculator className="w-4 h-4 text-primary" />
             <span className="text-primary text-sm font-semibold">{t.calculator.badge}</span>
@@ -69,7 +91,12 @@ const ProfitCalculator = () => {
 
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Sliders Section */}
-          <div className="space-y-8 bg-card p-8 rounded-2xl border border-border">
+          <div 
+            ref={slidersRef}
+            className={`space-y-8 bg-card p-8 rounded-2xl border border-border transition-all duration-700 ${
+              slidersVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
+            }`}
+          >
             <h3 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
               <Home className="w-5 h-5 text-primary" />
               {t.calculator.propertyParams}
@@ -183,9 +210,16 @@ const ProfitCalculator = () => {
           </div>
 
           {/* Results Section */}
-          <div className="space-y-6">
+          <div 
+            ref={resultsRef}
+            className={`space-y-6 transition-all duration-700 delay-150 ${
+              resultsVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
+            }`}
+          >
             {/* Main KPI Card */}
-            <div className="bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden">
+            <div className={`bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden transition-all duration-500 delay-300 ${
+              resultsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4">
