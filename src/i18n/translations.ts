@@ -863,6 +863,20 @@ Mulțumesc!`,
         responseTime: "Răspundem în maximum 24 de ore lucrătoare.",
       },
     },
+    
+    // Promo Banner
+    promoBanner: {
+      text: "Rezervă direct și folosește codul",
+      discount: "pentru 5% reducere la orice rezervare!",
+    },
+    
+    // Price Compare Widget
+    priceCompare: {
+      title: "Comparație Prețuri",
+      directPrice: "Prețul nostru",
+      youSave: "Economisești",
+      useCode: "Folosește codul",
+    },
   },
   
   en: {
@@ -1728,6 +1742,20 @@ Thank you!`,
         location: "Location",
         responseTime: "We respond within 24 business hours.",
       },
+    },
+    
+    // Promo Banner
+    promoBanner: {
+      text: "Book directly and use code",
+      discount: "for 5% off any reservation!",
+    },
+    
+    // Price Compare Widget
+    priceCompare: {
+      title: "Price Comparison",
+      directPrice: "Our price",
+      youSave: "You save",
+      useCode: "Use code",
     },
   },
 };
