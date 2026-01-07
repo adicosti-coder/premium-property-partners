@@ -8,6 +8,7 @@ import { FileText, Loader2, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ConfettiEffect from "./ConfettiEffect";
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -124,11 +125,14 @@ const LeadCaptureForm = ({
         </DialogHeader>
 
         {isSuccess ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">{t.leadForm.success}</h3>
-            <p className="text-muted-foreground">{t.leadForm.successMessage}</p>
-          </div>
+          <>
+            <ConfettiEffect isActive={isSuccess} duration={3000} particleCount={40} />
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <CheckCircle className="w-16 h-16 text-green-500 mb-4 animate-success-bounce" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">{t.leadForm.success}</h3>
+              <p className="text-muted-foreground">{t.leadForm.successMessage}</p>
+            </div>
+          </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
