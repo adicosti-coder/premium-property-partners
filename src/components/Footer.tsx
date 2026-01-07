@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MapPin, Phone, Mail, Send } from "lucide-react";
+import { MapPin, Phone, Mail, Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import AnimationToggle from "./AnimationToggle";
+import ThemeToggle from "./ThemeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -28,6 +31,11 @@ const Footer = () => {
       errorMessage: "A apărut o eroare. Încearcă din nou.",
       alreadySubscribed: "Acest email este deja abonat.",
       invalidEmail: "Te rugăm să introduci o adresă de email validă.",
+      accessibility: "Accesibilitate",
+      accessibilityDesc: "Personalizează experiența ta",
+      animations: "Animații",
+      theme: "Temă",
+      language: "Limbă",
     },
     en: {
       company: "Company",
@@ -42,6 +50,11 @@ const Footer = () => {
       errorMessage: "An error occurred. Please try again.",
       alreadySubscribed: "This email is already subscribed.",
       invalidEmail: "Please enter a valid email address.",
+      accessibility: "Accessibility",
+      accessibilityDesc: "Customize your experience",
+      animations: "Animations",
+      theme: "Theme",
+      language: "Language",
     },
   };
 
@@ -82,7 +95,7 @@ const Footer = () => {
   return (
     <footer className="bg-primary py-12 border-t border-cream/10">
       <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-5 gap-8 mb-8">
+        <div className="grid md:grid-cols-6 gap-8 mb-8">
           {/* Logo & Description */}
           <div className="md:col-span-1">
             <a href="/" className="flex items-center gap-2 mb-4">
@@ -170,6 +183,29 @@ const Footer = () => {
                 <Send className="w-4 h-4" />
               </Button>
             </form>
+          </div>
+
+          {/* Accessibility Settings */}
+          <div className="md:col-span-1">
+            <h4 className="text-cream font-semibold mb-4 flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              {tr.accessibility}
+            </h4>
+            <p className="text-cream/60 text-sm mb-4">{tr.accessibilityDesc}</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-cream/60 text-sm">{tr.animations}</span>
+                <AnimationToggle />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-cream/60 text-sm">{tr.theme}</span>
+                <ThemeToggle />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-cream/60 text-sm">{tr.language}</span>
+                <LanguageSwitcher />
+              </div>
+            </div>
           </div>
         </div>
 
