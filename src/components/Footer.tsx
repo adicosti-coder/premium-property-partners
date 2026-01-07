@@ -1,8 +1,18 @@
+import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { MapPin, Phone, Mail, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const emailSchema = z.string().trim().email().max(255);
 
 const Footer = () => {
   const { t, language } = useLanguage();
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const translations = {
     ro: {
@@ -10,21 +20,69 @@ const Footer = () => {
       companyName: "Imo Business Centrum SRL",
       cui: "CUI: RO14380627",
       address: "Timișoara, str. Samuil Micu, nr. 14, ap. 5",
+      newsletter: "Newsletter",
+      newsletterDesc: "Abonează-te pentru a primi noutăți și oferte speciale.",
+      emailPlaceholder: "Adresa ta de email",
+      subscribe: "Abonează-te",
+      successMessage: "Te-ai abonat cu succes!",
+      errorMessage: "A apărut o eroare. Încearcă din nou.",
+      alreadySubscribed: "Acest email este deja abonat.",
+      invalidEmail: "Te rugăm să introduci o adresă de email validă.",
     },
     en: {
       company: "Company",
       companyName: "Imo Business Centrum SRL",
       cui: "Tax ID: RO14380627",
       address: "Timișoara, Samuil Micu St., no. 14, apt. 5",
+      newsletter: "Newsletter",
+      newsletterDesc: "Subscribe to receive news and special offers.",
+      emailPlaceholder: "Your email address",
+      subscribe: "Subscribe",
+      successMessage: "Successfully subscribed!",
+      errorMessage: "An error occurred. Please try again.",
+      alreadySubscribed: "This email is already subscribed.",
+      invalidEmail: "Please enter a valid email address.",
     },
   };
 
   const tr = translations[language] || translations.en;
 
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const result = emailSchema.safeParse(email);
+    if (!result.success) {
+      toast.error(tr.invalidEmail);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("newsletter_subscribers")
+        .insert({ email: result.data });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error(tr.alreadySubscribed);
+        } else {
+          toast.error(tr.errorMessage);
+        }
+      } else {
+        toast.success(tr.successMessage);
+        setEmail("");
+      }
+    } catch {
+      toast.error(tr.errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-primary py-12 border-t border-cream/10">
       <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="grid md:grid-cols-5 gap-8 mb-8">
           {/* Logo & Description */}
           <div className="md:col-span-1">
             <a href="/" className="flex items-center gap-2 mb-4">
@@ -88,6 +146,30 @@ const Footer = () => {
                 {t.nav.contact}
               </a>
             </nav>
+          </div>
+
+          {/* Newsletter */}
+          <div className="md:col-span-1">
+            <h4 className="text-cream font-semibold mb-4">{tr.newsletter}</h4>
+            <p className="text-cream/60 text-sm mb-4">{tr.newsletterDesc}</p>
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder={tr.emailPlaceholder}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-cream/10 border-cream/20 text-cream placeholder:text-cream/40 text-sm"
+                required
+              />
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isLoading}
+                className="bg-gold hover:bg-gold/90 text-primary shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
           </div>
         </div>
 
