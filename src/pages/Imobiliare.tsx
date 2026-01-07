@@ -6,6 +6,7 @@ import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useParallax } from "@/hooks/useParallax";
 import { 
   Building2, 
   Home, 
@@ -34,6 +35,11 @@ const Imobiliare = () => {
   const { ref: processHeaderRef, isVisible: processHeaderVisible } = useScrollAnimation();
   const { ref: processGridRef, isVisible: processGridVisible } = useScrollAnimation({ threshold: 0.05 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
+
+  // Parallax effects for decorative elements
+  const { offset: parallaxSlow } = useParallax({ speed: 0.15, direction: 'up' });
+  const { offset: parallaxMedium } = useParallax({ speed: 0.25, direction: 'up' });
+  const { offset: parallaxFast } = useParallax({ speed: 0.35, direction: 'down' });
 
   const services = [
     {
@@ -87,6 +93,20 @@ const Imobiliare = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
         
+        {/* Parallax decorative elements - Hero */}
+        <div 
+          className="absolute top-20 left-10 w-32 h-32 rounded-full bg-primary/5 blur-3xl"
+          style={{ transform: `translateY(${parallaxSlow}px)` }}
+        />
+        <div 
+          className="absolute top-40 right-20 w-48 h-48 rounded-full bg-primary/8 blur-3xl"
+          style={{ transform: `translateY(${parallaxMedium}px)` }}
+        />
+        <div 
+          className="absolute bottom-10 left-1/4 w-24 h-24 rounded-full bg-primary/10 blur-2xl"
+          style={{ transform: `translateY(${parallaxFast}px)` }}
+        />
+        
         <div className="container mx-auto px-6 relative z-10">
           <div 
             ref={heroRef}
@@ -131,8 +151,18 @@ const Imobiliare = () => {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 md:py-28 bg-muted/30">
-        <div className="container mx-auto px-6">
+      <section id="services" className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
+        {/* Parallax decorative elements - Services */}
+        <div 
+          className="absolute top-32 right-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+          style={{ transform: `translateY(${parallaxMedium}px)` }}
+        />
+        <div 
+          className="absolute bottom-20 left-20 w-28 h-28 rounded-full bg-primary/8 blur-2xl"
+          style={{ transform: `translateY(${parallaxSlow}px)` }}
+        />
+        
+        <div className="container mx-auto px-6 relative z-10">
           <div 
             ref={servicesHeaderRef}
             className={`text-center mb-16 transition-all duration-700 ${
@@ -193,8 +223,18 @@ const Imobiliare = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-6">
+      <section className="relative py-20 md:py-28 overflow-hidden">
+        {/* Parallax decorative elements - Benefits */}
+        <div 
+          className="absolute top-16 left-16 w-36 h-36 rounded-full bg-primary/5 blur-3xl"
+          style={{ transform: `translateY(${parallaxFast}px)` }}
+        />
+        <div 
+          className="absolute bottom-24 right-24 w-44 h-44 rounded-full bg-primary/6 blur-3xl"
+          style={{ transform: `translateY(${parallaxMedium}px)` }}
+        />
+        
+        <div className="container mx-auto px-6 relative z-10">
           <div 
             ref={benefitsHeaderRef}
             className={`text-center mb-16 transition-all duration-700 ${
@@ -236,8 +276,18 @@ const Imobiliare = () => {
       </section>
 
       {/* Process Section */}
-      <section className="py-20 md:py-28 bg-muted/30">
-        <div className="container mx-auto px-6">
+      <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
+        {/* Parallax decorative elements - Process */}
+        <div 
+          className="absolute top-24 right-32 w-32 h-32 rounded-full bg-primary/5 blur-3xl"
+          style={{ transform: `translateY(${parallaxSlow}px)` }}
+        />
+        <div 
+          className="absolute bottom-16 left-1/3 w-40 h-40 rounded-full bg-primary/8 blur-3xl"
+          style={{ transform: `translateY(${parallaxMedium}px)` }}
+        />
+        
+        <div className="container mx-auto px-6 relative z-10">
           <div 
             ref={processHeaderRef}
             className={`text-center mb-16 transition-all duration-700 ${
@@ -289,8 +339,18 @@ const Imobiliare = () => {
       <RealEstateContactForm />
 
       {/* CTA Section */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-6">
+      <section className="relative py-20 md:py-28 overflow-hidden">
+        {/* Parallax decorative elements - CTA */}
+        <div 
+          className="absolute top-10 left-1/4 w-24 h-24 rounded-full bg-primary/6 blur-2xl"
+          style={{ transform: `translateY(${parallaxFast}px)` }}
+        />
+        <div 
+          className="absolute bottom-20 right-1/4 w-36 h-36 rounded-full bg-primary/5 blur-3xl"
+          style={{ transform: `translateY(${parallaxSlow}px)` }}
+        />
+        
+        <div className="container mx-auto px-6 relative z-10">
           <div 
             ref={ctaRef}
             className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-8 md:p-16 text-center transition-all duration-700 ${
