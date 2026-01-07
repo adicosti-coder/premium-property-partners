@@ -129,24 +129,89 @@ const Testimonials = () => {
           ))}
         </div>
 
-        {/* Trust stats */}
+        {/* Aggregated Platform Reviews Widget */}
         <div 
           ref={statsRef}
-          className={`mt-16 flex flex-wrap justify-center gap-8 md:gap-16 transition-all duration-700 ${
+          className={`mt-16 transition-all duration-700 ${
             statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <div className="text-center">
-            <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9/5</p>
-            <p className="text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
+          {/* Main stats banner */}
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20 mb-8">
+            <div className="text-center mb-6">
+              <p className="text-primary uppercase tracking-widest text-xs font-semibold mb-2">
+                {t.testimonials.platformReviewsLabel || 'Recenzii de pe Platforme'}
+              </p>
+              <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground">
+                {t.testimonials.platformReviewsTitle || 'Peste 500 de recenzii de 5 stele'}
+              </h3>
+              <p className="text-muted-foreground text-sm mt-2">
+                {t.testimonials.platformReviewsSubtitle || 'de la oaspeții noștri pe toate platformele'}
+              </p>
+            </div>
+            
+            {/* Platform badges */}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              {/* Booking.com */}
+              <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-border">
+                <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg">B</div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-foreground">9.4</span>
+                    <span className="text-xs text-muted-foreground">/10</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Booking.com</p>
+                </div>
+              </div>
+              
+              {/* Airbnb */}
+              <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-border">
+                <div className="w-10 h-10 rounded-lg bg-rose-500 flex items-center justify-center text-white font-bold text-lg">A</div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-foreground">4.9</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Airbnb</p>
+                </div>
+              </div>
+              
+              {/* Google */}
+              <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm rounded-xl px-4 py-3 border border-border">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 via-green-500 to-yellow-500 flex items-center justify-center text-white font-bold text-lg">G</div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-foreground">4.8</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Google Reviews</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="text-center" style={{ transitionDelay: '100ms' }}>
-            <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">200+</p>
-            <p className="text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
-          </div>
-          <div className="text-center" style={{ transitionDelay: '200ms' }}>
-            <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
-            <p className="text-muted-foreground text-sm">{t.testimonials.happyClients}</p>
+          
+          {/* Trust stats row */}
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+            <div className="text-center">
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9/5</p>
+              <p className="text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
+            </div>
+            <div className="text-center" style={{ transitionDelay: '100ms' }}>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">500+</p>
+              <p className="text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
+            </div>
+            <div className="text-center" style={{ transitionDelay: '200ms' }}>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
+              <p className="text-muted-foreground text-sm">{t.testimonials.happyClients}</p>
+            </div>
           </div>
         </div>
       </div>

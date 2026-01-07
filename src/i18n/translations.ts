@@ -12,6 +12,7 @@ export const translations = {
       onlineCheckIn: "Online Check-In",
       contact: "Contact",
       freeEvaluation: "Evaluare Gratuită",
+      listProperty: "Proprietari: Listează",
     },
     
     // Hero
@@ -169,6 +170,9 @@ export const translations = {
       avgRating: "Rating mediu",
       verifiedReviews: "Recenzii verificate",
       happyClients: "Clienți mulțumiți",
+      platformReviewsLabel: "Recenzii de pe Platforme",
+      platformReviewsTitle: "Peste 500 de recenzii de 5 stele",
+      platformReviewsSubtitle: "de la oaspeții noștri pe toate platformele",
     },
     
     // Guest Section
@@ -892,6 +896,7 @@ Mulțumesc!`,
       onlineCheckIn: "Online Check-In",
       contact: "Contact",
       freeEvaluation: "Free Evaluation",
+      listProperty: "Owners: List Property",
     },
     
     // Hero
@@ -1049,6 +1054,9 @@ Mulțumesc!`,
       avgRating: "Average rating",
       verifiedReviews: "Verified reviews",
       happyClients: "Happy clients",
+      platformReviewsLabel: "Platform Reviews",
+      platformReviewsTitle: "Over 500 five-star reviews",
+      platformReviewsSubtitle: "from our guests across all platforms",
     },
     
     // Guest Section

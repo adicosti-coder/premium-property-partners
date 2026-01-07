@@ -157,13 +157,15 @@ const Header = () => {
                 Admin
               </Button>
             </Link>
+            {/* Owners CTA - distinct gold button */}
             <Button 
-              variant="hero" 
+              variant="default" 
               size="default" 
-              className="hidden sm:inline-flex"
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              className="hidden lg:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0"
+              onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              {t.nav.contact}
+              <span className="mr-1.5">🏠</span>
+              {t.nav.listProperty || 'Proprietari: Listează'}
             </Button>
             
             {/* Mobile menu button */}
