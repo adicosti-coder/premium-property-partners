@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import QuickBookingForm from "@/components/QuickBookingForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -27,6 +28,7 @@ const WhyBookDirect = () => {
   const { ref: comparisonRef, isVisible: comparisonVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: benefitsRef, isVisible: benefitsVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: testimonialsRef, isVisible: testimonialsVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: bookingRef, isVisible: bookingVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation({ threshold: 0.1 });
 
   const directBookingTestimonials = [
@@ -370,8 +372,30 @@ const WhyBookDirect = () => {
           </div>
         </section>
 
+        {/* Quick Booking Form Section */}
+        <section ref={bookingRef} className="section-padding">
+          <div className="container mx-auto px-6">
+            <div className={`text-center section-header-spacing transition-all duration-700 ${
+              bookingVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}>
+              <h2 className="heading-premium text-3xl md:text-4xl mb-4">
+                {t.quickBooking?.formTitle || "Începe Rezervarea"}
+              </h2>
+              <p className="text-premium text-muted-foreground max-w-2xl mx-auto">
+                {t.quickBooking?.formSubtitle || "Completează datele și aplică codul DIRECT5 pentru 5% reducere"}
+              </p>
+            </div>
+            
+            <div className={`max-w-xl mx-auto transition-all duration-700 delay-200 ${
+              bookingVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}>
+              <QuickBookingForm />
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
-        <section ref={ctaRef} className="section-padding bg-gradient-to-b from-background to-primary/5">
+        <section ref={ctaRef} className="section-padding-sm bg-gradient-to-b from-background to-primary/5">
           <div className="container mx-auto px-6">
             <div className={`max-w-3xl mx-auto text-center transition-all duration-700 ${
               ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
