@@ -2,20 +2,37 @@ import { Sparkles, ZapOff } from "lucide-react";
 import { useAnimationPreference } from "@/hooks/useAnimationPreference";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 const AnimationToggle = () => {
   const { animationsEnabled, toggleAnimations } = useAnimationPreference();
   const { language } = useLanguage();
+  const { toast } = useToast();
 
   const label = animationsEnabled 
     ? (language === 'ro' ? 'Dezactivează animațiile' : 'Disable animations')
     : (language === 'ro' ? 'Activează animațiile' : 'Enable animations');
 
+  const handleToggle = () => {
+    const newState = !animationsEnabled;
+    toggleAnimations();
+    
+    toast({
+      title: newState 
+        ? (language === 'ro' ? '✨ Animații activate' : '✨ Animations enabled')
+        : (language === 'ro' ? '⚡ Animații dezactivate' : '⚡ Animations disabled'),
+      description: newState
+        ? (language === 'ro' ? 'Experiență vizuală completă' : 'Full visual experience')
+        : (language === 'ro' ? 'Conținut afișat instant' : 'Content displayed instantly'),
+      duration: 2000,
+    });
+  };
+
   return (
     <Button
       variant="ghost"
       size="sm"
-      onClick={toggleAnimations}
+      onClick={handleToggle}
       className="relative w-9 h-9 p-0 text-muted-foreground hover:text-foreground transition-colors overflow-hidden"
       aria-label={label}
       title={label}
