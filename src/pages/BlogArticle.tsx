@@ -203,6 +203,21 @@ const BlogArticle = () => {
             </div>
           )}
 
+          {/* CTA Section */}
+          <div className="mt-10 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+            <p className="text-foreground">
+              {language === "ro" 
+                ? "Vrei să fii aproape de locațiile importante din Timișoara? Vezi apartamentele noastre premium aici: "
+                : "Want to be close to important locations in Timișoara? See our premium apartments here: "}
+              <Link 
+                to="/guests" 
+                className="text-primary font-semibold hover:underline"
+              >
+                realtrust.ro
+              </Link>
+            </p>
+          </div>
+
           {/* Comments Section */}
           <BlogComments articleId={article.id} />
         </article>
