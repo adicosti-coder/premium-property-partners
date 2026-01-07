@@ -25,6 +25,7 @@ import PromoBanner from "@/components/PromoBanner";
 import StatsCounters from "@/components/StatsCounters";
 import ResidentialComplexes from "@/components/ResidentialComplexes";
 import PartnershipTimeline from "@/components/PartnershipTimeline";
+import DigitalHouseManual from "@/components/DigitalHouseManual";
 
 const Index = () => {
   return (
@@ -54,6 +55,7 @@ const Index = () => {
         <AboutFounder />
         <BlogPreview />
         <GuestSection />
+        <DigitalHouseManual />
         <CleaningStandards />
         <FAQ />
         <ContactSection />
