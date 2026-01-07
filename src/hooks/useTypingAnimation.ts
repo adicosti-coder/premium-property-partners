@@ -1,4 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+
+// Simple hook to check animation preference from localStorage (works without context)
+const useAnimationEnabled = () => {
+  const [enabled, setEnabled] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("animationsEnabled");
+      if (stored !== null) return stored === "true";
+      return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem("animationsEnabled");
+      if (stored !== null) {
+        setEnabled(stored === "true");
+      }
+    };
+
+    // Listen for storage changes (from other tabs or same-tab updates)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also poll for changes (for same-tab updates)
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem("animationsEnabled");
+      if (stored !== null) {
+        const newValue = stored === "true";
+        setEnabled(prev => prev !== newValue ? newValue : prev);
+      }
+    }, 100);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return enabled;
+};
 
 interface UseTypingAnimationProps {
   text: string;
@@ -13,24 +53,11 @@ export const useTypingAnimation = ({
 }: UseTypingAnimationProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  // Check for reduced motion preference
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (event: MediaQueryListEvent) => {
-      setPrefersReducedMotion(event.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  const animationsEnabled = useAnimationEnabled();
 
   useEffect(() => {
-    // If user prefers reduced motion, show text immediately
-    if (prefersReducedMotion) {
+    // If animations are disabled, show text immediately
+    if (!animationsEnabled) {
       setDisplayedText(text);
       setIsComplete(true);
       return;
@@ -56,7 +83,7 @@ export const useTypingAnimation = ({
     }, delay);
 
     return () => clearTimeout(startTimeout);
-  }, [text, speed, delay, prefersReducedMotion]);
+  }, [text, speed, delay, animationsEnabled]);
 
   return { displayedText, isComplete };
 };

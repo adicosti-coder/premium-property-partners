@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -26,32 +27,34 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/favorite" element={<Favorites />} />
-              <Route path="/oaspeti" element={<Guests />} />
-              <Route path="/imobiliare" element={<Imobiliare />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogArticle />} />
-              <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-              <Route path="/online-check-in" element={<OnlineCheckIn />} />
-              <Route path="/rezerva-direct" element={<WhyBookDirect />} />
-              <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
-              <Route path="/portal-proprietar" element={<OwnerDashboard />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </LanguageProvider>
+      <AnimationPreferenceProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/favorite" element={<Favorites />} />
+                <Route path="/oaspeti" element={<Guests />} />
+                <Route path="/imobiliare" element={<Imobiliare />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogArticle />} />
+                <Route path="/proprietate/:slug" element={<PropertyDetail />} />
+                <Route path="/online-check-in" element={<OnlineCheckIn />} />
+                <Route path="/rezerva-direct" element={<WhyBookDirect />} />
+                <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
+                <Route path="/portal-proprietar" element={<OwnerDashboard />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
+      </AnimationPreferenceProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
