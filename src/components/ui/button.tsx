@@ -20,6 +20,7 @@ const buttonVariants = cva(
         premium: "bg-gradient-to-r from-primary to-gold-dark text-primary-foreground font-semibold shadow-gold hover:shadow-glow hover:scale-105",
         whatsapp: "bg-[#25D366] text-white font-semibold hover:bg-[#128C7E] shadow-lg hover:shadow-xl hover:scale-105",
         call: "bg-primary text-primary-foreground font-semibold hover:bg-primary/90",
+        booking: "bg-[#003580] text-white font-semibold hover:bg-[#00254d] shadow-md hover:shadow-lg",
       },
       size: {
         default: "h-10 px-4 py-2",
