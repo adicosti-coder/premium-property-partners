@@ -624,6 +624,63 @@ export type Database = {
         }
         Relationships: []
       }
+      video_testimonials: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          location: string
+          months_as_client: number
+          name: string
+          property_en: string
+          property_ro: string
+          quote_en: string
+          quote_ro: string
+          rating: number
+          role_en: string
+          role_ro: string
+          updated_at: string
+          youtube_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          location: string
+          months_as_client?: number
+          name: string
+          property_en: string
+          property_ro: string
+          quote_en: string
+          quote_ro: string
+          rating?: number
+          role_en: string
+          role_ro: string
+          updated_at?: string
+          youtube_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          location?: string
+          months_as_client?: number
+          name?: string
+          property_en?: string
+          property_ro?: string
+          quote_en?: string
+          quote_ro?: string
+          rating?: number
+          role_en?: string
+          role_ro?: string
+          updated_at?: string
+          youtube_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
