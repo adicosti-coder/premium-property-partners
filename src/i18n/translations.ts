@@ -179,6 +179,43 @@ export const translations = {
       platformReviewsSubtitle: "de la oaspeții noștri pe toate platformele",
     },
     
+    // Cleaning Standards
+    cleaningStandards: {
+      badge: "Standarde Premium",
+      title: "Standardul Nostru de",
+      titleHighlight: "Curățenie",
+      subtitle: "Protocol de curățenie certificat, cu verificare quality control după fiecare checkout. Siguranță și igienă la standarde hoteliere.",
+      features: [
+        { title: "Protocol Certificat", description: "Proceduri standardizate bazate pe ghidurile internaționale de igienă și dezinfecție profesională." },
+        { title: "Echipe Profesionale", description: "Personal instruit și verificat, cu experiență în hoteluri de 4-5 stele și standarde ridicate." },
+        { title: "Verificare QC", description: "Inspecție quality control după fiecare curățenie, cu checklist de peste 50 de puncte." },
+      ],
+      checklistTitle: "Checklist Complet de Curățenie",
+      checklistSubtitle: "50+ puncte de verificare la fiecare checkout",
+      categories: [
+        { 
+          name: "Dormitor", 
+          items: ["Schimbare lenjerie fresh", "Aspirare & mop", "Curățare oglinzi", "Dezinfectare întrerupătoare", "Aranjare decorativă"] 
+        },
+        { 
+          name: "Baie", 
+          items: ["Dezinfecție completă", "Curățare duș/cadă", "Sanitare strălucitoare", "Prosoape noi pliate", "Reumplere consumabile"] 
+        },
+        { 
+          name: "Bucătărie", 
+          items: ["Spălare veselă", "Curățare electrocasnice", "Dezinfectare suprafețe", "Verificare frigider", "Aranjare ustensile"] 
+        },
+        { 
+          name: "Zone Comune", 
+          items: ["Aspirare canapele", "Ștergere praf", "Curățare geamuri", "Dezinfectare telecomandă", "Aerisire completă"] 
+        },
+      ],
+      statsPoints: "Puncte de verificare",
+      statsQC: "Inspecție QC",
+      statsTurnaround: "Turnaround mediu",
+      statsRating: "Rating curățenie",
+    },
+    
     // Guest Section
     guestSection: {
       badge: "Pentru Oaspeți",
@@ -1167,6 +1204,43 @@ Mulțumesc!`,
       platformReviewsLabel: "Platform Reviews",
       platformReviewsTitle: "Over 500 five-star reviews",
       platformReviewsSubtitle: "from our guests across all platforms",
+    },
+    
+    // Cleaning Standards
+    cleaningStandards: {
+      badge: "Premium Standards",
+      title: "Our Cleaning",
+      titleHighlight: "Standard",
+      subtitle: "Certified cleaning protocol with quality control verification after each checkout. Safety and hygiene at hotel standards.",
+      features: [
+        { title: "Certified Protocol", description: "Standardized procedures based on international hygiene and professional disinfection guidelines." },
+        { title: "Professional Teams", description: "Trained and verified staff with experience in 4-5 star hotels and high standards." },
+        { title: "QC Verification", description: "Quality control inspection after each cleaning, with a checklist of over 50 points." },
+      ],
+      checklistTitle: "Complete Cleaning Checklist",
+      checklistSubtitle: "50+ verification points at each checkout",
+      categories: [
+        { 
+          name: "Bedroom", 
+          items: ["Fresh linen change", "Vacuuming & mopping", "Mirror cleaning", "Switch disinfection", "Decorative arrangement"] 
+        },
+        { 
+          name: "Bathroom", 
+          items: ["Complete disinfection", "Shower/tub cleaning", "Sparkling sanitaries", "New folded towels", "Consumables refill"] 
+        },
+        { 
+          name: "Kitchen", 
+          items: ["Dish washing", "Appliance cleaning", "Surface disinfection", "Refrigerator check", "Utensil arrangement"] 
+        },
+        { 
+          name: "Common Areas", 
+          items: ["Sofa vacuuming", "Dust wiping", "Window cleaning", "Remote disinfection", "Complete airing"] 
+        },
+      ],
+      statsPoints: "Verification points",
+      statsQC: "QC inspection",
+      statsTurnaround: "Average turnaround",
+      statsRating: "Cleanliness rating",
     },
     
     // Guest Section
