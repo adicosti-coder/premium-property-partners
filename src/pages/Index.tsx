@@ -11,6 +11,7 @@ import ProfitCalculator from "@/components/ProfitCalculator";
 import PropertyGallery from "@/components/PropertyGallery";
 import Testimonials from "@/components/Testimonials";
 import GuestSection from "@/components/GuestSection";
+import CleaningStandards from "@/components/CleaningStandards";
 import FAQ from "@/components/FAQ";
 import ContactSection from "@/components/ContactSection";
 import CTA from "@/components/CTA";
@@ -50,6 +51,7 @@ const Index = () => {
         <AboutFounder />
         <BlogPreview />
         <GuestSection />
+        <CleaningStandards />
         <FAQ />
         <ContactSection />
         <CTA />
