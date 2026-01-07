@@ -462,7 +462,7 @@ const PropertyGallery = () => {
                       {t.portfolio.bookDirect}
                     </Button>
                     <Link to={`/proprietate/${property.slug}`}>
-                      <Button variant="outline" size="sm">
+                      <Button size="sm" className="bg-[#003580] hover:bg-[#00254d] text-white">
                         <Eye className="w-4 h-4" />
                       </Button>
                     </Link>

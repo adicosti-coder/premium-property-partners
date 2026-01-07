@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X, ArrowUpDown, TrendingUp, TrendingDown, Share2 } from "lucide-react";
+import { MapPin, Star, Users, BedDouble, Heart, Wifi, Car, Key, Calendar, ArrowRight, Search, Filter, Sparkles, Euro, X, ArrowUpDown, TrendingUp, TrendingDown, Share2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -554,24 +554,21 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                   </p>
 
                   {/* CTA Buttons */}
-                  <div className="flex gap-3">
-                    <Link to={`/proprietate/${property.slug}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        {language === 'ro' ? 'Detalii' : 'Details'}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => window.open(`https://www.airbnb.com/rooms/${property.id}`, '_blank')}
+                    >
+                      <Calendar className="w-4 h-4 mr-1" />
+                      {language === 'ro' ? 'Rezervă Direct' : 'Book Direct'}
+                    </Button>
+                    <Link to={`/proprietate/${property.slug}`}>
+                      <Button size="sm" className="bg-[#003580] hover:bg-[#00254d] text-white">
+                        <Eye className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <a 
-                      href={`https://www.airbnb.com/rooms/${property.id}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex-1"
-                    >
-                      <Button variant="hero" className="w-full group/btn">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        {language === 'ro' ? 'Rezervă' : 'Book'}
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                      </Button>
-                    </a>
                   </div>
                 </div>
               </article>
