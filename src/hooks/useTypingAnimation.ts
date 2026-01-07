@@ -13,8 +13,29 @@ export const useTypingAnimation = ({
 }: UseTypingAnimationProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
+    // If user prefers reduced motion, show text immediately
+    if (prefersReducedMotion) {
+      setDisplayedText(text);
+      setIsComplete(true);
+      return;
+    }
+
     setDisplayedText('');
     setIsComplete(false);
     
@@ -35,7 +56,7 @@ export const useTypingAnimation = ({
     }, delay);
 
     return () => clearTimeout(startTimeout);
-  }, [text, speed, delay]);
+  }, [text, speed, delay, prefersReducedMotion]);
 
   return { displayedText, isComplete };
 };
