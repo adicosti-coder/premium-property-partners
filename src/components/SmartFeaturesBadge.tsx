@@ -22,7 +22,7 @@ const SmartFeaturesBadge = ({ features, className = "", variant = "compact" }: S
     smartFeatures.push({
       icon: Wifi,
       label: language === 'ro' ? 'WiFi Rapid' : 'High-Speed WiFi',
-      shortLabel: '300Mbps',
+      shortLabel: 'High Speed',
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
       borderColor: 'border-blue-500/20'
