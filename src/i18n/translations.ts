@@ -17,7 +17,7 @@ export const translations = {
     
     // Hero
     hero: {
-      badge: "Administrare Premium în Regim Hotelier",
+      badge: "RealTrust & ApArt Hotel",
       title: "Maximizează Venitul.",
       titleHighlight: "Fără Efort.",
       subtitle: "Transformăm apartamentul tău din Timișoara într-o investiție profitabilă. Gestionăm totul — de la rezervări la curățenie — pentru ca tu să te bucuri doar de rezultate.",
@@ -71,7 +71,7 @@ export const translations = {
     
     // Owner Benefits
     ownerBenefits: {
-      label: "Servicii pentru Proprietari",
+      label: "ApArt Hotel",
       title: "Administrare Profesională",
       titleHighlight: "pentru Investitori",
       subtitle: "Oferim soluții complete de asset management pentru proprietari care urmăresc randamente superioare și protecția activelor imobiliare.",
@@ -780,7 +780,7 @@ Mulțumesc!`,
     // Real Estate Page
     realEstatePage: {
       hero: {
-        badge: "Servicii Imobiliare Complete",
+        badge: "RealTrust",
         title: "Tranzacții Imobiliare",
         titleHighlight: "Fără Complicații",
         subtitle: "RealTrust te ajută să vinzi, cumperi sau închiriezi proprietăți în Timișoara. Experiență, transparență și rezultate concrete.",
@@ -1044,7 +1044,7 @@ Mulțumesc!`,
     
     // Hero
     hero: {
-      badge: "Premium Short-Term Rental Management",
+      badge: "RealTrust & ApArt Hotel",
       title: "Maximize Your Income.",
       titleHighlight: "Effortlessly.",
       subtitle: "We transform your Timișoara apartment into a profitable investment. We handle everything — from bookings to cleaning — so you can just enjoy the results.",
@@ -1098,7 +1098,7 @@ Mulțumesc!`,
     
     // Owner Benefits
     ownerBenefits: {
-      label: "Property Owner Services",
+      label: "ApArt Hotel",
       title: "Professional Management",
       titleHighlight: "for Investors",
       subtitle: "We offer comprehensive asset management solutions for property owners seeking superior returns and real estate asset protection.",
@@ -1807,7 +1807,7 @@ Thank you!`,
     // Real Estate Page
     realEstatePage: {
       hero: {
-        badge: "Complete Real Estate Services",
+        badge: "RealTrust",
         title: "Real Estate Transactions",
         titleHighlight: "Made Simple",
         subtitle: "RealTrust helps you sell, buy, or rent properties in Timișoara. Experience, transparency, and concrete results.",
