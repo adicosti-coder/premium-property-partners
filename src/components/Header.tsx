@@ -222,6 +222,16 @@ const Header = () => {
                   </a>
                 );
               })}
+              
+              {/* Mobile settings row */}
+              <div className="flex items-center gap-2 pt-4 border-t border-border">
+                <span className="text-xs text-muted-foreground mr-2">
+                  {language === 'ro' ? 'Setări:' : 'Settings:'}
+                </span>
+                <AnimationToggle />
+                <ThemeToggle />
+                <LanguageSwitcher />
+              </div>
             </div>
           </nav>
         )}
