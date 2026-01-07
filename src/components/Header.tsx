@@ -6,6 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
+import AnimationToggle from "./AnimationToggle";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -144,6 +145,8 @@ const Header = () => {
                 </Button>
               </Link>
             )}
+            {/* Animation toggle */}
+            <AnimationToggle />
             {/* Theme toggle */}
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
