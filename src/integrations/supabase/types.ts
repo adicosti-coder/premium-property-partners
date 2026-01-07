@@ -663,8 +663,16 @@ export type Database = {
       site_settings: {
         Row: {
           created_at: string
+          hero_badge_en: string | null
+          hero_badge_ro: string | null
+          hero_highlight_en: string | null
+          hero_highlight_ro: string | null
           hero_image_filename: string | null
           hero_image_url: string | null
+          hero_subtitle_en: string | null
+          hero_subtitle_ro: string | null
+          hero_title_en: string | null
+          hero_title_ro: string | null
           hero_video_filename: string | null
           hero_video_url: string | null
           id: string
@@ -672,8 +680,16 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hero_badge_en?: string | null
+          hero_badge_ro?: string | null
+          hero_highlight_en?: string | null
+          hero_highlight_ro?: string | null
           hero_image_filename?: string | null
           hero_image_url?: string | null
+          hero_subtitle_en?: string | null
+          hero_subtitle_ro?: string | null
+          hero_title_en?: string | null
+          hero_title_ro?: string | null
           hero_video_filename?: string | null
           hero_video_url?: string | null
           id?: string
@@ -681,8 +697,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hero_badge_en?: string | null
+          hero_badge_ro?: string | null
+          hero_highlight_en?: string | null
+          hero_highlight_ro?: string | null
           hero_image_filename?: string | null
           hero_image_url?: string | null
+          hero_subtitle_en?: string | null
+          hero_subtitle_ro?: string | null
+          hero_title_en?: string | null
+          hero_title_ro?: string | null
           hero_video_filename?: string | null
           hero_video_url?: string | null
           id?: string

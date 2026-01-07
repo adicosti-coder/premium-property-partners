@@ -8,14 +8,29 @@ import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
 import { supabase } from "@/integrations/supabase/client";
 
+interface HeroSettings {
+  videoUrl: string;
+  customFallbackImage: string | null;
+  customTitle: string | null;
+  customHighlight: string | null;
+  customSubtitle: string | null;
+  customBadge: string | null;
+}
+
 const Hero = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
-  const [videoUrl, setVideoUrl] = useState("/hero-video.mp4");
-  const [customFallbackImage, setCustomFallbackImage] = useState<string | null>(null);
+  const [heroSettings, setHeroSettings] = useState<HeroSettings>({
+    videoUrl: "/hero-video.mp4",
+    customFallbackImage: null,
+    customTitle: null,
+    customHighlight: null,
+    customSubtitle: null,
+    customBadge: null,
+  });
 
   // Fetch hero settings from database
   useEffect(() => {
@@ -23,17 +38,19 @@ const Hero = () => {
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("hero_video_url, hero_image_url")
+          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en")
           .eq("id", "default")
           .single();
         
         if (!error && data) {
-          if (data.hero_video_url) {
-            setVideoUrl(data.hero_video_url);
-          }
-          if (data.hero_image_url) {
-            setCustomFallbackImage(data.hero_image_url);
-          }
+          setHeroSettings({
+            videoUrl: data.hero_video_url || "/hero-video.mp4",
+            customFallbackImage: data.hero_image_url,
+            customTitle: language === "ro" ? data.hero_title_ro : data.hero_title_en,
+            customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
+            customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
+            customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
+          });
         }
       } catch (err) {
         console.error("Error fetching hero settings:", err);
@@ -41,7 +58,7 @@ const Hero = () => {
     };
     
     fetchHeroSettings();
-  }, []);
+  }, [language]);
 
   // Check connection speed for lazy loading
   useEffect(() => {
@@ -88,14 +105,14 @@ const Hero = () => {
             className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setVideoError(true)}
             onLoadedData={() => setVideoLoaded(true)}
-            poster={customFallbackImage || heroImage}
+            poster={heroSettings.customFallbackImage || heroImage}
           >
-            <source src={videoUrl} type="video/mp4" />
+            <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
         ) : null}
         {/* Fallback image - always rendered for instant display, hidden when video loads */}
         <img
-          src={customFallbackImage || heroImage}
+          src={heroSettings.customFallbackImage || heroImage}
           alt="Apartament de lux"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection ? 'opacity-0' : 'opacity-100'}`}
           width={1920}
@@ -121,19 +138,22 @@ const Hero = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-foreground/80 text-sm font-medium tracking-wide">{t.hero.badge}</span>
+            <span className="text-foreground/80 text-sm font-medium tracking-wide">{heroSettings.customBadge || t.hero.badge}</span>
           </div>
           
           {/* Headline with typing animation */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            <TypingTitle title={t.hero.title} highlight={t.hero.titleHighlight} />
+            <TypingTitle 
+              title={heroSettings.customTitle || t.hero.title} 
+              highlight={heroSettings.customHighlight || t.hero.titleHighlight} 
+            />
           </h1>
           
           {/* Subheadline with typing animation + CTAs + Tags + Widget */}
           <HeroContent 
-            subtitle={t.hero.subtitle}
-            titleLength={t.hero.title.length}
-            highlightLength={t.hero.titleHighlight.length}
+            subtitle={heroSettings.customSubtitle || t.hero.subtitle}
+            titleLength={(heroSettings.customTitle || t.hero.title).length}
+            highlightLength={(heroSettings.customHighlight || t.hero.titleHighlight).length}
             ctaQuickStart={t.hero.ctaQuickStart || "Start rapid"}
             cta={t.hero.cta}
             tags={[
