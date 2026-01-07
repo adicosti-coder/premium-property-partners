@@ -28,6 +28,7 @@ import PartnershipTimeline from "@/components/PartnershipTimeline";
 import DigitalHouseManual from "@/components/DigitalHouseManual";
 import TrustBadges from "@/components/TrustBadges";
 import FinancialTransparency from "@/components/FinancialTransparency";
+import VideoTestimonials from "@/components/VideoTestimonials";
 
 const Index = () => {
   return (
@@ -56,6 +57,7 @@ const Index = () => {
         <ResidentialComplexes />
         <StatsCounters />
         <Testimonials />
+        <VideoTestimonials />
         <AboutFounder />
         <BlogPreview />
         <GuestSection />
