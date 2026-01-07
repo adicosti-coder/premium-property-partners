@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const partners = [
   { name: "Airbnb", logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg" },
@@ -10,12 +11,15 @@ const partners = [
 
 const PartnerLogos = () => {
   const { t } = useLanguage();
+  const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
   return (
     <section className="section-padding-sm bg-secondary/30 border-y border-border">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6" ref={ref}>
         {/* Premium Header */}
-        <div className="text-center section-header-spacing">
+        <div className={`text-center section-header-spacing transition-all duration-700 ${
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}>
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
             {t.partners.label}
           </p>
@@ -29,10 +33,17 @@ const PartnerLogos = () => {
 
         {/* Partner Logos Grid */}
         <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 lg:gap-20">
-          {partners.map((partner) => (
+          {partners.map((partner, index) => (
             <div
               key={partner.name}
-              className="group relative p-4 md:p-6 rounded-xl transition-all duration-500 hover:bg-background/50 hover:shadow-lg"
+              className={`group relative p-4 md:p-6 rounded-xl transition-all duration-500 hover:bg-background/50 hover:shadow-lg ${
+                isVisible 
+                  ? "opacity-100 translate-y-0 scale-100" 
+                  : "opacity-0 translate-y-8 scale-95"
+              }`}
+              style={{ 
+                transitionDelay: isVisible ? `${150 + index * 100}ms` : "0ms"
+              }}
             >
               <img
                 src={partner.logo}
@@ -51,7 +62,9 @@ const PartnerLogos = () => {
         </div>
 
         {/* Trust indicator */}
-        <div className="mt-12 text-center">
+        <div className={`mt-12 text-center transition-all duration-700 ${
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`} style={{ transitionDelay: isVisible ? "700ms" : "0ms" }}>
           <p className="text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
