@@ -25,6 +25,15 @@ const testimonials: Testimonial[] = [
   },
   {
     id: 2,
+    name: "Maria T.",
+    role: "Recenzie verificată · Airbnb",
+    content: "Locație perfectă în centrul orașului! Apartamentul arată exact ca în poze, foarte curat și bine dotat. Gazda a fost foarte amabilă și ne-a oferit recomandări excelente.",
+    rating: 5,
+    source: "Airbnb",
+    sourceIcon: "A",
+  },
+  {
+    id: 3,
     name: "Oaspete",
     role: "Recenzie verificată · Booking.com",
     content: "Check-in self-check-in foarte ușor și comod, apartament foarte curat, iar comunicarea a fost rapidă și prietenoasă. Recomand!",
@@ -33,7 +42,16 @@ const testimonials: Testimonial[] = [
     sourceIcon: "B",
   },
   {
-    id: 3,
+    id: 4,
+    name: "Stefan & Ana",
+    role: "Recenzie verificată · Airbnb",
+    content: "Am stat 5 nopți și a fost perfect! Vederea de la balcon este superbă, patul foarte confortabil, și bucătăria complet echipată. Vom reveni cu siguranță!",
+    rating: 5,
+    source: "Airbnb",
+    sourceIcon: "A",
+  },
+  {
+    id: 5,
     name: "Proprietar",
     role: "Recenzie verificată · Google",
     content: "Am primit o estimare realistă + plan clar. Exact ce aveam nevoie ca să decid. Colaborarea a fost excelentă de la început.",
@@ -42,13 +60,13 @@ const testimonials: Testimonial[] = [
     sourceIcon: "G",
   },
   {
-    id: 4,
-    name: "Alexandru M.",
-    role: "Proprietar · 2 apartamente",
-    content: "De când colaborez cu echipa, veniturile mele au crescut cu 45%. Se ocupă de absolut tot, de la comunicare cu oaspeții până la curățenie.",
+    id: 6,
+    name: "Andrei P.",
+    role: "Recenzie verificată · Airbnb",
+    content: "Experiență de 5 stele! Apartament modern și spațios, parfect pentru o familie. Curățenia impecabilă și comunicarea excelentă cu gazda.",
     rating: 5,
-    source: "Google Reviews",
-    sourceIcon: "G",
+    source: "Airbnb",
+    sourceIcon: "A",
   },
 ];
 
