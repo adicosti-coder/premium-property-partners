@@ -36,6 +36,10 @@ interface HeroTextSettings {
   hero_badge_en: string | null;
   hero_tags_ro: string[] | null;
   hero_tags_en: string[] | null;
+  hero_cta_primary_ro: string | null;
+  hero_cta_primary_en: string | null;
+  hero_cta_secondary_ro: string | null;
+  hero_cta_secondary_en: string | null;
 }
 
 const defaultTexts = {
@@ -47,6 +51,10 @@ const defaultTexts = {
   hero_subtitle_en: "We manage short-term rental properties in Brașov, offering owners maximized income and guests unforgettable experiences.",
   hero_badge_ro: "Premium Property Management",
   hero_badge_en: "Premium Property Management",
+  hero_cta_primary_ro: "Start rapid",
+  hero_cta_primary_en: "Quick Start",
+  hero_cta_secondary_ro: "Contactează-ne",
+  hero_cta_secondary_en: "Contact Us",
 };
 
 const defaultTags = {
@@ -66,6 +74,10 @@ const HeroTextManager = () => {
     hero_badge_en: null,
     hero_tags_ro: null,
     hero_tags_en: null,
+    hero_cta_primary_ro: null,
+    hero_cta_primary_en: null,
+    hero_cta_secondary_ro: null,
+    hero_cta_secondary_en: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -82,7 +94,7 @@ const HeroTextManager = () => {
     try {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en")
+        .select("hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
         .eq("id", "default")
         .single();
 
@@ -100,6 +112,10 @@ const HeroTextManager = () => {
           hero_badge_en: data.hero_badge_en,
           hero_tags_ro: data.hero_tags_ro,
           hero_tags_en: data.hero_tags_en,
+          hero_cta_primary_ro: data.hero_cta_primary_ro,
+          hero_cta_primary_en: data.hero_cta_primary_en,
+          hero_cta_secondary_ro: data.hero_cta_secondary_ro,
+          hero_cta_secondary_en: data.hero_cta_secondary_en,
         });
       }
     } catch (error) {
@@ -151,12 +167,16 @@ const HeroTextManager = () => {
       newSettings.hero_subtitle_ro = null;
       newSettings.hero_badge_ro = null;
       newSettings.hero_tags_ro = null;
+      newSettings.hero_cta_primary_ro = null;
+      newSettings.hero_cta_secondary_ro = null;
     } else {
       newSettings.hero_title_en = null;
       newSettings.hero_highlight_en = null;
       newSettings.hero_subtitle_en = null;
       newSettings.hero_badge_en = null;
       newSettings.hero_tags_en = null;
+      newSettings.hero_cta_primary_en = null;
+      newSettings.hero_cta_secondary_en = null;
     }
 
     setSettings(newSettings);
@@ -321,6 +341,39 @@ const HeroTextManager = () => {
               </p>
             </div>
 
+            {/* CTA Buttons Section RO */}
+            <div className="space-y-4 p-4 border border-border/50 rounded-lg bg-muted/30">
+              <Label className="flex items-center gap-2 font-medium">
+                Butoane CTA
+              </Label>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cta_primary_ro">Buton principal (Start rapid)</Label>
+                <Input
+                  id="cta_primary_ro"
+                  value={settings.hero_cta_primary_ro || ""}
+                  onChange={(e) => updateField("hero_cta_primary_ro", e.target.value)}
+                  placeholder={defaultTexts.hero_cta_primary_ro}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Implicit: {defaultTexts.hero_cta_primary_ro}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cta_secondary_ro">Buton secundar (Contactează-ne)</Label>
+                <Input
+                  id="cta_secondary_ro"
+                  value={settings.hero_cta_secondary_ro || ""}
+                  onChange={(e) => updateField("hero_cta_secondary_ro", e.target.value)}
+                  placeholder={defaultTexts.hero_cta_secondary_ro}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Implicit: {defaultTexts.hero_cta_secondary_ro}
+                </p>
+              </div>
+            </div>
+
             {/* Tags Section RO */}
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
@@ -432,6 +485,39 @@ const HeroTextManager = () => {
               <p className="text-xs text-muted-foreground">
                 Default: {defaultTexts.hero_subtitle_en}
               </p>
+            </div>
+
+            {/* CTA Buttons Section EN */}
+            <div className="space-y-4 p-4 border border-border/50 rounded-lg bg-muted/30">
+              <Label className="flex items-center gap-2 font-medium">
+                CTA Buttons
+              </Label>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cta_primary_en">Primary button (Quick Start)</Label>
+                <Input
+                  id="cta_primary_en"
+                  value={settings.hero_cta_primary_en || ""}
+                  onChange={(e) => updateField("hero_cta_primary_en", e.target.value)}
+                  placeholder={defaultTexts.hero_cta_primary_en}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Default: {defaultTexts.hero_cta_primary_en}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cta_secondary_en">Secondary button (Contact Us)</Label>
+                <Input
+                  id="cta_secondary_en"
+                  value={settings.hero_cta_secondary_en || ""}
+                  onChange={(e) => updateField("hero_cta_secondary_en", e.target.value)}
+                  placeholder={defaultTexts.hero_cta_secondary_en}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Default: {defaultTexts.hero_cta_secondary_en}
+                </p>
+              </div>
             </div>
 
             {/* Tags Section EN */}

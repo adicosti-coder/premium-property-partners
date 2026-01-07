@@ -16,6 +16,8 @@ interface HeroSettings {
   customSubtitle: string | null;
   customBadge: string | null;
   customTags: string[] | null;
+  customCtaPrimary: string | null;
+  customCtaSecondary: string | null;
 }
 
 const Hero = () => {
@@ -32,6 +34,8 @@ const Hero = () => {
     customSubtitle: null,
     customBadge: null,
     customTags: null,
+    customCtaPrimary: null,
+    customCtaSecondary: null,
   });
 
   // Fetch hero settings from database
@@ -40,7 +44,7 @@ const Hero = () => {
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en")
+          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
           .eq("id", "default")
           .single();
         
@@ -53,6 +57,8 @@ const Hero = () => {
             customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
             customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
             customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
+            customCtaPrimary: language === "ro" ? data.hero_cta_primary_ro : data.hero_cta_primary_en,
+            customCtaSecondary: language === "ro" ? data.hero_cta_secondary_ro : data.hero_cta_secondary_en,
           });
         }
       } catch (err) {
@@ -157,8 +163,8 @@ const Hero = () => {
             subtitle={heroSettings.customSubtitle || t.hero.subtitle}
             titleLength={(heroSettings.customTitle || t.hero.title).length}
             highlightLength={(heroSettings.customHighlight || t.hero.titleHighlight).length}
-            ctaQuickStart={t.hero.ctaQuickStart || "Start rapid"}
-            cta={t.hero.cta}
+            ctaQuickStart={heroSettings.customCtaPrimary || t.hero.ctaQuickStart || "Start rapid"}
+            cta={heroSettings.customCtaSecondary || t.hero.cta}
             tags={heroSettings.customTags && heroSettings.customTags.length > 0 
               ? heroSettings.customTags 
               : [
