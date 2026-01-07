@@ -2,11 +2,11 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const partners = [
-  { name: "Airbnb", logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg" },
-  { name: "Booking.com", logo: "https://upload.wikimedia.org/wikipedia/commons/6/66/Booking.com_logo.svg" },
-  { name: "Expedia", logo: "https://upload.wikimedia.org/wikipedia/commons/5/5b/Expedia_2012_logo.svg" },
-  { name: "Vrbo", logo: "https://upload.wikimedia.org/wikipedia/commons/4/43/Vrbo_Logo.svg" },
-  { name: "TripAdvisor", logo: "https://upload.wikimedia.org/wikipedia/commons/0/02/TripAdvisor_Logo.svg" },
+  { name: "Airbnb", logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg", url: "https://www.airbnb.com/users/show/123456789" },
+  { name: "Booking.com", logo: "https://upload.wikimedia.org/wikipedia/commons/6/66/Booking.com_logo.svg", url: "https://www.booking.com/hotel/ro/realtrust.html" },
+  { name: "Expedia", logo: "https://upload.wikimedia.org/wikipedia/commons/5/5b/Expedia_2012_logo.svg", url: "https://www.expedia.com" },
+  { name: "Vrbo", logo: "https://upload.wikimedia.org/wikipedia/commons/4/43/Vrbo_Logo.svg", url: "https://www.vrbo.com" },
+  { name: "TripAdvisor", logo: "https://upload.wikimedia.org/wikipedia/commons/0/02/TripAdvisor_Logo.svg", url: "https://www.tripadvisor.com" },
 ];
 
 const PartnerLogos = () => {
@@ -34,9 +34,12 @@ const PartnerLogos = () => {
         {/* Partner Logos Grid */}
         <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 lg:gap-20">
           {partners.map((partner, index) => (
-            <div
+            <a
               key={partner.name}
-              className={`group relative p-4 md:p-6 rounded-xl transition-all duration-500 hover:bg-background/50 hover:shadow-lg ${
+              href={partner.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group relative p-4 md:p-6 rounded-xl transition-all duration-500 hover:bg-background/50 hover:shadow-lg cursor-pointer ${
                 isVisible 
                   ? "opacity-100 translate-y-0 scale-100" 
                   : "opacity-0 translate-y-8 scale-95"
@@ -44,6 +47,7 @@ const PartnerLogos = () => {
               style={{ 
                 transitionDelay: isVisible ? `${150 + index * 100}ms` : "0ms"
               }}
+              aria-label={`Vezi profilul nostru pe ${partner.name}`}
             >
               <img
                 src={partner.logo}
@@ -57,7 +61,7 @@ const PartnerLogos = () => {
               <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs text-muted-foreground whitespace-nowrap">
                 {partner.name}
               </span>
-            </div>
+            </a>
           ))}
         </div>
 
