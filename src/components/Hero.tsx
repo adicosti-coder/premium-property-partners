@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
+import { supabase } from "@/integrations/supabase/client";
 
 const Hero = () => {
   const { t } = useLanguage();
@@ -13,9 +14,28 @@ const Hero = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("/hero-video.mp4");
 
-  // Hero video - custom uploaded video
-  const videoUrl = "/hero-video.mp4";
+  // Fetch hero video URL from database
+  useEffect(() => {
+    const fetchVideoUrl = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("hero_video_url")
+          .eq("id", "default")
+          .single();
+        
+        if (!error && data?.hero_video_url) {
+          setVideoUrl(data.hero_video_url);
+        }
+      } catch (err) {
+        console.error("Error fetching hero video URL:", err);
+      }
+    };
+    
+    fetchVideoUrl();
+  }, []);
 
   // Check connection speed for lazy loading
   useEffect(() => {

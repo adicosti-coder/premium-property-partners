@@ -45,6 +45,7 @@ import {
   Mail,
   Play,
   MapPin,
+  Film,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -60,6 +61,7 @@ import NewsletterManager from "@/components/admin/NewsletterManager";
 import ComplexManager from "@/components/admin/ComplexManager";
 import VideoTestimonialsManager from "@/components/admin/VideoTestimonialsManager";
 import POIManager from "@/components/admin/POIManager";
+import HeroVideoManager from "@/components/admin/HeroVideoManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -273,6 +275,10 @@ const Admin = () => {
             <TabsTrigger value="poi" className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               POI
+            </TabsTrigger>
+            <TabsTrigger value="hero-video" className="flex items-center gap-2">
+              <Film className="w-4 h-4" />
+              Hero Video
             </TabsTrigger>
           </TabsList>
 
@@ -511,6 +517,11 @@ const Admin = () => {
           {/* POI Tab */}
           <TabsContent value="poi">
             <POIManager />
+          </TabsContent>
+
+          {/* Hero Video Tab */}
+          <TabsContent value="hero-video">
+            <HeroVideoManager />
           </TabsContent>
         </Tabs>
       </div>
