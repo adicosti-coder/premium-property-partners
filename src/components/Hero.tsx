@@ -118,14 +118,14 @@ const Hero = () => {
 const TypingTitle = ({ title, highlight }: { title: string; highlight: string }) => {
   const { displayedText: titleText, isComplete: titleComplete } = useTypingAnimation({
     text: title,
-    speed: 40,
-    delay: 300
+    speed: 30, // Faster typing (was 40)
+    delay: 200 // Shorter initial delay (was 300)
   });
   
   const { displayedText: highlightText, isComplete: highlightComplete } = useTypingAnimation({
     text: highlight,
-    speed: 50,
-    delay: 300 + title.length * 40 + 200
+    speed: 35, // Faster typing (was 50)
+    delay: 200 + title.length * 30 + 100 // Reduced buffer (was 200)
   });
 
   return (
@@ -159,11 +159,12 @@ const HeroContent = ({
   tags: string[];
   t: any;
 }) => {
-  const titleDuration = 300 + titleLength * 40 + 200 + highlightLength * 50 + 300;
+  // Optimized timing: faster typing and shorter delays for mobile
+  const titleDuration = 200 + titleLength * 30 + 100 + highlightLength * 35 + 150;
   
   const { displayedText: subtitleText, isComplete: subtitleComplete } = useTypingAnimation({
     text: subtitle,
-    speed: 25,
+    speed: 18, // Faster subtitle typing (was 25)
     delay: titleDuration
   });
 
@@ -174,13 +175,13 @@ const HeroContent = ({
         <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete ? 'opacity-0' : 'animate-pulse'}`} />
       </p>
       
-      {/* CTAs with sequential fade-in */}
-      <div className={`flex flex-col sm:flex-row gap-4 transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      {/* CTAs with sequential fade-in - optimized timing */}
+      <div className={`flex flex-col sm:flex-row gap-4 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
         <Button 
           variant="hero" 
           size="xl" 
-          className={`relative animate-glow-pulse btn-shine transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-          style={{ transitionDelay: subtitleComplete ? '100ms' : '0ms' }}
+          className={`relative animate-glow-pulse btn-shine transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+          style={{ transitionDelay: subtitleComplete ? '50ms' : '0ms' }}
           onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
         >
           {ctaQuickStart}
@@ -189,39 +190,39 @@ const HeroContent = ({
         <Button 
           variant="heroOutline" 
           size="xl" 
-          className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-          style={{ transitionDelay: subtitleComplete ? '250ms' : '0ms' }}
+          className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+          style={{ transitionDelay: subtitleComplete ? '120ms' : '0ms' }}
           onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
         >
           {cta}
         </Button>
       </div>
       
-      {/* Feature tags with sequential fade-in after buttons */}
+      {/* Feature tags with sequential fade-in - optimized timing */}
       <div className="flex flex-wrap gap-2 mt-8">
         {tags.map((tag, index) => (
           <span 
             key={index} 
-            className={`px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-300 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-            style={{ transitionDelay: subtitleComplete ? `${400 + index * 75}ms` : '0ms' }}
+            className={`px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-250 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+            style={{ transitionDelay: subtitleComplete ? `${180 + index * 40}ms` : '0ms' }}
           >
             {tag}
           </span>
         ))}
       </div>
       
-      {/* Availability Search Widget with fade-in */}
+      {/* Availability Search Widget with fade-in - optimized */}
       <div 
-        className={`mt-10 transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        style={{ transitionDelay: subtitleComplete ? '700ms' : '0ms' }}
+        className={`mt-10 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+        style={{ transitionDelay: subtitleComplete ? '350ms' : '0ms' }}
       >
         <AvailabilitySearchWidget variant="hero" />
       </div>
       
-      {/* Trust indicators with fade-in */}
+      {/* Trust indicators with fade-in - optimized */}
       <div 
-        className={`transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-        style={{ transitionDelay: subtitleComplete ? '900ms' : '0ms' }}
+        className={`transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+        style={{ transitionDelay: subtitleComplete ? '450ms' : '0ms' }}
       >
         <StatsSection t={t} />
       </div>

@@ -42,18 +42,18 @@ const Imobiliare = () => {
   const { offset: parallaxMedium } = useParallax({ speed: 0.25, direction: 'up' });
   const { offset: parallaxFast } = useParallax({ speed: 0.35, direction: 'down' });
 
-  // Typing animation for Hero title
+  // Typing animation for Hero title - optimized for mobile
   const { displayedText: typedTitle, isComplete: titleComplete } = useTypingAnimation({
     text: realEstate.hero.title,
-    speed: 60,
-    delay: 300
+    speed: 40, // Faster typing (was 60)
+    delay: 200 // Shorter delay (was 300)
   });
 
-  // Typing animation for Hero subtitle (starts after title completes)
-  const titleDuration = realEstate.hero.title.length * 60 + 300 + 500; // title chars * speed + delay + buffer
+  // Typing animation for Hero subtitle (starts after title completes) - optimized
+  const titleDuration = realEstate.hero.title.length * 40 + 200 + 250; // Reduced buffer (was 500)
   const { displayedText: typedSubtitle, isComplete: subtitleComplete } = useTypingAnimation({
     text: realEstate.hero.subtitle,
-    speed: 30,
+    speed: 20, // Faster typing (was 30)
     delay: titleDuration
   });
 
@@ -150,13 +150,13 @@ const Imobiliare = () => {
               <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete || !titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
             </p>
             
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
               <Button 
                 variant="hero" 
                 size="lg"
                 onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank')}
-                className={`group transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-                style={{ transitionDelay: subtitleComplete ? '100ms' : '0ms' }}
+                className={`group transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+                style={{ transitionDelay: subtitleComplete ? '50ms' : '0ms' }}
               >
                 <Phone className="w-5 h-5 mr-2" />
                 {realEstate.cta.contact}
@@ -166,8 +166,8 @@ const Imobiliare = () => {
                 variant="outline" 
                 size="lg"
                 onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
-                className={`transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-                style={{ transitionDelay: subtitleComplete ? '250ms' : '0ms' }}
+                className={`transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+                style={{ transitionDelay: subtitleComplete ? '120ms' : '0ms' }}
               >
                 {realEstate.cta.learnMore}
               </Button>
