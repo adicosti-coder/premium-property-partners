@@ -3,6 +3,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import TeamSection from "@/components/TeamSection";
 import { 
   Building2, 
   Home, 
@@ -412,6 +413,9 @@ const AboutUs = () => {
             </Card>
           </div>
         </section>
+
+        {/* Team Section */}
+        <TeamSection />
 
         {/* Values Section */}
         <section className="py-20 bg-muted/30">
