@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -417,6 +418,7 @@ const Imobiliare = () => {
 
       <Footer />
       <FloatingWhatsApp />
+      <AccessibilityPanel />
     </div>
   );
 };

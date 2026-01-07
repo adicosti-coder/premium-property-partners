@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -523,6 +524,7 @@ const OnlineCheckIn = () => {
         </div>
       </main>
       <Footer />
+      <AccessibilityPanel />
     </div>
   );
 };
