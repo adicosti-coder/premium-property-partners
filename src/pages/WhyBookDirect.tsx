@@ -6,6 +6,12 @@ import QuickBookingForm from "@/components/QuickBookingForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
   Check, 
   X, 
   Percent, 
@@ -18,18 +24,72 @@ import {
   Sparkles,
   ArrowRight,
   Quote,
-  Star
+  Star,
+  HelpCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const WhyBookDirect = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: comparisonRef, isVisible: comparisonVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: benefitsRef, isVisible: benefitsVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: testimonialsRef, isVisible: testimonialsVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: bookingRef, isVisible: bookingVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: faqRef, isVisible: faqVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  const faqItems = language === 'ro' ? [
+    {
+      question: "Ce este codul DIRECT5 și cum îl folosesc?",
+      answer: "DIRECT5 este codul nostru de reducere exclusiv pentru rezervările directe. Îl introduci în formularul de rezervare și primești automat 5% reducere din prețul total. Codul este valabil pentru orice perioadă și orice proprietate.",
+    },
+    {
+      question: "Cum rezerv direct și primesc reducerea?",
+      answer: "Procesul este simplu: selectează datele dorite și proprietatea, completează formularul de rezervare și introdu codul DIRECT5. Vei primi confirmarea instant pe email, iar reducerea se aplică automat.",
+    },
+    {
+      question: "Pot modifica sau anula rezervarea gratuită?",
+      answer: "Da! Rezervările directe beneficiază de politici flexibile. Poți modifica datele sau anula gratuit cu cel puțin 48 de ore înainte de check-in. Contactează-ne direct pentru orice modificare.",
+    },
+    {
+      question: "Care sunt metodele de plată acceptate?",
+      answer: "Acceptăm plata cu cardul (Visa, Mastercard), transfer bancar și plata la check-in. Toate plățile online sunt securizate cu criptare SSL.",
+    },
+    {
+      question: "Pot cumula codul DIRECT5 cu alte oferte?",
+      answer: "Codul DIRECT5 poate fi cumulat cu ofertele pentru sejururi lungi (7+ nopți). Nu se cumulează cu alte coduri promoționale active.",
+    },
+    {
+      question: "Ce se întâmplă dacă am probleme în timpul sejurului?",
+      answer: "Echipa noastră este disponibilă 24/7. Ne poți contacta oricând prin WhatsApp sau telefon. Avantajul rezervării directe este că vorbești direct cu noi, fără intermediari.",
+    },
+  ] : [
+    {
+      question: "What is the DIRECT5 code and how do I use it?",
+      answer: "DIRECT5 is our exclusive discount code for direct bookings. Enter it in the booking form and automatically get 5% off the total price. The code is valid for any period and any property.",
+    },
+    {
+      question: "How do I book directly and get the discount?",
+      answer: "The process is simple: select your desired dates and property, fill out the booking form and enter the DIRECT5 code. You'll receive instant email confirmation, and the discount is applied automatically.",
+    },
+    {
+      question: "Can I modify or cancel my booking for free?",
+      answer: "Yes! Direct bookings benefit from flexible policies. You can modify dates or cancel for free at least 48 hours before check-in. Contact us directly for any changes.",
+    },
+    {
+      question: "What payment methods are accepted?",
+      answer: "We accept credit cards (Visa, Mastercard), bank transfer, and payment at check-in. All online payments are secured with SSL encryption.",
+    },
+    {
+      question: "Can I combine the DIRECT5 code with other offers?",
+      answer: "The DIRECT5 code can be combined with long-stay offers (7+ nights). It cannot be combined with other active promotional codes.",
+    },
+    {
+      question: "What if I have problems during my stay?",
+      answer: "Our team is available 24/7. You can contact us anytime via WhatsApp or phone. The advantage of booking direct is that you speak directly with us, no intermediaries.",
+    },
+  ];
 
   const directBookingTestimonials = [
     {
@@ -390,6 +450,70 @@ const WhyBookDirect = () => {
               bookingVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
               <QuickBookingForm />
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section ref={faqRef} className="section-padding bg-secondary/30">
+          <div className="container mx-auto px-6">
+            <div className={`text-center section-header-spacing transition-all duration-700 ${
+              faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary text-xs uppercase tracking-widest rounded-full mb-6">
+                <HelpCircle className="w-4 h-4" />
+                {language === 'ro' ? 'Întrebări Frecvente' : 'FAQ'}
+              </div>
+              <h2 className="heading-premium text-3xl md:text-4xl mb-4">
+                {language === 'ro' ? 'Ai Întrebări?' : 'Have Questions?'}
+              </h2>
+              <p className="text-premium text-muted-foreground max-w-2xl mx-auto">
+                {language === 'ro' 
+                  ? 'Găsește răspunsuri la cele mai frecvente întrebări despre codul de reducere și procesul de rezervare directă.'
+                  : 'Find answers to the most common questions about the discount code and the direct booking process.'}
+              </p>
+            </div>
+
+            <div className={`max-w-3xl mx-auto transition-all duration-700 delay-200 ${
+              faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}>
+              <Card className="border-2">
+                <CardContent className="p-6 md:p-8">
+                  <Accordion type="single" collapsible className="w-full">
+                    {faqItems.map((item, index) => (
+                      <AccordionItem 
+                        key={index} 
+                        value={`item-${index}`}
+                        className="border-b border-border/50 last:border-b-0"
+                      >
+                        <AccordionTrigger className="text-left hover:no-underline py-4 text-base font-medium">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground leading-relaxed pb-4">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+
+              {/* Contact hint */}
+              <div className="text-center mt-6">
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ro' 
+                    ? 'Nu ai găsit răspunsul? ' 
+                    : "Didn't find your answer? "}
+                  <a 
+                    href="https://wa.me/40723154520" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    {language === 'ro' ? 'Scrie-ne pe WhatsApp' : 'Message us on WhatsApp'}
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </section>
