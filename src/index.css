@@ -409,3 +409,51 @@
   background: hsl(45 93% 58% / 0.3);
   color: hsl(45 100% 96%);
 }
+
+/* Accessibility - High Contrast Mode */
+.high-contrast {
+  --foreground: 0 0% 100%;
+  --background: 0 0% 0%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --border: 0 0% 100%;
+  --muted-foreground: 0 0% 85%;
+}
+
+.high-contrast.light {
+  --foreground: 0 0% 0%;
+  --background: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --border: 0 0% 0%;
+  --muted-foreground: 0 0% 20%;
+}
+
+.high-contrast * {
+  border-color: currentColor !important;
+}
+
+.high-contrast img {
+  filter: contrast(1.2);
+}
+
+/* Accessibility - Reduce Motion */
+.reduce-motion,
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.reduce-motion .animate-fade-in,
+.reduce-motion .animate-slide-up,
+.reduce-motion .animate-scale-in,
+.reduce-motion .animate-pulse,
+.reduce-motion .animate-bounce,
+.reduce-motion .animate-spin,
+.reduce-motion [class*="animate-"] {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
