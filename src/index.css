@@ -212,6 +212,32 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
+
+  /* Premium Spacing - Generous White Space */
+  .section-padding {
+    @apply py-28 md:py-32 lg:py-36;
+  }
+
+  .section-padding-sm {
+    @apply py-20 md:py-24 lg:py-28;
+  }
+
+  .section-header-spacing {
+    @apply mb-16 md:mb-20 lg:mb-24;
+  }
+
+  .content-spacing {
+    @apply space-y-8 md:space-y-10 lg:space-y-12;
+  }
+
+  /* Premium Typography */
+  .heading-premium {
+    @apply font-serif font-semibold tracking-tight leading-tight;
+  }
+
+  .text-premium {
+    @apply font-sans leading-relaxed tracking-normal;
+  }
 }
 
 /* Animations */

@@ -61,7 +61,7 @@ const Testimonials = () => {
   const { offset: parallaxOffset2 } = useParallax({ speed: 0.1, direction: 'down' });
 
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
+    <section className="section-padding bg-background relative overflow-hidden">
       {/* Background decorations with parallax */}
       <div 
         className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
@@ -72,43 +72,43 @@ const Testimonials = () => {
         style={{ transform: `translateY(${parallaxOffset2}px)` }}
       />
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-6 lg:px-8 relative z-10">
         <div 
           ref={headerRef}
-          className={`text-center mb-16 transition-all duration-700 ${
+          className={`text-center section-header-spacing transition-all duration-700 ${
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">{t.testimonials.label}</p>
-          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
+          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-6">{t.testimonials.label}</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-6">
             {t.testimonials.title} <span className="text-gradient-gold">{t.testimonials.titleHighlight}</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto text-premium">
             {t.testimonials.subtitle}
           </p>
         </div>
 
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto">
           {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.id}
-              className={`bg-card rounded-2xl p-8 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant relative ${
+              className={`bg-card rounded-2xl p-10 lg:p-12 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant relative ${
                 gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
             >
               {/* Quote icon */}
-              <Quote className="absolute top-6 right-6 w-8 h-8 text-primary/20" />
+              <Quote className="absolute top-8 right-8 w-10 h-10 text-primary/20" />
               
               {/* Rating */}
-              <div className="flex gap-1 mb-4">
+              <div className="flex gap-1 mb-6">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                  <Star key={i} className="w-5 h-5 fill-primary text-primary" />
                 ))}
               </div>
 
               {/* Content */}
-              <p className="text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-muted-foreground mb-8 text-lg text-premium">
                 "{testimonial.content}"
               </p>
 
@@ -132,20 +132,20 @@ const Testimonials = () => {
         {/* Aggregated Platform Reviews Widget */}
         <div 
           ref={statsRef}
-          className={`mt-16 transition-all duration-700 ${
+          className={`mt-20 lg:mt-24 transition-all duration-700 ${
             statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
           {/* Main stats banner */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20 mb-8">
-            <div className="text-center mb-6">
-              <p className="text-primary uppercase tracking-widest text-xs font-semibold mb-2">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-10 lg:p-12 border border-primary/20 mb-10">
+            <div className="text-center mb-8">
+              <p className="text-primary uppercase tracking-widest text-xs font-semibold mb-3">
                 {t.testimonials.platformReviewsLabel || 'Recenzii de pe Platforme'}
               </p>
-              <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground">
+              <h3 className="text-2xl md:text-3xl lg:text-4xl heading-premium text-foreground">
                 {t.testimonials.platformReviewsTitle || 'Peste 500 de recenzii de 5 stele'}
               </h3>
-              <p className="text-muted-foreground text-sm mt-2">
+              <p className="text-muted-foreground text-sm mt-3 text-premium">
                 {t.testimonials.platformReviewsSubtitle || 'de la oaspeții noștri pe toate platformele'}
               </p>
             </div>
