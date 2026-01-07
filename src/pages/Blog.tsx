@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown } from "lucide-react";
+import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -32,6 +32,7 @@ type SortOption = "newest" | "oldest" | "title";
 
 const Blog = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const dateLocale = language === "ro" ? ro : enUS;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -102,6 +103,9 @@ const Blog = () => {
       newest: "Cele mai noi",
       oldest: "Cele mai vechi",
       titleSort: "Alfabetic",
+      promoTitle: "Rezervă direct și economisește 5%!",
+      promoDescription: "Folosește codul DIRECT5 pentru 5% reducere la orice rezervare directă.",
+      promoButton: "Află mai multe",
     },
     en: {
       title: "Blog",
@@ -116,6 +120,9 @@ const Blog = () => {
       newest: "Newest",
       oldest: "Oldest",
       titleSort: "Alphabetical",
+      promoTitle: "Book direct and save 5%!",
+      promoDescription: "Use code DIRECT5 for 5% off any direct booking.",
+      promoButton: "Learn more",
     },
   };
 
@@ -135,6 +142,25 @@ const Blog = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {t.subtitle}
             </p>
+          </div>
+
+          {/* Promo Banner */}
+          <div className="mb-8 p-6 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">{t.promoTitle}</h3>
+                  <p className="text-sm text-muted-foreground">{t.promoDescription}</p>
+                </div>
+              </div>
+              <Button onClick={() => navigate("/rezerva-direct")} className="shrink-0">
+                {t.promoButton}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}
