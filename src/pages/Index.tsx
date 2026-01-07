@@ -20,6 +20,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AboutFounder from "@/components/AboutFounder";
 import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
+import StatsCounters from "@/components/StatsCounters";
 
 const Index = () => {
   return (
@@ -42,6 +43,7 @@ const Index = () => {
           <WhyUs />
         </section>
         <PropertyGallery />
+        <StatsCounters />
         <Testimonials />
         <AboutFounder />
         <BlogPreview />
