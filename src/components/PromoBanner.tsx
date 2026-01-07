@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { X, Tag, Sparkles } from "lucide-react";
+import { X, Tag, Sparkles, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Link } from "react-router-dom";
 
 const PromoBanner = () => {
   const { t } = useLanguage();
@@ -20,6 +21,13 @@ const PromoBanner = () => {
           </span>{" "}
           {t.promoBanner.discount}
         </span>
+        <Link 
+          to="/rezerva-direct" 
+          className="hidden sm:inline-flex items-center gap-1 ml-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs font-semibold transition-colors"
+        >
+          {t.whyBookDirect?.ctaButton || "Află mai mult"}
+          <ArrowRight className="w-3 h-3" />
+        </Link>
         <button
           onClick={() => setIsVisible(false)}
           className="absolute right-4 p-1 hover:bg-white/10 rounded-full transition-colors"
