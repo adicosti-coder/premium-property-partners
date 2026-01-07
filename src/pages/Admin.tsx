@@ -62,6 +62,7 @@ import ComplexManager from "@/components/admin/ComplexManager";
 import VideoTestimonialsManager from "@/components/admin/VideoTestimonialsManager";
 import POIManager from "@/components/admin/POIManager";
 import HeroVideoManager from "@/components/admin/HeroVideoManager";
+import HeroTextManager from "@/components/admin/HeroTextManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -521,7 +522,10 @@ const Admin = () => {
 
           {/* Hero Video Tab */}
           <TabsContent value="hero-video">
-            <HeroVideoManager />
+            <div className="space-y-6">
+              <HeroVideoManager />
+              <HeroTextManager />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
