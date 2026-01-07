@@ -18,6 +18,7 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import AccessibilityPanel from "@/components/AccessibilityPanel";
 import AboutFounder from "@/components/AboutFounder";
 import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
@@ -59,6 +60,7 @@ const Index = () => {
       <Footer />
       <MobileCTABar />
       <FloatingWhatsApp />
+      <AccessibilityPanel />
     </div>
   );
 };
