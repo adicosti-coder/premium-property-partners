@@ -24,6 +24,7 @@ import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
 import StatsCounters from "@/components/StatsCounters";
 import ResidentialComplexes from "@/components/ResidentialComplexes";
+import PartnershipTimeline from "@/components/PartnershipTimeline";
 
 const Index = () => {
   return (
@@ -38,6 +39,7 @@ const Index = () => {
           <Benefits />
         </section>
         <OwnerBenefits />
+        <PartnershipTimeline />
         <ProfitCalculator />
         <section id="cum-functioneaza">
           <HowItWorks />
