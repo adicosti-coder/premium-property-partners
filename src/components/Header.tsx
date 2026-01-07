@@ -10,7 +10,7 @@ import ThemeToggle from "./ThemeToggle";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { favorites } = useFavorites();
   const location = useLocation();
   const navigate = useNavigate();
@@ -74,6 +74,7 @@ const Header = () => {
     { href: "/oaspeti", label: t.nav.guests, isPage: true },
     { href: "/online-check-in", label: t.nav.onlineCheckIn, isPage: true },
     { href: "/blog", label: "Blog", isPage: true },
+    { href: "/autentificare-proprietar", label: language === "ro" ? "Portal Proprietari" : "Owner Portal", isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
 
