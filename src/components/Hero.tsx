@@ -12,8 +12,8 @@ const Hero = () => {
   const [videoError, setVideoError] = useState(false);
   const [scrollY, setScrollY] = useState(0);
 
-  // Video URL - can be replaced with actual hosted video
-  const videoUrl = "https://www.realtrust.ro/video/apart-hotel-timisoara-hero.mp4";
+  // Hero video - custom uploaded video
+  const videoUrl = "/hero-video.mp4";
 
   // Parallax effect on scroll
   useEffect(() => {
