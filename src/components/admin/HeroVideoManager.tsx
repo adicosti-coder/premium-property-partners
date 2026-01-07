@@ -18,20 +18,26 @@ import {
   Loader2, 
   CheckCircle2,
   AlertCircle,
-  Play
+  Play,
+  Image as ImageIcon
 } from "lucide-react";
 
 interface SiteSettings {
   hero_video_url: string | null;
   hero_video_filename: string | null;
+  hero_image_url: string | null;
+  hero_image_filename: string | null;
 }
 
 const HeroVideoManager = () => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -42,12 +48,17 @@ const HeroVideoManager = () => {
     try {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("hero_video_url, hero_video_filename")
+        .select("hero_video_url, hero_video_filename, hero_image_url, hero_image_filename")
         .eq("id", "default")
         .single();
 
       if (error && error.code !== "PGRST116") throw error;
-      setSettings(data || { hero_video_url: null, hero_video_filename: null });
+      setSettings(data || { 
+        hero_video_url: null, 
+        hero_video_filename: null,
+        hero_image_url: null,
+        hero_image_filename: null
+      });
     } catch (error) {
       console.error("Error fetching settings:", error);
       toast({
@@ -60,11 +71,10 @@ const HeroVideoManager = () => {
     }
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("video/")) {
       toast({
         title: "Format invalid",
@@ -74,7 +84,6 @@ const HeroVideoManager = () => {
       return;
     }
 
-    // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
@@ -88,28 +97,50 @@ const HeroVideoManager = () => {
     await uploadVideo(file);
   };
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Format invalid",
+        description: "Te rugăm să încarci un fișier imagine (JPG, PNG, WebP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "Fișier prea mare",
+        description: "Dimensiunea maximă este de 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await uploadImage(file);
+  };
+
   const uploadVideo = async (file: File) => {
-    setIsUploading(true);
-    setUploadProgress(0);
+    setIsUploadingVideo(true);
+    setVideoUploadProgress(0);
 
     try {
-      // Generate unique filename
       const fileExt = file.name.split(".").pop();
       const fileName = `hero-video-${Date.now()}.${fileExt}`;
 
-      // Delete old video if exists
       if (settings?.hero_video_filename && settings.hero_video_filename !== "hero-video.mp4") {
         await supabase.storage
           .from("hero-videos")
           .remove([settings.hero_video_filename]);
       }
 
-      // Simulate upload progress
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
+        setVideoUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      // Upload new video
       const { error: uploadError } = await supabase.storage
         .from("hero-videos")
         .upload(fileName, file, {
@@ -121,12 +152,10 @@ const HeroVideoManager = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from("hero-videos")
         .getPublicUrl(fileName);
 
-      // Update settings in database
       const { error: updateError } = await supabase
         .from("site_settings")
         .upsert({
@@ -137,19 +166,19 @@ const HeroVideoManager = () => {
 
       if (updateError) throw updateError;
 
-      setUploadProgress(100);
-      setSettings({
+      setVideoUploadProgress(100);
+      setSettings(prev => prev ? {
+        ...prev,
         hero_video_url: urlData.publicUrl,
         hero_video_filename: fileName,
-      });
+      } : null);
 
       toast({
         title: "Video încărcat cu succes!",
         description: "Noul video hero a fost salvat.",
       });
 
-      // Reset progress after a delay
-      setTimeout(() => setUploadProgress(0), 1500);
+      setTimeout(() => setVideoUploadProgress(0), 1500);
     } catch (error) {
       console.error("Error uploading video:", error);
       toast({
@@ -158,23 +187,93 @@ const HeroVideoManager = () => {
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      setIsUploadingVideo(false);
+      if (videoInputRef.current) {
+        videoInputRef.current.value = "";
       }
     }
   };
 
-  const handleResetToDefault = async () => {
+  const uploadImage = async (file: File) => {
+    setIsUploadingImage(true);
+    setImageUploadProgress(0);
+
     try {
-      // Delete current video from storage if it's not the default
+      const fileExt = file.name.split(".").pop();
+      const fileName = `hero-image-${Date.now()}.${fileExt}`;
+
+      // Delete old image if exists and is not default
+      if (settings?.hero_image_filename) {
+        await supabase.storage
+          .from("hero-videos")
+          .remove([settings.hero_image_filename]);
+      }
+
+      const progressInterval = setInterval(() => {
+        setImageUploadProgress((prev) => Math.min(prev + 15, 90));
+      }, 150);
+
+      const { error: uploadError } = await supabase.storage
+        .from("hero-videos")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      clearInterval(progressInterval);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("hero-videos")
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from("site_settings")
+        .upsert({
+          id: "default",
+          hero_image_url: urlData.publicUrl,
+          hero_image_filename: fileName,
+        });
+
+      if (updateError) throw updateError;
+
+      setImageUploadProgress(100);
+      setSettings(prev => prev ? {
+        ...prev,
+        hero_image_url: urlData.publicUrl,
+        hero_image_filename: fileName,
+      } : null);
+
+      toast({
+        title: "Imagine încărcată cu succes!",
+        description: "Noua imagine de fallback a fost salvată.",
+      });
+
+      setTimeout(() => setImageUploadProgress(0), 1500);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Eroare la încărcare",
+        description: "Nu s-a putut încărca imaginea. Încearcă din nou.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleResetVideo = async () => {
+    try {
       if (settings?.hero_video_filename && settings.hero_video_filename !== "hero-video.mp4") {
         await supabase.storage
           .from("hero-videos")
           .remove([settings.hero_video_filename]);
       }
 
-      // Reset to default video
       const { error } = await supabase
         .from("site_settings")
         .upsert({
@@ -185,10 +284,11 @@ const HeroVideoManager = () => {
 
       if (error) throw error;
 
-      setSettings({
+      setSettings(prev => prev ? {
+        ...prev,
         hero_video_url: "/hero-video.mp4",
         hero_video_filename: "hero-video.mp4",
-      });
+      } : null);
 
       toast({
         title: "Video resetat",
@@ -204,6 +304,44 @@ const HeroVideoManager = () => {
     }
   };
 
+  const handleResetImage = async () => {
+    try {
+      if (settings?.hero_image_filename) {
+        await supabase.storage
+          .from("hero-videos")
+          .remove([settings.hero_image_filename]);
+      }
+
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({
+          id: "default",
+          hero_image_url: null,
+          hero_image_filename: null,
+        });
+
+      if (error) throw error;
+
+      setSettings(prev => prev ? {
+        ...prev,
+        hero_image_url: null,
+        hero_image_filename: null,
+      } : null);
+
+      toast({
+        title: "Imagine resetată",
+        description: "S-a revenit la imaginea implicită.",
+      });
+    } catch (error) {
+      console.error("Error resetting image:", error);
+      toast({
+        title: "Eroare",
+        description: "Nu s-a putut reseta imaginea.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -213,9 +351,11 @@ const HeroVideoManager = () => {
   }
 
   const isDefaultVideo = settings?.hero_video_filename === "hero-video.mp4" || !settings?.hero_video_url;
+  const hasCustomImage = !!settings?.hero_image_url;
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Video Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -223,7 +363,7 @@ const HeroVideoManager = () => {
             Video Hero
           </CardTitle>
           <CardDescription>
-            Gestionează video-ul de fundal din secțiunea hero a paginii principale.
+            Video-ul de fundal din secțiunea hero.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -254,12 +394,12 @@ const HeroVideoManager = () => {
               {isDefaultVideo ? (
                 <>
                   <AlertCircle className="w-4 h-4" />
-                  <span>Video implicit (din fișierele locale)</span>
+                  <span>Video implicit</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>Video personalizat: {settings?.hero_video_filename}</span>
+                  <span className="truncate">{settings?.hero_video_filename}</span>
                 </>
               )}
             </div>
@@ -270,22 +410,22 @@ const HeroVideoManager = () => {
             <Label>Încarcă video nou</Label>
             <div className="flex items-center gap-4">
               <Input
-                ref={fileInputRef}
+                ref={videoInputRef}
                 type="file"
                 accept="video/*"
-                onChange={handleFileSelect}
-                disabled={isUploading}
+                onChange={handleVideoSelect}
+                disabled={isUploadingVideo}
                 className="flex-1"
               />
               <Button
                 variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
+                onClick={() => videoInputRef.current?.click()}
+                disabled={isUploadingVideo}
               >
-                {isUploading ? (
+                {isUploadingVideo ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {uploadProgress}%
+                    {videoUploadProgress}%
                   </>
                 ) : (
                   <>
@@ -295,17 +435,16 @@ const HeroVideoManager = () => {
                 )}
               </Button>
             </div>
-            {isUploading && (
+            {isUploadingVideo && (
               <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
+                  style={{ width: `${videoUploadProgress}%` }}
                 />
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Formate acceptate: MP4, WebM, MOV. Dimensiune maximă: 100MB.
-              Recomandare: video 1920x1080 pentru calitate optimă.
+              MP4, WebM, MOV. Max 100MB. Recomandat: 1920x1080.
             </p>
           </div>
 
@@ -313,11 +452,114 @@ const HeroVideoManager = () => {
           {!isDefaultVideo && (
             <Button
               variant="destructive"
-              onClick={handleResetToDefault}
-              className="w-full sm:w-auto"
+              onClick={handleResetVideo}
+              className="w-full"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Resetează la video-ul implicit
+              Resetează video
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Image Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-primary" />
+            Imagine Fallback
+          </CardTitle>
+          <CardDescription>
+            Imagine afișată până la încărcarea video-ului sau pe conexiuni lente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Current Image Preview */}
+          <div className="space-y-3">
+            <Label>Imagine curentă</Label>
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border border-border">
+              {hasCustomImage ? (
+                <img
+                  src={settings.hero_image_url!}
+                  alt="Hero fallback"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>Imagine implicită (apt-01.jpg)</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {!hasCustomImage ? (
+                <>
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Imagine implicită</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span className="truncate">{settings?.hero_image_filename}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Upload Section */}
+          <div className="space-y-3">
+            <Label>Încarcă imagine nouă</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                disabled={isUploadingImage}
+                className="flex-1"
+              />
+              <Button
+                variant="outline"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={isUploadingImage}
+              >
+                {isUploadingImage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {imageUploadProgress}%
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Încarcă
+                  </>
+                )}
+              </Button>
+            </div>
+            {isUploadingImage && (
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${imageUploadProgress}%` }}
+                />
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              JPG, PNG, WebP. Max 10MB. Recomandat: 1920x1080.
+            </p>
+          </div>
+
+          {/* Reset Button */}
+          {hasCustomImage && (
+            <Button
+              variant="destructive"
+              onClick={handleResetImage}
+              className="w-full"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Resetează imagine
             </Button>
           )}
         </CardContent>

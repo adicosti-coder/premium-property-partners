@@ -663,6 +663,8 @@ export type Database = {
       site_settings: {
         Row: {
           created_at: string
+          hero_image_filename: string | null
+          hero_image_url: string | null
           hero_video_filename: string | null
           hero_video_url: string | null
           id: string
@@ -670,6 +672,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hero_image_filename?: string | null
+          hero_image_url?: string | null
           hero_video_filename?: string | null
           hero_video_url?: string | null
           id?: string
@@ -677,6 +681,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hero_image_filename?: string | null
+          hero_image_url?: string | null
           hero_video_filename?: string | null
           hero_video_url?: string | null
           id?: string
