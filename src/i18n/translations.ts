@@ -39,9 +39,13 @@ export const translations = {
       },
     },
     
-    // Partner Logos
+    // Partner Logos / Trusted Partners
     partners: {
       title: "Listăm pe Platformele de Top",
+      label: "Parteneri de Încredere",
+      trustedTitle: "Partenerii Noștri Premium",
+      trustedSubtitle: "Suntem mândri să colaborăm cu cele mai mari platforme de rezervări din lume pentru a maximiza vizibilitatea proprietății tale.",
+      activeText: "Listări active pe toate platformele",
     },
     
     // Benefits
@@ -923,9 +927,13 @@ Mulțumesc!`,
       },
     },
     
-    // Partner Logos
+    // Partner Logos / Trusted Partners
     partners: {
       title: "Listed on Top Platforms",
+      label: "Trusted Partners",
+      trustedTitle: "Our Premium Partners",
+      trustedSubtitle: "We're proud to partner with the world's largest booking platforms to maximize your property's visibility.",
+      activeText: "Active listings on all platforms",
     },
     
     // Benefits
