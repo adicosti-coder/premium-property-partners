@@ -49,6 +49,14 @@ const Imobiliare = () => {
     delay: 300
   });
 
+  // Typing animation for Hero subtitle (starts after title completes)
+  const titleDuration = realEstate.hero.title.length * 60 + 300 + 500; // title chars * speed + delay + buffer
+  const { displayedText: typedSubtitle, isComplete: subtitleComplete } = useTypingAnimation({
+    text: realEstate.hero.subtitle,
+    speed: 30,
+    delay: titleDuration
+  });
+
   const services = [
     {
       icon: Building2,
@@ -138,7 +146,8 @@ const Imobiliare = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              {realEstate.hero.subtitle}
+              {typedSubtitle}
+              <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete || !titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
