@@ -78,6 +78,9 @@ const Footer = () => {
               <a href="#portofoliu" className="text-cream/60 hover:text-cream transition-colors">
                 {t.nav.portfolio}
               </a>
+              <a href="/rezerva-direct" className="text-cream/60 hover:text-cream transition-colors">
+                {language === 'ro' ? 'De ce să rezervi direct?' : 'Why Book Direct?'}
+              </a>
               <a href="/online-check-in" className="text-cream/60 hover:text-cream transition-colors">
                 {t.nav.onlineCheckIn}
               </a>
