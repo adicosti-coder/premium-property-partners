@@ -90,38 +90,21 @@ const Hero = () => {
             <TypingTitle title={t.hero.title} highlight={t.hero.titleHighlight} />
           </h1>
           
-          {/* Subheadline with typing animation */}
-          <HeroSubtitle 
+          {/* Subheadline with typing animation + CTAs + Tags + Widget */}
+          <HeroContent 
             subtitle={t.hero.subtitle}
             titleLength={t.hero.title.length}
             highlightLength={t.hero.titleHighlight.length}
             ctaQuickStart={t.hero.ctaQuickStart || "Start rapid"}
             cta={t.hero.cta}
-          />
-          
-          {/* Feature tags like realtrust.ro */}
-          <div className="flex flex-wrap gap-2 mt-8">
-            {[t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
+            tags={[
+              t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
               t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
               t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
-              t.hero.tags?.cleaning || "Curățenie profesională"].map((tag, index) => (
-              <span 
-                key={index} 
-                className="px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-200 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground opacity-0 animate-fade-up"
-                style={{ animationDelay: `${0.5 + index * 0.1}s`, animationFillMode: 'forwards' }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-          
-          {/* Availability Search Widget */}
-          <div className="mt-10 animate-fade-up" style={{ animationDelay: '0.5s' }}>
-            <AvailabilitySearchWidget variant="hero" />
-          </div>
-          
-          {/* Trust indicators with counting animation */}
-          <StatsSection t={t} />
+              t.hero.tags?.cleaning || "Curățenie profesională"
+            ]}
+            t={t}
+          />
         </div>
       </div>
       
@@ -158,19 +141,23 @@ const TypingTitle = ({ title, highlight }: { title: string; highlight: string })
   );
 }
 
-// HeroSubtitle component with typing and fade-in buttons
-const HeroSubtitle = ({ 
+// HeroContent component with typing subtitle and sequential fade-in for all elements
+const HeroContent = ({ 
   subtitle, 
   titleLength, 
   highlightLength,
   ctaQuickStart,
-  cta
+  cta,
+  tags,
+  t
 }: { 
   subtitle: string; 
   titleLength: number; 
   highlightLength: number;
   ctaQuickStart: string;
   cta: string;
+  tags: string[];
+  t: any;
 }) => {
   const titleDuration = 300 + titleLength * 40 + 200 + highlightLength * 50 + 300;
   
@@ -208,6 +195,35 @@ const HeroSubtitle = ({
         >
           {cta}
         </Button>
+      </div>
+      
+      {/* Feature tags with sequential fade-in after buttons */}
+      <div className="flex flex-wrap gap-2 mt-8">
+        {tags.map((tag, index) => (
+          <span 
+            key={index} 
+            className={`px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-300 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ transitionDelay: subtitleComplete ? `${400 + index * 75}ms` : '0ms' }}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+      
+      {/* Availability Search Widget with fade-in */}
+      <div 
+        className={`mt-10 transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        style={{ transitionDelay: subtitleComplete ? '700ms' : '0ms' }}
+      >
+        <AvailabilitySearchWidget variant="hero" />
+      </div>
+      
+      {/* Trust indicators with fade-in */}
+      <div 
+        className={`transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        style={{ transitionDelay: subtitleComplete ? '900ms' : '0ms' }}
+      >
+        <StatsSection t={t} />
       </div>
     </>
   );
