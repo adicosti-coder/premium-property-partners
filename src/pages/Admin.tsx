@@ -33,6 +33,7 @@ import {
   Phone,
   Home,
   Euro,
+  Building2,
   Calendar,
   CalendarDays,
   ShieldAlert,
@@ -54,6 +55,7 @@ import BlogManager from "@/components/admin/BlogManager";
 import OwnerCodeManager from "@/components/admin/OwnerCodeManager";
 import MaintenanceManager from "@/components/admin/MaintenanceManager";
 import NewsletterManager from "@/components/admin/NewsletterManager";
+import ComplexManager from "@/components/admin/ComplexManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -255,6 +257,10 @@ const Admin = () => {
             <TabsTrigger value="newsletter" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               {t.admin.tabs?.newsletter || "Newsletter"}
+            </TabsTrigger>
+            <TabsTrigger value="complexes" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Complexe
             </TabsTrigger>
           </TabsList>
 
@@ -478,6 +484,11 @@ const Admin = () => {
           {/* Newsletter Tab */}
           <TabsContent value="newsletter">
             <NewsletterManager />
+          </TabsContent>
+
+          {/* Complexes Tab */}
+          <TabsContent value="complexes">
+            <ComplexManager />
           </TabsContent>
         </Tabs>
       </div>
