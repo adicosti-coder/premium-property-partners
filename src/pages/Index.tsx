@@ -29,6 +29,8 @@ import DigitalHouseManual from "@/components/DigitalHouseManual";
 import TrustBadges from "@/components/TrustBadges";
 import FinancialTransparency from "@/components/FinancialTransparency";
 import VideoTestimonials from "@/components/VideoTestimonials";
+import FacilitiesShowcase from "@/components/FacilitiesShowcase";
+import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
 
 const Index = () => {
   return (
@@ -54,6 +56,8 @@ const Index = () => {
           <WhyUs />
         </section>
         <PropertyGallery />
+        <FacilitiesShowcase />
+        <InteractiveMapWithPOI />
         <ResidentialComplexes />
         <StatsCounters />
         <Testimonials />
