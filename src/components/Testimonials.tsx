@@ -4,7 +4,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useParallax } from "@/hooks/useParallax";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 interface Testimonial {
   id: number;
@@ -145,11 +146,15 @@ const Testimonials = () => {
   const { offset: parallaxOffset2 } = useParallax({ speed: 0.1, direction: 'down' });
   const isMobile = useIsMobile();
   
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })
+  );
+  
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'center',
     containScroll: 'trimSnaps'
-  });
+  }, [autoplayPlugin.current]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
