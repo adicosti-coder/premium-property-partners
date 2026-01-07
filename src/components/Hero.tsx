@@ -10,10 +10,21 @@ import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
 const Hero = () => {
   const { t } = useLanguage();
   const [videoError, setVideoError] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isSlowConnection, setIsSlowConnection] = useState(false);
 
   // Hero video - custom uploaded video
   const videoUrl = "/hero-video.mp4";
+
+  // Check connection speed for lazy loading
+  useEffect(() => {
+    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    if (connection) {
+      const slowTypes = ['slow-2g', '2g', '3g'];
+      setIsSlowConnection(slowTypes.includes(connection.effectiveType) || connection.saveData);
+    }
+  }, []);
 
   // Parallax effect on scroll
   useEffect(() => {
@@ -41,29 +52,31 @@ const Hero = () => {
           willChange: 'transform, filter'
         }}
       >
-        {!videoError ? (
+        {!videoError && !isSlowConnection ? (
           <video
             autoPlay
             muted
             loop
             playsInline
-            className="w-full h-full object-cover"
+            preload="metadata"
+            className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setVideoError(true)}
+            onLoadedData={() => setVideoLoaded(true)}
             poster={heroImage}
           >
             <source src={videoUrl} type="video/mp4" />
           </video>
-        ) : (
-          <img
-            src={heroImage}
-            alt="Apartament de lux Timișoara"
-            className="w-full h-full object-cover"
-            width={1920}
-            height={1080}
-            fetchPriority="high"
-            decoding="async"
-          />
-        )}
+        ) : null}
+        {/* Fallback image - always rendered for instant display, hidden when video loads */}
+        <img
+          src={heroImage}
+          alt="Apartament de lux"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection ? 'opacity-0' : 'opacity-100'}`}
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
       </div>
       
