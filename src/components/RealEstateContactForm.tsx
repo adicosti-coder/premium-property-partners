@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import ConfettiEffect from "./ConfettiEffect";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
@@ -40,6 +41,7 @@ const RealEstateContactForm = () => {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -85,6 +87,11 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
     );
 
     setIsSubmitting(false);
+    
+    // Trigger confetti effect
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 3500);
+    
     toast.success(form.successMessage);
 
     // Reset form
@@ -114,6 +121,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
   return (
     <section id="contact-form" className="py-20 md:py-28 bg-muted/30">
+      <ConfettiEffect isActive={showConfetti} duration={3500} particleCount={60} />
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
