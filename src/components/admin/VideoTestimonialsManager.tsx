@@ -37,6 +37,24 @@ import {
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Play, Star, ExternalLink, GripVertical } from "lucide-react";
 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 interface VideoTestimonial {
   id: string;
   name: string;
@@ -71,11 +89,140 @@ const emptyForm: Omit<VideoTestimonial, "id" | "created_at"> = {
   is_active: true,
 };
 
+interface SortableRowProps {
+  testimonial: VideoTestimonial;
+  index: number;
+  onEdit: (testimonial: VideoTestimonial) => void;
+  onDelete: (id: string) => void;
+  onToggleActive: (id: string, is_active: boolean) => void;
+}
+
+const SortableRow = ({ testimonial, index, onEdit, onDelete, onToggleActive }: SortableRowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: testimonial.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <TableRow ref={setNodeRef} style={style} className={isDragging ? "bg-muted" : ""}>
+      <TableCell className="font-medium">
+        <div 
+          className="flex items-center gap-1 text-muted-foreground cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+          {index + 1}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="relative w-24 aspect-video rounded overflow-hidden">
+          <img
+            src={`https://img.youtube.com/vi/${testimonial.youtube_id}/mqdefault.jpg`}
+            alt={testimonial.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <Play className="h-4 w-4 text-white" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div>
+          <p className="font-medium">{testimonial.name}</p>
+          <p className="text-sm text-muted-foreground">{testimonial.role_ro}</p>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div>
+          <p className="text-sm">{testimonial.property_ro}</p>
+          <p className="text-xs text-muted-foreground">{testimonial.location}</p>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1">
+          {[...Array(testimonial.rating)].map((_, i) => (
+            <Star key={i} className="h-3 w-3 text-amber-500 fill-amber-500" />
+          ))}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={testimonial.is_active}
+            onCheckedChange={(checked) => onToggleActive(testimonial.id, checked)}
+          />
+          <Badge variant={testimonial.is_active ? "default" : "secondary"}>
+            {testimonial.is_active ? "Activ" : "Inactiv"}
+          </Badge>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(testimonial)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Șterge testimonialul?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Această acțiune nu poate fi anulată. Testimonialul video al lui{" "}
+                  <strong>{testimonial.name}</strong> va fi șters permanent.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anulează</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDelete(testimonial.id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Șterge
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+};
+
 const VideoTestimonialsManager = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(emptyForm);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const { data: testimonials, isLoading } = useQuery({
     queryKey: ["admin-video-testimonials"],
@@ -154,6 +301,49 @@ const VideoTestimonialsManager = () => {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: { id: string; display_order: number }[]) => {
+      // Update each item's display_order
+      for (const update of updates) {
+        const { error } = await supabase
+          .from("video_testimonials")
+          .update({ display_order: update.display_order })
+          .eq("id", update.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-video-testimonials"] });
+      toast.success("Ordine actualizată!");
+    },
+    onError: (error) => {
+      toast.error("Eroare la reordonare: " + error.message);
+    },
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id && testimonials) {
+      const oldIndex = testimonials.findIndex((t) => t.id === active.id);
+      const newIndex = testimonials.findIndex((t) => t.id === over.id);
+
+      const newOrder = arrayMove(testimonials, oldIndex, newIndex);
+      
+      // Create updates with new display_order values
+      const updates = newOrder.map((item, index) => ({
+        id: item.id,
+        display_order: index,
+      }));
+
+      // Optimistically update the cache
+      queryClient.setQueryData(["admin-video-testimonials"], newOrder);
+      
+      // Persist to database
+      reorderMutation.mutate(updates);
+    }
+  };
+
   const resetForm = () => {
     setFormData(emptyForm);
     setEditingId(null);
@@ -191,12 +381,13 @@ const VideoTestimonialsManager = () => {
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: formData });
     } else {
-      createMutation.mutate(formData);
+      // Set display_order to end of list for new items
+      const newDisplayOrder = testimonials ? testimonials.length : 0;
+      createMutation.mutate({ ...formData, display_order: newDisplayOrder });
     }
   };
 
   const extractYoutubeId = (url: string): string => {
-    // Handle various YouTube URL formats
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : url;
@@ -208,6 +399,9 @@ const VideoTestimonialsManager = () => {
         <CardTitle className="flex items-center gap-2">
           <Play className="h-5 w-5" />
           Testimoniale Video
+          <Badge variant="outline" className="ml-2 text-xs font-normal">
+            Drag & drop pentru reordonare
+          </Badge>
         </CardTitle>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -331,7 +525,7 @@ const VideoTestimonialsManager = () => {
               </div>
 
               {/* Numeric fields */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="rating">Rating (1-5)</Label>
                   <Input
@@ -351,15 +545,6 @@ const VideoTestimonialsManager = () => {
                     min={1}
                     value={formData.months_as_client}
                     onChange={(e) => setFormData({ ...formData, months_as_client: parseInt(e.target.value) || 1 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="order">Ordine Afișare</Label>
-                  <Input
-                    id="order"
-                    type="number"
-                    value={formData.display_order}
-                    onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
                   />
                 </div>
               </div>
@@ -418,111 +603,44 @@ const VideoTestimonialsManager = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead>Thumbnail</TableHead>
-                  <TableHead>Proprietar</TableHead>
-                  <TableHead>Proprietate</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Acțiuni</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {testimonials.map((testimonial, index) => (
-                  <TableRow key={testimonial.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <GripVertical className="h-4 w-4" />
-                        {index + 1}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="relative w-24 aspect-video rounded overflow-hidden">
-                        <img
-                          src={`https://img.youtube.com/vi/${testimonial.youtube_id}/mqdefault.jpg`}
-                          alt={testimonial.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <Play className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{testimonial.name}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role_ro}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm">{testimonial.property_ro}</p>
-                        <p className="text-xs text-muted-foreground">{testimonial.location}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="h-3 w-3 text-amber-500 fill-amber-500" />
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={testimonial.is_active}
-                          onCheckedChange={(checked) =>
-                            toggleActiveMutation.mutate({ id: testimonial.id, is_active: checked })
-                          }
-                        />
-                        <Badge variant={testimonial.is_active ? "default" : "secondary"}>
-                          {testimonial.is_active ? "Activ" : "Inactiv"}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(testimonial)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Șterge testimonialul?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Această acțiune nu poate fi anulată. Testimonialul video al lui{" "}
-                                <strong>{testimonial.name}</strong> va fi șters permanent.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Anulează</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteMutation.mutate(testimonial.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Șterge
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">#</TableHead>
+                    <TableHead>Thumbnail</TableHead>
+                    <TableHead>Proprietar</TableHead>
+                    <TableHead>Proprietate</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  <SortableContext
+                    items={testimonials.map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {testimonials.map((testimonial, index) => (
+                      <SortableRow
+                        key={testimonial.id}
+                        testimonial={testimonial}
+                        index={index}
+                        onEdit={handleEdit}
+                        onDelete={(id) => deleteMutation.mutate(id)}
+                        onToggleActive={(id, is_active) =>
+                          toggleActiveMutation.mutate({ id, is_active })
+                        }
+                      />
+                    ))}
+                  </SortableContext>
+                </TableBody>
+              </Table>
+            </DndContext>
           </div>
         )}
       </CardContent>
