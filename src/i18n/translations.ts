@@ -13,6 +13,7 @@ export const translations = {
       contact: "Contact",
       freeEvaluation: "Evaluare Gratuită",
       listProperty: "Proprietari: Listează",
+      aboutUs: "Despre Noi",
     },
     
     // Hero
@@ -1040,6 +1041,7 @@ Mulțumesc!`,
       contact: "Contact",
       freeEvaluation: "Free Evaluation",
       listProperty: "Owners: List Property",
+      aboutUs: "About Us",
     },
     
     // Hero

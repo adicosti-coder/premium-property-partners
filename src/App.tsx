@@ -20,6 +20,7 @@ import OnlineCheckIn from "./pages/OnlineCheckIn";
 import WhyBookDirect from "./pages/WhyBookDirect";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import AboutUs from "./pages/AboutUs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/rezerva-direct" element={<WhyBookDirect />} />
                 <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
                 <Route path="/portal-proprietar" element={<OwnerDashboard />} />
+                <Route path="/despre-noi" element={<AboutUs />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

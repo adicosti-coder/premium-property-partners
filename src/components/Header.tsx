@@ -73,6 +73,7 @@ const Header = () => {
     { href: "#portofoliu", label: t.nav.portfolio },
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/oaspeti", label: t.nav.guests, isPage: true },
+    { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
     { href: "/online-check-in", label: t.nav.onlineCheckIn, isPage: true },
     { href: "/blog", label: "Blog", isPage: true },
     { href: "/autentificare-proprietar", label: language === "ro" ? "Portal Proprietari" : "Owner Portal", isPage: true },
