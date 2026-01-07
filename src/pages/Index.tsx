@@ -27,6 +27,7 @@ import ResidentialComplexes from "@/components/ResidentialComplexes";
 import PartnershipTimeline from "@/components/PartnershipTimeline";
 import DigitalHouseManual from "@/components/DigitalHouseManual";
 import TrustBadges from "@/components/TrustBadges";
+import FinancialTransparency from "@/components/FinancialTransparency";
 
 const Index = () => {
   return (
@@ -42,6 +43,7 @@ const Index = () => {
         </section>
         <OwnerBenefits />
         <TrustBadges />
+        <FinancialTransparency />
         <PartnershipTimeline />
         <ProfitCalculator />
         <section id="cum-functioneaza">
