@@ -665,6 +665,10 @@ export type Database = {
           created_at: string
           hero_badge_en: string | null
           hero_badge_ro: string | null
+          hero_cta_primary_en: string | null
+          hero_cta_primary_ro: string | null
+          hero_cta_secondary_en: string | null
+          hero_cta_secondary_ro: string | null
           hero_highlight_en: string | null
           hero_highlight_ro: string | null
           hero_image_filename: string | null
@@ -684,6 +688,10 @@ export type Database = {
           created_at?: string
           hero_badge_en?: string | null
           hero_badge_ro?: string | null
+          hero_cta_primary_en?: string | null
+          hero_cta_primary_ro?: string | null
+          hero_cta_secondary_en?: string | null
+          hero_cta_secondary_ro?: string | null
           hero_highlight_en?: string | null
           hero_highlight_ro?: string | null
           hero_image_filename?: string | null
@@ -703,6 +711,10 @@ export type Database = {
           created_at?: string
           hero_badge_en?: string | null
           hero_badge_ro?: string | null
+          hero_cta_primary_en?: string | null
+          hero_cta_primary_ro?: string | null
+          hero_cta_secondary_en?: string | null
+          hero_cta_secondary_ro?: string | null
           hero_highlight_en?: string | null
           hero_highlight_ro?: string | null
           hero_image_filename?: string | null
