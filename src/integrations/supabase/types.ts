@@ -430,6 +430,63 @@ export type Database = {
           },
         ]
       }
+      points_of_interest: {
+        Row: {
+          address: string | null
+          category: string
+          created_at: string
+          description: string | null
+          description_en: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          name: string
+          name_en: string
+          phone: string | null
+          rating: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          description_en?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          name_en: string
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          description_en?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          name_en?: string
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { 
@@ -13,77 +14,32 @@ import {
   Coffee, 
   ShoppingBag, 
   Landmark,
-  MapIcon
+  MapIcon,
+  Bus,
+  Heart,
+  Clapperboard
 } from 'lucide-react';
 
-// Main apartment location in Timișoara (City of Mara / Circumvalațiunii area)
-const APARTMENT_LOCATION: [number, number] = [21.2175, 45.7510];
+// Main apartment location in Bucharest
+const APARTMENT_LOCATION: [number, number] = [26.1025, 44.4268];
 
-// Points of Interest near the apartments
-const pointsOfInterest = [
-  {
-    id: 'restaurant-1',
-    type: 'restaurant',
-    nameRo: 'Restaurant Crinul Alb',
-    nameEn: 'Crinul Alb Restaurant',
-    descriptionRo: 'Bucătărie tradițională românească',
-    descriptionEn: 'Traditional Romanian cuisine',
-    coordinates: [21.2230, 45.7545] as [number, number],
-    rating: 4.6,
-  },
-  {
-    id: 'restaurant-2',
-    type: 'restaurant',
-    nameRo: 'Pizzeria Il Calcio',
-    nameEn: 'Il Calcio Pizzeria',
-    descriptionRo: 'Pizza autentică italiană',
-    descriptionEn: 'Authentic Italian pizza',
-    coordinates: [21.2195, 45.7530] as [number, number],
-    rating: 4.4,
-  },
-  {
-    id: 'restaurant-3',
-    type: 'restaurant',
-    nameRo: 'La Mama',
-    nameEn: 'La Mama',
-    descriptionRo: 'Mâncare tradițională și confortabilă',
-    descriptionEn: 'Traditional comfort food',
-    coordinates: [21.2260, 45.7565] as [number, number],
-    rating: 4.5,
-  },
-  {
-    id: 'cafe-1',
-    type: 'cafe',
-    nameRo: 'Cafenea Scârț',
-    nameEn: 'Scârț Café',
-    descriptionRo: 'Cafea de specialitate',
-    descriptionEn: 'Specialty coffee',
-    coordinates: [21.2285, 45.7555] as [number, number],
-    rating: 4.7,
-  },
-  {
-    id: 'shopping-1',
-    type: 'shopping',
-    nameRo: 'Iulius Town',
-    nameEn: 'Iulius Town Mall',
-    descriptionRo: 'Centru comercial modern',
-    descriptionEn: 'Modern shopping center',
-    coordinates: [21.2100, 45.7490] as [number, number],
-    rating: 4.5,
-  },
-  {
-    id: 'landmark-1',
-    type: 'landmark',
-    nameRo: 'Piața Unirii',
-    nameEn: 'Union Square',
-    descriptionRo: 'Centrul istoric al Timișoarei',
-    descriptionEn: 'Historic center of Timișoara',
-    coordinates: [21.2268, 45.7575] as [number, number],
-    rating: 4.8,
-  },
-];
+interface POI {
+  id: string;
+  name: string;
+  name_en: string;
+  category: string;
+  description: string | null;
+  description_en: string | null;
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  phone: string | null;
+  website: string | null;
+  rating: number | null;
+  is_active: boolean;
+}
 
-const poiTypeConfig = {
+const poiTypeConfig: Record<string, { icon: React.ElementType; color: string; labelRo: string; labelEn: string }> = {
   restaurant: {
     icon: UtensilsCrossed,
     color: '#ef4444',
@@ -92,33 +48,67 @@ const poiTypeConfig = {
   },
   cafe: {
     icon: Coffee,
-    color: '#8b5cf6',
+    color: '#d97706',
     labelRo: 'Cafenele',
     labelEn: 'Cafés',
   },
   shopping: {
     icon: ShoppingBag,
-    color: '#3b82f6',
+    color: '#ec4899',
     labelRo: 'Cumpărături',
     labelEn: 'Shopping',
   },
-  landmark: {
+  attraction: {
     icon: Landmark,
-    color: '#10b981',
+    color: '#8b5cf6',
     labelRo: 'Atracții',
     labelEn: 'Attractions',
+  },
+  transport: {
+    icon: Bus,
+    color: '#3b82f6',
+    labelRo: 'Transport',
+    labelEn: 'Transport',
+  },
+  health: {
+    icon: Heart,
+    color: '#dc2626',
+    labelRo: 'Sănătate',
+    labelEn: 'Health',
+  },
+  entertainment: {
+    icon: Clapperboard,
+    color: '#10b981',
+    labelRo: 'Divertisment',
+    labelEn: 'Entertainment',
   },
 };
 
 const InteractiveMapWithPOI = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [tokenLoading, setTokenLoading] = useState(true);
+  const [tokenError, setTokenError] = useState<string | null>(null);
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
+
+  // Fetch POIs from Supabase
+  const { data: pois = [], isLoading: poisLoading } = useQuery({
+    queryKey: ['pois'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('points_of_interest')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as POI[];
+    },
+  });
 
   const content = {
     ro: {
@@ -154,13 +144,13 @@ const InteractiveMapWithPOI = () => {
         if (data?.token) {
           setMapboxToken(data.token);
         } else {
-          setError(t.error);
+          setTokenError(t.error);
         }
       } catch (err) {
         console.error('Error fetching Mapbox token:', err);
-        setError(t.error);
+        setTokenError(t.error);
       } finally {
-        setIsLoading(false);
+        setTokenLoading(false);
       }
     };
     fetchToken();
@@ -176,7 +166,7 @@ const InteractiveMapWithPOI = () => {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: APARTMENT_LOCATION,
-      zoom: 14,
+      zoom: 13,
       pitch: 0,
     });
 
@@ -214,7 +204,7 @@ const InteractiveMapWithPOI = () => {
       <div style="padding: 8px; text-align: center;">
         <strong style="color: #c9a962;">${t.apartment}</strong>
         <br/>
-        <small style="color: #666;">ApArt Hotel Timișoara</small>
+        <small style="color: #666;">ApArt Hotel București</small>
       </div>
     `);
 
@@ -222,68 +212,6 @@ const InteractiveMapWithPOI = () => {
       .setLngLat(APARTMENT_LOCATION)
       .setPopup(apartmentPopup)
       .addTo(map.current);
-
-    // Add POI markers
-    pointsOfInterest.forEach((poi) => {
-      const config = poiTypeConfig[poi.type as keyof typeof poiTypeConfig];
-      
-      const poiEl = document.createElement('div');
-      poiEl.className = `poi-marker poi-${poi.type}`;
-      poiEl.dataset.type = poi.type;
-      poiEl.style.cssText = `
-        width: 36px;
-        height: 36px;
-        background: ${config.color};
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        border: 3px solid white;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-      `;
-      
-      // Create SVG for icon based on type
-      const iconSvg = getIconSvg(poi.type);
-      poiEl.innerHTML = iconSvg;
-
-      poiEl.addEventListener('mouseenter', () => {
-        poiEl.style.transform = 'scale(1.2)';
-      });
-      poiEl.addEventListener('mouseleave', () => {
-        poiEl.style.transform = 'scale(1)';
-      });
-
-      const poiPopup = new mapboxgl.Popup({
-        offset: 25,
-        closeButton: true,
-        maxWidth: '250px',
-      }).setHTML(`
-        <div style="padding: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <div style="width: 28px; height: 28px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-              ${iconSvg}
-            </div>
-            <div>
-              <strong style="font-size: 14px; color: #1a1a1a;">${language === 'ro' ? poi.nameRo : poi.nameEn}</strong>
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <span style="font-size: 12px; color: #666;">${poi.rating}</span>
-              </div>
-            </div>
-          </div>
-          <p style="font-size: 12px; color: #666; margin: 0;">
-            ${language === 'ro' ? poi.descriptionRo : poi.descriptionEn}
-          </p>
-        </div>
-      `);
-
-      new mapboxgl.Marker(poiEl)
-        .setLngLat(poi.coordinates)
-        .setPopup(poiPopup)
-        .addTo(map.current!);
-    });
 
     // Add CSS for pulse animation
     const style = document.createElement('style');
@@ -300,7 +228,83 @@ const InteractiveMapWithPOI = () => {
       map.current?.remove();
       style.remove();
     };
-  }, [mapboxToken, language, t.apartment]);
+  }, [mapboxToken, t.apartment]);
+
+  // Add POI markers when data changes
+  useEffect(() => {
+    if (!map.current || !pois.length) return;
+
+    // Clear existing POI markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    pois.forEach((poi) => {
+      const config = poiTypeConfig[poi.category] || poiTypeConfig.attraction;
+      
+      const poiEl = document.createElement('div');
+      poiEl.className = `poi-marker poi-${poi.category}`;
+      poiEl.dataset.type = poi.category;
+      poiEl.style.cssText = `
+        width: 36px;
+        height: 36px;
+        background: ${config.color};
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        border: 3px solid white;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      `;
+      
+      const iconSvg = getIconSvg(poi.category);
+      poiEl.innerHTML = iconSvg;
+
+      poiEl.addEventListener('mouseenter', () => {
+        poiEl.style.transform = 'scale(1.2)';
+      });
+      poiEl.addEventListener('mouseleave', () => {
+        poiEl.style.transform = 'scale(1)';
+      });
+
+      const name = language === 'ro' ? poi.name : poi.name_en;
+      const description = language === 'ro' ? poi.description : poi.description_en;
+
+      const poiPopup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: true,
+        maxWidth: '280px',
+      }).setHTML(`
+        <div style="padding: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 28px; height: 28px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              ${iconSvg}
+            </div>
+            <div>
+              <strong style="font-size: 14px; color: #1a1a1a;">${name}</strong>
+              ${poi.rating ? `
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span style="font-size: 12px; color: #666;">${poi.rating}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          ${description ? `<p style="font-size: 12px; color: #666; margin: 0 0 8px 0;">${description}</p>` : ''}
+          ${poi.address ? `<p style="font-size: 11px; color: #888; margin: 0;"><strong>📍</strong> ${poi.address}</p>` : ''}
+          ${poi.website ? `<a href="${poi.website}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #3b82f6; text-decoration: none;">🔗 Website</a>` : ''}
+        </div>
+      `);
+
+      const marker = new mapboxgl.Marker(poiEl)
+        .setLngLat([poi.longitude, poi.latitude])
+        .setPopup(poiPopup)
+        .addTo(map.current!);
+
+      markersRef.current.push(marker);
+    });
+  }, [pois, language]);
 
   // Filter POI markers
   useEffect(() => {
@@ -318,16 +322,10 @@ const InteractiveMapWithPOI = () => {
     });
   }, [activeFilter]);
 
-  const filterOptions = [
-    { type: null, labelRo: 'Toate', labelEn: 'All' },
-    ...Object.entries(poiTypeConfig).map(([type, config]) => ({
-      type,
-      labelRo: config.labelRo,
-      labelEn: config.labelEn,
-      icon: config.icon,
-      color: config.color,
-    })),
-  ];
+  // Get available categories from POIs
+  const availableCategories = [...new Set(pois.map(p => p.category))];
+
+  const isLoading = tokenLoading || poisLoading;
 
   if (isLoading) {
     return (
@@ -344,14 +342,14 @@ const InteractiveMapWithPOI = () => {
     );
   }
 
-  if (error) {
+  if (tokenError) {
     return (
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="h-[500px] bg-muted rounded-xl flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-center px-4">
               <MapPin className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{error}</span>
+              <span className="text-sm text-muted-foreground">{tokenError}</span>
             </div>
           </div>
         </div>
@@ -395,15 +393,18 @@ const InteractiveMapWithPOI = () => {
                   : 'bg-card border border-border hover:bg-muted'
               }`}
             >
-              {language === 'ro' ? 'Toate' : 'All'}
+              {language === 'ro' ? 'Toate' : 'All'} ({pois.length})
             </button>
-            {Object.entries(poiTypeConfig).map(([type, config]) => {
+            {availableCategories.map((category) => {
+              const config = poiTypeConfig[category];
+              if (!config) return null;
               const Icon = config.icon;
-              const isActive = activeFilter === type;
+              const isActive = activeFilter === category;
+              const count = pois.filter(p => p.category === category).length;
               return (
                 <button
-                  key={type}
-                  onClick={() => setActiveFilter(type)}
+                  key={category}
+                  onClick={() => setActiveFilter(category)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-md'
@@ -411,7 +412,7 @@ const InteractiveMapWithPOI = () => {
                   }`}
                 >
                   <Icon className="w-4 h-4" style={{ color: isActive ? 'inherit' : config.color }} />
-                  {language === 'ro' ? config.labelRo : config.labelEn}
+                  {language === 'ro' ? config.labelRo : config.labelEn} ({count})
                 </button>
               );
             })}
@@ -431,10 +432,12 @@ const InteractiveMapWithPOI = () => {
               <span className="text-sm font-medium text-foreground">{t.apartment}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              {Object.entries(poiTypeConfig).map(([type, config]) => {
+              {availableCategories.map((category) => {
+                const config = poiTypeConfig[category];
+                if (!config) return null;
                 const Icon = config.icon;
                 return (
-                  <div key={type} className="flex items-center gap-1.5">
+                  <div key={category} className="flex items-center gap-1.5">
                     <div 
                       className="w-5 h-5 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: config.color }}
@@ -461,9 +464,12 @@ function getIconSvg(type: string): string {
     restaurant: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`,
     cafe: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg>`,
     shopping: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
-    landmark: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>`,
+    attraction: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>`,
+    transport: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>`,
+    health: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+    entertainment: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="2.18" ry="2.18"/><line x1="7" x2="7" y1="2" y2="22"/><line x1="17" x2="17" y1="2" y2="22"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="2" x2="7" y1="7" y2="7"/><line x1="2" x2="7" y1="17" y2="17"/><line x1="17" x2="22" y1="17" y2="17"/><line x1="17" x2="22" y1="7" y2="7"/></svg>`,
   };
-  return icons[type] || '';
+  return icons[type] || icons.attraction;
 }
 
 export default InteractiveMapWithPOI;
