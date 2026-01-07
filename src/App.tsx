@@ -16,6 +16,7 @@ import Imobiliare from "./pages/Imobiliare";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import OnlineCheckIn from "./pages/OnlineCheckIn";
+import WhyBookDirect from "./pages/WhyBookDirect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/proprietate/:slug" element={<PropertyDetail />} />
               <Route path="/online-check-in" element={<OnlineCheckIn />} />
+              <Route path="/rezerva-direct" element={<WhyBookDirect />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
