@@ -14,26 +14,26 @@ const FAQ = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="faq" className="py-24 bg-background relative overflow-hidden">
+    <section id="faq" className="section-padding bg-background relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-6 lg:px-8 relative z-10">
         <div 
           ref={headerRef}
-          className={`text-center mb-16 transition-all duration-700 ${
+          className={`text-center section-header-spacing transition-all duration-700 ${
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 mb-8">
             <HelpCircle className="w-4 h-4 text-primary" />
             <span className="text-primary text-sm font-semibold">{t.faq.badge}</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-6">
             {t.faq.title} <span className="text-gradient-gold">{t.faq.titleHighlight}</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto text-premium">
             {t.faq.subtitle}
           </p>
         </div>
@@ -44,17 +44,17 @@ const FAQ = () => {
             contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <Accordion type="single" collapsible className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-5">
             {t.faq.items.map((faq, index) => (
               <AccordionItem 
                 key={index} 
                 value={`item-${index}`}
-                className="bg-card border border-border rounded-xl px-6 data-[state=open]:border-primary/30 transition-colors"
+                className="bg-card border border-border rounded-xl px-8 data-[state=open]:border-primary/30 transition-colors"
               >
-                <AccordionTrigger className="text-left font-serif font-semibold text-foreground hover:text-primary py-5">
+                <AccordionTrigger className="text-left heading-premium text-foreground hover:text-primary py-6 text-lg">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                <AccordionContent className="text-muted-foreground pb-6 text-premium text-base">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -64,11 +64,11 @@ const FAQ = () => {
 
         {/* Contact CTA */}
         <div 
-          className={`mt-12 text-center transition-all duration-700 delay-200 ${
+          className={`mt-16 text-center transition-all duration-700 delay-200 ${
             contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground text-lg mb-5">
             {t.faq.notFound}
           </p>
           <a 

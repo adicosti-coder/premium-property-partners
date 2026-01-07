@@ -59,7 +59,7 @@ const WhyUs = () => {
   const t = translations[language];
 
   return (
-    <section className="py-24 bg-hero relative overflow-hidden">
+    <section className="section-padding bg-hero relative overflow-hidden">
       {/* Decorative elements with parallax */}
       <div 
         className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl transition-transform duration-100"
@@ -70,12 +70,12 @@ const WhyUs = () => {
         style={{ transform: `translateY(${parallaxOffset2}px)` }}
       />
       
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+      <div className="container mx-auto px-6 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center max-w-6xl mx-auto">
           {/* Content */}
           <div>
-            <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-4 font-sans">{t.label}</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-cream mb-6">
+            <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-6 font-sans">{t.label}</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-cream mb-8">
               {t.title}
             </h2>
             
