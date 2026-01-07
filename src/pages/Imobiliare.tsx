@@ -5,6 +5,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { 
   Building2, 
   Home, 
@@ -23,6 +24,16 @@ import {
 const Imobiliare = () => {
   const { t, language } = useLanguage();
   const realEstate = t.realEstatePage;
+
+  // Scroll animation hooks for each section
+  const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
+  const { ref: servicesHeaderRef, isVisible: servicesHeaderVisible } = useScrollAnimation();
+  const { ref: servicesGridRef, isVisible: servicesGridVisible } = useScrollAnimation({ threshold: 0.05 });
+  const { ref: benefitsHeaderRef, isVisible: benefitsHeaderVisible } = useScrollAnimation();
+  const { ref: benefitsGridRef, isVisible: benefitsGridVisible } = useScrollAnimation({ threshold: 0.05 });
+  const { ref: processHeaderRef, isVisible: processHeaderVisible } = useScrollAnimation();
+  const { ref: processGridRef, isVisible: processGridVisible } = useScrollAnimation({ threshold: 0.05 });
+  const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   const services = [
     {
@@ -77,21 +88,26 @@ const Imobiliare = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
         
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-6 animate-fade-in">
+          <div 
+            ref={heroRef}
+            className={`max-w-4xl mx-auto text-center transition-all duration-700 ${
+              heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-6">
               {realEstate.hero.badge}
             </span>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 leading-tight animate-fade-in">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 leading-tight">
               {realEstate.hero.title}{" "}
               <span className="text-primary">{realEstate.hero.titleHighlight}</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
               {realEstate.hero.subtitle}
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 variant="hero" 
                 size="lg"
@@ -117,7 +133,12 @@ const Imobiliare = () => {
       {/* Services Section */}
       <section id="services" className="py-20 md:py-28 bg-muted/30">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <div 
+            ref={servicesHeaderRef}
+            className={`text-center mb-16 transition-all duration-700 ${
+              servicesHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
               {realEstate.services.label}
             </span>
@@ -130,11 +151,17 @@ const Imobiliare = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div 
+            ref={servicesGridRef}
+            className={`grid md:grid-cols-2 gap-8 transition-all duration-700 delay-200 ${
+              servicesGridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
             {services.map((service, index) => (
               <Card 
                 key={index} 
                 className="group bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5"
+                style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <CardContent className="p-8">
                   <div className="flex items-start gap-6">
@@ -168,7 +195,12 @@ const Imobiliare = () => {
       {/* Benefits Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <div 
+            ref={benefitsHeaderRef}
+            className={`text-center mb-16 transition-all duration-700 ${
+              benefitsHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
               {realEstate.benefits.label}
             </span>
@@ -181,11 +213,17 @@ const Imobiliare = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div 
+            ref={benefitsGridRef}
+            className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-700 delay-200 ${
+              benefitsGridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
             {benefits.map((benefit, index) => (
               <div 
                 key={index}
                 className="flex items-center gap-4 p-6 bg-card rounded-xl border border-border hover:border-primary/50 transition-all duration-300"
+                style={{ transitionDelay: `${index * 75}ms` }}
               >
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <benefit.icon className="w-6 h-6 text-primary" />
@@ -200,7 +238,12 @@ const Imobiliare = () => {
       {/* Process Section */}
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <div 
+            ref={processHeaderRef}
+            className={`text-center mb-16 transition-all duration-700 ${
+              processHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
               {realEstate.process.label}
             </span>
@@ -212,9 +255,18 @@ const Imobiliare = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div 
+            ref={processGridRef}
+            className={`grid md:grid-cols-2 lg:grid-cols-4 gap-8 transition-all duration-700 delay-200 ${
+              processGridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
             {steps.map((step, index) => (
-              <div key={index} className="relative">
+              <div 
+                key={index} 
+                className="relative"
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
                 <div className="text-6xl font-serif font-bold text-primary/10 mb-4">
                   {step.number}
                 </div>
@@ -239,7 +291,12 @@ const Imobiliare = () => {
       {/* CTA Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-6">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-8 md:p-16 text-center">
+          <div 
+            ref={ctaRef}
+            className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-8 md:p-16 text-center transition-all duration-700 ${
+              ctaVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+          >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,hsl(var(--primary)/0.2),transparent_50%)]" />
             
             <div className="relative z-10">
