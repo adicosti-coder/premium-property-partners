@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
+import ConfettiEffect from "./ConfettiEffect";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
@@ -91,10 +92,11 @@ const QuickLeadForm = () => {
   if (isSuccess) {
     return (
       <section className="py-12 bg-gradient-to-b from-background to-card relative overflow-hidden">
+        <ConfettiEffect isActive={isSuccess} duration={4000} particleCount={60} />
         <div className="container mx-auto px-6">
           <div className="max-w-2xl mx-auto text-center">
             <div className="flex flex-col items-center justify-center py-8 animate-fade-up">
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4 animate-success-bounce">
                 <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
               <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">
