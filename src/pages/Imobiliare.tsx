@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
-import { 
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import {
   Building2, 
   Home, 
   TrendingUp, 
@@ -40,6 +41,13 @@ const Imobiliare = () => {
   const { offset: parallaxSlow } = useParallax({ speed: 0.15, direction: 'up' });
   const { offset: parallaxMedium } = useParallax({ speed: 0.25, direction: 'up' });
   const { offset: parallaxFast } = useParallax({ speed: 0.35, direction: 'down' });
+
+  // Typing animation for Hero title
+  const { displayedText: typedTitle, isComplete: titleComplete } = useTypingAnimation({
+    text: realEstate.hero.title,
+    speed: 60,
+    delay: 300
+  });
 
   const services = [
     {
@@ -119,8 +127,14 @@ const Imobiliare = () => {
             </span>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 leading-tight">
-              {realEstate.hero.title}{" "}
-              <span className="text-primary">{realEstate.hero.titleHighlight}</span>
+              {typedTitle}
+              <span className={`inline-block w-0.5 h-[1em] bg-primary ml-1 align-middle transition-opacity duration-300 ${titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
+              {titleComplete && (
+                <>
+                  {" "}
+                  <span className="text-primary animate-fade-in">{realEstate.hero.titleHighlight}</span>
+                </>
+              )}
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
