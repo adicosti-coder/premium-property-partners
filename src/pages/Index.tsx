@@ -21,6 +21,7 @@ import AboutFounder from "@/components/AboutFounder";
 import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
 import StatsCounters from "@/components/StatsCounters";
+import ResidentialComplexes from "@/components/ResidentialComplexes";
 
 const Index = () => {
   return (
@@ -43,6 +44,7 @@ const Index = () => {
           <WhyUs />
         </section>
         <PropertyGallery />
+        <ResidentialComplexes />
         <StatsCounters />
         <Testimonials />
         <AboutFounder />
