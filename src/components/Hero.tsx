@@ -90,31 +90,14 @@ const Hero = () => {
             <TypingTitle title={t.hero.title} highlight={t.hero.titleHighlight} />
           </h1>
           
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed animate-fade-up" style={{ animationDelay: '0.3s' }}>
-            {t.hero.subtitle}
-          </p>
-          
-          {/* CTAs - Differentiated like realtrust.ro */}
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-            <Button 
-              variant="hero" 
-              size="xl" 
-              className="relative animate-glow-pulse btn-shine"
-              onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              {t.hero.ctaQuickStart || "Start rapid"}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              variant="heroOutline" 
-              size="xl" 
-              className="btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-shadow duration-300"
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              {t.hero.cta}
-            </Button>
-          </div>
+          {/* Subheadline with typing animation */}
+          <HeroSubtitle 
+            subtitle={t.hero.subtitle}
+            titleLength={t.hero.title.length}
+            highlightLength={t.hero.titleHighlight.length}
+            ctaQuickStart={t.hero.ctaQuickStart || "Start rapid"}
+            cta={t.hero.cta}
+          />
           
           {/* Feature tags like realtrust.ro */}
           <div className="flex flex-wrap gap-2 mt-8">
@@ -165,11 +148,67 @@ const TypingTitle = ({ title, highlight }: { title: string; highlight: string })
   return (
     <>
       {titleText}
+      <span className={`inline-block w-0.5 h-[0.9em] bg-primary ml-1 align-middle transition-opacity duration-300 ${titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
       {titleComplete && " "}
       <span className="text-gradient-gold">
         {highlightText}
-        {!highlightComplete && <span className="animate-pulse">|</span>}
+        <span className={`inline-block w-0.5 h-[0.9em] bg-primary ml-1 align-middle transition-opacity duration-300 ${highlightComplete || !titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
       </span>
+    </>
+  );
+}
+
+// HeroSubtitle component with typing and fade-in buttons
+const HeroSubtitle = ({ 
+  subtitle, 
+  titleLength, 
+  highlightLength,
+  ctaQuickStart,
+  cta
+}: { 
+  subtitle: string; 
+  titleLength: number; 
+  highlightLength: number;
+  ctaQuickStart: string;
+  cta: string;
+}) => {
+  const titleDuration = 300 + titleLength * 40 + 200 + highlightLength * 50 + 300;
+  
+  const { displayedText: subtitleText, isComplete: subtitleComplete } = useTypingAnimation({
+    text: subtitle,
+    speed: 25,
+    delay: titleDuration
+  });
+
+  return (
+    <>
+      <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed">
+        {subtitleText}
+        <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete ? 'opacity-0' : 'animate-pulse'}`} />
+      </p>
+      
+      {/* CTAs with sequential fade-in */}
+      <div className={`flex flex-col sm:flex-row gap-4 transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <Button 
+          variant="hero" 
+          size="xl" 
+          className={`relative animate-glow-pulse btn-shine transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          style={{ transitionDelay: subtitleComplete ? '100ms' : '0ms' }}
+          onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          {ctaQuickStart}
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
+        <Button 
+          variant="heroOutline" 
+          size="xl" 
+          className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-500 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          style={{ transitionDelay: subtitleComplete ? '250ms' : '0ms' }}
+          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          {cta}
+        </Button>
+      </div>
     </>
   );
 }
