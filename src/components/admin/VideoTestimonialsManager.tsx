@@ -35,7 +35,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Play, Star, ExternalLink, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Play, Star, ExternalLink, GripVertical, Eye } from "lucide-react";
+import VideoTestimonials from "@/components/VideoTestimonials";
 
 import {
   DndContext,
@@ -210,6 +211,7 @@ const SortableRow = ({ testimonial, index, onEdit, onDelete, onToggleActive }: S
 const VideoTestimonialsManager = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(emptyForm);
 
@@ -403,12 +405,29 @@ const VideoTestimonialsManager = () => {
             Drag & drop pentru reordonare
           </Badge>
         </CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adaugă Testimonial
-            </Button>
+        <div className="flex gap-2">
+          <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+              <DialogHeader className="p-6 pb-0">
+                <DialogTitle>Preview Testimoniale Video</DialogTitle>
+              </DialogHeader>
+              <div className="bg-background">
+                <VideoTestimonials />
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Adaugă Testimonial
+              </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -592,6 +611,7 @@ const VideoTestimonialsManager = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
 
       <CardContent>
