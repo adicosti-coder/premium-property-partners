@@ -43,6 +43,7 @@ import {
   Key,
   Wrench,
   Mail,
+  Play,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -56,6 +57,7 @@ import OwnerCodeManager from "@/components/admin/OwnerCodeManager";
 import MaintenanceManager from "@/components/admin/MaintenanceManager";
 import NewsletterManager from "@/components/admin/NewsletterManager";
 import ComplexManager from "@/components/admin/ComplexManager";
+import VideoTestimonialsManager from "@/components/admin/VideoTestimonialsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -261,6 +263,10 @@ const Admin = () => {
             <TabsTrigger value="complexes" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
               Complexe
+            </TabsTrigger>
+            <TabsTrigger value="video-testimonials" className="flex items-center gap-2">
+              <Play className="w-4 h-4" />
+              Video
             </TabsTrigger>
           </TabsList>
 
@@ -489,6 +495,11 @@ const Admin = () => {
           {/* Complexes Tab */}
           <TabsContent value="complexes">
             <ComplexManager />
+          </TabsContent>
+
+          {/* Video Testimonials Tab */}
+          <TabsContent value="video-testimonials">
+            <VideoTestimonialsManager />
           </TabsContent>
         </Tabs>
       </div>
