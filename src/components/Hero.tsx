@@ -15,26 +15,32 @@ const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
   const [videoUrl, setVideoUrl] = useState("/hero-video.mp4");
+  const [customFallbackImage, setCustomFallbackImage] = useState<string | null>(null);
 
-  // Fetch hero video URL from database
+  // Fetch hero settings from database
   useEffect(() => {
-    const fetchVideoUrl = async () => {
+    const fetchHeroSettings = async () => {
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("hero_video_url")
+          .select("hero_video_url, hero_image_url")
           .eq("id", "default")
           .single();
         
-        if (!error && data?.hero_video_url) {
-          setVideoUrl(data.hero_video_url);
+        if (!error && data) {
+          if (data.hero_video_url) {
+            setVideoUrl(data.hero_video_url);
+          }
+          if (data.hero_image_url) {
+            setCustomFallbackImage(data.hero_image_url);
+          }
         }
       } catch (err) {
-        console.error("Error fetching hero video URL:", err);
+        console.error("Error fetching hero settings:", err);
       }
     };
     
-    fetchVideoUrl();
+    fetchHeroSettings();
   }, []);
 
   // Check connection speed for lazy loading
@@ -82,14 +88,14 @@ const Hero = () => {
             className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setVideoError(true)}
             onLoadedData={() => setVideoLoaded(true)}
-            poster={heroImage}
+            poster={customFallbackImage || heroImage}
           >
             <source src={videoUrl} type="video/mp4" />
           </video>
         ) : null}
         {/* Fallback image - always rendered for instant display, hidden when video loads */}
         <img
-          src={heroImage}
+          src={customFallbackImage || heroImage}
           alt="Apartament de lux"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection ? 'opacity-0' : 'opacity-100'}`}
           width={1920}
