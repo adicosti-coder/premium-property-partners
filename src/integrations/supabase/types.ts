@@ -136,6 +136,41 @@ export type Database = {
         }
         Relationships: []
       }
+      complex_images: {
+        Row: {
+          complex_id: string
+          created_at: string
+          display_order: number
+          id: string
+          image_path: string
+          is_primary: boolean
+        }
+        Insert: {
+          complex_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_path: string
+          is_primary?: boolean
+        }
+        Update: {
+          complex_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_path?: string
+          is_primary?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complex_images_complex_id_fkey"
+            columns: ["complex_id"]
+            isOneToOne: false
+            referencedRelation: "residential_complexes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_records: {
         Row: {
           amount: number
@@ -526,6 +561,45 @@ export type Database = {
           id?: string
           p256dh?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      residential_complexes: {
+        Row: {
+          created_at: string
+          description_en: string
+          description_ro: string
+          display_order: number
+          id: string
+          is_active: boolean
+          location: string
+          name: string
+          property_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_en: string
+          description_ro: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          location: string
+          name: string
+          property_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_en?: string
+          description_ro?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          location?: string
+          name?: string
+          property_count?: number
+          updated_at?: string
         }
         Relationships: []
       }

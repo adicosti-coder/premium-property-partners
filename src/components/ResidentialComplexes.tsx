@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building2, MapPin, Home, ChevronLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Building2, MapPin, Home, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -10,57 +12,30 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-import apt01 from "@/assets/apt-01.jpg";
-import apt02 from "@/assets/apt-02.jpg";
-import apt03 from "@/assets/apt-03.jpg";
-import apt04 from "@/assets/apt-04.jpg";
-import apt05 from "@/assets/apt-05.jpg";
-import apt06 from "@/assets/apt-06.jpg";
-
-interface Complex {
-  id: number;
-  name: string;
-  location: string;
-  propertyCount: number;
-  images: string[];
-  descriptionRo: string;
-  descriptionEn: string;
+interface ComplexImage {
+  id: string;
+  image_path: string;
+  display_order: number;
+  is_primary: boolean;
 }
 
-const complexes: Complex[] = [
-  {
-    id: 1,
-    name: "Iosefin Residence",
-    location: "Iosefin, Timișoara",
-    propertyCount: 4,
-    images: [apt01, apt02, apt03],
-    descriptionRo: "Complex rezidențial modern în inima cartierului Iosefin, cu apartamente premium complet mobilate.",
-    descriptionEn: "Modern residential complex in the heart of Iosefin neighborhood, with fully furnished premium apartments.",
-  },
-  {
-    id: 2,
-    name: "Central Park Living",
-    location: "Ultracentral, Timișoara",
-    propertyCount: 5,
-    images: [apt04, apt05, apt06],
-    descriptionRo: "Apartamente de lux în zona ultracentral, la câțiva pași de Piața Victoriei.",
-    descriptionEn: "Luxury apartments in the city center, steps away from Victory Square.",
-  },
-  {
-    id: 3,
-    name: "Dacia Premium",
-    location: "Dacia, Timișoara",
-    propertyCount: 2,
-    images: [apt02, apt04, apt01],
-    descriptionRo: "Clădire renovată complet cu apartamente spațioase și parcare privată.",
-    descriptionEn: "Fully renovated building with spacious apartments and private parking.",
-  },
-];
+interface Complex {
+  id: string;
+  name: string;
+  location: string;
+  property_count: number;
+  description_ro: string;
+  description_en: string;
+}
 
 const ResidentialComplexes = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: carouselRef, isVisible: carouselVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  const [complexes, setComplexes] = useState<Complex[]>([]);
+  const [complexImages, setComplexImages] = useState<Record<string, ComplexImage[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const translations = {
     ro: {
@@ -82,6 +57,64 @@ const ResidentialComplexes = () => {
   };
 
   const text = translations[language as keyof typeof translations] || translations.ro;
+
+  useEffect(() => {
+    const fetchComplexes = async () => {
+      setIsLoading(true);
+      try {
+        const { data: complexesData, error: complexesError } = await supabase
+          .from("residential_complexes")
+          .select("*")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
+
+        if (complexesError) throw complexesError;
+
+        if (complexesData && complexesData.length > 0) {
+          setComplexes(complexesData);
+
+          // Fetch images for all complexes
+          const { data: imagesData, error: imagesError } = await supabase
+            .from("complex_images")
+            .select("*")
+            .in("complex_id", complexesData.map((c) => c.id))
+            .order("display_order", { ascending: true });
+
+          if (imagesError) throw imagesError;
+
+          // Group images by complex_id
+          const imagesByComplex: Record<string, ComplexImage[]> = {};
+          imagesData?.forEach((img) => {
+            if (!imagesByComplex[img.complex_id]) {
+              imagesByComplex[img.complex_id] = [];
+            }
+            imagesByComplex[img.complex_id].push(img);
+          });
+          setComplexImages(imagesByComplex);
+        }
+      } catch (error) {
+        console.error("Error fetching complexes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchComplexes();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="py-24 bg-muted/30">
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (complexes.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-24 bg-muted/30 relative overflow-hidden">
@@ -122,57 +155,66 @@ const ResidentialComplexes = () => {
             className="w-full"
           >
             <CarouselContent className="-ml-4">
-              {complexes.map((complex) => (
-                <CarouselItem key={complex.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
-                  <div className="group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant h-full">
-                    {/* Image Carousel for each complex */}
-                    <div className="relative h-64 overflow-hidden">
-                      <Carousel opts={{ loop: true }} className="w-full h-full">
-                        <CarouselContent className="h-full -ml-0">
-                          {complex.images.map((image, idx) => (
-                            <CarouselItem key={idx} className="pl-0 h-full">
-                              <img
-                                src={image}
-                                alt={`${complex.name} - ${idx + 1}`}
-                                className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
-                              />
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="left-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <CarouselNext className="right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Carousel>
+              {complexes.map((complex) => {
+                const images = complexImages[complex.id] || [];
+                return (
+                  <CarouselItem key={complex.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
+                    <div className="group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant h-full">
+                      {/* Image Carousel for each complex */}
+                      <div className="relative h-64 overflow-hidden">
+                        {images.length > 0 ? (
+                          <Carousel opts={{ loop: true }} className="w-full h-full">
+                            <CarouselContent className="h-full -ml-0">
+                              {images.map((image, idx) => (
+                                <CarouselItem key={image.id} className="pl-0 h-full">
+                                  <img
+                                    src={image.image_path}
+                                    alt={`${complex.name} - ${idx + 1}`}
+                                    className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
+                                  />
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <CarouselNext className="right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </Carousel>
+                        ) : (
+                          <div className="w-full h-64 bg-muted flex items-center justify-center">
+                            <Building2 className="w-12 h-12 text-muted-foreground/30" />
+                          </div>
+                        )}
 
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
 
-                      {/* Location badge */}
-                      <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-xs font-medium text-foreground">{complex.location}</span>
+                        {/* Location badge */}
+                        <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-xs font-medium text-foreground">{complex.location}</span>
+                        </div>
+
+                        {/* Property count badge */}
+                        <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm flex items-center gap-1.5">
+                          <Home className="w-3.5 h-3.5 text-primary-foreground" />
+                          <span className="text-xs font-bold text-primary-foreground">
+                            {complex.property_count} {text.properties}
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Property count badge */}
-                      <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm flex items-center gap-1.5">
-                        <Home className="w-3.5 h-3.5 text-primary-foreground" />
-                        <span className="text-xs font-bold text-primary-foreground">
-                          {complex.propertyCount} {text.properties}
-                        </span>
+                      {/* Content */}
+                      <div className="p-6">
+                        <h3 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                          {complex.name}
+                        </h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          {language === "en" ? complex.description_en : complex.description_ro}
+                        </p>
                       </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                        {complex.name}
-                      </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {language === "en" ? complex.descriptionEn : complex.descriptionRo}
-                      </p>
-                    </div>
-                  </div>
-                </CarouselItem>
-              ))}
+                  </CarouselItem>
+                );
+              })}
             </CarouselContent>
             <div className="flex justify-center gap-2 mt-6">
               <CarouselPrevious className="static translate-y-0 h-10 w-10" />
