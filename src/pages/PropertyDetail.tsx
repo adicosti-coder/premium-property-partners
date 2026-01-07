@@ -13,6 +13,7 @@ import BookingForm from "@/components/BookingForm";
 import StayCalculator from "@/components/StayCalculator";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import PriceCompareWidget from "@/components/PriceCompareWidget";
+import SmartFeaturesBadge from "@/components/SmartFeaturesBadge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -253,6 +254,12 @@ const PropertyDetail = () => {
                     {t.propertyDetail.clickForGallery}
                   </Badge>
                 </div>
+                {/* Smart Features Badge on main image */}
+                <SmartFeaturesBadge 
+                  features={[...property.features, ...property.amenities]} 
+                  className="absolute bottom-4 right-4"
+                  variant="compact"
+                />
                 {dbImages.length > 0 && (
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-primary/90 backdrop-blur-sm">
@@ -349,6 +356,13 @@ const PropertyDetail = () => {
                     <span className="text-foreground">{property.size} m²</span>
                   </div>
                 </div>
+
+                {/* Smart Features Badge - Full variant */}
+                <SmartFeaturesBadge 
+                  features={[...property.features, ...property.amenities]} 
+                  className="mt-4"
+                  variant="full"
+                />
               </div>
 
               {/* Description */}
