@@ -41,6 +41,7 @@ import {
   FileText,
   Key,
   Wrench,
+  Mail,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -52,6 +53,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import BlogManager from "@/components/admin/BlogManager";
 import OwnerCodeManager from "@/components/admin/OwnerCodeManager";
 import MaintenanceManager from "@/components/admin/MaintenanceManager";
+import NewsletterManager from "@/components/admin/NewsletterManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 interface Lead {
@@ -249,6 +251,10 @@ const Admin = () => {
             <TabsTrigger value="maintenance" className="flex items-center gap-2">
               <Wrench className="w-4 h-4" />
               {t.admin.tabs?.maintenance || "Maintenance"}
+            </TabsTrigger>
+            <TabsTrigger value="newsletter" className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              {t.admin.tabs?.newsletter || "Newsletter"}
             </TabsTrigger>
           </TabsList>
 
@@ -467,6 +473,11 @@ const Admin = () => {
           {/* Maintenance Tab */}
           <TabsContent value="maintenance">
             <MaintenanceManager />
+          </TabsContent>
+
+          {/* Newsletter Tab */}
+          <TabsContent value="newsletter">
+            <NewsletterManager />
           </TabsContent>
         </Tabs>
       </div>
