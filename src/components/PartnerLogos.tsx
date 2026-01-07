@@ -39,7 +39,7 @@ const PartnerLogos = () => {
               href={partner.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`group relative p-4 md:p-6 rounded-xl transition-all duration-500 hover:bg-background/50 hover:shadow-lg cursor-pointer ${
+              className={`group relative p-4 md:p-6 rounded-xl transition-all duration-500 hover:bg-background/50 cursor-pointer ${
                 isVisible 
                   ? "opacity-100 translate-y-0 scale-100" 
                   : "opacity-0 translate-y-8 scale-95"
@@ -49,16 +49,25 @@ const PartnerLogos = () => {
               }}
               aria-label={`Vezi profilul nostru pe ${partner.name}`}
             >
+              {/* Glow effect background */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+              
+              {/* Shine effect overlay */}
+              <div className="absolute inset-0 rounded-xl overflow-hidden">
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+              </div>
+              
               <img
                 src={partner.logo}
                 alt={partner.name}
-                className="h-10 md:h-14 lg:h-16 w-auto object-contain grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                className="relative z-10 h-10 md:h-14 lg:h-16 w-auto object-contain grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 group-hover:drop-shadow-[0_0_8px_rgba(var(--primary),0.4)] transition-all duration-500"
                 loading="lazy"
                 width={140}
                 height={56}
               />
+              
               {/* Hover tooltip */}
-              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs text-muted-foreground whitespace-nowrap">
+              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs text-muted-foreground whitespace-nowrap z-20">
                 {partner.name}
               </span>
             </a>
