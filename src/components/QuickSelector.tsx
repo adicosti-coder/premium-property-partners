@@ -246,10 +246,10 @@ const QuickSelector = () => {
 
   const translations = {
     ro: {
-      badge: "Alege direcția potrivită în 30 de secunde:",
+      badge: "Intră direct pe pagina potrivită",
       subtitle: "3 opțiuni. 0 confuzie. Context suficient ca să iei o decizie bună în 1–2 minute.",
-      startRapid: "Cerere ofertă rapidă",
-      startRapidText: "Trimite datele și primești o estimare realistă + pași concreți.",
+      startRapid: "Cere ofertă rapid (2 minute)",
+      startRapidText: "Completează formularul și primești o estimare realistă + pași concreți.",
       formLabels: {
         name: "Nume",
         namePlaceholder: "Numele tău",
@@ -317,10 +317,10 @@ const QuickSelector = () => {
       ]
     },
     en: {
-      badge: "Choose the right direction in 30 seconds:",
+      badge: "Go directly to the right page",
       subtitle: "3 options. 0 confusion. Enough context to make a good decision in 1–2 minutes.",
-      startRapid: "Quick quote request",
-      startRapidText: "Send your details and receive a realistic estimate + concrete steps.",
+      startRapid: "Quick offer request (2 minutes)",
+      startRapidText: "Fill out the form and receive a realistic estimate + concrete steps.",
       formLabels: {
         name: "Name",
         namePlaceholder: "Your name",
