@@ -12,6 +12,7 @@ import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCompareModal from "./PropertyCompareModal";
 import PropertyMap from "./PropertyMap";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import { properties, Property } from "@/data/properties";
 import { toast } from "sonner";
 
@@ -329,7 +330,7 @@ const PropertyGallery = () => {
                 style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
               >
                 {/* Image */}
-                <Link to={`/proprietate/${property.slug}`}>
+                <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
                   <div className="relative h-48 overflow-hidden cursor-pointer">
                     <img
                       src={property.images[0]}
@@ -401,16 +402,16 @@ const PropertyGallery = () => {
                       </span>
                     </div>
                   </div>
-                </Link>
+                </PrefetchLink>
 
                 {/* Content */}
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-1">
-                    <Link to={`/proprietate/${property.slug}`}>
+                    <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
                       <h3 className="text-lg font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
                         {property.name}
                       </h3>
-                    </Link>
+                    </PrefetchLink>
                     <div className="flex items-baseline gap-1 ml-2 flex-shrink-0">
                       <span className="text-lg font-bold text-primary">€{property.pricePerNight}</span>
                       <span className="text-xs text-muted-foreground">/{language === 'ro' ? 'noapte' : 'night'}</span>
