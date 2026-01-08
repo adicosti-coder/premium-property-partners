@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeroSettings {
   videoUrl: string;
@@ -22,10 +23,12 @@ interface HeroSettings {
 
 const Hero = () => {
   const { t, language } = useLanguage();
+  const isMobile = useIsMobile();
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [heroSettings, setHeroSettings] = useState<HeroSettings>({
     videoUrl: "/hero-video.mp4",
     customFallbackImage: null,
@@ -37,6 +40,22 @@ const Hero = () => {
     customCtaPrimary: null,
     customCtaSecondary: null,
   });
+
+  // Defer video loading for better LCP - load after initial paint
+  useEffect(() => {
+    // On mobile with slow connection, skip video entirely
+    if (isMobile && isSlowConnection) {
+      setShouldLoadVideo(false);
+      return;
+    }
+    
+    // Defer video loading to after initial content paint
+    const timer = setTimeout(() => {
+      setShouldLoadVideo(true);
+    }, isMobile ? 1500 : 500); // Longer delay on mobile
+    
+    return () => clearTimeout(timer);
+  }, [isMobile, isSlowConnection]);
 
   // Fetch hero settings from database
   useEffect(() => {
@@ -88,10 +107,11 @@ const Hero = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const parallaxOffset = scrollY * 0.4;
-  const blurAmount = Math.min(scrollY * 0.02, 10); // Max 10px blur
-  const contentOpacity = Math.max(1 - scrollY * 0.002, 0); // Fade out content
-  const contentTranslate = scrollY * 0.3; // Move content up slightly
+  // Reduce parallax calculations on mobile for performance
+  const parallaxOffset = isMobile ? 0 : scrollY * 0.4;
+  const blurAmount = isMobile ? 0 : Math.min(scrollY * 0.02, 10);
+  const contentOpacity = Math.max(1 - scrollY * 0.002, 0);
+  const contentTranslate = isMobile ? 0 : scrollY * 0.3;
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -99,18 +119,19 @@ const Hero = () => {
       <div 
         className="absolute inset-0 scale-110 transition-[filter] duration-300"
         style={{ 
-          transform: `translateY(${parallaxOffset}px) scale(1.1)`,
-          filter: `blur(${blurAmount}px)`,
-          willChange: 'transform, filter'
+          transform: isMobile ? 'scale(1.1)' : `translateY(${parallaxOffset}px) scale(1.1)`,
+          filter: blurAmount > 0 ? `blur(${blurAmount}px)` : undefined,
+          willChange: isMobile ? 'auto' : 'transform, filter'
         }}
       >
-        {!videoError && !isSlowConnection ? (
+        {/* Video - only load when shouldLoadVideo is true and conditions are met */}
+        {shouldLoadVideo && !videoError && !isSlowConnection && (
           <video
             autoPlay
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="none"
             className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setVideoError(true)}
             onLoadedData={() => setVideoLoaded(true)}
@@ -118,16 +139,17 @@ const Hero = () => {
           >
             <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
-        ) : null}
-        {/* Fallback image - always rendered for instant display, hidden when video loads */}
+        )}
+        {/* Fallback image - always rendered for instant LCP, hidden when video loads */}
         <img
           src={heroSettings.customFallbackImage || heroImage}
           alt="Apartament de lux"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection ? 'opacity-0' : 'opacity-100'}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
           width={1920}
           height={1080}
           fetchPriority="high"
           decoding="async"
+          loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
       </div>

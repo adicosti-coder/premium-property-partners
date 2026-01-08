@@ -58,7 +58,10 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
               <img
                 src={image}
                 alt={`${propertyName} - ${index + 1}`}
-                loading="lazy"
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding={index === 0 ? "sync" : "async"}
+                width={400}
+                height={224}
                 className="w-full h-56 object-cover transition-transform duration-700 group-hover:scale-105"
               />
             </div>
