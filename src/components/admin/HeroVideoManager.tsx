@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { compressImage } from "@/utils/imageCompression";
 import { 
   Card, 
   CardContent, 
@@ -199,8 +200,15 @@ const HeroVideoManager = () => {
     setImageUploadProgress(0);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `hero-image-${Date.now()}.${fileExt}`;
+      // Compress image to WebP for better performance
+      const compressedFile = await compressImage(file, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 0.90,
+        outputType: 'image/webp',
+      });
+
+      const fileName = `hero-image-${Date.now()}.webp`;
 
       // Delete old image if exists and is not default
       if (settings?.hero_image_filename) {
@@ -215,7 +223,7 @@ const HeroVideoManager = () => {
 
       const { error: uploadError } = await supabase.storage
         .from("hero-videos")
-        .upload(fileName, file, {
+        .upload(fileName, compressedFile, {
           cacheControl: "3600",
           upsert: true,
         });
