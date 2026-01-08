@@ -74,7 +74,7 @@ const WhyUs = () => {
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center max-w-6xl mx-auto">
           {/* Content */}
           <div>
-            <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-6 font-sans">{t.label}</p>
+            <p className="text-primary tracking-widest text-sm font-semibold mb-6 font-sans">{t.label}</p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-8">
               {t.title}
             </h2>
