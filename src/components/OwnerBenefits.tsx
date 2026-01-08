@@ -23,7 +23,7 @@ const OwnerBenefits = () => {
   const { offset: parallaxOffset2 } = useParallax({ speed: 0.1, direction: 'down' });
 
   return (
-    <section className="py-24 bg-hero relative overflow-hidden">
+    <section className="py-24 bg-secondary relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-full h-full" style={{
@@ -66,7 +66,7 @@ const OwnerBenefits = () => {
             return (
               <div
                 key={index}
-                className={`group bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
+                className={`group bg-card backdrop-blur-sm rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
                   gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
                 style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}

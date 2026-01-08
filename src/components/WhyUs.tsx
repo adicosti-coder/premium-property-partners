@@ -59,14 +59,14 @@ const WhyUs = () => {
   const t = translations[language];
 
   return (
-    <section className="section-padding bg-hero relative overflow-hidden">
+    <section className="section-padding bg-background relative overflow-hidden">
       {/* Decorative elements with parallax */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
         style={{ transform: `translateY(${parallaxOffset1}px)` }}
       />
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
         style={{ transform: `translateY(${parallaxOffset2}px)` }}
       />
       
@@ -74,34 +74,34 @@ const WhyUs = () => {
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center max-w-6xl mx-auto">
           {/* Content */}
           <div>
-            <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-6 font-sans">{t.label}</p>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-cream mb-8">
+            <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-6 font-sans">{t.label}</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-8">
               {t.title}
             </h2>
             
             {/* Brand Card */}
-            <div className="bg-cream/5 backdrop-blur-sm rounded-xl p-6 border border-cream/10 mb-8">
+            <div className="bg-card backdrop-blur-sm rounded-xl p-6 border border-border mb-8">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center">
-                  <span className="text-gold font-serif font-bold text-lg">RT</span>
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <span className="text-primary font-serif font-bold text-lg">RT</span>
                 </div>
                 <div>
-                  <p className="font-serif font-semibold text-cream">{t.brandName}</p>
-                  <p className="text-cream/60 text-sm">{t.brandSubtitle}</p>
+                  <p className="font-serif font-semibold text-foreground">{t.brandName}</p>
+                  <p className="text-muted-foreground text-sm">{t.brandSubtitle}</p>
                 </div>
               </div>
-              <p className="text-cream/70 leading-relaxed font-sans text-sm">
+              <p className="text-muted-foreground leading-relaxed font-sans text-sm">
                 {t.description}
               </p>
             </div>
 
             {/* Promise Box */}
-            <div className="bg-gold/10 border border-gold/20 rounded-xl p-5 mb-8">
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-5 mb-8">
               <div className="flex items-center gap-3 mb-2">
-                <Shield className="w-5 h-5 text-gold" />
-                <span className="font-semibold text-gold">{t.promiseTitle}</span>
+                <Shield className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-primary">{t.promiseTitle}</span>
               </div>
-              <p className="text-cream/80 font-sans text-sm leading-relaxed">
+              <p className="text-foreground/80 font-sans text-sm leading-relaxed">
                 {t.promiseText}
               </p>
             </div>
@@ -110,9 +110,9 @@ const WhyUs = () => {
               {t.reasons.map((reason, index) => (
                 <li 
                   key={index} 
-                  className="flex items-start gap-3 text-cream/80 font-sans"
+                  className="flex items-start gap-3 text-foreground/80 font-sans"
                 >
-                  <CheckCircle2 className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span>{reason}</span>
                 </li>
               ))}
@@ -121,27 +121,27 @@ const WhyUs = () => {
           
           {/* Stats card */}
           <div className="relative">
-            <div className="bg-cream/5 backdrop-blur-sm rounded-3xl p-10 border border-cream/10">
+            <div className="bg-card backdrop-blur-sm rounded-3xl p-10 border border-border">
               <div className="text-center mb-8">
-                <p className="text-cream/60 text-sm uppercase tracking-widest mb-2 font-sans">{t.performanceLabel}</p>
+                <p className="text-muted-foreground text-sm uppercase tracking-widest mb-2 font-sans">{t.performanceLabel}</p>
                 <p className="text-5xl md:text-6xl font-serif font-semibold text-gradient-gold">{t.revenueIncrease}</p>
-                <p className="text-cream/70 mt-2 font-sans">{t.revenueDescription}</p>
+                <p className="text-muted-foreground mt-2 font-sans">{t.revenueDescription}</p>
               </div>
               
-              <div className="grid grid-cols-2 gap-6 pt-8 border-t border-cream/10">
+              <div className="grid grid-cols-2 gap-6 pt-8 border-t border-border">
                 <div className="text-center">
-                  <p className="text-2xl font-serif font-semibold text-cream">{t.listingTime}</p>
-                  <p className="text-cream/50 text-sm font-sans">{t.listingTimeLabel}</p>
+                  <p className="text-2xl font-serif font-semibold text-foreground">{t.listingTime}</p>
+                  <p className="text-muted-foreground text-sm font-sans">{t.listingTimeLabel}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-serif font-semibold text-cream">{t.commission}</p>
-                  <p className="text-cream/50 text-sm font-sans">{t.commissionLabel}</p>
+                  <p className="text-2xl font-serif font-semibold text-foreground">{t.commission}</p>
+                  <p className="text-muted-foreground text-sm font-sans">{t.commissionLabel}</p>
                 </div>
               </div>
             </div>
             
             {/* Floating accent */}
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-gold/20 rounded-full blur-2xl" />
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
           </div>
         </div>
       </div>

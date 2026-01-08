@@ -46,6 +46,11 @@
     --cream: 45 100% 96%;
     --slate: 215 20% 55%;
     --slate-light: 215 20% 70%;
+    
+    /* Text contrast helpers */
+    --text-strong: 45 100% 96%;
+    --text-medium: 45 60% 85%;
+    --text-subtle: 215 20% 65%;
 
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(222 47% 6%) 0%, hsl(222 30% 12%) 100%);
@@ -72,39 +77,53 @@
 
   .light {
     --background: 45 30% 97%;
-    --foreground: 222 47% 11%;
+    --foreground: 222 47% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 47% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 222 47% 15%;
 
-    --primary: 45 93% 45%;
+    --primary: 45 93% 40%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 45 30% 92%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary-foreground: 222 47% 15%;
 
     --muted: 45 20% 93%;
-    --muted-foreground: 222 20% 40%;
+    --muted-foreground: 222 25% 35%;
 
-    --accent: 45 80% 48%;
+    --accent: 45 80% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 45 20% 88%;
-    --input: 45 20% 88%;
+    --border: 45 20% 85%;
+    --input: 45 20% 85%;
     --ring: 45 93% 45%;
+    
+    /* Text contrast helpers - Light Theme */
+    --text-strong: 222 47% 15%;
+    --text-medium: 222 35% 30%;
+    --text-subtle: 222 20% 45%;
+    
+    /* Light mode gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(45 30% 97%) 0%, hsl(45 25% 93%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(45 30% 97%) 0%, hsl(45 25% 94%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(45 20% 98%) 100%);
+    
+    /* Light mode shadows */
+    --shadow-elegant: 0 25px 50px -12px hsl(222 30% 20% / 0.15);
+    --shadow-card: 0 10px 40px -10px hsl(222 30% 20% / 0.1);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 45 93% 45%;
+    --sidebar-foreground: 222 47% 15%;
+    --sidebar-primary: 45 93% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 45 30% 95%;
-    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-accent-foreground: 222 47% 15%;
     --sidebar-border: 45 20% 88%;
     --sidebar-ring: 45 93% 45%;
   }
