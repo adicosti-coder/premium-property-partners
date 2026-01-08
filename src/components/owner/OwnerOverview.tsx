@@ -162,7 +162,7 @@ const OwnerOverview = ({ propertyId }: OwnerOverviewProps) => {
             <div className="text-2xl font-bold text-foreground">
               {netIncome.toLocaleString()} €
             </div>
-            <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
+            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mt-1">
               <ArrowUpRight className="w-3 h-3" />
               <span>+12% {t.fromMonth}</span>
             </div>
