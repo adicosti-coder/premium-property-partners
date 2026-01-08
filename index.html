@@ -83,6 +83,15 @@
       }
     }
     </script>
+    
+    <!-- Theme initialization script to prevent flash -->
+    <script>
+      (function() {
+        const stored = localStorage.getItem('theme');
+        const theme = stored || 'dark';
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
   </head>
 
   <body>

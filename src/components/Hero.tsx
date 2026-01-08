@@ -190,10 +190,12 @@ const Hero = () => {
             tags={heroSettings.customTags && heroSettings.customTags.length > 0 
               ? heroSettings.customTags 
               : [
-                  t.hero.tags?.hotelManagement || "Administrare regim hotelier", 
-                  t.hero.tags?.dynamicPricing || "Prețuri dinamice", 
-                  t.hero.tags?.selfCheckIn || "Self check-in 24/7", 
-                  t.hero.tags?.cleaning || "Curățenie profesională"
+                  t.hero.tags?.hotelManagement || "Dynamic pricing", 
+                  t.hero.tags?.dynamicPricing || "Self check-in 24/7", 
+                  t.hero.tags?.selfCheckIn || "Curățenie hotel", 
+                  t.hero.tags?.cleaning || "Mentenanță",
+                  t.hero.tags?.reviews || "Recenzii & suport",
+                  t.hero.tags?.reporting || "Raportare"
                 ]
             }
             t={t}
