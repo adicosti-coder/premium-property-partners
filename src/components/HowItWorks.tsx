@@ -19,7 +19,7 @@ const HowItWorks = () => {
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-6 font-sans">{t.howItWorks.label}</p>
+          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-6 font-sans">{t.howItWorks.label}</p>
           <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-6">
             {t.howItWorks.title}
           </h2>
@@ -49,9 +49,9 @@ const HowItWorks = () => {
                     {/* Number badge */}
                     <div className="relative inline-flex items-center justify-center mb-8">
                       <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
-                        <Icon className="w-10 h-10 text-primary group-hover:text-cream transition-colors duration-300" />
+                        <Icon className="w-10 h-10 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
                       </div>
-                      <span className="absolute -top-2 -right-2 w-9 h-9 rounded-full bg-gold text-primary text-sm font-bold flex items-center justify-center font-sans">
+                      <span className="absolute -top-2 -right-2 w-9 h-9 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center font-sans">
                         {numbers[index]}
                       </span>
                     </div>
