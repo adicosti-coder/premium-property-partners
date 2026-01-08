@@ -38,7 +38,7 @@ const FinancialTransparency = () => {
         {
           icon: Receipt,
           title: "Facturare Ulterioară",
-          description: "La finalul lunii, îți trimitem factura pentru comisionul de administrare de 15%",
+          description: "La finalul lunii, îți trimitem factura pentru comisionul de administrare de 20%",
           highlight: "Plătești după ce încasezi"
         },
         {
@@ -104,7 +104,7 @@ const FinancialTransparency = () => {
         {
           icon: Receipt,
           title: "Subsequent Invoicing",
-          description: "At the end of the month, we send you the invoice for the 15% management commission",
+          description: "At the end of the month, we send you the invoice for the 20% management commission",
           highlight: "Pay after you collect"
         },
         {
