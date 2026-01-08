@@ -22,7 +22,7 @@ const CTA = () => {
               {t.cta.primaryButton}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="outline" size="xl" className="border-primary/20 hover:bg-primary hover:text-cream">
+            <Button variant="outline" size="xl" className="border-primary/20 hover:bg-primary hover:text-primary-foreground">
               <Phone className="mr-2 h-5 w-5" />
               {t.cta.secondaryButton}
             </Button>

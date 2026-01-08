@@ -128,9 +128,9 @@ const AccessibilityPanel = () => {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full shadow-lg",
-          "bg-gold hover:bg-gold/90 text-primary",
+          "bg-primary hover:bg-primary/90 text-primary-foreground",
           "transition-all duration-300 ease-out",
-          isOpen && "rotate-180 bg-primary text-cream hover:bg-primary/90"
+          isOpen && "rotate-180 bg-accent text-accent-foreground hover:bg-accent/90"
         )}
         size="icon"
         aria-label={tr.accessibility}
@@ -165,7 +165,7 @@ const AccessibilityPanel = () => {
           {/* Font Size */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Type className="w-4 h-4 text-gold" />
+              <Type className="w-4 h-4 text-primary" />
               {tr.fontSize}
             </label>
             <div className="grid grid-cols-4 gap-1">
@@ -177,7 +177,7 @@ const AccessibilityPanel = () => {
                   onClick={() => setFontSize(size)}
                   className={cn(
                     "transition-all duration-200 text-xs px-2",
-                    fontSize === size && "bg-gold text-primary hover:bg-gold/90"
+                    fontSize === size && "bg-primary text-primary-foreground hover:bg-primary/90"
                   )}
                 >
                   {tr[size]}
@@ -189,7 +189,7 @@ const AccessibilityPanel = () => {
           {/* High Contrast */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Contrast className="w-4 h-4 text-gold" />
+              <Contrast className="w-4 h-4 text-primary" />
               {tr.highContrast}
             </label>
             <div className="flex gap-2">
@@ -199,7 +199,7 @@ const AccessibilityPanel = () => {
                 onClick={() => setHighContrast(true)}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  highContrast && "bg-gold text-primary hover:bg-gold/90"
+                  highContrast && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
               >
                 {tr.on}
@@ -221,7 +221,7 @@ const AccessibilityPanel = () => {
           {/* Reduced Motion */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Zap className="w-4 h-4 text-gold" />
+              <Zap className="w-4 h-4 text-primary" />
               {tr.reducedMotion}
             </label>
             <div className="flex gap-2">
@@ -231,7 +231,7 @@ const AccessibilityPanel = () => {
                 onClick={() => setReducedMotion(true)}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  reducedMotion && "bg-gold text-primary hover:bg-gold/90"
+                  reducedMotion && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
               >
                 {tr.on}
@@ -254,9 +254,9 @@ const AccessibilityPanel = () => {
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
               {theme === "dark" ? (
-                <Moon className="w-4 h-4 text-gold" />
+                <Moon className="w-4 h-4 text-primary" />
               ) : (
-                <Sun className="w-4 h-4 text-gold" />
+                <Sun className="w-4 h-4 text-primary" />
               )}
               {tr.theme}
             </label>
@@ -267,7 +267,7 @@ const AccessibilityPanel = () => {
                 onClick={() => setTheme("light")}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  theme === "light" && "bg-gold text-primary hover:bg-gold/90"
+                  theme === "light" && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
               >
                 <Sun className="w-4 h-4 mr-1" />
@@ -279,7 +279,7 @@ const AccessibilityPanel = () => {
                 onClick={() => setTheme("dark")}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  theme === "dark" && "bg-gold text-primary hover:bg-gold/90"
+                  theme === "dark" && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
               >
                 <Moon className="w-4 h-4 mr-1" />
@@ -291,7 +291,7 @@ const AccessibilityPanel = () => {
           {/* Language Toggle */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Globe className="w-4 h-4 text-gold" />
+              <Globe className="w-4 h-4 text-primary" />
               {tr.language}
             </label>
             <div className="flex gap-2">
@@ -301,7 +301,7 @@ const AccessibilityPanel = () => {
                 onClick={() => setLanguage("ro")}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  language === "ro" && "bg-gold text-primary hover:bg-gold/90"
+                  language === "ro" && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
               >
                 🇷🇴 Română
@@ -312,7 +312,7 @@ const AccessibilityPanel = () => {
                 onClick={() => setLanguage("en")}
                 className={cn(
                   "flex-1 transition-all duration-200",
-                  language === "en" && "bg-gold text-primary hover:bg-gold/90"
+                  language === "en" && "bg-primary text-primary-foreground hover:bg-primary/90"
                 )}
               >
                 🇬🇧 English
