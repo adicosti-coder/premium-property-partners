@@ -49,7 +49,7 @@ const OwnerBenefits = () => {
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">
+          <p className="text-primary tracking-widest text-sm font-semibold mb-4">
             {t.ownerBenefits.label}
           </p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
