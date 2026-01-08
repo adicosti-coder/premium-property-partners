@@ -38,8 +38,8 @@ const Benefits = () => {
                 style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
               >
                 {/* Icon container */}
-                <div className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center mb-8 group-hover:bg-gold transition-colors duration-300">
-                  <Icon className="w-8 h-8 text-cream" />
+                <div className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center mb-8 group-hover:bg-amber-500 transition-colors duration-300">
+                  <Icon className="w-8 h-8 text-primary-foreground" />
                 </div>
                 
                 <h3 className="text-xl lg:text-2xl heading-premium text-foreground mb-4">
@@ -51,7 +51,7 @@ const Benefits = () => {
                 </p>
                 
                 {/* Subtle hover accent */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-gold/0 via-gold to-gold/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-2xl" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-2xl" />
               </div>
             );
           })}
