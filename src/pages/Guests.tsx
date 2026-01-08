@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
 import PropertyImageCarousel from "@/components/PropertyImageCarousel";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -564,11 +565,11 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                       <Calendar className="w-4 h-4 mr-1" />
                       {language === 'ro' ? 'Rezervă Direct' : 'Book Direct'}
                     </Button>
-                    <Link to={`/proprietate/${property.slug}`}>
+                    <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
                       <Button variant="booking" size="sm">
                         <Eye className="w-4 h-4" />
                       </Button>
-                    </Link>
+                    </PrefetchLink>
                   </div>
                 </div>
               </article>
