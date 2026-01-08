@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/utils/imageCompression";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -376,12 +377,19 @@ export default function ComplexManager() {
     setIsUploadingImage(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${editingComplex.id}/${Date.now()}.${fileExt}`;
+      // Compress image to WebP
+      const compressedFile = await compressImage(file, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 0.85,
+        outputType: 'image/webp',
+      });
+
+      const fileName = `${editingComplex.id}/${Date.now()}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("property-images")
-        .upload(fileName, file);
+        .upload(fileName, compressedFile);
 
       if (uploadError) throw uploadError;
 
