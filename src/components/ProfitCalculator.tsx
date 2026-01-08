@@ -13,7 +13,7 @@ const ProfitCalculator = () => {
   const [adr, setAdr] = useState(80);
   const [occupancy, setOccupancy] = useState(75);
   const [cleaningCost, setCleaningCost] = useState(25);
-  const [managementFee, setManagementFee] = useState(18);
+  const [managementFee, setManagementFee] = useState(20);
   const [platformFee, setPlatformFee] = useState(15);
   const [avgStayDuration, setAvgStayDuration] = useState(3);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
