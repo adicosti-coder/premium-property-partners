@@ -48,6 +48,9 @@ import {
   MessageSquare,
   Filter,
   BarChart3,
+  Eye,
+  EyeOff,
+  CheckCheck,
 } from "lucide-react";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -92,6 +95,7 @@ interface Lead {
   source: string | null;
   email: string | null;
   message: string | null;
+  is_read: boolean;
 }
 
 type LeadFromDB = Omit<Lead, "simulation_data"> & {
@@ -154,8 +158,10 @@ const LeadsManager = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingReadId, setTogglingReadId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [readFilter, setReadFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -201,6 +207,14 @@ const LeadsManager = () => {
       studio: "Garsonieră",
       house: "Casă",
       unknown: "Necunoscut",
+      markAsRead: "Marchează ca citit",
+      markAsUnread: "Marchează ca necitit",
+      readStatus: "Status citire",
+      allLeads: "Toate",
+      unreadOnly: "Necitite",
+      readOnly: "Citite",
+      markAllAsRead: "Marchează toate ca citite",
+      unreadCount: "necitite",
     },
     en: {
       title: "Leads Manager",
@@ -243,6 +257,14 @@ const LeadsManager = () => {
       studio: "Studio",
       house: "House",
       unknown: "Unknown",
+      markAsRead: "Mark as read",
+      markAsUnread: "Mark as unread",
+      readStatus: "Read status",
+      allLeads: "All",
+      unreadOnly: "Unread",
+      readOnly: "Read",
+      markAllAsRead: "Mark all as read",
+      unreadCount: "unread",
     },
   };
 
@@ -354,6 +376,52 @@ const LeadsManager = () => {
     }
   };
 
+  const handleToggleRead = async (id: string, currentStatus: boolean) => {
+    setTogglingReadId(id);
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update({ is_read: !currentStatus })
+        .eq("id", id);
+      
+      if (error) throw error;
+      
+      setLeads(leads.map((lead) => 
+        lead.id === id ? { ...lead, is_read: !currentStatus } : lead
+      ));
+    } catch (error) {
+      console.error("Error toggling read status:", error);
+      toast({
+        title: text.error,
+        variant: "destructive",
+      });
+    } finally {
+      setTogglingReadId(null);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const unreadIds = leads.filter(l => !l.is_read).map(l => l.id);
+      if (unreadIds.length === 0) return;
+
+      const { error } = await supabase
+        .from("leads")
+        .update({ is_read: true })
+        .in("id", unreadIds);
+      
+      if (error) throw error;
+      
+      setLeads(leads.map((lead) => ({ ...lead, is_read: true })));
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      toast({
+        title: text.error,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
       // Search filter
@@ -391,9 +459,17 @@ const LeadsManager = () => {
         });
       }
 
-      return searchMatch && sourceMatch && dateMatch;
+      // Read status filter
+      let readMatch = true;
+      if (readFilter === "unread") {
+        readMatch = !lead.is_read;
+      } else if (readFilter === "read") {
+        readMatch = lead.is_read;
+      }
+
+      return searchMatch && sourceMatch && dateMatch && readMatch;
     });
-  }, [leads, searchTerm, sourceFilter, dateFilter]);
+  }, [leads, searchTerm, sourceFilter, dateFilter, readFilter]);
 
   // Stats calculations
   const stats = useMemo(() => {
@@ -413,7 +489,9 @@ const LeadsManager = () => {
       ? Math.round(leads.reduce((acc, l) => acc + l.property_area, 0) / leads.length)
       : 0;
 
-    return { total: leads.length, thisWeek, thisMonth, avgProfit, avgArea };
+    const unreadCount = leads.filter((l) => !l.is_read).length;
+
+    return { total: leads.length, thisWeek, thisMonth, avgProfit, avgArea, unreadCount };
   }, [leads]);
 
   // Chart data - Leads by source
@@ -665,7 +743,33 @@ const LeadsManager = () => {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
+              <Select value={readFilter} onValueChange={setReadFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <Eye className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder={text.readStatus} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{text.allLeads}</SelectItem>
+                  <SelectItem value="unread">
+                    <span className="flex items-center gap-2">
+                      <EyeOff className="w-3 h-3" />
+                      {text.unreadOnly}
+                      {stats.unreadCount > 0 && (
+                        <Badge variant="secondary" className="ml-1 bg-orange-500 text-white text-xs">
+                          {stats.unreadCount}
+                        </Badge>
+                      )}
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="read">
+                    <span className="flex items-center gap-2">
+                      <Eye className="w-3 h-3" />
+                      {text.readOnly}
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
                 <SelectTrigger className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
@@ -695,6 +799,12 @@ const LeadsManager = () => {
                 <Download className="w-4 h-4 mr-2" />
                 {text.export}
               </Button>
+              {stats.unreadCount > 0 && (
+                <Button variant="outline" onClick={handleMarkAllAsRead}>
+                  <CheckCheck className="w-4 h-4 mr-2" />
+                  {text.markAllAsRead}
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -724,16 +834,24 @@ const LeadsManager = () => {
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead) => (
-                  <TableRow key={lead.id}>
+                  <TableRow 
+                    key={lead.id} 
+                    className={!lead.is_read ? "bg-primary/5 hover:bg-primary/10" : ""}
+                  >
                     <TableCell className="font-medium">
-                      <div>
-                        <p>{lead.name}</p>
-                        {lead.message && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                            <MessageSquare className="w-3 h-3" />
-                            {lead.message.substring(0, 50)}...
-                          </p>
+                      <div className="flex items-center gap-2">
+                        {!lead.is_read && (
+                          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                         )}
+                        <div>
+                          <p className={!lead.is_read ? "font-semibold" : ""}>{lead.name}</p>
+                          {lead.message && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <MessageSquare className="w-3 h-3" />
+                              {lead.message.substring(0, 50)}...
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -799,36 +917,53 @@ const LeadsManager = () => {
                       })}
                     </TableCell>
                     <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            {deletingId === lead.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>{text.deleteConfirm}</AlertDialogTitle>
-                            <AlertDialogDescription>{text.deleteDescription}</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>{text.cancel}</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(lead.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleRead(lead.id, lead.is_read)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title={lead.is_read ? text.markAsUnread : text.markAsRead}
+                        >
+                          {togglingReadId === lead.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : lead.is_read ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                              {text.delete}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              {deletingId === lead.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{text.deleteConfirm}</AlertDialogTitle>
+                              <AlertDialogDescription>{text.deleteDescription}</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{text.cancel}</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(lead.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {text.delete}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

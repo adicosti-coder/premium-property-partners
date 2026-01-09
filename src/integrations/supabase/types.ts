@@ -219,6 +219,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_read: boolean
           message: string | null
           name: string
           property_area: number
@@ -233,6 +234,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_read?: boolean
           message?: string | null
           name: string
           property_area: number
@@ -247,6 +249,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_read?: boolean
           message?: string | null
           name?: string
           property_area?: number
