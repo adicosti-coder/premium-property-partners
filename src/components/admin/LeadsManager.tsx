@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -212,9 +213,63 @@ const LeadsManager = () => {
 
   const text = translations[language as keyof typeof translations] || translations.en;
 
+  const { toast: showToast } = useToast();
+
+  // Initial fetch
   useEffect(() => {
     fetchLeads();
   }, []);
+
+  // Realtime subscription for new leads
+  useEffect(() => {
+    const channel = supabase
+      .channel('leads-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'leads'
+        },
+        (payload) => {
+          console.log('New lead received:', payload);
+          const newLead = payload.new as LeadFromDB;
+          const typedLead: Lead = {
+            ...newLead,
+            simulation_data: newLead.simulation_data as Lead["simulation_data"],
+          };
+          
+          // Add new lead to the top of the list
+          setLeads((prevLeads) => [typedLead, ...prevLeads]);
+          
+          // Show notification
+          const sourceLabel = sourceLabels[newLead.source || 'calculator']?.[language as 'ro' | 'en'] || newLead.source;
+          showToast({
+            title: language === 'ro' ? '🎉 Lead nou!' : '🎉 New Lead!',
+            description: language === 'ro' 
+              ? `${newLead.name} a trimis un lead din ${sourceLabel}`
+              : `${newLead.name} submitted a lead from ${sourceLabel}`,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'leads'
+        },
+        (payload) => {
+          const deletedId = (payload.old as { id: string }).id;
+          setLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== deletedId));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [language, showToast]);
 
   const fetchLeads = async () => {
     setIsLoading(true);
