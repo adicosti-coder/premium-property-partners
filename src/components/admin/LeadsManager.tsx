@@ -52,6 +52,7 @@ import {
   EyeOff,
   CheckCheck,
 } from "lucide-react";
+import LeadNotesDialog from "./LeadNotesDialog";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -918,6 +919,7 @@ const LeadsManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        <LeadNotesDialog leadId={lead.id} leadName={lead.name} />
                         <Button
                           variant="ghost"
                           size="icon"
