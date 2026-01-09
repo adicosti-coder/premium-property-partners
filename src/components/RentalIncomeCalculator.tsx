@@ -112,33 +112,36 @@ const RentalIncomeCalculator = () => {
     const locationData = locationTypes.find(l => l.id === data.locationType);
     const income = calculateIncome();
 
+    const simulationData = {
+      city: data.city,
+      cityName: city,
+      rooms: data.rooms,
+      roomName: room?.name || '',
+      locationType: data.locationType,
+      locationName: location,
+      multiplier: locationData?.multiplier || 1,
+      baseValue: room?.baseValue || 0,
+      estimatedMin: income.min,
+      estimatedMax: income.max,
+      estimatedBase: income.base,
+      longTermRent: income.longTermRent,
+      percentageIncrease: income.percentageIncrease,
+      calculatedAt: new Date().toISOString(),
+    };
+
     setIsSavingLead(true);
     
     try {
+      // Save lead to database
       const { error } = await supabase.from('leads').insert({
         name: `Calculator Lead - ${city}`,
-        whatsapp_number: 'pending', // Will be updated when they message
+        whatsapp_number: 'pending',
         property_type: room?.name || data.rooms,
-        property_area: room?.baseValue || 0, // Using baseValue as a reference
+        property_area: room?.baseValue || 0,
         calculated_net_profit: income.base,
         calculated_yearly_profit: income.base * 12,
         source: 'rental-calculator',
-        simulation_data: {
-          city: data.city,
-          cityName: city,
-          rooms: data.rooms,
-          roomName: room?.name,
-          locationType: data.locationType,
-          locationName: location,
-          multiplier: locationData?.multiplier,
-          baseValue: room?.baseValue,
-          estimatedMin: income.min,
-          estimatedMax: income.max,
-          estimatedBase: income.base,
-          longTermRent: income.longTermRent,
-          percentageIncrease: income.percentageIncrease,
-          calculatedAt: new Date().toISOString(),
-        },
+        simulation_data: simulationData,
       });
 
       if (error) {
@@ -147,6 +150,24 @@ const RentalIncomeCalculator = () => {
       } else {
         setLeadSaved(true);
         console.log('Lead saved successfully');
+
+        // Send email notification
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-lead-notification', {
+            body: {
+              source: 'rental-calculator',
+              simulationData,
+            },
+          });
+
+          if (emailError) {
+            console.error('Error sending email notification:', emailError);
+          } else {
+            console.log('Email notification sent successfully');
+          }
+        } catch (emailErr) {
+          console.error('Error invoking email function:', emailErr);
+        }
       }
     } catch (err) {
       console.error('Error saving lead:', err);
