@@ -935,7 +935,7 @@ const LeadsManager = () => {
                           }`}>
                             <CalendarClock className="w-3 h-3" />
                             <span className="font-medium">
-                              Follow-up: {format(new Date(lead.follow_up_date), "d MMM", { locale: dateLocale })}
+                              Follow-up: {format(new Date(lead.follow_up_date), "d MMM, HH:mm", { locale: dateLocale })}
                             </span>
                           </div>
                         )}

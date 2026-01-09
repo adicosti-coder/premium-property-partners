@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -16,11 +18,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, MessageSquarePlus, Send, StickyNote, Clock, CalendarClock, Bell, X, Check } from "lucide-react";
-import { format, isBefore, startOfDay } from "date-fns";
+import { format, isBefore, startOfDay, setHours, setMinutes } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -39,6 +48,11 @@ interface LeadNotesDialogProps {
   onFollowUpChange: (date: string | null) => void;
 }
 
+// Generate hour options (0-23)
+const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
+// Generate minute options (0, 15, 30, 45)
+const minutes = ["00", "15", "30", "45"];
+
 const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: LeadNotesDialogProps) => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -49,6 +63,12 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
   const [notesCount, setNotesCount] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     followUpDate ? new Date(followUpDate) : undefined
+  );
+  const [selectedHour, setSelectedHour] = useState<string>(
+    followUpDate ? format(new Date(followUpDate), "HH") : "09"
+  );
+  const [selectedMinute, setSelectedMinute] = useState<string>(
+    followUpDate ? format(new Date(followUpDate), "mm") : "00"
   );
   const [isSavingReminder, setIsSavingReminder] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -69,15 +89,18 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
       saveSuccess: "Notiță adăugată",
       notesTab: "Notițe",
       reminderTab: "Reminder",
-      setReminder: "Setează reminder",
+      setReminder: "Setează data și ora",
       reminderSet: "Reminder setat",
       reminderCleared: "Reminder anulat",
       clearReminder: "Anulează reminder",
       saveReminder: "Salvează",
       noReminder: "Niciun reminder setat",
-      reminderDescription: "Selectează o dată pentru follow-up. Vei primi o notificare automată.",
+      reminderDescription: "Selectează data și ora pentru follow-up. Vei primi o notificare automată.",
       reminderActive: "Follow-up programat:",
       reminderError: "Nu am putut salva reminder-ul",
+      selectTime: "Ora:",
+      at: "la",
+      cancel: "Anulează",
     },
     en: {
       title: "Notes & Follow-up",
@@ -92,15 +115,18 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
       saveSuccess: "Note added",
       notesTab: "Notes",
       reminderTab: "Reminder",
-      setReminder: "Set reminder",
+      setReminder: "Set date and time",
       reminderSet: "Reminder set",
       reminderCleared: "Reminder cleared",
       clearReminder: "Clear reminder",
       saveReminder: "Save",
       noReminder: "No reminder set",
-      reminderDescription: "Select a date for follow-up. You will receive an automatic notification.",
+      reminderDescription: "Select date and time for follow-up. You will receive an automatic notification.",
       reminderActive: "Follow-up scheduled:",
       reminderError: "Could not save reminder",
+      selectTime: "Time:",
+      at: "at",
+      cancel: "Cancel",
     },
   };
 
@@ -113,7 +139,19 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
   }, [isOpen, leadId]);
 
   useEffect(() => {
-    setSelectedDate(followUpDate ? new Date(followUpDate) : undefined);
+    if (followUpDate) {
+      const date = new Date(followUpDate);
+      setSelectedDate(date);
+      setSelectedHour(format(date, "HH"));
+      // Round to nearest 15 minutes for display
+      const mins = date.getMinutes();
+      const roundedMins = Math.round(mins / 15) * 15;
+      setSelectedMinute(roundedMins === 60 ? "00" : roundedMins.toString().padStart(2, "0"));
+    } else {
+      setSelectedDate(undefined);
+      setSelectedHour("09");
+      setSelectedMinute("00");
+    }
   }, [followUpDate]);
 
   // Fetch notes count on mount
@@ -187,17 +225,27 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
     }
   };
 
+  const getDateTimeWithTime = () => {
+    if (!selectedDate) return null;
+    let dateWithTime = setHours(selectedDate, parseInt(selectedHour));
+    dateWithTime = setMinutes(dateWithTime, parseInt(selectedMinute));
+    return dateWithTime;
+  };
+
   const handleSaveReminder = async () => {
+    const dateTime = getDateTimeWithTime();
+    if (!dateTime) return;
+
     setIsSavingReminder(true);
     try {
       const { error } = await supabase
         .from("leads")
-        .update({ follow_up_date: selectedDate?.toISOString() || null })
+        .update({ follow_up_date: dateTime.toISOString() })
         .eq("id", leadId);
 
       if (error) throw error;
 
-      onFollowUpChange(selectedDate?.toISOString() || null);
+      onFollowUpChange(dateTime.toISOString());
       toast({ title: text.reminderSet });
       setIsCalendarOpen(false);
     } catch (error) {
@@ -223,6 +271,8 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
       if (error) throw error;
 
       setSelectedDate(undefined);
+      setSelectedHour("09");
+      setSelectedMinute("00");
       onFollowUpChange(null);
       toast({ title: text.reminderCleared });
     } catch (error) {
@@ -244,7 +294,7 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
   };
 
   const hasReminder = !!followUpDate;
-  const isPastDue = followUpDate ? isBefore(new Date(followUpDate), startOfDay(new Date())) : false;
+  const isPastDue = followUpDate ? isBefore(new Date(followUpDate), new Date()) : false;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -384,6 +434,9 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
                         {format(new Date(followUpDate!), "EEEE, d MMMM yyyy", {
                           locale: dateLocale,
                         })}
+                        <span className="ml-2 text-base">
+                          {text.at} {format(new Date(followUpDate!), "HH:mm")}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -403,9 +456,10 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
                 </div>
               )}
 
-              {/* Date picker */}
-              <div className="space-y-2">
+              {/* Date and time picker */}
+              <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">{text.reminderDescription}</p>
+                
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -417,7 +471,9 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
                     >
                       <CalendarClock className="mr-2 h-4 w-4" />
                       {selectedDate ? (
-                        format(selectedDate, "PPP", { locale: dateLocale })
+                        <>
+                          {format(selectedDate, "PPP", { locale: dateLocale })} {text.at} {selectedHour}:{selectedMinute}
+                        </>
                       ) : (
                         text.setReminder
                       )}
@@ -432,13 +488,80 @@ const LeadNotesDialog = ({ leadId, leadName, followUpDate, onFollowUpChange }: L
                       initialFocus
                       locale={dateLocale}
                     />
+                    
+                    {/* Time picker */}
+                    <div className="p-3 border-t space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {text.selectTime}
+                        </Label>
+                        <div className="flex items-center gap-1">
+                          <Select value={selectedHour} onValueChange={setSelectedHour}>
+                            <SelectTrigger className="w-[70px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {hours.map((hour) => (
+                                <SelectItem key={hour} value={hour}>
+                                  {hour}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-lg font-medium">:</span>
+                          <Select value={selectedMinute} onValueChange={setSelectedMinute}>
+                            <SelectTrigger className="w-[70px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {minutes.map((minute) => (
+                                <SelectItem key={minute} value={minute}>
+                                  {minute}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      {/* Quick time presets */}
+                      <div className="flex flex-wrap gap-1">
+                        {[
+                          { label: "09:00", hour: "09", min: "00" },
+                          { label: "10:00", hour: "10", min: "00" },
+                          { label: "12:00", hour: "12", min: "00" },
+                          { label: "14:00", hour: "14", min: "00" },
+                          { label: "16:00", hour: "16", min: "00" },
+                          { label: "18:00", hour: "18", min: "00" },
+                        ].map((preset) => (
+                          <Button
+                            key={preset.label}
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "text-xs px-2 h-7",
+                              selectedHour === preset.hour && selectedMinute === preset.min && 
+                              "bg-primary text-primary-foreground hover:bg-primary/90"
+                            )}
+                            onClick={() => {
+                              setSelectedHour(preset.hour);
+                              setSelectedMinute(preset.min);
+                            }}
+                          >
+                            {preset.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    
                     <div className="p-3 border-t flex justify-end gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setIsCalendarOpen(false)}
                       >
-                        {language === "ro" ? "Anulează" : "Cancel"}
+                        {text.cancel}
                       </Button>
                       <Button
                         size="sm"
