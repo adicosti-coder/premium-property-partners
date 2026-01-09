@@ -114,6 +114,41 @@ const sourceLabels: Record<string, { ro: string; en: string; color: string }> = 
   real_estate_contact: { ro: "Contact Imobiliare", en: "Real Estate Contact", color: "bg-orange-500" },
 };
 
+// Notification sound using Web Audio API
+const playNotificationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Create a pleasant notification sound (two-tone chime)
+    const playTone = (frequency: number, startTime: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      // Smooth envelope
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+    
+    const now = audioContext.currentTime;
+    playTone(880, now, 0.15); // A5
+    playTone(1100, now + 0.15, 0.2); // C#6
+    playTone(1320, now + 0.3, 0.25); // E6
+    
+  } catch (error) {
+    console.log('Could not play notification sound:', error);
+  }
+};
+
 const LeadsManager = () => {
   const { t, language } = useLanguage();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -241,6 +276,9 @@ const LeadsManager = () => {
           
           // Add new lead to the top of the list
           setLeads((prevLeads) => [typedLead, ...prevLeads]);
+          
+          // Play notification sound
+          playNotificationSound();
           
           // Show notification
           const sourceLabel = sourceLabels[newLead.source || 'calculator']?.[language as 'ro' | 'en'] || newLead.source;
