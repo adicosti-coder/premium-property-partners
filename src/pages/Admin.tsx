@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -65,6 +66,7 @@ import HeroVideoManager from "@/components/admin/HeroVideoManager";
 import HeroTextManager from "@/components/admin/HeroTextManager";
 import LeadsManager from "@/components/admin/LeadsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
 interface Lead {
   id: string;
@@ -100,6 +102,7 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
+  const { newLeadsCount } = useNewLeadsNotification(activeTab);
   const dateLocale = language === 'ro' ? ro : enUS;
 
   useEffect(() => {
@@ -238,9 +241,17 @@ const Admin = () => {
               <LayoutDashboard className="w-4 h-4" />
               {t.admin.tabs?.dashboard || "Dashboard"}
             </TabsTrigger>
-            <TabsTrigger value="leads" className="flex items-center gap-2">
+            <TabsTrigger value="leads" className="flex items-center gap-2 relative">
               <Users className="w-4 h-4" />
               {t.admin.tabs?.leads || "Leads"}
+              {newLeadsCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 min-w-5 h-5 text-xs px-1.5 animate-bounce"
+                >
+                  {newLeadsCount > 99 ? '99+' : newLeadsCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="bookings" className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4" />
