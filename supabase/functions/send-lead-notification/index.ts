@@ -47,7 +47,14 @@ interface RentalCalculatorLead {
   };
 }
 
-type LeadNotificationRequest = ProfitCalculatorLead | RentalCalculatorLead;
+interface QuickFormLead {
+  source: 'quick_form';
+  name: string;
+  whatsappNumber: string;
+  propertyType: string;
+}
+
+type LeadNotificationRequest = ProfitCalculatorLead | RentalCalculatorLead | QuickFormLead;
 
 const propertyTypeLabels: Record<string, string> = {
   apartament: "Apartament",
@@ -259,6 +266,69 @@ const generateRentalCalculatorEmail = (leadData: RentalCalculatorLead): string =
   `;
 };
 
+const generateQuickFormEmail = (leadData: QuickFormLead): string => {
+  const propertyTypeLabel = propertyTypeLabels[leadData.propertyType] || leadData.propertyType;
+  const whatsappClean = leadData.whatsappNumber.replace(/[^0-9]/g, '');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">⚡ Lead Rapid - Evaluare Gratuită</h1>
+          <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">Formular Quick Lead</p>
+        </div>
+        
+        <div style="background-color: #ffffff; padding: 32px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+            <p style="margin: 0; color: #92400e; font-size: 14px;">
+              🔥 Lead rapid care solicită evaluare gratuită!
+            </p>
+          </div>
+          
+          <h2 style="color: #1a365d; margin-top: 0; margin-bottom: 24px; font-size: 20px;">📋 Detalii Contact</h2>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <tr>
+              <td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #71717a; width: 40%;">👤 Nume</td>
+              <td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 600; font-size: 18px;">${leadData.name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #71717a;">📱 WhatsApp</td>
+              <td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 600;">
+                <a href="https://wa.me/${whatsappClean}" style="color: #0d453a; text-decoration: none; font-size: 18px;">${leadData.whatsappNumber}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 16px; color: #71717a;">🏠 Tip Proprietate</td>
+              <td style="padding: 16px; color: #18181b; font-weight: 600; font-size: 18px;">${propertyTypeLabel}</td>
+            </tr>
+          </table>
+          
+          <div style="text-align: center; padding-top: 24px; border-top: 1px solid #e4e4e7;">
+            <a href="https://wa.me/${whatsappClean}" style="display: inline-block; background-color: #25d366; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+              📱 Contactează pe WhatsApp
+            </a>
+            <p style="color: #71717a; font-size: 12px; margin-top: 16px;">
+              Răspunde rapid pentru cea mai bună conversie!
+            </p>
+          </div>
+        </div>
+        
+        <p style="text-align: center; color: #71717a; font-size: 12px; margin-top: 24px;">
+          Acest email a fost trimis automat de sistemul RealTrust.
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("Received request to send lead notification");
   
@@ -278,6 +348,11 @@ const handler = async (req: Request): Promise<Response> => {
       const { simulationData } = leadData;
       htmlContent = generateRentalCalculatorEmail(leadData);
       emailSubject = `📊 Calculator Venituri: ${simulationData.roomName} în ${simulationData.locationName}, ${simulationData.cityName} - ${simulationData.estimatedBase}€/lună`;
+    } else if (leadData.source === 'quick_form') {
+      const quickLead = leadData as QuickFormLead;
+      const propertyTypeLabel = propertyTypeLabels[quickLead.propertyType] || quickLead.propertyType;
+      htmlContent = generateQuickFormEmail(quickLead);
+      emailSubject = `⚡ Lead Rapid: ${quickLead.name} - ${propertyTypeLabel}`;
     } else {
       const profitLead = leadData as ProfitCalculatorLead;
       const propertyTypeLabel = propertyTypeLabels[profitLead.propertyType] || profitLead.propertyType;
@@ -317,6 +392,14 @@ const handler = async (req: Request): Promise<Response> => {
             `📌 *Zonă:* ${simulationData.locationName}\n` +
             `💰 *Venit estimat:* ${simulationData.estimatedMin}€ - ${simulationData.estimatedMax}€/lună\n` +
             `📈 *+${simulationData.percentageIncrease}%* față de chirie standard`;
+        } else if (leadData.source === 'quick_form') {
+          const quickLead = leadData as QuickFormLead;
+          const propertyTypeLabel = propertyTypeLabels[quickLead.propertyType] || quickLead.propertyType;
+          slackMessage = `⚡ *Lead Rapid - Evaluare Gratuită*\n\n` +
+            `👤 *Nume:* ${quickLead.name}\n` +
+            `📱 *WhatsApp:* ${quickLead.whatsappNumber}\n` +
+            `🏠 *Tip:* ${propertyTypeLabel}\n` +
+            `🔥 _Răspunde rapid pentru conversie maximă!_`;
         } else {
           const profitLead = leadData as ProfitCalculatorLead;
           const propertyTypeLabel = propertyTypeLabels[profitLead.propertyType] || profitLead.propertyType;
