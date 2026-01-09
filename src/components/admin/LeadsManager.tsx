@@ -51,6 +51,7 @@ import {
   Eye,
   EyeOff,
   CheckCheck,
+  CalendarClock,
 } from "lucide-react";
 import LeadNotesDialog from "./LeadNotesDialog";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -97,6 +98,7 @@ interface Lead {
   email: string | null;
   message: string | null;
   is_read: boolean;
+  follow_up_date: string | null;
 }
 
 type LeadFromDB = Omit<Lead, "simulation_data"> & {
@@ -422,6 +424,12 @@ const LeadsManager = () => {
       });
     }
   };
+
+  const handleFollowUpChange = useCallback((leadId: string, date: string | null) => {
+    setLeads(prevLeads => prevLeads.map((lead) => 
+      lead.id === leadId ? { ...lead, follow_up_date: date } : lead
+    ));
+  }, []);
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
@@ -912,14 +920,35 @@ const LeadsManager = () => {
                       )}
                     </TableCell>
                     <TableCell>{getSourceBadge(lead.source)}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(lead.created_at), "d MMM yyyy, HH:mm", {
-                        locale: dateLocale,
-                      })}
+                    <TableCell>
+                      <div className="space-y-1">
+                        <span className="text-muted-foreground">
+                          {format(new Date(lead.created_at), "d MMM yyyy, HH:mm", {
+                            locale: dateLocale,
+                          })}
+                        </span>
+                        {lead.follow_up_date && (
+                          <div className={`flex items-center gap-1 text-xs ${
+                            new Date(lead.follow_up_date) < new Date() 
+                              ? "text-destructive" 
+                              : "text-primary"
+                          }`}>
+                            <CalendarClock className="w-3 h-3" />
+                            <span className="font-medium">
+                              Follow-up: {format(new Date(lead.follow_up_date), "d MMM", { locale: dateLocale })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <LeadNotesDialog leadId={lead.id} leadName={lead.name} />
+                        <LeadNotesDialog 
+                          leadId={lead.id} 
+                          leadName={lead.name} 
+                          followUpDate={lead.follow_up_date}
+                          onFollowUpChange={(date) => handleFollowUpChange(lead.id, date)}
+                        />
                         <Button
                           variant="ghost"
                           size="icon"

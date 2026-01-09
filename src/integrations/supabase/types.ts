@@ -250,6 +250,7 @@ export type Database = {
           calculated_yearly_profit: number | null
           created_at: string
           email: string | null
+          follow_up_date: string | null
           id: string
           is_read: boolean
           message: string | null
@@ -265,6 +266,7 @@ export type Database = {
           calculated_yearly_profit?: number | null
           created_at?: string
           email?: string | null
+          follow_up_date?: string | null
           id?: string
           is_read?: boolean
           message?: string | null
@@ -280,6 +282,7 @@ export type Database = {
           calculated_yearly_profit?: number | null
           created_at?: string
           email?: string | null
+          follow_up_date?: string | null
           id?: string
           is_read?: boolean
           message?: string | null
