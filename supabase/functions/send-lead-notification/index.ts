@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -302,7 +303,46 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = await emailResponse.json();
     console.log("Email sent successfully:", emailData);
 
-    return new Response(JSON.stringify({ success: true, emailData }), {
+    // Send Slack notification if webhook URL is configured
+    let slackResult = null;
+    if (SLACK_WEBHOOK_URL) {
+      try {
+        let slackMessage: string;
+        
+        if (leadData.source === 'rental-calculator') {
+          const { simulationData } = leadData;
+          slackMessage = `🏠 *Lead Nou din Calculator Venituri*\n\n` +
+            `📍 *Oraș:* ${simulationData.cityName}\n` +
+            `🛏️ *Tip:* ${simulationData.roomName}\n` +
+            `📌 *Zonă:* ${simulationData.locationName}\n` +
+            `💰 *Venit estimat:* ${simulationData.estimatedMin}€ - ${simulationData.estimatedMax}€/lună\n` +
+            `📈 *+${simulationData.percentageIncrease}%* față de chirie standard`;
+        } else {
+          const profitLead = leadData as ProfitCalculatorLead;
+          const propertyTypeLabel = propertyTypeLabels[profitLead.propertyType] || profitLead.propertyType;
+          slackMessage = `🏠 *Lead Nou din Profit Calculator*\n\n` +
+            `👤 *Nume:* ${profitLead.name}\n` +
+            `📱 *WhatsApp:* ${profitLead.whatsappNumber}\n` +
+            `🏢 *Proprietate:* ${propertyTypeLabel}, ${profitLead.propertyArea}m²\n` +
+            `💰 *Profit estimat:* ${profitLead.calculatedNetProfit.toLocaleString('ro-RO')}€/lună\n` +
+            `📅 *Anual:* ${profitLead.calculatedYearlyProfit.toLocaleString('ro-RO')}€`;
+        }
+
+        const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: slackMessage }),
+        });
+
+        slackResult = slackResponse.ok ? "sent" : "failed";
+        console.log("Slack notification result:", slackResult);
+      } catch (slackError) {
+        console.error("Error sending Slack notification:", slackError);
+        slackResult = "error";
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, emailData, slackResult }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
