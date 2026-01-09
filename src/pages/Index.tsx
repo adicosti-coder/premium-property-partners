@@ -8,6 +8,7 @@ import HowItWorks from "@/components/HowItWorks";
 import WhyUs from "@/components/WhyUs";
 import OwnerBenefits from "@/components/OwnerBenefits";
 import ProfitCalculator from "@/components/ProfitCalculator";
+import RentalIncomeCalculator from "@/components/RentalIncomeCalculator";
 import PropertyGallery from "@/components/PropertyGallery";
 import Testimonials from "@/components/Testimonials";
 import GuestSection from "@/components/GuestSection";
@@ -49,6 +50,7 @@ const Index = () => {
         <FinancialTransparency />
         <PartnershipTimeline />
         <ProfitCalculator />
+        <RentalIncomeCalculator />
         <section id="cum-functioneaza">
           <HowItWorks />
         </section>
