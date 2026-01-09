@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, MapPin, Home, Sparkles, TrendingUp, Phone, MessageCircle, ChevronRight, Check, Brain } from 'lucide-react';
+import { Building2, MapPin, Home, Sparkles, TrendingUp, MessageCircle, Check, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useParallax } from '@/hooks/useParallax';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface CalculatorData {
   city: string;
@@ -42,6 +43,8 @@ const RentalIncomeCalculator = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isSavingLead, setIsSavingLead] = useState(false);
+  const [leadSaved, setLeadSaved] = useState(false);
   const [data, setData] = useState<CalculatorData>({
     city: '',
     rooms: '',
@@ -100,7 +103,62 @@ const RentalIncomeCalculator = () => {
     }, 300);
   };
 
-  const handleWhatsAppClick = () => {
+  const saveLeadToDatabase = async () => {
+    if (leadSaved) return; // Prevent duplicate saves
+    
+    const city = cities.find(c => c.id === data.city)?.name || '';
+    const location = locationTypes.find(l => l.id === data.locationType)?.name || '';
+    const room = roomTypes.find(r => r.id === data.rooms);
+    const locationData = locationTypes.find(l => l.id === data.locationType);
+    const income = calculateIncome();
+
+    setIsSavingLead(true);
+    
+    try {
+      const { error } = await supabase.from('leads').insert({
+        name: `Calculator Lead - ${city}`,
+        whatsapp_number: 'pending', // Will be updated when they message
+        property_type: room?.name || data.rooms,
+        property_area: room?.baseValue || 0, // Using baseValue as a reference
+        calculated_net_profit: income.base,
+        calculated_yearly_profit: income.base * 12,
+        source: 'rental-calculator',
+        simulation_data: {
+          city: data.city,
+          cityName: city,
+          rooms: data.rooms,
+          roomName: room?.name,
+          locationType: data.locationType,
+          locationName: location,
+          multiplier: locationData?.multiplier,
+          baseValue: room?.baseValue,
+          estimatedMin: income.min,
+          estimatedMax: income.max,
+          estimatedBase: income.base,
+          longTermRent: income.longTermRent,
+          percentageIncrease: income.percentageIncrease,
+          calculatedAt: new Date().toISOString(),
+        },
+      });
+
+      if (error) {
+        console.error('Error saving lead:', error);
+        toast.error('Eroare la salvarea datelor');
+      } else {
+        setLeadSaved(true);
+        console.log('Lead saved successfully');
+      }
+    } catch (err) {
+      console.error('Error saving lead:', err);
+    } finally {
+      setIsSavingLead(false);
+    }
+  };
+
+  const handleWhatsAppClick = async () => {
+    // Save lead to database first
+    await saveLeadToDatabase();
+    
     const city = cities.find(c => c.id === data.city)?.name || '';
     const location = locationTypes.find(l => l.id === data.locationType)?.name || '';
     const income = calculateIncome();
@@ -116,6 +174,7 @@ const RentalIncomeCalculator = () => {
     setCurrentStep(1);
     setShowResults(false);
     setIsCalculating(false);
+    setLeadSaved(false);
     setData({ city: '', rooms: '', locationType: '', phone: '' });
   };
 
@@ -435,10 +494,24 @@ const RentalIncomeCalculator = () => {
                     <div className="space-y-3">
                       <Button
                         onClick={handleWhatsAppClick}
-                        className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl"
+                        disabled={isSavingLead}
+                        className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-70"
                       >
-                        <MessageCircle className="w-5 h-5 mr-2" />
-                        Obțineți Raportul Complet pe WhatsApp
+                        {isSavingLead ? (
+                          <>
+                            <motion.div
+                              className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            />
+                            Se salvează...
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle className="w-5 h-5 mr-2" />
+                            Obțineți Raportul Complet pe WhatsApp
+                          </>
+                        )}
                       </Button>
                       <Button
                         variant="outline"
