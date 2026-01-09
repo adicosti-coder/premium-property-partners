@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -85,6 +86,23 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
       `https://wa.me/40723154520?text=${encodeURIComponent(message)}`,
       "_blank"
     );
+
+    // Send notification
+    try {
+      await supabase.functions.invoke("send-lead-notification", {
+        body: {
+          source: "real_estate_contact",
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          serviceType: formData.serviceType,
+          propertyType: formData.propertyType || undefined,
+          message: formData.message?.trim() || undefined,
+        },
+      });
+    } catch (notifError) {
+      console.error("Failed to send notification:", notifError);
+    }
 
     setIsSubmitting(false);
     
