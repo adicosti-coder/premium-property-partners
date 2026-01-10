@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Users, Home } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect, useMemo } from "react";
@@ -8,6 +8,7 @@ import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
 
 interface HeroSettings {
   videoUrl: string;
@@ -203,6 +204,18 @@ const Hero = () => {
         </div>
       </div>
       
+      {/* KPI Overlay Badges */}
+      <div className="absolute bottom-32 right-6 lg:right-12 z-20 hidden md:flex flex-col gap-3">
+        <div className="kpi-badge px-5 py-3 bg-background/80 backdrop-blur-sm rounded-xl border border-primary/40 shadow-lg">
+          <span className="text-primary font-bold text-xl">+40% Yield</span>
+          <span className="text-xs text-muted-foreground block">vs Chirie clasică</span>
+        </div>
+        <div className="kpi-badge px-5 py-3 bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
+          <span className="font-bold text-foreground text-lg">Zero Stress</span>
+          <span className="text-xs text-muted-foreground block">Operare full</span>
+        </div>
+      </div>
+      
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
@@ -293,13 +306,45 @@ const HeroContent = ({
         </Button>
       </div>
       
+      {/* Direction Selector - compact cards */}
+      <div 
+        className={`grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+        style={{ transitionDelay: subtitleComplete ? '180ms' : '0ms' }}
+      >
+        <Link 
+          to="/imobiliare" 
+          className="dir-item group p-4 bg-card/50 border border-border rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all duration-300 text-center"
+        >
+          <Building2 className="w-5 h-5 mx-auto mb-2 text-emerald-500 group-hover:scale-110 transition-transform" />
+          <span className="text-sm font-semibold text-foreground block">Imobiliare</span>
+          <span className="text-xs text-muted-foreground">Vânzare & închiriere</span>
+        </Link>
+        <a 
+          href="#calculator" 
+          className="dir-item dir-cta relative p-4 bg-primary/10 border border-primary/30 rounded-xl hover:bg-primary/15 transition-all duration-300 text-center overflow-hidden"
+        >
+          <div className="dir-shimmer" />
+          <Home className="w-5 h-5 mx-auto mb-2 text-primary" />
+          <span className="text-sm font-semibold text-primary block">Proprietari</span>
+          <span className="text-xs text-muted-foreground">Administrare hotelieră</span>
+        </a>
+        <Link 
+          to="/oaspeti" 
+          className="dir-item group p-4 bg-card/50 border border-border rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300 text-center"
+        >
+          <Users className="w-5 h-5 mx-auto mb-2 text-blue-500 group-hover:scale-110 transition-transform" />
+          <span className="text-sm font-semibold text-foreground block">Oaspeți</span>
+          <span className="text-xs text-muted-foreground">Apartamente premium</span>
+        </Link>
+      </div>
+      
       {/* Feature tags with sequential fade-in - optimized timing */}
-      <div className="flex flex-wrap gap-2 mt-8">
+      <div className="flex flex-wrap gap-2 mt-6">
         {tags.map((tag, index) => (
           <span 
             key={index} 
             className={`px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-250 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-            style={{ transitionDelay: subtitleComplete ? `${180 + index * 40}ms` : '0ms' }}
+            style={{ transitionDelay: subtitleComplete ? `${280 + index * 40}ms` : '0ms' }}
           >
             {tag}
           </span>
