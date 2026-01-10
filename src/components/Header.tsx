@@ -85,9 +85,14 @@ const Header = () => {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
+          <a href="/" className="flex flex-col items-start gap-0">
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
               Real<span className="text-primary">Trust</span>
+              <span className="text-muted-foreground"> & </span>
+              <span className="text-foreground">ApArt Hotel</span>
+            </span>
+            <span className="hidden lg:block text-[9px] text-muted-foreground tracking-[0.2em] uppercase -mt-0.5">
+              Investiții · Property Management · Regim Hotelier
             </span>
           </a>
           
