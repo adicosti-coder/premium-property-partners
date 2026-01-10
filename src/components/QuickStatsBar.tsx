@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building, Users, Calendar, TrendingUp } from "lucide-react";
+import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck } from "lucide-react";
 
 interface Stats {
   properties: number;
   bookings: number;
   leads: number;
   occupancy: number;
+  avgRating: number;
+  monthlyRevenue: number;
+  totalGuests: number;
 }
 
 const QuickStatsBar = () => {
@@ -17,6 +20,9 @@ const QuickStatsBar = () => {
     bookings: 0,
     leads: 0,
     occupancy: 85,
+    avgRating: 4.8,
+    monthlyRevenue: 0,
+    totalGuests: 0,
   });
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -27,12 +33,18 @@ const QuickStatsBar = () => {
       bookings: "Rezervări",
       leads: "Solicitări",
       occupancy: "Ocupare",
+      rating: "Rating",
+      revenue: "Venit lunar",
+      guests: "Oaspeți",
     },
     en: {
       properties: "Apartments",
       bookings: "Bookings",
       leads: "Inquiries",
       occupancy: "Occupancy",
+      rating: "Rating",
+      revenue: "Monthly Rev",
+      guests: "Guests",
     },
   };
 
@@ -41,17 +53,43 @@ const QuickStatsBar = () => {
   // Fetch stats from database
   const fetchStats = async () => {
     try {
-      const [propertiesRes, bookingsRes, leadsRes] = await Promise.all([
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+      const [propertiesRes, bookingsRes, leadsRes, financialsRes, guestsRes] = await Promise.all([
         supabase.from("properties").select("id", { count: "exact" }).eq("is_active", true),
         supabase.from("bookings").select("id", { count: "exact" }),
         supabase.from("leads").select("id", { count: "exact" }),
+        supabase.from("financial_records")
+          .select("amount, type")
+          .gte("date", startOfMonth)
+          .lte("date", endOfMonth),
+        supabase.from("bookings")
+          .select("guest_name", { count: "exact" })
+          .not("guest_name", "is", null),
       ]);
 
+      // Calculate monthly revenue (income - expenses)
+      let monthlyRevenue = 0;
+      if (financialsRes.data) {
+        financialsRes.data.forEach((record) => {
+          if (record.type === "income") {
+            monthlyRevenue += Number(record.amount);
+          } else if (record.type === "expense") {
+            monthlyRevenue -= Number(record.amount);
+          }
+        });
+      }
+
       setStats({
-        properties: propertiesRes.count || 11, // Fallback to 11 active apartments
+        properties: propertiesRes.count || 11,
         bookings: bookingsRes.count || 0,
         leads: leadsRes.count || 0,
-        occupancy: 85, // Static for now - could be calculated from bookings
+        occupancy: 85,
+        avgRating: 4.8, // Static for now - could be fetched from reviews table
+        monthlyRevenue: Math.max(0, monthlyRevenue),
+        totalGuests: guestsRes.count || 0,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -77,10 +115,16 @@ const QuickStatsBar = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, fetchStats)
       .subscribe();
 
+    const financialsChannel = supabase
+      .channel("quick-stats-financials")
+      .on("postgres_changes", { event: "*", schema: "public", table: "financial_records" }, fetchStats)
+      .subscribe();
+
     return () => {
       supabase.removeChannel(propertiesChannel);
       supabase.removeChannel(bookingsChannel);
       supabase.removeChannel(leadsChannel);
+      supabase.removeChannel(financialsChannel);
     };
   }, []);
 
@@ -104,6 +148,13 @@ const QuickStatsBar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  const formatRevenue = (amount: number) => {
+    if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(1)}k`;
+    }
+    return amount.toString();
+  };
+
   const statItems = [
     {
       icon: Building,
@@ -113,6 +164,14 @@ const QuickStatsBar = () => {
       color: "text-emerald-500",
     },
     {
+      icon: Star,
+      value: stats.avgRating,
+      label: t.rating,
+      suffix: "",
+      color: "text-amber-500",
+      isDecimal: true,
+    },
+    {
       icon: Calendar,
       value: stats.bookings,
       label: t.bookings,
@@ -120,18 +179,26 @@ const QuickStatsBar = () => {
       color: "text-blue-500",
     },
     {
-      icon: Users,
-      value: stats.leads,
-      label: t.leads,
+      icon: UserCheck,
+      value: stats.totalGuests,
+      label: t.guests,
       suffix: "",
-      color: "text-amber-500",
+      color: "text-violet-500",
+    },
+    {
+      icon: Euro,
+      value: stats.monthlyRevenue,
+      label: t.revenue,
+      suffix: "€",
+      color: "text-primary",
+      formatFn: formatRevenue,
     },
     {
       icon: TrendingUp,
       value: stats.occupancy,
       label: t.occupancy,
       suffix: "%",
-      color: "text-primary",
+      color: "text-teal-500",
     },
   ];
 
@@ -143,16 +210,20 @@ const QuickStatsBar = () => {
     >
       <div className="bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-4 md:gap-8 lg:gap-12 py-2">
-            {statItems.map((stat, index) => (
+          <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2 overflow-x-auto scrollbar-hide">
+            {statItems.map((stat) => (
               <div
                 key={stat.label}
-                className="flex items-center gap-1.5 md:gap-2 group cursor-default"
+                className="flex items-center gap-1.5 md:gap-2 group cursor-default flex-shrink-0"
               >
                 <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-sm md:text-base font-semibold text-foreground tabular-nums">
-                    {stat.value.toLocaleString()}
+                    {stat.formatFn 
+                      ? stat.formatFn(stat.value) 
+                      : stat.isDecimal 
+                        ? stat.value.toFixed(1) 
+                        : stat.value.toLocaleString()}
                   </span>
                   {stat.suffix && (
                     <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
@@ -167,7 +238,7 @@ const QuickStatsBar = () => {
             ))}
             
             {/* Live indicator */}
-            <div className="hidden md:flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50">
+            <div className="hidden md:flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
