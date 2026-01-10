@@ -32,13 +32,15 @@ import FinancialTransparency from "@/components/FinancialTransparency";
 import VideoTestimonials from "@/components/VideoTestimonials";
 import FacilitiesShowcase from "@/components/FacilitiesShowcase";
 import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
+import QuickStatsBar from "@/components/QuickStatsBar";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <PromoBanner />
       <Header />
-      <main>
+      <QuickStatsBar />
+      <main className="pt-10">
         <Hero />
         <QuickLeadForm />
         <PartnerLogos />
