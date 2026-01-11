@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import AnimatedStatValue from "./AnimatedStatValue";
 
 interface Stats {
   properties: number;
@@ -230,12 +231,13 @@ const QuickStatsBar = () => {
                 <>
                   <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
                   <div className="flex items-baseline gap-0.5">
-                    <span className="text-sm md:text-base font-semibold text-foreground tabular-nums group-hover:text-primary transition-colors">
-                      {stat.formatFn 
-                        ? stat.formatFn(stat.value) 
-                        : stat.isDecimal 
-                          ? stat.value.toFixed(1) 
-                          : stat.value.toLocaleString()}
+                    <span className="text-sm md:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <AnimatedStatValue 
+                        value={stat.value} 
+                        decimals={stat.isDecimal ? 1 : 0}
+                        formatFn={stat.formatFn}
+                        duration={1200}
+                      />
                     </span>
                     {stat.suffix && (
                       <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
