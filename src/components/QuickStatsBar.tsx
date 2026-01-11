@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck } from "lucide-react";
+import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import AnimatedStatValue from "./AnimatedStatValue";
 import {
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { User } from "@supabase/supabase-js";
 
 interface Stats {
   properties: number;
@@ -19,10 +20,14 @@ interface Stats {
   avgRating: number;
   monthlyRevenue: number;
   totalGuests: number;
+  yearsExperience: number;
+  cities: number;
 }
 
 const QuickStatsBar = () => {
   const { language } = useLanguage();
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState<Stats>({
     properties: 0,
     bookings: 0,
@@ -31,6 +36,8 @@ const QuickStatsBar = () => {
     avgRating: 4.8,
     monthlyRevenue: 0,
     totalGuests: 0,
+    yearsExperience: 5,
+    cities: 3,
   });
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -44,6 +51,9 @@ const QuickStatsBar = () => {
       rating: "Rating",
       revenue: "Venit lunar",
       guests: "Oaspeți",
+      yearsExp: "Ani experiență",
+      cities: "Orașe",
+      satisfaction: "Satisfacție",
       tooltips: {
         properties: "Numărul total de apartamente premium în portofoliul nostru, disponibile pentru închiriere pe termen scurt",
         rating: "Rating-ul mediu acordat de oaspeții noștri pe platformele de rezervări (Booking, Airbnb)",
@@ -51,6 +61,10 @@ const QuickStatsBar = () => {
         guests: "Numărul total de oaspeți care au beneficiat de serviciile noastre",
         revenue: "Venitul net lunar generat pentru proprietari în luna curentă",
         occupancy: "Rata medie de ocupare a apartamentelor din portofoliul nostru",
+        yearsExp: "Numărul de ani de experiență în managementul proprietăților",
+        cities: "Numărul de orașe în care operăm",
+        satisfaction: "Rata de satisfacție a clienților noștri",
+        leads: "Numărul total de solicitări de la potențiali clienți",
       },
     },
     en: {
@@ -61,6 +75,9 @@ const QuickStatsBar = () => {
       rating: "Rating",
       revenue: "Monthly Rev",
       guests: "Guests",
+      yearsExp: "Years Exp",
+      cities: "Cities",
+      satisfaction: "Satisfaction",
       tooltips: {
         properties: "Total number of premium apartments in our portfolio, available for short-term rental",
         rating: "Average rating given by our guests on booking platforms (Booking, Airbnb)",
@@ -68,6 +85,10 @@ const QuickStatsBar = () => {
         guests: "Total number of guests who have used our services",
         revenue: "Net monthly income generated for property owners this month",
         occupancy: "Average occupancy rate of apartments in our portfolio",
+        yearsExp: "Years of experience in property management",
+        cities: "Number of cities where we operate",
+        satisfaction: "Customer satisfaction rate",
+        leads: "Total number of inquiries from potential clients",
       },
     },
   };
@@ -111,13 +132,50 @@ const QuickStatsBar = () => {
         bookings: bookingsRes.count || 0,
         leads: leadsRes.count || 0,
         occupancy: 85,
-        avgRating: 4.8, // Static for now - could be fetched from reviews table
+        avgRating: 4.8,
         monthlyRevenue: Math.max(0, monthlyRevenue),
         totalGuests: guestsRes.count || 0,
+        yearsExperience: 5,
+        cities: 3,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
+  };
+
+  // Auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        
+        // Check admin role after auth state change
+        if (session?.user) {
+          setTimeout(() => {
+            checkAdminRole(session.user.id);
+          }, 0);
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminRole(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAdminRole = async (userId: string) => {
+    const { data } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    setIsAdmin(data === true);
   };
 
   useEffect(() => {
@@ -186,7 +244,67 @@ const QuickStatsBar = () => {
     }
   };
 
-  const statItems = [
+  // Stats for anonymous visitors (public, trust-building metrics)
+  const publicStatItems = [
+    {
+      icon: Building,
+      value: stats.properties || 11,
+      label: t.properties,
+      suffix: "+",
+      color: "text-emerald-500",
+      action: () => scrollToSection("property-gallery"),
+      tooltip: t.tooltips.properties,
+    },
+    {
+      icon: Star,
+      value: stats.avgRating,
+      label: t.rating,
+      suffix: "",
+      color: "text-amber-500",
+      isDecimal: true,
+      action: () => scrollToSection("testimonials"),
+      tooltip: t.tooltips.rating,
+    },
+    {
+      icon: Clock,
+      value: stats.yearsExperience,
+      label: t.yearsExp,
+      suffix: "+",
+      color: "text-blue-500",
+      action: () => scrollToSection("how-it-works"),
+      tooltip: t.tooltips.yearsExp,
+    },
+    {
+      icon: MapPin,
+      value: stats.cities,
+      label: t.cities,
+      suffix: "",
+      color: "text-violet-500",
+      action: () => scrollToSection("property-gallery"),
+      tooltip: t.tooltips.cities,
+    },
+    {
+      icon: TrendingUp,
+      value: stats.occupancy,
+      label: t.occupancy,
+      suffix: "%",
+      color: "text-teal-500",
+      action: () => scrollToSection("how-it-works"),
+      tooltip: t.tooltips.occupancy,
+    },
+    {
+      icon: Award,
+      value: 98,
+      label: t.satisfaction,
+      suffix: "%",
+      color: "text-primary",
+      action: () => scrollToSection("testimonials"),
+      tooltip: t.tooltips.satisfaction,
+    },
+  ];
+
+  // Stats for authenticated users (detailed business metrics)
+  const authenticatedStatItems = [
     {
       icon: Building,
       value: stats.properties || 11,
@@ -244,6 +362,28 @@ const QuickStatsBar = () => {
       tooltip: t.tooltips.occupancy,
     },
   ];
+
+  // Admin-only stats (includes leads)
+  const adminStatItems = [
+    ...authenticatedStatItems.slice(0, 2),
+    {
+      icon: Users,
+      value: stats.leads,
+      label: t.leads,
+      suffix: "",
+      color: "text-orange-500",
+      link: "/admin",
+      tooltip: t.tooltips.leads,
+    },
+    ...authenticatedStatItems.slice(2),
+  ];
+
+  // Select which stats to show based on auth status
+  const statItems = isAdmin 
+    ? adminStatItems 
+    : user 
+      ? authenticatedStatItems 
+      : publicStatItems;
 
   return (
     <div
