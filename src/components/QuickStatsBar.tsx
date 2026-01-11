@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Stats {
   properties: number;
@@ -155,6 +156,13 @@ const QuickStatsBar = () => {
     return amount.toString();
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const statItems = [
     {
       icon: Building,
@@ -162,6 +170,7 @@ const QuickStatsBar = () => {
       label: t.properties,
       suffix: "+",
       color: "text-emerald-500",
+      action: () => scrollToSection("property-gallery"),
     },
     {
       icon: Star,
@@ -170,6 +179,7 @@ const QuickStatsBar = () => {
       suffix: "",
       color: "text-amber-500",
       isDecimal: true,
+      action: () => scrollToSection("testimonials"),
     },
     {
       icon: Calendar,
@@ -177,6 +187,7 @@ const QuickStatsBar = () => {
       label: t.bookings,
       suffix: "",
       color: "text-blue-500",
+      link: "/guests",
     },
     {
       icon: UserCheck,
@@ -184,6 +195,7 @@ const QuickStatsBar = () => {
       label: t.guests,
       suffix: "",
       color: "text-violet-500",
+      link: "/guests",
     },
     {
       icon: Euro,
@@ -192,6 +204,7 @@ const QuickStatsBar = () => {
       suffix: "€",
       color: "text-primary",
       formatFn: formatRevenue,
+      action: () => scrollToSection("benefits"),
     },
     {
       icon: TrendingUp,
@@ -199,6 +212,7 @@ const QuickStatsBar = () => {
       label: t.occupancy,
       suffix: "%",
       color: "text-teal-500",
+      action: () => scrollToSection("how-it-works"),
     },
   ];
 
@@ -211,31 +225,52 @@ const QuickStatsBar = () => {
       <div className="bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2 overflow-x-auto scrollbar-hide">
-            {statItems.map((stat) => (
-              <div
-                key={stat.label}
-                className="flex items-center gap-1.5 md:gap-2 group cursor-default flex-shrink-0"
-              >
-                <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-sm md:text-base font-semibold text-foreground tabular-nums">
-                    {stat.formatFn 
-                      ? stat.formatFn(stat.value) 
-                      : stat.isDecimal 
-                        ? stat.value.toFixed(1) 
-                        : stat.value.toLocaleString()}
-                  </span>
-                  {stat.suffix && (
-                    <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
-                      {stat.suffix}
+            {statItems.map((stat) => {
+              const content = (
+                <>
+                  <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-sm md:text-base font-semibold text-foreground tabular-nums group-hover:text-primary transition-colors">
+                      {stat.formatFn 
+                        ? stat.formatFn(stat.value) 
+                        : stat.isDecimal 
+                          ? stat.value.toFixed(1) 
+                          : stat.value.toLocaleString()}
                     </span>
-                  )}
-                </div>
-                <span className="hidden sm:inline text-xs text-muted-foreground">
-                  {stat.label}
-                </span>
-              </div>
-            ))}
+                    {stat.suffix && (
+                      <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
+                        {stat.suffix}
+                      </span>
+                    )}
+                  </div>
+                  <span className="hidden sm:inline text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                    {stat.label}
+                  </span>
+                </>
+              );
+
+              if (stat.link) {
+                return (
+                  <Link
+                    key={stat.label}
+                    to={stat.link}
+                    className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={stat.label}
+                  onClick={stat.action}
+                  className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
+                >
+                  {content}
+                </button>
+              );
+            })}
             
             {/* Live indicator */}
             <div className="hidden md:flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0">
