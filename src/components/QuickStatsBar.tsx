@@ -4,6 +4,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import AnimatedStatValue from "./AnimatedStatValue";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Stats {
   properties: number;
@@ -38,6 +44,14 @@ const QuickStatsBar = () => {
       rating: "Rating",
       revenue: "Venit lunar",
       guests: "Oaspeți",
+      tooltips: {
+        properties: "Numărul total de apartamente premium în portofoliul nostru, disponibile pentru închiriere pe termen scurt",
+        rating: "Rating-ul mediu acordat de oaspeții noștri pe platformele de rezervări (Booking, Airbnb)",
+        bookings: "Numărul total de rezervări confirmate din toate proprietățile noastre",
+        guests: "Numărul total de oaspeți care au beneficiat de serviciile noastre",
+        revenue: "Venitul net lunar generat pentru proprietari în luna curentă",
+        occupancy: "Rata medie de ocupare a apartamentelor din portofoliul nostru",
+      },
     },
     en: {
       properties: "Apartments",
@@ -47,6 +61,14 @@ const QuickStatsBar = () => {
       rating: "Rating",
       revenue: "Monthly Rev",
       guests: "Guests",
+      tooltips: {
+        properties: "Total number of premium apartments in our portfolio, available for short-term rental",
+        rating: "Average rating given by our guests on booking platforms (Booking, Airbnb)",
+        bookings: "Total number of confirmed bookings across all our properties",
+        guests: "Total number of guests who have used our services",
+        revenue: "Net monthly income generated for property owners this month",
+        occupancy: "Average occupancy rate of apartments in our portfolio",
+      },
     },
   };
 
@@ -172,6 +194,7 @@ const QuickStatsBar = () => {
       suffix: "+",
       color: "text-emerald-500",
       action: () => scrollToSection("property-gallery"),
+      tooltip: t.tooltips.properties,
     },
     {
       icon: Star,
@@ -181,6 +204,7 @@ const QuickStatsBar = () => {
       color: "text-amber-500",
       isDecimal: true,
       action: () => scrollToSection("testimonials"),
+      tooltip: t.tooltips.rating,
     },
     {
       icon: Calendar,
@@ -189,6 +213,7 @@ const QuickStatsBar = () => {
       suffix: "",
       color: "text-blue-500",
       link: "/guests",
+      tooltip: t.tooltips.bookings,
     },
     {
       icon: UserCheck,
@@ -197,6 +222,7 @@ const QuickStatsBar = () => {
       suffix: "",
       color: "text-violet-500",
       link: "/guests",
+      tooltip: t.tooltips.guests,
     },
     {
       icon: Euro,
@@ -206,6 +232,7 @@ const QuickStatsBar = () => {
       color: "text-primary",
       formatFn: formatRevenue,
       action: () => scrollToSection("benefits"),
+      tooltip: t.tooltips.revenue,
     },
     {
       icon: TrendingUp,
@@ -214,6 +241,7 @@ const QuickStatsBar = () => {
       suffix: "%",
       color: "text-teal-500",
       action: () => scrollToSection("how-it-works"),
+      tooltip: t.tooltips.occupancy,
     },
   ];
 
@@ -225,66 +253,87 @@ const QuickStatsBar = () => {
     >
       <div className="bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2 overflow-x-auto scrollbar-hide">
-            {statItems.map((stat) => {
-              const content = (
-                <>
-                  <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
-                  <div className="flex items-baseline gap-0.5">
-                    <span className="text-sm md:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-                      <AnimatedStatValue 
-                        value={stat.value} 
-                        decimals={stat.isDecimal ? 1 : 0}
-                        formatFn={stat.formatFn}
-                        duration={1200}
-                      />
-                    </span>
-                    {stat.suffix && (
-                      <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
-                        {stat.suffix}
+          <TooltipProvider delayDuration={300}>
+            <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2 overflow-x-auto scrollbar-hide">
+              {statItems.map((stat) => {
+                const content = (
+                  <>
+                    <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="text-sm md:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                        <AnimatedStatValue 
+                          value={stat.value} 
+                          decimals={stat.isDecimal ? 1 : 0}
+                          formatFn={stat.formatFn}
+                          duration={1200}
+                        />
                       </span>
-                    )}
-                  </div>
-                  <span className="hidden sm:inline text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                    {stat.label}
-                  </span>
-                </>
-              );
+                      {stat.suffix && (
+                        <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
+                          {stat.suffix}
+                        </span>
+                      )}
+                    </div>
+                    <span className="hidden sm:inline text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                      {stat.label}
+                    </span>
+                  </>
+                );
 
-              if (stat.link) {
-                return (
+                const wrappedContent = stat.link ? (
                   <Link
-                    key={stat.label}
                     to={stat.link}
                     className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
                   >
                     {content}
                   </Link>
+                ) : (
+                  <button
+                    onClick={stat.action}
+                    className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
+                  >
+                    {content}
+                  </button>
                 );
-              }
 
-              return (
-                <button
-                  key={stat.label}
-                  onClick={stat.action}
-                  className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
-                >
-                  {content}
-                </button>
-              );
-            })}
-            
-            {/* Live indicator */}
-            <div className="hidden md:flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                Live
-              </span>
+                return (
+                  <Tooltip key={stat.label}>
+                    <TooltipTrigger asChild>
+                      {wrappedContent}
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="bottom" 
+                      className="max-w-xs text-center bg-popover/95 backdrop-blur-sm"
+                    >
+                      <p className="text-sm">{stat.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+              
+              {/* Live indicator */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="hidden md:flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 cursor-help">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      Live
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-popover/95 backdrop-blur-sm">
+                  <p className="text-sm">
+                    {language === "ro" 
+                      ? "Statistici actualizate în timp real din baza de date" 
+                      : "Statistics updated in real-time from database"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-          </div>
+          </TooltipProvider>
         </div>
       </div>
     </div>
