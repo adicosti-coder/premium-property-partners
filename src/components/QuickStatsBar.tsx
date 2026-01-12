@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut } from "lucide-react";
+import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut, LayoutDashboard, Settings, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -12,6 +12,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { User } from "@supabase/supabase-js";
 
 interface Stats {
@@ -465,9 +472,9 @@ const QuickStatsBar = () => {
               })}
               
               {/* User status indicator */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {!user ? (
+              {!user ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Link
                       to="/auth"
                       className="flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 px-2 py-1 rounded-md transition-all bg-primary/10 hover:bg-primary/20 group"
@@ -477,11 +484,22 @@ const QuickStatsBar = () => {
                         {language === "ro" ? "Autentificare" : "Sign In"}
                       </span>
                     </Link>
-                  ) : (
-                    <div className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 px-2 py-1 rounded-md transition-all ${
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="bg-popover/95 backdrop-blur-sm max-w-xs">
+                    <p className="text-sm">
+                      {language === "ro" 
+                        ? "Click pentru a te autentifica și a vedea mai multe statistici." 
+                        : "Click to sign in and see more statistics."}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 px-2 py-1 rounded-md transition-all cursor-pointer ${
                       isAdmin 
-                        ? "bg-amber-500/10" 
-                        : "bg-primary/10"
+                        ? "bg-amber-500/10 hover:bg-amber-500/20" 
+                        : "bg-primary/10 hover:bg-primary/20"
                     }`}>
                       {isAdmin ? (
                         <Shield className="w-3.5 h-3.5 text-amber-500" />
@@ -495,34 +513,48 @@ const QuickStatsBar = () => {
                       }`}>
                         {isAdmin ? "Admin" : (language === "ro" ? "Cont" : "User")}
                       </span>
-                      <button
-                        onClick={handleLogout}
-                        className={`ml-1 p-1 rounded transition-all hover:bg-destructive/20 group/logout ${
-                          isAdmin ? "hover:text-destructive" : "hover:text-destructive"
-                        }`}
-                        title={language === "ro" ? "Deconectare" : "Sign Out"}
+                      <ChevronDown className={`w-3 h-3 ${isAdmin ? "text-amber-500" : "text-primary"}`} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-48 bg-popover border border-border shadow-lg z-50"
+                    sideOffset={8}
+                  >
+                    {isAdmin && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/admin")}
+                        className="cursor-pointer"
                       >
-                        <LogOut className="w-3 h-3 text-muted-foreground group-hover/logout:text-destructive transition-colors" />
-                      </button>
-                    </div>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-popover/95 backdrop-blur-sm max-w-xs">
-                  <p className="text-sm">
-                    {isAdmin 
-                      ? (language === "ro" 
-                          ? "Ești autentificat ca administrator. Vezi toate statisticile business." 
-                          : "You're logged in as admin. You see all business statistics.")
-                      : user 
-                        ? (language === "ro" 
-                            ? "Ești autentificat. Vezi statistici detaliate despre business." 
-                            : "You're logged in. You see detailed business statistics.")
-                        : (language === "ro" 
-                            ? "Click pentru a te autentifica și a vedea mai multe statistici." 
-                            : "Click to sign in and see more statistics.")}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        <span>{language === "ro" ? "Panou Admin" : "Admin Dashboard"}</span>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/portal-proprietar")}
+                      className="cursor-pointer"
+                    >
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      <span>{language === "ro" ? "Dashboard" : "Dashboard"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/favorites")}
+                      className="cursor-pointer"
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      <span>{language === "ro" ? "Favorite" : "Favorites"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      <span>{language === "ro" ? "Deconectare" : "Sign Out"}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               {/* Live indicator */}
               <Tooltip>
