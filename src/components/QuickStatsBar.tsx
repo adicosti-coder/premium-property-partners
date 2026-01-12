@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award } from "lucide-react";
+import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import AnimatedStatValue from "./AnimatedStatValue";
 import {
@@ -451,10 +451,59 @@ const QuickStatsBar = () => {
                 );
               })}
               
+              {/* User status indicator */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 cursor-help px-2 py-1 rounded-md transition-all ${
+                    isAdmin 
+                      ? "bg-amber-500/10 hover:bg-amber-500/20" 
+                      : user 
+                        ? "bg-primary/10 hover:bg-primary/20" 
+                        : "bg-muted/50 hover:bg-muted"
+                  }`}>
+                    {isAdmin ? (
+                      <Shield className="w-3.5 h-3.5 text-amber-500" />
+                    ) : user ? (
+                      <UserIcon className="w-3.5 h-3.5 text-primary" />
+                    ) : (
+                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                    <span className={`text-[10px] uppercase tracking-wider font-medium ${
+                      isAdmin 
+                        ? "text-amber-600 dark:text-amber-400" 
+                        : user 
+                          ? "text-primary" 
+                          : "text-muted-foreground"
+                    }`}>
+                      {isAdmin 
+                        ? "Admin" 
+                        : user 
+                          ? (language === "ro" ? "Cont" : "User") 
+                          : (language === "ro" ? "Vizitator" : "Guest")}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-popover/95 backdrop-blur-sm max-w-xs">
+                  <p className="text-sm">
+                    {isAdmin 
+                      ? (language === "ro" 
+                          ? "Ești autentificat ca administrator. Vezi toate statisticile business." 
+                          : "You're logged in as admin. You see all business statistics.")
+                      : user 
+                        ? (language === "ro" 
+                            ? "Ești autentificat. Vezi statistici detaliate despre business." 
+                            : "You're logged in. You see detailed business statistics.")
+                        : (language === "ro" 
+                            ? "Vizitezi ca anonim. Autentifică-te pentru a vedea mai multe statistici." 
+                            : "Browsing as guest. Log in to see more statistics.")}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
               {/* Live indicator */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="hidden md:flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 cursor-help">
+                  <div className="hidden md:flex items-center gap-1.5 pl-3 border-l border-border/50 flex-shrink-0 cursor-help">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
