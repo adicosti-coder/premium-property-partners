@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye } from "lucide-react";
+import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import AnimatedStatValue from "./AnimatedStatValue";
 import {
@@ -26,6 +28,7 @@ interface Stats {
 
 const QuickStatsBar = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState<Stats>({
@@ -41,6 +44,16 @@ const QuickStatsBar = () => {
   });
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success(language === "ro" ? "Deconectat cu succes" : "Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error(language === "ro" ? "Eroare la deconectare" : "Error signing out");
+    }
+  };
 
   const translations = {
     ro: {
@@ -465,10 +478,10 @@ const QuickStatsBar = () => {
                       </span>
                     </Link>
                   ) : (
-                    <div className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 cursor-help px-2 py-1 rounded-md transition-all ${
+                    <div className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 px-2 py-1 rounded-md transition-all ${
                       isAdmin 
-                        ? "bg-amber-500/10 hover:bg-amber-500/20" 
-                        : "bg-primary/10 hover:bg-primary/20"
+                        ? "bg-amber-500/10" 
+                        : "bg-primary/10"
                     }`}>
                       {isAdmin ? (
                         <Shield className="w-3.5 h-3.5 text-amber-500" />
@@ -482,6 +495,15 @@ const QuickStatsBar = () => {
                       }`}>
                         {isAdmin ? "Admin" : (language === "ro" ? "Cont" : "User")}
                       </span>
+                      <button
+                        onClick={handleLogout}
+                        className={`ml-1 p-1 rounded transition-all hover:bg-destructive/20 group/logout ${
+                          isAdmin ? "hover:text-destructive" : "hover:text-destructive"
+                        }`}
+                        title={language === "ro" ? "Deconectare" : "Sign Out"}
+                      >
+                        <LogOut className="w-3 h-3 text-muted-foreground group-hover/logout:text-destructive transition-colors" />
+                      </button>
                     </div>
                   )}
                 </TooltipTrigger>
