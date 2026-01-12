@@ -454,34 +454,36 @@ const QuickStatsBar = () => {
               {/* User status indicator */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 cursor-help px-2 py-1 rounded-md transition-all ${
-                    isAdmin 
-                      ? "bg-amber-500/10 hover:bg-amber-500/20" 
-                      : user 
-                        ? "bg-primary/10 hover:bg-primary/20" 
-                        : "bg-muted/50 hover:bg-muted"
-                  }`}>
-                    {isAdmin ? (
-                      <Shield className="w-3.5 h-3.5 text-amber-500" />
-                    ) : user ? (
-                      <UserIcon className="w-3.5 h-3.5 text-primary" />
-                    ) : (
-                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-                    )}
-                    <span className={`text-[10px] uppercase tracking-wider font-medium ${
+                  {!user ? (
+                    <Link
+                      to="/auth"
+                      className="flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 px-2 py-1 rounded-md transition-all bg-primary/10 hover:bg-primary/20 group"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                        {language === "ro" ? "Autentificare" : "Sign In"}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className={`flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 cursor-help px-2 py-1 rounded-md transition-all ${
                       isAdmin 
-                        ? "text-amber-600 dark:text-amber-400" 
-                        : user 
-                          ? "text-primary" 
-                          : "text-muted-foreground"
+                        ? "bg-amber-500/10 hover:bg-amber-500/20" 
+                        : "bg-primary/10 hover:bg-primary/20"
                     }`}>
-                      {isAdmin 
-                        ? "Admin" 
-                        : user 
-                          ? (language === "ro" ? "Cont" : "User") 
-                          : (language === "ro" ? "Vizitator" : "Guest")}
-                    </span>
-                  </div>
+                      {isAdmin ? (
+                        <Shield className="w-3.5 h-3.5 text-amber-500" />
+                      ) : (
+                        <UserIcon className="w-3.5 h-3.5 text-primary" />
+                      )}
+                      <span className={`text-[10px] uppercase tracking-wider font-medium ${
+                        isAdmin 
+                          ? "text-amber-600 dark:text-amber-400" 
+                          : "text-primary"
+                      }`}>
+                        {isAdmin ? "Admin" : (language === "ro" ? "Cont" : "User")}
+                      </span>
+                    </div>
+                  )}
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="bg-popover/95 backdrop-blur-sm max-w-xs">
                   <p className="text-sm">
@@ -494,8 +496,8 @@ const QuickStatsBar = () => {
                             ? "Ești autentificat. Vezi statistici detaliate despre business." 
                             : "You're logged in. You see detailed business statistics.")
                         : (language === "ro" 
-                            ? "Vizitezi ca anonim. Autentifică-te pentru a vedea mai multe statistici." 
-                            : "Browsing as guest. Log in to see more statistics.")}
+                            ? "Click pentru a te autentifica și a vedea mai multe statistici." 
+                            : "Click to sign in and see more statistics.")}
                   </p>
                 </TooltipContent>
               </Tooltip>
