@@ -22,6 +22,7 @@ import OwnerAuth from "./pages/OwnerAuth";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AboutUs from "./pages/AboutUs";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/portal-proprietar" element={<OwnerDashboard />} />
                 <Route path="/despre-noi" element={<AboutUs />} />
                 <Route path="/profil" element={<Profile />} />
+                <Route path="/setari" element={<Settings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
