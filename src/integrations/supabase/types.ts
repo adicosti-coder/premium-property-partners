@@ -527,21 +527,27 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          full_name: string | null
           id: string
           notifications_enabled: boolean | null
           preferred_locations: string[] | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          full_name?: string | null
           id: string
           notifications_enabled?: boolean | null
           preferred_locations?: string[] | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           notifications_enabled?: boolean | null
           preferred_locations?: string[] | null
