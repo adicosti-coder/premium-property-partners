@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut, LayoutDashboard, Settings, ChevronDown } from "lucide-react";
+import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut, LayoutDashboard, Settings, ChevronDown, UserCircle, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -538,11 +538,25 @@ const QuickStatsBar = () => {
                       <span>{language === "ro" ? "Dashboard" : "Dashboard"}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem 
+                      onClick={() => navigate("/profil")}
+                      className="cursor-pointer"
+                    >
+                      <UserCircle className="w-4 h-4 mr-2" />
+                      <span>{language === "ro" ? "Profilul meu" : "My Profile"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
                       onClick={() => navigate("/favorites")}
                       className="cursor-pointer"
                     >
-                      <Star className="w-4 h-4 mr-2" />
+                      <Heart className="w-4 h-4 mr-2" />
                       <span>{language === "ro" ? "Favorite" : "Favorites"}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/setari")}
+                      className="cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      <span>{language === "ro" ? "Setări cont" : "Account Settings"}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
