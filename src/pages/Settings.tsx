@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2, Shield, ShieldCheck, ShieldOff, Copy, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { z } from "zod";
@@ -49,6 +49,17 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordErrors, setPasswordErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  
+  // 2FA states
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaEnrolling, setMfaEnrolling] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [totpSecret, setTotpSecret] = useState<string | null>(null);
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [verifyCode, setVerifyCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [secretCopied, setSecretCopied] = useState(false);
 
   const t = {
     ro: {
@@ -69,6 +80,27 @@ const Settings = () => {
       passwordError: "Eroare la schimbarea parolei",
       passwordMismatch: "Parolele nu coincid",
       passwordTooShort: "Parola trebuie să aibă cel puțin 8 caractere",
+      
+      // 2FA section
+      twoFactorSection: "Autentificare în doi pași (2FA)",
+      twoFactorDescription: "Adaugă un nivel suplimentar de securitate contului tău",
+      twoFactorEnabled: "2FA este activat",
+      twoFactorDisabled: "2FA nu este activat",
+      enable2FA: "Activează 2FA",
+      disable2FA: "Dezactivează 2FA",
+      scanQRCode: "Scanează codul QR cu aplicația de autentificare",
+      orEnterManually: "Sau introdu manual acest cod în aplicație:",
+      enterVerificationCode: "Introdu codul de verificare",
+      verificationCodePlaceholder: "Cod din 6 cifre",
+      verify: "Verifică și activează",
+      verifying: "Se verifică...",
+      cancel: "Anulează",
+      twoFactorSuccess: "2FA a fost activat cu succes!",
+      twoFactorDisableSuccess: "2FA a fost dezactivat!",
+      twoFactorError: "Eroare la configurarea 2FA",
+      invalidCode: "Cod invalid. Încearcă din nou.",
+      copiedToClipboard: "Copiat în clipboard!",
+      copySecret: "Copiază codul",
       
       // Notifications section
       notificationsSection: "Notificări",
@@ -117,6 +149,27 @@ const Settings = () => {
       passwordError: "Error changing password",
       passwordMismatch: "Passwords don't match",
       passwordTooShort: "Password must be at least 8 characters",
+      
+      // 2FA section
+      twoFactorSection: "Two-Factor Authentication (2FA)",
+      twoFactorDescription: "Add an extra layer of security to your account",
+      twoFactorEnabled: "2FA is enabled",
+      twoFactorDisabled: "2FA is not enabled",
+      enable2FA: "Enable 2FA",
+      disable2FA: "Disable 2FA",
+      scanQRCode: "Scan the QR code with your authenticator app",
+      orEnterManually: "Or manually enter this code in your app:",
+      enterVerificationCode: "Enter verification code",
+      verificationCodePlaceholder: "6-digit code",
+      verify: "Verify and enable",
+      verifying: "Verifying...",
+      cancel: "Cancel",
+      twoFactorSuccess: "2FA has been enabled successfully!",
+      twoFactorDisableSuccess: "2FA has been disabled!",
+      twoFactorError: "Error configuring 2FA",
+      invalidCode: "Invalid code. Please try again.",
+      copiedToClipboard: "Copied to clipboard!",
+      copySecret: "Copy code",
       
       // Notifications section
       notificationsSection: "Notifications",
@@ -167,11 +220,123 @@ const Settings = () => {
         navigate("/auth");
       } else {
         fetchSettings(session.user.id);
+        checkMfaStatus();
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkMfaStatus = async () => {
+    try {
+      setMfaLoading(true);
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      
+      const verifiedFactor = data.totp.find(factor => factor.status === 'verified');
+      setMfaEnabled(!!verifiedFactor);
+      if (verifiedFactor) {
+        setFactorId(verifiedFactor.id);
+      }
+    } catch (error) {
+      console.error("Error checking MFA status:", error);
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const startMfaEnrollment = async () => {
+    try {
+      setMfaEnrolling(true);
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'Authenticator App'
+      });
+      
+      if (error) throw error;
+      
+      setQrCode(data.totp.qr_code);
+      setTotpSecret(data.totp.secret);
+      setFactorId(data.id);
+    } catch (error: any) {
+      console.error("Error starting MFA enrollment:", error);
+      toast.error(text.twoFactorError);
+      setMfaEnrolling(false);
+    }
+  };
+
+  const cancelMfaEnrollment = async () => {
+    if (factorId) {
+      try {
+        await supabase.auth.mfa.unenroll({ factorId });
+      } catch (error) {
+        console.error("Error canceling enrollment:", error);
+      }
+    }
+    setMfaEnrolling(false);
+    setQrCode(null);
+    setTotpSecret(null);
+    setFactorId(null);
+    setVerifyCode("");
+  };
+
+  const verifyAndEnableMfa = async () => {
+    if (!factorId || verifyCode.length !== 6) return;
+    
+    try {
+      setVerifying(true);
+      const { data, error } = await supabase.auth.mfa.challengeAndVerify({
+        factorId,
+        code: verifyCode
+      });
+      
+      if (error) {
+        toast.error(text.invalidCode);
+        return;
+      }
+      
+      toast.success(text.twoFactorSuccess);
+      setMfaEnabled(true);
+      setMfaEnrolling(false);
+      setQrCode(null);
+      setTotpSecret(null);
+      setVerifyCode("");
+    } catch (error: any) {
+      console.error("Error verifying MFA:", error);
+      toast.error(text.invalidCode);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const disableMfa = async () => {
+    if (!factorId) return;
+    
+    try {
+      setMfaLoading(true);
+      const { error } = await supabase.auth.mfa.unenroll({ factorId });
+      
+      if (error) throw error;
+      
+      toast.success(text.twoFactorDisableSuccess);
+      setMfaEnabled(false);
+      setFactorId(null);
+    } catch (error: any) {
+      console.error("Error disabling MFA:", error);
+      toast.error(text.twoFactorError);
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const copySecretToClipboard = async () => {
+    if (totpSecret) {
+      await navigator.clipboard.writeText(totpSecret);
+      setSecretCopied(true);
+      toast.success(text.copiedToClipboard);
+      setTimeout(() => setSecretCopied(false), 2000);
+    }
+  };
 
   const fetchSettings = async (userId: string) => {
     try {
@@ -369,6 +534,144 @@ const Settings = () => {
                   text.changePassword
                 )}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* 2FA Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="w-5 h-5" />
+                {text.twoFactorSection}
+              </CardTitle>
+              <CardDescription>{text.twoFactorDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {mfaLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading...</span>
+                </div>
+              ) : mfaEnrolling ? (
+                <div className="space-y-4">
+                  {qrCode && (
+                    <div className="flex flex-col items-center gap-4">
+                      <p className="text-sm text-muted-foreground text-center">
+                        {text.scanQRCode}
+                      </p>
+                      <div className="p-4 bg-white rounded-lg">
+                        <img src={qrCode} alt="QR Code" className="w-48 h-48" />
+                      </div>
+                      
+                      {totpSecret && (
+                        <div className="w-full space-y-2">
+                          <p className="text-sm text-muted-foreground text-center">
+                            {text.orEnterManually}
+                          </p>
+                          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                            <code className="flex-1 text-sm font-mono break-all">
+                              {totpSecret}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={copySecretToClipboard}
+                              className="shrink-0"
+                            >
+                              {secretCopied ? (
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="w-full space-y-2">
+                        <Label htmlFor="verifyCode">{text.enterVerificationCode}</Label>
+                        <Input
+                          id="verifyCode"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={6}
+                          value={verifyCode}
+                          onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
+                          placeholder={text.verificationCodePlaceholder}
+                          className="text-center text-lg tracking-widest"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2 w-full">
+                        <Button
+                          variant="outline"
+                          onClick={cancelMfaEnrollment}
+                          className="flex-1"
+                        >
+                          {text.cancel}
+                        </Button>
+                        <Button
+                          onClick={verifyAndEnableMfa}
+                          disabled={verifying || verifyCode.length !== 6}
+                          className="flex-1"
+                        >
+                          {verifying ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              {text.verifying}
+                            </>
+                          ) : (
+                            text.verify
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : mfaEnabled ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <ShieldCheck className="w-5 h-5" />
+                    <span className="font-medium">{text.twoFactorEnabled}</span>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <ShieldOff className="w-4 h-4 mr-2" />
+                        {text.disable2FA}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{text.deleteConfirmTitle}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {language === 'ro' 
+                            ? 'Dezactivarea 2FA va reduce securitatea contului tău. Ești sigur?' 
+                            : 'Disabling 2FA will reduce your account security. Are you sure?'}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{text.deleteCancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={disableMfa}>
+                          {text.disable2FA}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <ShieldOff className="w-5 h-5" />
+                    <span>{text.twoFactorDisabled}</span>
+                  </div>
+                  <Button onClick={startMfaEnrollment}>
+                    <Shield className="w-4 h-4 mr-2" />
+                    {text.enable2FA}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
