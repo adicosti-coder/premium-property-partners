@@ -10,6 +10,7 @@ type FontSize = "small" | "normal" | "large" | "xlarge";
 
 const AccessibilityPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const { language, setLanguage } = useLanguage();
   const { animationsEnabled, toggleAnimations } = useAnimationPreference();
   const { theme, setTheme } = useTheme();
@@ -36,6 +37,18 @@ const AccessibilityPanel = () => {
     }
     return false;
   });
+
+  // Show button on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsVisible(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Apply font size
   useEffect(() => {
@@ -129,8 +142,11 @@ const AccessibilityPanel = () => {
         className={cn(
           "fixed bottom-40 right-4 z-50 w-12 h-12 rounded-full shadow-lg",
           "bg-primary hover:bg-primary/90 text-primary-foreground",
-          "transition-all duration-300 ease-out",
-          isOpen && "rotate-180 bg-accent text-accent-foreground hover:bg-accent/90"
+          "transition-all duration-500 ease-out",
+          isOpen && "rotate-180 bg-accent text-accent-foreground hover:bg-accent/90",
+          isVisible 
+            ? "opacity-100 translate-y-0 scale-100" 
+            : "opacity-0 translate-y-8 scale-75 pointer-events-none"
         )}
         size="icon"
         aria-label={tr.accessibility}
