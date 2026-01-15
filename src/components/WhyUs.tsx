@@ -1,4 +1,6 @@
-import { CheckCircle2, Shield, Target, Zap } from "lucide-react";
+import { Award, TrendingUp, HeartHandshake, Camera, FileText, Shield, type LucideIcon } from "lucide-react";
+
+const reasonIcons: LucideIcon[] = [Award, TrendingUp, HeartHandshake, Camera, FileText];
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useParallax } from "@/hooks/useParallax";
 
@@ -107,15 +109,18 @@ const WhyUs = () => {
             </div>
             
             <ul className="space-y-4">
-              {t.reasons.map((reason, index) => (
-                <li 
-                  key={index} 
-                  className="flex items-start gap-3 text-foreground/80 font-sans"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span>{reason}</span>
-                </li>
-              ))}
+              {t.reasons.map((reason, index) => {
+                const Icon = reasonIcons[index];
+                return (
+                  <li 
+                    key={index} 
+                    className="flex items-start gap-3 text-foreground/80 font-sans"
+                  >
+                    <Icon className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span>{reason}</span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
           
