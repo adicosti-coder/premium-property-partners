@@ -17,9 +17,9 @@ const WhyUs = () => {
       promiseTitle: "Promisiune simplă",
       promiseText: "Îți spunem realist dacă merită. Dacă merită, îți dăm pași clari. Dacă nu merită, îți spunem de ce.",
       reasons: [
-        "Experiență de peste 5 ani în administrare proprietăți",
-        "Rata medie de ocupare de 95%+ pentru portofoliu",
-        "Suport 24/7 pentru proprietari și oaspeți",
+        "Experiență de peste 25 ani în administrarea de proprietăți",
+        "Rata medie de ocupare maximizată pentru proprietățile preluate",
+        "Suport pentru proprietari și oaspeți",
         "Fotografii și listări profesionale incluse",
         "Raportare lunară detaliată și transparentă"
       ],
@@ -40,9 +40,9 @@ const WhyUs = () => {
       promiseTitle: "Simple promise",
       promiseText: "We tell you realistically if it's worth it. If it is, we give you clear steps. If not, we tell you why.",
       reasons: [
-        "Over 5 years of property management experience",
-        "Average occupancy rate of 95%+ for portfolio",
-        "24/7 support for owners and guests",
+        "Over 25 years of property management experience",
+        "Maximized occupancy rate for managed properties",
+        "Support for owners and guests",
         "Professional photos and listings included",
         "Detailed and transparent monthly reporting"
       ],
