@@ -94,7 +94,7 @@ export const properties: Property[] = [
     slug: "fructus-plaza-ultracentral-apart-hotel",
     name: "Fructus Plaza ULTRACENTRAL ApArt Hotel",
     location: "Fructus Plaza",
-    images: [apt03],
+    images: [apt05],
     features: ["Parcare Gratuită", "Balcon Mare", "WiFi"],
     bookingUrl: "https://www.booking.com/hotel/ro/fructus-plaza-ultracentral-deluxe-apartment-plus-free-parking.html",
     description: "Apartament DeLuxe ultracentral cu parcare gratuită și balcon mare",
