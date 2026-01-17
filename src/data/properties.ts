@@ -9,6 +9,7 @@ import apt08 from "@/assets/apt-08.jpg";
 import apt09 from "@/assets/apt-09.jpg";
 import apt11 from "@/assets/apt-11.jpg";
 import modernStudio from "@/assets/modern-studio.jpg";
+import helios from "@/assets/helios.jpg";
 
 export interface Property {
   id: number;
@@ -173,7 +174,7 @@ export const properties: Property[] = [
     slug: "helios-apart-hotel",
     name: "HELIOS ApArt Hotel - DeLuxe Residence",
     location: "Strada Argeș",
-    images: [apt02],
+    images: [helios],
     features: ["Central", "Parcare", "WiFi"],
     bookingUrl: "https://www.booking.com/hotel/ro/helios-apartment-timisoara.html",
     description: "Reședință DeLuxe aproape de centrul orașului",
