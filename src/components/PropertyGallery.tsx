@@ -12,6 +12,7 @@ import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCompareModal from "./PropertyCompareModal";
 import PropertyMap from "./PropertyMap";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
+import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { properties, Property } from "@/data/properties";
 import { toast } from "sonner";
@@ -332,11 +333,11 @@ const PropertyGallery = () => {
                 {/* Image */}
                 <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
                   <div className="relative h-48 overflow-hidden cursor-pointer">
-                    <img
+                    <OptimizedImage
                       src={property.images[0]}
                       alt={property.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full"
+                      priority={index < 3}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
