@@ -8,6 +8,7 @@ import apt07 from "@/assets/apt-07.jpg";
 import apt08 from "@/assets/apt-08.jpg";
 import apt09 from "@/assets/apt-09.jpg";
 import apt11 from "@/assets/apt-11.jpg";
+import modernStudio from "@/assets/modern-studio.jpg";
 
 export interface Property {
   id: number;
@@ -302,7 +303,7 @@ export const properties: Property[] = [
     slug: "modern-studio-apart-hotel",
     name: "MODERN Studio ApArt Hotel",
     location: "Simion Bărnuțiu",
-    images: [apt05],
+    images: [modernStudio],
     features: ["Parcare", "WiFi", "Lângă Amazonia"],
     bookingUrl: "https://www.booking.com/hotel/ro/modern-studio-to-aquapark-amazonia-babes-hospital-and-cardiology.html",
     description: "Studio modern lângă AquaPark Amazonia și Spitalele Babeș și Cardiologie",
