@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, memo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import OptimizedImage from "./OptimizedImage";
 
 interface PropertyImageCarouselProps {
   images: string[];
@@ -55,14 +56,13 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
               key={index} 
               className="flex-[0_0_100%] min-w-0"
             >
-              <img
+              <OptimizedImage
                 src={image}
                 alt={`${propertyName} - ${index + 1}`}
-                loading={index === 0 ? "eager" : "lazy"}
-                decoding={index === 0 ? "sync" : "async"}
+                className="w-full h-56"
                 width={400}
                 height={224}
-                className="w-full h-56 object-cover transition-transform duration-700 group-hover:scale-105"
+                priority={index === 0}
               />
             </div>
           ))}
