@@ -99,20 +99,28 @@ const OptimizedImage = memo(({
 
       {/* Actual image - only render when in view */}
       {isInView && !hasError && (
-        <img
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          loading={priority ? "eager" : "lazy"}
-          decoding={priority ? "sync" : "async"}
-          fetchPriority={priority ? "high" : "auto"}
-          onLoad={handleLoad}
-          onError={handleError}
-          className={`w-full h-full object-cover transition-all duration-500 ${
-            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
-          }`}
-        />
+        <picture>
+          {/* WebP source for modern browsers */}
+          <source
+            srcSet={src.replace(/\.(jpg|jpeg|png)$/i, '.webp')}
+            type="image/webp"
+          />
+          {/* Original format fallback */}
+          <img
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            loading={priority ? "eager" : "lazy"}
+            decoding={priority ? "sync" : "async"}
+            fetchPriority={priority ? "high" : "auto"}
+            onLoad={handleLoad}
+            onError={handleError}
+            className={`w-full h-full object-cover transition-all duration-500 ${
+              isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+            }`}
+          />
+        </picture>
       )}
     </div>
   );
