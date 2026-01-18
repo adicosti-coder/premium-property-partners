@@ -1,14 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Building2, Users, Home } from "lucide-react";
 import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect, useMemo } from "react";
-import { useCountAnimation } from "@/hooks/useCountAnimation";
+import { useState, useEffect } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
-import AvailabilitySearchWidget from "@/components/AvailabilitySearchWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Link } from "react-router-dom";
 
 interface HeroSettings {
   videoUrl: string;
@@ -173,32 +169,22 @@ const Hero = () => {
             <span className="text-foreground/80 text-sm font-medium tracking-wide">{heroSettings.customBadge || t.hero.badge}</span>
           </div>
           
-          {/* Headline with typing animation */}
+          {/* Headline with typing animation - 3 lines layout */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
             <TypingTitle 
               title={heroSettings.customTitle || t.hero.title} 
+              titleMid={t.hero.titleMid}
               highlight={heroSettings.customHighlight || t.hero.titleHighlight} 
             />
           </h1>
           
-          {/* Subheadline with typing animation + CTAs + Tags + Widget */}
+          {/* Subheadline with typing animation + CTAs + Feature Cards */}
           <HeroContent 
             subtitle={heroSettings.customSubtitle || t.hero.subtitle}
             titleLength={(heroSettings.customTitle || t.hero.title).length}
             highlightLength={(heroSettings.customHighlight || t.hero.titleHighlight).length}
-            ctaQuickStart={heroSettings.customCtaPrimary || t.hero.ctaQuickStart || "Start rapid"}
-            cta={heroSettings.customCtaSecondary || t.hero.cta}
-            tags={heroSettings.customTags && heroSettings.customTags.length > 0 
-              ? heroSettings.customTags 
-              : [
-                  t.hero.tags?.hotelManagement || "Dynamic pricing", 
-                  t.hero.tags?.dynamicPricing || "Self check-in 24/7", 
-                  t.hero.tags?.selfCheckIn || "Curățenie hotel", 
-                  t.hero.tags?.cleaning || "Mentenanță",
-                  t.hero.tags?.reviews || "Recenzii & suport",
-                  t.hero.tags?.reporting || "Raportare"
-                ]
-            }
+            ctaPrimary={heroSettings.customCtaPrimary || t.hero.cta}
+            ctaSecondary={heroSettings.customCtaSecondary || t.hero.ctaSecondary}
             t={t}
           />
         </div>
@@ -222,200 +208,124 @@ const Hero = () => {
   );
 };
 
-// Typing title component
-const TypingTitle = ({ title, highlight }: { title: string; highlight: string }) => {
+// Typing title component - 3 lines layout
+const TypingTitle = ({ title, titleMid, highlight }: { title: string; titleMid: string; highlight: string }) => {
   const { displayedText: titleText, isComplete: titleComplete } = useTypingAnimation({
     text: title,
-    speed: 30, // Faster typing (was 40)
-    delay: 200 // Shorter initial delay (was 300)
+    speed: 30,
+    delay: 200
   });
   
   const { displayedText: highlightText, isComplete: highlightComplete } = useTypingAnimation({
     text: highlight,
-    speed: 35, // Faster typing (was 50)
-    delay: 200 + title.length * 30 + 100 // Reduced buffer (was 200)
+    speed: 35,
+    delay: 200 + title.length * 30 + 300
   });
 
   return (
-    <>
-      {titleText}
-      <span className={`inline-block w-0.5 h-[0.9em] bg-primary ml-1 align-middle transition-opacity duration-300 ${titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
-      {titleComplete && " "}
-      <span className="text-gradient-gold">
-        {highlightText}
-        <span className={`inline-block w-0.5 h-[0.9em] bg-primary ml-1 align-middle transition-opacity duration-300 ${highlightComplete || !titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
-      </span>
-    </>
+    <span className="block">
+      <span className="block">{titleText}</span>
+      {titleComplete && (
+        <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-muted-foreground my-2">
+          {titleMid}
+        </span>
+      )}
+      {titleComplete && (
+        <span className="block text-gradient-gold">
+          {highlightText}
+          <span className={`inline-block w-0.5 h-[0.9em] bg-primary ml-1 align-middle transition-opacity duration-300 ${highlightComplete ? 'opacity-0' : 'animate-pulse'}`} />
+        </span>
+      )}
+    </span>
   );
 }
 
-// HeroContent component with typing subtitle and sequential fade-in for all elements
+// HeroContent component with typing subtitle and feature cards
 const HeroContent = ({ 
   subtitle, 
   titleLength, 
   highlightLength,
-  ctaQuickStart,
-  cta,
-  tags,
+  ctaPrimary,
+  ctaSecondary,
   t
 }: { 
   subtitle: string; 
   titleLength: number; 
   highlightLength: number;
-  ctaQuickStart: string;
-  cta: string;
-  tags: string[];
+  ctaPrimary: string;
+  ctaSecondary: string;
   t: any;
 }) => {
-  // Optimized timing: faster typing and shorter delays for mobile
-  const titleDuration = 200 + titleLength * 30 + 100 + highlightLength * 35 + 150;
+  const titleDuration = 200 + titleLength * 30 + 300 + highlightLength * 35 + 150;
   
   const { displayedText: subtitleText, isComplete: subtitleComplete } = useTypingAnimation({
     text: subtitle,
-    speed: 18, // Faster subtitle typing (was 25)
+    speed: 18,
     delay: titleDuration
   });
 
   return (
     <>
-      <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed">
+      <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8 leading-relaxed">
         {subtitleText}
         <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete ? 'opacity-0' : 'animate-pulse'}`} />
       </p>
       
-      {/* CTAs with sequential fade-in - optimized timing */}
-      <div className={`flex flex-col sm:flex-row gap-4 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+      {/* CTAs */}
+      <div className={`flex flex-col gap-3 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
         <Button 
           variant="hero" 
           size="xl" 
-          className={`relative animate-glow-pulse btn-shine transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+          className={`relative animate-glow-pulse btn-shine w-full sm:w-auto transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
           style={{ transitionDelay: subtitleComplete ? '50ms' : '0ms' }}
           onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
         >
-          {ctaQuickStart}
-          <ArrowRight className="ml-2 h-5 w-5" />
+          {ctaPrimary}
         </Button>
         <Button 
           variant="heroOutline" 
           size="xl" 
-          className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+          className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] w-full sm:w-auto transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
           style={{ transitionDelay: subtitleComplete ? '120ms' : '0ms' }}
-          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
         >
-          {cta}
+          {ctaSecondary}
         </Button>
       </div>
       
-      {/* Direction Selector - compact cards */}
+      {/* Trust text */}
       <div 
-        className={`grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+        className={`mt-6 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
         style={{ transitionDelay: subtitleComplete ? '180ms' : '0ms' }}
       >
-        <Link 
-          to="/imobiliare" 
-          className="dir-item group p-4 bg-card/50 border border-border rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all duration-300 text-center"
-        >
-          <Building2 className="w-5 h-5 mx-auto mb-2 text-emerald-500 group-hover:scale-110 transition-transform" />
-          <span className="text-sm font-semibold text-foreground block">Imobiliare</span>
-          <span className="text-xs text-muted-foreground">Vânzare & închiriere</span>
-        </Link>
-        <a 
-          href="#calculator" 
-          className="dir-item dir-cta relative p-4 bg-primary/10 border border-primary/30 rounded-xl hover:bg-primary/15 transition-all duration-300 text-center overflow-hidden"
-        >
-          <div className="dir-shimmer" />
-          <Home className="w-5 h-5 mx-auto mb-2 text-primary" />
-          <span className="text-sm font-semibold text-primary block">Proprietari</span>
-          <span className="text-xs text-muted-foreground">Administrare hotelieră</span>
-        </a>
-        <Link 
-          to="/oaspeti" 
-          className="dir-item group p-4 bg-card/50 border border-border rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300 text-center"
-        >
-          <Users className="w-5 h-5 mx-auto mb-2 text-blue-500 group-hover:scale-110 transition-transform" />
-          <span className="text-sm font-semibold text-foreground block">Oaspeți</span>
-          <span className="text-xs text-muted-foreground">Apartamente premium</span>
-        </Link>
+        <p className="text-muted-foreground text-sm">
+          {t.hero.trustText} <span className="font-semibold text-foreground">24h</span>
+        </p>
+        <p className="text-muted-foreground/70 text-sm mt-1">
+          {t.hero.trustPrivacy}
+        </p>
       </div>
       
-      {/* Feature tags with sequential fade-in - optimized timing */}
-      <div className="flex flex-wrap gap-2 mt-6">
-        {tags.map((tag, index) => (
-          <span 
-            key={index} 
-            className={`px-3 py-1.5 text-xs font-medium bg-card/50 border border-border/50 rounded-full text-foreground/80 cursor-default transition-all duration-250 hover:scale-110 hover:bg-primary/10 hover:border-primary/30 hover:text-foreground ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-            style={{ transitionDelay: subtitleComplete ? `${280 + index * 40}ms` : '0ms' }}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-      
-      {/* Availability Search Widget with fade-in - optimized */}
+      {/* Feature Cards */}
       <div 
-        className={`mt-10 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-        style={{ transitionDelay: subtitleComplete ? '350ms' : '0ms' }}
+        className={`grid grid-cols-1 gap-3 mt-8 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
+        style={{ transitionDelay: subtitleComplete ? '250ms' : '0ms' }}
       >
-        <AvailabilitySearchWidget variant="hero" />
-      </div>
-      
-      {/* Trust indicators with fade-in - optimized */}
-      <div 
-        className={`transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-        style={{ transitionDelay: subtitleComplete ? '450ms' : '0ms' }}
-      >
-        <StatsSection t={t} />
+        <div className="p-4 bg-card/60 border border-border/50 rounded-xl backdrop-blur-sm">
+          <p className="text-muted-foreground text-sm">{t.hero.features?.payments || "Plăți"}</p>
+          <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
+        </div>
+        <div className="p-4 bg-card/60 border border-border/50 rounded-xl backdrop-blur-sm">
+          <p className="text-muted-foreground text-sm">{t.hero.features?.model || "Model"}</p>
+          <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
+        </div>
+        <div className="p-4 bg-card/60 border border-border/50 rounded-xl backdrop-blur-sm">
+          <p className="text-muted-foreground text-sm">{t.hero.features?.response || "Răspuns"}</p>
+          <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
+        </div>
       </div>
     </>
   );
 }
-
-// Stats section component with counting animations
-const StatsSection = ({ t }: { t: any }) => {
-  const { count: propertiesCount, elementRef: propertiesRef } = useCountAnimation({ 
-    end: 150, 
-    duration: 2000,
-    delay: 200 
-  });
-  
-  const { count: occupancyCount, elementRef: occupancyRef } = useCountAnimation({ 
-    end: 98, 
-    duration: 2000,
-    delay: 400 
-  });
-  
-  const { count: ratingCount, elementRef: ratingRef } = useCountAnimation({ 
-    end: 4.9, 
-    duration: 2000,
-    delay: 600,
-    decimals: 1 
-  });
-
-  return (
-    <div className="mt-16 pt-8 border-t border-border animate-fade-up" style={{ animationDelay: '0.5s' }}>
-      <p className="text-muted-foreground text-sm mb-4 uppercase tracking-widest">{t.hero.trustTitle}</p>
-      <div className="flex flex-wrap gap-8 md:gap-16">
-        <div ref={propertiesRef}>
-          <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">
-            {propertiesCount}+
-          </p>
-          <p className="text-muted-foreground text-sm">{t.hero.stats.properties}</p>
-        </div>
-        <div ref={occupancyRef}>
-          <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">
-            {occupancyCount}%
-          </p>
-          <p className="text-muted-foreground text-sm">{t.hero.stats.occupancy}</p>
-        </div>
-        <div ref={ratingRef}>
-          <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">
-            {ratingCount}★
-          </p>
-          <p className="text-muted-foreground text-sm">{t.hero.stats.rating}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default Hero;
