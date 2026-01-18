@@ -19,8 +19,8 @@ export const translations = {
     // Hero
     hero: {
       badge: "Timișoara · Premium · Execuție ca la hotel",
-      title: "Un sistem complet pentru",
-      titleHighlight: "randament real",
+      title: "1 Sistem Complet pentru",
+      titleHighlight: "1 Randament Real",
       subtitle: "Tot ce ține de proprietăți — vânzare, administrare și cazare — într-un sistem clar, profesionist. Plățile intră direct la tine · structură transparentă · fără obligații.",
       cta: "Vreau ofertă",
       ctaSecondary: "Cum lucrăm",
@@ -1049,8 +1049,8 @@ Mulțumesc!`,
     // Hero
     hero: {
       badge: "Timișoara · Premium · Hotel-style execution",
-      title: "A complete system for",
-      titleHighlight: "real returns",
+      title: "1 Complete System for",
+      titleHighlight: "1 Real Return",
       subtitle: "Everything property-related — sales, management, and accommodation — in a clear, professional system. Payments go directly to you · transparent structure · no obligations.",
       cta: "Get an offer",
       ctaSecondary: "How we work",
