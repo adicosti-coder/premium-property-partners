@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/apt-01.jpg";
+import heroImage from "@/assets/hero-cinematic.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
@@ -137,11 +137,11 @@ const Hero = () => {
             <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
         )}
-        {/* Fallback image - always rendered for instant LCP, hidden when video loads */}
+        {/* Fallback image with cinematic zoom effect - always rendered for instant LCP, hidden when video loads */}
         <img
           src={heroSettings.customFallbackImage || heroImage}
           alt="Apartament de lux"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 animate-cinematic-zoom ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
           width={1920}
           height={1080}
           fetchPriority="high"
