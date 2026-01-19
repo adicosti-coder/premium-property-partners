@@ -18,7 +18,7 @@ export const translations = {
     
     // Hero
     hero: {
-      badge: "Vânzare · Administrare · Cazare — 1 singur sistem",
+      badge: "Vânzare · Administrare · Cazare\n1 singur sistem",
       title: "1 Sistem Complet",
       titleMid: "pentru",
       titleHighlight: "1 Randament Real",
@@ -1059,7 +1059,7 @@ Mulțumesc!`,
     
     // Hero
     hero: {
-      badge: "Sales · Management · Accommodation — 1 system",
+      badge: "Sales · Management · Accommodation\n1 single system",
       title: "1 Complete System",
       titleMid: "for",
       titleHighlight: "1 Real Return",

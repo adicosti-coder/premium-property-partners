@@ -164,9 +164,9 @@ const Hero = () => {
       >
         <div className="max-w-4xl">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-foreground/80 text-sm font-medium tracking-wide">{heroSettings.customBadge || t.hero.badge}</span>
+          <div className="inline-flex flex-col items-center gap-1 px-6 py-3 rounded-2xl bg-primary/10 border border-primary/20 mb-8 animate-fade-up text-center" style={{ animationDelay: '0.1s' }}>
+            <span className="text-foreground/80 text-sm font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
+            <span className="text-foreground text-sm font-semibold">1 singur sistem</span>
           </div>
           
           {/* Headline with typing animation - 3 lines layout */}
