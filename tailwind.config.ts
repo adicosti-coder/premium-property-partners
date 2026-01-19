@@ -123,6 +123,18 @@ export default {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.1)" },
         },
+        "badge-shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "badge-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 8px hsl(var(--primary) / 0.3), inset 0 0 8px hsl(var(--primary) / 0.1)" 
+          },
+          "50%": { 
+            boxShadow: "0 0 16px hsl(var(--primary) / 0.5), inset 0 0 12px hsl(var(--primary) / 0.2)" 
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -131,6 +143,8 @@ export default {
         "confetti-fall": "confetti-fall 3s ease-out forwards",
         "sparkle-burst": "sparkle-burst 0.8s ease-out forwards",
         "success-bounce": "success-bounce 0.5s ease-in-out",
+        "badge-shimmer": "badge-shimmer 3s ease-in-out infinite",
+        "badge-glow": "badge-glow 2.5s ease-in-out infinite",
       },
     },
   },
