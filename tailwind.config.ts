@@ -135,6 +135,17 @@ export default {
             boxShadow: "0 0 16px hsl(var(--primary) / 0.5), inset 0 0 12px hsl(var(--primary) / 0.2)" 
           },
         },
+        "cinematic-zoom": {
+          "0%": { 
+            transform: "scale(1.0) translateX(0%)",
+          },
+          "50%": { 
+            transform: "scale(1.15) translateX(-2%)",
+          },
+          "100%": { 
+            transform: "scale(1.0) translateX(0%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -145,6 +156,7 @@ export default {
         "success-bounce": "success-bounce 0.5s ease-in-out",
         "badge-shimmer": "badge-shimmer 3s ease-in-out infinite",
         "badge-glow": "badge-glow 2.5s ease-in-out infinite",
+        "cinematic-zoom": "cinematic-zoom 25s ease-in-out infinite",
       },
     },
   },
