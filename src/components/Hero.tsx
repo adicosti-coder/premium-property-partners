@@ -164,9 +164,12 @@ const Hero = () => {
       >
         <div className="max-w-4xl">
           {/* Badge */}
-          <div className="inline-flex flex-col items-center gap-1 px-6 py-3 rounded-2xl bg-primary/10 border border-primary/20 mb-8 animate-fade-up text-center" style={{ animationDelay: '0.1s' }}>
+          <div 
+            className="inline-flex flex-col items-center gap-1 px-6 py-3 rounded-2xl bg-primary/10 border border-primary/20 mb-8 animate-fade-up text-center animate-badge-glow backdrop-blur-sm" 
+            style={{ animationDelay: '0.1s' }}
+          >
             <span className="text-foreground/80 text-sm font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
-            <span className="text-foreground text-sm font-semibold">1 singur sistem</span>
+            <span className="text-primary text-sm font-semibold">1 singur sistem</span>
           </div>
           
           {/* Headline with typing animation - 3 lines layout */}
