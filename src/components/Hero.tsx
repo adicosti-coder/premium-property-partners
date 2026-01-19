@@ -142,28 +142,33 @@ const Hero = () => {
           src={heroSettings.customFallbackImage || heroImage}
           alt="Apartament de lux"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 animate-cinematic-zoom ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
+          style={{
+            filter: "brightness(1.12) contrast(1.06) saturate(1.05)",
+          }}
           width={1920}
           height={1080}
           fetchPriority="high"
           decoding="async"
           loading="eager"
         />
-        {/* Cinematic vignette overlay */}
-        <div 
+        {/* Cinematic vignette overlay (lighter on mobile) */}
+        <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.25) 80%, rgba(0,0,0,0.45) 100%)'
+            background: isMobile
+              ? "radial-gradient(ellipse at center, hsl(var(--background) / 0) 70%, hsl(var(--background) / 0.06) 92%, hsl(var(--background) / 0.12) 100%)"
+              : "radial-gradient(ellipse at center, hsl(var(--background) / 0) 62%, hsl(var(--background) / 0.10) 88%, hsl(var(--background) / 0.18) 100%)",
           }}
         />
-        {/* Film grain overlay */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-overlay"
+        {/* Film grain overlay (very subtle) */}
+        <div
+          className={`absolute inset-0 pointer-events-none ${isMobile ? "opacity-[0.015]" : "opacity-[0.025]"} mix-blend-soft-light`}
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           }}
         />
-        {/* Content gradient overlay - reduced opacity */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/60 to-transparent" />
+        {/* Content gradient overlay - keep image clearly visible */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/10 via-transparent to-transparent" />
       </div>
       
       {/* Gold accent line */}
