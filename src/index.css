@@ -260,6 +260,19 @@
 }
 
 /* Animations */
+@keyframes hero-zoom {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.15);
+  }
+}
+
+.animate-hero-zoom {
+  animation: hero-zoom 25s ease-out forwards;
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

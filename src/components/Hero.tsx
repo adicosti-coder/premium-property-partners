@@ -125,7 +125,7 @@ const Hero = () => {
         <img
           src={heroSettings.customFallbackImage || heroImage}
           alt="Apartament de lux"
-          className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-cover transition-opacity duration-700 animate-hero-zoom ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
           width={1920}
           height={1080}
           fetchPriority="high"
