@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-cinematic.jpg";
+import heroImage from "@/assets/apt-01.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
@@ -114,13 +114,24 @@ const Hero = () => {
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Video or Fallback Image with Parallax */}
       <div 
-        className="absolute inset-0 scale-110 transition-[filter] duration-300"
+        className="absolute inset-0 transition-[filter] duration-300"
         style={{ 
-          transform: isMobile ? 'scale(1.1)' : `translateY(${parallaxOffset}px) scale(1.1)`,
+          transform: isMobile ? 'scale(1.05)' : `translateY(${parallaxOffset}px) scale(1.05)`,
           filter: blurAmount > 0 ? `blur(${blurAmount}px)` : undefined,
           willChange: isMobile ? 'auto' : 'transform, filter'
         }}
       >
+        {/* Fallback image - always rendered for instant LCP */}
+        <img
+          src={heroSettings.customFallbackImage || heroImage}
+          alt="Apartament de lux"
+          className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
+        />
         {/* Video - only load when shouldLoadVideo is true and conditions are met */}
         {shouldLoadVideo && !videoError && !isSlowConnection && (
           <video
@@ -129,7 +140,7 @@ const Hero = () => {
             loop
             playsInline
             preload="none"
-            className={`w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setVideoError(true)}
             onLoadedData={() => setVideoLoaded(true)}
             poster={heroSettings.customFallbackImage || heroImage}
@@ -137,39 +148,18 @@ const Hero = () => {
             <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
         )}
-        {/* Fallback image with cinematic zoom effect - always rendered for instant LCP, hidden when video loads */}
-        <img
-          src={heroSettings.customFallbackImage || heroImage}
-          alt="Apartament de lux"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 animate-cinematic-zoom ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
-          style={{
-            filter: "brightness(1.12) contrast(1.06) saturate(1.05)",
-          }}
-          width={1920}
-          height={1080}
-          fetchPriority="high"
-          decoding="async"
-          loading="eager"
-        />
-        {/* Cinematic vignette overlay (lighter on mobile) */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: isMobile
-              ? "radial-gradient(ellipse at center, hsl(var(--background) / 0) 70%, hsl(var(--background) / 0.06) 92%, hsl(var(--background) / 0.12) 100%)"
-              : "radial-gradient(ellipse at center, hsl(var(--background) / 0) 62%, hsl(var(--background) / 0.10) 88%, hsl(var(--background) / 0.18) 100%)",
-          }}
-        />
-        {/* Film grain overlay (very subtle) */}
-        <div
-          className={`absolute inset-0 pointer-events-none ${isMobile ? "opacity-[0.015]" : "opacity-[0.025]"} mix-blend-soft-light`}
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          }}
-        />
-        {/* Content gradient overlay - keep image clearly visible */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background/10 via-transparent to-transparent" />
       </div>
+      
+      {/* Content gradient overlay - subtle for text readability while keeping image visible */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/20 to-transparent z-[1]" />
+      
+      {/* Subtle vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{
+          background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%)",
+        }}
+      />
       
       {/* Gold accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
