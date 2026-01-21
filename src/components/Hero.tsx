@@ -153,11 +153,11 @@ const Hero = () => {
       {/* Content gradient overlay - subtle for text readability while keeping image visible */}
       <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/20 to-transparent z-[1]" />
       
-      {/* Subtle vignette */}
+      {/* Dramatic cinematic vignette */}
       <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.5) 100%)",
         }}
       />
       
