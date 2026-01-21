@@ -249,9 +249,8 @@ const Header = () => {
       {/* Centered badge below header */}
       <div className="glass border-b border-border/50 py-2">
         <div className="container mx-auto px-6 flex justify-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 animate-badge-glow backdrop-blur-sm">
+          <div className="inline-flex flex-col items-center gap-0.5 px-5 py-2 rounded-2xl bg-primary/10 border border-primary/20 animate-badge-glow backdrop-blur-sm">
             <span className="text-foreground/80 text-xs font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
-            <span className="text-primary/50">|</span>
             <span className="text-primary text-xs font-semibold">1 singur sistem</span>
           </div>
         </div>
