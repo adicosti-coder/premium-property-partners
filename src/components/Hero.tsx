@@ -164,6 +164,14 @@ const Hero = () => {
       {/* Film grain overlay */}
       <div className="absolute inset-0 pointer-events-none z-[2] film-grain opacity-[0.04]" />
       
+      {/* Warm golden color grading overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-[1] mix-blend-overlay"
+        style={{
+          background: "linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(180, 140, 40, 0.05) 50%, rgba(139, 90, 43, 0.06) 100%)",
+        }}
+      />
+      
       {/* Gold accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
