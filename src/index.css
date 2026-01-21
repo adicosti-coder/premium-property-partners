@@ -395,6 +395,37 @@
   animation: grain 8s steps(10) infinite;
 }
 
+/* Lens flare animations */
+@keyframes lens-flare {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translate(20%, -30%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(18%, -28%) scale(1.05);
+  }
+}
+
+@keyframes flare-orb {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.2);
+  }
+}
+
+.animate-lens-flare {
+  animation: lens-flare 8s ease-in-out infinite;
+}
+
+.animate-flare-orb {
+  animation: flare-orb 6s ease-in-out infinite;
+}
+
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }

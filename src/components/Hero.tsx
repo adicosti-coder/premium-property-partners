@@ -172,6 +172,22 @@ const Hero = () => {
         }}
       />
       
+      {/* Cinematic lens flare */}
+      <div 
+        className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-[1] animate-lens-flare"
+        style={{
+          background: "radial-gradient(ellipse at 80% 20%, rgba(255, 215, 100, 0.15) 0%, rgba(255, 200, 80, 0.08) 25%, transparent 60%)",
+          transform: "translate(20%, -30%)",
+        }}
+      />
+      <div 
+        className="absolute top-20 right-40 w-16 h-16 pointer-events-none z-[1] rounded-full animate-flare-orb"
+        style={{
+          background: "radial-gradient(circle, rgba(255, 230, 150, 0.4) 0%, rgba(255, 215, 100, 0.1) 40%, transparent 70%)",
+          filter: "blur(8px)",
+        }}
+      />
+      
       {/* Gold accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
