@@ -81,9 +81,11 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border">
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-16 md:h-20">
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Main header bar */}
+      <div className="glass border-b border-border">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <a href="/" className="flex flex-col items-start gap-0">
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
@@ -241,6 +243,18 @@ const Header = () => {
             </div>
           </nav>
         )}
+        </div>
+      </div>
+      
+      {/* Centered badge below header */}
+      <div className="glass border-b border-border/50 py-2">
+        <div className="container mx-auto px-6 flex justify-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 animate-badge-glow backdrop-blur-sm">
+            <span className="text-foreground/80 text-xs font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
+            <span className="text-primary/50">|</span>
+            <span className="text-primary text-xs font-semibold">1 singur sistem</span>
+          </div>
+        </div>
       </div>
     </header>
   );
