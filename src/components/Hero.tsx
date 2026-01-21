@@ -161,6 +161,9 @@ const Hero = () => {
         }}
       />
       
+      {/* Film grain overlay */}
+      <div className="absolute inset-0 pointer-events-none z-[2] film-grain opacity-[0.04]" />
+      
       {/* Gold accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
