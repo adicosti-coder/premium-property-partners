@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Loader2, CheckCircle, Home, Phone, User, Link, Check, X } from "lucide-react";
+import { ArrowRight, Loader2, CheckCircle, Home, User, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
-import { detectCountryFromPhone, getDefaultCountry } from "@/utils/phoneCountryDetector";
+import PhoneInputWithCountry from "./PhoneInputWithCountry";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
@@ -21,7 +21,7 @@ const formSchema = z.object({
 });
 
 const QuickLeadForm = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -186,46 +186,14 @@ const QuickLeadForm = () => {
               </div>
               
               {/* Phone Input */}
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg z-10">
-                  {(detectCountryFromPhone(phone) || getDefaultCountry()).flag}
-                </span>
-                <Input
-                  type="tel"
-                  placeholder={t.quickLeadForm?.phonePlaceholder || "+40 7XX XXX XXX"}
+              <div className="flex-1 min-w-[200px]">
+                <PhoneInputWithCountry
                   value={phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  className={`pl-10 pr-10 h-12 bg-background/50 border-0 focus-visible:ring-1 ${
-                    phoneError 
-                      ? "ring-1 ring-destructive focus-visible:ring-destructive" 
-                      : phone && romanianPhoneRegex.test(phone)
-                        ? "ring-1 ring-green-500 focus-visible:ring-green-500"
-                        : "focus-visible:ring-primary"
-                  }`}
-                  maxLength={20}
+                  onChange={handlePhoneChange}
+                  placeholder={t.quickLeadForm?.phonePlaceholder || "+40 7XX XXX XXX"}
+                  error={phoneError}
+                  inputClassName="h-12 bg-background/50 border-0"
                 />
-                {phone && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {romanianPhoneRegex.test(phone) ? (
-                      <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <X className="w-4 h-4 text-destructive" />
-                    )}
-                  </div>
-                )}
-                <p className={`absolute -bottom-5 left-0 text-xs ${
-                  phoneError 
-                    ? "text-destructive" 
-                    : phone && romanianPhoneRegex.test(phone)
-                      ? "text-green-600"
-                      : "text-muted-foreground"
-                }`}>
-                  {phoneError 
-                    ? phoneError 
-                    : phone && romanianPhoneRegex.test(phone)
-                      ? `✓ ${(detectCountryFromPhone(phone) || getDefaultCountry())[language === 'en' ? 'nameEn' : 'name']}`
-                      : (t.quickLeadForm?.phoneHint || "📞 +40 7XX (mobil) sau +40 2XX (fix)")}
-                </p>
               </div>
               
               {/* Property Type Select */}
