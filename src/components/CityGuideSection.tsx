@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useQuery } from '@tanstack/react-query';
@@ -27,14 +27,26 @@ import {
   ArrowUpDown,
   SortAsc,
   SortDesc,
-  HeartOff
+  HeartOff,
+  Download,
+  Share2,
+  Check,
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
+import { exportPoiFavoritesPdf, generateShareableLink, parseSharedPois } from '@/utils/exportPoiFavoritesPdf';
+import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface POI {
   id: string;
@@ -53,11 +65,24 @@ interface POI {
 const CityGuideSection: React.FC = () => {
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'default' | 'name' | 'rating'>('default');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showSharedPois, setShowSharedPois] = useState(false);
+  const [sharedPoiIds, setSharedPoiIds] = useState<string[] | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const { favorites, isFavorite, toggleFavorite, favoritesCount } = usePoiFavorites();
+
+  // Check for shared POIs in URL
+  useEffect(() => {
+    const shared = parseSharedPois(searchParams);
+    if (shared && shared.length > 0) {
+      setSharedPoiIds(shared);
+      setShowSharedPois(true);
+    }
+  }, [searchParams]);
 
   // Fetch ALL POIs from Supabase (removed limit for filtering)
   const { data: pois = [], isLoading } = useQuery({
@@ -131,6 +156,18 @@ const CityGuideSection: React.FC = () => {
       showFavorites: 'Arată doar favorite',
       noFavorites: 'Nu ai locații favorite încă',
       noFavoritesHint: 'Apasă pe inimă pentru a salva locațiile preferate',
+      exportPdf: 'Exportă PDF',
+      shareLink: 'Copiază link',
+      linkCopied: 'Link copiat!',
+      sharedTitle: 'Locații partajate',
+      sharedSubtitle: 'Explorează locațiile recomandate de un prieten',
+      viewAll: 'Vezi toate locațiile',
+      pdfTitle: 'Ghid Local - Locații Favorite',
+      pdfCategory: 'Categorie',
+      pdfAddress: 'Adresă',
+      pdfRating: 'Rating',
+      pdfGeneratedOn: 'Generat la',
+      pdfNoDescription: 'Fără descriere',
     },
     en: {
       badge: 'Local Guide',
@@ -165,6 +202,18 @@ const CityGuideSection: React.FC = () => {
       showFavorites: 'Show favorites only',
       noFavorites: 'No favorite locations yet',
       noFavoritesHint: 'Tap the heart icon to save your favorite places',
+      exportPdf: 'Export PDF',
+      shareLink: 'Copy link',
+      linkCopied: 'Link copied!',
+      sharedTitle: 'Shared Locations',
+      sharedSubtitle: 'Explore locations recommended by a friend',
+      viewAll: 'View all locations',
+      pdfTitle: 'City Guide - Favorite Locations',
+      pdfCategory: 'Category',
+      pdfAddress: 'Address',
+      pdfRating: 'Rating',
+      pdfGeneratedOn: 'Generated on',
+      pdfNoDescription: 'No description',
     }
   };
 
@@ -232,12 +281,16 @@ const CityGuideSection: React.FC = () => {
     return cats.sort();
   }, [pois]);
 
-  // Filter and sort POIs based on search, category, favorites, and sort option
+  // Filter and sort POIs based on search, category, favorites, shared, and sort option
   const filteredPois = useMemo(() => {
     let filtered = pois;
     
+    // Filter by shared POIs if viewing shared link
+    if (showSharedPois && sharedPoiIds) {
+      filtered = filtered.filter(poi => sharedPoiIds.includes(poi.id));
+    }
     // Filter by favorites
-    if (showFavoritesOnly) {
+    else if (showFavoritesOnly) {
       filtered = filtered.filter(poi => isFavorite(poi.id));
     }
     
@@ -277,15 +330,75 @@ const CityGuideSection: React.FC = () => {
     // Default: keep display_order from database
     
     return filtered;
-  }, [pois, selectedCategory, searchQuery, language, sortBy, showFavoritesOnly, isFavorite]);
+  }, [pois, selectedCategory, searchQuery, language, sortBy, showFavoritesOnly, showSharedPois, sharedPoiIds, isFavorite]);
 
-  const hasActiveFilters = searchQuery.trim() || selectedCategory || sortBy !== 'default' || showFavoritesOnly;
+  // Get favorite POIs for export
+  const favoritePois = useMemo(() => {
+    return pois.filter(poi => isFavorite(poi.id));
+  }, [pois, isFavorite]);
+
+  const hasActiveFilters = searchQuery.trim() || selectedCategory || sortBy !== 'default' || showFavoritesOnly || showSharedPois;
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory(null);
     setSortBy('default');
     setShowFavoritesOnly(false);
+    setShowSharedPois(false);
+    setSharedPoiIds(null);
+    // Remove shared_pois from URL
+    searchParams.delete('shared_pois');
+    setSearchParams(searchParams);
+  };
+
+  const handleExportPdf = () => {
+    if (favoritePois.length === 0) {
+      toast.error(language === 'ro' ? 'Nu ai locații favorite pentru export' : 'No favorite locations to export');
+      return;
+    }
+
+    exportPoiFavoritesPdf({
+      title: t.pdfTitle,
+      pois: favoritePois,
+      language: language as 'ro' | 'en',
+      labels: {
+        category: t.pdfCategory,
+        address: t.pdfAddress,
+        rating: t.pdfRating,
+        generatedOn: t.pdfGeneratedOn,
+        noDescription: t.pdfNoDescription,
+      },
+      categoryLabels: t.categories as Record<string, string>,
+    });
+
+    toast.success(language === 'ro' ? 'PDF exportat cu succes!' : 'PDF exported successfully!');
+  };
+
+  const handleShareLink = async () => {
+    if (favoritePois.length === 0) {
+      toast.error(language === 'ro' ? 'Nu ai locații favorite pentru partajare' : 'No favorite locations to share');
+      return;
+    }
+
+    const link = generateShareableLink(favorites);
+    
+    try {
+      await navigator.clipboard.writeText(link);
+      setLinkCopied(true);
+      toast.success(t.linkCopied);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = link;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      toast.success(t.linkCopied);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
   };
 
   return (
@@ -294,6 +407,28 @@ const CityGuideSection: React.FC = () => {
       className="py-20 bg-muted/30"
     >
       <div className="container mx-auto px-6">
+        {/* Shared POIs Banner */}
+        {showSharedPois && sharedPoiIds && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Share2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">{t.sharedTitle}</p>
+                <p className="text-sm text-muted-foreground">{t.sharedSubtitle}</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              {t.viewAll}
+            </Button>
+          </motion.div>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -426,6 +561,32 @@ const CityGuideSection: React.FC = () => {
                   </Badge>
                 )}
               </Button>
+
+              {/* Export/Share Dropdown */}
+              {favoritesCount > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="rounded-full">
+                      <Share2 className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">{language === 'ro' ? 'Partajează' : 'Share'}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportPdf}>
+                      <Download className="w-4 h-4 mr-2" />
+                      {t.exportPdf}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShareLink}>
+                      {linkCopied ? (
+                        <Check className="w-4 h-4 mr-2 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4 mr-2" />
+                      )}
+                      {linkCopied ? t.linkCopied : t.shareLink}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
 
             {/* Results count and clear filters */}
