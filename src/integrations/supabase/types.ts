@@ -192,6 +192,71 @@ export type Database = {
           },
         ]
       }
+      email_ab_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          subject_used: string
+          test_id: string
+          user_id: string
+          variant: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          subject_used: string
+          test_id: string
+          user_id: string
+          variant: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          subject_used?: string
+          test_id?: string
+          user_id?: string
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_ab_assignments_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "email_ab_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_ab_tests: {
+        Row: {
+          created_at: string
+          email_type: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          variant_a_subject: string
+          variant_b_subject: string
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          variant_a_subject: string
+          variant_b_subject: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          variant_a_subject?: string
+          variant_b_subject?: string
+        }
+        Relationships: []
+      }
       email_click_tracking: {
         Row: {
           clicked_at: string
@@ -233,6 +298,54 @@ export type Database = {
           utm_source?: string | null
         }
         Relationships: []
+      }
+      email_open_tracking: {
+        Row: {
+          ab_assignment_id: string | null
+          email_type: string
+          followup_email_id: string | null
+          id: string
+          ip_address: string | null
+          opened_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          ab_assignment_id?: string | null
+          email_type: string
+          followup_email_id?: string | null
+          id?: string
+          ip_address?: string | null
+          opened_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          ab_assignment_id?: string | null
+          email_type?: string
+          followup_email_id?: string | null
+          id?: string
+          ip_address?: string | null
+          opened_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_open_tracking_ab_assignment_id_fkey"
+            columns: ["ab_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "email_ab_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_open_tracking_followup_email_id_fkey"
+            columns: ["followup_email_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_followup_emails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       financial_records: {
         Row: {

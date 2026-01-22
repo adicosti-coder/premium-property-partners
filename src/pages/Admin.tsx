@@ -49,6 +49,7 @@ import {
   MapPin,
   Film,
   Lightbulb,
+  FlaskConical,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -69,6 +70,7 @@ import HeroTextManager from "@/components/admin/HeroTextManager";
 import LeadsManager from "@/components/admin/LeadsManager";
 import LocalTipsManager from "@/components/admin/LocalTipsManager";
 import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
+import ABTestManager from "@/components/admin/ABTestManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -305,6 +307,10 @@ const Admin = () => {
               <MailCheck className="w-4 h-4" />
               Follow-up
             </TabsTrigger>
+            <TabsTrigger value="ab-testing" className="flex items-center gap-2">
+              <FlaskConical className="w-4 h-4" />
+              A/B Testing
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -378,6 +384,11 @@ const Admin = () => {
           {/* Follow-up Stats Tab */}
           <TabsContent value="followup-stats">
             <FollowupStatsManager />
+          </TabsContent>
+
+          {/* A/B Testing Tab */}
+          <TabsContent value="ab-testing">
+            <ABTestManager />
           </TabsContent>
         </Tabs>
       </div>
