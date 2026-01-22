@@ -1080,6 +1080,8 @@ export type Database = {
           id: string
           last_conversion_alert_at: string | null
           updated_at: string
+          weekly_report_enabled: boolean | null
+          weekly_report_recipients: string[] | null
         }
         Insert: {
           conversion_alert_enabled?: boolean | null
@@ -1106,6 +1108,8 @@ export type Database = {
           id?: string
           last_conversion_alert_at?: string | null
           updated_at?: string
+          weekly_report_enabled?: boolean | null
+          weekly_report_recipients?: string[] | null
         }
         Update: {
           conversion_alert_enabled?: boolean | null
@@ -1132,6 +1136,8 @@ export type Database = {
           id?: string
           last_conversion_alert_at?: string | null
           updated_at?: string
+          weekly_report_enabled?: boolean | null
+          weekly_report_recipients?: string[] | null
         }
         Relationships: []
       }

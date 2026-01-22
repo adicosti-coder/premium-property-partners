@@ -152,6 +152,38 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Check if weekly reports are enabled and get recipients
+    const { data: settings, error: settingsError } = await supabase
+      .from("site_settings")
+      .select("weekly_report_enabled, weekly_report_recipients")
+      .eq("id", "default")
+      .single();
+
+    if (settingsError) {
+      console.log("No settings found, using defaults");
+    }
+
+    const reportEnabled = settings?.weekly_report_enabled ?? true;
+    const recipients: string[] = settings?.weekly_report_recipients ?? ["contact@realtrust.ro"];
+
+    if (!reportEnabled) {
+      console.log("Weekly reports are disabled");
+      return new Response(
+        JSON.stringify({ success: true, message: "Weekly reports disabled" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!recipients || recipients.length === 0) {
+      console.log("No recipients configured");
+      return new Response(
+        JSON.stringify({ success: true, message: "No recipients configured" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Sending weekly report to ${recipients.length} recipients: ${recipients.join(", ")}`);
+
     // Calculate date range (last 7 days)
     const now = new Date();
     const weekEnd = new Date(now);
@@ -288,7 +320,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "RealTrust Reports <onboarding@resend.dev>",
-        to: ["contact@realtrust.ro"],
+        to: recipients,
         subject: `📊 Raport Săptămânal Follow-up: ${stats.conversionRate}% conversie (${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)})`,
         html: emailHtml,
       }),
@@ -300,13 +332,14 @@ serve(async (req) => {
       throw new Error(`Resend error: ${JSON.stringify(emailData)}`);
     }
 
-    console.log("Email sent successfully:", emailData);
+    console.log("Email sent successfully to:", recipients);
 
     return new Response(
       JSON.stringify({
         success: true,
         stats,
         emailId: emailData.id,
+        recipients,
       }),
       {
         status: 200,
