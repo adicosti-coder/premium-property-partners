@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useUISound } from "@/hooks/useUISound";
+import { fuzzyFilter } from "@/utils/fuzzySearch";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -198,17 +199,23 @@ const PhoneInputWithCountry = ({
     return null;
   };
 
-  // Filter countries based on search query
+  // Filter countries based on search query with fuzzy matching
   const filteredCountries = useMemo(() => {
     if (!searchQuery) return countries;
     
-    const query = searchQuery.toLowerCase();
-    return countries.filter(country => 
-      country.name.toLowerCase().includes(query) ||
-      country.nameEn.toLowerCase().includes(query) ||
-      country.prefix.includes(query) ||
-      country.code.toLowerCase().includes(query)
+    const results = fuzzyFilter(
+      countries,
+      searchQuery,
+      (country) => [
+        country.name,
+        country.nameEn,
+        country.prefix,
+        country.code,
+      ],
+      0.2 // Minimum score threshold
     );
+    
+    return results.map(r => r.item);
   }, [searchQuery]);
 
   // Group filtered countries by region
