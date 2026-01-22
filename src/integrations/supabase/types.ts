@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_alert_subscriptions: {
+        Row: {
+          alert_types: string[]
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          alert_types?: string[]
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          alert_types?: string[]
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_articles: {
         Row: {
           author_name: string
@@ -922,6 +943,8 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          conversion_alert_enabled: boolean | null
+          conversion_rate_threshold: number | null
           created_at: string
           hero_badge_en: string | null
           hero_badge_ro: string | null
@@ -942,9 +965,12 @@ export type Database = {
           hero_video_filename: string | null
           hero_video_url: string | null
           id: string
+          last_conversion_alert_at: string | null
           updated_at: string
         }
         Insert: {
+          conversion_alert_enabled?: boolean | null
+          conversion_rate_threshold?: number | null
           created_at?: string
           hero_badge_en?: string | null
           hero_badge_ro?: string | null
@@ -965,9 +991,12 @@ export type Database = {
           hero_video_filename?: string | null
           hero_video_url?: string | null
           id?: string
+          last_conversion_alert_at?: string | null
           updated_at?: string
         }
         Update: {
+          conversion_alert_enabled?: boolean | null
+          conversion_rate_threshold?: number | null
           created_at?: string
           hero_badge_en?: string | null
           hero_badge_ro?: string | null
@@ -988,6 +1017,7 @@ export type Database = {
           hero_video_filename?: string | null
           hero_video_url?: string | null
           id?: string
+          last_conversion_alert_at?: string | null
           updated_at?: string
         }
         Relationships: []
