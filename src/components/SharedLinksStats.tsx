@@ -49,8 +49,13 @@ import {
   Calendar,
   Bell,
   BellOff,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow, format, subDays, startOfDay, eachDayOfInterval, startOfWeek, eachWeekOfInterval, subWeeks } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -70,6 +75,8 @@ interface SharedLink {
   import_count: number;
   created_at: string;
   last_imported_at: string | null;
+  name: string | null;
+  description: string | null;
 }
 
 interface POI {
@@ -89,6 +96,10 @@ const SharedLinksStats = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [chartView, setChartView] = useState<'daily' | 'weekly'>('daily');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -139,6 +150,15 @@ const SharedLinksStats = () => {
       disablePush: "Dezactivează",
       pushSuccess: "Notificări push activate!",
       pushDisabledSuccess: "Notificări push dezactivate",
+      linkName: "Nume",
+      linkDescription: "Descriere",
+      namePlaceholder: "ex: Recomandările mele pentru București",
+      descriptionPlaceholder: "O scurtă descriere a locațiilor...",
+      edit: "Editează",
+      save: "Salvează",
+      saveSuccess: "Link actualizat cu succes",
+      saveError: "Eroare la actualizarea link-ului",
+      unnamed: "Fără nume",
     },
     en: {
       title: "Sharing Statistics",
@@ -178,6 +198,15 @@ const SharedLinksStats = () => {
       disablePush: "Disable",
       pushSuccess: "Push notifications enabled!",
       pushDisabledSuccess: "Push notifications disabled",
+      linkName: "Name",
+      linkDescription: "Description",
+      namePlaceholder: "e.g., My recommendations for Bucharest",
+      descriptionPlaceholder: "A short description of the locations...",
+      edit: "Edit",
+      save: "Save",
+      saveSuccess: "Link updated successfully",
+      saveError: "Error updating link",
+      unnamed: "Unnamed",
     },
   };
 
@@ -338,6 +367,48 @@ const SharedLinksStats = () => {
       });
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const startEditing = (link: SharedLink) => {
+    setEditingId(link.id);
+    setEditName(link.name || '');
+    setEditDescription(link.description || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditName('');
+    setEditDescription('');
+  };
+
+  const handleSave = async (linkId: string) => {
+    setSavingId(linkId);
+    try {
+      const { error } = await supabase
+        .from("shared_poi_links")
+        .update({
+          name: editName.trim() || null,
+          description: editDescription.trim() || null,
+        })
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      setSharedLinks((prev) =>
+        prev.map((link) =>
+          link.id === linkId
+            ? { ...link, name: editName.trim() || null, description: editDescription.trim() || null }
+            : link
+        )
+      );
+      toast({ title: t.saveSuccess });
+      cancelEditing();
+    } catch (error) {
+      console.error("Error updating link:", error);
+      toast({ title: t.saveError, variant: "destructive" });
+    } finally {
+      setSavingId(null);
     }
   };
 
@@ -637,10 +708,9 @@ const SharedLinksStats = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t.linkCode}</TableHead>
+                      <TableHead className="min-w-[200px]">{t.linkName}</TableHead>
                       <TableHead>{t.locations}</TableHead>
                       <TableHead className="text-center">{t.imports}</TableHead>
-                      <TableHead>{t.created}</TableHead>
                       <TableHead>{t.lastImport}</TableHead>
                       <TableHead className="text-right"></TableHead>
                     </TableRow>
@@ -649,9 +719,47 @@ const SharedLinksStats = () => {
                     {sharedLinks.map((link) => (
                       <TableRow key={link.id}>
                         <TableCell>
-                          <code className="text-xs bg-muted px-2 py-1 rounded">
-                            {link.share_code}
-                          </code>
+                          {editingId === link.id ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                placeholder={t.namePlaceholder}
+                                className="text-sm"
+                              />
+                              <Textarea
+                                value={editDescription}
+                                onChange={(e) => setEditDescription(e.target.value)}
+                                placeholder={t.descriptionPlaceholder}
+                                className="text-sm resize-none"
+                                rows={2}
+                              />
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  {link.name || (
+                                    <span className="text-muted-foreground italic">{t.unnamed}</span>
+                                  )}
+                                </span>
+                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                                  {link.share_code}
+                                </code>
+                              </div>
+                              {link.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {link.description}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(link.created_at), {
+                                  addSuffix: true,
+                                  locale: dateLocale,
+                                })}
+                              </p>
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1 max-w-xs">
@@ -678,12 +786,6 @@ const SharedLinksStats = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(link.created_at), {
-                            addSuffix: true,
-                            locale: dateLocale,
-                          })}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
                           {link.last_imported_at
                             ? formatDistanceToNow(new Date(link.last_imported_at), {
                                 addSuffix: true,
@@ -693,63 +795,98 @@ const SharedLinksStats = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center gap-1 justify-end">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyShareLink(link.share_code)}
-                            >
-                              {copiedCode === link.share_code ? (
-                                <Check className="w-3 h-3" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              asChild
-                            >
-                              <a
-                                href={`/pentru-oaspeti?share=${link.share_code}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                            {editingId === link.id ? (
+                              <>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  disabled={deletingId === link.id}
+                                  onClick={() => handleSave(link.id)}
+                                  disabled={savingId === link.id}
+                                  className="text-primary hover:text-primary"
                                 >
-                                  {deletingId === link.id ? (
+                                  {savingId === link.id ? (
                                     <Loader2 className="w-3 h-3 animate-spin" />
                                   ) : (
-                                    <Trash2 className="w-3 h-3" />
+                                    <Save className="w-3 h-3" />
                                   )}
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    {t.deleteConfirmDesc}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(link.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={cancelEditing}
+                                  disabled={savingId === link.id}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => startEditing(link)}
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyShareLink(link.share_code)}
+                                >
+                                  {copiedCode === link.share_code ? (
+                                    <Check className="w-3 h-3" />
+                                  ) : (
+                                    <Copy className="w-3 h-3" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  asChild
+                                >
+                                  <a
+                                    href={`/pentru-oaspeti?share=${link.share_code}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                   >
-                                    {t.confirm}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      disabled={deletingId === link.id}
+                                    >
+                                      {deletingId === link.id ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="w-3 h-3" />
+                                      )}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {t.deleteConfirmDesc}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDelete(link.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        {t.confirm}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

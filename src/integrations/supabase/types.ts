@@ -804,27 +804,33 @@ export type Database = {
       shared_poi_links: {
         Row: {
           created_at: string
+          description: string | null
           id: string
           import_count: number
           last_imported_at: string | null
+          name: string | null
           poi_ids: string[]
           share_code: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
           import_count?: number
           last_imported_at?: string | null
+          name?: string | null
           poi_ids: string[]
           share_code: string
           user_id: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
           import_count?: number
           last_imported_at?: string | null
+          name?: string | null
           poi_ids?: string[]
           share_code?: string
           user_id?: string
