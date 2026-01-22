@@ -10,11 +10,12 @@ import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
+import { formatRomanianPhone } from "@/utils/phoneFormatter";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
-// Romanian phone regex: +40 7XX XXX XXX, 07XX XXX XXX, or variations
-const romanianPhoneRegex = /^(\+40\s?|0)(7\d{2})[\s.-]?\d{3}[\s.-]?\d{3}$/;
+// Romanian phone regex for formatted numbers: +40 7XX XXX XXX
+const romanianPhoneRegex = /^\+40\s7\d{2}\s\d{3}\s\d{3}$/;
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -52,7 +53,8 @@ const LeadCaptureForm = ({
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handlePhoneChange = (value: string) => {
-    setWhatsappNumber(value);
+    const formatted = formatRomanianPhone(value);
+    setWhatsappNumber(formatted);
     if (phoneError) setPhoneError("");
   };
 

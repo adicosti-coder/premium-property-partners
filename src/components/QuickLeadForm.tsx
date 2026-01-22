@@ -8,11 +8,12 @@ import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
+import { formatRomanianPhone } from "@/utils/phoneFormatter";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
-// Romanian phone regex: +40 7XX XXX XXX, 07XX XXX XXX, or variations
-const romanianPhoneRegex = /^(\+40\s?|0)(7\d{2})[\s.-]?\d{3}[\s.-]?\d{3}$/;
+// Romanian phone regex for formatted numbers: +40 7XX XXX XXX
+const romanianPhoneRegex = /^\+40\s7\d{2}\s\d{3}\s\d{3}$/;
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele este prea scurt").max(100),
@@ -38,7 +39,8 @@ const QuickLeadForm = () => {
   };
 
   const handlePhoneChange = (value: string) => {
-    setPhone(value);
+    const formatted = formatRomanianPhone(value);
+    setPhone(formatted);
     if (phoneError) setPhoneError("");
   };
 

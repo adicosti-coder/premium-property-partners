@@ -17,9 +17,10 @@ import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
+import { formatRomanianPhone } from "@/utils/phoneFormatter";
 
-// Romanian phone regex: +40 7XX XXX XXX, 07XX XXX XXX, or variations
-const romanianPhoneRegex = /^(\+40\s?|0)(7\d{2})[\s.-]?\d{3}[\s.-]?\d{3}$/;
+// Romanian phone regex for formatted numbers: +40 7XX XXX XXX
+const romanianPhoneRegex = /^\+40\s7\d{2}\s\d{3}\s\d{3}$/;
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
@@ -51,7 +52,9 @@ const RealEstateContactForm = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const handleChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Apply phone formatting for the phone field
+    const finalValue = field === "phone" ? formatRomanianPhone(value) : value;
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
