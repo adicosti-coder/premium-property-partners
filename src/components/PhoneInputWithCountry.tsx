@@ -45,9 +45,20 @@ const PhoneInputWithCountry = ({
 }: PhoneInputWithCountryProps) => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(getDefaultCountry());
+  const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(() => {
+    // Try to load saved country from localStorage
+    const saved = localStorage.getItem('preferred-phone-country');
+    if (saved) {
+      const found = countries.find(c => c.code === saved);
+      if (found) return found;
+    }
+    return getDefaultCountry();
+  });
   const [searchQuery, setSearchQuery] = useState("");
-  const [hasUserSelected, setHasUserSelected] = useState(false);
+  const [hasUserSelected, setHasUserSelected] = useState(() => {
+    // If there's a saved preference, consider it as user-selected
+    return !!localStorage.getItem('preferred-phone-country');
+  });
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -56,7 +67,7 @@ const PhoneInputWithCountry = ({
   // Auto-detect country from geolocation
   const geoDetection = useGeoCountryDetection();
 
-  // Set initial country from geolocation (only if user hasn't manually selected)
+  // Set initial country from geolocation (only if user hasn't manually selected and no saved preference)
   useEffect(() => {
     if (autoDetectLocation && !geoDetection.isLoading && !hasUserSelected && !value) {
       setSelectedCountry(geoDetection.country);
@@ -94,6 +105,9 @@ const PhoneInputWithCountry = ({
     setHasUserSelected(true);
     setIsOpen(false);
     setSearchQuery("");
+    
+    // Save to localStorage for future visits
+    localStorage.setItem('preferred-phone-country', country.code);
     
     // Replace the prefix in the current value
     const cleanValue = value.replace(/[^\d]/g, "");
