@@ -24,6 +24,7 @@ const formSchema = z.object({
   email: z.string().trim().email("Email invalid").max(255),
   serviceType: z.string().min(1, "Selectează tipul de serviciu"),
   propertyType: z.string().optional(),
+  listingUrl: z.string().trim().url("Link invalid").max(500).optional().or(z.literal("")),
   message: z.string().trim().max(1000).optional(),
 });
 
@@ -39,6 +40,7 @@ const RealEstateContactForm = () => {
     email: "",
     serviceType: "",
     propertyType: "",
+    listingUrl: "",
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +81,7 @@ ${form.fields.phone}: ${formData.phone}
 ${form.fields.email}: ${formData.email}
 ${form.fields.serviceType}: ${formData.serviceType}
 ${formData.propertyType ? `${form.fields.propertyType}: ${formData.propertyType}` : ""}
+${formData.listingUrl ? `${form.fields.listingUrl}: ${formData.listingUrl}` : ""}
 ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
     // Open WhatsApp
@@ -97,6 +100,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
           email: formData.email.trim(),
           serviceType: formData.serviceType,
           propertyType: formData.propertyType || undefined,
+          listingUrl: formData.listingUrl?.trim() || undefined,
           message: formData.message?.trim() || undefined,
         },
       });
@@ -119,6 +123,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
       email: "",
       serviceType: "",
       propertyType: "",
+      listingUrl: "",
       message: "",
     });
   };
@@ -301,6 +306,21 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="listingUrl">{form.fields.listingUrl}</Label>
+                  <Input
+                    id="listingUrl"
+                    type="url"
+                    value={formData.listingUrl}
+                    onChange={(e) => handleChange("listingUrl", e.target.value)}
+                    placeholder={form.placeholders.listingUrl}
+                    className={errors.listingUrl ? "border-destructive" : ""}
+                  />
+                  {errors.listingUrl && (
+                    <p className="text-sm text-destructive">{errors.listingUrl}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
