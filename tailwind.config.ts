@@ -178,6 +178,14 @@ export default {
             transform: "translateX(0)",
           },
         },
+        "overlay-pulse": {
+          "0%, 100%": { 
+            opacity: "0.9",
+          },
+          "50%": { 
+            opacity: "1",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -193,6 +201,7 @@ export default {
         "shimmer-sweep": "shimmer-sweep 1.5s ease-in-out infinite",
         "menu-slide-down": "menu-slide-down 0.3s ease-out forwards",
         "menu-item-slide": "menu-item-slide 0.3s ease-out forwards",
+        "overlay-pulse": "overlay-pulse 3s ease-in-out infinite",
       },
     },
   },
