@@ -213,8 +213,12 @@ const LeadCaptureForm = ({
                 maxLength={20}
                 className={phoneError ? "border-destructive" : ""}
               />
-              {phoneError && (
+              {phoneError ? (
                 <p className="text-sm text-destructive">{phoneError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="text-primary">📱</span> Format: +40 7XX XXX XXX
+                </p>
               )}
             </div>
 

@@ -192,15 +192,15 @@ const QuickLeadForm = () => {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="tel"
-                  placeholder={t.quickLeadForm?.phonePlaceholder || "Telefon / WhatsApp"}
+                  placeholder={t.quickLeadForm?.phonePlaceholder || "+40 7XX XXX XXX"}
                   value={phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
                   className={`pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary ${phoneError ? "ring-1 ring-destructive" : ""}`}
                   maxLength={20}
                 />
-                {phoneError && (
-                  <p className="absolute -bottom-5 left-0 text-xs text-destructive">{phoneError}</p>
-                )}
+                <p className={`absolute -bottom-5 left-0 text-xs ${phoneError ? "text-destructive" : "text-muted-foreground"}`}>
+                  {phoneError || "Format: +40 7XX XXX XXX"}
+                </p>
               </div>
               
               {/* Property Type Select */}
