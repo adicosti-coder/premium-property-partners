@@ -73,7 +73,7 @@ const CityGuideSection: React.FC = () => {
   const [showSharedPois, setShowSharedPois] = useState(false);
   const [sharedPoiIds, setSharedPoiIds] = useState<string[] | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
-  const { favorites, isFavorite, toggleFavorite, favoritesCount } = usePoiFavorites();
+  const { favorites, isFavorite, toggleFavorite, importFavorites, isImporting, favoritesCount } = usePoiFavorites();
 
   // Check for shared POIs in URL
   useEffect(() => {
@@ -162,6 +162,9 @@ const CityGuideSection: React.FC = () => {
       sharedTitle: 'Locații partajate',
       sharedSubtitle: 'Explorează locațiile recomandate de un prieten',
       viewAll: 'Vezi toate locațiile',
+      importToFavorites: 'Importă în favorite',
+      importing: 'Se importă...',
+      alreadyImported: 'Deja în favorite',
       pdfTitle: 'Ghid Local - Locații Favorite',
       pdfCategory: 'Categorie',
       pdfAddress: 'Adresă',
@@ -208,6 +211,9 @@ const CityGuideSection: React.FC = () => {
       sharedTitle: 'Shared Locations',
       sharedSubtitle: 'Explore locations recommended by a friend',
       viewAll: 'View all locations',
+      importToFavorites: 'Import to favorites',
+      importing: 'Importing...',
+      alreadyImported: 'Already in favorites',
       pdfTitle: 'City Guide - Favorite Locations',
       pdfCategory: 'Category',
       pdfAddress: 'Address',
@@ -420,12 +426,47 @@ const CityGuideSection: React.FC = () => {
               </div>
               <div>
                 <p className="font-medium text-foreground">{t.sharedTitle}</p>
-                <p className="text-sm text-muted-foreground">{t.sharedSubtitle}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t.sharedSubtitle} ({sharedPoiIds.length} {language === 'ro' ? 'locații' : 'locations'})
+                </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              {t.viewAll}
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Import to favorites button */}
+              {(() => {
+                const notYetFavorited = sharedPoiIds.filter(id => !isFavorite(id));
+                const allImported = notYetFavorited.length === 0;
+                
+                return (
+                  <Button
+                    variant={allImported ? "outline" : "default"}
+                    size="sm"
+                    onClick={() => importFavorites(sharedPoiIds)}
+                    disabled={isImporting || allImported}
+                  >
+                    {isImporting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {t.importing}
+                      </>
+                    ) : allImported ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        {t.alreadyImported}
+                      </>
+                    ) : (
+                      <>
+                        <Heart className="w-4 h-4 mr-2" />
+                        {t.importToFavorites}
+                      </>
+                    )}
+                  </Button>
+                );
+              })()}
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                {t.viewAll}
+              </Button>
+            </div>
           </motion.div>
         )}
 

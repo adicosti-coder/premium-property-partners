@@ -84,6 +84,42 @@ export const usePoiFavorites = () => {
     },
   });
 
+  // Bulk add favorites mutation (for importing shared favorites)
+  const bulkAddFavoritesMutation = useMutation({
+    mutationFn: async (poiIds: string[]) => {
+      // Filter out already favorited items
+      const newIds = poiIds.filter(id => !favorites.includes(id));
+      
+      if (newIds.length === 0) return 0;
+
+      if (!user) {
+        // Store in localStorage
+        const updated = [...new Set([...localFavorites, ...newIds])];
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+        setLocalFavorites(updated);
+        return newIds.length;
+      }
+
+      // Insert all new favorites at once
+      const inserts = newIds.map(poi_id => ({ user_id: user.id, poi_id }));
+      const { error } = await supabase
+        .from('poi_favorites')
+        .insert(inserts);
+      
+      if (error) throw error;
+      return newIds.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['poi-favorites'] });
+      if (count && count > 0) {
+        toast.success(`${count} locații adăugate la favorite!`);
+      }
+    },
+    onError: () => {
+      toast.error('Nu s-au putut importa favoritele');
+    },
+  });
+
   // Remove favorite mutation
   const removeFavoriteMutation = useMutation({
     mutationFn: async (poiId: string) => {
@@ -123,11 +159,17 @@ export const usePoiFavorites = () => {
     }
   }, [isFavorite, addFavoriteMutation, removeFavoriteMutation]);
 
+  const importFavorites = useCallback((poiIds: string[]) => {
+    bulkAddFavoritesMutation.mutate(poiIds);
+  }, [bulkAddFavoritesMutation]);
+
   return {
     favorites,
     isLoading,
     isFavorite,
     toggleFavorite,
+    importFavorites,
+    isImporting: bulkAddFavoritesMutation.isPending,
     isAuthenticated: !!user,
     favoritesCount: favorites.length,
   };
