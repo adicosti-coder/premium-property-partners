@@ -124,6 +124,8 @@ const SharedLinksStats = () => {
   const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
   const [importerFilter, setImporterFilter] = useState<'all' | 'with-email' | 'anonymous'>('all');
   const [importerSort, setImporterSort] = useState<'date-desc' | 'date-asc' | 'count-desc' | 'count-asc'>('date-desc');
+  const [importerPage, setImporterPage] = useState(1);
+  const IMPORTERS_PER_PAGE = 5;
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -1139,16 +1141,23 @@ const SharedLinksStats = () => {
                                       }
                                       return 0;
                                     });
-                                      
+                                    
                                     if (filteredImporters.length === 0) {
-                                      return (
-                                        <p className="text-sm text-muted-foreground">{t.noImporters}</p>
-                                      );
+                                      return <p className="text-sm text-muted-foreground">{t.noImporters}</p>;
                                     }
                                       
+                                    // Pagination - reset page if out of bounds after filter change
+                                    const totalPages = Math.ceil(filteredImporters.length / IMPORTERS_PER_PAGE);
+                                    const currentPage = Math.min(importerPage, totalPages);
+                                    const paginatedImporters = filteredImporters.slice(
+                                      (currentPage - 1) * IMPORTERS_PER_PAGE,
+                                      currentPage * IMPORTERS_PER_PAGE
+                                    );
+                                      
                                     return (
-                                        <div className="grid gap-2 max-h-60 overflow-y-auto">
-                                          {filteredImporters.map((importer) => (
+                                      <div className="space-y-3">
+                                        <div className="grid gap-2">
+                                          {paginatedImporters.map((importer) => (
                                             <div
                                               key={importer.id}
                                               className="flex items-center justify-between p-2 bg-background rounded-lg border"
@@ -1213,7 +1222,43 @@ const SharedLinksStats = () => {
                                             </div>
                                           ))}
                                         </div>
-                                      );
+                                        
+                                        {/* Pagination controls */}
+                                        {totalPages > 1 && (
+                                          <div className="flex items-center justify-between pt-2 border-t">
+                                            <p className="text-xs text-muted-foreground">
+                                              {language === 'ro' 
+                                                ? `${(currentPage - 1) * IMPORTERS_PER_PAGE + 1}-${Math.min(currentPage * IMPORTERS_PER_PAGE, filteredImporters.length)} din ${filteredImporters.length}`
+                                                : `${(currentPage - 1) * IMPORTERS_PER_PAGE + 1}-${Math.min(currentPage * IMPORTERS_PER_PAGE, filteredImporters.length)} of ${filteredImporters.length}`
+                                              }
+                                            </p>
+                                            <div className="flex gap-1">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setImporterPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className="h-7 px-2"
+                                              >
+                                                <ChevronUp className="w-3 h-3 rotate-[-90deg]" />
+                                              </Button>
+                                              <span className="flex items-center px-2 text-xs text-muted-foreground">
+                                                {currentPage} / {totalPages}
+                                              </span>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setImporterPage(p => Math.min(totalPages, p + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="h-7 px-2"
+                                              >
+                                                <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
                                     })()}
                                 </div>
                               </TableCell>
