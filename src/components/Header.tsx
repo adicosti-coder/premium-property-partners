@@ -194,9 +194,9 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-border animate-fade-in">
+          <nav className="md:hidden py-4 border-t border-border animate-menu-slide-down origin-top">
             <div className="flex flex-col gap-4">
-              {navLinks.map((link) => {
+              {navLinks.map((link, index) => {
                 const isActive = activeSection === link.href;
                 const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
                 const activeClasses = isActive 
@@ -208,7 +208,8 @@ const Header = () => {
                     key={link.href}
                     href={link.href}
                     onClick={handleHomeClick}
-                    className={`${baseClasses} ${activeClasses}`}
+                    className={`${baseClasses} ${activeClasses} animate-menu-item-slide`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {link.label}
                   </a>
@@ -216,7 +217,8 @@ const Header = () => {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className={`${baseClasses} ${activeClasses}`}
+                    className={`${baseClasses} ${activeClasses} animate-menu-item-slide`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
@@ -225,7 +227,8 @@ const Header = () => {
                   <a
                     key={link.href}
                     href={link.href}
-                    className={`${baseClasses} ${activeClasses}`}
+                    className={`${baseClasses} ${activeClasses} animate-menu-item-slide`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}

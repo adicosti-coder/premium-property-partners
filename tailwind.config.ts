@@ -158,6 +158,26 @@ export default {
           "0%": { transform: "translateX(-100%) skewX(-12deg)" },
           "100%": { transform: "translateX(200%) skewX(-12deg)" },
         },
+        "menu-slide-down": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateY(-10px) scaleY(0.95)",
+          },
+          "100%": { 
+            opacity: "1",
+            transform: "translateY(0) scaleY(1)",
+          },
+        },
+        "menu-item-slide": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateX(-20px)",
+          },
+          "100%": { 
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -171,6 +191,8 @@ export default {
         "cinematic-zoom": "cinematic-zoom 25s ease-in-out infinite",
         "text-glow": "text-glow 3s ease-in-out infinite",
         "shimmer-sweep": "shimmer-sweep 1.5s ease-in-out infinite",
+        "menu-slide-down": "menu-slide-down 0.3s ease-out forwards",
+        "menu-item-slide": "menu-item-slide 0.3s ease-out forwards",
       },
     },
   },
