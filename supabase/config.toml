@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.send-simulation-followup]
 verify_jwt = false
+
+[functions.track-email-click]
+verify_jwt = false

@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift } from "lucide-react";
+import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift, MousePointerClick } from "lucide-react";
 import { format, subDays, eachDayOfInterval, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import {
@@ -50,6 +50,17 @@ interface Profile {
   email: string | null;
 }
 
+interface ClickTracking {
+  id: string;
+  user_id: string;
+  email_type: string;
+  link_type: string;
+  utm_source: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  clicked_at: string;
+}
+
 const COLORS = [
   'hsl(var(--primary))',
   'hsl(var(--chart-2))',
@@ -66,23 +77,26 @@ const FollowupStatsManager = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [simulations, setSimulations] = useState<UserSimulation[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [clickTracking, setClickTracking] = useState<ClickTracking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTriggering, setIsTriggering] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [emailsRes, leadsRes, simsRes, profilesRes] = await Promise.all([
+      const [emailsRes, leadsRes, simsRes, profilesRes, clicksRes] = await Promise.all([
         supabase.from("simulation_followup_emails").select("*").order("sent_at", { ascending: false }),
         supabase.from("leads").select("id, email, created_at"),
         supabase.from("user_simulations").select("id, user_id, created_at"),
         supabase.from("profiles").select("id, email"),
+        supabase.from("email_click_tracking").select("*").order("clicked_at", { ascending: false }),
       ]);
 
       if (emailsRes.data) setFollowupEmails(emailsRes.data);
       if (leadsRes.data) setLeads(leadsRes.data);
       if (simsRes.data) setSimulations(simsRes.data);
       if (profilesRes.data) setProfiles(profilesRes.data);
+      if (clicksRes.data) setClickTracking(clicksRes.data);
     } catch (error) {
       console.error("Error fetching followup stats:", error);
     } finally {
@@ -175,6 +189,17 @@ const FollowupStatsManager = () => {
       ? Math.round(conversionDays.reduce((a, b) => a + b, 0) / conversionDays.length)
       : 0;
 
+    // Click tracking stats
+    const totalClicks = clickTracking.length;
+    const uniqueClickers = new Set(clickTracking.map(c => c.user_id)).size;
+    const clickRate = totalEmailsSent > 0 ? Math.round((uniqueClickers / usersWithEmails.size) * 100) : 0;
+    
+    // Clicks by link type
+    const clicksByLinkType = clickTracking.reduce((acc, click) => {
+      acc[click.link_type] = (acc[click.link_type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     return {
       totalEmailsSent,
       firstFollowups,
@@ -184,8 +209,12 @@ const FollowupStatsManager = () => {
       conversionRate,
       pendingUsers,
       avgConversionDays,
+      totalClicks,
+      uniqueClickers,
+      clickRate,
+      clicksByLinkType,
     };
-  }, [followupEmails, leads, simulations, profiles]);
+  }, [followupEmails, leads, simulations, profiles, clickTracking]);
 
   // Daily emails sent (last 30 days)
   const dailyData = useMemo(() => {
@@ -239,12 +268,32 @@ const FollowupStatsManager = () => {
         fill: "hsl(var(--primary))",
       },
       { 
+        name: language === "ro" ? "Click-uri în email" : "Email clicks", 
+        value: stats.uniqueClickers,
+        fill: "hsl(var(--chart-4))",
+      },
+      { 
         name: language === "ro" ? "Lead-uri generate" : "Leads generated", 
         value: stats.conversions,
         fill: "hsl(var(--chart-2))",
       },
     ];
   }, [simulations, stats, language]);
+
+  // Click tracking by link type
+  const clicksByLinkTypeData = useMemo(() => {
+    const linkTypeLabels: Record<string, { ro: string; en: string }> = {
+      whatsapp_cta: { ro: "WhatsApp CTA", en: "WhatsApp CTA" },
+      whatsapp_offer_cta: { ro: "WhatsApp Ofertă", en: "WhatsApp Offer" },
+      whatsapp_questions: { ro: "WhatsApp Întrebări", en: "WhatsApp Questions" },
+      website_footer: { ro: "Website (Footer)", en: "Website (Footer)" },
+    };
+    
+    return Object.entries(stats.clicksByLinkType).map(([linkType, count]) => ({
+      name: linkTypeLabels[linkType]?.[language] || linkType,
+      value: count,
+    }));
+  }, [stats.clicksByLinkType, language]);
 
   const tr = {
     ro: {
@@ -264,6 +313,11 @@ const FollowupStatsManager = () => {
       first: "Primul email",
       second: "Ofertă specială",
       noData: "Nu există date",
+      totalClicks: "Click-uri totale",
+      uniqueClickers: "Utilizatori cu click",
+      clickRate: "Rată click",
+      clicksByLink: "Click-uri pe link",
+      recentClicks: "Click-uri recente",
     },
     en: {
       title: "Follow-up Email Stats",
@@ -282,6 +336,11 @@ const FollowupStatsManager = () => {
       first: "First email",
       second: "Special offer",
       noData: "No data",
+      totalClicks: "Total clicks",
+      uniqueClickers: "Unique clickers",
+      clickRate: "Click rate",
+      clicksByLink: "Clicks by link",
+      recentClicks: "Recent clicks",
     },
   };
 
@@ -320,7 +379,31 @@ const FollowupStatsManager = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Click Tracking Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-chart-5/10">
+                <MousePointerClick className="w-5 h-5 text-chart-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-serif font-bold text-foreground">
+                  {stats.totalClicks}
+                </p>
+                <p className="text-sm text-muted-foreground">{t.totalClicks}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {stats.uniqueClickers} {t.uniqueClickers}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {stats.clickRate}% {t.clickRate}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
