@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Check, X, ChevronDown, MapPin, Loader2, Info } from "lucide-react";
+import { Check, X, ChevronDown, MapPin, Loader2, Info, Star } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { 
   detectCountryFromPhone, 
@@ -57,6 +57,10 @@ const PhoneInputWithCountry = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [hasUserSelected, setHasUserSelected] = useState(() => {
     // If there's a saved preference, consider it as user-selected
+    return !!localStorage.getItem('preferred-phone-country');
+  });
+  const [isFromSavedPreference] = useState(() => {
+    // Track if the initial country was loaded from saved preferences
     return !!localStorage.getItem('preferred-phone-country');
   });
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -528,6 +532,13 @@ const PhoneInputWithCountry = ({
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <MapPin className="w-3 h-3" />
           {getDetectionLabel()}
+        </p>
+      ) : isFromSavedPreference && !hasValue ? (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+          {language === 'en' 
+            ? 'Your preferred country' 
+            : 'Țara ta preferată'}
         </p>
       ) : hasValue ? (
         <p className="text-xs text-muted-foreground">
