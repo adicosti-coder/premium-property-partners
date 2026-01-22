@@ -198,10 +198,10 @@ const Header = () => {
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => {
                 const isActive = activeSection === link.href;
-                const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out";
+                const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
                 const activeClasses = isActive 
-                  ? "text-primary font-semibold translate-x-2 animate-glow-pulse before:opacity-100" 
-                  : "text-muted-foreground hover:text-foreground hover:translate-x-1 before:opacity-0 hover:before:opacity-100";
+                  ? "text-primary font-semibold translate-x-2 scale-105 animate-glow-pulse before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
+                  : "text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
 
                 return link.isHome ? (
                   <a
