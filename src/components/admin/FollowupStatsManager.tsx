@@ -4,7 +4,10 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift, MousePointerClick } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift, MousePointerClick, Bell, Settings } from "lucide-react";
 import { format, subDays, eachDayOfInterval, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import {
@@ -80,16 +83,23 @@ const FollowupStatsManager = () => {
   const [clickTracking, setClickTracking] = useState<ClickTracking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTriggering, setIsTriggering] = useState(false);
+  
+  // Alert settings
+  const [alertEnabled, setAlertEnabled] = useState(true);
+  const [alertThreshold, setAlertThreshold] = useState(10);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isCheckingAlert, setIsCheckingAlert] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [emailsRes, leadsRes, simsRes, profilesRes, clicksRes] = await Promise.all([
+      const [emailsRes, leadsRes, simsRes, profilesRes, clicksRes, settingsRes] = await Promise.all([
         supabase.from("simulation_followup_emails").select("*").order("sent_at", { ascending: false }),
         supabase.from("leads").select("id, email, created_at"),
         supabase.from("user_simulations").select("id, user_id, created_at"),
         supabase.from("profiles").select("id, email"),
         supabase.from("email_click_tracking").select("*").order("clicked_at", { ascending: false }),
+        supabase.from("site_settings").select("conversion_rate_threshold, conversion_alert_enabled").eq("id", "default").single(),
       ]);
 
       if (emailsRes.data) setFollowupEmails(emailsRes.data);
@@ -97,6 +107,10 @@ const FollowupStatsManager = () => {
       if (simsRes.data) setSimulations(simsRes.data);
       if (profilesRes.data) setProfiles(profilesRes.data);
       if (clicksRes.data) setClickTracking(clicksRes.data);
+      if (settingsRes.data) {
+        setAlertThreshold(settingsRes.data.conversion_rate_threshold ?? 10);
+        setAlertEnabled(settingsRes.data.conversion_alert_enabled ?? true);
+      }
     } catch (error) {
       console.error("Error fetching followup stats:", error);
     } finally {
@@ -134,6 +148,65 @@ const FollowupStatsManager = () => {
       });
     } finally {
       setIsTriggering(false);
+    }
+  };
+
+  // Save alert settings
+  const handleSaveAlertSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({
+          id: "default",
+          conversion_rate_threshold: alertThreshold,
+          conversion_alert_enabled: alertEnabled,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id" });
+
+      if (error) throw error;
+
+      toast({
+        title: language === "ro" ? "Setări salvate" : "Settings saved",
+        description: language === "ro" 
+          ? `Prag: ${alertThreshold}%, Alerte: ${alertEnabled ? "Activate" : "Dezactivate"}`
+          : `Threshold: ${alertThreshold}%, Alerts: ${alertEnabled ? "Enabled" : "Disabled"}`,
+      });
+    } catch (error) {
+      console.error("Error saving alert settings:", error);
+      toast({
+        title: language === "ro" ? "Eroare" : "Error",
+        description: String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  // Check conversion rate alert manually
+  const handleCheckAlert = async () => {
+    setIsCheckingAlert(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-conversion-rate-alert");
+      
+      if (error) throw error;
+      
+      toast({
+        title: language === "ro" ? "Verificare completă" : "Check complete",
+        description: data.alertSent 
+          ? (language === "ro" ? `Alertă trimisă! Rată: ${data.conversionRate}%` : `Alert sent! Rate: ${data.conversionRate}%`)
+          : (language === "ro" ? `Rata: ${data.conversionRate}% (prag: ${data.threshold}%)` : `Rate: ${data.conversionRate}% (threshold: ${data.threshold}%)`),
+      });
+    } catch (error) {
+      console.error("Error checking alert:", error);
+      toast({
+        title: language === "ro" ? "Eroare" : "Error",
+        description: String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingAlert(false);
     }
   };
 
@@ -318,6 +391,11 @@ const FollowupStatsManager = () => {
       clickRate: "Rată click",
       clicksByLink: "Click-uri pe link",
       recentClicks: "Click-uri recente",
+      alertSettings: "Setări alertă conversie",
+      alertThreshold: "Prag alertă (%)",
+      alertEnabled: "Alerte activate",
+      saveSettings: "Salvează",
+      checkNow: "Verifică acum",
     },
     en: {
       title: "Follow-up Email Stats",
@@ -341,6 +419,11 @@ const FollowupStatsManager = () => {
       clickRate: "Click rate",
       clicksByLink: "Clicks by link",
       recentClicks: "Recent clicks",
+      alertSettings: "Conversion alert settings",
+      alertThreshold: "Alert threshold (%)",
+      alertEnabled: "Alerts enabled",
+      saveSettings: "Save",
+      checkNow: "Check now",
     },
   };
 
@@ -497,6 +580,85 @@ const FollowupStatsManager = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Alert Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Bell className="w-5 h-5 text-primary" />
+            {t.alertSettings}
+          </CardTitle>
+          <CardDescription>
+            {language === "ro" 
+              ? "Primește notificări push când rata de conversie scade sub pragul setat"
+              : "Receive push notifications when conversion rate drops below threshold"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="threshold">{t.alertThreshold}</Label>
+              <Input
+                id="threshold"
+                type="number"
+                min={1}
+                max={100}
+                value={alertThreshold}
+                onChange={(e) => setAlertThreshold(parseInt(e.target.value) || 10)}
+                className="w-24"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="alertEnabled"
+                checked={alertEnabled}
+                onCheckedChange={setAlertEnabled}
+              />
+              <Label htmlFor="alertEnabled">{t.alertEnabled}</Label>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveAlertSettings}
+                disabled={isSavingSettings}
+              >
+                {isSavingSettings ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Settings className="w-4 h-4 mr-2" />
+                )}
+                {t.saveSettings}
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleCheckAlert}
+                disabled={isCheckingAlert}
+              >
+                {isCheckingAlert ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Bell className="w-4 h-4 mr-2" />
+                )}
+                {t.checkNow}
+              </Button>
+            </div>
+          </div>
+          {stats.conversionRate < alertThreshold && stats.usersReached >= 5 && (
+            <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive flex items-center gap-2">
+                <Bell className="w-4 h-4" />
+                {language === "ro"
+                  ? `⚠️ Rata curentă (${stats.conversionRate}%) este sub prag (${alertThreshold}%)`
+                  : `⚠️ Current rate (${stats.conversionRate}%) is below threshold (${alertThreshold}%)`
+                }
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

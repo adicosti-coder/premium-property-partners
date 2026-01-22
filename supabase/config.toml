@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.track-email-click]
 verify_jwt = false
+
+[functions.check-conversion-rate-alert]
+verify_jwt = false
