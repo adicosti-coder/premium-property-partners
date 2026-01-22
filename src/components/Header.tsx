@@ -87,7 +87,7 @@ const Header = () => {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105">
+          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1">
             {/* Shimmer overlay */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:animate-shimmer-sweep bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
