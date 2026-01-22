@@ -295,6 +295,36 @@ export type Database = {
         }
         Relationships: []
       }
+      local_tips: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          tip_en: string
+          tip_ro: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          tip_en: string
+          tip_ro: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          tip_en?: string
+          tip_ro?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       maintenance_records: {
         Row: {
           cost: number
