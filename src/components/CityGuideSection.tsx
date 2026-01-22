@@ -74,10 +74,11 @@ const CityGuideSection: React.FC = () => {
   const [showSharedPois, setShowSharedPois] = useState(false);
   const [sharedPoiIds, setSharedPoiIds] = useState<string[] | null>(null);
   const [currentShareCode, setCurrentShareCode] = useState<string | null>(null);
+  const [sharedLinkInfo, setSharedLinkInfo] = useState<{ name: string | null; description: string | null } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const { favorites, isFavorite, toggleFavorite, importFavorites, isImporting, favoritesCount, isAuthenticated, userId } = usePoiFavorites();
 
-  // Check for shared POIs in URL
+  // Check for shared POIs in URL and fetch link details
   useEffect(() => {
     const checkSharedPois = async () => {
       const { poiIds, shareCode } = await parseSharedPois(searchParams);
@@ -85,6 +86,19 @@ const CityGuideSection: React.FC = () => {
         setSharedPoiIds(poiIds);
         setCurrentShareCode(shareCode);
         setShowSharedPois(true);
+        
+        // Fetch shared link details if we have a share code
+        if (shareCode) {
+          const { data } = await supabase
+            .from('shared_poi_links')
+            .select('name, description')
+            .eq('share_code', shareCode)
+            .single();
+          
+          if (data) {
+            setSharedLinkInfo({ name: data.name, description: data.description });
+          }
+        }
       }
     };
     checkSharedPois();
@@ -438,54 +452,64 @@ const CityGuideSection: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+            className="mb-8 p-6 rounded-2xl bg-primary/10 border border-primary/20"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Share2 className="w-5 h-5 text-primary" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Share2 className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  {sharedLinkInfo?.name ? (
+                    <h3 className="text-lg font-semibold text-foreground">{sharedLinkInfo.name}</h3>
+                  ) : (
+                    <h3 className="text-lg font-semibold text-foreground">{t.sharedTitle}</h3>
+                  )}
+                  {sharedLinkInfo?.description && (
+                    <p className="text-sm text-muted-foreground max-w-md">{sharedLinkInfo.description}</p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {sharedLinkInfo?.name ? t.sharedSubtitle : ''} {sharedPoiIds.length} {language === 'ro' ? 'locații recomandate' : 'recommended locations'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">{t.sharedTitle}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t.sharedSubtitle} ({sharedPoiIds.length} {language === 'ro' ? 'locații' : 'locations'})
-                </p>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {/* Import to favorites button */}
+                {(() => {
+                  const notYetFavorited = sharedPoiIds.filter(id => !isFavorite(id));
+                  const allImported = notYetFavorited.length === 0;
+                  
+                  return (
+                    <Button
+                      variant={allImported ? "outline" : "default"}
+                      size="sm"
+                      onClick={handleImportFavorites}
+                      disabled={isImporting || allImported}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isImporting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {t.importing}
+                        </>
+                      ) : allImported ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          {t.alreadyImported}
+                        </>
+                      ) : (
+                        <>
+                          <Heart className="w-4 h-4 mr-2" />
+                          {t.importToFavorites}
+                        </>
+                      )}
+                    </Button>
+                  );
+                })()}
+                <Button variant="outline" size="sm" onClick={clearFilters} className="flex-1 sm:flex-none">
+                  {t.viewAll}
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Import to favorites button */}
-              {(() => {
-                const notYetFavorited = sharedPoiIds.filter(id => !isFavorite(id));
-                const allImported = notYetFavorited.length === 0;
-                
-                return (
-                  <Button
-                    variant={allImported ? "outline" : "default"}
-                    size="sm"
-                    onClick={handleImportFavorites}
-                    disabled={isImporting || allImported}
-                  >
-                    {isImporting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t.importing}
-                      </>
-                    ) : allImported ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        {t.alreadyImported}
-                      </>
-                    ) : (
-                      <>
-                        <Heart className="w-4 h-4 mr-2" />
-                        {t.importToFavorites}
-                      </>
-                    )}
-                  </Button>
-                );
-              })()}
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                {t.viewAll}
-              </Button>
             </div>
           </motion.div>
         )}
