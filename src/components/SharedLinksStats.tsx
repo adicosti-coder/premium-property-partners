@@ -59,6 +59,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Search,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -125,6 +126,7 @@ const SharedLinksStats = () => {
   const [importerFilter, setImporterFilter] = useState<'all' | 'with-email' | 'anonymous'>('all');
   const [importerSort, setImporterSort] = useState<'date-desc' | 'date-asc' | 'count-desc' | 'count-asc'>('date-desc');
   const [importerPage, setImporterPage] = useState(1);
+  const [importerSearch, setImporterSearch] = useState('');
   const IMPORTERS_PER_PAGE = 5;
 
   const dateLocale = language === "ro" ? ro : enUS;
@@ -201,6 +203,8 @@ const SharedLinksStats = () => {
       oldest: "Cele mai vechi",
       mostLocations: "Cele mai multe",
       fewestLocations: "Cele mai puține",
+      searchImporters: "Caută după nume sau email...",
+      noSearchResults: "Niciun rezultat pentru căutare",
     },
     en: {
       title: "Sharing Statistics",
@@ -265,6 +269,8 @@ const SharedLinksStats = () => {
       oldest: "Oldest",
       mostLocations: "Most",
       fewestLocations: "Fewest",
+      searchImporters: "Search by name or email...",
+      noSearchResults: "No results found",
     },
   };
 
@@ -1107,6 +1113,22 @@ const SharedLinksStats = () => {
                                       </Button>
                                     </div>
                                   </div>
+                                  
+                                  {/* Search input */}
+                                  <div className="relative">
+                                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                    <Input
+                                      type="text"
+                                      placeholder={t.searchImporters}
+                                      value={importerSearch}
+                                      onChange={(e) => {
+                                        setImporterSearch(e.target.value);
+                                        setImporterPage(1); // Reset to first page on search
+                                      }}
+                                      className="h-8 pl-7 text-sm"
+                                    />
+                                  </div>
+                                  
                                   {(() => {
                                     // Calculate counts for each category
                                     const withEmailCount = importers.filter(i => !!i.importer_email).length;
@@ -1117,13 +1139,23 @@ const SharedLinksStats = () => {
                                       return <p className="text-sm text-muted-foreground">{t.noImporters}</p>;
                                     }
                                     
-                                    // Filter
+                                    // Filter by category
                                     let filteredImporters = importers.filter((importer) => {
                                       if (importerFilter === 'all') return true;
                                       if (importerFilter === 'with-email') return !!importer.importer_email;
                                       if (importerFilter === 'anonymous') return !importer.importer_email && !importer.importer_name;
                                       return true;
                                     });
+                                    
+                                    // Filter by search term
+                                    if (importerSearch.trim()) {
+                                      const searchLower = importerSearch.toLowerCase().trim();
+                                      filteredImporters = filteredImporters.filter((importer) => {
+                                        const nameMatch = importer.importer_name?.toLowerCase().includes(searchLower);
+                                        const emailMatch = importer.importer_email?.toLowerCase().includes(searchLower);
+                                        return nameMatch || emailMatch;
+                                      });
+                                    }
                                     
                                     // Sort
                                     filteredImporters = [...filteredImporters].sort((a, b) => {
@@ -1143,7 +1175,7 @@ const SharedLinksStats = () => {
                                     });
                                     
                                     if (filteredImporters.length === 0) {
-                                      return <p className="text-sm text-muted-foreground">{t.noImporters}</p>;
+                                      return <p className="text-sm text-muted-foreground">{importerSearch.trim() ? t.noSearchResults : t.noImporters}</p>;
                                     }
                                       
                                     // Pagination - reset page if out of bounds after filter change
