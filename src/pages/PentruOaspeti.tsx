@@ -7,6 +7,7 @@ import DigitalHouseManual from "@/components/DigitalHouseManual";
 import CleaningStandards from "@/components/CleaningStandards";
 import PropertyMap from "@/components/PropertyMap";
 import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
+import QuickAvailabilitySearch from "@/components/QuickAvailabilitySearch";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
@@ -346,6 +347,16 @@ const PentruOaspeti = () => {
                   </Button>
                 </Link>
               </div>
+            </motion.div>
+
+            {/* Quick Availability Search Widget */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={heroAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mt-12 max-w-4xl mx-auto"
+            >
+              <QuickAvailabilitySearch />
             </motion.div>
           </div>
         </section>
