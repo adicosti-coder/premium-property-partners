@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap, Volume2, VolumeX, Volume1 } from "lucide-react";
+import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap, Volume2, VolumeX, Volume1, RotateCcw, Eye, BookOpen, Focus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAnimationPreference } from "@/hooks/useAnimationPreference";
@@ -108,6 +108,30 @@ const AccessibilityPanel = () => {
     localStorage.setItem("reducedMotion", String(reducedMotion));
   }, [reducedMotion]);
 
+  // Presets configuration
+  type PresetKey = "default" | "easyReading" | "maxContrast" | "focused";
+  
+  const presets: Record<PresetKey, {
+    fontSize: FontSize;
+    highContrast: boolean;
+    reducedMotion: boolean;
+    theme: "light" | "dark";
+  }> = {
+    default: { fontSize: "normal", highContrast: false, reducedMotion: false, theme: "dark" },
+    easyReading: { fontSize: "large", highContrast: false, reducedMotion: false, theme: "light" },
+    maxContrast: { fontSize: "large", highContrast: true, reducedMotion: false, theme: "light" },
+    focused: { fontSize: "normal", highContrast: false, reducedMotion: true, theme: "dark" },
+  };
+
+  const applyPreset = (presetKey: PresetKey) => {
+    const preset = presets[presetKey];
+    setFontSize(preset.fontSize);
+    setHighContrast(preset.highContrast);
+    setReducedMotion(preset.reducedMotion);
+    setTheme(preset.theme);
+    playSound("success");
+  };
+
   const translations = {
     ro: {
       accessibility: "Accesibilitate",
@@ -130,6 +154,11 @@ const AccessibilityPanel = () => {
       reducedMotion: "Reducere mișcare",
       sounds: "Sunete UI",
       volume: "Volum",
+      quickPresets: "Preseturi rapide",
+      default: "Standard",
+      easyReading: "Citire ușoară",
+      maxContrast: "Contrast max",
+      focused: "Concentrat",
     },
     en: {
       accessibility: "Accessibility",
@@ -152,6 +181,11 @@ const AccessibilityPanel = () => {
       reducedMotion: "Reduce motion",
       sounds: "UI Sounds",
       volume: "Volume",
+      quickPresets: "Quick Presets",
+      default: "Default",
+      easyReading: "Easy Reading",
+      maxContrast: "Max Contrast",
+      focused: "Focused",
     },
   };
 
@@ -201,6 +235,54 @@ const AccessibilityPanel = () => {
 
         {/* Settings */}
         <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Quick Presets */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              {tr.quickPresets}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset("default")}
+                className="flex items-center gap-1.5 text-xs h-9"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {tr.default}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset("easyReading")}
+                className="flex items-center gap-1.5 text-xs h-9"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                {tr.easyReading}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset("maxContrast")}
+                className="flex items-center gap-1.5 text-xs h-9"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                {tr.maxContrast}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyPreset("focused")}
+                className="flex items-center gap-1.5 text-xs h-9"
+              >
+                <Focus className="w-3.5 h-3.5" />
+                {tr.focused}
+              </Button>
+            </div>
+          </div>
+
+          <div className="border-t border-border" />
+
           {/* Font Size */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
