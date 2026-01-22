@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
+import { detectCountryFromPhone, getDefaultCountry } from "@/utils/phoneCountryDetector";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
@@ -240,13 +241,16 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                   <div className="space-y-2">
                     <Label htmlFor="phone">{form.fields.phone} *</Label>
                     <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg z-10">
+                        {(detectCountryFromPhone(formData.phone) || getDefaultCountry()).flag}
+                      </span>
                       <Input
                         id="phone"
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => handleChange("phone", e.target.value)}
                         placeholder={form.placeholders.phone}
-                        className={`pr-10 ${
+                        className={`pl-10 pr-10 ${
                           errors.phone 
                             ? "border-destructive focus-visible:ring-destructive" 
                             : formData.phone && romanianPhoneRegex.test(formData.phone)
@@ -268,7 +272,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                       <p className="text-sm text-destructive">{errors.phone}</p>
                     ) : formData.phone && romanianPhoneRegex.test(formData.phone) ? (
                       <p className="text-xs text-green-600 flex items-center gap-1">
-                        ✓ {language === 'en' ? 'Valid number' : 'Număr valid'}
+                        ✓ {(detectCountryFromPhone(formData.phone) || getDefaultCountry())[language === 'en' ? 'nameEn' : 'name']} - {language === 'en' ? 'Valid number' : 'Număr valid'}
                       </p>
                     ) : (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
