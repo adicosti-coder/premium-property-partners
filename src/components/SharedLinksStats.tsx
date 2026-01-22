@@ -82,6 +82,7 @@ interface ImporterInfo {
   imported_by: string | null;
   importer_name: string | null;
   importer_email: string | null;
+  importer_avatar: string | null;
 }
 
 interface SharedLink {
@@ -296,12 +297,12 @@ const SharedLinksStats = () => {
         if (!allEventsError && allEvents) {
           // Fetch profile info for authenticated importers (including email consent)
           const importerIds = [...new Set(allEvents.filter(e => e.imported_by).map(e => e.imported_by as string))];
-          let profilesMap: Record<string, { full_name: string | null; email: string | null; share_email_on_import: boolean }> = {};
+          let profilesMap: Record<string, { full_name: string | null; email: string | null; share_email_on_import: boolean; avatar_url: string | null }> = {};
           
           if (importerIds.length > 0) {
             const { data: profiles } = await supabase
               .from("profiles")
-              .select("id, full_name, email, share_email_on_import")
+              .select("id, full_name, email, share_email_on_import, avatar_url")
               .in("id", importerIds);
             
             if (profiles) {
@@ -309,7 +310,8 @@ const SharedLinksStats = () => {
                 profilesMap[p.id] = { 
                   full_name: p.full_name, 
                   email: p.share_email_on_import ? p.email : null,
-                  share_email_on_import: p.share_email_on_import || false
+                  share_email_on_import: p.share_email_on_import || false,
+                  avatar_url: p.avatar_url
                 };
               });
             }
@@ -329,7 +331,8 @@ const SharedLinksStats = () => {
               created_at: event.created_at,
               imported_by: event.imported_by,
               importer_name: profile?.full_name || null,
-              importer_email: profile?.email || null, // Only shown if user consented
+              importer_email: profile?.email || null,
+              importer_avatar: profile?.avatar_url || null,
             });
           });
           setImportersMap(importersByLink);
@@ -1011,9 +1014,17 @@ const SharedLinksStats = () => {
                                           className="flex items-center justify-between p-2 bg-background rounded-lg border"
                                         >
                                           <div className="flex items-center gap-3">
-                                            <div className="p-1.5 rounded-full bg-muted">
-                                              <User className="w-4 h-4 text-muted-foreground" />
-                                            </div>
+                                            {importer.importer_avatar ? (
+                                              <img 
+                                                src={importer.importer_avatar} 
+                                                alt={importer.importer_name || t.anonymous}
+                                                className="w-8 h-8 rounded-full object-cover"
+                                              />
+                                            ) : (
+                                              <div className="p-1.5 rounded-full bg-muted">
+                                                <User className="w-4 h-4 text-muted-foreground" />
+                                              </div>
+                                            )}
                                             <div>
                                               <p className="text-sm font-medium">
                                                 {importer.importer_name || t.anonymous}
