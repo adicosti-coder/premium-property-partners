@@ -26,13 +26,15 @@ import {
   Filter,
   ArrowUpDown,
   SortAsc,
-  SortDesc
+  SortDesc,
+  HeartOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 
 interface POI {
   id: string;
@@ -54,6 +56,8 @@ const CityGuideSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'default' | 'name' | 'rating'>('default');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const { favorites, isFavorite, toggleFavorite, favoritesCount } = usePoiFavorites();
 
   // Fetch ALL POIs from Supabase (removed limit for filtering)
   const { data: pois = [], isLoading } = useQuery({
@@ -123,6 +127,10 @@ const CityGuideSection: React.FC = () => {
       sortDefault: 'Ordine implicită',
       sortName: 'Nume',
       sortRating: 'Rating',
+      favorites: 'Favorite',
+      showFavorites: 'Arată doar favorite',
+      noFavorites: 'Nu ai locații favorite încă',
+      noFavoritesHint: 'Apasă pe inimă pentru a salva locațiile preferate',
     },
     en: {
       badge: 'Local Guide',
@@ -153,6 +161,10 @@ const CityGuideSection: React.FC = () => {
       sortDefault: 'Default order',
       sortName: 'Name',
       sortRating: 'Rating',
+      favorites: 'Favorites',
+      showFavorites: 'Show favorites only',
+      noFavorites: 'No favorite locations yet',
+      noFavoritesHint: 'Tap the heart icon to save your favorite places',
     }
   };
 
@@ -220,9 +232,14 @@ const CityGuideSection: React.FC = () => {
     return cats.sort();
   }, [pois]);
 
-  // Filter and sort POIs based on search, category, and sort option
+  // Filter and sort POIs based on search, category, favorites, and sort option
   const filteredPois = useMemo(() => {
     let filtered = pois;
+    
+    // Filter by favorites
+    if (showFavoritesOnly) {
+      filtered = filtered.filter(poi => isFavorite(poi.id));
+    }
     
     // Filter by category
     if (selectedCategory) {
@@ -260,14 +277,15 @@ const CityGuideSection: React.FC = () => {
     // Default: keep display_order from database
     
     return filtered;
-  }, [pois, selectedCategory, searchQuery, language, sortBy]);
+  }, [pois, selectedCategory, searchQuery, language, sortBy, showFavoritesOnly, isFavorite]);
 
-  const hasActiveFilters = searchQuery.trim() || selectedCategory || sortBy !== 'default';
+  const hasActiveFilters = searchQuery.trim() || selectedCategory || sortBy !== 'default' || showFavoritesOnly;
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory(null);
     setSortBy('default');
+    setShowFavoritesOnly(false);
   };
 
   return (
@@ -358,7 +376,7 @@ const CityGuideSection: React.FC = () => {
             </div>
 
             {/* Sort Options */}
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-sm text-muted-foreground flex items-center gap-1">
                 <ArrowUpDown className="w-4 h-4" />
                 {t.sortBy}:
@@ -391,6 +409,23 @@ const CityGuideSection: React.FC = () => {
                   {t.sortRating}
                 </Button>
               </div>
+
+              {/* Favorites Toggle */}
+              <div className="h-6 w-px bg-border mx-2" />
+              <Button
+                variant={showFavoritesOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className="rounded-full"
+              >
+                <Heart className={`w-4 h-4 mr-1 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                {t.favorites}
+                {favoritesCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                    {favoritesCount}
+                  </Badge>
+                )}
+              </Button>
             </div>
 
             {/* Results count and clear filters */}
@@ -441,13 +476,27 @@ const CityGuideSection: React.FC = () => {
             animate={{ opacity: 1 }}
             className="text-center py-12 mb-12 bg-card rounded-2xl border border-border"
           >
-            <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg font-medium text-foreground mb-2">{t.noResults}</p>
-            <p className="text-muted-foreground mb-4">{t.noResultsHint}</p>
-            <Button variant="outline" onClick={clearFilters}>
-              <X className="w-4 h-4 mr-2" />
-              {t.clearFilters}
-            </Button>
+            {showFavoritesOnly && favoritesCount === 0 ? (
+              <>
+                <HeartOff className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium text-foreground mb-2">{t.noFavorites}</p>
+                <p className="text-muted-foreground mb-4">{t.noFavoritesHint}</p>
+                <Button variant="outline" onClick={() => setShowFavoritesOnly(false)}>
+                  <Heart className="w-4 h-4 mr-2" />
+                  {t.categories.all}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium text-foreground mb-2">{t.noResults}</p>
+                <p className="text-muted-foreground mb-4">{t.noResultsHint}</p>
+                <Button variant="outline" onClick={clearFilters}>
+                  <X className="w-4 h-4 mr-2" />
+                  {t.clearFilters}
+                </Button>
+              </>
+            )}
           </motion.div>
         )}
 
@@ -487,6 +536,26 @@ const CityGuideSection: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        
+                        {/* Favorite button on image */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleFavorite(poi.id);
+                          }}
+                          className="absolute top-3 left-3 w-9 h-9 rounded-full bg-background/90 flex items-center justify-center hover:bg-background transition-colors z-10"
+                          aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          <Heart 
+                            className={`w-5 h-5 transition-colors ${
+                              isFavorite(poi.id) 
+                                ? 'text-rose-500 fill-rose-500' 
+                                : 'text-muted-foreground hover:text-rose-500'
+                            }`} 
+                          />
+                        </button>
+                        
                         {poi.rating && (
                           <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
                             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -503,12 +572,32 @@ const CityGuideSection: React.FC = () => {
                           <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
                             <Icon className={`w-6 h-6 ${iconColor}`} />
                           </div>
-                          {poi.rating && (
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
-                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                              <span className="font-medium">{poi.rating}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {/* Favorite button */}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFavorite(poi.id);
+                              }}
+                              className="w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
+                              aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                              <Heart 
+                                className={`w-5 h-5 transition-colors ${
+                                  isFavorite(poi.id) 
+                                    ? 'text-rose-500 fill-rose-500' 
+                                    : 'text-muted-foreground hover:text-rose-500'
+                                }`} 
+                              />
+                            </button>
+                            {poi.rating && (
+                              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
+                                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                                <span className="font-medium">{poi.rating}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
