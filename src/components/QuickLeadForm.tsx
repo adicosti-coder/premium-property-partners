@@ -8,17 +8,12 @@ import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
-import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
+import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
-const formSchema = z.object({
-  name: z.string().trim().min(2, "Numele este prea scurt").max(100),
-  phone: z.string().trim().regex(romanianPhoneRegex, "Număr de telefon invalid").max(20),
-  propertyType: z.string().min(1, "Selectați tipul"),
-  listingUrl: z.string().trim().url("Link invalid").max(500).optional().or(z.literal("")),
-});
+const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
 
 const QuickLeadForm = () => {
   const { t } = useLanguage();
@@ -37,8 +32,7 @@ const QuickLeadForm = () => {
   };
 
   const handlePhoneChange = (value: string) => {
-    const formatted = formatRomanianPhone(value);
-    setPhone(formatted);
+    setPhone(value);
     if (phoneError) setPhoneError("");
   };
 
@@ -46,27 +40,35 @@ const QuickLeadForm = () => {
     e.preventDefault();
     setListingUrlError("");
     setPhoneError("");
-    e.preventDefault();
-    setListingUrlError("");
 
-    const validation = formSchema.safeParse({ name, phone: phone.trim().replace(/\s+/g, " "), propertyType, listingUrl: listingUrl.trim() || undefined });
-    if (!validation.success) {
-      const urlError = validation.error.errors.find(e => e.path[0] === "listingUrl");
-      const phoneErr = validation.error.errors.find(e => e.path[0] === "phone");
-      if (urlError) {
-        setListingUrlError(t.quickLeadForm?.invalidUrl || "Link invalid");
-      }
-      if (phoneErr) {
-        setPhoneError(t.quickLeadForm?.invalidPhone || "Număr invalid");
-      }
+    // Validate required fields
+    if (!name.trim() || !phone.trim() || !propertyType) {
       toast({
         title: t.quickLeadForm?.fillAllFields || "Completează toate câmpurile",
-        description: phoneErr 
-          ? (t.quickLeadForm?.invalidPhoneMessage || "Format: +40 7XX XXX XXX sau 07XX XXX XXX")
-          : (t.quickLeadForm?.fillAllFieldsMessage || "Te rugăm să completezi corect toate câmpurile."),
+        description: t.quickLeadForm?.fillAllFieldsMessage || "Te rugăm să completezi corect toate câmpurile.",
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate phone internationally
+    if (!isValidInternationalPhone(phone)) {
+      setPhoneError(t.quickLeadForm?.invalidPhone || "Număr invalid");
+      toast({
+        title: t.quickLeadForm?.invalidPhone || "Număr invalid",
+        description: t.quickLeadForm?.invalidPhoneMessage || "Verifică formatul numărului de telefon",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate listing URL if provided
+    if (listingUrl.trim()) {
+      const urlValidation = listingUrlSchema.safeParse(listingUrl.trim());
+      if (!urlValidation.success) {
+        setListingUrlError(t.quickLeadForm?.invalidUrl || "Link invalid");
+        return;
+      }
     }
 
     setIsSubmitting(true);

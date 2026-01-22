@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Check, X, ChevronDown, MapPin, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { romanianPhoneRegex } from "@/utils/phoneFormatter";
 import { 
   detectCountryFromPhone, 
   getDefaultCountry, 
   countries, 
-  CountryInfo 
+  CountryInfo,
+  formatInternationalPhone,
+  validatePhoneForCountry
 } from "@/utils/phoneCountryDetector";
 import { useGeoCountryDetection } from "@/hooks/useGeoCountryDetection";
 
@@ -26,7 +27,7 @@ interface PhoneInputWithCountryProps {
 const PhoneInputWithCountry = ({
   value,
   onChange,
-  placeholder = "+40 7XX XXX XXX",
+  placeholder,
   error,
   className = "",
   inputClassName = "",
@@ -94,8 +95,17 @@ const PhoneInputWithCountry = ({
     }
     
     // Format with new country prefix
-    const newPrefix = country.prefix;
-    onChange(`${newPrefix} ${digitsWithoutPrefix}`);
+    onChange(formatInternationalPhone(`${country.prefix}${digitsWithoutPrefix}`, country));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    const detected = detectCountryFromPhone(newValue);
+    const countryToUse = detected || selectedCountry;
+    
+    // Format the phone number
+    const formatted = formatInternationalPhone(newValue, countryToUse);
+    onChange(formatted);
   };
 
   // Get detection source label
@@ -119,8 +129,12 @@ const PhoneInputWithCountry = ({
     );
   });
 
-  const isValid = value && romanianPhoneRegex.test(value);
+  // International validation
+  const isValid = validatePhoneForCountry(value, selectedCountry);
   const hasValue = value && value.length > 3;
+
+  // Dynamic placeholder based on selected country
+  const dynamicPlaceholder = placeholder || `${selectedCountry.prefix} ${'X'.repeat(selectedCountry.phoneLength).replace(/(.{3})/g, '$1 ').trim()}`;
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -147,11 +161,11 @@ const PhoneInputWithCountry = ({
           <Input
             id={id}
             type="tel"
-            placeholder={placeholder}
+            placeholder={dynamicPlaceholder}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={handleInputChange}
             required={required}
-            maxLength={20}
+            maxLength={25}
             className={`rounded-l-none pr-10 ${
               error 
                 ? "border-destructive focus-visible:ring-destructive" 
@@ -233,11 +247,13 @@ const PhoneInputWithCountry = ({
           <MapPin className="w-3 h-3" />
           {getDetectionLabel()}
         </p>
-      ) : (
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          📞 {language === 'en' ? 'Mobile: +40 7XX or Landline: +40 2XX' : 'Mobil: +40 7XX sau Fix: +40 2XX'}
+      ) : hasValue ? (
+        <p className="text-xs text-muted-foreground">
+          {language === 'en' 
+            ? `Expected ${selectedCountry.phoneLength} digits after ${selectedCountry.prefix}` 
+            : `Se așteaptă ${selectedCountry.phoneLength} cifre după ${selectedCountry.prefix}`}
         </p>
-      )}
+      ) : null}
     </div>
   );
 };
