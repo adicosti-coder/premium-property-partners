@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap } from "lucide-react";
+import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAnimationPreference } from "@/hooks/useAnimationPreference";
 import { useTheme } from "@/hooks/useTheme";
+import { useUISound } from "@/hooks/useUISound";
 import { cn } from "@/lib/utils";
 
 type FontSize = "small" | "normal" | "large" | "xlarge";
@@ -37,6 +38,15 @@ const AccessibilityPanel = () => {
     }
     return false;
   });
+
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("ui-sound-preference") !== "false";
+    }
+    return true;
+  });
+
+  const { playSound } = useUISound();
 
   // Show button on scroll
   useEffect(() => {
@@ -109,6 +119,7 @@ const AccessibilityPanel = () => {
       on: "Activat",
       off: "Dezactivat",
       reducedMotion: "Reducere mișcare",
+      sounds: "Sunete UI",
     },
     en: {
       accessibility: "Accessibility",
@@ -129,6 +140,7 @@ const AccessibilityPanel = () => {
       on: "On",
       off: "Off",
       reducedMotion: "Reduce motion",
+      sounds: "UI Sounds",
     },
   };
 
@@ -261,6 +273,51 @@ const AccessibilityPanel = () => {
                   !reducedMotion && "bg-muted-foreground text-background"
                 )}
               >
+                {tr.off}
+              </Button>
+            </div>
+          </div>
+
+          {/* UI Sounds */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              {soundEnabled ? (
+                <Volume2 className="w-4 h-4 text-primary" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-primary" />
+              )}
+              {tr.sounds}
+            </label>
+            <div className="flex gap-2">
+              <Button
+                variant={soundEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setSoundEnabled(true);
+                  localStorage.setItem("ui-sound-preference", "true");
+                  setTimeout(() => playSound("success"), 50);
+                }}
+                className={cn(
+                  "flex-1 transition-all duration-200",
+                  soundEnabled && "bg-primary text-primary-foreground hover:bg-primary/90"
+                )}
+              >
+                <Volume2 className="w-4 h-4 mr-1" />
+                {tr.on}
+              </Button>
+              <Button
+                variant={!soundEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setSoundEnabled(false);
+                  localStorage.setItem("ui-sound-preference", "false");
+                }}
+                className={cn(
+                  "flex-1 transition-all duration-200",
+                  !soundEnabled && "bg-muted-foreground text-background"
+                )}
+              >
+                <VolumeX className="w-4 h-4 mr-1" />
                 {tr.off}
               </Button>
             </div>
