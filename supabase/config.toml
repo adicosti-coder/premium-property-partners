@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.send-weekly-followup-report]
 verify_jwt = false
+
+[functions.send-advanced-simulation-followup]
+verify_jwt = false
