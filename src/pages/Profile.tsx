@@ -9,7 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Camera, Loader2, Save, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Save, Trash2, User as UserIcon } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -20,6 +31,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -39,6 +51,13 @@ const Profile = () => {
       success: "Profil actualizat cu succes!",
       error: "Eroare la actualizarea profilului",
       uploadError: "Eroare la încărcarea imaginii",
+      deleteAvatar: "Șterge avatar",
+      deleteAvatarConfirm: "Ești sigur că vrei să ștergi avatarul?",
+      deleteAvatarDescription: "Avatarul tău va fi resetat la imaginea implicită.",
+      cancel: "Anulează",
+      confirm: "Șterge",
+      avatarDeleted: "Avatar șters cu succes!",
+      deleteError: "Eroare la ștergerea avatarului",
       notLoggedIn: "Trebuie să fii autentificat pentru a accesa această pagină",
     },
     en: {
@@ -56,6 +75,13 @@ const Profile = () => {
       success: "Profile updated successfully!",
       error: "Error updating profile",
       uploadError: "Error uploading image",
+      deleteAvatar: "Delete avatar",
+      deleteAvatarConfirm: "Are you sure you want to delete your avatar?",
+      deleteAvatarDescription: "Your avatar will be reset to the default image.",
+      cancel: "Cancel",
+      confirm: "Delete",
+      avatarDeleted: "Avatar deleted successfully!",
+      deleteError: "Error deleting avatar",
       notLoggedIn: "You must be logged in to access this page",
     },
   };
@@ -170,6 +196,40 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAvatar = async () => {
+    if (!user || !avatarUrl) return;
+
+    try {
+      setDeleting(true);
+
+      // Extract file path from URL
+      const urlParts = avatarUrl.split("/avatars/");
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        await supabase.storage.from("avatars").remove([filePath]);
+      }
+
+      // Update profile to remove avatar
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setAvatarUrl(null);
+      toast.success(text.avatarDeleted);
+    } catch (error) {
+      console.error("Error deleting avatar:", error);
+      toast.error(text.deleteError);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -261,13 +321,50 @@ const Profile = () => {
                 <input
                   id="avatar-upload"
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
                   className="hidden"
                   onChange={handleAvatarUpload}
                   disabled={uploading}
                 />
               </div>
-              <p className="text-sm text-muted-foreground">{text.changeAvatar}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">{text.changeAvatar}</p>
+                {avatarUrl && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        disabled={deleting}
+                      >
+                        {deleting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{text.deleteAvatarConfirm}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {text.deleteAvatarDescription}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{text.cancel}</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteAvatar}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {text.confirm}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </div>
 
             {/* Email (Read-only) */}
