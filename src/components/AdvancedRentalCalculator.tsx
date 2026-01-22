@@ -21,7 +21,8 @@ import {
   History,
   Trash2,
   LogIn,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ro, enUS } from 'date-fns/locale';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 
 type Scenario = 'conservator' | 'piata' | 'optimist';
 
@@ -119,6 +121,10 @@ const translations = {
     simulationSaved: 'Simulare salvată cu succes!',
     simulationDeleted: 'Simulare ștearsă',
     simulationLoaded: 'Simulare încărcată',
+    chartTitle: 'Comparație Vizuală',
+    chartClassic: 'Chirie Clasică',
+    chartWithout: 'Fără Sistem',
+    chartWith: 'Cu RealTrust',
   },
   en: {
     title: 'Advanced Income Calculator',
@@ -167,6 +173,10 @@ const translations = {
     simulationSaved: 'Simulation saved successfully!',
     simulationDeleted: 'Simulation deleted',
     simulationLoaded: 'Simulation loaded',
+    chartTitle: 'Visual Comparison',
+    chartClassic: 'Classic Rent',
+    chartWithout: 'Without System',
+    chartWith: 'With RealTrust',
   },
 };
 
@@ -630,6 +640,102 @@ const AdvancedRentalCalculator = () => {
                 <p className="text-sm text-muted-foreground">{t.resultsHelp}</p>
               </div>
 
+              {/* Bar Chart Comparison */}
+              <motion.div
+                className="mb-6 p-4 rounded-xl bg-card border border-border"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="w-5 h-5 text-gold" />
+                  <h4 className="font-semibold text-foreground">{t.chartTitle}</h4>
+                </div>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          name: t.chartClassic,
+                          value: calculations.classicRent,
+                          fill: 'hsl(var(--muted-foreground))',
+                        },
+                        {
+                          name: t.chartWithout,
+                          value: calculations.netWithoutSystem,
+                          fill: 'hsl(38 92% 50%)',
+                        },
+                        {
+                          name: t.chartWith,
+                          value: calculations.netWithSystem,
+                          fill: 'hsl(var(--gold))',
+                        },
+                      ]}
+                      layout="vertical"
+                      margin={{ top: 10, right: 40, left: 10, bottom: 10 }}
+                    >
+                      <XAxis 
+                        type="number" 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
+                        tickFormatter={(value) => `€${value}`}
+                      />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        width={100}
+                        tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        }}
+                        labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
+                        formatter={(value: number) => [`€${value}`, 'Venit NET/lună']}
+                      />
+                      <Bar 
+                        dataKey="value" 
+                        radius={[0, 8, 8, 0]}
+                        maxBarSize={50}
+                      >
+                        {[
+                          { fill: 'hsl(var(--muted-foreground))' },
+                          { fill: 'hsl(38 92% 50%)' },
+                          { fill: 'hsl(45 93% 58%)' },
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                        <LabelList 
+                          dataKey="value" 
+                          position="right" 
+                          formatter={(value: number) => `€${value}`}
+                          style={{ fill: 'hsl(var(--foreground))', fontWeight: 'bold', fontSize: 14 }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                {/* Visual difference indicator */}
+                {calculations.diffVsClassic > 0 && (
+                  <motion.div 
+                    className="mt-4 flex items-center justify-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <span className="text-emerald-400 font-bold">
+                      +{calculations.diffVsClassic}€/lună (+{calculations.percentVsClassic}%) {t.vsClassic}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.div>
+
               <div className="space-y-3">
                 {/* Classic Rent Result */}
                 <motion.div
@@ -638,7 +744,7 @@ const AdvancedRentalCalculator = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <span className="text-amber-400 font-medium">{t.classicRentResult}</span>
+                  <span className="text-muted-foreground font-medium">{t.classicRentResult}</span>
                   <span className="text-2xl font-bold text-foreground">€{calculations.classicRent}</span>
                 </motion.div>
 
