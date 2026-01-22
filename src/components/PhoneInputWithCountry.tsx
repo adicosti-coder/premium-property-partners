@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Check, X, ChevronDown, MapPin, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,7 +8,9 @@ import {
   countries, 
   CountryInfo,
   formatInternationalPhone,
-  validatePhoneForCountry
+  validatePhoneForCountry,
+  regions,
+  CountryRegion
 } from "@/utils/phoneCountryDetector";
 import { useGeoCountryDetection } from "@/hooks/useGeoCountryDetection";
 
@@ -119,15 +121,32 @@ const PhoneInputWithCountry = ({
     return null;
   };
 
-  const filteredCountries = countries.filter(country => {
+  // Filter countries based on search query
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery) return countries;
+    
     const query = searchQuery.toLowerCase();
-    return (
+    return countries.filter(country => 
       country.name.toLowerCase().includes(query) ||
       country.nameEn.toLowerCase().includes(query) ||
       country.prefix.includes(query) ||
       country.code.toLowerCase().includes(query)
     );
-  });
+  }, [searchQuery]);
+
+  // Group filtered countries by region
+  const groupedCountries = useMemo(() => {
+    const grouped = new Map<CountryRegion, CountryInfo[]>();
+    
+    for (const region of regions) {
+      const regionCountries = filteredCountries.filter(c => c.region === region.key);
+      if (regionCountries.length > 0) {
+        grouped.set(region.key, regionCountries);
+      }
+    }
+    
+    return grouped;
+  }, [filteredCountries]);
 
   // International validation
   const isValid = validatePhoneForCountry(value, selectedCountry);
@@ -135,6 +154,12 @@ const PhoneInputWithCountry = ({
 
   // Dynamic placeholder based on selected country
   const dynamicPlaceholder = placeholder || `${selectedCountry.prefix} ${'X'.repeat(selectedCountry.phoneLength).replace(/(.{3})/g, '$1 ').trim()}`;
+
+  // Get region name
+  const getRegionName = (key: CountryRegion): string => {
+    const region = regions.find(r => r.key === key);
+    return region ? (language === 'en' ? region.nameEn : region.nameRo) : key;
+  };
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -189,10 +214,10 @@ const PhoneInputWithCountry = ({
         {isOpen && (
           <div
             ref={dropdownRef}
-            className="absolute top-full left-0 mt-1 w-72 max-h-64 overflow-hidden bg-popover border border-border rounded-lg shadow-lg z-50"
+            className="absolute top-full left-0 mt-1 w-80 max-h-80 overflow-hidden bg-popover border border-border rounded-lg shadow-lg z-50"
           >
             {/* Search Input */}
-            <div className="p-2 border-b border-border">
+            <div className="p-2 border-b border-border sticky top-0 bg-popover">
               <Input
                 type="text"
                 placeholder={language === 'en' ? 'Search country...' : 'Caută țara...'}
@@ -203,27 +228,39 @@ const PhoneInputWithCountry = ({
               />
             </div>
             
-            {/* Countries List */}
-            <div className="overflow-y-auto max-h-48">
-              {filteredCountries.length > 0 ? (
-                filteredCountries.map((country) => (
-                  <button
-                    key={country.code}
-                    type="button"
-                    onClick={() => handleCountrySelect(country)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-accent transition-colors ${
-                      selectedCountry.code === country.code ? 'bg-accent' : ''
-                    }`}
-                  >
-                    <span className="text-lg">{country.flag}</span>
-                    <span className="flex-1 text-sm">
-                      {language === 'en' ? country.nameEn : country.name}
-                    </span>
-                    <span className="text-sm text-muted-foreground">{country.prefix}</span>
-                    {selectedCountry.code === country.code && (
-                      <Check className="w-4 h-4 text-primary" />
-                    )}
-                  </button>
+            {/* Countries List Grouped by Region */}
+            <div className="overflow-y-auto max-h-64">
+              {groupedCountries.size > 0 ? (
+                Array.from(groupedCountries.entries()).map(([regionKey, regionCountries]) => (
+                  <div key={regionKey}>
+                    {/* Region Header */}
+                    <div className="sticky top-0 px-3 py-1.5 bg-muted/80 backdrop-blur-sm border-b border-border/50">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {getRegionName(regionKey)}
+                      </span>
+                    </div>
+                    
+                    {/* Region Countries */}
+                    {regionCountries.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => handleCountrySelect(country)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-accent transition-colors ${
+                          selectedCountry.code === country.code ? 'bg-accent' : ''
+                        }`}
+                      >
+                        <span className="text-lg">{country.flag}</span>
+                        <span className="flex-1 text-sm truncate">
+                          {language === 'en' ? country.nameEn : country.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono">{country.prefix}</span>
+                        {selectedCountry.code === country.code && (
+                          <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 ))
               ) : (
                 <div className="px-3 py-4 text-sm text-muted-foreground text-center">
