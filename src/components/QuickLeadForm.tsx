@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Loader2, CheckCircle, Home, Phone, User } from "lucide-react";
+import { ArrowRight, Loader2, CheckCircle, Home, Phone, User, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -22,6 +22,7 @@ const QuickLeadForm = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [listingUrl, setListingUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -47,6 +48,7 @@ const QuickLeadForm = () => {
         property_area: 50, // Default value
         property_type: propertyType,
         source: "quick_form",
+        simulation_data: listingUrl.trim() ? { listingUrl: listingUrl.trim() } : null,
       });
 
       if (error) throw error;
@@ -58,6 +60,7 @@ const QuickLeadForm = () => {
             name: name.trim(),
             whatsappNumber: phone.trim(),
             propertyType: propertyType,
+            listingUrl: listingUrl.trim() || undefined,
             source: "quick_form",
           },
         });
@@ -75,6 +78,7 @@ const QuickLeadForm = () => {
         setName("");
         setPhone("");
         setPropertyType("");
+        setListingUrl("");
         setIsSuccess(false);
       }, 3000);
     } catch (error) {
@@ -179,6 +183,19 @@ const QuickLeadForm = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              
+              {/* Listing URL Input */}
+              <div className="relative flex-1 md:max-w-[220px]">
+                <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="url"
+                  placeholder={t.quickLeadForm?.listingUrlPlaceholder || "Link anunț (opțional)"}
+                  value={listingUrl}
+                  onChange={(e) => setListingUrl(e.target.value)}
+                  className="pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                  maxLength={500}
+                />
               </div>
               
               {/* Submit Button */}
