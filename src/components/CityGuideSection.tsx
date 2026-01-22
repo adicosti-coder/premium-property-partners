@@ -41,6 +41,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiImport } from '@/utils/exportPoiFavoritesPdf';
 import { toast } from 'sonner';
+import SharedLinksStats from './SharedLinksStats';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -638,7 +639,7 @@ const CityGuideSection: React.FC = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleShareLink}>
                       {linkCopied ? (
-                        <Check className="w-4 h-4 mr-2 text-green-500" />
+                        <Check className="w-4 h-4 mr-2 text-primary" />
                       ) : (
                         <Copy className="w-4 h-4 mr-2" />
                       )}
@@ -647,6 +648,9 @@ const CityGuideSection: React.FC = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+
+              {/* Stats Dashboard Button */}
+              {isAuthenticated && <SharedLinksStats />}
             </div>
 
             {/* Results count and clear filters */}
