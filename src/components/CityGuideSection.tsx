@@ -48,6 +48,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Link as RouterLink } from 'react-router-dom';
+import { LogIn, UserPlus } from 'lucide-react';
 
 interface POI {
   id: string;
@@ -185,6 +187,11 @@ const CityGuideSection: React.FC = () => {
       importToFavorites: 'Importă în favorite',
       importing: 'Se importă...',
       alreadyImported: 'Deja în favorite',
+      loginToImport: 'Autentifică-te pentru a importa',
+      loginBannerTitle: 'Creează un cont pentru a salva locațiile',
+      loginBannerSubtitle: 'Autentifică-te pentru a importa aceste locații în favoritele tale și a le accesa oricând.',
+      loginButton: 'Autentificare',
+      signupButton: 'Creează cont',
       pdfTitle: 'Ghid Local - Locații Favorite',
       pdfCategory: 'Categorie',
       pdfAddress: 'Adresă',
@@ -234,6 +241,11 @@ const CityGuideSection: React.FC = () => {
       importToFavorites: 'Import to favorites',
       importing: 'Importing...',
       alreadyImported: 'Already in favorites',
+      loginToImport: 'Login to import',
+      loginBannerTitle: 'Create an account to save locations',
+      loginBannerSubtitle: 'Sign in to import these locations to your favorites and access them anytime.',
+      loginButton: 'Sign in',
+      signupButton: 'Create account',
       pdfTitle: 'City Guide - Favorite Locations',
       pdfCategory: 'Category',
       pdfAddress: 'Address',
@@ -474,10 +486,26 @@ const CityGuideSection: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                {/* Import to favorites button */}
+                {/* Import to favorites button - requires authentication */}
                 {(() => {
                   const notYetFavorited = sharedPoiIds.filter(id => !isFavorite(id));
                   const allImported = notYetFavorited.length === 0;
+                  
+                  // If not authenticated, show login button
+                  if (!isAuthenticated) {
+                    const currentUrl = window.location.pathname + window.location.search;
+                    return (
+                      <RouterLink 
+                        to={`/auth?redirect=${encodeURIComponent(currentUrl)}`}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Button variant="default" size="sm" className="w-full">
+                          <LogIn className="w-4 h-4 mr-2" />
+                          {t.loginToImport}
+                        </Button>
+                      </RouterLink>
+                    );
+                  }
                   
                   return (
                     <Button
@@ -511,6 +539,47 @@ const CityGuideSection: React.FC = () => {
                 </Button>
               </div>
             </div>
+            
+            {/* Login encouragement banner for unauthenticated users */}
+            {!isAuthenticated && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-4 p-4 rounded-xl bg-muted/50 border border-border"
+              >
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{t.loginBannerTitle}</p>
+                      <p className="text-sm text-muted-foreground">{t.loginBannerSubtitle}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <RouterLink 
+                      to={`/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button variant="outline" size="sm" className="w-full">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        {t.loginButton}
+                      </Button>
+                    </RouterLink>
+                    <RouterLink 
+                      to={`/auth?mode=signup&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button size="sm" className="w-full">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        {t.signupButton}
+                      </Button>
+                    </RouterLink>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         )}
 

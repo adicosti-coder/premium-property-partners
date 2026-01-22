@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,14 @@ type AuthMode = "login" | "signup" | "reset";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
-  const [mode, setMode] = useState<AuthMode>("login");
+  
+  // Get redirect URL and initial mode from query params
+  const redirectUrl = searchParams.get('redirect') || '/admin';
+  const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,19 +34,20 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
-          navigate("/admin");
+          // Navigate to the redirect URL or default to /admin
+          navigate(redirectUrl);
         }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate("/admin");
+        navigate(redirectUrl);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, redirectUrl]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
