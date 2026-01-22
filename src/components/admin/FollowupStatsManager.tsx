@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift, MousePointerClick, Bell, Settings } from "lucide-react";
+import ConversionRateChart from "./ConversionRateChart";
 import { format, subDays, eachDayOfInterval, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import {
@@ -659,6 +660,15 @@ const FollowupStatsManager = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Conversion Rate Evolution Chart */}
+      <ConversionRateChart
+        followupEmails={followupEmails}
+        leads={leads}
+        profiles={profiles}
+        alertThreshold={alertThreshold}
+        language={language}
+      />
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
