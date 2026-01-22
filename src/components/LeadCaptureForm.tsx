@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Loader2, CheckCircle } from "lucide-react";
+import { FileText, Loader2, CheckCircle, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -39,6 +39,7 @@ const LeadCaptureForm = ({
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [listingUrl, setListingUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -64,7 +65,10 @@ const LeadCaptureForm = ({
         property_type: propertyType,
         calculated_net_profit: calculatedNetProfit,
         calculated_yearly_profit: calculatedYearlyProfit,
-        simulation_data: simulationData,
+        simulation_data: {
+          ...simulationData,
+          listingUrl: listingUrl.trim() || undefined,
+        },
       });
 
       if (error) throw error;
@@ -76,6 +80,7 @@ const LeadCaptureForm = ({
             whatsappNumber: whatsappNumber.trim(),
             propertyArea: parseInt(propertyArea),
             propertyType: propertyType,
+            listingUrl: listingUrl.trim() || undefined,
             calculatedNetProfit,
             calculatedYearlyProfit,
             simulationData,
@@ -96,6 +101,7 @@ const LeadCaptureForm = ({
         setWhatsappNumber("");
         setPropertyArea("");
         setPropertyType("");
+        setListingUrl("");
         setIsSuccess(false);
         onClose();
       }, 2000);
@@ -188,6 +194,21 @@ const LeadCaptureForm = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="listingUrl" className="flex items-center gap-1.5">
+                <Link className="w-3.5 h-3.5" />
+                {t.leadForm.listingUrl}
+              </Label>
+              <Input
+                id="listingUrl"
+                type="url"
+                placeholder={t.leadForm.listingUrlPlaceholder}
+                value={listingUrl}
+                onChange={(e) => setListingUrl(e.target.value)}
+                maxLength={500}
+              />
             </div>
 
             <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
