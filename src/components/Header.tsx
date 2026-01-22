@@ -70,7 +70,7 @@ const Header = () => {
   const navLinks = [
     { href: "/", label: t.nav.home, isHome: true },
     { href: "/pentru-proprietari", label: language === "ro" ? "Proprietari" : "Owners", isPage: true },
-    { href: "/oaspeti", label: t.nav.guests, isPage: true },
+    { href: "/pentru-oaspeti", label: t.nav.guests, isPage: true },
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
     { href: "/blog", label: "Blog", isPage: true },
