@@ -5,10 +5,13 @@ import AccessibilityPanel from "@/components/AccessibilityPanel";
 import FacilitiesShowcase from "@/components/FacilitiesShowcase";
 import DigitalHouseManual from "@/components/DigitalHouseManual";
 import CleaningStandards from "@/components/CleaningStandards";
+import PropertyMap from "@/components/PropertyMap";
+import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { 
   Star, 
   Shield, 
@@ -24,15 +27,22 @@ import {
   Sparkles,
   Award,
   Users,
-  Phone
+  Phone,
+  Map,
+  Building2,
+  Navigation
 } from "lucide-react";
 import { properties } from "@/data/properties";
 import { motion } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PentruOaspeti = () => {
   const { language } = useLanguage();
+  const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
+  const [activeMapTab, setActiveMapTab] = useState<string>("properties");
   const heroAnimation = useScrollAnimation({ threshold: 0.1 });
   const benefitsAnimation = useScrollAnimation({ threshold: 0.1 });
+  const mapAnimation = useScrollAnimation({ threshold: 0.1 });
   const processAnimation = useScrollAnimation({ threshold: 0.1 });
   const propertiesAnimation = useScrollAnimation({ threshold: 0.1 });
   const faqAnimation = useScrollAnimation({ threshold: 0.1 });
@@ -380,6 +390,112 @@ const PentruOaspeti = () => {
                 </motion.div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Interactive Map Section */}
+        <section 
+          ref={mapAnimation.ref as React.RefObject<HTMLElement>}
+          className="py-20"
+        >
+          <div className="container mx-auto px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={mapAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-12"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                <Map className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {language === 'ro' ? 'Hartă Interactivă' : 'Interactive Map'}
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4">
+                {language === 'ro' ? 'Explorează' : 'Explore'}{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                  {language === 'ro' ? 'Locațiile Noastre' : 'Our Locations'}
+                </span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {language === 'ro' 
+                  ? 'Descoperă apartamentele noastre premium și punctele de interes din apropiere pe hartă'
+                  : 'Discover our premium apartments and nearby points of interest on the map'}
+              </p>
+            </motion.div>
+
+            {/* Map Tabs */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={mapAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Tabs value={activeMapTab} onValueChange={setActiveMapTab} className="w-full">
+                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+                  <TabsTrigger value="properties" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    {language === 'ro' ? 'Apartamente' : 'Apartments'}
+                  </TabsTrigger>
+                  <TabsTrigger value="poi" className="flex items-center gap-2">
+                    <Navigation className="w-4 h-4" />
+                    {language === 'ro' ? 'Puncte de Interes' : 'Points of Interest'}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="properties" className="mt-0">
+                  <div className="rounded-2xl overflow-hidden shadow-xl border border-border">
+                    <PropertyMap 
+                      onPropertySelect={setSelectedProperty}
+                      selectedProperty={selectedProperty}
+                      className="w-full h-[500px] md:h-[600px]"
+                    />
+                  </div>
+                  
+                  {/* Property Quick Links */}
+                  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {properties.slice(0, 8).map((property) => (
+                      <button
+                        key={property.slug}
+                        onClick={() => setSelectedProperty(property.slug)}
+                        className={`p-3 rounded-xl border text-left transition-all duration-300 ${
+                          selectedProperty === property.slug
+                            ? 'border-primary bg-primary/10 shadow-md'
+                            : 'border-border bg-card hover:border-primary/30 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin className={`w-3 h-3 ${selectedProperty === property.slug ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <span className="text-xs text-muted-foreground truncate">{property.location}</span>
+                        </div>
+                        <h4 className="text-sm font-medium truncate">{property.name}</h4>
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="poi" className="mt-0">
+                  <div className="rounded-2xl overflow-hidden shadow-xl border border-border">
+                    <InteractiveMapWithPOI />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {/* Map Legend */}
+              <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border">
+                  <div className="w-3 h-3 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">
+                    {language === 'ro' ? 'Apartamente Premium' : 'Premium Apartments'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border">
+                  <div className="w-3 h-3 rounded-full bg-accent" />
+                  <span className="text-muted-foreground">
+                    {language === 'ro' ? 'Puncte de Interes' : 'Points of Interest'}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
 
