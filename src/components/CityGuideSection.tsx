@@ -447,9 +447,10 @@ const CityGuideSection: React.FC = () => {
     importFavorites(sharedPoiIds);
     
     // Send notification to the original sharer if this is a tracked share
+    // Include userId if authenticated for tracking who imported
     if (currentShareCode) {
       const notYetFavorited = sharedPoiIds.filter(id => !isFavorite(id));
-      await notifyPoiImport(currentShareCode, undefined, notYetFavorited.length);
+      await notifyPoiImport(currentShareCode, undefined, notYetFavorited.length, userId || undefined);
     }
   };
 
