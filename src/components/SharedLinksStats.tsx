@@ -13,6 +13,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,13 +35,14 @@ import {
   BarChart3,
   Link2,
   Users,
-  Calendar,
   Copy,
   Check,
   ExternalLink,
   TrendingUp,
+  Trash2,
+  Loader2,
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 
@@ -57,6 +69,7 @@ const SharedLinksStats = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -79,6 +92,13 @@ const SharedLinksStats = () => {
       copied: "Copiat!",
       viewDetails: "Vezi Statistici",
       open: "Deschide",
+      delete: "Șterge",
+      deleteConfirmTitle: "Șterge link-ul partajat?",
+      deleteConfirmDesc: "Acest link nu va mai funcționa și nu va mai putea fi accesat de alți utilizatori.",
+      cancel: "Anulează",
+      confirm: "Șterge",
+      deleteSuccess: "Link șters cu succes",
+      deleteError: "Eroare la ștergerea link-ului",
     },
     en: {
       title: "Sharing Statistics",
@@ -98,6 +118,13 @@ const SharedLinksStats = () => {
       copied: "Copied!",
       viewDetails: "View Statistics",
       open: "Open",
+      delete: "Delete",
+      deleteConfirmTitle: "Delete shared link?",
+      deleteConfirmDesc: "This link will no longer work and won't be accessible by other users.",
+      cancel: "Cancel",
+      confirm: "Delete",
+      deleteSuccess: "Link deleted successfully",
+      deleteError: "Error deleting link",
     },
   };
 
@@ -159,6 +186,31 @@ const SharedLinksStats = () => {
       title: t.copied,
     });
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleDelete = async (linkId: string) => {
+    setDeletingId(linkId);
+    try {
+      const { error } = await supabase
+        .from("shared_poi_links")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      setSharedLinks((prev) => prev.filter((link) => link.id !== linkId));
+      toast({
+        title: t.deleteSuccess,
+      });
+    } catch (error) {
+      console.error("Error deleting link:", error);
+      toast({
+        title: t.deleteError,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const totalImports = sharedLinks.reduce((sum, link) => sum + link.import_count, 0);
@@ -328,12 +380,11 @@ const SharedLinksStats = () => {
                             : t.never}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center gap-2 justify-end">
+                          <div className="flex items-center gap-1 justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => copyShareLink(link.share_code)}
-                              className="gap-1"
                             >
                               {copiedCode === link.share_code ? (
                                 <Check className="w-3 h-3" />
@@ -354,6 +405,39 @@ const SharedLinksStats = () => {
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  disabled={deletingId === link.id}
+                                >
+                                  {deletingId === link.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t.deleteConfirmDesc}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(link.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    {t.confirm}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
