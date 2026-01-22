@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Check, X, ChevronDown } from "lucide-react";
+import { Check, X, ChevronDown, MapPin, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { romanianPhoneRegex } from "@/utils/phoneFormatter";
 import { 
@@ -9,6 +9,7 @@ import {
   countries, 
   CountryInfo 
 } from "@/utils/phoneCountryDetector";
+import { useGeoCountryDetection } from "@/hooks/useGeoCountryDetection";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -19,6 +20,7 @@ interface PhoneInputWithCountryProps {
   inputClassName?: string;
   id?: string;
   required?: boolean;
+  autoDetectLocation?: boolean;
 }
 
 const PhoneInputWithCountry = ({
@@ -30,15 +32,27 @@ const PhoneInputWithCountry = ({
   inputClassName = "",
   id,
   required = false,
+  autoDetectLocation = true,
 }: PhoneInputWithCountryProps) => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(getDefaultCountry());
   const [searchQuery, setSearchQuery] = useState("");
+  const [hasUserSelected, setHasUserSelected] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Auto-detect country from phone number
+  // Auto-detect country from geolocation
+  const geoDetection = useGeoCountryDetection();
+
+  // Set initial country from geolocation (only if user hasn't manually selected)
+  useEffect(() => {
+    if (autoDetectLocation && !geoDetection.isLoading && !hasUserSelected && !value) {
+      setSelectedCountry(geoDetection.country);
+    }
+  }, [geoDetection.isLoading, geoDetection.country, autoDetectLocation, hasUserSelected, value]);
+
+  // Auto-detect country from phone number (overrides geolocation)
   useEffect(() => {
     const detected = detectCountryFromPhone(value);
     if (detected && detected.code !== selectedCountry.code) {
@@ -66,6 +80,7 @@ const PhoneInputWithCountry = ({
 
   const handleCountrySelect = (country: CountryInfo) => {
     setSelectedCountry(country);
+    setHasUserSelected(true);
     setIsOpen(false);
     setSearchQuery("");
     
@@ -81,6 +96,17 @@ const PhoneInputWithCountry = ({
     // Format with new country prefix
     const newPrefix = country.prefix;
     onChange(`${newPrefix} ${digitsWithoutPrefix}`);
+  };
+
+  // Get detection source label
+  const getDetectionLabel = () => {
+    if (geoDetection.isLoading) {
+      return language === 'en' ? 'Detecting location...' : 'Se detectează locația...';
+    }
+    if (!hasUserSelected && !value && geoDetection.source === 'ip') {
+      return language === 'en' ? 'Auto-detected from your location' : 'Detectat automat din locația ta';
+    }
+    return null;
   };
 
   const filteredCountries = countries.filter(country => {
@@ -106,8 +132,13 @@ const PhoneInputWithCountry = ({
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-1 px-3 py-2 border border-r-0 rounded-l-md bg-muted/50 hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
           aria-label={language === 'en' ? 'Select country' : 'Selectează țara'}
+          title={getDetectionLabel() || (language === 'en' ? 'Select country' : 'Selectează țara')}
         >
-          <span className="text-lg">{selectedCountry.flag}</span>
+          {geoDetection.isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          ) : (
+            <span className="text-lg">{selectedCountry.flag}</span>
+          )}
           <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
@@ -196,6 +227,11 @@ const PhoneInputWithCountry = ({
       ) : isValid ? (
         <p className="text-xs text-green-600 flex items-center gap-1">
           ✓ {selectedCountry[language === 'en' ? 'nameEn' : 'name']} - {language === 'en' ? 'Valid number' : 'Număr valid'}
+        </p>
+      ) : getDetectionLabel() ? (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <MapPin className="w-3 h-3" />
+          {getDetectionLabel()}
         </p>
       ) : (
         <p className="text-xs text-muted-foreground flex items-center gap-1">
