@@ -245,11 +245,12 @@ const PhoneInputWithCountry = ({
     handleCountrySelect(country);
   }, [handleCountrySelect]);
 
-  // Use keyboard navigation hook
+  // Use keyboard navigation hook with type-ahead support
   const { 
     highlightedIndex, 
     setHighlightedIndex, 
-    handleKeyDown 
+    handleKeyDown,
+    typeAheadQuery,
   } = useKeyboardNavigation({
     items: flatCountryList,
     isActive: isOpen,
@@ -258,6 +259,8 @@ const PhoneInputWithCountry = ({
     pageSize: 10,
     listRef,
     resetDependencies: [searchQuery],
+    getSearchLabel: (country) => language === 'en' ? country.nameEn : country.name,
+    typeAheadDebounce: 500,
   });
 
   // International validation
