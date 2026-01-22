@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Loader2, CheckCircle, Link } from "lucide-react";
+import { FileText, Loader2, CheckCircle, Link, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -38,7 +38,7 @@ const LeadCaptureForm = ({
   calculatedYearlyProfit,
   simulationData,
 }: LeadCaptureFormProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [name, setName] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
@@ -200,18 +200,39 @@ const LeadCaptureForm = ({
 
             <div className="space-y-2">
               <Label htmlFor="whatsapp">{t.leadForm.whatsapp}</Label>
-              <Input
-                id="whatsapp"
-                type="tel"
-                placeholder={t.leadForm.whatsappPlaceholder}
-                value={whatsappNumber}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                required
-                maxLength={20}
-                className={phoneError ? "border-destructive" : ""}
-              />
+              <div className="relative">
+                <Input
+                  id="whatsapp"
+                  type="tel"
+                  placeholder={t.leadForm.whatsappPlaceholder}
+                  value={whatsappNumber}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  required
+                  maxLength={20}
+                  className={`pr-10 ${
+                    phoneError 
+                      ? "border-destructive focus-visible:ring-destructive" 
+                      : whatsappNumber && romanianPhoneRegex.test(whatsappNumber)
+                        ? "border-green-500 focus-visible:ring-green-500"
+                        : ""
+                  }`}
+                />
+                {whatsappNumber && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {romanianPhoneRegex.test(whatsappNumber) ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <X className="w-4 h-4 text-destructive" />
+                    )}
+                  </div>
+                )}
+              </div>
               {phoneError ? (
                 <p className="text-sm text-destructive">{phoneError}</p>
+              ) : whatsappNumber && romanianPhoneRegex.test(whatsappNumber) ? (
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  ✓ {language === 'en' ? 'Valid number' : 'Număr valid'}
+                </p>
               ) : (
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   {t.leadForm.phoneHint || "📞 Mobil: +40 7XX sau Fix: +40 2XX"}
