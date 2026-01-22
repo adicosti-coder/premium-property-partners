@@ -9,6 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
+import { detectCountryFromPhone, getDefaultCountry } from "@/utils/phoneCountryDetector";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
@@ -186,7 +187,9 @@ const QuickLeadForm = () => {
               
               {/* Phone Input */}
               <div className="relative flex-1">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg z-10">
+                  {(detectCountryFromPhone(phone) || getDefaultCountry()).flag}
+                </span>
                 <Input
                   type="tel"
                   placeholder={t.quickLeadForm?.phonePlaceholder || "+40 7XX XXX XXX"}
@@ -220,7 +223,7 @@ const QuickLeadForm = () => {
                   {phoneError 
                     ? phoneError 
                     : phone && romanianPhoneRegex.test(phone)
-                      ? (language === 'en' ? '✓ Valid number' : '✓ Număr valid')
+                      ? `✓ ${(detectCountryFromPhone(phone) || getDefaultCountry())[language === 'en' ? 'nameEn' : 'name']}`
                       : (t.quickLeadForm?.phoneHint || "📞 +40 7XX (mobil) sau +40 2XX (fix)")}
                 </p>
               </div>
