@@ -265,15 +265,28 @@ serve(async (req) => {
       console.log('No push subscriptions found for user');
     }
 
-    // Send email notification
+    // Check if user has email notifications enabled before sending
     if (resend && sharerEmail) {
-      emailSent = await sendEmailNotification(
-        resend,
-        sharerEmail,
-        name,
-        count,
-        shareCode
-      );
+      // Check user's notification preferences
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('notifications_enabled')
+        .eq('id', sharedLink.user_id)
+        .single();
+      
+      const emailNotificationsEnabled = profile?.notifications_enabled ?? true; // Default to true if not set
+      
+      if (emailNotificationsEnabled) {
+        emailSent = await sendEmailNotification(
+          resend,
+          sharerEmail,
+          name,
+          count,
+          shareCode
+        );
+      } else {
+        console.log('Email notifications disabled by user');
+      }
     } else {
       console.log('Email notification skipped: no Resend API key or no sharer email');
     }
