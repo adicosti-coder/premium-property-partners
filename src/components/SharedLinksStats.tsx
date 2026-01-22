@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +32,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
   BarChart3,
   Link2,
   Users,
@@ -41,10 +46,19 @@ import {
   TrendingUp,
   Trash2,
   Loader2,
+  Calendar,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, subDays, startOfDay, eachDayOfInterval, startOfWeek, eachWeekOfInterval, subWeeks } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts";
+
+interface ImportEvent {
+  id: string;
+  shared_link_id: string;
+  imported_count: number;
+  created_at: string;
+}
 
 interface SharedLink {
   id: string;
@@ -65,11 +79,13 @@ interface POI {
 const SharedLinksStats = () => {
   const { language } = useLanguage();
   const [sharedLinks, setSharedLinks] = useState<SharedLink[]>([]);
+  const [importEvents, setImportEvents] = useState<ImportEvent[]>([]);
   const [pois, setPois] = useState<Record<string, POI>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [chartView, setChartView] = useState<'daily' | 'weekly'>('daily');
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -99,6 +115,10 @@ const SharedLinksStats = () => {
       confirm: "Șterge",
       deleteSuccess: "Link șters cu succes",
       deleteError: "Eroare la ștergerea link-ului",
+      importTrends: "Tendințe Importuri",
+      daily: "Zilnic",
+      weekly: "Săptămânal",
+      noData: "Nu există date pentru această perioadă",
     },
     en: {
       title: "Sharing Statistics",
@@ -125,6 +145,10 @@ const SharedLinksStats = () => {
       confirm: "Delete",
       deleteSuccess: "Link deleted successfully",
       deleteError: "Error deleting link",
+      importTrends: "Import Trends",
+      daily: "Daily",
+      weekly: "Weekly",
+      noData: "No data for this period",
     },
   };
 
@@ -152,6 +176,22 @@ const SharedLinksStats = () => {
       }
 
       setSharedLinks(links || []);
+
+      // Fetch import events for trends chart
+      const linkIds = (links || []).map((l) => l.id);
+      if (linkIds.length > 0) {
+        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+        const { data: events, error: eventsError } = await supabase
+          .from("poi_import_events")
+          .select("*")
+          .in("shared_link_id", linkIds)
+          .gte("created_at", thirtyDaysAgo)
+          .order("created_at", { ascending: true });
+
+        if (!eventsError && events) {
+          setImportEvents(events);
+        }
+      }
 
       // Fetch POI names for all referenced POIs
       const allPoiIds = [...new Set((links || []).flatMap((l) => l.poi_ids))];
@@ -215,6 +255,63 @@ const SharedLinksStats = () => {
 
   const totalImports = sharedLinks.reduce((sum, link) => sum + link.import_count, 0);
   const avgImports = sharedLinks.length > 0 ? (totalImports / sharedLinks.length).toFixed(1) : "0";
+
+  // Calculate chart data based on view type
+  const chartData = useMemo(() => {
+    const now = new Date();
+    
+    if (chartView === 'daily') {
+      // Last 14 days
+      const days = eachDayOfInterval({
+        start: subDays(now, 13),
+        end: now,
+      });
+      
+      return days.map((day) => {
+        const dayStart = startOfDay(day);
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+        
+        const importsOnDay = importEvents.filter((event) => {
+          const eventDate = new Date(event.created_at);
+          return eventDate >= dayStart && eventDate < dayEnd;
+        });
+        
+        return {
+          date: format(day, 'dd MMM', { locale: dateLocale }),
+          imports: importsOnDay.reduce((sum, e) => sum + e.imported_count, 0),
+        };
+      });
+    } else {
+      // Last 8 weeks
+      const weeks = eachWeekOfInterval({
+        start: subWeeks(now, 7),
+        end: now,
+      }, { weekStartsOn: 1 });
+      
+      return weeks.map((weekStart) => {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        
+        const importsInWeek = importEvents.filter((event) => {
+          const eventDate = new Date(event.created_at);
+          return eventDate >= weekStart && eventDate < weekEnd;
+        });
+        
+        return {
+          date: format(weekStart, 'dd MMM', { locale: dateLocale }),
+          imports: importsInWeek.reduce((sum, e) => sum + e.imported_count, 0),
+        };
+      });
+    }
+  }, [importEvents, chartView, dateLocale]);
+
+  const chartConfig = {
+    imports: {
+      label: language === 'ro' ? 'Importuri' : 'Imports',
+      color: 'hsl(var(--primary))',
+    },
+  };
 
   const getPoiName = (poiId: string) => {
     const poi = pois[poiId];
@@ -315,6 +412,70 @@ const SharedLinksStats = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Import Trends Chart */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    {t.importTrends}
+                  </CardTitle>
+                  <div className="flex gap-1">
+                    <Button
+                      variant={chartView === 'daily' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setChartView('daily')}
+                      className="text-xs"
+                    >
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {t.daily}
+                    </Button>
+                    <Button
+                      variant={chartView === 'weekly' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setChartView('weekly')}
+                      className="text-xs"
+                    >
+                      {t.weekly}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {chartData.some(d => d.imports > 0) ? (
+                  <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                    <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        className="text-muted-foreground"
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        allowDecimals={false}
+                        className="text-muted-foreground"
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar 
+                        dataKey="imports" 
+                        fill="hsl(var(--primary))" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                    <p>{t.noData}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Links Table */}
             <Card>

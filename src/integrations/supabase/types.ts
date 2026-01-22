@@ -530,6 +530,38 @@ export type Database = {
           },
         ]
       }
+      poi_import_events: {
+        Row: {
+          created_at: string
+          id: string
+          imported_by: string | null
+          imported_count: number
+          shared_link_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          imported_by?: string | null
+          imported_count?: number
+          shared_link_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          imported_by?: string | null
+          imported_count?: number
+          shared_link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poi_import_events_shared_link_id_fkey"
+            columns: ["shared_link_id"]
+            isOneToOne: false
+            referencedRelation: "shared_poi_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_of_interest: {
         Row: {
           address: string | null
