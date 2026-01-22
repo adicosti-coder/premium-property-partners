@@ -154,6 +154,10 @@ export default {
             textShadow: "0 0 8px hsl(var(--primary) / 0.5), 0 0 16px hsl(var(--primary) / 0.25)" 
           },
         },
+        "shimmer-sweep": {
+          "0%": { transform: "translateX(-100%) skewX(-12deg)" },
+          "100%": { transform: "translateX(200%) skewX(-12deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -166,6 +170,7 @@ export default {
         "badge-glow": "badge-glow 2.5s ease-in-out infinite",
         "cinematic-zoom": "cinematic-zoom 25s ease-in-out infinite",
         "text-glow": "text-glow 3s ease-in-out infinite",
+        "shimmer-sweep": "shimmer-sweep 1.5s ease-in-out infinite",
       },
     },
   },
