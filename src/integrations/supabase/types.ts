@@ -843,6 +843,41 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_followup_emails: {
+        Row: {
+          created_at: string
+          email_type: string
+          id: string
+          sent_at: string
+          simulation_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          sent_at?: string
+          simulation_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          sent_at?: string
+          simulation_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_followup_emails_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "user_simulations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           created_at: string
