@@ -82,7 +82,22 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
+    <>
+      {/* Backdrop blur when mobile menu is open */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+      
+      <header className="fixed top-0 left-0 right-0 z-50">
       {/* Main header bar */}
       <div className="glass border-b border-border">
         <div className="container mx-auto px-6">
@@ -270,7 +285,8 @@ const Header = () => {
         </div>
       </div>
       
-    </header>
+      </header>
+    </>
   );
 };
 
