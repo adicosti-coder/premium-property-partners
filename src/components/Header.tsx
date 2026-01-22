@@ -69,15 +69,12 @@ const Header = () => {
 
   const navLinks = [
     { href: "/", label: t.nav.home, isHome: true },
-    { href: "#beneficii", label: t.nav.benefits },
-    { href: "#calculator", label: "Calculator" },
-    { href: "#portofoliu", label: t.nav.portfolio },
-    { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
+    { href: "/pentru-proprietari", label: language === "ro" ? "Proprietari" : "Owners", isPage: true },
     { href: "/oaspeti", label: t.nav.guests, isPage: true },
+    { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
-    { href: "/online-check-in", label: t.nav.onlineCheckIn, isPage: true },
     { href: "/blog", label: "Blog", isPage: true },
-    { href: "/autentificare-proprietar", label: language === "ro" ? "Portal Proprietari" : "Owner Portal", isPage: true },
+    { href: "/online-check-in", label: t.nav.onlineCheckIn, isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
 

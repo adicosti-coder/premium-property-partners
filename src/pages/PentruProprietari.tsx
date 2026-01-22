@@ -1,0 +1,342 @@
+import { Link } from "react-router-dom";
+import { 
+  Building2, 
+  TrendingUp, 
+  Shield, 
+  BarChart3, 
+  ArrowRight,
+  CheckCircle2,
+  Star,
+  Phone,
+  MessageCircle,
+  Sparkles
+} from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import OwnerBenefits from "@/components/OwnerBenefits";
+import TrustBadges from "@/components/TrustBadges";
+import FinancialTransparency from "@/components/FinancialTransparency";
+import PartnershipTimeline from "@/components/PartnershipTimeline";
+import ProfitCalculator from "@/components/ProfitCalculator";
+import RentalIncomeCalculator from "@/components/RentalIncomeCalculator";
+import HowItWorks from "@/components/HowItWorks";
+import WhyUs from "@/components/WhyUs";
+import Testimonials from "@/components/Testimonials";
+import VideoTestimonials from "@/components/VideoTestimonials";
+import FAQ from "@/components/FAQ";
+
+const PentruProprietari = () => {
+  const { language } = useLanguage();
+  const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  const content = {
+    ro: {
+      badge: "Pentru Proprietari de Apartamente",
+      title: "Transformă-ți Proprietatea",
+      titleHighlight: "într-o Sursă de Venit",
+      subtitle: "Management profesional în regim hotelier cu tehnologie avansată, transparență totală și echipă dedicată. Maximizează randamentul apartamentului tău fără stres.",
+      cta: "Calculează Potențialul Tău",
+      secondaryCta: "Contactează-ne",
+      stats: [
+        { value: "+40%", label: "Randament Superior", description: "Față de chiria pe termen lung" },
+        { value: "20%", label: "Comision Transparent", description: "Fără costuri ascunse" },
+        { value: "98%", label: "Rată Ocupare", description: "Media portofoliului nostru" },
+        { value: "24/7", label: "Suport Complet", description: "Pentru tine și oaspeți" },
+      ],
+      trustPoints: [
+        "Contract flexibil, fără perioadă minimă",
+        "Banii intră direct în contul tău",
+        "Rapoarte financiare în timp real",
+        "Verificare completă a oaspeților",
+      ],
+      portalTitle: "Portal Dedicat Proprietarilor",
+      portalSubtitle: "Acces 24/7 la toate informațiile despre proprietatea ta",
+      portalCta: "Accesează Portalul",
+      faqTitle: "Întrebări Frecvente",
+    },
+    en: {
+      badge: "For Apartment Owners",
+      title: "Transform Your Property",
+      titleHighlight: "into an Income Source",
+      subtitle: "Professional short-term rental management with advanced technology, full transparency, and a dedicated team. Maximize your apartment's returns without stress.",
+      cta: "Calculate Your Potential",
+      secondaryCta: "Contact Us",
+      stats: [
+        { value: "+40%", label: "Higher Returns", description: "Compared to long-term rent" },
+        { value: "20%", label: "Transparent Commission", description: "No hidden fees" },
+        { value: "98%", label: "Occupancy Rate", description: "Our portfolio average" },
+        { value: "24/7", label: "Full Support", description: "For you and guests" },
+      ],
+      trustPoints: [
+        "Flexible contract, no minimum period",
+        "Money goes directly to your account",
+        "Real-time financial reports",
+        "Complete guest verification",
+      ],
+      portalTitle: "Dedicated Owner Portal",
+      portalSubtitle: "24/7 access to all information about your property",
+      portalCta: "Access Portal",
+      faqTitle: "Frequently Asked Questions",
+    },
+  };
+
+  const t = content[language as keyof typeof content] || content.ro;
+
+  const scrollToCalculator = () => {
+    const element = document.getElementById("calculator");
+    element?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent(
+      language === "ro"
+        ? "Bună! Sunt interesat de serviciile de administrare pentru apartamentul meu."
+        : "Hello! I'm interested in management services for my apartment."
+    );
+    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 via-primary/5 to-background overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_70%)]" />
+        <div className="absolute top-40 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-60 right-20 w-48 h-48 bg-gold/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+
+        <div
+          ref={heroRef}
+          className={`container mx-auto px-6 relative z-10 transition-all duration-1000 ${
+            heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+          }`}
+        >
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Badge */}
+            <div
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 transition-all duration-700 ${
+                heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
+              }`}
+              style={{ transitionDelay: "200ms" }}
+            >
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">{t.badge}</span>
+            </div>
+
+            {/* Title */}
+            <h1
+              className={`text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 transition-all duration-700 ${
+                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: "300ms" }}
+            >
+              {t.title}{" "}
+              <span className="text-gradient-gold">{t.titleHighlight}</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p
+              className={`text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto transition-all duration-700 ${
+                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: "400ms" }}
+            >
+              {t.subtitle}
+            </p>
+
+            {/* Trust Points */}
+            <div
+              className={`flex flex-wrap justify-center gap-4 mb-10 transition-all duration-700 ${
+                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: "500ms" }}
+            >
+              {t.trustPoints.map((point, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 px-4 py-2 bg-card/50 backdrop-blur-sm rounded-full border border-border text-foreground"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-foreground">{point}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTAs */}
+            <div
+              className={`flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 ${
+                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: "600ms" }}
+            >
+              <Button
+                variant="hero"
+                size="xl"
+                onClick={scrollToCalculator}
+                className="group"
+              >
+                <TrendingUp className="w-5 h-5 mr-2" />
+                {t.cta}
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button
+                variant="heroOutline"
+                size="xl"
+                onClick={handleWhatsApp}
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                {t.secondaryCta}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div
+          ref={statsRef}
+          className={`container mx-auto px-6 mt-16 transition-all duration-700 ${
+            statsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            {t.stats.map((stat, index) => (
+              <div
+                key={index}
+                className={`text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border transition-all duration-500 hover:border-primary/30 hover:shadow-lg ${
+                  statsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: statsVisible ? `${index * 100 + 200}ms` : "0ms" }}
+              >
+                <div className="text-3xl md:text-4xl font-serif font-bold text-gradient-gold mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-sm font-semibold text-foreground mb-1">
+                  {stat.label}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {stat.description}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <TrustBadges />
+
+      {/* Owner Benefits */}
+      <OwnerBenefits />
+
+      {/* Financial Transparency */}
+      <FinancialTransparency />
+
+      {/* Partnership Timeline */}
+      <PartnershipTimeline />
+
+      {/* Calculator Section */}
+      <section id="calculator">
+        <ProfitCalculator />
+      </section>
+
+      {/* Rental Income Calculator */}
+      <RentalIncomeCalculator />
+
+      {/* How It Works */}
+      <HowItWorks />
+
+      {/* Why Us */}
+      <WhyUs />
+
+      {/* Testimonials */}
+      <Testimonials />
+
+      {/* Video Testimonials */}
+      <VideoTestimonials />
+
+      {/* Owner Portal CTA */}
+      <section className="py-20 bg-gradient-to-r from-primary/10 via-gold/10 to-primary/10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--gold)/0.1),transparent_70%)]" />
+        
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-6">
+              <Sparkles className="w-4 h-4 text-gold" />
+              <span className="text-sm font-medium text-gold">
+                {language === "ro" ? "Exclusiv pentru Parteneri" : "Partners Only"}
+              </span>
+            </div>
+            
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              {t.portalTitle}
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              {t.portalSubtitle}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild variant="hero" size="xl" className="group">
+                <Link to="/autentificare-proprietar">
+                  {t.portalCta}
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Button asChild variant="heroOutline" size="xl">
+                <Link to="/despre-noi">
+                  {language === "ro" ? "Despre Noi" : "About Us"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <FAQ />
+
+      {/* Final CTA */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              {language === "ro" ? "Gata să Începi?" : "Ready to Start?"}
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              {language === "ro"
+                ? "Contactează-ne acum pentru o evaluare gratuită a proprietății tale."
+                : "Contact us now for a free evaluation of your property."}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="hero" size="xl" onClick={handleWhatsApp}>
+                <MessageCircle className="w-5 h-5 mr-2" />
+                WhatsApp
+              </Button>
+              <Button
+                variant="heroOutline"
+                size="xl"
+                onClick={() => window.location.href = "tel:+40723154520"}
+              >
+                <Phone className="w-5 h-5 mr-2" />
+                +40 723 154 520
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+      <FloatingWhatsApp />
+    </div>
+  );
+};
+
+export default PentruProprietari;
