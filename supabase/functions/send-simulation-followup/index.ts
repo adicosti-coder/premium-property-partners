@@ -27,13 +27,35 @@ function getTrackedUrl(
   return trackingUrl.toString();
 }
 
+// Generate tracking pixel URL for open tracking
+function getTrackingPixelUrl(
+  userId: string,
+  emailType: string,
+  followupEmailId: string | null,
+  abAssignmentId: string | null,
+  supabaseUrl: string
+): string {
+  const pixelUrl = new URL(`${supabaseUrl}/functions/v1/track-email-open`);
+  pixelUrl.searchParams.set("user_id", userId);
+  pixelUrl.searchParams.set("email_type", emailType);
+  if (followupEmailId) {
+    pixelUrl.searchParams.set("followup_id", followupEmailId);
+  }
+  if (abAssignmentId) {
+    pixelUrl.searchParams.set("ab_id", abAssignmentId);
+  }
+  return pixelUrl.toString();
+}
+
 // Email templates
 function getFirstFollowupEmail(
   firstName: string, 
   monthlyIncome: number, 
   yearlyIncome: number,
   userId: string,
-  supabaseUrl: string
+  supabaseUrl: string,
+  customSubject?: string,
+  trackingPixelUrl?: string
 ): { subject: string; html: string } {
   const whatsappUrl = getTrackedUrl(
     userId,
@@ -50,8 +72,13 @@ function getFirstFollowupEmail(
     supabaseUrl
   );
 
+  const subject = customSubject || `${firstName}, ai calculat un venit de ${monthlyIncome.toLocaleString('ro-RO')} €/lună – hai să-l facem realitate!`;
+  const trackingPixel = trackingPixelUrl 
+    ? `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none;" />`
+    : '';
+
   return {
-    subject: `${firstName}, ai calculat un venit de ${monthlyIncome.toLocaleString('ro-RO')} €/lună – hai să-l facem realitate!`,
+    subject,
     html: `
       <!DOCTYPE html>
       <html>
@@ -60,6 +87,7 @@ function getFirstFollowupEmail(
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+        ${trackingPixel}
         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
           <tr>
             <td align="center">
@@ -133,7 +161,9 @@ function getSecondFollowupEmail(
   monthlyIncome: number, 
   yearlyIncome: number,
   userId: string,
-  supabaseUrl: string
+  supabaseUrl: string,
+  customSubject?: string,
+  trackingPixelUrl?: string
 ): { subject: string; html: string } {
   const bonusAmount = Math.round(monthlyIncome * 0.1); // 10% bonus for first month
   
@@ -158,9 +188,14 @@ function getSecondFollowupEmail(
     "https://realtrustaparthotel.lovable.app",
     supabaseUrl
   );
+
+  const subject = customSubject || `🎁 ${firstName}, ofertă exclusivă: ${bonusAmount}€ bonus la prima lună!`;
+  const trackingPixel = trackingPixelUrl 
+    ? `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none;" />`
+    : '';
   
   return {
-    subject: `🎁 ${firstName}, ofertă exclusivă: ${bonusAmount}€ bonus la prima lună!`,
+    subject,
     html: `
       <!DOCTYPE html>
       <html>
@@ -169,6 +204,7 @@ function getSecondFollowupEmail(
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+        ${trackingPixel}
         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
           <tr>
             <td align="center">
@@ -304,6 +340,21 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const resend = new Resend(resendApiKey);
 
+    // Get active A/B tests
+    const { data: abTests } = await supabase
+      .from("email_ab_tests")
+      .select("*")
+      .eq("is_active", true);
+
+    const abTestMap = new Map<string, { id: string; variant_a_subject: string; variant_b_subject: string }>();
+    for (const test of abTests || []) {
+      abTestMap.set(test.email_type, {
+        id: test.id,
+        variant_a_subject: test.variant_a_subject,
+        variant_b_subject: test.variant_b_subject,
+      });
+    }
+
     // Get all simulations
     const { data: usersWithSimulations, error: simError } = await supabase
       .from("user_simulations")
@@ -404,26 +455,20 @@ serve(async (req) => {
       const monthlyIncome = latestSim.realtrurst_income || latestSim.monthly_income;
       const yearlyIncome = latestSim.realtrust_yearly || monthlyIncome * 12;
 
-      let emailToSend: { type: string; content: { subject: string; html: string } } | null = null;
+      let emailType: string | null = null;
 
       // Determine which email to send
       if (!history.first) {
         // Never received first email - check if simulation is old enough (24h)
         if (simDate <= oneDayAgo) {
-          emailToSend = {
-            type: "first_followup",
-            content: getFirstFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl),
-          };
+          emailType = "first_followup";
         }
       } else if (!history.second) {
         // Received first email, check if eligible for second (14 days after first)
         if (history.first <= fourteenDaysAgo) {
           // Also ensure we haven't sent any email in the last 7 days
           if (history.first <= sevenDaysAgo) {
-            emailToSend = {
-              type: "second_followup",
-              content: getSecondFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl),
-            };
+            emailType = "second_followup";
           }
         }
       } else {
@@ -432,44 +477,102 @@ serve(async (req) => {
         continue;
       }
 
-      if (!emailToSend) {
+      if (!emailType) {
         console.log(`Skipping user ${profile.id}: not eligible for any email yet`);
         continue;
       }
 
       try {
+        // Handle A/B testing for subject line
+        let customSubject: string | undefined;
+        let abAssignmentId: string | null = null;
+        let variant: string | null = null;
+
+        const abTest = abTestMap.get(emailType);
+        if (abTest) {
+          // Randomly assign variant (50/50 split)
+          variant = Math.random() < 0.5 ? "A" : "B";
+          customSubject = variant === "A" ? abTest.variant_a_subject : abTest.variant_b_subject;
+          
+          // Replace placeholders in subject
+          customSubject = customSubject
+            .replace("{firstName}", firstName)
+            .replace("{monthlyIncome}", monthlyIncome.toLocaleString('ro-RO'))
+            .replace("{yearlyIncome}", yearlyIncome.toLocaleString('ro-RO'))
+            .replace("{bonusAmount}", Math.round(monthlyIncome * 0.1).toString());
+
+          console.log(`A/B Test: User ${profile.id} assigned to variant ${variant} for ${emailType}`);
+        }
+
+        // Create followup email record first to get ID for tracking
+        const { data: followupRecord, error: recordError } = await supabase
+          .from("simulation_followup_emails")
+          .insert({
+            user_id: profile.id,
+            simulation_id: latestSim.id || null,
+            email_type: emailType,
+          })
+          .select("id")
+          .single();
+
+        if (recordError) {
+          console.error("Error creating followup record:", recordError);
+          continue;
+        }
+
+        // Create A/B assignment if applicable
+        if (abTest && variant && customSubject) {
+          const { data: abAssignment, error: abError } = await supabase
+            .from("email_ab_assignments")
+            .insert({
+              user_id: profile.id,
+              test_id: abTest.id,
+              variant: variant,
+              subject_used: customSubject,
+            })
+            .select("id")
+            .single();
+
+          if (!abError && abAssignment) {
+            abAssignmentId = abAssignment.id;
+          }
+        }
+
+        // Generate tracking pixel URL
+        const trackingPixelUrl = getTrackingPixelUrl(
+          profile.id,
+          emailType,
+          followupRecord?.id || null,
+          abAssignmentId,
+          supabaseUrl
+        );
+
+        // Get email content
+        const emailContent = emailType === "first_followup"
+          ? getFirstFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl, customSubject, trackingPixelUrl)
+          : getSecondFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl, customSubject, trackingPixelUrl);
+
         const { error: emailError } = await resend.emails.send({
           from: "RealTrust <contact@realtrust.ro>",
           to: [profile.email],
-          subject: emailToSend.content.subject,
-          html: emailToSend.content.html,
+          subject: emailContent.subject,
+          html: emailContent.html,
         });
 
         if (emailError) {
           console.error(`Error sending email to ${profile.email}:`, emailError);
           errors.push(`${profile.email}: ${emailError.message}`);
+          // Delete the followup record if email failed
+          await supabase.from("simulation_followup_emails").delete().eq("id", followupRecord.id);
           continue;
         }
 
-        // Record sent email
-        const { error: recordError } = await supabase
-          .from("simulation_followup_emails")
-          .insert({
-            user_id: profile.id,
-            simulation_id: latestSim.id || null,
-            email_type: emailToSend.type,
-          });
-
-        if (recordError) {
-          console.error("Error recording sent email:", recordError);
-        }
-
-        if (emailToSend.type === "first_followup") {
+        if (emailType === "first_followup") {
           firstEmailsSent++;
-          console.log(`First follow-up email sent to ${profile.email}`);
+          console.log(`First follow-up email sent to ${profile.email} (A/B: ${variant || 'N/A'})`);
         } else {
           secondEmailsSent++;
-          console.log(`Second follow-up email (special offer) sent to ${profile.email}`);
+          console.log(`Second follow-up email (special offer) sent to ${profile.email} (A/B: ${variant || 'N/A'})`);
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err);
