@@ -91,7 +91,7 @@ const Header = () => {
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
               <span className="animate-text-glow">Real<span className="text-primary">Trust</span></span>
               <span className="text-muted-foreground"> & </span>
-              <span className="text-foreground">ApArt Hotel</span>
+              <span className="text-foreground animate-text-glow">ApArt Hotel</span>
             </span>
             <span className="text-[9px] md:text-[10px] text-muted-foreground tracking-wide mt-0.5 animate-text-glow">
               Vânzare · Administrare · Cazare <span className="text-primary/60">|</span> <span className="text-primary font-semibold">1 singur sistem</span>
