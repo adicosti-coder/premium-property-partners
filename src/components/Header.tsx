@@ -89,7 +89,7 @@ const Header = () => {
           {/* Logo */}
           <a href="/" className="flex flex-col items-start gap-0">
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
-              Real<span className="text-primary">Trust</span>
+              <span className="animate-text-glow">Real<span className="text-primary">Trust</span></span>
               <span className="text-muted-foreground"> & </span>
               <span className="text-foreground">ApArt Hotel</span>
             </span>
