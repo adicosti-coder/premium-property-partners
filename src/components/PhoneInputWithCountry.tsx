@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Check, X, ChevronDown, MapPin, Loader2, Info, Star } from "lucide-react";
+import { Check, X, ChevronDown, MapPin, Loader2, Info, Star, RotateCcw } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { 
   detectCountryFromPhone, 
@@ -59,7 +59,7 @@ const PhoneInputWithCountry = ({
     // If there's a saved preference, consider it as user-selected
     return !!localStorage.getItem('preferred-phone-country');
   });
-  const [isFromSavedPreference] = useState(() => {
+  const [isFromSavedPreference, setIsFromSavedPreference] = useState(() => {
     // Track if the initial country was loaded from saved preferences
     return !!localStorage.getItem('preferred-phone-country');
   });
@@ -107,6 +107,7 @@ const PhoneInputWithCountry = ({
   const handleCountrySelect = (country: CountryInfo) => {
     setSelectedCountry(country);
     setHasUserSelected(true);
+    setIsFromSavedPreference(true);
     setIsOpen(false);
     setSearchQuery("");
     
@@ -124,6 +125,21 @@ const PhoneInputWithCountry = ({
     
     // Format with new country prefix
     onChange(formatInternationalPhone(`${country.prefix}${digitsWithoutPrefix}`, country));
+  };
+
+  // Reset saved preference and return to auto-detection
+  const handleResetPreference = () => {
+    localStorage.removeItem('preferred-phone-country');
+    setIsFromSavedPreference(false);
+    setHasUserSelected(false);
+    
+    // Re-apply geolocation detection
+    if (autoDetectLocation && !geoDetection.isLoading) {
+      setSelectedCountry(geoDetection.country);
+      if (!value) {
+        onChange('');
+      }
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -536,9 +552,20 @@ const PhoneInputWithCountry = ({
       ) : isFromSavedPreference && !hasValue ? (
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-          {language === 'en' 
-            ? 'Your preferred country' 
-            : 'Țara ta preferată'}
+          <span>
+            {language === 'en' 
+              ? 'Your preferred country' 
+              : 'Țara ta preferată'}
+          </span>
+          <button
+            type="button"
+            onClick={handleResetPreference}
+            className="ml-1 p-0.5 rounded hover:bg-muted transition-colors group"
+            aria-label={language === 'en' ? 'Reset preference' : 'Resetează preferința'}
+            title={language === 'en' ? 'Reset to auto-detect' : 'Resetează la auto-detectare'}
+          >
+            <RotateCcw className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
         </p>
       ) : hasValue ? (
         <p className="text-xs text-muted-foreground">
