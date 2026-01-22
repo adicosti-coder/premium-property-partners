@@ -560,11 +560,11 @@ const PhoneInputWithCountry = ({
           <button
             type="button"
             onClick={handleResetPreference}
-            className="ml-1 p-0.5 rounded hover:bg-muted transition-colors group"
+            className="ml-1 p-0.5 rounded hover:bg-muted transition-colors group active:scale-90"
             aria-label={language === 'en' ? 'Reset preference' : 'Resetează preferința'}
             title={language === 'en' ? 'Reset to auto-detect' : 'Resetează la auto-detectare'}
           >
-            <RotateCcw className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <RotateCcw className="w-3 h-3 text-muted-foreground group-hover:text-foreground group-active:rotate-[-360deg] transition-all duration-500" />
           </button>
         </p>
       ) : hasValue ? (
