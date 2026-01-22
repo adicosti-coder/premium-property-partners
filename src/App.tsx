@@ -21,6 +21,7 @@ import WhyBookDirect from "./pages/WhyBookDirect";
 import OwnerAuth from "./pages/OwnerAuth";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AboutUs from "./pages/AboutUs";
+import PentruProprietari from "./pages/PentruProprietari";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
                 <Route path="/portal-proprietar" element={<OwnerDashboard />} />
                 <Route path="/despre-noi" element={<AboutUs />} />
+                <Route path="/pentru-proprietari" element={<PentruProprietari />} />
                 <Route path="/profil" element={<Profile />} />
                 <Route path="/setari" element={<Settings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

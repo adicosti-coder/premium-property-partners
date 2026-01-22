@@ -71,11 +71,6 @@ const OwnersTeaser = () => {
 
   const t = content[language as keyof typeof content] || content.ro;
 
-  const scrollToCalculator = () => {
-    const calculatorSection = document.getElementById("calculator");
-    calculatorSection?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <HubSection
       badge={t.badge}
@@ -84,7 +79,7 @@ const OwnersTeaser = () => {
       titleHighlight={t.titleHighlight}
       subtitle={t.subtitle}
       ctaText={t.cta}
-      ctaLink="#calculator"
+      ctaLink="/pentru-proprietari"
       secondaryCta={{
         text: language === "ro" ? "Cum Funcționează" : "How It Works",
         onClick: () => {
