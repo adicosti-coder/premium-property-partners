@@ -47,7 +47,10 @@ import {
   Trash2,
   Loader2,
   Calendar,
+  Bell,
+  BellOff,
 } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { formatDistanceToNow, format, subDays, startOfDay, eachDayOfInterval, startOfWeek, eachWeekOfInterval, subWeeks } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -89,6 +92,14 @@ const SharedLinksStats = () => {
 
   const dateLocale = language === "ro" ? ro : enUS;
 
+  const {
+    isSupported: pushSupported,
+    isSubscribed: pushSubscribed,
+    isLoading: pushLoading,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+  } = usePushNotifications();
+
   const translations = {
     ro: {
       title: "Statistici Partajări",
@@ -119,6 +130,15 @@ const SharedLinksStats = () => {
       daily: "Zilnic",
       weekly: "Săptămânal",
       noData: "Nu există date pentru această perioadă",
+      pushNotifications: "Notificări Push",
+      pushEnabled: "Activat",
+      pushDisabled: "Dezactivat",
+      pushDescription: "Primești notificări când cineva importă locațiile tale, chiar și când nu ești pe site",
+      pushNotSupported: "Browser-ul nu suportă notificări push",
+      enablePush: "Activează",
+      disablePush: "Dezactivează",
+      pushSuccess: "Notificări push activate!",
+      pushDisabledSuccess: "Notificări push dezactivate",
     },
     en: {
       title: "Sharing Statistics",
@@ -149,6 +169,15 @@ const SharedLinksStats = () => {
       daily: "Daily",
       weekly: "Weekly",
       noData: "No data for this period",
+      pushNotifications: "Push Notifications",
+      pushEnabled: "Enabled",
+      pushDisabled: "Disabled",
+      pushDescription: "Get notified when someone imports your locations, even when you're away",
+      pushNotSupported: "Browser doesn't support push notifications",
+      enablePush: "Enable",
+      disablePush: "Disable",
+      pushSuccess: "Push notifications enabled!",
+      pushDisabledSuccess: "Push notifications disabled",
     },
   };
 
@@ -427,6 +456,69 @@ const SharedLinksStats = () => {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Push Notifications Card */}
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${pushSubscribed ? 'bg-primary/20' : 'bg-muted'}`}>
+                      {pushSubscribed ? (
+                        <Bell className="w-5 h-5 text-primary" />
+                      ) : (
+                        <BellOff className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{t.pushNotifications}</p>
+                        <Badge variant={pushSubscribed ? "default" : "secondary"} className="text-xs">
+                          {pushSubscribed ? t.pushEnabled : t.pushDisabled}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {pushSupported ? t.pushDescription : t.pushNotSupported}
+                      </p>
+                    </div>
+                  </div>
+                  {pushSupported && (
+                    <Button
+                      variant={pushSubscribed ? "outline" : "default"}
+                      size="sm"
+                      onClick={async () => {
+                        if (pushSubscribed) {
+                          const success = await unsubscribePush();
+                          if (success) {
+                            toast({ title: t.pushDisabledSuccess });
+                          }
+                        } else {
+                          const success = await subscribePush();
+                          if (success) {
+                            toast({ title: t.pushSuccess });
+                          }
+                        }
+                      }}
+                      disabled={pushLoading}
+                      className="gap-2"
+                    >
+                      {pushLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : pushSubscribed ? (
+                        <>
+                          <BellOff className="w-4 h-4" />
+                          {t.disablePush}
+                        </>
+                      ) : (
+                        <>
+                          <Bell className="w-4 h-4" />
+                          {t.enablePush}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Summary Cards */}
             <div className="grid grid-cols-3 gap-4">
               <Card>
