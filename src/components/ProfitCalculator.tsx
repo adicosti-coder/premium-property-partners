@@ -1,15 +1,19 @@
-import { useState, useMemo } from "react";
-import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import LeadCaptureForm from "./LeadCaptureForm";
+import AuthGateOverlay from "./AuthGateOverlay";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
+import { useSimulations } from "@/hooks/useSimulations";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const ProfitCalculator = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [adr, setAdr] = useState(80);
   const [occupancy, setOccupancy] = useState(75);
   const [cleaningCost, setCleaningCost] = useState(25);
@@ -17,6 +21,11 @@ const ProfitCalculator = () => {
   const [platformFee, setPlatformFee] = useState(15);
   const [avgStayDuration, setAvgStayDuration] = useState(3);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [showSimulationHistory, setShowSimulationHistory] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [simulationSaved, setSimulationSaved] = useState(false);
+
+  const { user, isAuthenticated, simulations, saveSimulation, deleteSimulation } = useSimulations();
 
   // Scroll animations
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
@@ -57,6 +66,77 @@ const ProfitCalculator = () => {
       platformCost: Math.round(totalPlatformFee),
     };
   }, [adr, occupancy, cleaningCost, managementFee, platformFee, avgStayDuration]);
+
+  // Track when user interacts with sliders
+  const handleSliderInteraction = () => {
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      setSimulationSaved(false);
+    }
+  };
+
+  // Auto-save simulation when authenticated user interacts
+  useEffect(() => {
+    if (isAuthenticated && hasInteracted && !simulationSaved) {
+      const saveTimeout = setTimeout(async () => {
+        const { error } = await saveSimulation({
+          city: "Timișoara",
+          rooms: "2 Camere",
+          location: "General",
+          monthlyIncome: calculations.grossRevenue,
+          yearlyIncome: calculations.yearlyGross,
+          realtrustIncome: calculations.netProfit,
+          realtrustYearly: calculations.yearlyNet,
+        });
+        
+        if (!error) {
+          setSimulationSaved(true);
+          toast.success(
+            language === 'ro' 
+              ? "Simularea a fost salvată în istoricul tău!" 
+              : "Simulation saved to your history!"
+          );
+        }
+      }, 2000); // Save after 2 seconds of inactivity
+
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [isAuthenticated, hasInteracted, calculations, simulationSaved]);
+
+  const handleDeleteSimulation = async (id: string) => {
+    const { error } = await deleteSimulation(id);
+    if (!error) {
+      toast.success(
+        language === 'ro' 
+          ? "Simularea a fost ștearsă!" 
+          : "Simulation deleted!"
+      );
+    }
+  };
+
+  // Translations for new elements
+  const localT = {
+    ro: {
+      viewHistory: "Vezi istoric",
+      hideHistory: "Ascunde istoric",
+      simulationHistory: "Istoricul simulărilor",
+      noSimulations: "Nu ai încă simulări salvate",
+      monthly: "/lună",
+      yearly: "/an",
+      deleteSimulation: "Șterge",
+    },
+    en: {
+      viewHistory: "View history",
+      hideHistory: "Hide history",
+      simulationHistory: "Simulation history",
+      noSimulations: "No saved simulations yet",
+      monthly: "/month",
+      yearly: "/year",
+      deleteSimulation: "Delete",
+    },
+  };
+
+  const lt = localT[language as keyof typeof localT] || localT.ro;
 
   return (
     <section id="calculator" className="section-padding bg-background relative overflow-hidden">
@@ -110,7 +190,10 @@ const ProfitCalculator = () => {
               </div>
               <Slider
                 value={[adr]}
-                onValueChange={(value) => setAdr(value[0])}
+                onValueChange={(value) => {
+                  setAdr(value[0]);
+                  handleSliderInteraction();
+                }}
                 min={30}
                 max={200}
                 step={5}
@@ -127,7 +210,10 @@ const ProfitCalculator = () => {
               </div>
               <Slider
                 value={[occupancy]}
-                onValueChange={(value) => setOccupancy(value[0])}
+                onValueChange={(value) => {
+                  setOccupancy(value[0]);
+                  handleSliderInteraction();
+                }}
                 min={30}
                 max={100}
                 step={5}
@@ -144,7 +230,10 @@ const ProfitCalculator = () => {
               </div>
               <Slider
                 value={[avgStayDuration]}
-                onValueChange={(value) => setAvgStayDuration(value[0])}
+                onValueChange={(value) => {
+                  setAvgStayDuration(value[0]);
+                  handleSliderInteraction();
+                }}
                 min={1}
                 max={14}
                 step={1}
@@ -166,7 +255,10 @@ const ProfitCalculator = () => {
                 </div>
                 <Slider
                   value={[cleaningCost]}
-                  onValueChange={(value) => setCleaningCost(value[0])}
+                  onValueChange={(value) => {
+                    setCleaningCost(value[0]);
+                    handleSliderInteraction();
+                  }}
                   min={10}
                   max={60}
                   step={5}
@@ -182,7 +274,10 @@ const ProfitCalculator = () => {
                 </div>
                 <Slider
                   value={[managementFee]}
-                  onValueChange={(value) => setManagementFee(value[0])}
+                  onValueChange={(value) => {
+                    setManagementFee(value[0]);
+                    handleSliderInteraction();
+                  }}
                   min={10}
                   max={30}
                   step={1}
@@ -198,7 +293,10 @@ const ProfitCalculator = () => {
                 </div>
                 <Slider
                   value={[platformFee]}
-                  onValueChange={(value) => setPlatformFee(value[0])}
+                  onValueChange={(value) => {
+                    setPlatformFee(value[0]);
+                    handleSliderInteraction();
+                  }}
                   min={10}
                   max={25}
                   step={1}
@@ -212,14 +310,73 @@ const ProfitCalculator = () => {
           {/* Results Section */}
           <div 
             ref={resultsRef}
-            className={`space-y-6 transition-all duration-700 delay-150 ${
+            className={cn(
+              "space-y-6 transition-all duration-700 delay-150 relative",
               resultsVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
-            }`}
+            )}
           >
+            {/* Auth Gate Overlay - show blur when user has interacted but not authenticated */}
+            {hasInteracted && !isAuthenticated && (
+              <AuthGateOverlay />
+            )}
+
+            {/* History toggle button for authenticated users */}
+            {isAuthenticated && simulations.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSimulationHistory(!showSimulationHistory)}
+                className="mb-2"
+              >
+                <History className="w-4 h-4 mr-2" />
+                {showSimulationHistory ? lt.hideHistory : lt.viewHistory} ({simulations.length})
+              </Button>
+            )}
+
+            {/* Simulation History */}
+            {isAuthenticated && showSimulationHistory && (
+              <div className="bg-card p-4 rounded-xl border border-border mb-4 space-y-3">
+                <h4 className="font-semibold text-foreground flex items-center gap-2">
+                  <History className="w-4 h-4 text-primary" />
+                  {lt.simulationHistory}
+                </h4>
+                {simulations.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{lt.noSimulations}</p>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {simulations.slice(0, 5).map((sim) => (
+                      <div
+                        key={sim.id}
+                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {sim.realtrurst_income.toLocaleString()} €{lt.monthly}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(sim.created_at).toLocaleDateString(language === 'ro' ? 'ro-RO' : 'en-US')}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteSimulation(sim.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {/* Main KPI Card */}
-            <div className={`bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden transition-all duration-500 delay-300 ${
-              resultsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}>
+            <div className={cn(
+              "bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden transition-all duration-500 delay-300",
+              resultsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
+              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+            )}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4">
@@ -239,7 +396,10 @@ const ProfitCalculator = () => {
             </div>
 
             {/* Secondary KPIs */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className={cn(
+              "grid grid-cols-2 gap-4",
+              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+            )}>
               <div className="bg-card p-6 rounded-xl border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-primary" />
@@ -264,7 +424,10 @@ const ProfitCalculator = () => {
             </div>
 
             {/* Cost Breakdown with Chart */}
-            <div className="bg-card p-6 rounded-xl border border-border">
+            <div className={cn(
+              "bg-card p-6 rounded-xl border border-border",
+              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+            )}>
               <h4 className="font-semibold text-foreground mb-4">{t.calculator.costBreakdown}</h4>
               
               {/* Donut Chart */}
@@ -395,7 +558,10 @@ const ProfitCalculator = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className={cn(
+              "grid grid-cols-2 gap-4",
+              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+            )}>
               <div className="bg-secondary/50 p-4 rounded-lg text-center">
                 <p className="text-2xl font-serif font-bold text-foreground">{calculations.occupiedDays}</p>
                 <p className="text-sm text-muted-foreground">{t.calculator.occupiedDays}</p>
@@ -409,8 +575,12 @@ const ProfitCalculator = () => {
             {/* Lead Capture CTA */}
             <Button 
               onClick={() => setIsLeadFormOpen(true)}
-              className="w-full py-6 text-lg"
+              className={cn(
+                "w-full py-6 text-lg",
+                hasInteracted && !isAuthenticated && "blur-sm pointer-events-none"
+              )}
               size="lg"
+              disabled={hasInteracted && !isAuthenticated}
             >
               <FileText className="w-5 h-5 mr-2" />
               {t.calculator.getAnalysis}
