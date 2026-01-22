@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift, MousePointerClick, Bell, Settings } from "lucide-react";
+import { Loader2, Mail, MailCheck, TrendingUp, Users, Target, RefreshCw, ArrowRight, Gift, MousePointerClick, Bell, Settings, Send, X, Plus, FileText } from "lucide-react";
 import ConversionRateChart from "./ConversionRateChart";
 import { format, subDays, eachDayOfInterval, startOfDay, parseISO, differenceInDays } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -90,6 +90,13 @@ const FollowupStatsManager = () => {
   const [alertThreshold, setAlertThreshold] = useState(10);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isCheckingAlert, setIsCheckingAlert] = useState(false);
+  
+  // Weekly report settings
+  const [weeklyReportEnabled, setWeeklyReportEnabled] = useState(true);
+  const [weeklyReportRecipients, setWeeklyReportRecipients] = useState<string[]>(["contact@realtrust.ro"]);
+  const [newRecipient, setNewRecipient] = useState("");
+  const [isSavingReportSettings, setIsSavingReportSettings] = useState(false);
+  const [isSendingTestReport, setIsSendingTestReport] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -100,7 +107,7 @@ const FollowupStatsManager = () => {
         supabase.from("user_simulations").select("id, user_id, created_at"),
         supabase.from("profiles").select("id, email"),
         supabase.from("email_click_tracking").select("*").order("clicked_at", { ascending: false }),
-        supabase.from("site_settings").select("conversion_rate_threshold, conversion_alert_enabled").eq("id", "default").single(),
+        supabase.from("site_settings").select("conversion_rate_threshold, conversion_alert_enabled, weekly_report_enabled, weekly_report_recipients").eq("id", "default").single(),
       ]);
 
       if (emailsRes.data) setFollowupEmails(emailsRes.data);
@@ -111,6 +118,8 @@ const FollowupStatsManager = () => {
       if (settingsRes.data) {
         setAlertThreshold(settingsRes.data.conversion_rate_threshold ?? 10);
         setAlertEnabled(settingsRes.data.conversion_alert_enabled ?? true);
+        setWeeklyReportEnabled(settingsRes.data.weekly_report_enabled ?? true);
+        setWeeklyReportRecipients(settingsRes.data.weekly_report_recipients ?? ["contact@realtrust.ro"]);
       }
     } catch (error) {
       console.error("Error fetching followup stats:", error);
@@ -208,6 +217,99 @@ const FollowupStatsManager = () => {
       });
     } finally {
       setIsCheckingAlert(false);
+    }
+  };
+
+  // Save weekly report settings
+  const handleSaveReportSettings = async () => {
+    setIsSavingReportSettings(true);
+    try {
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({
+          id: "default",
+          weekly_report_enabled: weeklyReportEnabled,
+          weekly_report_recipients: weeklyReportRecipients,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id" });
+
+      if (error) throw error;
+
+      toast({
+        title: language === "ro" ? "Setări salvate" : "Settings saved",
+        description: language === "ro" 
+          ? `Raport: ${weeklyReportEnabled ? "Activat" : "Dezactivat"}, ${weeklyReportRecipients.length} destinatari`
+          : `Report: ${weeklyReportEnabled ? "Enabled" : "Disabled"}, ${weeklyReportRecipients.length} recipients`,
+      });
+    } catch (error) {
+      console.error("Error saving report settings:", error);
+      toast({
+        title: language === "ro" ? "Eroare" : "Error",
+        description: String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingReportSettings(false);
+    }
+  };
+
+  // Add recipient
+  const handleAddRecipient = () => {
+    const email = newRecipient.trim().toLowerCase();
+    if (!email) return;
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: language === "ro" ? "Email invalid" : "Invalid email",
+        description: language === "ro" ? "Introdu o adresă de email validă" : "Enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (weeklyReportRecipients.includes(email)) {
+      toast({
+        title: language === "ro" ? "Email existent" : "Email exists",
+        description: language === "ro" ? "Acest email este deja în listă" : "This email is already in the list",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setWeeklyReportRecipients([...weeklyReportRecipients, email]);
+    setNewRecipient("");
+  };
+
+  // Remove recipient
+  const handleRemoveRecipient = (email: string) => {
+    setWeeklyReportRecipients(weeklyReportRecipients.filter(r => r !== email));
+  };
+
+  // Send test report
+  const handleSendTestReport = async () => {
+    setIsSendingTestReport(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-weekly-followup-report");
+      
+      if (error) throw error;
+      
+      toast({
+        title: language === "ro" ? "Raport trimis" : "Report sent",
+        description: language === "ro" 
+          ? `Raport trimis către ${data.recipients?.length || 0} destinatari`
+          : `Report sent to ${data.recipients?.length || 0} recipients`,
+      });
+    } catch (error) {
+      console.error("Error sending test report:", error);
+      toast({
+        title: language === "ro" ? "Eroare" : "Error",
+        description: String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingTestReport(false);
     }
   };
 
@@ -658,6 +760,119 @@ const FollowupStatsManager = () => {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Weekly Report Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <FileText className="w-5 h-5 text-primary" />
+            {language === "ro" ? "Raport Săptămânal" : "Weekly Report"}
+          </CardTitle>
+          <CardDescription>
+            {language === "ro" 
+              ? "Configurează destinatarii raportului săptămânal de performanță (trimis luni la 10:00)"
+              : "Configure weekly performance report recipients (sent Monday at 10:00 AM)"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Enable/Disable toggle */}
+          <div className="flex items-center gap-2">
+            <Switch
+              id="weeklyReportEnabled"
+              checked={weeklyReportEnabled}
+              onCheckedChange={setWeeklyReportEnabled}
+            />
+            <Label htmlFor="weeklyReportEnabled">
+              {language === "ro" ? "Rapoarte activate" : "Reports enabled"}
+            </Label>
+          </div>
+
+          {/* Recipients list */}
+          <div className="space-y-2">
+            <Label>{language === "ro" ? "Destinatari" : "Recipients"}</Label>
+            <div className="flex flex-wrap gap-2">
+              {weeklyReportRecipients.map((email) => (
+                <Badge 
+                  key={email} 
+                  variant="secondary" 
+                  className="flex items-center gap-1 px-3 py-1"
+                >
+                  {email}
+                  <button
+                    onClick={() => handleRemoveRecipient(email)}
+                    className="ml-1 hover:text-destructive transition-colors"
+                    aria-label={`Remove ${email}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+              {weeklyReportRecipients.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {language === "ro" ? "Niciun destinatar configurat" : "No recipients configured"}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Add recipient */}
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              placeholder={language === "ro" ? "email@exemplu.ro" : "email@example.com"}
+              value={newRecipient}
+              onChange={(e) => setNewRecipient(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddRecipient();
+                }
+              }}
+              className="max-w-xs"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAddRecipient}
+              disabled={!newRecipient.trim()}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              {language === "ro" ? "Adaugă" : "Add"}
+            </Button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSaveReportSettings}
+              disabled={isSavingReportSettings}
+            >
+              {isSavingReportSettings ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Settings className="w-4 h-4 mr-2" />
+              )}
+              {language === "ro" ? "Salvează" : "Save"}
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={handleSendTestReport}
+              disabled={isSendingTestReport || weeklyReportRecipients.length === 0}
+            >
+              {isSendingTestReport ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              {language === "ro" ? "Trimite acum" : "Send now"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
