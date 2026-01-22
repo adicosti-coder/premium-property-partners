@@ -55,7 +55,9 @@ import {
   ChevronDown,
   ChevronUp,
   User,
+  Mail,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -181,6 +183,7 @@ const SharedLinksStats = () => {
       noImporters: "Nimeni nu a importat încă",
       showImporters: "Vezi cine a importat",
       hideImporters: "Ascunde lista",
+      contactEmail: "Trimite email",
     },
     en: {
       title: "Sharing Statistics",
@@ -235,6 +238,7 @@ const SharedLinksStats = () => {
       noImporters: "No one has imported yet",
       showImporters: "Show who imported",
       hideImporters: "Hide list",
+      contactEmail: "Send email",
     },
   };
 
@@ -1027,9 +1031,34 @@ const SharedLinksStats = () => {
                                               </p>
                                             </div>
                                           </div>
-                                          <Badge variant="secondary" className="text-xs">
-                                            {importer.imported_count} {t.locationsImported}
-                                          </Badge>
+                                          <div className="flex items-center gap-2">
+                                            {importer.importer_email && (
+                                              <TooltipProvider>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      className="h-7 w-7 p-0"
+                                                      asChild
+                                                    >
+                                                      <a 
+                                                        href={`mailto:${importer.importer_email}?subject=${encodeURIComponent(language === 'ro' ? 'Mulțumesc că ai importat locațiile mele!' : 'Thanks for importing my locations!')}`}
+                                                      >
+                                                        <Mail className="w-3.5 h-3.5" />
+                                                      </a>
+                                                    </Button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    <p>{t.contactEmail}</p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            )}
+                                            <Badge variant="secondary" className="text-xs">
+                                              {importer.imported_count} {t.locationsImported}
+                                            </Badge>
+                                          </div>
                                         </div>
                                       ))}
                                     </div>
