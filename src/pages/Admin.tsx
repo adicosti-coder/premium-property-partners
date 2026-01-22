@@ -44,6 +44,7 @@ import {
   Key,
   Wrench,
   Mail,
+  MailCheck,
   Play,
   MapPin,
   Film,
@@ -67,6 +68,7 @@ import HeroVideoManager from "@/components/admin/HeroVideoManager";
 import HeroTextManager from "@/components/admin/HeroTextManager";
 import LeadsManager from "@/components/admin/LeadsManager";
 import LocalTipsManager from "@/components/admin/LocalTipsManager";
+import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -299,6 +301,10 @@ const Admin = () => {
               <Lightbulb className="w-4 h-4" />
               Sfaturi Locale
             </TabsTrigger>
+            <TabsTrigger value="followup-stats" className="flex items-center gap-2">
+              <MailCheck className="w-4 h-4" />
+              Follow-up
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -367,6 +373,11 @@ const Admin = () => {
           {/* Local Tips Tab */}
           <TabsContent value="local-tips">
             <LocalTipsManager />
+          </TabsContent>
+
+          {/* Follow-up Stats Tab */}
+          <TabsContent value="followup-stats">
+            <FollowupStatsManager />
           </TabsContent>
         </Tabs>
       </div>
