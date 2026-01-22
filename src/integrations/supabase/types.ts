@@ -769,6 +769,36 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_poi_links: {
+        Row: {
+          created_at: string
+          id: string
+          import_count: number
+          last_imported_at: string | null
+          poi_ids: string[]
+          share_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          import_count?: number
+          last_imported_at?: string | null
+          poi_ids: string[]
+          share_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          import_count?: number
+          last_imported_at?: string | null
+          poi_ids?: string[]
+          share_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           created_at: string

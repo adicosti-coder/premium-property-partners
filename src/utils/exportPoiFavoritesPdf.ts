@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { supabase } from "@/integrations/supabase/client";
 
 interface POI {
   id: string;
@@ -105,26 +106,99 @@ export const exportPoiFavoritesPdf = ({ title, pois, language, labels, categoryL
   doc.save(fileName);
 };
 
-// Generate shareable link with encoded favorite IDs
+// Generate a short random code
+const generateShareCode = (): string => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+// Create shareable link and save to database (for authenticated users)
+export const createShareableLink = async (favoriteIds: string[], userId?: string): Promise<{ link: string; shareCode: string | null }> => {
+  const baseUrl = window.location.origin;
+  
+  // If user is authenticated, save to database for tracking
+  if (userId && favoriteIds.length > 0) {
+    const shareCode = generateShareCode();
+    
+    const { error } = await supabase
+      .from('shared_poi_links')
+      .insert({
+        share_code: shareCode,
+        user_id: userId,
+        poi_ids: favoriteIds,
+      });
+    
+    if (!error) {
+      return {
+        link: `${baseUrl}/?share=${shareCode}`,
+        shareCode,
+      };
+    }
+    console.error('Error saving share link:', error);
+  }
+  
+  // Fallback to encoded IDs (for non-authenticated users or if save fails)
+  const encodedIds = btoa(JSON.stringify(favoriteIds));
+  return {
+    link: `${baseUrl}/?shared_pois=${encodedIds}`,
+    shareCode: null,
+  };
+};
+
+// Legacy function for backward compatibility
 export const generateShareableLink = (favoriteIds: string[]): string => {
   const baseUrl = window.location.origin;
   const encodedIds = btoa(JSON.stringify(favoriteIds));
   return `${baseUrl}/?shared_pois=${encodedIds}`;
 };
 
-// Parse shared POI IDs from URL
-export const parseSharedPois = (searchParams: URLSearchParams): string[] | null => {
+// Parse shared POI IDs from URL (handles both new share codes and legacy encoded IDs)
+export const parseSharedPois = async (searchParams: URLSearchParams): Promise<{ poiIds: string[] | null; shareCode: string | null }> => {
+  // Check for new share code format
+  const shareCode = searchParams.get('share');
+  if (shareCode) {
+    const { data, error } = await supabase
+      .from('shared_poi_links')
+      .select('poi_ids')
+      .eq('share_code', shareCode)
+      .single();
+    
+    if (!error && data?.poi_ids) {
+      return { poiIds: data.poi_ids, shareCode };
+    }
+  }
+  
+  // Fallback to legacy encoded format
   const sharedParam = searchParams.get('shared_pois');
-  if (!sharedParam) return null;
+  if (!sharedParam) return { poiIds: null, shareCode: null };
   
   try {
     const decoded = atob(sharedParam);
     const ids = JSON.parse(decoded);
     if (Array.isArray(ids) && ids.every(id => typeof id === 'string')) {
-      return ids;
+      return { poiIds: ids, shareCode: null };
     }
-    return null;
+    return { poiIds: null, shareCode: null };
   } catch {
-    return null;
+    return { poiIds: null, shareCode: null };
+  };
+};
+
+// Notify the original sharer that someone imported their favorites
+export const notifyPoiImport = async (shareCode: string, importerName?: string, importedCount?: number): Promise<void> => {
+  try {
+    await supabase.functions.invoke('notify-poi-import', {
+      body: {
+        shareCode,
+        importerName,
+        importedCount,
+      },
+    });
+  } catch (error) {
+    console.error('Error notifying POI import:', error);
   }
 };

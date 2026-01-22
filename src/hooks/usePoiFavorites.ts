@@ -171,6 +171,7 @@ export const usePoiFavorites = () => {
     importFavorites,
     isImporting: bulkAddFavoritesMutation.isPending,
     isAuthenticated: !!user,
+    userId: user?.id || null,
     favoritesCount: favorites.length,
   };
 };
