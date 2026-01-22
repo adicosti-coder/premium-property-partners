@@ -221,6 +221,14 @@ const PhoneInputWithCountry = ({
           prev > 0 ? prev - 1 : flatCountryList.length - 1
         );
         break;
+      case 'Home':
+        e.preventDefault();
+        setHighlightedIndex(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        setHighlightedIndex(flatCountryList.length - 1);
+        break;
       case 'Enter':
         e.preventDefault();
         if (highlightedIndex >= 0 && highlightedIndex < flatCountryList.length) {
