@@ -104,10 +104,10 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
-              const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out";
+              const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)]";
               const activeClasses = isActive 
-                ? "text-primary font-semibold scale-105 animate-glow-pulse after:w-full" 
-                : "text-muted-foreground hover:text-foreground hover:scale-105 after:w-0 hover:after:w-full";
+                ? "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]" 
+                : "text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
 
               return link.isHome ? (
                 <a
