@@ -52,6 +52,9 @@ import {
   Pencil,
   Save,
   X,
+  ChevronDown,
+  ChevronUp,
+  User,
 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Input } from "@/components/ui/input";
@@ -66,6 +69,17 @@ interface ImportEvent {
   shared_link_id: string;
   imported_count: number;
   created_at: string;
+  imported_by: string | null;
+}
+
+interface ImporterInfo {
+  id: string;
+  shared_link_id: string;
+  imported_count: number;
+  created_at: string;
+  imported_by: string | null;
+  importer_name: string | null;
+  importer_email: string | null;
 }
 
 interface SharedLink {
@@ -90,6 +104,7 @@ const SharedLinksStats = () => {
   const { language } = useLanguage();
   const [sharedLinks, setSharedLinks] = useState<SharedLink[]>([]);
   const [importEvents, setImportEvents] = useState<ImportEvent[]>([]);
+  const [importersMap, setImportersMap] = useState<Record<string, ImporterInfo[]>>({});
   const [pois, setPois] = useState<Record<string, POI>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -100,6 +115,7 @@ const SharedLinksStats = () => {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -159,6 +175,12 @@ const SharedLinksStats = () => {
       saveSuccess: "Link actualizat cu succes",
       saveError: "Eroare la actualizarea link-ului",
       unnamed: "Fără nume",
+      importers: "Cine a importat",
+      anonymous: "Anonim",
+      locationsImported: "locații importate",
+      noImporters: "Nimeni nu a importat încă",
+      showImporters: "Vezi cine a importat",
+      hideImporters: "Ascunde lista",
     },
     en: {
       title: "Sharing Statistics",
@@ -207,6 +229,12 @@ const SharedLinksStats = () => {
       saveSuccess: "Link updated successfully",
       saveError: "Error updating link",
       unnamed: "Unnamed",
+      importers: "Who imported",
+      anonymous: "Anonymous",
+      locationsImported: "locations imported",
+      noImporters: "No one has imported yet",
+      showImporters: "Show who imported",
+      hideImporters: "Hide list",
     },
   };
 
@@ -239,7 +267,7 @@ const SharedLinksStats = () => {
 
       setSharedLinks(links || []);
 
-      // Fetch import events for trends chart
+      // Fetch import events for trends chart and importer details
       const linkIds = (links || []).map((l) => l.id);
       if (linkIds.length > 0) {
         const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
@@ -252,6 +280,51 @@ const SharedLinksStats = () => {
 
         if (!eventsError && events) {
           setImportEvents(events);
+        }
+
+        // Fetch all import events with importer info (not just last 30 days)
+        const { data: allEvents, error: allEventsError } = await supabase
+          .from("poi_import_events")
+          .select("*")
+          .in("shared_link_id", linkIds)
+          .order("created_at", { ascending: false });
+
+        if (!allEventsError && allEvents) {
+          // Fetch profile info for authenticated importers
+          const importerIds = [...new Set(allEvents.filter(e => e.imported_by).map(e => e.imported_by as string))];
+          let profilesMap: Record<string, { full_name: string | null }> = {};
+          
+          if (importerIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("id, full_name")
+              .in("id", importerIds);
+            
+            if (profiles) {
+              profiles.forEach(p => {
+                profilesMap[p.id] = { full_name: p.full_name };
+              });
+            }
+          }
+
+          // Group events by link and enrich with importer info
+          const importersByLink: Record<string, ImporterInfo[]> = {};
+          allEvents.forEach(event => {
+            if (!importersByLink[event.shared_link_id]) {
+              importersByLink[event.shared_link_id] = [];
+            }
+            const profile = event.imported_by ? profilesMap[event.imported_by] : null;
+            importersByLink[event.shared_link_id].push({
+              id: event.id,
+              shared_link_id: event.shared_link_id,
+              imported_count: event.imported_count,
+              created_at: event.created_at,
+              imported_by: event.imported_by,
+              importer_name: profile?.full_name || null,
+              importer_email: null, // We don't expose email for privacy
+            });
+          });
+          setImportersMap(importersByLink);
         }
       }
 
@@ -716,181 +789,249 @@ const SharedLinksStats = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sharedLinks.map((link) => (
-                      <TableRow key={link.id}>
-                        <TableCell>
-                          {editingId === link.id ? (
-                            <div className="space-y-2">
-                              <Input
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                placeholder={t.namePlaceholder}
-                                className="text-sm"
-                              />
-                              <Textarea
-                                value={editDescription}
-                                onChange={(e) => setEditDescription(e.target.value)}
-                                placeholder={t.descriptionPlaceholder}
-                                className="text-sm resize-none"
-                                rows={2}
-                              />
-                            </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {link.name || (
-                                    <span className="text-muted-foreground italic">{t.unnamed}</span>
+                    {sharedLinks.map((link) => {
+                      const importers = importersMap[link.id] || [];
+                      const isExpanded = expandedLinkId === link.id;
+                      
+                      return (
+                        <>
+                          <TableRow key={link.id}>
+                            <TableCell>
+                              {editingId === link.id ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    placeholder={t.namePlaceholder}
+                                    className="text-sm"
+                                  />
+                                  <Textarea
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                    placeholder={t.descriptionPlaceholder}
+                                    className="text-sm resize-none"
+                                    rows={2}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">
+                                      {link.name || (
+                                        <span className="text-muted-foreground italic">{t.unnamed}</span>
+                                      )}
+                                    </span>
+                                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                                      {link.share_code}
+                                    </code>
+                                  </div>
+                                  {link.description && (
+                                    <p className="text-xs text-muted-foreground line-clamp-2">
+                                      {link.description}
+                                    </p>
                                   )}
-                                </span>
-                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                                  {link.share_code}
-                                </code>
-                              </div>
-                              {link.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2">
-                                  {link.description}
-                                </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(link.created_at), {
+                                      addSuffix: true,
+                                      locale: dateLocale,
+                                    })}
+                                  </p>
+                                </div>
                               )}
-                              <p className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(link.created_at), {
-                                  addSuffix: true,
-                                  locale: dateLocale,
-                                })}
-                              </p>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                            {link.poi_ids.slice(0, 3).map((poiId) => (
-                              <Badge key={poiId} variant="secondary" className="text-xs">
-                                {getCategoryIcon(pois[poiId]?.category || "default")}{" "}
-                                {getPoiName(poiId).slice(0, 15)}
-                                {getPoiName(poiId).length > 15 ? "..." : ""}
-                              </Badge>
-                            ))}
-                            {link.poi_ids.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{link.poi_ids.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge
-                            variant={link.import_count > 0 ? "default" : "secondary"}
-                            className="tabular-nums"
-                          >
-                            {link.import_count}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {link.last_imported_at
-                            ? formatDistanceToNow(new Date(link.last_imported_at), {
-                                addSuffix: true,
-                                locale: dateLocale,
-                              })
-                            : t.never}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center gap-1 justify-end">
-                            {editingId === link.id ? (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleSave(link.id)}
-                                  disabled={savingId === link.id}
-                                  className="text-primary hover:text-primary"
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1 max-w-xs">
+                                {link.poi_ids.slice(0, 3).map((poiId) => (
+                                  <Badge key={poiId} variant="secondary" className="text-xs">
+                                    {getCategoryIcon(pois[poiId]?.category || "default")}{" "}
+                                    {getPoiName(poiId).slice(0, 15)}
+                                    {getPoiName(poiId).length > 15 ? "..." : ""}
+                                  </Badge>
+                                ))}
+                                {link.poi_ids.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{link.poi_ids.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setExpandedLinkId(isExpanded ? null : link.id)}
+                                className="gap-1 p-1 h-auto"
+                                disabled={link.import_count === 0}
+                              >
+                                <Badge
+                                  variant={link.import_count > 0 ? "default" : "secondary"}
+                                  className="tabular-nums"
                                 >
-                                  {savingId === link.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  {link.import_count}
+                                </Badge>
+                                {link.import_count > 0 && (
+                                  isExpanded ? (
+                                    <ChevronUp className="w-3 h-3" />
                                   ) : (
-                                    <Save className="w-3 h-3" />
-                                  )}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={cancelEditing}
-                                  disabled={savingId === link.id}
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => startEditing(link)}
-                                >
-                                  <Pencil className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => copyShareLink(link.share_code)}
-                                >
-                                  {copiedCode === link.share_code ? (
-                                    <Check className="w-3 h-3" />
-                                  ) : (
-                                    <Copy className="w-3 h-3" />
-                                  )}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                >
-                                  <a
-                                    href={`/pentru-oaspeti?share=${link.share_code}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
+                                    <ChevronDown className="w-3 h-3" />
+                                  )
+                                )}
+                              </Button>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {link.last_imported_at
+                                ? formatDistanceToNow(new Date(link.last_imported_at), {
+                                    addSuffix: true,
+                                    locale: dateLocale,
+                                  })
+                                : t.never}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center gap-1 justify-end">
+                                {editingId === link.id ? (
+                                  <>
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                      disabled={deletingId === link.id}
+                                      onClick={() => handleSave(link.id)}
+                                      disabled={savingId === link.id}
+                                      className="text-primary hover:text-primary"
                                     >
-                                      {deletingId === link.id ? (
+                                      {savingId === link.id ? (
                                         <Loader2 className="w-3 h-3 animate-spin" />
                                       ) : (
-                                        <Trash2 className="w-3 h-3" />
+                                        <Save className="w-3 h-3" />
                                       )}
                                     </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        {t.deleteConfirmDesc}
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleDelete(link.id)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={cancelEditing}
+                                      disabled={savingId === link.id}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => startEditing(link)}
+                                    >
+                                      <Pencil className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => copyShareLink(link.share_code)}
+                                    >
+                                      {copiedCode === link.share_code ? (
+                                        <Check className="w-3 h-3" />
+                                      ) : (
+                                        <Copy className="w-3 h-3" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      asChild
+                                    >
+                                      <a
+                                        href={`/pentru-oaspeti?share=${link.share_code}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                       >
-                                        {t.confirm}
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                                        <ExternalLink className="w-3 h-3" />
+                                      </a>
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                          disabled={deletingId === link.id}
+                                        >
+                                          {deletingId === link.id ? (
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                          ) : (
+                                            <Trash2 className="w-3 h-3" />
+                                          )}
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            {t.deleteConfirmDesc}
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            onClick={() => handleDelete(link.id)}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          >
+                                            {t.confirm}
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          
+                          {/* Expanded Importers List */}
+                          {isExpanded && (
+                            <TableRow key={`${link.id}-importers`}>
+                              <TableCell colSpan={5} className="bg-muted/30 p-4">
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-2 text-sm font-medium">
+                                    <Users className="w-4 h-4" />
+                                    {t.importers}
+                                  </div>
+                                  {importers.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">{t.noImporters}</p>
+                                  ) : (
+                                    <div className="grid gap-2 max-h-60 overflow-y-auto">
+                                      {importers.map((importer) => (
+                                        <div
+                                          key={importer.id}
+                                          className="flex items-center justify-between p-2 bg-background rounded-lg border"
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <div className="p-1.5 rounded-full bg-muted">
+                                              <User className="w-4 h-4 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                              <p className="text-sm font-medium">
+                                                {importer.importer_name || t.anonymous}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground">
+                                                {formatDistanceToNow(new Date(importer.created_at), {
+                                                  addSuffix: true,
+                                                  locale: dateLocale,
+                                                })}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <Badge variant="secondary" className="text-xs">
+                                            {importer.imported_count} {t.locationsImported}
+                                          </Badge>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
