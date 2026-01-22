@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap, Volume2, VolumeX } from "lucide-react";
+import { Settings, X, Sparkles, Sun, Moon, Globe, Type, Contrast, Zap, Volume2, VolumeX, Volume1 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAnimationPreference } from "@/hooks/useAnimationPreference";
 import { useTheme } from "@/hooks/useTheme";
 import { useUISound } from "@/hooks/useUISound";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
 type FontSize = "small" | "normal" | "large" | "xlarge";
@@ -46,7 +47,15 @@ const AccessibilityPanel = () => {
     return true;
   });
 
-  const { playSound } = useUISound();
+  const [soundVolume, setSoundVolume] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("ui-sound-volume");
+      return stored !== null ? parseFloat(stored) : 0.15;
+    }
+    return 0.15;
+  });
+
+  const { playSound } = useUISound({ volume: soundVolume });
 
   // Show button on scroll
   useEffect(() => {
@@ -120,6 +129,7 @@ const AccessibilityPanel = () => {
       off: "Dezactivat",
       reducedMotion: "Reducere mișcare",
       sounds: "Sunete UI",
+      volume: "Volum",
     },
     en: {
       accessibility: "Accessibility",
@@ -141,6 +151,7 @@ const AccessibilityPanel = () => {
       off: "Off",
       reducedMotion: "Reduce motion",
       sounds: "UI Sounds",
+      volume: "Volume",
     },
   };
 
@@ -321,6 +332,34 @@ const AccessibilityPanel = () => {
                 {tr.off}
               </Button>
             </div>
+            
+            {/* Volume Slider */}
+            {soundEnabled && (
+              <div className="pt-2 space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Volume1 className="w-3 h-3" />
+                    {tr.volume}
+                  </span>
+                  <span className="font-mono">{Math.round(soundVolume * 100)}%</span>
+                </div>
+                <Slider
+                  value={[soundVolume * 100]}
+                  onValueChange={(value) => {
+                    const newVolume = value[0] / 100;
+                    setSoundVolume(newVolume);
+                    localStorage.setItem("ui-sound-volume", String(newVolume));
+                  }}
+                  onValueCommit={() => {
+                    playSound("pop");
+                  }}
+                  min={5}
+                  max={50}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
 
           {/* Theme Toggle */}
