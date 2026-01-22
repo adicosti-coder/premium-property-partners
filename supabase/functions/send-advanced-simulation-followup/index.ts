@@ -270,7 +270,7 @@ serve(async (req) => {
     if (!simulations || simulations.length === 0) {
       console.log("No advanced simulations from 7 days ago to process");
       return new Response(
-        JSON.stringify({ success: true, message: "No simulations to process", emailsSent: 0, pushSent: 0 }),
+        JSON.stringify({ success: true, message: "No simulations to process", emailsSent: 0, pushSent: 0, inAppSent: 0 }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -325,6 +325,7 @@ serve(async (req) => {
 
     let emailsSent = 0;
     let pushSent = 0;
+    let inAppSent = 0;
     const errors: string[] = [];
     const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
@@ -353,6 +354,29 @@ serve(async (req) => {
       if (netWithSystem <= 0 || diffVsClassic <= 0) {
         console.log(`Skipping user ${profile.id}: simulation results not meaningful`);
         continue;
+      }
+
+      // Create in-app notification first
+      try {
+        const { error: notifError } = await supabase
+          .from("user_notifications")
+          .insert({
+            user_id: profile.id,
+            title: "📊 Simularea ta de acum o săptămână",
+            message: `${firstName}, ai calculat +${percentVsClassic.toFixed(0)}% față de chiria clasică (${netWithSystem.toLocaleString('ro-RO')} €/lună). Hai să discutăm despre cum putem transforma aceste cifre în realitate!`,
+            type: "action",
+            action_url: "/pentru-proprietari#calculator",
+            action_label: "Revizuiește simularea",
+          });
+
+        if (notifError) {
+          console.error(`Error creating in-app notification for user ${profile.id}:`, notifError);
+        } else {
+          inAppSent++;
+          console.log(`In-app notification created for user ${profile.id}`);
+        }
+      } catch (err) {
+        console.error("Error creating in-app notification:", err);
       }
 
       // Send push notification first (always try if user has subscription)
@@ -431,13 +455,14 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Advanced simulation follow-up job complete. Emails: ${emailsSent}, Push: ${pushSent}, Errors: ${errors.length}`);
+    console.log(`Advanced simulation follow-up job complete. Emails: ${emailsSent}, Push: ${pushSent}, In-app: ${inAppSent}, Errors: ${errors.length}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         emailsSent,
         pushSent,
+        inAppSent,
         errors: errors.length > 0 ? errors : undefined,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

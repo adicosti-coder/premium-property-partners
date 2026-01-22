@@ -7,6 +7,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import AnimationToggle from "./AnimationToggle";
+import NotificationBell from "./NotificationBell";
 import { AnimatePresence, motion } from "framer-motion";
 
 const Header = () => {
@@ -168,6 +169,8 @@ const Header = () => {
                 </Button>
               </Link>
             )}
+            {/* Notifications */}
+            <NotificationBell />
             {/* Animation toggle */}
             <AnimationToggle />
             {/* Theme toggle */}
