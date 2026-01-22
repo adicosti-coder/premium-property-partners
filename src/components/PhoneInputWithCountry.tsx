@@ -430,14 +430,22 @@ const PhoneInputWithCountry = ({
           >
             {/* Type-ahead Indicator Badge */}
             {typeAheadQuery && (
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10 animate-scale-in">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full shadow-lg animate-pulse">
-                  <span className="text-xs font-medium">
-                    {language === 'en' ? 'Typing:' : 'Tastezi:'}
-                  </span>
+              <div className="absolute -top-9 left-1/2 -translate-x-1/2 z-10 animate-scale-in">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-full shadow-lg animate-pulse">
                   <span className="font-mono font-bold text-sm tracking-wider">
                     {typeAheadQuery.toUpperCase()}
                   </span>
+                  {highlightedIndex >= 0 && flatCountryList[highlightedIndex] && (
+                    <>
+                      <span className="text-primary-foreground/60">→</span>
+                      <span className="text-lg">{flatCountryList[highlightedIndex].flag}</span>
+                      <span className="text-xs font-medium truncate max-w-[120px]">
+                        {language === 'en' 
+                          ? flatCountryList[highlightedIndex].nameEn 
+                          : flatCountryList[highlightedIndex].name}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
