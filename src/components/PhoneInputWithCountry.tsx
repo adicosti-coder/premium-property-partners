@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Check, X, ChevronDown, MapPin, Loader2, Info, Star, RotateCcw } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -63,7 +64,6 @@ const PhoneInputWithCountry = ({
     // Track if the initial country was loaded from saved preferences
     return !!localStorage.getItem('preferred-phone-country');
   });
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -104,7 +104,7 @@ const PhoneInputWithCountry = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCountrySelect = (country: CountryInfo) => {
+  const handleCountrySelect = useCallback((country: CountryInfo) => {
     setSelectedCountry(country);
     setHasUserSelected(true);
     setIsFromSavedPreference(true);
@@ -125,7 +125,7 @@ const PhoneInputWithCountry = ({
     
     // Format with new country prefix
     onChange(formatInternationalPhone(`${country.prefix}${digitsWithoutPrefix}`, country));
-  };
+  }, [value, selectedCountry.prefix, onChange]);
 
   // Reset saved preference and return to auto-detection
   const handleResetPreference = () => {
@@ -233,74 +233,32 @@ const PhoneInputWithCountry = ({
     return list;
   }, [groupedCountries]);
 
-  // Reset highlighted index when search query changes or dropdown opens/closes
-  useEffect(() => {
-    setHighlightedIndex(-1);
-  }, [searchQuery, isOpen]);
+  // Handle escape - close dropdown and focus button
+  const handleEscape = useCallback(() => {
+    setIsOpen(false);
+    setSearchQuery("");
+    buttonRef.current?.focus();
+  }, []);
 
-  // Handle keyboard navigation in dropdown
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen) return;
+  // Handle country selection from keyboard
+  const handleKeyboardSelect = useCallback((country: CountryInfo) => {
+    handleCountrySelect(country);
+  }, [handleCountrySelect]);
 
-    const PAGE_SIZE = 10;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev < flatCountryList.length - 1 ? prev + 1 : 0
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev > 0 ? prev - 1 : flatCountryList.length - 1
-        );
-        break;
-      case 'PageDown':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          Math.min(prev + PAGE_SIZE, flatCountryList.length - 1)
-        );
-        break;
-      case 'PageUp':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          Math.max(prev - PAGE_SIZE, 0)
-        );
-        break;
-      case 'Home':
-        e.preventDefault();
-        setHighlightedIndex(0);
-        break;
-      case 'End':
-        e.preventDefault();
-        setHighlightedIndex(flatCountryList.length - 1);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < flatCountryList.length) {
-          handleCountrySelect(flatCountryList[highlightedIndex]);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        setSearchQuery("");
-        buttonRef.current?.focus();
-        break;
-    }
-  };
-
-  // Scroll highlighted item into view
-  useEffect(() => {
-    if (highlightedIndex >= 0 && listRef.current) {
-      const highlightedElement = listRef.current.querySelector(`[data-index="${highlightedIndex}"]`);
-      if (highlightedElement) {
-        highlightedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }, [highlightedIndex]);
+  // Use keyboard navigation hook
+  const { 
+    highlightedIndex, 
+    setHighlightedIndex, 
+    handleKeyDown 
+  } = useKeyboardNavigation({
+    items: flatCountryList,
+    isActive: isOpen,
+    onSelect: handleKeyboardSelect,
+    onEscape: handleEscape,
+    pageSize: 10,
+    listRef,
+    resetDependencies: [searchQuery],
+  });
 
   // International validation
   const isValid = validatePhoneForCountry(value, selectedCountry);
