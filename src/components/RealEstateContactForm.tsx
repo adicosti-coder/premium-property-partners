@@ -13,12 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin, Check, X } from "lucide-react";
+import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
-import { detectCountryFromPhone, getDefaultCountry } from "@/utils/phoneCountryDetector";
+import PhoneInputWithCountry from "./PhoneInputWithCountry";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
@@ -33,7 +33,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const RealEstateContactForm = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const form = t.realEstateForm;
 
   const [formData, setFormData] = useState<FormData>({
@@ -240,45 +240,14 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">{form.fields.phone} *</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg z-10">
-                        {(detectCountryFromPhone(formData.phone) || getDefaultCountry()).flag}
-                      </span>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        placeholder={form.placeholders.phone}
-                        className={`pl-10 pr-10 ${
-                          errors.phone 
-                            ? "border-destructive focus-visible:ring-destructive" 
-                            : formData.phone && romanianPhoneRegex.test(formData.phone)
-                              ? "border-green-500 focus-visible:ring-green-500"
-                              : ""
-                        }`}
-                      />
-                      {formData.phone && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          {romanianPhoneRegex.test(formData.phone) ? (
-                            <Check className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <X className="w-4 h-4 text-destructive" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {errors.phone ? (
-                      <p className="text-sm text-destructive">{errors.phone}</p>
-                    ) : formData.phone && romanianPhoneRegex.test(formData.phone) ? (
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        ✓ {(detectCountryFromPhone(formData.phone) || getDefaultCountry())[language === 'en' ? 'nameEn' : 'name']} - {language === 'en' ? 'Valid number' : 'Număr valid'}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        {t.leadForm.phoneHint || "📞 Mobil: +40 7XX sau Fix: +40 2XX"}
-                      </p>
-                    )}
+                    <PhoneInputWithCountry
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(value) => handleChange("phone", value)}
+                      placeholder={form.placeholders.phone}
+                      error={errors.phone}
+                      required
+                    />
                   </div>
                 </div>
 
