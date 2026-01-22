@@ -501,6 +501,35 @@ export type Database = {
           },
         ]
       }
+      poi_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          poi_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          poi_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          poi_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poi_favorites_poi_id_fkey"
+            columns: ["poi_id"]
+            isOneToOne: false
+            referencedRelation: "points_of_interest"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_of_interest: {
         Row: {
           address: string | null
