@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import PropertyDetail from "./pages/PropertyDetail";
 import ResetPassword from "./pages/ResetPassword";
 import Favorites from "./pages/Favorites";
+import PentruOaspeti from "./pages/PentruOaspeti";
 import Guests from "./pages/Guests";
 import Imobiliare from "./pages/Imobiliare";
 import Blog from "./pages/Blog";
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/favorite" element={<Favorites />} />
                 <Route path="/oaspeti" element={<Guests />} />
+                <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
                 <Route path="/imobiliare" element={<Imobiliare />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogArticle />} />

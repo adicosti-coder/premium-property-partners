@@ -136,13 +136,13 @@ const GuestsTeaser = () => {
           }`}
         >
           <Button asChild variant="hero" size="xl" className="group">
-            <Link to="/oaspeti">
+            <Link to="/pentru-oaspeti">
               {t.cta}
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
           <Button asChild variant="heroOutline" size="xl">
-            <Link to="/rezerva-direct">{t.bookDirect}</Link>
+            <Link to="/oaspeti">{t.bookDirect}</Link>
           </Button>
         </div>
       </div>
