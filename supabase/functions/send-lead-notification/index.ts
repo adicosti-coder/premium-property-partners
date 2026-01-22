@@ -10,11 +10,12 @@ const corsHeaders = {
 };
 
 interface ProfitCalculatorLead {
-  source: 'profit-calculator';
+  source?: 'profit-calculator';
   name: string;
   whatsappNumber: string;
   propertyArea: number;
   propertyType: string;
+  listingUrl?: string;
   calculatedNetProfit: number;
   calculatedYearlyProfit: number;
   simulationData: {
@@ -24,6 +25,7 @@ interface ProfitCalculatorLead {
     managementFee: number;
     platformFee: number;
     avgStayDuration: number;
+    listingUrl?: string;
   };
 }
 
@@ -52,6 +54,7 @@ interface QuickFormLead {
   name: string;
   whatsappNumber: string;
   propertyType: string;
+  listingUrl?: string;
 }
 
 interface RealEstateContactLead {
@@ -61,6 +64,7 @@ interface RealEstateContactLead {
   email: string;
   serviceType: string;
   propertyType?: string;
+  listingUrl?: string;
   message?: string;
 }
 
@@ -88,6 +92,7 @@ const serviceTypeLabels: Record<string, string> = {
 const generateProfitCalculatorEmail = (leadData: ProfitCalculatorLead): string => {
   const propertyTypeLabel = propertyTypeLabels[leadData.propertyType] || leadData.propertyType;
   const whatsappClean = leadData.whatsappNumber.replace(/[^0-9]/g, '');
+  const listingUrl = leadData.listingUrl || leadData.simulationData?.listingUrl;
 
   return `
     <!DOCTYPE html>
@@ -129,6 +134,12 @@ const generateProfitCalculatorEmail = (leadData: ProfitCalculatorLead): string =
               <td style="padding: 12px 0; border-bottom: 1px solid #e4e4e7; color: #71717a;">Suprafață</td>
               <td style="padding: 12px 0; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 500;">${leadData.propertyArea} m²</td>
             </tr>
+            ${listingUrl ? `<tr>
+              <td style="padding: 12px 0; border-bottom: 1px solid #e4e4e7; color: #71717a;">🔗 Link Anunț</td>
+              <td style="padding: 12px 0; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 500;">
+                <a href="${listingUrl}" style="color: #0d453a; text-decoration: none; word-break: break-all;" target="_blank">${listingUrl}</a>
+              </td>
+            </tr>` : ''}
           </table>
           
           <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
@@ -326,15 +337,24 @@ const generateQuickFormEmail = (leadData: QuickFormLead): string => {
               </td>
             </tr>
             <tr>
-              <td style="padding: 16px; color: #71717a;">🏠 Tip Proprietate</td>
-              <td style="padding: 16px; color: #18181b; font-weight: 600; font-size: 18px;">${propertyTypeLabel}</td>
+              <td style="padding: 16px; ${leadData.listingUrl ? 'border-bottom: 1px solid #e4e4e7;' : ''} color: #71717a;">🏠 Tip Proprietate</td>
+              <td style="padding: 16px; ${leadData.listingUrl ? 'border-bottom: 1px solid #e4e4e7;' : ''} color: #18181b; font-weight: 600; font-size: 18px;">${propertyTypeLabel}</td>
             </tr>
+            ${leadData.listingUrl ? `<tr>
+              <td style="padding: 16px; color: #71717a;">🔗 Link Anunț</td>
+              <td style="padding: 16px; color: #18181b; font-weight: 600;">
+                <a href="${leadData.listingUrl}" style="color: #0d453a; text-decoration: none; word-break: break-all;" target="_blank">${leadData.listingUrl}</a>
+              </td>
+            </tr>` : ''}
           </table>
           
           <div style="text-align: center; padding-top: 24px; border-top: 1px solid #e4e4e7;">
             <a href="https://wa.me/${whatsappClean}" style="display: inline-block; background-color: #25d366; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
               📱 Contactează pe WhatsApp
             </a>
+            ${leadData.listingUrl ? `<a href="${leadData.listingUrl}" style="display: inline-block; background-color: #1a365d; color: #ffffff; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-left: 8px;" target="_blank">
+              🔗 Vezi Anunț
+            </a>` : ''}
             <p style="color: #71717a; font-size: 12px; margin-top: 16px;">
               Răspunde rapid pentru cea mai bună conversie!
             </p>
@@ -400,6 +420,7 @@ const generateRealEstateContactEmail = (leadData: RealEstateContactLead): string
               <td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 600;">${serviceTypeLabel}</td>
             </tr>
             ${propertyTypeLabel ? `<tr><td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #71717a;">🏠 Tip Proprietate</td><td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 600;">${propertyTypeLabel}</td></tr>` : ''}
+            ${leadData.listingUrl ? `<tr><td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #71717a;">🔗 Link Anunț</td><td style="padding: 16px; border-bottom: 1px solid #e4e4e7; color: #18181b; font-weight: 600;"><a href="${leadData.listingUrl}" style="color: #1a365d; text-decoration: none; word-break: break-all;" target="_blank">${leadData.listingUrl}</a></td></tr>` : ''}
           </table>
 
           ${leadData.message ? `<div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;"><h3 style="color: #1a365d; margin: 0 0 12px 0; font-size: 16px;">💬 Mesaj</h3><p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">${leadData.message}</p></div>` : ''}
@@ -408,9 +429,12 @@ const generateRealEstateContactEmail = (leadData: RealEstateContactLead): string
             <a href="https://wa.me/${phoneClean}" style="display: inline-block; background-color: #25d366; color: #ffffff; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-right: 8px;">
               📱 WhatsApp
             </a>
-            <a href="tel:${leadData.phone}" style="display: inline-block; background-color: #1a365d; color: #ffffff; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+            <a href="tel:${leadData.phone}" style="display: inline-block; background-color: #1a365d; color: #ffffff; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-right: 8px;">
               📞 Sună acum
             </a>
+            ${leadData.listingUrl ? `<a href="${leadData.listingUrl}" style="display: inline-block; background-color: #0d453a; color: #ffffff; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-top: 8px;" target="_blank">
+              🔗 Vezi Anunț
+            </a>` : ''}
           </div>
         </div>
         
@@ -498,6 +522,7 @@ const handler = async (req: Request): Promise<Response> => {
             `👤 *Nume:* ${quickLead.name}\n` +
             `📱 *WhatsApp:* ${quickLead.whatsappNumber}\n` +
             `🏠 *Tip:* ${propertyTypeLabel}\n` +
+            (quickLead.listingUrl ? `🔗 *Link Anunț:* ${quickLead.listingUrl}\n` : '') +
             `🔥 _Răspunde rapid pentru conversie maximă!_`;
         } else if (leadData.source === 'real_estate_contact') {
           const realEstateLead = leadData as RealEstateContactLead;
@@ -509,16 +534,19 @@ const handler = async (req: Request): Promise<Response> => {
             `📧 *Email:* ${realEstateLead.email}\n` +
             `🎯 *Serviciu:* ${serviceTypeLabel}\n` +
             (propertyTypeLabel ? `🏠 *Tip:* ${propertyTypeLabel}\n` : '') +
+            (realEstateLead.listingUrl ? `🔗 *Link Anunț:* ${realEstateLead.listingUrl}\n` : '') +
             (realEstateLead.message ? `💬 *Mesaj:* ${realEstateLead.message}` : '');
         } else {
           const profitLead = leadData as ProfitCalculatorLead;
           const propertyTypeLabel = propertyTypeLabels[profitLead.propertyType] || profitLead.propertyType;
+          const listingUrl = profitLead.listingUrl || profitLead.simulationData?.listingUrl;
           slackMessage = `🏠 *Lead Nou din Profit Calculator*\n\n` +
             `👤 *Nume:* ${profitLead.name}\n` +
             `📱 *WhatsApp:* ${profitLead.whatsappNumber}\n` +
             `🏢 *Proprietate:* ${propertyTypeLabel}, ${profitLead.propertyArea}m²\n` +
             `💰 *Profit estimat:* ${profitLead.calculatedNetProfit.toLocaleString('ro-RO')}€/lună\n` +
-            `📅 *Anual:* ${profitLead.calculatedYearlyProfit.toLocaleString('ro-RO')}€`;
+            `📅 *Anual:* ${profitLead.calculatedYearlyProfit.toLocaleString('ro-RO')}€` +
+            (listingUrl ? `\n🔗 *Link Anunț:* ${listingUrl}` : '');
         }
 
         const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
