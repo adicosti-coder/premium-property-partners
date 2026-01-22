@@ -171,6 +171,48 @@ export type Database = {
           },
         ]
       }
+      email_click_tracking: {
+        Row: {
+          clicked_at: string
+          email_type: string
+          id: string
+          ip_address: string | null
+          link_type: string
+          user_agent: string | null
+          user_id: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          email_type: string
+          id?: string
+          ip_address?: string | null
+          link_type: string
+          user_agent?: string | null
+          user_id: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          email_type?: string
+          id?: string
+          ip_address?: string | null
+          link_type?: string
+          user_agent?: string | null
+          user_id?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       financial_records: {
         Row: {
           amount: number

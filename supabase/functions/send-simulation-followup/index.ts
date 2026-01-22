@@ -7,8 +7,49 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate tracked URL with UTM parameters
+function getTrackedUrl(
+  userId: string,
+  emailType: string,
+  linkType: string,
+  targetUrl: string,
+  supabaseUrl: string
+): string {
+  const trackingUrl = new URL(`${supabaseUrl}/functions/v1/track-email-click`);
+  trackingUrl.searchParams.set("user_id", userId);
+  trackingUrl.searchParams.set("email_type", emailType);
+  trackingUrl.searchParams.set("link_type", linkType);
+  trackingUrl.searchParams.set("utm_source", "email");
+  trackingUrl.searchParams.set("utm_medium", "followup");
+  trackingUrl.searchParams.set("utm_campaign", emailType);
+  trackingUrl.searchParams.set("utm_content", linkType);
+  trackingUrl.searchParams.set("redirect", targetUrl);
+  return trackingUrl.toString();
+}
+
 // Email templates
-function getFirstFollowupEmail(firstName: string, monthlyIncome: number, yearlyIncome: number): { subject: string; html: string } {
+function getFirstFollowupEmail(
+  firstName: string, 
+  monthlyIncome: number, 
+  yearlyIncome: number,
+  userId: string,
+  supabaseUrl: string
+): { subject: string; html: string } {
+  const whatsappUrl = getTrackedUrl(
+    userId,
+    "first_followup",
+    "whatsapp_cta",
+    "https://wa.me/40744566778?text=Salut!%20Am%20folosit%20calculatorul%20și%20vreau%20mai%20multe%20detalii%20despre%20colaborare.",
+    supabaseUrl
+  );
+  const websiteUrl = getTrackedUrl(
+    userId,
+    "first_followup",
+    "website_footer",
+    "https://realtrustaparthotel.lovable.app",
+    supabaseUrl
+  );
+
   return {
     subject: `${firstName}, ai calculat un venit de ${monthlyIncome.toLocaleString('ro-RO')} €/lună – hai să-l facem realitate!`,
     html: `
@@ -56,7 +97,7 @@ function getFirstFollowupEmail(firstName: string, monthlyIncome: number, yearlyI
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td align="center" style="padding: 10px 0 30px;">
-                          <a href="https://wa.me/40744566778?text=Salut!%20Am%20folosit%20calculatorul%20și%20vreau%20mai%20multe%20detalii%20despre%20colaborare." 
+                          <a href="${whatsappUrl}" 
                              style="display: inline-block; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);">
                             💬 Scrie-ne pe WhatsApp
                           </a>
@@ -73,7 +114,7 @@ function getFirstFollowupEmail(firstName: string, monthlyIncome: number, yearlyI
                     <p style="color: #6c757d; font-size: 13px; margin: 0; text-align: center;">
                       RealTrust Property Management<br>
                       Timișoara, România<br>
-                      <a href="https://realtrustaparthotel.lovable.app" style="color: #1a1a2e; text-decoration: none;">realtrust.ro</a>
+                      <a href="${websiteUrl}" style="color: #1a1a2e; text-decoration: none;">realtrust.ro</a>
                     </p>
                   </td>
                 </tr>
@@ -87,8 +128,36 @@ function getFirstFollowupEmail(firstName: string, monthlyIncome: number, yearlyI
   };
 }
 
-function getSecondFollowupEmail(firstName: string, monthlyIncome: number, yearlyIncome: number): { subject: string; html: string } {
+function getSecondFollowupEmail(
+  firstName: string, 
+  monthlyIncome: number, 
+  yearlyIncome: number,
+  userId: string,
+  supabaseUrl: string
+): { subject: string; html: string } {
   const bonusAmount = Math.round(monthlyIncome * 0.1); // 10% bonus for first month
+  
+  const whatsappOfferUrl = getTrackedUrl(
+    userId,
+    "second_followup",
+    "whatsapp_offer_cta",
+    `https://wa.me/40744566778?text=Salut!%20Vreau%20să%20beneficiez%20de%20oferta%20specială%20cu%20${bonusAmount}€%20bonus!`,
+    supabaseUrl
+  );
+  const whatsappQuestionsUrl = getTrackedUrl(
+    userId,
+    "second_followup",
+    "whatsapp_questions",
+    "https://wa.me/40744566778?text=Salut!%20Am%20câteva%20întrebări%20despre%20serviciile%20voastre.",
+    supabaseUrl
+  );
+  const websiteUrl = getTrackedUrl(
+    userId,
+    "second_followup",
+    "website_footer",
+    "https://realtrustaparthotel.lovable.app",
+    supabaseUrl
+  );
   
   return {
     subject: `🎁 ${firstName}, ofertă exclusivă: ${bonusAmount}€ bonus la prima lună!`,
@@ -174,7 +243,7 @@ function getSecondFollowupEmail(firstName: string, monthlyIncome: number, yearly
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td align="center" style="padding: 10px 0;">
-                          <a href="https://wa.me/40744566778?text=Salut!%20Vreau%20să%20beneficiez%20de%20oferta%20specială%20cu%20${bonusAmount}€%20bonus!" 
+                          <a href="${whatsappOfferUrl}" 
                              style="display: inline-block; background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); color: #ffffff; text-decoration: none; padding: 18px 45px; border-radius: 8px; font-size: 17px; font-weight: 700; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);">
                             🎁 Vreau oferta specială!
                           </a>
@@ -182,7 +251,7 @@ function getSecondFollowupEmail(firstName: string, monthlyIncome: number, yearly
                       </tr>
                       <tr>
                         <td align="center" style="padding: 15px 0 0;">
-                          <a href="https://wa.me/40744566778?text=Salut!%20Am%20câteva%20întrebări%20despre%20serviciile%20voastre." 
+                          <a href="${whatsappQuestionsUrl}" 
                              style="display: inline-block; background: transparent; color: #1a1a2e; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-size: 14px; border: 2px solid #1a1a2e;">
                             Am întrebări
                           </a>
@@ -200,7 +269,7 @@ function getSecondFollowupEmail(firstName: string, monthlyIncome: number, yearly
                     <p style="color: #6c757d; font-size: 13px; margin: 0; text-align: center;">
                       RealTrust Property Management<br>
                       Timișoara, România<br>
-                      <a href="https://realtrustaparthotel.lovable.app" style="color: #1a1a2e; text-decoration: none;">realtrust.ro</a>
+                      <a href="${websiteUrl}" style="color: #1a1a2e; text-decoration: none;">realtrust.ro</a>
                     </p>
                   </td>
                 </tr>
@@ -343,7 +412,7 @@ serve(async (req) => {
         if (simDate <= oneDayAgo) {
           emailToSend = {
             type: "first_followup",
-            content: getFirstFollowupEmail(firstName, monthlyIncome, yearlyIncome),
+            content: getFirstFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl),
           };
         }
       } else if (!history.second) {
@@ -353,7 +422,7 @@ serve(async (req) => {
           if (history.first <= sevenDaysAgo) {
             emailToSend = {
               type: "second_followup",
-              content: getSecondFollowupEmail(firstName, monthlyIncome, yearlyIncome),
+              content: getSecondFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl),
             };
           }
         }
