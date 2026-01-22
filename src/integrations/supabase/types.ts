@@ -936,6 +936,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_simulations: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          location: string
+          monthly_income: number
+          property_area: number | null
+          realtrurst_income: number
+          realtrust_yearly: number
+          rooms: string
+          user_id: string
+          yearly_income: number
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          location: string
+          monthly_income: number
+          property_area?: number | null
+          realtrurst_income: number
+          realtrust_yearly: number
+          rooms: string
+          user_id: string
+          yearly_income: number
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          location?: string
+          monthly_income?: number
+          property_area?: number | null
+          realtrurst_income?: number
+          realtrust_yearly?: number
+          rooms?: string
+          user_id?: string
+          yearly_income?: number
+        }
+        Relationships: []
+      }
       video_testimonials: {
         Row: {
           created_at: string
