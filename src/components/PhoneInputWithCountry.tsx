@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Check, X, ChevronDown, MapPin, Loader2 } from "lucide-react";
+import { Check, X, ChevronDown, MapPin, Loader2, Info } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { 
   detectCountryFromPhone, 
@@ -13,6 +13,12 @@ import {
   CountryRegion
 } from "@/utils/phoneCountryDetector";
 import { useGeoCountryDetection } from "@/hooks/useGeoCountryDetection";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -189,6 +195,13 @@ const PhoneInputWithCountry = ({
   // Dynamic placeholder based on selected country
   const dynamicPlaceholder = placeholder || `${selectedCountry.prefix} ${'X'.repeat(selectedCountry.phoneLength).replace(/(.{3})/g, '$1 ').trim()}`;
 
+  // Generate example format for tooltip
+  const getExampleFormat = () => {
+    const exampleDigits = '123456789012'.slice(0, selectedCountry.phoneLength);
+    const formatted = exampleDigits.replace(/(.{3})/g, '$1 ').trim();
+    return `${selectedCountry.prefix} ${formatted}`;
+  };
+
   // Get region name
   const getRegionName = (key: CountryRegion): string => {
     const region = regions.find(r => r.key === key);
@@ -196,24 +209,53 @@ const PhoneInputWithCountry = ({
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <div className="relative flex">
-        {/* Country Selector Button */}
-        <button
-          ref={buttonRef}
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1 px-3 py-2 border border-r-0 rounded-l-md bg-muted/50 hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
-          aria-label={language === 'en' ? 'Select country' : 'Selectează țara'}
-          title={getDetectionLabel() || (language === 'en' ? 'Select country' : 'Selectează țara')}
-        >
-          {geoDetection.isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          ) : (
-            <span className="text-lg">{selectedCountry.flag}</span>
-          )}
-          <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
+    <TooltipProvider>
+      <div className={`space-y-2 ${className}`}>
+        <div className="relative flex">
+          {/* Country Selector Button with Tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                ref={buttonRef}
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-1 px-3 py-2 border border-r-0 rounded-l-md bg-muted/50 hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
+                aria-label={language === 'en' ? 'Select country' : 'Selectează țara'}
+              >
+                {geoDetection.isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <span className="text-lg">{selectedCountry.flag}</span>
+                )}
+                <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{selectedCountry.flag}</span>
+                  <span className="font-medium">
+                    {language === 'en' ? selectedCountry.nameEn : selectedCountry.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Info className="w-3 h-3" />
+                  <span>
+                    {language === 'en' ? 'Expected format:' : 'Format așteptat:'}
+                  </span>
+                </div>
+                <div className="font-mono text-sm bg-muted/50 px-2 py-1 rounded">
+                  {getExampleFormat()}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {language === 'en' 
+                    ? `${selectedCountry.phoneLength} digits after ${selectedCountry.prefix}`
+                    : `${selectedCountry.phoneLength} cifre după ${selectedCountry.prefix}`
+                  }
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
 
         {/* Phone Input */}
         <div className="relative flex-1">
@@ -350,7 +392,8 @@ const PhoneInputWithCountry = ({
             : `Se așteaptă ${selectedCountry.phoneLength} cifre după ${selectedCountry.prefix}`}
         </p>
       ) : null}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 
