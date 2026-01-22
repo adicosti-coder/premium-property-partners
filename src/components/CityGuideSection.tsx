@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { 
   UtensilsCrossed, 
@@ -10,31 +12,52 @@ import {
   TreePine,
   Camera,
   Music,
-  Wine,
+  Heart,
+  Bus,
+  Clapperboard,
   MapPin,
   Star,
   Clock,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface Recommendation {
+interface POI {
+  id: string;
   name: string;
-  nameEn: string;
-  description: string;
-  descriptionEn: string;
+  name_en: string;
   category: string;
-  distance: string;
-  rating?: number;
-  highlight?: string;
-  highlightEn?: string;
+  description: string | null;
+  description_en: string | null;
+  address: string | null;
+  rating: number | null;
+  is_active: boolean;
+  display_order: number;
 }
 
 const CityGuideSection: React.FC = () => {
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
+
+  // Fetch POIs from Supabase
+  const { data: pois = [], isLoading } = useQuery({
+    queryKey: ['city-guide-pois'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('points_of_interest')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(6);
+      
+      if (error) throw error;
+      return data as POI[];
+    },
+  });
 
   const content = {
     ro: {
@@ -43,17 +66,20 @@ const CityGuideSection: React.FC = () => {
       titleHighlight: 'Timișoara',
       subtitle: 'Recomandările noastre pentru o experiență autentică în "Mica Vienă"',
       categories: {
-        restaurants: 'Restaurante',
-        cafes: 'Cafenele',
-        attractions: 'Atracții',
+        restaurant: 'Restaurante',
+        cafe: 'Cafenele',
+        attraction: 'Atracții',
         shopping: 'Cumpărături',
         nature: 'Natură',
         nightlife: 'Viață de Noapte',
+        transport: 'Transport',
+        health: 'Sănătate',
+        entertainment: 'Divertisment',
       },
-      distance: 'distanță',
       seeOnMap: 'Vezi pe Hartă',
       localTip: 'Sfat Local',
-      mustTry: 'De încercat',
+      noResults: 'Nu există recomandări momentan',
+      loading: 'Se încarcă recomandările...',
     },
     en: {
       badge: 'Local Guide',
@@ -61,115 +87,60 @@ const CityGuideSection: React.FC = () => {
       titleHighlight: 'Timișoara',
       subtitle: 'Our recommendations for an authentic experience in "Little Vienna"',
       categories: {
-        restaurants: 'Restaurants',
-        cafes: 'Cafés',
-        attractions: 'Attractions',
+        restaurant: 'Restaurants',
+        cafe: 'Cafés',
+        attraction: 'Attractions',
         shopping: 'Shopping',
         nature: 'Nature',
         nightlife: 'Nightlife',
+        transport: 'Transport',
+        health: 'Health',
+        entertainment: 'Entertainment',
       },
-      distance: 'away',
       seeOnMap: 'See on Map',
       localTip: 'Local Tip',
-      mustTry: 'Must Try',
+      noResults: 'No recommendations available',
+      loading: 'Loading recommendations...',
     }
   };
 
   const t = content[language as keyof typeof content] || content.ro;
 
   const categoryIcons: Record<string, React.ElementType> = {
-    restaurants: UtensilsCrossed,
-    cafes: Coffee,
-    attractions: Landmark,
+    restaurant: UtensilsCrossed,
+    cafe: Coffee,
+    attraction: Landmark,
     shopping: ShoppingBag,
     nature: TreePine,
     nightlife: Music,
+    transport: Bus,
+    health: Heart,
+    entertainment: Clapperboard,
   };
 
   const categoryColors: Record<string, string> = {
-    restaurants: 'from-rose-500/20 to-rose-500/5 border-rose-500/30',
-    cafes: 'from-amber-500/20 to-amber-500/5 border-amber-500/30',
-    attractions: 'from-violet-500/20 to-violet-500/5 border-violet-500/30',
+    restaurant: 'from-rose-500/20 to-rose-500/5 border-rose-500/30',
+    cafe: 'from-amber-500/20 to-amber-500/5 border-amber-500/30',
+    attraction: 'from-violet-500/20 to-violet-500/5 border-violet-500/30',
     shopping: 'from-pink-500/20 to-pink-500/5 border-pink-500/30',
     nature: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/30',
     nightlife: 'from-indigo-500/20 to-indigo-500/5 border-indigo-500/30',
+    transport: 'from-blue-500/20 to-blue-500/5 border-blue-500/30',
+    health: 'from-red-500/20 to-red-500/5 border-red-500/30',
+    entertainment: 'from-teal-500/20 to-teal-500/5 border-teal-500/30',
   };
 
   const categoryIconColors: Record<string, string> = {
-    restaurants: 'text-rose-500',
-    cafes: 'text-amber-500',
-    attractions: 'text-violet-500',
+    restaurant: 'text-rose-500',
+    cafe: 'text-amber-500',
+    attraction: 'text-violet-500',
     shopping: 'text-pink-500',
     nature: 'text-emerald-500',
     nightlife: 'text-indigo-500',
+    transport: 'text-blue-500',
+    health: 'text-red-500',
+    entertainment: 'text-teal-500',
   };
-
-  const recommendations: Recommendation[] = [
-    {
-      name: 'La Căpite',
-      nameEn: 'La Căpite',
-      description: 'Bucătărie tradițională bănățeană într-un decor autentic. Celebru pentru tocănița de vită și papanașii.',
-      descriptionEn: 'Traditional Banat cuisine in an authentic setting. Famous for beef stew and papanași.',
-      category: 'restaurants',
-      distance: '1.2 km',
-      rating: 4.8,
-      highlight: 'Tocănița tradițională',
-      highlightEn: 'Traditional stew',
-    },
-    {
-      name: 'Scârț loc lejer',
-      nameEn: 'Scârț loc lejer',
-      description: 'Cafenea creativă cu atmosferă artistică, locul perfect pentru brunch și cafea de specialitate.',
-      descriptionEn: 'Creative café with artistic atmosphere, perfect for brunch and specialty coffee.',
-      category: 'cafes',
-      distance: '800 m',
-      rating: 4.7,
-      highlight: 'Brunch de weekend',
-      highlightEn: 'Weekend brunch',
-    },
-    {
-      name: 'Piața Unirii',
-      nameEn: 'Unirii Square',
-      description: 'Inima Timișoarei cu arhitectură barocă impresionantă, Domul Catolic și palate istorice.',
-      descriptionEn: 'Heart of Timișoara with impressive baroque architecture, Catholic Dome and historic palaces.',
-      category: 'attractions',
-      distance: '600 m',
-      rating: 4.9,
-      highlight: 'Arhitectură barocă',
-      highlightEn: 'Baroque architecture',
-    },
-    {
-      name: 'Iulius Town',
-      nameEn: 'Iulius Town',
-      description: 'Cel mai mare mall din vestul României cu branduri internaționale și multiple opțiuni de dining.',
-      descriptionEn: 'The largest mall in Western Romania with international brands and multiple dining options.',
-      category: 'shopping',
-      distance: '2.5 km',
-      rating: 4.5,
-    },
-    {
-      name: 'Parcul Rozelor',
-      nameEn: 'Rose Park',
-      description: 'Oază de liniște cu mii de trandafiri, perfectă pentru plimbări romantice și picnicuri.',
-      descriptionEn: 'Peaceful oasis with thousands of roses, perfect for romantic walks and picnics.',
-      category: 'nature',
-      distance: '1.8 km',
-      rating: 4.6,
-      highlight: 'Peste 1200 de soiuri',
-      highlightEn: 'Over 1200 varieties',
-    },
-    {
-      name: 'D\'Arc',
-      nameEn: 'D\'Arc',
-      description: 'Bar elegant cu cocktailuri artizanale și atmosferă sofisticată în centrul vechi.',
-      descriptionEn: 'Elegant bar with artisanal cocktails and sophisticated atmosphere in the old center.',
-      category: 'nightlife',
-      distance: '700 m',
-      rating: 4.7,
-      highlight: 'Cocktailuri signature',
-      highlightEn: 'Signature cocktails',
-    },
-  ];
 
   const localTips = language === 'ro' ? [
     'Vizitează Piața Victoriei seara pentru cele mai frumoase lumini',
@@ -182,6 +153,11 @@ const CityGuideSection: React.FC = () => {
     'Walk along the Bega River at sunset for stunning views',
     'Book restaurants on weekends - they\'re very popular',
   ];
+
+  const getCategoryLabel = (category: string) => {
+    const categories = t.categories as Record<string, string>;
+    return categories[category] || category;
+  };
 
   return (
     <section 
@@ -213,61 +189,94 @@ const CityGuideSection: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Recommendations Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {recommendations.map((rec, index) => {
-            const Icon = categoryIcons[rec.category];
-            const colorClasses = categoryColors[rec.category];
-            const iconColor = categoryIconColors[rec.category];
-            
-            return (
-              <motion.div
-                key={rec.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`group relative p-6 rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300`}
-              >
-                {/* Category Icon */}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-6 rounded-2xl bg-card border border-border">
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm`}>
-                    <Icon className={`w-6 h-6 ${iconColor}`} />
-                  </div>
-                  {rec.rating && (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                      <span className="font-medium">{rec.rating}</span>
-                    </div>
-                  )}
+                  <Skeleton className="w-12 h-12 rounded-xl" />
+                  <Skeleton className="w-16 h-6 rounded-full" />
                 </div>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-full mb-1" />
+                <Skeleton className="h-4 w-2/3 mb-4" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-                {/* Content */}
-                <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                  {language === 'ro' ? rec.name : rec.nameEn}
-                </h3>
-                
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                  {language === 'ro' ? rec.description : rec.descriptionEn}
-                </p>
+        {/* No Results */}
+        {!isLoading && pois.length === 0 && (
+          <div className="text-center py-12 mb-12">
+            <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">{t.noResults}</p>
+          </div>
+        )}
 
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span>{rec.distance} {t.distance}</span>
+        {/* Recommendations Grid */}
+        {!isLoading && pois.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {pois.map((poi, index) => {
+              const Icon = categoryIcons[poi.category] || MapPin;
+              const colorClasses = categoryColors[poi.category] || 'from-primary/20 to-primary/5 border-primary/30';
+              const iconColor = categoryIconColors[poi.category] || 'text-primary';
+              
+              return (
+                <motion.div
+                  key={poi.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`group relative p-6 rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300`}
+                >
+                  {/* Category Icon */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
+                      <Icon className={`w-6 h-6 ${iconColor}`} />
+                    </div>
+                    {poi.rating && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
+                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                        <span className="font-medium">{poi.rating}</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                    {language === 'ro' ? poi.name : poi.name_en}
+                  </h3>
                   
-                  {(rec.highlight || rec.highlightEn) && (
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                    {language === 'ro' 
+                      ? (poi.description || 'Fără descriere') 
+                      : (poi.description_en || 'No description')}
+                  </p>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between">
+                    {poi.address && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        <span className="truncate max-w-[120px]">{poi.address}</span>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
                       <Sparkles className="w-3 h-3" />
-                      {language === 'ro' ? rec.highlight : rec.highlightEn}
+                      {getCategoryLabel(poi.category)}
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Local Tips */}
         <motion.div
