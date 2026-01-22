@@ -18,9 +18,12 @@ import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 
+// Romanian phone regex: +40 7XX XXX XXX, 07XX XXX XXX, or variations
+const romanianPhoneRegex = /^(\+40\s?|0)(7\d{2})[\s.-]?\d{3}[\s.-]?\d{3}$/;
+
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
-  phone: z.string().trim().min(10, "Număr de telefon invalid").max(20),
+  phone: z.string().trim().regex(romanianPhoneRegex, "Număr de telefon invalid").max(20),
   email: z.string().trim().email("Email invalid").max(255),
   serviceType: z.string().min(1, "Selectează tipul de serviciu"),
   propertyType: z.string().optional(),

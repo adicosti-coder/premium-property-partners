@@ -11,9 +11,12 @@ import ConfettiEffect from "./ConfettiEffect";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
+// Romanian phone regex: +40 7XX XXX XXX, 07XX XXX XXX, or variations
+const romanianPhoneRegex = /^(\+40\s?|0)(7\d{2})[\s.-]?\d{3}[\s.-]?\d{3}$/;
+
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele este prea scurt").max(100),
-  phone: z.string().trim().min(10, "Număr invalid").max(20),
+  phone: z.string().trim().regex(romanianPhoneRegex, "Număr de telefon invalid").max(20),
   propertyType: z.string().min(1, "Selectați tipul"),
   listingUrl: z.string().trim().url("Link invalid").max(500).optional().or(z.literal("")),
 });
@@ -25,6 +28,7 @@ const QuickLeadForm = () => {
   const [propertyType, setPropertyType] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -33,19 +37,33 @@ const QuickLeadForm = () => {
     if (listingUrlError) setListingUrlError("");
   };
 
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    if (phoneError) setPhoneError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setListingUrlError("");
+    setPhoneError("");
+    e.preventDefault();
+    setListingUrlError("");
 
-    const validation = formSchema.safeParse({ name, phone, propertyType, listingUrl: listingUrl.trim() || undefined });
+    const validation = formSchema.safeParse({ name, phone: phone.trim().replace(/\s+/g, " "), propertyType, listingUrl: listingUrl.trim() || undefined });
     if (!validation.success) {
       const urlError = validation.error.errors.find(e => e.path[0] === "listingUrl");
+      const phoneErr = validation.error.errors.find(e => e.path[0] === "phone");
       if (urlError) {
         setListingUrlError(t.quickLeadForm?.invalidUrl || "Link invalid");
       }
+      if (phoneErr) {
+        setPhoneError(t.quickLeadForm?.invalidPhone || "Număr invalid");
+      }
       toast({
         title: t.quickLeadForm?.fillAllFields || "Completează toate câmpurile",
-        description: t.quickLeadForm?.fillAllFieldsMessage || "Te rugăm să completezi corect toate câmpurile.",
+        description: phoneErr 
+          ? (t.quickLeadForm?.invalidPhoneMessage || "Format: +40 7XX XXX XXX sau 07XX XXX XXX")
+          : (t.quickLeadForm?.fillAllFieldsMessage || "Te rugăm să completezi corect toate câmpurile."),
         variant: "destructive",
       });
       return;
@@ -174,10 +192,13 @@ const QuickLeadForm = () => {
                   type="tel"
                   placeholder={t.quickLeadForm?.phonePlaceholder || "Telefon / WhatsApp"}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  className={`pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary ${phoneError ? "ring-1 ring-destructive" : ""}`}
                   maxLength={20}
                 />
+                {phoneError && (
+                  <p className="absolute -bottom-5 left-0 text-xs text-destructive">{phoneError}</p>
+                )}
               </div>
               
               {/* Property Type Select */}
