@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UtensilsCrossed, 
   Coffee, 
@@ -20,11 +20,16 @@ import {
   Clock,
   ExternalLink,
   Sparkles,
-  Loader2
+  Loader2,
+  Search,
+  X,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 interface POI {
   id: string;
@@ -43,8 +48,10 @@ interface POI {
 const CityGuideSection: React.FC = () => {
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Fetch POIs from Supabase
+  // Fetch ALL POIs from Supabase (removed limit for filtering)
   const { data: pois = [], isLoading } = useQuery({
     queryKey: ['city-guide-pois'],
     queryFn: async () => {
@@ -52,8 +59,7 @@ const CityGuideSection: React.FC = () => {
         .from('points_of_interest')
         .select('*')
         .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .limit(6);
+        .order('display_order', { ascending: true });
       
       if (error) throw error;
       return data as POI[];
@@ -90,6 +96,7 @@ const CityGuideSection: React.FC = () => {
       titleHighlight: 'Timișoara',
       subtitle: 'Recomandările noastre pentru o experiență autentică în "Mica Vienă"',
       categories: {
+        all: 'Toate',
         restaurant: 'Restaurante',
         cafe: 'Cafenele',
         attraction: 'Atracții',
@@ -102,8 +109,12 @@ const CityGuideSection: React.FC = () => {
       },
       seeOnMap: 'Vezi pe Hartă',
       localTip: 'Sfat Local',
-      noResults: 'Nu există recomandări momentan',
+      noResults: 'Nu există recomandări pentru această căutare',
+      noResultsHint: 'Încearcă să cauți altceva sau selectează altă categorie',
       loading: 'Se încarcă recomandările...',
+      searchPlaceholder: 'Caută locații...',
+      clearFilters: 'Șterge filtrele',
+      resultsCount: 'locații găsite',
     },
     en: {
       badge: 'Local Guide',
@@ -111,6 +122,7 @@ const CityGuideSection: React.FC = () => {
       titleHighlight: 'Timișoara',
       subtitle: 'Our recommendations for an authentic experience in "Little Vienna"',
       categories: {
+        all: 'All',
         restaurant: 'Restaurants',
         cafe: 'Cafés',
         attraction: 'Attractions',
@@ -123,8 +135,12 @@ const CityGuideSection: React.FC = () => {
       },
       seeOnMap: 'See on Map',
       localTip: 'Local Tip',
-      noResults: 'No recommendations available',
+      noResults: 'No locations found for this search',
+      noResultsHint: 'Try searching for something else or select another category',
       loading: 'Loading recommendations...',
+      searchPlaceholder: 'Search locations...',
+      clearFilters: 'Clear filters',
+      resultsCount: 'locations found',
     }
   };
 
@@ -186,6 +202,45 @@ const CityGuideSection: React.FC = () => {
     return categories[category] || category;
   };
 
+  // Get unique categories from POIs
+  const availableCategories = useMemo(() => {
+    const cats = [...new Set(pois.map(poi => poi.category))];
+    return cats.sort();
+  }, [pois]);
+
+  // Filter POIs based on search and category
+  const filteredPois = useMemo(() => {
+    let filtered = pois;
+    
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter(poi => poi.category === selectedCategory);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(poi => {
+        const name = language === 'ro' ? poi.name : poi.name_en;
+        const description = language === 'ro' ? poi.description : poi.description_en;
+        return (
+          name.toLowerCase().includes(query) ||
+          (description && description.toLowerCase().includes(query)) ||
+          (poi.address && poi.address.toLowerCase().includes(query))
+        );
+      });
+    }
+    
+    return filtered;
+  }, [pois, selectedCategory, searchQuery, language]);
+
+  const hasActiveFilters = searchQuery.trim() || selectedCategory;
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory(null);
+  };
+
   return (
     <section 
       ref={animation.ref as React.RefObject<HTMLElement>}
@@ -197,7 +252,7 @@ const CityGuideSection: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <MapPin className="w-4 h-4 text-primary" />
@@ -215,6 +270,83 @@ const CityGuideSection: React.FC = () => {
             {t.subtitle}
           </p>
         </motion.div>
+
+        {/* Search and Filters */}
+        {!isLoading && pois.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-8 space-y-4"
+          >
+            {/* Search Input */}
+            <div className="relative max-w-md mx-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={t.searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-10 h-12 rounded-full bg-card border-border"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                variant={selectedCategory === null ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(null)}
+                className="rounded-full"
+              >
+                <Filter className="w-4 h-4 mr-1" />
+                {getCategoryLabel('all')}
+              </Button>
+              {availableCategories.map((category) => {
+                const Icon = categoryIcons[category] || MapPin;
+                const isSelected = selectedCategory === category;
+                return (
+                  <Button
+                    key={category}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(isSelected ? null : category)}
+                    className="rounded-full"
+                  >
+                    <Icon className="w-4 h-4 mr-1" />
+                    {getCategoryLabel(category)}
+                  </Button>
+                );
+              })}
+            </div>
+
+            {/* Results count and clear filters */}
+            {hasActiveFilters && (
+              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+                <span>
+                  <strong className="text-foreground">{filteredPois.length}</strong> {t.resultsCount}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-primary hover:text-primary"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  {t.clearFilters}
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Loading State */}
         {isLoading && (
@@ -237,7 +369,24 @@ const CityGuideSection: React.FC = () => {
           </div>
         )}
 
-        {/* No Results */}
+        {/* No Results - when filters produce no matches */}
+        {!isLoading && pois.length > 0 && filteredPois.length === 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 mb-12 bg-card rounded-2xl border border-border"
+          >
+            <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg font-medium text-foreground mb-2">{t.noResults}</p>
+            <p className="text-muted-foreground mb-4">{t.noResultsHint}</p>
+            <Button variant="outline" onClick={clearFilters}>
+              <X className="w-4 h-4 mr-2" />
+              {t.clearFilters}
+            </Button>
+          </motion.div>
+        )}
+
+        {/* No POIs at all */}
         {!isLoading && pois.length === 0 && (
           <div className="text-center py-12 mb-12">
             <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -246,84 +395,88 @@ const CityGuideSection: React.FC = () => {
         )}
 
         {/* Recommendations Grid */}
-        {!isLoading && pois.length > 0 && (
+        {!isLoading && filteredPois.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {pois.map((poi, index) => {
-              const Icon = categoryIcons[poi.category] || MapPin;
-              const colorClasses = categoryColors[poi.category] || 'from-primary/20 to-primary/5 border-primary/30';
-              const iconColor = categoryIconColors[poi.category] || 'text-primary';
-              
-              return (
-                <motion.div
-                  key={poi.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`group relative rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
-                >
-                  {/* Image */}
-                  {poi.image_url && (
-                    <div className="relative h-40 overflow-hidden">
-                      <img 
-                        src={poi.image_url} 
-                        alt={language === 'ro' ? poi.name : poi.name_en}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                      {poi.rating && (
-                        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
-                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                          <span className="font-medium">{poi.rating}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="p-6">
-                    {/* Category Icon - show only if no image */}
-                    {!poi.image_url && (
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
-                          <Icon className={`w-6 h-6 ${iconColor}`} />
-                        </div>
+            <AnimatePresence mode="popLayout">
+              {filteredPois.map((poi, index) => {
+                const Icon = categoryIcons[poi.category] || MapPin;
+                const colorClasses = categoryColors[poi.category] || 'from-primary/20 to-primary/5 border-primary/30';
+                const iconColor = categoryIconColors[poi.category] || 'text-primary';
+                
+                return (
+                  <motion.div
+                    key={poi.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className={`group relative rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
+                  >
+                    {/* Image */}
+                    {poi.image_url && (
+                      <div className="relative h-40 overflow-hidden">
+                        <img 
+                          src={poi.image_url} 
+                          alt={language === 'ro' ? poi.name : poi.name_en}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         {poi.rating && (
-                          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
+                          <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
                             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                             <span className="font-medium">{poi.rating}</span>
                           </div>
                         )}
                       </div>
                     )}
-
-                    {/* Content */}
-                    <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                      {language === 'ro' ? poi.name : poi.name_en}
-                    </h3>
                     
-                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                      {language === 'ro' 
-                        ? (poi.description || 'Fără descriere') 
-                        : (poi.description_en || 'No description')}
-                    </p>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between">
-                      {poi.address && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span className="truncate max-w-[120px]">{poi.address}</span>
+                    <div className="p-6">
+                      {/* Category Icon - show only if no image */}
+                      {!poi.image_url && (
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
+                            <Icon className={`w-6 h-6 ${iconColor}`} />
+                          </div>
+                          {poi.rating && (
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              <span className="font-medium">{poi.rating}</span>
+                            </div>
+                          )}
                         </div>
                       )}
+
+                      {/* Content */}
+                      <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                        {language === 'ro' ? poi.name : poi.name_en}
+                      </h3>
                       
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
-                        <Sparkles className="w-3 h-3" />
-                        {getCategoryLabel(poi.category)}
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                        {language === 'ro' 
+                          ? (poi.description || 'Fără descriere') 
+                          : (poi.description_en || 'No description')}
+                      </p>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between">
+                        {poi.address && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            <span className="truncate max-w-[120px]">{poi.address}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
+                          <Sparkles className="w-3 h-3" />
+                          {getCategoryLabel(poi.category)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
         )}
 
