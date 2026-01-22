@@ -11,25 +11,10 @@ import AnimationToggle from "./AnimationToggle";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
-  const [showBadge, setShowBadge] = useState(true);
   const { t, language } = useLanguage();
   const { favorites } = useFavorites();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Hide badge on scroll down
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    
-    const handleScrollBadge = () => {
-      const currentScrollY = window.scrollY;
-      setShowBadge(currentScrollY < 50 || currentScrollY < lastScrollY);
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScrollBadge, { passive: true });
-    return () => window.removeEventListener("scroll", handleScrollBadge);
-  }, []);
 
   // Track active section based on scroll position
   useEffect(() => {
@@ -108,8 +93,8 @@ const Header = () => {
               <span className="text-muted-foreground"> & </span>
               <span className="text-foreground">ApArt Hotel</span>
             </span>
-            <span className="hidden lg:block text-[9px] text-muted-foreground tracking-[0.2em] uppercase -mt-0.5">
-              Investiții · Property Management · Regim Hotelier
+            <span className="text-[9px] md:text-[10px] text-muted-foreground tracking-wide mt-0.5">
+              Vânzare · Administrare · Cazare <span className="text-primary/60">|</span> <span className="text-primary font-semibold">1 singur sistem</span>
             </span>
           </a>
           
@@ -261,25 +246,6 @@ const Header = () => {
         </div>
       </div>
       
-      {/* Centered badge below header */}
-      <div 
-        className={`glass border-b border-border/50 py-2 transition-all duration-300 ${
-          showBadge ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 py-0 border-b-0 overflow-hidden'
-        }`}
-      >
-        <div className="container mx-auto px-6 flex justify-center">
-          <div className="inline-flex flex-col items-center gap-1 px-5 py-2 rounded-2xl bg-primary/10 border border-primary/20 animate-badge-glow backdrop-blur-sm">
-            <span className="text-foreground/60 text-[10px] md:text-xs font-medium tracking-wide">
-              De la achiziție (imobiliare) la venit hotelier: administrare completă
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-foreground/80 text-xs font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
-              <span className="text-primary/50">|</span>
-              <span className="text-primary text-xs font-semibold">1 singur sistem</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </header>
   );
 };
