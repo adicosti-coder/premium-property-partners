@@ -13,6 +13,9 @@ import ConfettiEffect from "./ConfettiEffect";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
+// Romanian phone regex: +40 7XX XXX XXX, 07XX XXX XXX, or variations
+const romanianPhoneRegex = /^(\+40\s?|0)(7\d{2})[\s.-]?\d{3}[\s.-]?\d{3}$/;
+
 interface LeadCaptureFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,8 +47,14 @@ const LeadCaptureForm = ({
   const [propertyType, setPropertyType] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const handlePhoneChange = (value: string) => {
+    setWhatsappNumber(value);
+    if (phoneError) setPhoneError("");
+  };
 
   const handleListingUrlChange = (value: string) => {
     setListingUrl(value);
@@ -54,11 +63,25 @@ const LeadCaptureForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPhoneError("");
+    setListingUrlError("");
     
     if (!name.trim() || !whatsappNumber.trim() || !propertyArea || !propertyType) {
       toast({
         title: t.leadForm.fillAllFields,
         description: t.leadForm.fillAllFieldsMessage,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate Romanian phone number
+    const cleanPhone = whatsappNumber.trim().replace(/\s+/g, " ");
+    if (!romanianPhoneRegex.test(cleanPhone)) {
+      setPhoneError(t.leadForm.invalidPhone || "Număr de telefon invalid");
+      toast({
+        title: t.leadForm.invalidPhone || "Număr invalid",
+        description: t.leadForm.invalidPhoneMessage || "Formatul corect: +40 7XX XXX XXX sau 07XX XXX XXX",
         variant: "destructive",
       });
       return;
@@ -183,10 +206,14 @@ const LeadCaptureForm = ({
                 type="tel"
                 placeholder={t.leadForm.whatsappPlaceholder}
                 value={whatsappNumber}
-                onChange={(e) => setWhatsappNumber(e.target.value)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 required
                 maxLength={20}
+                className={phoneError ? "border-destructive" : ""}
               />
+              {phoneError && (
+                <p className="text-sm text-destructive">{phoneError}</p>
+              )}
             </div>
 
             <div className="space-y-2">
