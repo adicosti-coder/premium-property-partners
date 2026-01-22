@@ -56,6 +56,9 @@ import {
   ChevronUp,
   User,
   Mail,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -120,6 +123,7 @@ const SharedLinksStats = () => {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
   const [importerFilter, setImporterFilter] = useState<'all' | 'with-email' | 'anonymous'>('all');
+  const [importerSort, setImporterSort] = useState<'date-desc' | 'date-asc' | 'count-desc' | 'count-asc'>('date-desc');
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -189,6 +193,12 @@ const SharedLinksStats = () => {
       filterWithEmail: "Cu email",
       filterAnonymous: "Anonimi",
       contactEmail: "Trimite email",
+      sortByDate: "După dată",
+      sortByCount: "După nr. locații",
+      newest: "Cele mai noi",
+      oldest: "Cele mai vechi",
+      mostLocations: "Cele mai multe",
+      fewestLocations: "Cele mai puține",
     },
     en: {
       title: "Sharing Statistics",
@@ -247,6 +257,12 @@ const SharedLinksStats = () => {
       filterWithEmail: "With email",
       filterAnonymous: "Anonymous",
       contactEmail: "Send email",
+      sortByDate: "By date",
+      sortByCount: "By locations",
+      newest: "Newest",
+      oldest: "Oldest",
+      mostLocations: "Most",
+      fewestLocations: "Fewest",
     },
   };
 
@@ -1058,6 +1074,37 @@ const SharedLinksStats = () => {
                                       );
                                     })()}
                                   </div>
+                                  {/* Sort controls */}
+                                  <div className="flex items-center gap-2 pb-2 border-b mb-3">
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <ArrowUpDown className="w-3 h-3" />
+                                      {language === 'ro' ? 'Sortare:' : 'Sort:'}
+                                    </span>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant={importerSort.startsWith('date') ? 'secondary' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setImporterSort(importerSort === 'date-desc' ? 'date-asc' : 'date-desc')}
+                                        className="text-xs h-6 px-2"
+                                      >
+                                        <Calendar className="w-3 h-3 mr-1" />
+                                        {t.sortByDate}
+                                        {importerSort === 'date-desc' && <ArrowDown className="w-3 h-3 ml-1" />}
+                                        {importerSort === 'date-asc' && <ArrowUp className="w-3 h-3 ml-1" />}
+                                      </Button>
+                                      <Button
+                                        variant={importerSort.startsWith('count') ? 'secondary' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setImporterSort(importerSort === 'count-desc' ? 'count-asc' : 'count-desc')}
+                                        className="text-xs h-6 px-2"
+                                      >
+                                        <BarChart3 className="w-3 h-3 mr-1" />
+                                        {t.sortByCount}
+                                        {importerSort === 'count-desc' && <ArrowDown className="w-3 h-3 ml-1" />}
+                                        {importerSort === 'count-asc' && <ArrowUp className="w-3 h-3 ml-1" />}
+                                      </Button>
+                                    </div>
+                                  </div>
                                   {(() => {
                                     // Calculate counts for each category
                                     const withEmailCount = importers.filter(i => !!i.importer_email).length;
@@ -1068,20 +1115,38 @@ const SharedLinksStats = () => {
                                       return <p className="text-sm text-muted-foreground">{t.noImporters}</p>;
                                     }
                                     
-                                    const filteredImporters = importers.filter((importer) => {
+                                    // Filter
+                                    let filteredImporters = importers.filter((importer) => {
                                       if (importerFilter === 'all') return true;
                                       if (importerFilter === 'with-email') return !!importer.importer_email;
                                       if (importerFilter === 'anonymous') return !importer.importer_email && !importer.importer_name;
                                       return true;
                                     });
-                                      
-                                      if (filteredImporters.length === 0) {
-                                        return (
-                                          <p className="text-sm text-muted-foreground">{t.noImporters}</p>
-                                        );
+                                    
+                                    // Sort
+                                    filteredImporters = [...filteredImporters].sort((a, b) => {
+                                      if (importerSort === 'date-desc') {
+                                        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                                       }
+                                      if (importerSort === 'date-asc') {
+                                        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                                      }
+                                      if (importerSort === 'count-desc') {
+                                        return b.imported_count - a.imported_count;
+                                      }
+                                      if (importerSort === 'count-asc') {
+                                        return a.imported_count - b.imported_count;
+                                      }
+                                      return 0;
+                                    });
                                       
+                                    if (filteredImporters.length === 0) {
                                       return (
+                                        <p className="text-sm text-muted-foreground">{t.noImporters}</p>
+                                      );
+                                    }
+                                      
+                                    return (
                                         <div className="grid gap-2 max-h-60 overflow-y-auto">
                                           {filteredImporters.map((importer) => (
                                             <div
