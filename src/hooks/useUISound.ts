@@ -3,16 +3,41 @@ import { useCallback, useRef } from "react";
 type SoundType = "click" | "success" | "error" | "pop";
 
 interface UseUISoundOptions {
+  /** Override the global enabled preference */
   enabled?: boolean;
+  /** Volume level (0-1), defaults to global preference or 0.15 */
   volume?: number;
+}
+
+// Storage keys for global preferences
+const STORAGE_KEY = "ui-sound-preference";
+const VOLUME_STORAGE_KEY = "ui-sound-volume";
+
+/**
+ * Get global sound preference from localStorage
+ */
+function getGlobalSoundEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored !== null ? stored === "true" : true;
+}
+
+/**
+ * Get global volume from localStorage
+ */
+function getGlobalVolume(): number {
+  if (typeof window === "undefined") return 0.15;
+  const stored = localStorage.getItem(VOLUME_STORAGE_KEY);
+  return stored !== null ? parseFloat(stored) : 0.15;
 }
 
 /**
  * A hook for playing subtle UI feedback sounds using the Web Audio API.
  * No external audio files required - generates sounds programmatically.
+ * 
+ * Respects global sound preference from localStorage unless overridden.
  */
 export function useUISound(options: UseUISoundOptions = {}) {
-  const { enabled = true, volume = 0.15 } = options;
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const getAudioContext = useCallback(() => {
@@ -24,6 +49,10 @@ export function useUISound(options: UseUISoundOptions = {}) {
 
   const playSound = useCallback(
     (type: SoundType = "click") => {
+      // Check global preference unless explicitly overridden
+      const enabled = options.enabled !== undefined ? options.enabled : getGlobalSoundEnabled();
+      const volume = options.volume !== undefined ? options.volume : getGlobalVolume();
+      
       if (!enabled) return;
 
       try {
@@ -86,7 +115,7 @@ export function useUISound(options: UseUISoundOptions = {}) {
         console.debug("Audio not supported:", error);
       }
     },
-    [enabled, volume, getAudioContext]
+    [options.enabled, options.volume, getAudioContext]
   );
 
   return { playSound };

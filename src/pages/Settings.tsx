@@ -22,7 +22,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2, Shield } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2, Shield, Volume2 } from "lucide-react";
+import { useUISound } from "@/hooks/useUISound";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { z } from "zod";
@@ -52,6 +53,14 @@ const Settings = () => {
   const [shareEmailOnImport, setShareEmailOnImport] = useState(false);
   const [savingShareEmail, setSavingShareEmail] = useState(false);
   
+  // Sound preference state
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem('ui-sound-preference');
+    return stored !== null ? stored === 'true' : true;
+  });
+  
+  // Sound hook for preview
+  const { playSound } = useUISound();
 
   const t = {
     ro: {
@@ -73,6 +82,13 @@ const Settings = () => {
       passwordMismatch: "Parolele nu coincid",
       passwordTooShort: "Parola trebuie să aibă cel puțin 8 caractere",
       
+      // Sound section
+      soundSection: "Sunete UI",
+      soundDescription: "Controlează feedback-ul audio pentru interacțiuni",
+      soundEnabled: "Activează sunetele",
+      soundEnabledDesc: "Redă sunete subtile pentru acțiuni precum type-ahead și selecții",
+      soundSaved: "Preferințele de sunet au fost salvate!",
+      soundPreview: "Previzualizare",
       
       // Notifications section
       notificationsSection: "Notificări",
@@ -129,6 +145,13 @@ const Settings = () => {
       passwordMismatch: "Passwords don't match",
       passwordTooShort: "Password must be at least 8 characters",
       
+      // Sound section
+      soundSection: "UI Sounds",
+      soundDescription: "Control audio feedback for interactions",
+      soundEnabled: "Enable sounds",
+      soundEnabledDesc: "Play subtle sounds for actions like type-ahead and selections",
+      soundSaved: "Sound preferences saved!",
+      soundPreview: "Preview",
       
       // Notifications section
       notificationsSection: "Notifications",
@@ -485,6 +508,65 @@ const Settings = () => {
                   <SelectItem value="en">{text.english}</SelectItem>
                 </SelectContent>
               </Select>
+            </CardContent>
+          </Card>
+
+          {/* Sound Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Volume2 className="w-5 h-5" />
+                {text.soundSection}
+              </CardTitle>
+              <CardDescription>{text.soundDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>{text.soundEnabled}</Label>
+                  <p className="text-sm text-muted-foreground">{text.soundEnabledDesc}</p>
+                </div>
+                <Switch
+                  checked={soundEnabled}
+                  onCheckedChange={(enabled) => {
+                    setSoundEnabled(enabled);
+                    localStorage.setItem('ui-sound-preference', String(enabled));
+                    toast.success(text.soundSaved);
+                    if (enabled) {
+                      // Play a preview sound when enabling
+                      setTimeout(() => playSound("success"), 100);
+                    }
+                  }}
+                />
+              </div>
+              {soundEnabled && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => playSound("click")}
+                  >
+                    Click
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => playSound("pop")}
+                  >
+                    Pop
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => playSound("success")}
+                  >
+                    Success
+                  </Button>
+                  <span className="text-xs text-muted-foreground ml-2">
+                    {text.soundPreview}
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
