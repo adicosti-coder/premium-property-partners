@@ -1012,48 +1012,68 @@ const SharedLinksStats = () => {
                                       <Users className="w-4 h-4" />
                                       {t.importers}
                                     </div>
-                                    {importers.length > 0 && (
-                                      <div className="flex gap-1">
-                                        <Button
-                                          variant={importerFilter === 'all' ? 'secondary' : 'ghost'}
-                                          size="sm"
-                                          onClick={() => setImporterFilter('all')}
-                                          className="text-xs h-7 px-2"
-                                        >
-                                          <Users className="w-3 h-3 mr-1" />
-                                          {t.filterAll}
-                                        </Button>
-                                        <Button
-                                          variant={importerFilter === 'with-email' ? 'secondary' : 'ghost'}
-                                          size="sm"
-                                          onClick={() => setImporterFilter('with-email')}
-                                          className="text-xs h-7 px-2"
-                                        >
-                                          <Mail className="w-3 h-3 mr-1" />
-                                          {t.filterWithEmail}
-                                        </Button>
-                                        <Button
-                                          variant={importerFilter === 'anonymous' ? 'secondary' : 'ghost'}
-                                          size="sm"
-                                          onClick={() => setImporterFilter('anonymous')}
-                                          className="text-xs h-7 px-2"
-                                        >
-                                          <User className="w-3 h-3 mr-1" />
-                                          {t.filterAnonymous}
-                                        </Button>
-                                      </div>
-                                    )}
+                                    {importers.length > 0 && (() => {
+                                      const withEmailCount = importers.filter(i => !!i.importer_email).length;
+                                      const anonymousCount = importers.filter(i => !i.importer_email && !i.importer_name).length;
+                                      
+                                      return (
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant={importerFilter === 'all' ? 'secondary' : 'ghost'}
+                                            size="sm"
+                                            onClick={() => setImporterFilter('all')}
+                                            className="text-xs h-7 px-2"
+                                          >
+                                            <Users className="w-3 h-3 mr-1" />
+                                            {t.filterAll}
+                                            <Badge variant="outline" className="ml-1.5 h-4 px-1 text-[10px] font-medium">
+                                              {importers.length}
+                                            </Badge>
+                                          </Button>
+                                          <Button
+                                            variant={importerFilter === 'with-email' ? 'secondary' : 'ghost'}
+                                            size="sm"
+                                            onClick={() => setImporterFilter('with-email')}
+                                            className="text-xs h-7 px-2"
+                                          >
+                                            <Mail className="w-3 h-3 mr-1" />
+                                            {t.filterWithEmail}
+                                            <Badge variant="outline" className="ml-1.5 h-4 px-1 text-[10px] font-medium">
+                                              {withEmailCount}
+                                            </Badge>
+                                          </Button>
+                                          <Button
+                                            variant={importerFilter === 'anonymous' ? 'secondary' : 'ghost'}
+                                            size="sm"
+                                            onClick={() => setImporterFilter('anonymous')}
+                                            className="text-xs h-7 px-2"
+                                          >
+                                            <User className="w-3 h-3 mr-1" />
+                                            {t.filterAnonymous}
+                                            <Badge variant="outline" className="ml-1.5 h-4 px-1 text-[10px] font-medium">
+                                              {anonymousCount}
+                                            </Badge>
+                                          </Button>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
-                                  {importers.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">{t.noImporters}</p>
-                                  ) : (
-                                    (() => {
-                                      const filteredImporters = importers.filter((importer) => {
-                                        if (importerFilter === 'all') return true;
-                                        if (importerFilter === 'with-email') return !!importer.importer_email;
-                                        if (importerFilter === 'anonymous') return !importer.importer_email && !importer.importer_name;
-                                        return true;
-                                      });
+                                  {(() => {
+                                    // Calculate counts for each category
+                                    const withEmailCount = importers.filter(i => !!i.importer_email).length;
+                                    const anonymousCount = importers.filter(i => !i.importer_email && !i.importer_name).length;
+                                    const allCount = importers.length;
+                                    
+                                    if (allCount === 0) {
+                                      return <p className="text-sm text-muted-foreground">{t.noImporters}</p>;
+                                    }
+                                    
+                                    const filteredImporters = importers.filter((importer) => {
+                                      if (importerFilter === 'all') return true;
+                                      if (importerFilter === 'with-email') return !!importer.importer_email;
+                                      if (importerFilter === 'anonymous') return !importer.importer_email && !importer.importer_name;
+                                      return true;
+                                    });
                                       
                                       if (filteredImporters.length === 0) {
                                         return (
@@ -1129,8 +1149,7 @@ const SharedLinksStats = () => {
                                           ))}
                                         </div>
                                       );
-                                    })()
-                                  )}
+                                    })()}
                                 </div>
                               </TableCell>
                             </TableRow>
