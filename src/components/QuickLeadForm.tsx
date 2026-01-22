@@ -15,6 +15,7 @@ const formSchema = z.object({
   name: z.string().trim().min(2, "Numele este prea scurt").max(100),
   phone: z.string().trim().min(10, "Număr invalid").max(20),
   propertyType: z.string().min(1, "Selectați tipul"),
+  listingUrl: z.string().trim().url("Link invalid").max(500).optional().or(z.literal("")),
 });
 
 const QuickLeadForm = () => {
@@ -23,14 +24,25 @@ const QuickLeadForm = () => {
   const [phone, setPhone] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [listingUrl, setListingUrl] = useState("");
+  const [listingUrlError, setListingUrlError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const handleListingUrlChange = (value: string) => {
+    setListingUrl(value);
+    if (listingUrlError) setListingUrlError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setListingUrlError("");
 
-    const validation = formSchema.safeParse({ name, phone, propertyType });
+    const validation = formSchema.safeParse({ name, phone, propertyType, listingUrl: listingUrl.trim() || undefined });
     if (!validation.success) {
+      const urlError = validation.error.errors.find(e => e.path[0] === "listingUrl");
+      if (urlError) {
+        setListingUrlError(t.quickLeadForm?.invalidUrl || "Link invalid");
+      }
       toast({
         title: t.quickLeadForm?.fillAllFields || "Completează toate câmpurile",
         description: t.quickLeadForm?.fillAllFieldsMessage || "Te rugăm să completezi corect toate câmpurile.",
@@ -192,10 +204,13 @@ const QuickLeadForm = () => {
                   type="url"
                   placeholder={t.quickLeadForm?.listingUrlPlaceholder || "Link anunț (opțional)"}
                   value={listingUrl}
-                  onChange={(e) => setListingUrl(e.target.value)}
-                  className="pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                  onChange={(e) => handleListingUrlChange(e.target.value)}
+                  className={`pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary ${listingUrlError ? "ring-1 ring-destructive" : ""}`}
                   maxLength={500}
                 />
+                {listingUrlError && (
+                  <p className="absolute -bottom-5 left-0 text-xs text-destructive">{listingUrlError}</p>
+                )}
               </div>
               
               {/* Submit Button */}

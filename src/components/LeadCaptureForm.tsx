@@ -8,7 +8,10 @@ import { FileText, Loader2, CheckCircle, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
+
+const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -40,8 +43,14 @@ const LeadCaptureForm = ({
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [listingUrl, setListingUrl] = useState("");
+  const [listingUrlError, setListingUrlError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleListingUrlChange = (value: string) => {
+    setListingUrl(value);
+    if (listingUrlError) setListingUrlError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +62,20 @@ const LeadCaptureForm = ({
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate listing URL if provided
+    if (listingUrl.trim()) {
+      const urlValidation = listingUrlSchema.safeParse(listingUrl.trim());
+      if (!urlValidation.success) {
+        setListingUrlError(t.leadForm.invalidUrl || "Link invalid");
+        toast({
+          title: t.leadForm.invalidUrl || "Link invalid",
+          description: t.leadForm.invalidUrlMessage || "Te rugăm să introduci un URL valid.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -206,9 +229,13 @@ const LeadCaptureForm = ({
                 type="url"
                 placeholder={t.leadForm.listingUrlPlaceholder}
                 value={listingUrl}
-                onChange={(e) => setListingUrl(e.target.value)}
+                onChange={(e) => handleListingUrlChange(e.target.value)}
                 maxLength={500}
+                className={listingUrlError ? "border-destructive" : ""}
               />
+              {listingUrlError && (
+                <p className="text-sm text-destructive">{listingUrlError}</p>
+              )}
             </div>
 
             <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
