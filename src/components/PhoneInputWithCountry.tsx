@@ -208,6 +208,8 @@ const PhoneInputWithCountry = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isOpen) return;
 
+    const PAGE_SIZE = 10;
+
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -219,6 +221,18 @@ const PhoneInputWithCountry = ({
         e.preventDefault();
         setHighlightedIndex(prev => 
           prev > 0 ? prev - 1 : flatCountryList.length - 1
+        );
+        break;
+      case 'PageDown':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          Math.min(prev + PAGE_SIZE, flatCountryList.length - 1)
+        );
+        break;
+      case 'PageUp':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          Math.max(prev - PAGE_SIZE, 0)
         );
         break;
       case 'Home':
