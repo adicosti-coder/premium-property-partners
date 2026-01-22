@@ -83,7 +83,7 @@ serve(async (req) => {
     // Get the shared link to find the original sharer
     const { data: sharedLink, error: linkError } = await supabase
       .from('shared_poi_links')
-      .select('user_id, import_count')
+      .select('id, user_id, import_count')
       .eq('share_code', shareCode)
       .single();
 
@@ -106,6 +106,18 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating import count:', updateError);
+    }
+
+    // Log import event for trends tracking
+    const { error: eventError } = await supabase
+      .from('poi_import_events')
+      .insert({
+        shared_link_id: sharedLink.id,
+        imported_count: importedCount || 1,
+      });
+
+    if (eventError) {
+      console.error('Error logging import event:', eventError);
     }
 
     // Get push subscription for the original sharer
