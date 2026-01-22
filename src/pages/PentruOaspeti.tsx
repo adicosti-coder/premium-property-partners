@@ -8,6 +8,7 @@ import CleaningStandards from "@/components/CleaningStandards";
 import PropertyMap from "@/components/PropertyMap";
 import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
 import QuickAvailabilitySearch from "@/components/QuickAvailabilitySearch";
+import CityGuideSection from "@/components/CityGuideSection";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
@@ -509,6 +510,9 @@ const PentruOaspeti = () => {
             </motion.div>
           </div>
         </section>
+
+        {/* City Guide Section */}
+        <CityGuideSection />
 
         {/* Facilities Showcase */}
         <FacilitiesShowcase />
