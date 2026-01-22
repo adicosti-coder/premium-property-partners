@@ -1,18 +1,11 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import QuickLeadForm from "@/components/QuickLeadForm";
-import QuickSelector from "@/components/QuickSelector";
 import PartnerLogos from "@/components/PartnerLogos";
-import Benefits from "@/components/Benefits";
-import HowItWorks from "@/components/HowItWorks";
-import WhyUs from "@/components/WhyUs";
-import OwnerBenefits from "@/components/OwnerBenefits";
+import TrustBadges from "@/components/TrustBadges";
 import ProfitCalculator from "@/components/ProfitCalculator";
-import RentalIncomeCalculator from "@/components/RentalIncomeCalculator";
 import PropertyGallery from "@/components/PropertyGallery";
 import Testimonials from "@/components/Testimonials";
-import GuestSection from "@/components/GuestSection";
-import CleaningStandards from "@/components/CleaningStandards";
 import FAQ from "@/components/FAQ";
 import ContactSection from "@/components/ContactSection";
 import CTA from "@/components/CTA";
@@ -20,19 +13,15 @@ import Footer from "@/components/Footer";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
-import AboutFounder from "@/components/AboutFounder";
 import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
-import StatsCounters from "@/components/StatsCounters";
-import ResidentialComplexes from "@/components/ResidentialComplexes";
-import PartnershipTimeline from "@/components/PartnershipTimeline";
-import DigitalHouseManual from "@/components/DigitalHouseManual";
-import TrustBadges from "@/components/TrustBadges";
-import FinancialTransparency from "@/components/FinancialTransparency";
-import VideoTestimonials from "@/components/VideoTestimonials";
-import FacilitiesShowcase from "@/components/FacilitiesShowcase";
-import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
 import QuickStatsBar from "@/components/QuickStatsBar";
+
+// Hub Teaser Components
+import ServicesOverview from "@/components/hub/ServicesOverview";
+import OwnersTeaser from "@/components/hub/OwnersTeaser";
+import GuestsTeaser from "@/components/hub/GuestsTeaser";
+import AboutTeaser from "@/components/hub/AboutTeaser";
 
 const Index = () => {
   return (
@@ -41,38 +30,55 @@ const Index = () => {
       <Header />
       <QuickStatsBar />
       <main className="pt-10">
+        {/* Hero - Entry Point */}
         <Hero />
+        
+        {/* Quick Lead Capture */}
         <QuickLeadForm />
+        
+        {/* Trust Elements */}
         <PartnerLogos />
-        <section id="beneficii">
-          <Benefits />
-        </section>
-        <OwnerBenefits />
         <TrustBadges />
-        <FinancialTransparency />
-        <PartnershipTimeline />
-        <ProfitCalculator />
-        <RentalIncomeCalculator />
-        <section id="cum-functioneaza">
-          <HowItWorks />
+        
+        {/* Services Overview - Hub Navigation */}
+        <ServicesOverview />
+        
+        {/* Owners Teaser Section */}
+        <section id="beneficii">
+          <OwnersTeaser />
         </section>
-        <section id="de-ce-noi">
-          <WhyUs />
+        
+        {/* Calculator - Keep full version as it's a key conversion tool */}
+        <section id="calculator">
+          <ProfitCalculator />
         </section>
-        <PropertyGallery />
-        <FacilitiesShowcase />
-        <InteractiveMapWithPOI />
-        <ResidentialComplexes />
-        <StatsCounters />
+        
+        {/* Guests Teaser Section with Property Preview */}
+        <section id="oaspeti-preview">
+          <GuestsTeaser />
+        </section>
+        
+        {/* Property Portfolio - Keep as showcase */}
+        <section id="portofoliu">
+          <PropertyGallery />
+        </section>
+        
+        {/* Social Proof */}
         <Testimonials />
-        <VideoTestimonials />
-        <AboutFounder />
+        
+        {/* About Teaser */}
+        <AboutTeaser />
+        
+        {/* Blog Preview */}
         <BlogPreview />
-        <GuestSection />
-        <DigitalHouseManual />
-        <CleaningStandards />
+        
+        {/* FAQ - Keep for SEO */}
         <FAQ />
+        
+        {/* Contact */}
         <ContactSection />
+        
+        {/* Final CTA */}
         <CTA />
       </main>
       <Footer />
