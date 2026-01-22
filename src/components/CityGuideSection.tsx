@@ -23,7 +23,10 @@ import {
   Loader2,
   Search,
   X,
-  Filter
+  Filter,
+  ArrowUpDown,
+  SortAsc,
+  SortDesc
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +53,7 @@ const CityGuideSection: React.FC = () => {
   const animation = useScrollAnimation({ threshold: 0.1 });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'default' | 'name' | 'rating'>('default');
 
   // Fetch ALL POIs from Supabase (removed limit for filtering)
   const { data: pois = [], isLoading } = useQuery({
@@ -115,6 +119,10 @@ const CityGuideSection: React.FC = () => {
       searchPlaceholder: 'Caută locații...',
       clearFilters: 'Șterge filtrele',
       resultsCount: 'locații găsite',
+      sortBy: 'Sortează după',
+      sortDefault: 'Ordine implicită',
+      sortName: 'Nume',
+      sortRating: 'Rating',
     },
     en: {
       badge: 'Local Guide',
@@ -141,6 +149,10 @@ const CityGuideSection: React.FC = () => {
       searchPlaceholder: 'Search locations...',
       clearFilters: 'Clear filters',
       resultsCount: 'locations found',
+      sortBy: 'Sort by',
+      sortDefault: 'Default order',
+      sortName: 'Name',
+      sortRating: 'Rating',
     }
   };
 
@@ -208,7 +220,7 @@ const CityGuideSection: React.FC = () => {
     return cats.sort();
   }, [pois]);
 
-  // Filter POIs based on search and category
+  // Filter and sort POIs based on search, category, and sort option
   const filteredPois = useMemo(() => {
     let filtered = pois;
     
@@ -231,14 +243,31 @@ const CityGuideSection: React.FC = () => {
       });
     }
     
+    // Sort results
+    if (sortBy === 'name') {
+      filtered = [...filtered].sort((a, b) => {
+        const nameA = language === 'ro' ? a.name : a.name_en;
+        const nameB = language === 'ro' ? b.name : b.name_en;
+        return nameA.localeCompare(nameB, language === 'ro' ? 'ro' : 'en');
+      });
+    } else if (sortBy === 'rating') {
+      filtered = [...filtered].sort((a, b) => {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        return ratingB - ratingA; // Descending (highest rating first)
+      });
+    }
+    // Default: keep display_order from database
+    
     return filtered;
-  }, [pois, selectedCategory, searchQuery, language]);
+  }, [pois, selectedCategory, searchQuery, language, sortBy]);
 
-  const hasActiveFilters = searchQuery.trim() || selectedCategory;
+  const hasActiveFilters = searchQuery.trim() || selectedCategory || sortBy !== 'default';
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory(null);
+    setSortBy('default');
   };
 
   return (
@@ -326,6 +355,42 @@ const CityGuideSection: React.FC = () => {
                   </Button>
                 );
               })}
+            </div>
+
+            {/* Sort Options */}
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <ArrowUpDown className="w-4 h-4" />
+                {t.sortBy}:
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  variant={sortBy === 'default' ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setSortBy('default')}
+                  className="text-xs"
+                >
+                  {t.sortDefault}
+                </Button>
+                <Button
+                  variant={sortBy === 'name' ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setSortBy('name')}
+                  className="text-xs"
+                >
+                  <SortAsc className="w-3 h-3 mr-1" />
+                  {t.sortName}
+                </Button>
+                <Button
+                  variant={sortBy === 'rating' ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setSortBy('rating')}
+                  className="text-xs"
+                >
+                  <Star className="w-3 h-3 mr-1" />
+                  {t.sortRating}
+                </Button>
+              </div>
             </div>
 
             {/* Results count and clear filters */}
