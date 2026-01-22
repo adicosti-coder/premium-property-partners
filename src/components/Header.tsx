@@ -146,7 +146,7 @@ const Header = () => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="relative text-muted-foreground hover:text-foreground"
+                  className="relative text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(0_80%_50%/0.3)]"
                 >
                   <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
@@ -165,7 +165,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
               >
                 <Shield className="w-4 h-4 mr-2" />
                 Admin
@@ -175,7 +175,7 @@ const Header = () => {
             <Button 
               variant="default" 
               size="default" 
-              className="hidden lg:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0"
+              className="hidden lg:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/40"
               onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
             >
               <span className="mr-1.5">🏠</span>
