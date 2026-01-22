@@ -7,6 +7,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import AnimationToggle from "./AnimationToggle";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -193,61 +194,79 @@ const Header = () => {
         </div>
 
         {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-border animate-menu-slide-down origin-top">
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link, index) => {
-                const isActive = activeSection === link.href;
-                const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
-                const activeClasses = isActive 
-                  ? "text-primary font-semibold translate-x-2 scale-105 animate-glow-pulse before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
-                  : "text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.nav 
+              className="md:hidden py-4 border-t border-border origin-top overflow-hidden"
+              initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
+              animate={{ opacity: 1, height: "auto", scaleY: 1 }}
+              exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="flex flex-col gap-4">
+                {navLinks.map((link, index) => {
+                  const isActive = activeSection === link.href;
+                  const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
+                  const activeClasses = isActive 
+                    ? "text-primary font-semibold translate-x-2 scale-105 animate-glow-pulse before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
+                    : "text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
 
-                return link.isHome ? (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={handleHomeClick}
-                    className={`${baseClasses} ${activeClasses} animate-menu-item-slide`}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    {link.label}
-                  </a>
-                ) : link.isPage ? (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className={`${baseClasses} ${activeClasses} animate-menu-item-slide`}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className={`${baseClasses} ${activeClasses} animate-menu-item-slide`}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                );
-              })}
-              
-              {/* Mobile settings row */}
-              <div className="flex items-center gap-2 pt-4 border-t border-border">
-                <span className="text-xs text-muted-foreground mr-2">
-                  {language === 'ro' ? 'Setări:' : 'Settings:'}
-                </span>
-                <AnimationToggle />
-                <ThemeToggle />
-                <LanguageSwitcher />
+                  return (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                    >
+                      {link.isHome ? (
+                        <a
+                          href={link.href}
+                          onClick={handleHomeClick}
+                          className={`${baseClasses} ${activeClasses}`}
+                        >
+                          {link.label}
+                        </a>
+                      ) : link.isPage ? (
+                        <Link
+                          to={link.href}
+                          className={`${baseClasses} ${activeClasses}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {link.label}
+                        </Link>
+                      ) : (
+                        <a
+                          href={link.href}
+                          className={`${baseClasses} ${activeClasses}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {link.label}
+                        </a>
+                      )}
+                    </motion.div>
+                  );
+                })}
+                
+                {/* Mobile settings row */}
+                <motion.div 
+                  className="flex items-center gap-2 pt-4 border-t border-border"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
+                >
+                  <span className="text-xs text-muted-foreground mr-2">
+                    {language === 'ro' ? 'Setări:' : 'Settings:'}
+                  </span>
+                  <AnimationToggle />
+                  <ThemeToggle />
+                  <LanguageSwitcher />
+                </motion.div>
               </div>
-            </div>
-          </nav>
-        )}
+            </motion.nav>
+          )}
+        </AnimatePresence>
         </div>
       </div>
       
