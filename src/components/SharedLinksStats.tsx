@@ -119,6 +119,7 @@ const SharedLinksStats = () => {
   const [editDescription, setEditDescription] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
+  const [importerFilter, setImporterFilter] = useState<'all' | 'with-email' | 'anonymous'>('all');
 
   const dateLocale = language === "ro" ? ro : enUS;
 
@@ -184,6 +185,9 @@ const SharedLinksStats = () => {
       noImporters: "Nimeni nu a importat încă",
       showImporters: "Vezi cine a importat",
       hideImporters: "Ascunde lista",
+      filterAll: "Toți",
+      filterWithEmail: "Cu email",
+      filterAnonymous: "Anonimi",
       contactEmail: "Trimite email",
     },
     en: {
@@ -239,6 +243,9 @@ const SharedLinksStats = () => {
       noImporters: "No one has imported yet",
       showImporters: "Show who imported",
       hideImporters: "Hide list",
+      filterAll: "All",
+      filterWithEmail: "With email",
+      filterAnonymous: "Anonymous",
       contactEmail: "Send email",
     },
   };
@@ -1000,79 +1007,129 @@ const SharedLinksStats = () => {
                             <TableRow key={`${link.id}-importers`}>
                               <TableCell colSpan={5} className="bg-muted/30 p-4">
                                 <div className="space-y-3">
-                                  <div className="flex items-center gap-2 text-sm font-medium">
-                                    <Users className="w-4 h-4" />
-                                    {t.importers}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                      <Users className="w-4 h-4" />
+                                      {t.importers}
+                                    </div>
+                                    {importers.length > 0 && (
+                                      <div className="flex gap-1">
+                                        <Button
+                                          variant={importerFilter === 'all' ? 'secondary' : 'ghost'}
+                                          size="sm"
+                                          onClick={() => setImporterFilter('all')}
+                                          className="text-xs h-7 px-2"
+                                        >
+                                          <Users className="w-3 h-3 mr-1" />
+                                          {t.filterAll}
+                                        </Button>
+                                        <Button
+                                          variant={importerFilter === 'with-email' ? 'secondary' : 'ghost'}
+                                          size="sm"
+                                          onClick={() => setImporterFilter('with-email')}
+                                          className="text-xs h-7 px-2"
+                                        >
+                                          <Mail className="w-3 h-3 mr-1" />
+                                          {t.filterWithEmail}
+                                        </Button>
+                                        <Button
+                                          variant={importerFilter === 'anonymous' ? 'secondary' : 'ghost'}
+                                          size="sm"
+                                          onClick={() => setImporterFilter('anonymous')}
+                                          className="text-xs h-7 px-2"
+                                        >
+                                          <User className="w-3 h-3 mr-1" />
+                                          {t.filterAnonymous}
+                                        </Button>
+                                      </div>
+                                    )}
                                   </div>
                                   {importers.length === 0 ? (
                                     <p className="text-sm text-muted-foreground">{t.noImporters}</p>
                                   ) : (
-                                    <div className="grid gap-2 max-h-60 overflow-y-auto">
-                                      {importers.map((importer) => (
-                                        <div
-                                          key={importer.id}
-                                          className="flex items-center justify-between p-2 bg-background rounded-lg border"
-                                        >
-                                          <div className="flex items-center gap-3">
-                                            {importer.importer_avatar ? (
-                                              <img 
-                                                src={importer.importer_avatar} 
-                                                alt={importer.importer_name || t.anonymous}
-                                                className="w-8 h-8 rounded-full object-cover"
-                                              />
-                                            ) : (
-                                              <div className="p-1.5 rounded-full bg-muted">
-                                                <User className="w-4 h-4 text-muted-foreground" />
+                                    (() => {
+                                      const filteredImporters = importers.filter((importer) => {
+                                        if (importerFilter === 'all') return true;
+                                        if (importerFilter === 'with-email') return !!importer.importer_email;
+                                        if (importerFilter === 'anonymous') return !importer.importer_email && !importer.importer_name;
+                                        return true;
+                                      });
+                                      
+                                      if (filteredImporters.length === 0) {
+                                        return (
+                                          <p className="text-sm text-muted-foreground">{t.noImporters}</p>
+                                        );
+                                      }
+                                      
+                                      return (
+                                        <div className="grid gap-2 max-h-60 overflow-y-auto">
+                                          {filteredImporters.map((importer) => (
+                                            <div
+                                              key={importer.id}
+                                              className="flex items-center justify-between p-2 bg-background rounded-lg border"
+                                            >
+                                              <div className="flex items-center gap-3">
+                                                {importer.importer_avatar ? (
+                                                  <img 
+                                                    src={importer.importer_avatar} 
+                                                    alt={importer.importer_name || t.anonymous}
+                                                    className="w-8 h-8 rounded-full object-cover"
+                                                  />
+                                                ) : (
+                                                  <div className="p-1.5 rounded-full bg-muted">
+                                                    <User className="w-4 h-4 text-muted-foreground" />
+                                                  </div>
+                                                )}
+                                                <div>
+                                                  <p className="text-sm font-medium">
+                                                    {importer.importer_name || t.anonymous}
+                                                  </p>
+                                                  {importer.importer_email && (
+                                                    <p className="text-xs text-primary">
+                                                      {importer.importer_email}
+                                                    </p>
+                                                  )}
+                                                  <p className="text-xs text-muted-foreground">
+                                                    {formatDistanceToNow(new Date(importer.created_at), {
+                                                      addSuffix: true,
+                                                      locale: dateLocale,
+                                                    })}
+                                                  </p>
+                                                </div>
                                               </div>
-                                            )}
-                                            <div>
-                                              <p className="text-sm font-medium">
-                                                {importer.importer_name || t.anonymous}
-                                              </p>
-                                              {importer.importer_email && (
-                                                <p className="text-xs text-primary">
-                                                  {importer.importer_email}
-                                                </p>
-                                              )}
-                                              <p className="text-xs text-muted-foreground">
-                                                {formatDistanceToNow(new Date(importer.created_at), {
-                                                  addSuffix: true,
-                                                  locale: dateLocale,
-                                                })}
-                                              </p>
+                                              <div className="flex items-center gap-2">
+                                                {importer.importer_email && (
+                                                  <TooltipProvider>
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <Button
+                                                          variant="outline"
+                                                          size="sm"
+                                                          className="h-7 w-7 p-0"
+                                                          asChild
+                                                        >
+                                                          <a 
+                                                            href={`mailto:${importer.importer_email}?subject=${encodeURIComponent(language === 'ro' ? 'Mulțumesc că ai importat locațiile mele!' : 'Thanks for importing my locations!')}`}
+                                                          >
+                                                            <Mail className="w-3.5 h-3.5" />
+                                                          </a>
+                                                        </Button>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        <p>{t.contactEmail}</p>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  </TooltipProvider>
+                                                )}
+                                                <Badge variant="secondary" className="text-xs">
+                                                  {importer.imported_count} {t.locationsImported}
+                                                </Badge>
+                                              </div>
                                             </div>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            {importer.importer_email && (
-                                              <TooltipProvider>
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
-                                                    <Button
-                                                      variant="outline"
-                                                      size="sm"
-                                                      className="h-7 w-7 p-0"
-                                                      asChild
-                                                    >
-                                                      <a 
-                                                        href={`mailto:${importer.importer_email}?subject=${encodeURIComponent(language === 'ro' ? 'Mulțumesc că ai importat locațiile mele!' : 'Thanks for importing my locations!')}`}
-                                                      >
-                                                        <Mail className="w-3.5 h-3.5" />
-                                                      </a>
-                                                    </Button>
-                                                  </TooltipTrigger>
-                                                  <TooltipContent>
-                                                    <p>{t.contactEmail}</p>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              </TooltipProvider>
-                                            )}
-                                            <Badge variant="secondary" className="text-xs">
-                                              {importer.imported_count} {t.locationsImported}
-                                            </Badge>
-                                          </div>
+                                          ))}
                                         </div>
-                                      ))}
-                                    </div>
+                                      );
+                                    })()
                                   )}
                                 </div>
                               </TableCell>
