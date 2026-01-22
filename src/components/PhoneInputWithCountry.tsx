@@ -48,8 +48,10 @@ const PhoneInputWithCountry = ({
   const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(getDefaultCountry());
   const [searchQuery, setSearchQuery] = useState("");
   const [hasUserSelected, setHasUserSelected] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   // Auto-detect country from geolocation
   const geoDetection = useGeoCountryDetection();
@@ -188,6 +190,62 @@ const PhoneInputWithCountry = ({
     return grouped;
   }, [filteredCountries]);
 
+  // Flat list of all filtered countries for keyboard navigation
+  const flatCountryList = useMemo(() => {
+    const list: CountryInfo[] = [];
+    for (const [, regionCountries] of groupedCountries) {
+      list.push(...regionCountries);
+    }
+    return list;
+  }, [groupedCountries]);
+
+  // Reset highlighted index when search query changes or dropdown opens/closes
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [searchQuery, isOpen]);
+
+  // Handle keyboard navigation in dropdown
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev < flatCountryList.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex(prev => 
+          prev > 0 ? prev - 1 : flatCountryList.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < flatCountryList.length) {
+          handleCountrySelect(flatCountryList[highlightedIndex]);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        setSearchQuery("");
+        buttonRef.current?.focus();
+        break;
+    }
+  };
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && listRef.current) {
+      const highlightedElement = listRef.current.querySelector(`[data-index="${highlightedIndex}"]`);
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [highlightedIndex]);
+
   // International validation
   const isValid = validatePhoneForCountry(value, selectedCountry);
   const hasValue = value && value.length > 3;
@@ -324,45 +382,59 @@ const PhoneInputWithCountry = ({
                 placeholder={language === 'en' ? 'Search country...' : 'Caută țara...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="h-8 text-sm"
                 autoFocus
               />
             </div>
             
             {/* Countries List Grouped by Region */}
-            <div className="overflow-y-auto max-h-64">
+            <div ref={listRef} className="overflow-y-auto max-h-64">
               {groupedCountries.size > 0 ? (
-                Array.from(groupedCountries.entries()).map(([regionKey, regionCountries]) => (
-                  <div key={regionKey}>
-                    {/* Region Header */}
-                    <div className="sticky top-0 px-3 py-1.5 bg-muted/80 backdrop-blur-sm border-b border-border/50">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        {getRegionName(regionKey)}
-                      </span>
-                    </div>
-                    
-                    {/* Region Countries */}
-                    {regionCountries.map((country) => (
-                      <button
-                        key={country.code}
-                        type="button"
-                        onClick={() => handleCountrySelect(country)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-accent transition-colors ${
-                          selectedCountry.code === country.code ? 'bg-accent' : ''
-                        }`}
-                      >
-                        <span className="text-lg">{country.flag}</span>
-                        <span className="flex-1 text-sm truncate">
-                          {language === 'en' ? country.nameEn : country.name}
+                (() => {
+                  let globalIndex = -1;
+                  return Array.from(groupedCountries.entries()).map(([regionKey, regionCountries]) => (
+                    <div key={regionKey}>
+                      {/* Region Header */}
+                      <div className="sticky top-0 px-3 py-1.5 bg-muted/80 backdrop-blur-sm border-b border-border/50">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {getRegionName(regionKey)}
                         </span>
-                        <span className="text-xs text-muted-foreground font-mono">{country.prefix}</span>
-                        {selectedCountry.code === country.code && (
-                          <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                ))
+                      </div>
+                      
+                      {/* Region Countries */}
+                      {regionCountries.map((country) => {
+                        globalIndex++;
+                        const isHighlighted = globalIndex === highlightedIndex;
+                        return (
+                          <button
+                            key={country.code}
+                            type="button"
+                            data-index={globalIndex}
+                            onClick={() => handleCountrySelect(country)}
+                            onMouseEnter={() => setHighlightedIndex(globalIndex)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                              isHighlighted 
+                                ? 'bg-accent' 
+                                : selectedCountry.code === country.code 
+                                  ? 'bg-accent/50' 
+                                  : 'hover:bg-accent'
+                            }`}
+                          >
+                            <span className="text-lg">{country.flag}</span>
+                            <span className="flex-1 text-sm truncate">
+                              {language === 'en' ? country.nameEn : country.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground font-mono">{country.prefix}</span>
+                            {selectedCountry.code === country.code && (
+                              <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ));
+                })()
               ) : (
                 <div className="px-3 py-4 text-sm text-muted-foreground text-center">
                   {language === 'en' ? 'No country found' : 'Nicio țară găsită'}
