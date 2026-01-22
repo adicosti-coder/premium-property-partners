@@ -110,6 +110,40 @@ const PhoneInputWithCountry = ({
     onChange(formatted);
   };
 
+  // Handle paste from clipboard with automatic formatting
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Clean the pasted text - keep only digits and + sign
+    const cleanedText = pastedText.replace(/[^\d+]/g, '');
+    
+    // If it doesn't start with +, try to add the current country prefix
+    let phoneToFormat = cleanedText;
+    if (!cleanedText.startsWith('+') && cleanedText.length > 0) {
+      // Check if it might be a local number (starts with 0 or just digits)
+      if (cleanedText.startsWith('0')) {
+        // Remove leading 0 and add country prefix
+        phoneToFormat = selectedCountry.prefix + cleanedText.slice(1);
+      } else {
+        // Assume it's a local number without prefix
+        phoneToFormat = selectedCountry.prefix + cleanedText;
+      }
+    }
+    
+    // Detect country from the formatted number
+    const detected = detectCountryFromPhone(phoneToFormat);
+    if (detected) {
+      setSelectedCountry(detected);
+    }
+    
+    // Format and set the value
+    const countryToUse = detected || selectedCountry;
+    const formatted = formatInternationalPhone(phoneToFormat, countryToUse);
+    onChange(formatted);
+  };
+
   // Get detection source label
   const getDetectionLabel = () => {
     if (geoDetection.isLoading) {
@@ -189,6 +223,7 @@ const PhoneInputWithCountry = ({
             placeholder={dynamicPlaceholder}
             value={value}
             onChange={handleInputChange}
+            onPaste={handlePaste}
             required={required}
             maxLength={25}
             className={`rounded-l-none pr-16 ${
