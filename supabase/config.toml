@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.notify-poi-import]
 verify_jwt = false
+
+[functions.send-simulation-followup]
+verify_jwt = false
