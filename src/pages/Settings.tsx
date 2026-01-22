@@ -76,7 +76,7 @@ const Settings = () => {
       notificationsSection: "Notificări",
       notificationsDescription: "Controlează cum primești notificările",
       emailNotifications: "Notificări email",
-      emailNotificationsDesc: "Primește actualizări prin email despre rezervări și proprietăți",
+      emailNotificationsDesc: "Primește email când cineva îți importă locațiile partajate",
       notificationsSaved: "Preferințele de notificare au fost salvate!",
       
       // Language section
@@ -125,7 +125,7 @@ const Settings = () => {
       notificationsSection: "Notifications",
       notificationsDescription: "Control how you receive notifications",
       emailNotifications: "Email Notifications",
-      emailNotificationsDesc: "Receive email updates about bookings and properties",
+      emailNotificationsDesc: "Receive emails when someone imports your shared locations",
       notificationsSaved: "Notification preferences saved!",
       
       // Language section
