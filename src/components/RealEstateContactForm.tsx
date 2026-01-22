@@ -250,8 +250,12 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                       placeholder={form.placeholders.phone}
                       className={errors.phone ? "border-destructive" : ""}
                     />
-                    {errors.phone && (
+                    {errors.phone ? (
                       <p className="text-sm text-destructive">{errors.phone}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="text-primary">📱</span> Format: +40 7XX XXX XXX
+                      </p>
                     )}
                   </div>
                 </div>
