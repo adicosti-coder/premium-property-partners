@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -42,7 +42,10 @@ import {
   Trash2, 
   Loader2,
   GripVertical,
-  Lightbulb
+  Lightbulb,
+  Upload,
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -69,6 +72,7 @@ interface LocalTip {
   tip_en: string;
   display_order: number;
   is_active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,12 +81,14 @@ interface FormData {
   tip_ro: string;
   tip_en: string;
   is_active: boolean;
+  image_url: string | null;
 }
 
 const defaultFormData: FormData = {
   tip_ro: '',
   tip_en: '',
   is_active: true,
+  image_url: null,
 };
 
 interface SortableRowProps {
@@ -118,6 +124,19 @@ const SortableRow: React.FC<SortableRowProps> = ({ tip, onEdit, onDelete, onTogg
         >
           <GripVertical className="w-4 h-4" />
         </button>
+      </TableCell>
+      <TableCell className="w-16">
+        {tip.image_url ? (
+          <img 
+            src={tip.image_url} 
+            alt="" 
+            className="w-12 h-12 object-cover rounded-lg"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+          </div>
+        )}
       </TableCell>
       <TableCell className="max-w-xs">
         <p className="truncate">{tip.tip_ro}</p>
@@ -175,6 +194,8 @@ const LocalTipsManager: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTip, setEditingTip] = useState<LocalTip | null>(null);
   const [formData, setFormData] = useState<FormData>(defaultFormData);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -197,6 +218,37 @@ const LocalTipsManager: React.FC = () => {
     },
   });
 
+  // Upload image
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `tip-${Date.now()}.${fileExt}`;
+      const filePath = `local-tips/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      toast({ title: 'Imagine încărcată cu succes!' });
+    } catch (error: any) {
+      toast({ 
+        title: 'Eroare la încărcare', 
+        description: error.message,
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -208,6 +260,7 @@ const LocalTipsManager: React.FC = () => {
         tip_ro: data.tip_ro,
         tip_en: data.tip_en,
         is_active: data.is_active,
+        image_url: data.image_url,
         display_order: maxOrder + 1,
       });
       
@@ -319,6 +372,7 @@ const LocalTipsManager: React.FC = () => {
       tip_ro: tip.tip_ro,
       tip_en: tip.tip_en,
       is_active: tip.is_active,
+      image_url: tip.image_url,
     });
     setIsDialogOpen(true);
   };
@@ -398,6 +452,54 @@ const LocalTipsManager: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label>Imagine (opțional)</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file);
+                  }}
+                />
+                {formData.image_url ? (
+                  <div className="relative inline-block">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview" 
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 w-6 h-6"
+                      onClick={() => setFormData(prev => ({ ...prev, image_url: null }))}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full h-24 border-dashed"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="w-5 h-5 mr-2" />
+                    )}
+                    {isUploading ? 'Se încarcă...' : 'Încarcă imagine'}
+                  </Button>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="tip_ro">Sfat (Română) *</Label>
                 <Textarea
@@ -469,6 +571,7 @@ const LocalTipsManager: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-16">Imagine</TableHead>
                   <TableHead>Sfat (RO)</TableHead>
                   <TableHead>Sfat (EN)</TableHead>
                   <TableHead>Status</TableHead>

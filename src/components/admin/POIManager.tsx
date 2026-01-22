@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { useRef, useCallback } from "react";
 
 interface POI {
   id: string;
@@ -29,6 +30,7 @@ interface POI {
   rating: number | null;
   is_active: boolean;
   display_order: number;
+  image_url: string | null;
 }
 
 const CATEGORIES = [
@@ -45,6 +47,8 @@ const POIManager = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     name_en: '',
@@ -59,6 +63,7 @@ const POIManager = () => {
     rating: '',
     is_active: true,
     display_order: 0,
+    image_url: '',
   });
 
   const { data: pois, isLoading } = useQuery({
@@ -138,8 +143,35 @@ const POIManager = () => {
       rating: '',
       is_active: true,
       display_order: 0,
+      image_url: '',
     });
     setEditingPOI(null);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `poi-${Date.now()}.${fileExt}`;
+      const filePath = `poi/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      toast.success('Imagine încărcată cu succes!');
+    } catch (error: any) {
+      toast.error('Eroare la încărcare: ' + error.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleEdit = (poi: POI) => {
@@ -158,6 +190,7 @@ const POIManager = () => {
       rating: poi.rating ? String(poi.rating) : '',
       is_active: poi.is_active,
       display_order: poi.display_order,
+      image_url: poi.image_url || '',
     });
     setIsDialogOpen(true);
   };
@@ -179,6 +212,7 @@ const POIManager = () => {
       rating: formData.rating ? parseFloat(formData.rating) : null,
       is_active: formData.is_active,
       display_order: formData.display_order,
+      image_url: formData.image_url || null,
     };
 
     if (editingPOI) {
@@ -222,6 +256,54 @@ const POIManager = () => {
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label>Imagine (opțional)</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file);
+                  }}
+                />
+                {formData.image_url ? (
+                  <div className="relative inline-block">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview" 
+                      className="w-32 h-24 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 w-6 h-6"
+                      onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full h-20 border-dashed"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="w-5 h-5 mr-2" />
+                    )}
+                    {isUploading ? 'Se încarcă...' : 'Încarcă imagine'}
+                  </Button>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nume (RO)</Label>
