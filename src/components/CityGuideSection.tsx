@@ -59,6 +59,29 @@ const CityGuideSection: React.FC = () => {
     },
   });
 
+  // Fetch local tips from Supabase
+  interface LocalTip {
+    id: string;
+    tip_ro: string;
+    tip_en: string;
+    display_order: number;
+    is_active: boolean;
+  }
+
+  const { data: localTipsData = [] } = useQuery({
+    queryKey: ['local-tips'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('local_tips')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as LocalTip[];
+    },
+  });
+
   const content = {
     ro: {
       badge: 'Ghid Local',
@@ -142,17 +165,20 @@ const CityGuideSection: React.FC = () => {
     entertainment: 'text-teal-500',
   };
 
-  const localTips = language === 'ro' ? [
-    'Vizitează Piața Victoriei seara pentru cele mai frumoase lumini',
-    'Încearcă plăcinta bănățeană la Covrigăria Sârbească',
-    'Plimbă-te pe malul Begăi la apus pentru priveliști superbe',
-    'Rezervă la restaurante în weekend - sunt foarte căutate',
-  ] : [
-    'Visit Victory Square at night for the most beautiful lights',
-    'Try the Banat pie at Covrigăria Sârbească',
-    'Walk along the Bega River at sunset for stunning views',
-    'Book restaurants on weekends - they\'re very popular',
-  ];
+  // Use fetched tips or fallback to hardcoded
+  const localTips = localTipsData.length > 0
+    ? localTipsData.map(tip => language === 'ro' ? tip.tip_ro : tip.tip_en)
+    : (language === 'ro' ? [
+        'Vizitează Piața Victoriei seara pentru cele mai frumoase lumini',
+        'Încearcă plăcinta bănățeană la Covrigăria Sârbească',
+        'Plimbă-te pe malul Begăi la apus pentru priveliști superbe',
+        'Rezervă la restaurante în weekend - sunt foarte căutate',
+      ] : [
+        'Visit Victory Square at night for the most beautiful lights',
+        'Try the Banat pie at Covrigăria Sârbească',
+        'Walk along the Bega River at sunset for stunning views',
+        'Book restaurants on weekends - they\'re very popular',
+      ]);
 
   const getCategoryLabel = (category: string) => {
     const categories = t.categories as Record<string, string>;

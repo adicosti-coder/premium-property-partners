@@ -47,6 +47,7 @@ import {
   Play,
   MapPin,
   Film,
+  Lightbulb,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -65,6 +66,7 @@ import POIManager from "@/components/admin/POIManager";
 import HeroVideoManager from "@/components/admin/HeroVideoManager";
 import HeroTextManager from "@/components/admin/HeroTextManager";
 import LeadsManager from "@/components/admin/LeadsManager";
+import LocalTipsManager from "@/components/admin/LocalTipsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -293,6 +295,10 @@ const Admin = () => {
               <Film className="w-4 h-4" />
               Hero Video
             </TabsTrigger>
+            <TabsTrigger value="local-tips" className="flex items-center gap-2">
+              <Lightbulb className="w-4 h-4" />
+              Sfaturi Locale
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -356,6 +362,11 @@ const Admin = () => {
               <HeroVideoManager />
               <HeroTextManager />
             </div>
+          </TabsContent>
+
+          {/* Local Tips Tab */}
+          <TabsContent value="local-tips">
+            <LocalTipsManager />
           </TabsContent>
         </Tabs>
       </div>
