@@ -1177,6 +1177,26 @@ const SharedLinksStats = () => {
                                     if (filteredImporters.length === 0) {
                                       return <p className="text-sm text-muted-foreground">{importerSearch.trim() ? t.noSearchResults : t.noImporters}</p>;
                                     }
+                                    
+                                    // Highlight function for search matches
+                                    const highlightText = (text: string | null, search: string): React.ReactNode => {
+                                      if (!text || !search.trim()) return text;
+                                      const searchLower = search.toLowerCase().trim();
+                                      const index = text.toLowerCase().indexOf(searchLower);
+                                      if (index === -1) return text;
+                                      
+                                      const before = text.slice(0, index);
+                                      const match = text.slice(index, index + search.trim().length);
+                                      const after = text.slice(index + search.trim().length);
+                                      
+                                      return (
+                                        <>
+                                          {before}
+                                          <mark className="bg-primary/30 text-foreground rounded px-0.5">{match}</mark>
+                                          {after}
+                                        </>
+                                      );
+                                    };
                                       
                                     // Pagination - reset page if out of bounds after filter change
                                     const totalPages = Math.ceil(filteredImporters.length / IMPORTERS_PER_PAGE);
@@ -1208,11 +1228,14 @@ const SharedLinksStats = () => {
                                                 )}
                                                 <div>
                                                   <p className="text-sm font-medium">
-                                                    {importer.importer_name || t.anonymous}
+                                                    {importer.importer_name 
+                                                      ? highlightText(importer.importer_name, importerSearch)
+                                                      : t.anonymous
+                                                    }
                                                   </p>
                                                   {importer.importer_email && (
                                                     <p className="text-xs text-primary">
-                                                      {importer.importer_email}
+                                                      {highlightText(importer.importer_email, importerSearch)}
                                                     </p>
                                                   )}
                                                   <p className="text-xs text-muted-foreground">
