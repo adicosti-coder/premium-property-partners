@@ -17,10 +17,7 @@ import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
-import { formatRomanianPhone } from "@/utils/phoneFormatter";
-
-// Romanian phone regex for formatted numbers: +40 7XX XXX XXX
-const romanianPhoneRegex = /^\+40\s7\d{2}\s\d{3}\s\d{3}$/;
+import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
@@ -254,7 +251,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                       <p className="text-sm text-destructive">{errors.phone}</p>
                     ) : (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <span className="text-primary">📱</span> Format: +40 7XX XXX XXX
+                        📞 Mobil: +40 7XX sau Fix: +40 2XX
                       </p>
                     )}
                   </div>

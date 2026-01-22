@@ -10,12 +10,9 @@ import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
-import { formatRomanianPhone } from "@/utils/phoneFormatter";
+import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
-
-// Romanian phone regex for formatted numbers: +40 7XX XXX XXX
-const romanianPhoneRegex = /^\+40\s7\d{2}\s\d{3}\s\d{3}$/;
 
 interface LeadCaptureFormProps {
   isOpen: boolean;
@@ -217,7 +214,7 @@ const LeadCaptureForm = ({
                 <p className="text-sm text-destructive">{phoneError}</p>
               ) : (
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="text-primary">📱</span> Format: +40 7XX XXX XXX
+                  📞 Mobil: +40 7XX sau Fix: +40 2XX
                 </p>
               )}
             </div>

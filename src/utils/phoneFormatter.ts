@@ -1,6 +1,6 @@
 /**
  * Formats a Romanian phone number as the user types.
- * Target format: +40 7XX XXX XXX
+ * Supports both mobile (+40 7XX XXX XXX) and landline (+40 2XX XXX XXX) formats.
  */
 export const formatRomanianPhone = (value: string): string => {
   // Remove all non-digit characters except leading +
@@ -21,7 +21,7 @@ export const formatRomanianPhone = (value: string): string => {
   // Keep only digits now
   digits = digits.replace(/\D/g, "");
   
-  // Limit to 9 digits (Romanian mobile numbers after country code)
+  // Limit to 9 digits (Romanian phone numbers after country code)
   digits = digits.slice(0, 9);
   
   // If empty, return empty
@@ -30,7 +30,7 @@ export const formatRomanianPhone = (value: string): string => {
   // Build formatted number
   let formatted = "+40 ";
   
-  // First group: 3 digits (7XX)
+  // First group: 3 digits (7XX for mobile, 2XX for landline)
   if (digits.length > 0) {
     formatted += digits.slice(0, 3);
   }
@@ -54,3 +54,10 @@ export const formatRomanianPhone = (value: string): string => {
 export const extractPhoneDigits = (formattedPhone: string): string => {
   return formattedPhone.replace(/[^\d+]/g, "");
 };
+
+/**
+ * Regex for validating Romanian phone numbers (mobile and landline)
+ * Mobile: +40 7XX XXX XXX
+ * Landline: +40 2XX XXX XXX (or +40 3XX for some regions)
+ */
+export const romanianPhoneRegex = /^\+40\s[237]\d{2}\s\d{3}\s\d{3}$/;
