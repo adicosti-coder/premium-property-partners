@@ -189,13 +189,19 @@ export const parseSharedPois = async (searchParams: URLSearchParams): Promise<{ 
 };
 
 // Notify the original sharer that someone imported their favorites
-export const notifyPoiImport = async (shareCode: string, importerName?: string, importedCount?: number): Promise<void> => {
+export const notifyPoiImport = async (
+  shareCode: string, 
+  importerName?: string, 
+  importedCount?: number,
+  importerId?: string
+): Promise<void> => {
   try {
     await supabase.functions.invoke('notify-poi-import', {
       body: {
         shareCode,
         importerName,
         importedCount,
+        importerId,
       },
     });
   } catch (error) {

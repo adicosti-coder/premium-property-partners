@@ -69,7 +69,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { shareCode, importerName, importedCount } = await req.json();
+    const { shareCode, importerName, importedCount, importerId } = await req.json();
 
     if (!shareCode) {
       return new Response(
@@ -108,13 +108,23 @@ serve(async (req) => {
       console.error('Error updating import count:', updateError);
     }
 
-    // Log import event for trends tracking
+    // Log import event for trends tracking (including importer user_id if authenticated)
+    const importEventData: { shared_link_id: string; imported_count: number; imported_by?: string } = {
+      shared_link_id: sharedLink.id,
+      imported_count: importedCount || 1,
+    };
+    
+    // Add importer user_id if provided (authenticated user)
+    if (importerId) {
+      importEventData.imported_by = importerId;
+      console.log(`Import by authenticated user: ${importerId}`);
+    } else {
+      console.log('Import by anonymous user');
+    }
+
     const { error: eventError } = await supabase
       .from('poi_import_events')
-      .insert({
-        shared_link_id: sharedLink.id,
-        imported_count: importedCount || 1,
-      });
+      .insert(importEventData);
 
     if (eventError) {
       console.error('Error logging import event:', eventError);
