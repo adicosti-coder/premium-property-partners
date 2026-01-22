@@ -87,7 +87,7 @@ const Header = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            className="fixed inset-0 bg-gradient-to-b from-black/60 via-amber-950/40 to-black/70 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-gradient-to-b from-black/60 via-amber-900/50 to-black/70 backdrop-blur-sm z-40 md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
