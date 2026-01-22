@@ -22,7 +22,8 @@ import {
   Trash2,
   LogIn,
   X,
-  BarChart3
+  BarChart3,
+  GitCompare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ro, enUS } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import SimulationCompareModal from './SimulationCompareModal';
 
 type Scenario = 'conservator' | 'piata' | 'optimist';
 
@@ -125,6 +127,7 @@ const translations = {
     chartClassic: 'Chirie Clasică',
     chartWithout: 'Fără Sistem',
     chartWith: 'Cu RealTrust',
+    compareSimulations: 'Compară Simulări',
   },
   en: {
     title: 'Advanced Income Calculator',
@@ -177,6 +180,7 @@ const translations = {
     chartClassic: 'Classic Rent',
     chartWithout: 'Without System',
     chartWith: 'With RealTrust',
+    compareSimulations: 'Compare Simulations',
   },
 };
 
@@ -215,6 +219,7 @@ const AdvancedRentalCalculator = () => {
   const [scenario, setScenario] = useState<Scenario>('piata');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -816,6 +821,18 @@ const AdvancedRentalCalculator = () => {
                       {t.saveSimulation}
                     </Button>
 
+                    {/* Compare Simulations Button */}
+                    {simulations.length >= 2 && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowCompareModal(true)}
+                        className="w-full border-gold/30 text-gold hover:bg-gold/10"
+                      >
+                        <GitCompare className="w-4 h-4 mr-2" />
+                        {t.compareSimulations}
+                      </Button>
+                    )}
+
                     {/* History Toggle */}
                     <Button
                       variant="ghost"
@@ -924,6 +941,13 @@ const AdvancedRentalCalculator = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Compare Modal */}
+      <SimulationCompareModal
+        isOpen={showCompareModal}
+        onClose={() => setShowCompareModal(false)}
+        simulations={simulations}
+      />
     </section>
   );
 };
