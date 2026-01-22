@@ -290,19 +290,23 @@ const SharedLinksStats = () => {
           .order("created_at", { ascending: false });
 
         if (!allEventsError && allEvents) {
-          // Fetch profile info for authenticated importers
+          // Fetch profile info for authenticated importers (including email consent)
           const importerIds = [...new Set(allEvents.filter(e => e.imported_by).map(e => e.imported_by as string))];
-          let profilesMap: Record<string, { full_name: string | null }> = {};
+          let profilesMap: Record<string, { full_name: string | null; email: string | null; share_email_on_import: boolean }> = {};
           
           if (importerIds.length > 0) {
             const { data: profiles } = await supabase
               .from("profiles")
-              .select("id, full_name")
+              .select("id, full_name, email, share_email_on_import")
               .in("id", importerIds);
             
             if (profiles) {
               profiles.forEach(p => {
-                profilesMap[p.id] = { full_name: p.full_name };
+                profilesMap[p.id] = { 
+                  full_name: p.full_name, 
+                  email: p.share_email_on_import ? p.email : null,
+                  share_email_on_import: p.share_email_on_import || false
+                };
               });
             }
           }
@@ -321,7 +325,7 @@ const SharedLinksStats = () => {
               created_at: event.created_at,
               imported_by: event.imported_by,
               importer_name: profile?.full_name || null,
-              importer_email: null, // We don't expose email for privacy
+              importer_email: profile?.email || null, // Only shown if user consented
             });
           });
           setImportersMap(importersByLink);
@@ -1010,6 +1014,11 @@ const SharedLinksStats = () => {
                                               <p className="text-sm font-medium">
                                                 {importer.importer_name || t.anonymous}
                                               </p>
+                                              {importer.importer_email && (
+                                                <p className="text-xs text-primary">
+                                                  {importer.importer_email}
+                                                </p>
+                                              )}
                                               <p className="text-xs text-muted-foreground">
                                                 {formatDistanceToNow(new Date(importer.created_at), {
                                                   addSuffix: true,
