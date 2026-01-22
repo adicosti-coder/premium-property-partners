@@ -24,6 +24,8 @@ interface UseKeyboardNavigationOptions<T> {
   getSearchLabel?: (item: T) => string;
   /** Debounce time in ms for type-ahead search reset (default: 500ms) */
   typeAheadDebounce?: number;
+  /** Callback when type-ahead finds a match */
+  onTypeAheadMatch?: (item: T, index: number) => void;
 }
 
 interface UseKeyboardNavigationReturn {
@@ -87,6 +89,7 @@ export function useKeyboardNavigation<T>({
   resetDependencies = [],
   getSearchLabel,
   typeAheadDebounce = 500,
+  onTypeAheadMatch,
 }: UseKeyboardNavigationOptions<T>): UseKeyboardNavigationReturn {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [typeAheadQuery, setTypeAheadQuery] = useState("");
@@ -202,6 +205,7 @@ export function useKeyboardNavigation<T>({
 
             if (matchIndex !== -1) {
               setHighlightedIndex(matchIndex);
+              onTypeAheadMatch?.(items[matchIndex], matchIndex);
             } else if (newQuery.length === 1) {
               // If no match with single char, try to find next item starting with this letter
               // starting from current position (for cycling through same-letter items)
@@ -221,6 +225,7 @@ export function useKeyboardNavigation<T>({
               
               if (foundIndex !== -1) {
                 setHighlightedIndex(foundIndex);
+                onTypeAheadMatch?.(items[foundIndex], foundIndex);
               }
             }
 

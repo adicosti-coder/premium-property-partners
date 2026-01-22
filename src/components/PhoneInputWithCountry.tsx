@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import { useUISound } from "@/hooks/useUISound";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -245,6 +246,14 @@ const PhoneInputWithCountry = ({
     handleCountrySelect(country);
   }, [handleCountrySelect]);
 
+  // UI sound for type-ahead feedback
+  const { playSound } = useUISound({ volume: 0.1 });
+
+  // Handle type-ahead match with sound
+  const handleTypeAheadMatch = useCallback(() => {
+    playSound("pop");
+  }, [playSound]);
+
   // Use keyboard navigation hook with type-ahead support
   const { 
     highlightedIndex, 
@@ -261,6 +270,7 @@ const PhoneInputWithCountry = ({
     resetDependencies: [searchQuery],
     getSearchLabel: (country) => language === 'en' ? country.nameEn : country.name,
     typeAheadDebounce: 500,
+    onTypeAheadMatch: handleTypeAheadMatch,
   });
 
   // International validation
