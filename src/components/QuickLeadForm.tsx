@@ -196,7 +196,7 @@ const QuickLeadForm = () => {
                   maxLength={20}
                 />
                 <p className={`absolute -bottom-5 left-0 text-xs ${phoneError ? "text-destructive" : "text-muted-foreground"}`}>
-                  {phoneError || "📞 +40 7XX (mobil) sau +40 2XX (fix)"}
+                  {phoneError || (t.quickLeadForm?.phoneHint || "📞 +40 7XX (mobil) sau +40 2XX (fix)")}
                 </p>
               </div>
               

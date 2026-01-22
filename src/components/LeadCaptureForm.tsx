@@ -214,7 +214,7 @@ const LeadCaptureForm = ({
                 <p className="text-sm text-destructive">{phoneError}</p>
               ) : (
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  📞 Mobil: +40 7XX sau Fix: +40 2XX
+                  {t.leadForm.phoneHint || "📞 Mobil: +40 7XX sau Fix: +40 2XX"}
                 </p>
               )}
             </div>
