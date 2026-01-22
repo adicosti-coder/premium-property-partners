@@ -39,7 +39,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
-import { exportPoiFavoritesPdf, generateShareableLink, parseSharedPois } from '@/utils/exportPoiFavoritesPdf';
+import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiImport } from '@/utils/exportPoiFavoritesPdf';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -72,16 +72,21 @@ const CityGuideSection: React.FC = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showSharedPois, setShowSharedPois] = useState(false);
   const [sharedPoiIds, setSharedPoiIds] = useState<string[] | null>(null);
+  const [currentShareCode, setCurrentShareCode] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
-  const { favorites, isFavorite, toggleFavorite, importFavorites, isImporting, favoritesCount } = usePoiFavorites();
+  const { favorites, isFavorite, toggleFavorite, importFavorites, isImporting, favoritesCount, isAuthenticated, userId } = usePoiFavorites();
 
   // Check for shared POIs in URL
   useEffect(() => {
-    const shared = parseSharedPois(searchParams);
-    if (shared && shared.length > 0) {
-      setSharedPoiIds(shared);
-      setShowSharedPois(true);
-    }
+    const checkSharedPois = async () => {
+      const { poiIds, shareCode } = await parseSharedPois(searchParams);
+      if (poiIds && poiIds.length > 0) {
+        setSharedPoiIds(poiIds);
+        setCurrentShareCode(shareCode);
+        setShowSharedPois(true);
+      }
+    };
+    checkSharedPois();
   }, [searchParams]);
 
   // Fetch ALL POIs from Supabase (removed limit for filtering)
@@ -386,7 +391,8 @@ const CityGuideSection: React.FC = () => {
       return;
     }
 
-    const link = generateShareableLink(favorites);
+    // Use the new createShareableLink that saves to database for authenticated users
+    const { link } = await createShareableLink(favorites, userId || undefined);
     
     try {
       await navigator.clipboard.writeText(link);
@@ -404,6 +410,19 @@ const CityGuideSection: React.FC = () => {
       setLinkCopied(true);
       toast.success(t.linkCopied);
       setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+
+  // Handle import with notification
+  const handleImportFavorites = async () => {
+    if (!sharedPoiIds) return;
+    
+    importFavorites(sharedPoiIds);
+    
+    // Send notification to the original sharer if this is a tracked share
+    if (currentShareCode) {
+      const notYetFavorited = sharedPoiIds.filter(id => !isFavorite(id));
+      await notifyPoiImport(currentShareCode, undefined, notYetFavorited.length);
     }
   };
 
@@ -441,7 +460,7 @@ const CityGuideSection: React.FC = () => {
                   <Button
                     variant={allImported ? "outline" : "default"}
                     size="sm"
-                    onClick={() => importFavorites(sharedPoiIds)}
+                    onClick={handleImportFavorites}
                     disabled={isImporting || allImported}
                   >
                     {isImporting ? (

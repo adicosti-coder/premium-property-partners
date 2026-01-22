@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.check-follow-up-reminders]
 verify_jwt = false
+
+[functions.notify-poi-import]
+verify_jwt = false
