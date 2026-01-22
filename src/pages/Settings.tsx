@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2, Shield } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { z } from "zod";
@@ -49,6 +49,8 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordErrors, setPasswordErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [shareEmailOnImport, setShareEmailOnImport] = useState(false);
+  const [savingShareEmail, setSavingShareEmail] = useState(false);
   
 
   const t = {
@@ -78,6 +80,13 @@ const Settings = () => {
       emailNotifications: "Notificări email",
       emailNotificationsDesc: "Primește email când cineva îți importă locațiile partajate",
       notificationsSaved: "Preferințele de notificare au fost salvate!",
+      
+      // Privacy section
+      privacySection: "Confidențialitate",
+      privacyDescription: "Controlează ce informații sunt vizibile pentru alții",
+      shareEmailOnImport: "Partajează email la import",
+      shareEmailOnImportDesc: "Permite celor care îți partajezi locațiile să vadă email-ul tău când importă",
+      privacySaved: "Preferințele de confidențialitate au fost salvate!",
       
       // Language section
       languageSection: "Limbă",
@@ -127,6 +136,13 @@ const Settings = () => {
       emailNotifications: "Email Notifications",
       emailNotificationsDesc: "Receive emails when someone imports your shared locations",
       notificationsSaved: "Notification preferences saved!",
+      
+      // Privacy section
+      privacySection: "Privacy",
+      privacyDescription: "Control what information is visible to others",
+      shareEmailOnImport: "Share email on import",
+      shareEmailOnImportDesc: "Allow those you share locations with to see your email when they import",
+      privacySaved: "Privacy preferences saved!",
       
       // Language section
       languageSection: "Language",
@@ -180,7 +196,7 @@ const Settings = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("notifications_enabled")
+        .select("notifications_enabled, share_email_on_import")
         .eq("id", userId)
         .single();
 
@@ -190,6 +206,7 @@ const Settings = () => {
 
       if (data) {
         setNotificationsEnabled(data.notifications_enabled || false);
+        setShareEmailOnImport(data.share_email_on_import || false);
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -266,6 +283,32 @@ const Settings = () => {
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as "ro" | "en");
     toast.success(text.languageSaved);
+  };
+
+  const handleShareEmailChange = async (enabled: boolean) => {
+    if (!user) return;
+
+    try {
+      setSavingShareEmail(true);
+      setShareEmailOnImport(enabled);
+
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          share_email_on_import: enabled,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      toast.success(text.privacySaved);
+    } catch (error) {
+      console.error("Error saving privacy settings:", error);
+      setShareEmailOnImport(!enabled);
+    } finally {
+      setSavingShareEmail(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -394,6 +437,30 @@ const Settings = () => {
                   checked={notificationsEnabled}
                   onCheckedChange={handleNotificationsChange}
                   disabled={savingNotifications}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Privacy Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="w-5 h-5" />
+                {text.privacySection}
+              </CardTitle>
+              <CardDescription>{text.privacyDescription}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>{text.shareEmailOnImport}</Label>
+                  <p className="text-sm text-muted-foreground">{text.shareEmailOnImportDesc}</p>
+                </div>
+                <Switch
+                  checked={shareEmailOnImport}
+                  onCheckedChange={handleShareEmailChange}
+                  disabled={savingShareEmail}
                 />
               </div>
             </CardContent>
