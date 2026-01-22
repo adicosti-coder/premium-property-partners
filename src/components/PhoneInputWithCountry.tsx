@@ -325,27 +325,63 @@ const PhoneInputWithCountry = ({
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{selectedCountry.flag}</span>
-                  <span className="font-medium">
-                    {language === 'en' ? selectedCountry.nameEn : selectedCountry.name}
-                  </span>
+              <div className="space-y-2">
+                {/* Country & Format Info */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{selectedCountry.flag}</span>
+                    <span className="font-medium">
+                      {language === 'en' ? selectedCountry.nameEn : selectedCountry.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Info className="w-3 h-3" />
+                    <span>
+                      {language === 'en' ? 'Expected format:' : 'Format așteptat:'}
+                    </span>
+                  </div>
+                  <div className="font-mono text-sm bg-muted/50 px-2 py-1 rounded">
+                    {getExampleFormat()}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {language === 'en' 
+                      ? `${selectedCountry.phoneLength} digits after ${selectedCountry.prefix}`
+                      : `${selectedCountry.phoneLength} cifre după ${selectedCountry.prefix}`
+                    }
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Info className="w-3 h-3" />
-                  <span>
-                    {language === 'en' ? 'Expected format:' : 'Format așteptat:'}
-                  </span>
-                </div>
-                <div className="font-mono text-sm bg-muted/50 px-2 py-1 rounded">
-                  {getExampleFormat()}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {language === 'en' 
-                    ? `${selectedCountry.phoneLength} digits after ${selectedCountry.prefix}`
-                    : `${selectedCountry.phoneLength} cifre după ${selectedCountry.prefix}`
-                  }
+                
+                {/* Keyboard Shortcuts */}
+                <div className="pt-2 border-t border-border/50">
+                  <div className="text-xs text-muted-foreground mb-1.5">
+                    {language === 'en' ? 'Keyboard shortcuts:' : 'Comenzi rapide:'}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↑↓</kbd>
+                      <span className="text-muted-foreground">{language === 'en' ? 'Navigate' : 'Navighează'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd>
+                      <span className="text-muted-foreground">{language === 'en' ? 'Select' : 'Selectează'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">PgUp/Dn</kbd>
+                      <span className="text-muted-foreground">{language === 'en' ? 'Jump 10' : 'Salt 10'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Esc</kbd>
+                      <span className="text-muted-foreground">{language === 'en' ? 'Close' : 'Închide'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Home</kbd>
+                      <span className="text-muted-foreground">{language === 'en' ? 'First' : 'Prima'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">End</kbd>
+                      <span className="text-muted-foreground">{language === 'en' ? 'Last' : 'Ultima'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </TooltipContent>
