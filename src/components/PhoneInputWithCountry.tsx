@@ -428,6 +428,20 @@ const PhoneInputWithCountry = ({
             ref={dropdownRef}
             className="absolute top-full left-0 mt-1 w-80 max-h-80 overflow-hidden bg-popover border border-border rounded-lg shadow-lg z-50"
           >
+            {/* Type-ahead Indicator Badge */}
+            {typeAheadQuery && (
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10 animate-scale-in">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full shadow-lg">
+                  <span className="text-xs font-medium">
+                    {language === 'en' ? 'Typing:' : 'Tastezi:'}
+                  </span>
+                  <span className="font-mono font-bold text-sm tracking-wider">
+                    {typeAheadQuery.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            )}
+            
             {/* Search Input */}
             <div className="p-2 border-b border-border sticky top-0 bg-popover">
               <Input
