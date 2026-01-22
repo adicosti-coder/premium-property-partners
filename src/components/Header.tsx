@@ -264,13 +264,19 @@ const Header = () => {
       {/* Centered badge below header */}
       <div 
         className={`glass border-b border-border/50 py-2 transition-all duration-300 ${
-          showBadge ? 'opacity-100 max-h-16' : 'opacity-0 max-h-0 py-0 border-b-0 overflow-hidden'
+          showBadge ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 py-0 border-b-0 overflow-hidden'
         }`}
       >
         <div className="container mx-auto px-6 flex justify-center">
-          <div className="inline-flex flex-col items-center gap-0.5 px-5 py-2 rounded-2xl bg-primary/10 border border-primary/20 animate-badge-glow backdrop-blur-sm">
-            <span className="text-foreground/80 text-xs font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
-            <span className="text-primary text-xs font-semibold">1 singur sistem</span>
+          <div className="inline-flex flex-col items-center gap-1 px-5 py-2 rounded-2xl bg-primary/10 border border-primary/20 animate-badge-glow backdrop-blur-sm">
+            <span className="text-foreground/60 text-[10px] md:text-xs font-medium tracking-wide">
+              De la achiziție (imobiliare) la venit hotelier: administrare completă
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-foreground/80 text-xs font-medium tracking-wide">Vânzare · Administrare · Cazare</span>
+              <span className="text-primary/50">|</span>
+              <span className="text-primary text-xs font-semibold">1 singur sistem</span>
+            </div>
           </div>
         </div>
       </div>
