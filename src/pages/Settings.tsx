@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
@@ -22,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2, Shield, Volume2 } from "lucide-react";
+import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2, Shield, Volume2, Volume1 } from "lucide-react";
 import { useUISound } from "@/hooks/useUISound";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -59,8 +60,13 @@ const Settings = () => {
     return stored !== null ? stored === 'true' : true;
   });
   
+  const [soundVolume, setSoundVolume] = useState(() => {
+    const stored = localStorage.getItem('ui-sound-volume');
+    return stored !== null ? parseFloat(stored) : 0.15;
+  });
+  
   // Sound hook for preview
-  const { playSound } = useUISound();
+  const { playSound } = useUISound({ volume: soundVolume });
 
   const t = {
     ro: {
@@ -89,6 +95,7 @@ const Settings = () => {
       soundEnabledDesc: "Redă sunete subtile pentru acțiuni precum type-ahead și selecții",
       soundSaved: "Preferințele de sunet au fost salvate!",
       soundPreview: "Previzualizare",
+      soundVolume: "Volum",
       
       // Notifications section
       notificationsSection: "Notificări",
@@ -152,6 +159,7 @@ const Settings = () => {
       soundEnabledDesc: "Play subtle sounds for actions like type-ahead and selections",
       soundSaved: "Sound preferences saved!",
       soundPreview: "Preview",
+      soundVolume: "Volume",
       
       // Notifications section
       notificationsSection: "Notifications",
@@ -540,32 +548,61 @@ const Settings = () => {
                 />
               </div>
               {soundEnabled && (
-                <div className="flex items-center gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => playSound("click")}
-                  >
-                    Click
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => playSound("pop")}
-                  >
-                    Pop
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => playSound("success")}
-                  >
-                    Success
-                  </Button>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {text.soundPreview}
-                  </span>
-                </div>
+                <>
+                  {/* Volume Slider */}
+                  <div className="pt-2 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <Volume1 className="w-4 h-4" />
+                        {text.soundVolume}
+                      </span>
+                      <span className="font-mono text-sm">{Math.round(soundVolume * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={[soundVolume * 100]}
+                      onValueChange={(value) => {
+                        const newVolume = value[0] / 100;
+                        setSoundVolume(newVolume);
+                        localStorage.setItem('ui-sound-volume', String(newVolume));
+                      }}
+                      onValueCommit={() => {
+                        playSound("pop");
+                      }}
+                      min={5}
+                      max={50}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  {/* Preview Buttons */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => playSound("click")}
+                    >
+                      Click
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => playSound("pop")}
+                    >
+                      Pop
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => playSound("success")}
+                    >
+                      Success
+                    </Button>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {text.soundPreview}
+                    </span>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
