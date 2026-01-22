@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calculator, 
@@ -16,17 +16,25 @@ import {
   CreditCard,
   Users,
   ArrowUp,
-  RefreshCw
+  RefreshCw,
+  Save,
+  History,
+  Trash2,
+  LogIn,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useParallax } from '@/hooks/useParallax';
+import { useAdvancedSimulations, AdvancedSimulationData } from '@/hooks/useAdvancedSimulations';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
+import { ro, enUS } from 'date-fns/locale';
 
 type Scenario = 'conservator' | 'piata' | 'optimist';
 
@@ -99,6 +107,18 @@ const translations = {
     hideAdvanced: 'Ascunde setările avansate',
     whatsappCTA: 'Obține evaluare personalizată',
     resetToDefaults: 'Resetează la valori implicite',
+    saveSimulation: 'Salvează simularea',
+    savedSimulations: 'Simulări salvate',
+    hideHistory: 'Ascunde istoricul',
+    showHistory: 'Arată istoricul',
+    deleteSimulation: 'Șterge',
+    loadSimulation: 'Încarcă',
+    loginToSave: 'Autentifică-te pentru a salva simulările',
+    loginButton: 'Autentificare',
+    noSimulations: 'Nu ai simulări salvate încă',
+    simulationSaved: 'Simulare salvată cu succes!',
+    simulationDeleted: 'Simulare ștearsă',
+    simulationLoaded: 'Simulare încărcată',
   },
   en: {
     title: 'Advanced Income Calculator',
@@ -135,6 +155,18 @@ const translations = {
     hideAdvanced: 'Hide advanced settings',
     whatsappCTA: 'Get personalized evaluation',
     resetToDefaults: 'Reset to defaults',
+    saveSimulation: 'Save simulation',
+    savedSimulations: 'Saved simulations',
+    hideHistory: 'Hide history',
+    showHistory: 'Show history',
+    deleteSimulation: 'Delete',
+    loadSimulation: 'Load',
+    loginToSave: 'Log in to save simulations',
+    loginButton: 'Log in',
+    noSimulations: 'No saved simulations yet',
+    simulationSaved: 'Simulation saved successfully!',
+    simulationDeleted: 'Simulation deleted',
+    simulationLoaded: 'Simulation loaded',
   },
 };
 
@@ -158,11 +190,23 @@ const AdvancedRentalCalculator = () => {
   const { ref, isVisible } = useScrollAnimation();
   const { offset: parallaxOffset } = useParallax({ speed: 0.1 });
   const t = translations[language as keyof typeof translations] || translations.ro;
+  const dateLocale = language === 'ro' ? ro : enUS;
+  
+  const { 
+    isAuthenticated, 
+    simulations, 
+    saveSimulation, 
+    deleteSimulation, 
+    loadSimulation,
+    loading: simulationsLoading 
+  } = useAdvancedSimulations();
   
   const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs);
   const [scenario, setScenario] = useState<Scenario>('piata');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleInputChange = (key: keyof CalculatorInputs, value: number) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -184,6 +228,51 @@ const AdvancedRentalCalculator = () => {
   const handleReset = () => {
     setInputs(defaultInputs);
     setScenario('piata');
+  };
+
+  const handleSaveSimulation = async () => {
+    if (!isAuthenticated) return;
+    
+    setIsSaving(true);
+    const result = await saveSimulation({
+      scenario,
+      classicRent: inputs.classicRent,
+      nightlyRate: inputs.nightlyRate,
+      occupancyWithoutSystem: inputs.occupancyWithoutSystem,
+      rateUplift: inputs.rateUpliftWithSystem,
+      occupancyUplift: inputs.occupancyUpliftWithSystem,
+      platformCommission: inputs.platformCommission,
+      paymentProcessingFee: inputs.paymentProcessingFee,
+      cleaningCostPerStay: inputs.cleaningCostPerStay,
+      averageStayDuration: inputs.averageStayDuration,
+      monthlyFixedCosts: inputs.monthlyFixedCosts,
+      managementFee: inputs.managementFee,
+      netWithoutSystem: calculations.netWithoutSystem,
+      netWithSystem: calculations.netWithSystem,
+      diffVsClassic: calculations.diffVsClassic,
+      percentVsClassic: calculations.percentVsClassic,
+    });
+    setIsSaving(false);
+    
+    if (!result.error) {
+      toast.success(t.simulationSaved);
+    } else {
+      toast.error('Error saving simulation');
+    }
+  };
+
+  const handleLoadSimulation = (sim: AdvancedSimulationData) => {
+    const loadedInputs = loadSimulation(sim);
+    setInputs(loadedInputs);
+    setScenario(sim.scenario as Scenario);
+    toast.success(t.simulationLoaded);
+  };
+
+  const handleDeleteSimulation = async (id: string) => {
+    const result = await deleteSimulation(id);
+    if (!result.error) {
+      toast.success(t.simulationDeleted);
+    }
   };
 
   const calculations = useMemo(() => {
@@ -597,6 +686,124 @@ const AdvancedRentalCalculator = () => {
                     <span className="font-bold">+{calculations.percentVsClassic}% {t.vsClassic}</span>
                   </div>
                 </motion.div>
+              </div>
+
+              {/* Save & History Section */}
+              <div className="mt-6 space-y-4">
+                {isAuthenticated ? (
+                  <>
+                    {/* Save Button */}
+                    <Button
+                      onClick={handleSaveSimulation}
+                      disabled={isSaving}
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4"
+                    >
+                      {isSaving ? (
+                        <motion.div
+                          className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      {t.saveSimulation}
+                    </Button>
+
+                    {/* History Toggle */}
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowHistory(!showHistory)}
+                      className="w-full justify-between text-muted-foreground hover:text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <History className="w-4 h-4" />
+                        {showHistory ? t.hideHistory : t.showHistory}
+                        {simulations.length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs">
+                            {simulations.length}
+                          </span>
+                        )}
+                      </span>
+                      {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </Button>
+
+                    {/* Saved Simulations List */}
+                    <AnimatePresence>
+                      {showHistory && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2 overflow-hidden"
+                        >
+                          {simulations.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              {t.noSimulations}
+                            </p>
+                          ) : (
+                            simulations.map((sim) => (
+                              <motion.div
+                                key={sim.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="p-3 rounded-lg bg-muted/50 border border-border"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-gold/20 text-gold capitalize">
+                                      {t[sim.scenario as keyof typeof t] || sim.scenario}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(new Date(sim.created_at), 'dd MMM yyyy, HH:mm', { locale: dateLocale })}
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleLoadSimulation(sim)}
+                                      className="h-7 px-2 text-xs"
+                                    >
+                                      {t.loadSimulation}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteSimulation(sim.id)}
+                                      className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    €{sim.nightly_rate}/noapte • {sim.occupancy_without_system}% ocupare
+                                  </span>
+                                  <span className="font-bold text-gold">
+                                    €{sim.net_with_system}/lună
+                                  </span>
+                                </div>
+                              </motion.div>
+                            ))
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <div className="p-4 rounded-xl bg-muted/30 border border-border text-center">
+                    <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-3">{t.loginToSave}</p>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/auth">
+                        {t.loginButton}
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* WhatsApp CTA */}

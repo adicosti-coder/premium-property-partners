@@ -35,6 +35,72 @@ export type Database = {
         }
         Relationships: []
       }
+      advanced_simulations: {
+        Row: {
+          average_stay_duration: number
+          classic_rent: number
+          cleaning_cost_per_stay: number
+          created_at: string
+          diff_vs_classic: number
+          id: string
+          management_fee: number
+          monthly_fixed_costs: number
+          net_with_system: number
+          net_without_system: number
+          nightly_rate: number
+          occupancy_uplift: number
+          occupancy_without_system: number
+          payment_processing_fee: number
+          percent_vs_classic: number
+          platform_commission: number
+          rate_uplift: number
+          scenario: string
+          user_id: string
+        }
+        Insert: {
+          average_stay_duration?: number
+          classic_rent?: number
+          cleaning_cost_per_stay?: number
+          created_at?: string
+          diff_vs_classic?: number
+          id?: string
+          management_fee?: number
+          monthly_fixed_costs?: number
+          net_with_system?: number
+          net_without_system?: number
+          nightly_rate?: number
+          occupancy_uplift?: number
+          occupancy_without_system?: number
+          payment_processing_fee?: number
+          percent_vs_classic?: number
+          platform_commission?: number
+          rate_uplift?: number
+          scenario?: string
+          user_id: string
+        }
+        Update: {
+          average_stay_duration?: number
+          classic_rent?: number
+          cleaning_cost_per_stay?: number
+          created_at?: string
+          diff_vs_classic?: number
+          id?: string
+          management_fee?: number
+          monthly_fixed_costs?: number
+          net_with_system?: number
+          net_without_system?: number
+          nightly_rate?: number
+          occupancy_uplift?: number
+          occupancy_without_system?: number
+          payment_processing_fee?: number
+          percent_vs_classic?: number
+          platform_commission?: number
+          rate_uplift?: number
+          scenario?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_articles: {
         Row: {
           author_name: string
