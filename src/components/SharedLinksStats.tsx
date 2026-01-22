@@ -154,6 +154,8 @@ const SharedLinksStats = () => {
 
   const t = translations[language];
 
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -161,6 +163,8 @@ const SharedLinksStats = () => {
         setIsLoading(false);
         return;
       }
+
+      setCurrentUserId(user.id);
 
       // Fetch shared links
       const { data: links, error: linksError } = await supabase
@@ -217,6 +221,61 @@ const SharedLinksStats = () => {
       fetchData();
     }
   }, [isOpen]);
+
+  // Realtime subscription for import events
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const linkIds = sharedLinks.map((l) => l.id);
+    if (linkIds.length === 0) return;
+
+    const channel = supabase
+      .channel('poi-import-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'poi_import_events',
+        },
+        (payload) => {
+          const newEvent = payload.new as ImportEvent;
+          
+          // Check if this event is for one of our links
+          if (linkIds.includes(newEvent.shared_link_id)) {
+            // Add to import events for chart
+            setImportEvents((prev) => [...prev, newEvent]);
+            
+            // Update the import count on the corresponding link
+            setSharedLinks((prev) =>
+              prev.map((link) =>
+                link.id === newEvent.shared_link_id
+                  ? {
+                      ...link,
+                      import_count: link.import_count + 1,
+                      last_imported_at: newEvent.created_at,
+                    }
+                  : link
+              )
+            );
+
+            // Show toast notification
+            const link = sharedLinks.find((l) => l.id === newEvent.shared_link_id);
+            toast({
+              title: language === 'ro' ? '🎉 Nou import!' : '🎉 New import!',
+              description: language === 'ro' 
+                ? `Cineva a importat ${newEvent.imported_count} locații din link-ul ${link?.share_code || ''}`
+                : `Someone imported ${newEvent.imported_count} locations from link ${link?.share_code || ''}`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId, sharedLinks, language]);
 
   const copyShareLink = async (shareCode: string) => {
     const shareUrl = `${window.location.origin}/pentru-oaspeti?share=${shareCode}`;
