@@ -203,28 +203,34 @@ const PhoneInputWithCountry = ({
           {/* Clear & Validation Icons */}
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
             {/* Clear Button */}
-            {hasValue && (
-              <button
-                type="button"
-                onClick={() => onChange("")}
-                className="p-0.5 rounded-full hover:bg-muted transition-colors"
-                aria-label={language === 'en' ? 'Clear phone number' : 'Șterge numărul'}
-                title={language === 'en' ? 'Clear' : 'Șterge'}
-              >
-                <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className={`p-0.5 rounded-full hover:bg-muted transition-all duration-200 ${
+                hasValue 
+                  ? "opacity-100 scale-100" 
+                  : "opacity-0 scale-75 pointer-events-none"
+              }`}
+              aria-label={language === 'en' ? 'Clear phone number' : 'Șterge numărul'}
+              title={language === 'en' ? 'Clear' : 'Șterge'}
+            >
+              <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+            </button>
             
             {/* Validation Icon */}
-            {hasValue && (
-              isValid ? (
-                <Check className="w-4 h-4 text-green-500" />
+            <div className={`transition-all duration-200 ${
+              hasValue 
+                ? "opacity-100 scale-100" 
+                : "opacity-0 scale-75"
+            }`}>
+              {isValid ? (
+                <Check className="w-4 h-4 text-green-500 animate-scale-in" />
               ) : (
                 <span className="w-4 h-4 rounded-full bg-destructive/20 flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                 </span>
-              )
-            )}
+              )}
+            </div>
           </div>
         </div>
 
