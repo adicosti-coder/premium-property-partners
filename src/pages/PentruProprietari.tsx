@@ -23,6 +23,7 @@ import FinancialTransparency from "@/components/FinancialTransparency";
 import PartnershipTimeline from "@/components/PartnershipTimeline";
 import ProfitCalculator from "@/components/ProfitCalculator";
 import RentalIncomeCalculator from "@/components/RentalIncomeCalculator";
+import AdvancedRentalCalculator from "@/components/AdvancedRentalCalculator";
 import HowItWorks from "@/components/HowItWorks";
 import WhyUs from "@/components/WhyUs";
 import Testimonials from "@/components/Testimonials";
@@ -249,6 +250,9 @@ const PentruProprietari = () => {
 
       {/* Rental Income Calculator */}
       <RentalIncomeCalculator />
+
+      {/* Advanced Rental Calculator */}
+      <AdvancedRentalCalculator />
 
       {/* How It Works */}
       <HowItWorks />
