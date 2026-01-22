@@ -116,6 +116,25 @@ const Profile = () => {
       }
 
       const file = event.target.files[0];
+      
+      // Validate file type - only images allowed
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(language === "ro" 
+          ? "Doar fișiere imagine sunt permise (JPG, PNG, GIF, WEBP)" 
+          : "Only image files are allowed (JPG, PNG, GIF, WEBP)");
+        return;
+      }
+      
+      // Validate file size - max 2MB
+      const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSizeBytes) {
+        toast.error(language === "ro" 
+          ? "Fișierul este prea mare. Dimensiunea maximă este 2MB." 
+          : "File is too large. Maximum size is 2MB.");
+        return;
+      }
+      
       const fileExt = file.name.split(".").pop();
       const filePath = `${user?.id}/${Date.now()}.${fileExt}`;
 
