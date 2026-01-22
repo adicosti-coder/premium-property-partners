@@ -1,4 +1,5 @@
 /**
+ * @deprecated Use formatInternationalPhone from phoneCountryDetector.ts instead
  * Formats a Romanian phone number as the user types.
  * Supports both mobile (+40 7XX XXX XXX) and landline (+40 2XX XXX XXX) formats.
  */
@@ -56,6 +57,7 @@ export const extractPhoneDigits = (formattedPhone: string): string => {
 };
 
 /**
+ * @deprecated Use isValidInternationalPhone from phoneCountryDetector.ts for international validation
  * Regex for validating Romanian phone numbers (mobile and landline)
  * Mobile: +40 7XX XXX XXX
  * Landline: +40 2XX XXX XXX (or +40 3XX for some regions)

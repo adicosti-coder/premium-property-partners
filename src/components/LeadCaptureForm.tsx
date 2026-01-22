@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
-import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
+import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
@@ -51,8 +51,7 @@ const LeadCaptureForm = ({
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handlePhoneChange = (value: string) => {
-    const formatted = formatRomanianPhone(value);
-    setWhatsappNumber(formatted);
+    setWhatsappNumber(value);
     if (phoneError) setPhoneError("");
   };
 
@@ -75,16 +74,29 @@ const LeadCaptureForm = ({
       return;
     }
 
-    // Validate Romanian phone number
-    const cleanPhone = whatsappNumber.trim().replace(/\s+/g, " ");
-    if (!romanianPhoneRegex.test(cleanPhone)) {
+    // Validate phone number internationally
+    if (!isValidInternationalPhone(whatsappNumber)) {
       setPhoneError(t.leadForm.invalidPhone || "Număr de telefon invalid");
       toast({
         title: t.leadForm.invalidPhone || "Număr invalid",
-        description: t.leadForm.invalidPhoneMessage || "Formatul corect: +40 7XX XXX XXX sau 07XX XXX XXX",
+        description: t.leadForm.invalidPhoneMessage || "Verifică formatul numărului de telefon",
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate listing URL if provided
+    if (listingUrl.trim()) {
+      const urlValidation = listingUrlSchema.safeParse(listingUrl.trim());
+      if (!urlValidation.success) {
+        setListingUrlError(t.leadForm.invalidUrl || "Link invalid");
+        toast({
+          title: t.leadForm.invalidUrl || "Link invalid",
+          description: t.leadForm.invalidUrlMessage || "Te rugăm să introduci un URL valid.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Validate listing URL if provided

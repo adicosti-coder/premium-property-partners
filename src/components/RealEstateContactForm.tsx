@@ -17,12 +17,15 @@ import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
-import { formatRomanianPhone, romanianPhoneRegex } from "@/utils/phoneFormatter";
+import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 
+// Custom refinement for international phone validation
 const formSchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie să aibă cel puțin 2 caractere").max(100),
-  phone: z.string().trim().regex(romanianPhoneRegex, "Număr de telefon invalid").max(20),
+  phone: z.string().trim().max(25).refine((val) => isValidInternationalPhone(val), {
+    message: "Număr de telefon invalid"
+  }),
   email: z.string().trim().email("Email invalid").max(255),
   serviceType: z.string().min(1, "Selectează tipul de serviciu"),
   propertyType: z.string().optional(),
@@ -50,9 +53,7 @@ const RealEstateContactForm = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const handleChange = (field: keyof FormData, value: string) => {
-    // Apply phone formatting for the phone field
-    const finalValue = field === "phone" ? formatRomanianPhone(value) : value;
-    setFormData(prev => ({ ...prev, [field]: finalValue }));
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
