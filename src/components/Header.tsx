@@ -89,7 +89,7 @@ const Header = () => {
           {/* Logo */}
           <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden">
             {/* Shimmer overlay */}
-            <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
+            <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
               <span className="animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_20px_hsl(45_100%_50%/0.8),0_0_40px_hsl(45_100%_50%/0.5),0_0_60px_hsl(45_100%_50%/0.3)] transition-all duration-300">Real<span className="text-primary group-hover:text-amber-400 transition-colors duration-300">Trust</span></span>
               <span className="text-muted-foreground"> & </span>
