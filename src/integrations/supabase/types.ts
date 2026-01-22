@@ -300,6 +300,7 @@ export type Database = {
           created_at: string
           display_order: number
           id: string
+          image_url: string | null
           is_active: boolean
           tip_en: string
           tip_ro: string
@@ -309,6 +310,7 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           tip_en: string
           tip_ro: string
@@ -318,6 +320,7 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           tip_en?: string
           tip_ro?: string
@@ -507,6 +510,7 @@ export type Database = {
           description_en: string | null
           display_order: number
           id: string
+          image_url: string | null
           is_active: boolean
           latitude: number
           longitude: number
@@ -525,6 +529,7 @@ export type Database = {
           description_en?: string | null
           display_order?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           latitude: number
           longitude: number
@@ -543,6 +548,7 @@ export type Database = {
           description_en?: string | null
           display_order?: number
           id?: string
+          image_url?: string | null
           is_active?: boolean
           latitude?: number
           longitude?: number

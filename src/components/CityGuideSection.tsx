@@ -37,6 +37,7 @@ interface POI {
   rating: number | null;
   is_active: boolean;
   display_order: number;
+  image_url: string | null;
 }
 
 const CityGuideSection: React.FC = () => {
@@ -258,44 +259,66 @@ const CityGuideSection: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`group relative p-6 rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300`}
+                  className={`group relative rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
                 >
-                  {/* Category Icon */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
-                      <Icon className={`w-6 h-6 ${iconColor}`} />
+                  {/* Image */}
+                  {poi.image_url && (
+                    <div className="relative h-40 overflow-hidden">
+                      <img 
+                        src={poi.image_url} 
+                        alt={language === 'ro' ? poi.name : poi.name_en}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      {poi.rating && (
+                        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          <span className="font-medium">{poi.rating}</span>
+                        </div>
+                      )}
                     </div>
-                    {poi.rating && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
-                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        <span className="font-medium">{poi.rating}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                    {language === 'ro' ? poi.name : poi.name_en}
-                  </h3>
+                  )}
                   
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                    {language === 'ro' 
-                      ? (poi.description || 'Fără descriere') 
-                      : (poi.description_en || 'No description')}
-                  </p>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between">
-                    {poi.address && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span className="truncate max-w-[120px]">{poi.address}</span>
+                  <div className="p-6">
+                    {/* Category Icon - show only if no image */}
+                    {!poi.image_url && (
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
+                          <Icon className={`w-6 h-6 ${iconColor}`} />
+                        </div>
+                        {poi.rating && (
+                          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
+                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                            <span className="font-medium">{poi.rating}</span>
+                          </div>
+                        )}
                       </div>
                     )}
+
+                    {/* Content */}
+                    <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                      {language === 'ro' ? poi.name : poi.name_en}
+                    </h3>
                     
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
-                      <Sparkles className="w-3 h-3" />
-                      {getCategoryLabel(poi.category)}
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                      {language === 'ro' 
+                        ? (poi.description || 'Fără descriere') 
+                        : (poi.description_en || 'No description')}
+                    </p>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between">
+                      {poi.address && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          <span className="truncate max-w-[120px]">{poi.address}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
+                        <Sparkles className="w-3 h-3" />
+                        {getCategoryLabel(poi.category)}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
