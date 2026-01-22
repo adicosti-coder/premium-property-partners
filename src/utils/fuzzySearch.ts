@@ -5,7 +5,7 @@
 export interface FuzzyMatch {
   item: string;
   score: number;
-  matches: Array<[number, number]>; // Start and end indices of matching segments
+  matches: number[]; // Indices of matching characters
 }
 
 /**
@@ -38,6 +38,35 @@ function levenshteinDistance(a: string, b: string): number {
   }
 
   return matrix[b.length][a.length];
+}
+
+/**
+ * Get indices of matching characters in target string.
+ */
+export function getMatchIndices(query: string, target: string): number[] {
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  const indices: number[] = [];
+
+  // Check for substring match first (exact or contains)
+  const substringIndex = t.indexOf(q);
+  if (substringIndex !== -1) {
+    for (let i = substringIndex; i < substringIndex + q.length; i++) {
+      indices.push(i);
+    }
+    return indices;
+  }
+
+  // Check for characters appearing in order
+  let queryIndex = 0;
+  for (let i = 0; i < t.length && queryIndex < q.length; i++) {
+    if (t[i] === q[queryIndex]) {
+      indices.push(i);
+      queryIndex++;
+    }
+  }
+
+  return indices;
 }
 
 /**
@@ -106,24 +135,28 @@ export function fuzzyFilter<T>(
   query: string,
   getSearchableStrings: (item: T) => string[],
   minScore: number = 0.2
-): Array<{ item: T; score: number }> {
+): Array<{ item: T; score: number; matchIndices: Map<string, number[]> }> {
   if (!query.trim()) {
-    return items.map(item => ({ item, score: 1 }));
+    return items.map(item => ({ item, score: 1, matchIndices: new Map() }));
   }
 
-  const results: Array<{ item: T; score: number }> = [];
+  const results: Array<{ item: T; score: number; matchIndices: Map<string, number[]> }> = [];
 
   for (const item of items) {
     const searchableStrings = getSearchableStrings(item);
     let maxScore = 0;
+    const matchIndices = new Map<string, number[]>();
 
     for (const str of searchableStrings) {
       const score = fuzzyScore(query, str);
+      if (score > 0) {
+        matchIndices.set(str, getMatchIndices(query, str));
+      }
       maxScore = Math.max(maxScore, score);
     }
 
     if (maxScore >= minScore) {
-      results.push({ item, score: maxScore });
+      results.push({ item, score: maxScore, matchIndices });
     }
   }
 

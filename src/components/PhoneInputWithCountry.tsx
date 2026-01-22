@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useUISound } from "@/hooks/useUISound";
-import { fuzzyFilter } from "@/utils/fuzzySearch";
+import { fuzzyFilter, getMatchIndices } from "@/utils/fuzzySearch";
+import HighlightedText from "@/components/HighlightedText";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -200,8 +201,10 @@ const PhoneInputWithCountry = ({
   };
 
   // Filter countries based on search query with fuzzy matching
-  const filteredCountries = useMemo(() => {
-    if (!searchQuery) return countries;
+  const { filteredCountries, matchIndicesMap } = useMemo(() => {
+    if (!searchQuery) {
+      return { filteredCountries: countries, matchIndicesMap: new Map<string, number[]>() };
+    }
     
     const results = fuzzyFilter(
       countries,
@@ -215,8 +218,19 @@ const PhoneInputWithCountry = ({
       0.2 // Minimum score threshold
     );
     
-    return results.map(r => r.item);
-  }, [searchQuery]);
+    // Build a map of country code -> match indices for the display name
+    const indicesMap = new Map<string, number[]>();
+    for (const result of results) {
+      const displayName = language === 'en' ? result.item.nameEn : result.item.name;
+      const indices = getMatchIndices(searchQuery, displayName);
+      indicesMap.set(result.item.code, indices);
+    }
+    
+    return { 
+      filteredCountries: results.map(r => r.item),
+      matchIndicesMap: indicesMap
+    };
+  }, [searchQuery, language]);
 
   // Group filtered countries by region
   const groupedCountries = useMemo(() => {
@@ -515,7 +529,10 @@ const PhoneInputWithCountry = ({
                           >
                             <span className="text-lg">{country.flag}</span>
                             <span className="flex-1 text-sm truncate">
-                              {language === 'en' ? country.nameEn : country.name}
+                              <HighlightedText
+                                text={language === 'en' ? country.nameEn : country.name}
+                                highlightIndices={matchIndicesMap.get(country.code) || []}
+                              />
                             </span>
                             <span className="text-xs text-muted-foreground font-mono">{country.prefix}</span>
                             {selectedCountry.code === country.code && (
