@@ -380,10 +380,10 @@ const AdvancedRentalCalculator = () => {
     }
 
     const message = encodeURIComponent(
-      `Bună, RealTrust! Am folosit calculatorul avansat:\n` +
+      `Bună ziua, RealTrust & ApArt Hotel! Am folosit calculatorul avansat:\n` +
       `📊 Scenariu: ${t[scenario]}\n` +
       `💰 Chirie clasică: ${calculations.classicRent}€\n` +
-      `📈 Cu RealTrust: ${calculations.netWithSystem}€/lună\n` +
+      `📈 Cu RealTrust & ApArt Hotel: ${calculations.netWithSystem}€/lună\n` +
       `✨ Diferență: +${calculations.diffVsClassic}€/lună (+${calculations.percentVsClassic}%)\n\n` +
       `Vreau o evaluare personalizată pentru proprietatea mea.`
     );
