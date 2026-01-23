@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
 import LiveLeaderboard from "@/components/LiveLeaderboard";
+import UserLeaderboard from "@/components/UserLeaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -364,8 +365,9 @@ const CommunityArticles = () => {
 
           {/* Live Leaderboard Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
               <LiveLeaderboard contestId={activeContest?.id} />
+              <UserLeaderboard maxDisplay={5} />
             </div>
             
             {/* How It Works */}
