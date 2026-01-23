@@ -58,7 +58,7 @@ const QuickLeadForm = () => {
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
-        body: { token }
+        body: { token, formType: 'quick_lead_form' }
       });
       if (error) throw error;
       return data.success === true;

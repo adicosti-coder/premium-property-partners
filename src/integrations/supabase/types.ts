@@ -223,6 +223,42 @@ export type Database = {
         }
         Relationships: []
       }
+      captcha_logs: {
+        Row: {
+          created_at: string
+          error_codes: string[] | null
+          form_type: string
+          hostname: string | null
+          id: string
+          ip_address: string | null
+          score: number | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_codes?: string[] | null
+          form_type: string
+          hostname?: string | null
+          id?: string
+          ip_address?: string | null
+          score?: number | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_codes?: string[] | null
+          form_type?: string
+          hostname?: string | null
+          id?: string
+          ip_address?: string | null
+          score?: number | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       complex_images: {
         Row: {
           complex_id: string
