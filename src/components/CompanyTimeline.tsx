@@ -52,7 +52,7 @@ const CompanyTimeline = () => {
           highlight: "Servicii complete de administrare"
         },
         {
-          year: "2019",
+          year: "2017",
           icon: Home,
           title: "Nașterea ApArt Hotel",
           description: "Identificarea oportunității în piața de închirieri pe termen scurt și lansarea brandului ApArt Hotel.",
@@ -115,7 +115,7 @@ const CompanyTimeline = () => {
           highlight: "Complete management services"
         },
         {
-          year: "2019",
+          year: "2017",
           icon: Home,
           title: "Birth of ApArt Hotel",
           description: "Identifying the opportunity in the short-term rental market and launching the ApArt Hotel brand.",
