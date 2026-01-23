@@ -35,6 +35,7 @@ interface BlogArticle {
 }
 
 type SortOption = "newest" | "oldest" | "title";
+type AccessFilter = "all" | "public" | "premium";
 
 const Blog = () => {
   const { language } = useLanguage();
@@ -43,6 +44,7 @@ const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [accessFilter, setAccessFilter] = useState<AccessFilter>("all");
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -89,7 +91,11 @@ const Blog = () => {
         article.category.toLowerCase().includes(query);
       const matchesCategory =
         !selectedCategory || article.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesAccess =
+        accessFilter === "all" ||
+        (accessFilter === "public" && !article.is_premium) ||
+        (accessFilter === "premium" && article.is_premium);
+      return matchesSearch && matchesCategory && matchesAccess;
     });
 
     // Sort articles
@@ -106,7 +112,7 @@ const Blog = () => {
                  new Date(a.published_at || a.created_at).getTime();
       }
     });
-  }, [articles, searchQuery, selectedCategory, sortBy, language]);
+  }, [articles, searchQuery, selectedCategory, accessFilter, sortBy, language]);
 
   const translations = {
     ro: {
@@ -127,6 +133,9 @@ const Blog = () => {
       promoButton: "Află mai multe",
       premiumBadge: "Premium",
       loginToRead: "Autentifică-te pentru a citi",
+      accessAll: "Toate",
+      accessPublic: "Publice",
+      accessPremium: "Premium",
     },
     en: {
       title: "Blog",
@@ -146,6 +155,9 @@ const Blog = () => {
       promoButton: "Learn more",
       premiumBadge: "Premium",
       loginToRead: "Login to read",
+      accessAll: "All",
+      accessPublic: "Public",
+      accessPremium: "Premium",
     },
   };
 
@@ -187,17 +199,35 @@ const Blog = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={t.search}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex flex-col gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={t.search}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 items-center">
+                <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                  <SelectTrigger className="w-[160px] h-8">
+                    <ArrowUpDown className="w-3 h-3 mr-2" />
+                    <SelectValue placeholder={t.sortBy} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">{t.newest}</SelectItem>
+                    <SelectItem value="oldest">{t.oldest}</SelectItem>
+                    <SelectItem value="title">{t.titleSort}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            
+            {/* Category and Access Filters */}
             <div className="flex flex-wrap gap-2 items-center">
+              {/* Category Filters */}
               <Button
                 variant={selectedCategory === null ? "default" : "outline"}
                 size="sm"
@@ -215,17 +245,38 @@ const Blog = () => {
                   {cat}
                 </Button>
               ))}
-              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-                <SelectTrigger className="w-[160px] h-8">
-                  <ArrowUpDown className="w-3 h-3 mr-2" />
-                  <SelectValue placeholder={t.sortBy} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">{t.newest}</SelectItem>
-                  <SelectItem value="oldest">{t.oldest}</SelectItem>
-                  <SelectItem value="title">{t.titleSort}</SelectItem>
-                </SelectContent>
-              </Select>
+              
+              {/* Separator */}
+              <div className="h-6 w-px bg-border mx-2 hidden sm:block" />
+              
+              {/* Access Filter */}
+              <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
+                <Button
+                  variant={accessFilter === "all" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setAccessFilter("all")}
+                  className="h-7 px-3"
+                >
+                  {t.accessAll}
+                </Button>
+                <Button
+                  variant={accessFilter === "public" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setAccessFilter("public")}
+                  className="h-7 px-3"
+                >
+                  {t.accessPublic}
+                </Button>
+                <Button
+                  variant={accessFilter === "premium" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setAccessFilter("premium")}
+                  className="h-7 px-3 gap-1"
+                >
+                  <Crown className="w-3 h-3" />
+                  {t.accessPremium}
+                </Button>
+              </div>
             </div>
           </div>
 
