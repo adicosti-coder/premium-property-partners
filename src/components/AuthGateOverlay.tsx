@@ -93,12 +93,28 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
         </ul>
 
         <div className="space-y-3">
-          <Button asChild className="w-full" size="lg">
-            <Link to="/auth?mode=signup">
-              <UserPlus className="w-4 h-4 mr-2" />
-              {text.signup}
-            </Link>
-          </Button>
+          <motion.div
+            animate={{ 
+              boxShadow: [
+                "0 0 0 0 hsl(var(--primary) / 0)",
+                "0 0 0 8px hsl(var(--primary) / 0.3)",
+                "0 0 0 0 hsl(var(--primary) / 0)"
+              ]
+            }}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+            className="rounded-lg"
+          >
+            <Button asChild className="w-full" size="lg">
+              <Link to="/auth?mode=signup">
+                <UserPlus className="w-4 h-4 mr-2" />
+                {text.signup}
+              </Link>
+            </Button>
+          </motion.div>
           
           <Button asChild variant="outline" className="w-full" size="lg">
             <Link to="/auth">
