@@ -85,9 +85,26 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
           <span className="text-sm font-medium">{text.badge}</span>
         </motion.div>
 
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            boxShadow: [
+              "0 0 0 0 hsl(var(--primary) / 0)",
+              "0 0 30px 10px hsl(var(--primary) / 0.4)",
+              "0 0 20px 5px hsl(var(--primary) / 0.2)"
+            ]
+          }}
+          transition={{ 
+            delay: 0.25,
+            duration: 0.5,
+            boxShadow: { delay: 0.5, duration: 1, ease: "easeOut" }
+          }}
+          className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6"
+        >
           <Lock className="w-8 h-8 text-primary" />
-        </div>
+        </motion.div>
         
         <h3 className="text-2xl font-serif font-bold text-foreground mb-3">
           {text.title}
