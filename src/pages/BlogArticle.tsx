@@ -9,14 +9,14 @@ import BlogComments from "@/components/BlogComments";
 import BlogNewsletterCTA from "@/components/BlogNewsletterCTA";
 import RelatedArticles from "@/components/RelatedArticles";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
+import SocialShareButtons from "@/components/blog/SocialShareButtons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, ArrowLeft, User, Tag, Share2, Lock, Crown, LogIn } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
-import { toast } from "@/hooks/use-toast";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -81,8 +81,6 @@ const BlogArticlePage = () => {
       notFoundDescription: "Ne pare rău, acest articol nu există sau nu a fost publicat.",
       goToBlog: "Mergi la Blog",
       minRead: "min citire",
-      share: "Distribuie",
-      linkCopied: "Link copiat în clipboard!",
       premiumContent: "Conținut Premium",
       premiumDescription: "Acest articol este rezervat membrilor noștri. Autentifică-te pentru a citi conținutul complet.",
       loginToRead: "Autentifică-te pentru a citi",
@@ -94,8 +92,6 @@ const BlogArticlePage = () => {
       notFoundDescription: "Sorry, this article doesn't exist or hasn't been published.",
       goToBlog: "Go to Blog",
       minRead: "min read",
-      share: "Share",
-      linkCopied: "Link copied to clipboard!",
       premiumContent: "Premium Content",
       premiumDescription: "This article is reserved for our members. Login to read the full content.",
       loginToRead: "Login to read",
@@ -104,15 +100,7 @@ const BlogArticlePage = () => {
   };
 
   const t = translations[language] || translations.ro;
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast({ title: t.linkCopied });
-    } catch {
-      console.error("Failed to copy link");
-    }
-  };
+  const articleUrl = typeof window !== "undefined" ? window.location.href : "";
 
   // Check if this is a premium article that requires auth
   const isPremiumLocked = article?.is_premium && !user;
@@ -270,7 +258,7 @@ const BlogArticlePage = () => {
               {displayExcerpt}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
               <span className="flex items-center gap-1">
                 <User className="w-4 h-4" />
                 {article.author_name}
@@ -287,11 +275,14 @@ const BlogArticlePage = () => {
                 <Clock className="w-4 h-4" />
                 {readingTime} {t.minRead}
               </span>
-              <Button variant="ghost" size="sm" onClick={handleShare}>
-                <Share2 className="w-4 h-4 mr-1" />
-                {t.share}
-              </Button>
             </div>
+
+            {/* Social Share Buttons */}
+            <SocialShareButtons 
+              url={articleUrl} 
+              title={displayTitle} 
+              description={displayExcerpt}
+            />
           </header>
 
           {/* Cover Image */}
@@ -311,16 +302,27 @@ const BlogArticlePage = () => {
             dangerouslySetInnerHTML={{ __html: displayContent }}
           />
 
-          {/* Tags */}
-          {article.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-8 border-t border-border">
-              {article.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+          {/* Tags and Share */}
+          <div className="pt-8 border-t border-border space-y-6">
+            {article.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {article.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
+            {/* Bottom Social Share */}
+            <div className="flex justify-center">
+              <SocialShareButtons 
+                url={articleUrl} 
+                title={displayTitle} 
+                description={displayExcerpt}
+              />
             </div>
-          )}
+          </div>
 
           {/* Related Articles */}
           <RelatedArticles 
