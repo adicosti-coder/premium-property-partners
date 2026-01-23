@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Calendar, Users, Phone, Mail, MessageSquare, Globe, Send, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Calendar, Users, Phone, Mail, MessageSquare, Globe, Send, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 interface BookingFormProps {
   isOpen: boolean;
@@ -44,6 +45,57 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // hCaptcha state
+  const captchaRef = useRef<HCaptcha>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+
+  // Fetch hCaptcha site key
+  useEffect(() => {
+    const fetchSiteKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        if (error) throw error;
+        setHcaptchaSiteKey(data.siteKey);
+      } catch (error) {
+        console.error("Failed to fetch hCaptcha site key:", error);
+      }
+    };
+    if (isOpen) {
+      fetchSiteKey();
+    }
+  }, [isOpen]);
+
+  // Reset captcha when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCaptchaToken(null);
+      captchaRef.current?.resetCaptcha();
+    }
+  }, [isOpen]);
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
+  const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+        body: { token }
+      });
+      if (error) throw error;
+      return data.success === true;
+    } catch (error) {
+      console.error("Captcha verification error:", error);
+      return false;
+    }
+  };
 
   const countries = language === 'en' ? countriesEn : countriesRo;
 
@@ -116,7 +168,34 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
       return;
     }
 
+    // Verify hCaptcha
+    if (!captchaToken) {
+      toast({
+        title: language === 'en' ? "Verification required" : "Verificare necesară",
+        description: language === 'en' ? "Please complete the captcha verification" : "Vă rugăm să completați verificarea captcha",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setIsVerifyingCaptcha(true);
+
+    // Server-side captcha verification
+    const isCaptchaValid = await verifyCaptchaOnServer(captchaToken);
+    setIsVerifyingCaptcha(false);
+
+    if (!isCaptchaValid) {
+      toast({
+        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
+        description: language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Vă rugăm să încercați din nou.",
+        variant: "destructive",
+      });
+      setCaptchaToken(null);
+      captchaRef.current?.resetCaptcha();
+      setIsSubmitting(false);
+      return;
+    }
 
     // Send email notification
     await sendEmailNotification();
@@ -344,6 +423,34 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             />
           </div>
 
+          {/* hCaptcha widget */}
+          <div className="flex flex-col items-center gap-2 pt-2">
+            {hcaptchaSiteKey ? (
+              <>
+                <HCaptcha
+                  ref={captchaRef}
+                  sitekey={hcaptchaSiteKey}
+                  onVerify={handleCaptchaVerify}
+                  onExpire={handleCaptchaExpire}
+                  languageOverride={language}
+                  theme="dark"
+                />
+                {captchaToken && (
+                  <div className="flex items-center gap-1 text-sm text-primary">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>{language === "ro" ? "Verificat" : "Verified"}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-pulse text-muted-foreground text-sm">
+                  {language === "ro" ? "Se încarcă verificarea..." : "Loading verification..."}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Submit */}
           <div className="flex gap-3 pt-4">
             <Button
@@ -356,11 +463,13 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}
               className="flex-1 bg-primary hover:bg-primary/90"
             >
               {isSubmitting ? (
-                t.booking.sending
+                isVerifyingCaptcha 
+                  ? (language === 'en' ? "Verifying..." : "Se verifică...")
+                  : t.booking.sending
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
