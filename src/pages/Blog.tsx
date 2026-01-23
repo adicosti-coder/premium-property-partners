@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown, Eye, TrendingUp } from "lucide-react";
+import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown, Eye, TrendingUp, PenLine, Trophy } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -143,6 +143,9 @@ const Blog = () => {
       oldest: "Cele mai vechi",
       titleSort: "Alfabetic",
       popular: "Cele mai populare",
+      communityTitle: "Scrie și câștigă!",
+      communityDesc: "Trimite un articol și poți câștiga o noapte gratuită de cazare.",
+      communityBtn: "Participă la concurs",
       promoTitle: "Rezervă direct și economisește 5%!",
       promoDescription: "Folosește codul DIRECT5 pentru 5% reducere la orice rezervare directă.",
       promoButton: "Află mai multe",
@@ -167,6 +170,9 @@ const Blog = () => {
       oldest: "Oldest",
       titleSort: "Alphabetical",
       popular: "Most popular",
+      communityTitle: "Write and win!",
+      communityDesc: "Submit an article and you could win a free night stay.",
+      communityBtn: "Join the contest",
       promoTitle: "Book direct and save 5%!",
       promoDescription: "Use code DIRECT5 for 5% off any direct booking.",
       promoButton: "Learn more",
@@ -212,6 +218,25 @@ const Blog = () => {
               <Button onClick={() => navigate("/rezerva-direct")} className="shrink-0">
                 {t.promoButton}
                 <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Community Contest Banner */}
+          <div className="mb-8 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-full">
+                  <Trophy className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">{t.communityTitle}</h3>
+                  <p className="text-sm text-muted-foreground">{t.communityDesc}</p>
+                </div>
+              </div>
+              <Button onClick={() => navigate("/comunitate")} variant="outline" className="shrink-0 border-amber-500/50 hover:bg-amber-500/10">
+                <PenLine className="w-4 h-4 mr-2" />
+                {t.communityBtn}
               </Button>
             </div>
           </div>

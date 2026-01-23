@@ -101,6 +101,35 @@ export type Database = {
         }
         Relationships: []
       }
+      article_votes: {
+        Row: {
+          created_at: string
+          id: string
+          submission_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          submission_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          submission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_votes_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "user_article_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_article_views: {
         Row: {
           article_id: string
@@ -340,6 +369,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contest_periods: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          name: string
+          prize_description: string
+          start_date: string
+          updated_at: string
+          winner_announced_at: string | null
+          winner_submission_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          name: string
+          prize_description?: string
+          start_date: string
+          updated_at?: string
+          winner_announced_at?: string | null
+          winner_submission_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          prize_description?: string
+          start_date?: string
+          updated_at?: string
+          winner_announced_at?: string | null
+          winner_submission_id?: string | null
+        }
+        Relationships: []
       }
       email_ab_assignments: {
         Row: {
@@ -1367,6 +1438,65 @@ export type Database = {
           weekly_report_recipients?: string[] | null
         }
         Relationships: []
+      }
+      user_article_submissions: {
+        Row: {
+          admin_feedback: string | null
+          content: string
+          contest_period_id: string | null
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          vote_count: number
+        }
+        Insert: {
+          admin_feedback?: string | null
+          content: string
+          contest_period_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          vote_count?: number
+        }
+        Update: {
+          admin_feedback?: string | null
+          content?: string
+          contest_period_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          vote_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_article_submissions_contest_period_id_fkey"
+            columns: ["contest_period_id"]
+            isOneToOne: false
+            referencedRelation: "contest_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_notifications: {
         Row: {
