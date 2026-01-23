@@ -50,6 +50,7 @@ import {
   Film,
   Lightbulb,
   FlaskConical,
+  Shield,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -73,6 +74,7 @@ import LocalTipsManager from "@/components/admin/LocalTipsManager";
 import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
 import ABTestManager from "@/components/admin/ABTestManager";
 import ReviewsManager from "@/components/admin/ReviewsManager";
+import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -317,6 +319,10 @@ const Admin = () => {
               <MessageSquare className="w-4 h-4" />
               Reviews
             </TabsTrigger>
+            <TabsTrigger value="captcha" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Captcha
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -400,6 +406,11 @@ const Admin = () => {
           {/* Reviews Tab */}
           <TabsContent value="reviews">
             <ReviewsManager />
+          </TabsContent>
+
+          {/* Captcha Logs Tab */}
+          <TabsContent value="captcha">
+            <CaptchaLogsManager />
           </TabsContent>
         </Tabs>
       </div>
