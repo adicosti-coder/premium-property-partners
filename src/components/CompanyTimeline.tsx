@@ -38,6 +38,13 @@ const CompanyTimeline = () => {
           highlight: "100+ tranzacții finalizate"
         },
         {
+          year: "2006",
+          icon: Award,
+          title: "Recunoaștere",
+          description: "Consolidarea poziției de acoperire regională, cu o echipă de experți dedicați și procese standardizate.",
+          highlight: "Echipă de 10+ profesioniști"
+        },
+        {
           year: "2010",
           icon: Award,
           title: "Diversificare",
@@ -99,6 +106,13 @@ const CompanyTimeline = () => {
           title: "Expansion",
           description: "Expanding the portfolio to commercial properties and developing relationships with institutional investors.",
           highlight: "100+ transactions completed"
+        },
+        {
+          year: "2006",
+          icon: Award,
+          title: "Recognition",
+          description: "Consolidating regional coverage position, with a team of dedicated experts and standardized processes.",
+          highlight: "Team of 10+ professionals"
         },
         {
           year: "2010",
