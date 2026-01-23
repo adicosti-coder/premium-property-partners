@@ -52,10 +52,13 @@ import {
   EyeOff,
   Loader2,
   Search,
-  Filter
+  Filter,
+  Reply,
+  MessageCircle
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
 interface Review {
   id: string;
@@ -67,6 +70,9 @@ interface Review {
   content: string | null;
   is_published: boolean;
   created_at: string;
+  admin_reply: string | null;
+  admin_reply_at: string | null;
+  admin_reply_by: string | null;
   property?: {
     name: string;
   };
@@ -88,6 +94,8 @@ const ReviewsManager = () => {
   const [filterProperty, setFilterProperty] = useState<string>("all");
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
+  const [replyingReview, setReplyingReview] = useState<Review | null>(null);
+  const [replyText, setReplyText] = useState("");
   const [editForm, setEditForm] = useState({
     guest_name: "",
     rating: 5,
@@ -117,6 +125,7 @@ const ReviewsManager = () => {
       unpublish: "Ascunde",
       edit: "Editează",
       delete: "Șterge",
+      reply: "Răspunde",
       noReviews: "Nu există recenzii",
       noReviewsDesc: "Încă nu au fost primite recenzii de la oaspeți.",
       editTitle: "Editează Recenzie",
@@ -132,11 +141,20 @@ const ReviewsManager = () => {
       successUnpublish: "Recenzie ascunsă cu succes",
       successEdit: "Recenzie actualizată cu succes",
       successDelete: "Recenzie ștearsă cu succes",
+      successReply: "Răspuns salvat cu succes",
+      successReplyDelete: "Răspuns șters cu succes",
       error: "A apărut o eroare",
       totalReviews: "Total recenzii",
       publishedReviews: "Publicate",
       pendingReviews: "În așteptare",
       avgRating: "Rating mediu",
+      replyTitle: "Răspunde la Recenzie",
+      replyPlaceholder: "Scrie răspunsul tău aici...",
+      yourReply: "Răspunsul tău",
+      editReply: "Editează răspunsul",
+      deleteReply: "Șterge răspunsul",
+      hasReply: "Răspuns",
+      repliedOn: "Răspuns pe",
     },
     en: {
       title: "Reviews Management",
@@ -159,6 +177,7 @@ const ReviewsManager = () => {
       unpublish: "Hide",
       edit: "Edit",
       delete: "Delete",
+      reply: "Reply",
       noReviews: "No reviews",
       noReviewsDesc: "No guest reviews have been received yet.",
       editTitle: "Edit Review",
@@ -174,11 +193,20 @@ const ReviewsManager = () => {
       successUnpublish: "Review hidden successfully",
       successEdit: "Review updated successfully",
       successDelete: "Review deleted successfully",
+      successReply: "Reply saved successfully",
+      successReplyDelete: "Reply deleted successfully",
       error: "An error occurred",
       totalReviews: "Total reviews",
       publishedReviews: "Published",
       pendingReviews: "Pending",
       avgRating: "Average rating",
+      replyTitle: "Reply to Review",
+      replyPlaceholder: "Write your reply here...",
+      yourReply: "Your reply",
+      editReply: "Edit reply",
+      deleteReply: "Delete reply",
+      hasReply: "Replied",
+      repliedOn: "Replied on",
     },
   };
 
@@ -276,6 +304,31 @@ const ReviewsManager = () => {
     },
   });
 
+  // Reply mutation
+  const replyMutation = useMutation({
+    mutationFn: async ({ id, reply }: { id: string; reply: string | null }) => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      const { error } = await supabase
+        .from("property_reviews")
+        .update({
+          admin_reply: reply,
+          admin_reply_at: reply ? new Date().toISOString() : null,
+          admin_reply_by: reply ? user?.id : null,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { reply }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
+      setReplyingReview(null);
+      setReplyText("");
+      toast({ title: reply ? t.successReply : t.successReplyDelete });
+    },
+    onError: () => {
+      toast({ title: t.error, variant: "destructive" });
+    },
+  });
+
   // Filter reviews
   const filteredReviews = reviews?.filter((review) => {
     const matchesSearch =
@@ -332,6 +385,27 @@ const ReviewsManager = () => {
     editMutation.mutate({
       id: editingReview.id,
       ...editForm,
+    });
+  };
+
+  const handleReplyClick = (review: Review) => {
+    setReplyingReview(review);
+    setReplyText(review.admin_reply || "");
+  };
+
+  const handleReplySave = () => {
+    if (!replyingReview) return;
+    replyMutation.mutate({
+      id: replyingReview.id,
+      reply: replyText.trim() || null,
+    });
+  };
+
+  const handleReplyDelete = () => {
+    if (!replyingReview) return;
+    replyMutation.mutate({
+      id: replyingReview.id,
+      reply: null,
     });
   };
 
@@ -465,12 +539,20 @@ const ReviewsManager = () => {
                       </p>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={review.is_published ? "default" : "secondary"}
-                        className={review.is_published ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : ""}
-                      >
-                        {review.is_published ? t.published : t.pending}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge
+                          variant={review.is_published ? "default" : "secondary"}
+                          className={review.is_published ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 w-fit" : "w-fit"}
+                        >
+                          {review.is_published ? t.published : t.pending}
+                        </Badge>
+                        {review.admin_reply && (
+                          <Badge variant="outline" className="text-primary border-primary/30 w-fit">
+                            <MessageCircle className="w-3 h-3 mr-1" />
+                            {t.hasReply}
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(parseISO(review.created_at), "d MMM yyyy", { locale: dateLocale })}
@@ -488,6 +570,14 @@ const ReviewsManager = () => {
                           ) : (
                             <Eye className="w-4 h-4 text-emerald-600" />
                           )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleReplyClick(review)}
+                          title={t.reply}
+                        >
+                          <Reply className={`w-4 h-4 ${review.admin_reply ? "text-primary" : "text-muted-foreground"}`} />
                         </Button>
                         <Button
                           variant="ghost"
@@ -596,6 +686,73 @@ const ReviewsManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reply Dialog */}
+      <Dialog open={!!replyingReview} onOpenChange={() => setReplyingReview(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Reply className="w-5 h-5 text-primary" />
+              {t.replyTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Original Review Info */}
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-sm">{replyingReview?.guest_name}</p>
+                {replyingReview && renderStars(replyingReview.rating)}
+              </div>
+              {replyingReview?.title && (
+                <p className="text-sm font-medium">{replyingReview.title}</p>
+              )}
+              <p className="text-sm text-muted-foreground">{replyingReview?.content}</p>
+              {replyingReview?.created_at && (
+                <p className="text-xs text-muted-foreground">
+                  {format(parseISO(replyingReview.created_at), "d MMM yyyy", { locale: dateLocale })}
+                </p>
+              )}
+            </div>
+
+            {/* Reply Form */}
+            <div className="space-y-2">
+              <Label>{t.yourReply}</Label>
+              <Textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder={t.replyPlaceholder}
+                rows={4}
+              />
+              {replyingReview?.admin_reply_at && (
+                <p className="text-xs text-muted-foreground">
+                  {t.repliedOn} {format(parseISO(replyingReview.admin_reply_at), "d MMM yyyy HH:mm", { locale: dateLocale })}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {replyingReview?.admin_reply && (
+              <Button
+                variant="outline"
+                onClick={handleReplyDelete}
+                disabled={replyMutation.isPending}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {t.deleteReply}
+              </Button>
+            )}
+            <div className="flex-1" />
+            <Button variant="outline" onClick={() => setReplyingReview(null)}>
+              {t.cancel}
+            </Button>
+            <Button onClick={handleReplySave} disabled={replyMutation.isPending || !replyText.trim()}>
+              {replyMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {t.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

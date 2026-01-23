@@ -985,6 +985,9 @@ export type Database = {
       }
       property_reviews: {
         Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
+          admin_reply_by: string | null
           booking_id: string | null
           content: string | null
           created_at: string
@@ -998,6 +1001,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          admin_reply_by?: string | null
           booking_id?: string | null
           content?: string | null
           created_at?: string
@@ -1011,6 +1017,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          admin_reply_by?: string | null
           booking_id?: string | null
           content?: string | null
           created_at?: string
