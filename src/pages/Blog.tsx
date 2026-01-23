@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown, Eye } from "lucide-react";
+import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown, Eye, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -80,6 +80,17 @@ const Blog = () => {
     return Array.from(cats);
   }, [articles]);
 
+  // Get top 3 trending article IDs based on view count
+  const trendingArticleIds = useMemo(() => {
+    if (!articles) return new Set<string>();
+    const sorted = [...articles]
+      .filter(a => (a.view_count || 0) > 0)
+      .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+      .slice(0, 3)
+      .map(a => a.id);
+    return new Set(sorted);
+  }, [articles]);
+
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     const query = searchQuery.toLowerCase().trim();
@@ -136,6 +147,7 @@ const Blog = () => {
       promoDescription: "Folosește codul DIRECT5 pentru 5% reducere la orice rezervare directă.",
       promoButton: "Află mai multe",
       premiumBadge: "Premium",
+      trendingBadge: "Trending",
       loginToRead: "Autentifică-te pentru a citi",
       accessAll: "Toate",
       accessPublic: "Publice",
@@ -159,6 +171,7 @@ const Blog = () => {
       promoDescription: "Use code DIRECT5 for 5% off any direct booking.",
       promoButton: "Learn more",
       premiumBadge: "Premium",
+      trendingBadge: "Trending",
       loginToRead: "Login to read",
       accessAll: "All",
       accessPublic: "Public",
@@ -316,6 +329,7 @@ const Blog = () => {
                 const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
                 const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
                 const isPremiumLocked = article.is_premium && !user;
+                const isTrending = trendingArticleIds.has(article.id);
                 
                 return (
                 <Link 
@@ -333,10 +347,16 @@ const Blog = () => {
                           decoding="async"
                           className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
                         />
-                        <div className="absolute top-3 left-3 flex gap-2">
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                           <Badge>
                             {article.category}
                           </Badge>
+                          {isTrending && (
+                            <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-rose-600">
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                              {t.trendingBadge}
+                            </Badge>
+                          )}
                           {article.is_premium && (
                             <Badge className="bg-amber-500/90 text-white border-amber-600">
                               <Crown className="w-3 h-3 mr-1" />
@@ -356,8 +376,14 @@ const Blog = () => {
                     )}
                     <CardContent className="p-6">
                       {!coverImage && (
-                        <div className="flex gap-2 mb-3">
+                        <div className="flex flex-wrap gap-2 mb-3">
                           <Badge>{article.category}</Badge>
+                          {isTrending && (
+                            <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-rose-600">
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                              {t.trendingBadge}
+                            </Badge>
+                          )}
                           {article.is_premium && (
                             <Badge className="bg-amber-500/90 text-white border-amber-600">
                               <Crown className="w-3 h-3 mr-1" />
