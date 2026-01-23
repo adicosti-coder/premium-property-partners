@@ -68,3 +68,9 @@ verify_jwt = false
 
 [functions.check-referral-reminders]
 verify_jwt = false
+
+[functions.send-exit-discount]
+verify_jwt = false
+
+[functions.ai-chatbot]
+verify_jwt = false
