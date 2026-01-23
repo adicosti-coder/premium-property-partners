@@ -97,36 +97,59 @@ const handler = async (req: Request): Promise<Response> => {
       { role: "user", content: message },
     ];
 
-    // Use Lovable AI (OpenRouter)
-    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    // Use Lovable AI Gateway
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
-    if (!OPENROUTER_API_KEY) {
-      throw new Error("OPENROUTER_API_KEY not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://realtrustaparthotel.lovable.app",
-        "X-Title": "ApArt Hotel Chatbot",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages,
         max_tokens: 500,
         temperature: 0.7,
       }),
     });
 
-    const data = await response.json();
-    
     if (!response.ok) {
-      console.error("OpenRouter API error:", data);
-      throw new Error(data.error?.message || "API error");
+      if (response.status === 429) {
+        console.error("Rate limit exceeded");
+        return new Response(
+          JSON.stringify({ 
+            error: "Rate limit exceeded",
+            response: language === "en" 
+              ? "I'm receiving too many requests right now. Please try again in a moment or contact us on WhatsApp."
+              : "Primesc prea multe cereri în acest moment. Te rog încearcă din nou într-un moment sau contactează-ne pe WhatsApp."
+          }),
+          { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      if (response.status === 402) {
+        console.error("Payment required");
+        return new Response(
+          JSON.stringify({ 
+            error: "Service temporarily unavailable",
+            response: language === "en" 
+              ? "Our AI service is temporarily unavailable. Please contact us on WhatsApp: +40723154520"
+              : "Serviciul AI este temporar indisponibil. Te rog contactează-ne pe WhatsApp: +40723154520"
+          }),
+          { status: 402, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      const errorText = await response.text();
+      console.error("Lovable AI error:", response.status, errorText);
+      throw new Error("AI gateway error");
     }
 
+    const data = await response.json();
+    
     const assistantResponse = data.choices?.[0]?.message?.content || 
       (language === "en" 
         ? "I apologize, I couldn't process your request. Please try again or contact us on WhatsApp."
