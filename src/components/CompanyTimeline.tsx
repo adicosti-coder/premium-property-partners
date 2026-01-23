@@ -54,9 +54,9 @@ const CompanyTimeline = () => {
         {
           year: "2015",
           icon: Users,
-          title: "Diversificare",
-          description: "Lansarea serviciilor de property management și administrare de imobile pentru proprietari absenți.",
-          highlight: "Servicii complete de administrare"
+          title: "Continuare Diversificare",
+          description: "Lansarea serviciilor de property management și administrare de imobile în regim hotelier pentru proprietari absenți.",
+          highlight: "Servicii complete de administrare imobile în regim hotelier"
         },
         {
           year: "2017",
@@ -124,9 +124,9 @@ const CompanyTimeline = () => {
         {
           year: "2015",
           icon: Users,
-          title: "Diversification",
-          description: "Launching property management and building administration services for absentee owners.",
-          highlight: "Complete management services"
+          title: "Continued Diversification",
+          description: "Launching property management and hotel-regime building administration services for absentee owners.",
+          highlight: "Complete hotel-regime property management services"
         },
         {
           year: "2017",
