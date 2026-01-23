@@ -203,7 +203,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     // Build WhatsApp message
     const property = propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă");
     const whatsappMessage = language === 'en' 
-      ? `🏠 *Booking Request - RealTrust*
+      ? `🏠 *Booking Request - RealTrust & ApArt Hotel*
 
 👤 *Name:* ${formData.name}
 📧 *Email:* ${formData.email}
@@ -217,7 +217,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
 🏡 *Property:* ${property}
 
 💬 *Message:* ${formData.message || "No additional message"}`
-      : `🏠 *Cerere de Rezervare - RealTrust*
+      : `🏠 *Cerere de Rezervare - RealTrust & ApArt Hotel*
 
 👤 *Nume:* ${formData.name}
 📧 *Email:* ${formData.email}

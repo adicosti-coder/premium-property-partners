@@ -185,7 +185,7 @@ const RentalIncomeCalculator = () => {
     const income = calculateIncome();
     
     const message = encodeURIComponent(
-      `Bună, RealTrust! Tocmai am calculat venitul pentru apartamentul meu din ${location}, ${city}. Estimarea este de ${income.base}€/lună. Vreau mai multe detalii.`
+      `Bună ziua, RealTrust & ApArt Hotel! Tocmai am calculat venitul pentru apartamentul meu din ${location}, ${city}. Estimarea este de ${income.base}€/lună. Vreau mai multe detalii.`
     );
     
     window.open(`https://wa.me/40723154520?text=${message}`, '_blank');
