@@ -14,7 +14,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
 
   const t = {
     ro: {
-      badge: "🔐 Cont gratuit • Acces instant",
+      badge: "✨ Înregistrare gratuită • Rezultate în 10 secunde",
       title: title || "Autentifică-te pentru a vedea rezultatele",
       description: description || "Creează un cont gratuit pentru a vedea estimările și a-ți salva simulările.",
       login: "Autentifică-te",
@@ -26,7 +26,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       ],
     },
     en: {
-      badge: "🔐 Free account • Instant access",
+      badge: "✨ Free signup • Results in 10 seconds",
       title: title || "Sign in to see the results",
       description: description || "Create a free account to view estimates and save your simulations.",
       login: "Sign in",
