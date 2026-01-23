@@ -22,7 +22,8 @@ import {
   Plus,
   X,
   Tag,
-  Eye
+  Eye,
+  Copy
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -252,6 +253,26 @@ const HeroTextManager = () => {
     }));
   };
 
+  const copyRoToEn = () => {
+    setSettings(prev => ({
+      ...prev,
+      hero_title_en: prev.hero_title_ro,
+      hero_highlight_en: prev.hero_highlight_ro,
+      hero_subtitle_en: prev.hero_subtitle_ro,
+      hero_badge_en: prev.hero_badge_ro,
+      hero_tags_en: prev.hero_tags_ro ? [...prev.hero_tags_ro] : null,
+      hero_cta_primary_en: prev.hero_cta_primary_ro,
+      hero_cta_secondary_en: prev.hero_cta_secondary_ro,
+    }));
+    
+    toast({
+      title: "Copiat!",
+      description: "Textele din română au fost copiate în câmpurile engleze. Nu uita să le traduci și să salvezi.",
+    });
+    
+    setActiveTab("en");
+  };
+
   const getDisplayTags = (lang: "ro" | "en") => {
     const field = lang === "ro" ? "hero_tags_ro" : "hero_tags_en";
     return settings[field] || [];
@@ -371,16 +392,31 @@ const HeroTextManager = () => {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="ro" className="flex items-center gap-2">
-              <Languages className="w-4 h-4" />
-              Română
-            </TabsTrigger>
-            <TabsTrigger value="en" className="flex items-center gap-2">
-              <Languages className="w-4 h-4" />
-              English
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center gap-2 mb-2">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="ro" className="flex items-center gap-2">
+                <Languages className="w-4 h-4" />
+                Română
+              </TabsTrigger>
+              <TabsTrigger value="en" className="flex items-center gap-2">
+                <Languages className="w-4 h-4" />
+                English
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          {/* Copy RO to EN Button */}
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyRoToEn}
+              className="flex items-center gap-2"
+            >
+              <Copy className="w-4 h-4" />
+              Copiază din RO în EN
+            </Button>
+          </div>
 
           <TabsContent value="ro" className="space-y-4 mt-4">
             <div className="space-y-2">
