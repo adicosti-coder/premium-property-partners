@@ -98,13 +98,17 @@ const Footer = () => {
         <div className="grid md:grid-cols-6 gap-8 mb-8">
           {/* Logo & Description */}
           <div className="md:col-span-1">
-            <a href="/" className="flex items-center gap-2 mb-4">
-              <span className="text-xl font-serif font-semibold text-foreground">
-                Real<span className="text-primary dark:text-primary">Trust</span>
+            <a href="/" className="flex flex-col gap-1 mb-4">
+              <span className="text-xl font-serif font-semibold">
+                <span className="text-foreground">Real</span>
+                <span className="text-primary">Trust</span>
+                <span className="text-foreground"> & </span>
+                <span className="text-amber-500">ApArt</span>
+                <span className="text-foreground"> Hotel</span>
               </span>
             </a>
             <p className="text-foreground/60 dark:text-muted-foreground text-sm">
-              ApArt Hotel Timișoara
+              Timișoara, România
             </p>
           </div>
 
