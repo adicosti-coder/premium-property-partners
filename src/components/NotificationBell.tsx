@@ -1,4 +1,4 @@
-import { Bell, Check, Trash2, ExternalLink, Info, CheckCircle, AlertTriangle, Zap, X } from "lucide-react";
+import { Bell, Check, Trash2, ExternalLink, Info, CheckCircle, AlertTriangle, Zap, X, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -12,7 +12,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import ConfettiEffect from "@/components/ConfettiEffect";
+
+// Helper to detect badge notifications
+const isBadgeNotification = (notification: UserNotification): boolean => {
+  return notification.title.includes("badge") || notification.title.includes("🏆");
+};
 
 const NotificationBell = () => {
   const { language } = useLanguage();
@@ -26,6 +32,49 @@ const NotificationBell = () => {
     clearAllNotifications,
   } = useNotifications();
   const [open, setOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [celebratedBadges, setCelebratedBadges] = useState<Set<string>>(() => {
+    // Load already celebrated badges from localStorage
+    try {
+      const stored = localStorage.getItem("celebratedBadgeNotifications");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Check for new badge notifications and trigger confetti
+  const checkForNewBadges = useCallback(() => {
+    const unreadBadgeNotifications = notifications.filter(
+      (n) => !n.is_read && isBadgeNotification(n) && !celebratedBadges.has(n.id)
+    );
+
+    if (unreadBadgeNotifications.length > 0 && open) {
+      // Trigger confetti
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 100);
+
+      // Mark these as celebrated
+      const newCelebrated = new Set(celebratedBadges);
+      unreadBadgeNotifications.forEach((n) => newCelebrated.add(n.id));
+      setCelebratedBadges(newCelebrated);
+      
+      try {
+        localStorage.setItem(
+          "celebratedBadgeNotifications",
+          JSON.stringify([...newCelebrated])
+        );
+      } catch {
+        // Ignore storage errors
+      }
+    }
+  }, [notifications, open, celebratedBadges]);
+
+  useEffect(() => {
+    if (open) {
+      checkForNewBadges();
+    }
+  }, [open, checkForNewBadges]);
 
   if (!isAuthenticated) return null;
 
@@ -37,8 +86,13 @@ const NotificationBell = () => {
     viewAction: language === "ro" ? "Vezi detalii" : "View details",
   };
 
-  const getTypeIcon = (type: UserNotification["type"]) => {
-    switch (type) {
+  const getTypeIcon = (notification: UserNotification) => {
+    // Special icon for badge notifications
+    if (isBadgeNotification(notification)) {
+      return <Trophy className="w-4 h-4 text-amber-500" />;
+    }
+    
+    switch (notification.type) {
       case "success":
         return <CheckCircle className="w-4 h-4 text-emerald-500" />;
       case "warning":
@@ -50,9 +104,15 @@ const NotificationBell = () => {
     }
   };
 
-  const getTypeBgClass = (type: UserNotification["type"], isRead: boolean) => {
-    if (isRead) return "bg-muted/30";
-    switch (type) {
+  const getTypeBgClass = (notification: UserNotification) => {
+    if (notification.is_read) return "bg-muted/30";
+    
+    // Special styling for badge notifications
+    if (isBadgeNotification(notification)) {
+      return "bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-l-2 border-l-amber-500";
+    }
+    
+    switch (notification.type) {
       case "success":
         return "bg-emerald-500/10 border-l-2 border-l-emerald-500";
       case "warning":
@@ -81,8 +141,11 @@ const NotificationBell = () => {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <>
+      <ConfettiEffect isActive={showConfetti} duration={3500} particleCount={60} />
+      
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
@@ -153,11 +216,27 @@ const NotificationBell = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
-                    className={`relative group p-3 ${getTypeBgClass(notification.type, notification.is_read)} transition-colors duration-200 hover:bg-muted/50`}
+                    className={`relative group p-3 ${getTypeBgClass(notification)} transition-colors duration-200 hover:bg-muted/50`}
                   >
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 mt-0.5">
-                        {getTypeIcon(notification.type)}
+                        {isBadgeNotification(notification) && !notification.is_read ? (
+                          <motion.div
+                            animate={{ 
+                              scale: [1, 1.2, 1],
+                              rotate: [0, -10, 10, 0]
+                            }}
+                            transition={{ 
+                              duration: 0.6,
+                              repeat: Infinity,
+                              repeatDelay: 2
+                            }}
+                          >
+                            {getTypeIcon(notification)}
+                          </motion.div>
+                        ) : (
+                          getTypeIcon(notification)
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
@@ -206,6 +285,7 @@ const NotificationBell = () => {
         </ScrollArea>
       </PopoverContent>
     </Popover>
+    </>
   );
 };
 
