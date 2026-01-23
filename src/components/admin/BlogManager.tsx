@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import RichTextEditor from "./RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,9 @@ import {
   Eye,
   EyeOff,
   X,
+  Copy,
+  Globe,
+  Languages,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -52,8 +56,11 @@ interface BlogArticle {
   id: string;
   slug: string;
   title: string;
+  title_en: string | null;
   excerpt: string;
+  excerpt_en: string | null;
   content: string;
+  content_en: string | null;
   cover_image: string | null;
   category: string;
   tags: string[];
@@ -75,12 +82,16 @@ const BlogManager = () => {
   const [deleteArticle, setDeleteArticle] = useState<BlogArticle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [tagInput, setTagInput] = useState("");
+  const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
 
   const [formData, setFormData] = useState({
     title: "",
+    title_en: "",
     slug: "",
     excerpt: "",
+    excerpt_en: "",
     content: "",
+    content_en: "",
     cover_image: "",
     category: "",
     tags: [] as string[],
@@ -117,11 +128,18 @@ const BlogManager = () => {
         title: "Titlu",
         category: "Categorie",
         status: "Status",
+        translations: "Traduceri",
         date: "Data",
         actions: "Acțiuni",
       },
       draft: "Draft",
       publishedLabel: "Publicat",
+      romanian: "Română",
+      english: "English",
+      copyToEn: "Copiază în EN",
+      copySuccess: "Conținut copiat în engleză!",
+      hasTranslation: "EN",
+      noTranslation: "Lipsește EN",
     },
     en: {
       title: "Blog Manager",
@@ -151,11 +169,18 @@ const BlogManager = () => {
         title: "Title",
         category: "Category",
         status: "Status",
+        translations: "Translations",
         date: "Date",
         actions: "Actions",
       },
       draft: "Draft",
       publishedLabel: "Published",
+      romanian: "Română",
+      english: "English",
+      copyToEn: "Copy to EN",
+      copySuccess: "Content copied to English!",
+      hasTranslation: "EN",
+      noTranslation: "Missing EN",
     },
   };
 
@@ -220,14 +245,28 @@ const BlogManager = () => {
     }));
   };
 
+  const handleCopyToEnglish = () => {
+    setFormData((prev) => ({
+      ...prev,
+      title_en: prev.title,
+      excerpt_en: prev.excerpt,
+      content_en: prev.content,
+    }));
+    setActiveTab("en");
+    toast({ title: t.copySuccess });
+  };
+
   const openDialog = (article?: BlogArticle) => {
     if (article) {
       setEditingArticle(article);
       setFormData({
         title: article.title,
+        title_en: article.title_en || "",
         slug: article.slug,
         excerpt: article.excerpt,
+        excerpt_en: article.excerpt_en || "",
         content: article.content,
+        content_en: article.content_en || "",
         cover_image: article.cover_image || "",
         category: article.category,
         tags: article.tags,
@@ -238,9 +277,12 @@ const BlogManager = () => {
       setEditingArticle(null);
       setFormData({
         title: "",
+        title_en: "",
         slug: "",
         excerpt: "",
+        excerpt_en: "",
         content: "",
+        content_en: "",
         cover_image: "",
         category: "",
         tags: [],
@@ -248,6 +290,7 @@ const BlogManager = () => {
         is_published: false,
       });
     }
+    setActiveTab("ro");
     setIsDialogOpen(true);
   };
 
@@ -265,9 +308,12 @@ const BlogManager = () => {
     try {
       const articleData = {
         title: formData.title,
+        title_en: formData.title_en || null,
         slug: formData.slug,
         excerpt: formData.excerpt,
+        excerpt_en: formData.excerpt_en || null,
         content: formData.content,
+        content_en: formData.content_en || null,
         cover_image: formData.cover_image || null,
         category: formData.category,
         tags: formData.tags,
@@ -324,6 +370,10 @@ const BlogManager = () => {
     }
   };
 
+  const hasEnglishTranslation = (article: BlogArticle) => {
+    return !!(article.title_en && article.excerpt_en && article.content_en);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -359,6 +409,7 @@ const BlogManager = () => {
                 <TableRow>
                   <TableHead>{t.tableHeaders.title}</TableHead>
                   <TableHead>{t.tableHeaders.category}</TableHead>
+                  <TableHead>{t.tableHeaders.translations}</TableHead>
                   <TableHead>{t.tableHeaders.status}</TableHead>
                   <TableHead>{t.tableHeaders.date}</TableHead>
                   <TableHead className="w-[100px]">{t.tableHeaders.actions}</TableHead>
@@ -367,9 +418,24 @@ const BlogManager = () => {
               <TableBody>
                 {articles.map((article) => (
                   <TableRow key={article.id}>
-                    <TableCell className="font-medium">{article.title}</TableCell>
+                    <TableCell className="font-medium max-w-[250px] truncate">
+                      {article.title}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{article.category}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {hasEnglishTranslation(article) ? (
+                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                          <Globe className="w-3 h-3 mr-1" />
+                          {t.hasTranslation}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-500 border-amber-500/30">
+                          <Languages className="w-3 h-3 mr-1" />
+                          {t.noTranslation}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {article.is_published ? (
@@ -418,60 +484,138 @@ const BlogManager = () => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Languages className="w-5 h-5 text-primary" />
               {editingArticle ? t.editArticle : t.addArticle}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">{t.articleTitle} *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  placeholder="Titlul articolului..."
-                />
+
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "ro" | "en")} className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <TabsList>
+                <TabsTrigger value="ro" className="gap-2">
+                  🇷🇴 {t.romanian}
+                </TabsTrigger>
+                <TabsTrigger value="en" className="gap-2">
+                  🇬🇧 {t.english}
+                </TabsTrigger>
+              </TabsList>
+              
+              {activeTab === "ro" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyToEnglish}
+                  className="gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  {t.copyToEn}
+                </Button>
+              )}
+            </div>
+
+            {/* Romanian Content */}
+            <TabsContent value="ro" className="space-y-4 mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">{t.articleTitle} (RO) *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="Titlul articolului..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="slug">{t.slug} *</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                    }
+                    placeholder="titlu-articol"
+                  />
+                </div>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="slug">{t.slug} *</Label>
-                <Input
-                  id="slug"
-                  value={formData.slug}
+                <Label htmlFor="excerpt">{t.excerpt} (RO) *</Label>
+                <Textarea
+                  id="excerpt"
+                  value={formData.excerpt}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                    setFormData((prev) => ({ ...prev, excerpt: e.target.value }))
                   }
-                  placeholder="titlu-articol"
+                  placeholder="Rezumat scurt al articolului..."
+                  rows={2}
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="excerpt">{t.excerpt} *</Label>
-              <Textarea
-                id="excerpt"
-                value={formData.excerpt}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, excerpt: e.target.value }))
-                }
-                placeholder="Rezumat scurt al articolului..."
-                rows={2}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label>{t.content} (RO) *</Label>
+                <RichTextEditor
+                  content={formData.content}
+                  onChange={(content) =>
+                    setFormData((prev) => ({ ...prev, content }))
+                  }
+                  placeholder="Scrie conținutul articolului..."
+                />
+              </div>
+            </TabsContent>
 
-            <div className="space-y-2">
-              <Label>{t.content} *</Label>
-              <RichTextEditor
-                content={formData.content}
-                onChange={(content) =>
-                  setFormData((prev) => ({ ...prev, content }))
-                }
-                placeholder="Scrie conținutul articolului..."
-              />
-            </div>
+            {/* English Content */}
+            <TabsContent value="en" className="space-y-4 mt-0">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg mb-4">
+                <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  English translation - Leave empty to use Romanian content as fallback
+                </p>
+              </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="title_en">{t.articleTitle} (EN)</Label>
+                <Input
+                  id="title_en"
+                  value={formData.title_en}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title_en: e.target.value }))
+                  }
+                  placeholder="Article title..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="excerpt_en">{t.excerpt} (EN)</Label>
+                <Textarea
+                  id="excerpt_en"
+                  value={formData.excerpt_en}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, excerpt_en: e.target.value }))
+                  }
+                  placeholder="Short excerpt of the article..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t.content} (EN)</Label>
+                <RichTextEditor
+                  content={formData.content_en}
+                  onChange={(content_en) =>
+                    setFormData((prev) => ({ ...prev, content_en }))
+                  }
+                  placeholder="Write the article content..."
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Shared Fields */}
+          <div className="border-t pt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cover_image">{t.coverImage}</Label>
@@ -547,6 +691,7 @@ const BlogManager = () => {
               <Label htmlFor="is_published">{t.published}</Label>
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               {t.cancel}
