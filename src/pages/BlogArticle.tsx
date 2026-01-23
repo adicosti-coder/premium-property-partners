@@ -13,6 +13,7 @@ import { Calendar, Clock, ArrowLeft, User, Tag, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
+import { getBlogCoverImage } from "@/utils/blogImageMap";
 
 interface BlogArticle {
   id: string;
@@ -126,7 +127,7 @@ const BlogArticle = () => {
   }
 
   const readingTime = Math.ceil(article.content.length / 1000);
-
+  const coverImage = getBlogCoverImage(article.slug, article.cover_image);
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -177,10 +178,10 @@ const BlogArticle = () => {
           </header>
 
           {/* Cover Image */}
-          {article.cover_image && (
+          {coverImage && (
             <div className="relative aspect-video mb-8 rounded-xl overflow-hidden">
               <img
-                src={article.cover_image}
+                src={coverImage}
                 alt={article.title}
                 className="w-full h-full object-cover"
               />

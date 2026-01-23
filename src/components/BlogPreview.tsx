@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PrefetchLink } from "@/components/PrefetchLink";
+import { getBlogCoverImage } from "@/utils/blogImageMap";
 
 interface BlogArticle {
   id: string;
@@ -113,13 +114,15 @@ const BlogPreview = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {articles.map((article) => (
+          {articles.map((article) => {
+            const coverImage = getBlogCoverImage(article.slug, article.cover_image);
+            return (
             <PrefetchLink key={article.id} to={`/blog/${article.slug}`} blogSlug={article.slug}>
               <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
-                {article.cover_image ? (
+                {coverImage ? (
                   <div className="aspect-video overflow-hidden">
                     <img
-                      src={article.cover_image}
+                      src={coverImage}
                       alt={article.title}
                       loading="lazy"
                       decoding="async"
@@ -160,7 +163,8 @@ const BlogPreview = () => {
                 </CardContent>
               </Card>
             </PrefetchLink>
-          ))}
+          );
+          })}
         </div>
 
         <div className="text-center mt-12">
