@@ -56,6 +56,7 @@ interface Referral {
   referrer_name: string;
   referrer_email: string;
   referrer_phone: string | null;
+  referrer_user_id: string | null;
   owner_name: string;
   owner_email: string;
   owner_phone: string;
@@ -197,6 +198,7 @@ const ReferralManager = () => {
             body: {
               referrerName: selectedReferral.referrer_name,
               referrerEmail: selectedReferral.referrer_email,
+              referrerUserId: selectedReferral.referrer_user_id,
               ownerName: selectedReferral.owner_name,
               newStatus: status,
               oldStatus: selectedReferral.status,
