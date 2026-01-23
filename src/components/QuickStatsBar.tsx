@@ -265,13 +265,14 @@ const QuickStatsBar = () => {
   };
 
   // Stats for anonymous visitors (public, trust-building metrics)
+  // Using theme-aware colors for better contrast
   const publicStatItems = [
     {
       icon: Building,
       value: stats.properties || 11,
       label: t.properties,
       suffix: "+",
-      color: "text-emerald-500",
+      color: "text-primary",
       action: () => scrollToSection("property-gallery"),
       tooltip: t.tooltips.properties,
     },
@@ -280,7 +281,7 @@ const QuickStatsBar = () => {
       value: stats.avgRating,
       label: t.rating,
       suffix: "",
-      color: "text-amber-500",
+      color: "text-primary",
       isDecimal: true,
       action: () => scrollToSection("testimonials"),
       tooltip: t.tooltips.rating,
@@ -290,7 +291,7 @@ const QuickStatsBar = () => {
       value: stats.yearsExperience,
       label: t.yearsExp,
       suffix: "+",
-      color: "text-blue-500",
+      color: "text-foreground",
       action: () => scrollToSection("how-it-works"),
       tooltip: t.tooltips.yearsExp,
     },
@@ -299,7 +300,7 @@ const QuickStatsBar = () => {
       value: stats.cities,
       label: t.cities,
       suffix: "",
-      color: "text-violet-500",
+      color: "text-foreground",
       action: () => scrollToSection("property-gallery"),
       tooltip: t.tooltips.cities,
     },
@@ -308,7 +309,7 @@ const QuickStatsBar = () => {
       value: stats.occupancy,
       label: t.occupancy,
       suffix: "%",
-      color: "text-teal-500",
+      color: "text-primary",
       action: () => scrollToSection("how-it-works"),
       tooltip: t.tooltips.occupancy,
     },
@@ -324,13 +325,14 @@ const QuickStatsBar = () => {
   ];
 
   // Stats for authenticated users (detailed business metrics)
+  // Using theme-aware colors for better contrast
   const authenticatedStatItems = [
     {
       icon: Building,
       value: stats.properties || 11,
       label: t.properties,
       suffix: "+",
-      color: "text-emerald-500",
+      color: "text-primary",
       action: () => scrollToSection("property-gallery"),
       tooltip: t.tooltips.properties,
     },
@@ -339,7 +341,7 @@ const QuickStatsBar = () => {
       value: stats.avgRating,
       label: t.rating,
       suffix: "",
-      color: "text-amber-500",
+      color: "text-primary",
       isDecimal: true,
       action: () => scrollToSection("testimonials"),
       tooltip: t.tooltips.rating,
@@ -349,7 +351,7 @@ const QuickStatsBar = () => {
       value: stats.bookings,
       label: t.bookings,
       suffix: "",
-      color: "text-blue-500",
+      color: "text-foreground",
       link: "/guests",
       tooltip: t.tooltips.bookings,
     },
@@ -358,7 +360,7 @@ const QuickStatsBar = () => {
       value: stats.totalGuests,
       label: t.guests,
       suffix: "",
-      color: "text-violet-500",
+      color: "text-foreground",
       link: "/guests",
       tooltip: t.tooltips.guests,
     },
@@ -377,13 +379,14 @@ const QuickStatsBar = () => {
       value: stats.occupancy,
       label: t.occupancy,
       suffix: "%",
-      color: "text-teal-500",
+      color: "text-primary",
       action: () => scrollToSection("how-it-works"),
       tooltip: t.tooltips.occupancy,
     },
   ];
 
   // Admin-only stats (includes leads)
+  // Using theme-aware colors for better contrast
   const adminStatItems = [
     ...authenticatedStatItems.slice(0, 2),
     {
@@ -391,7 +394,7 @@ const QuickStatsBar = () => {
       value: stats.leads,
       label: t.leads,
       suffix: "",
-      color: "text-orange-500",
+      color: "text-primary",
       link: "/admin",
       tooltip: t.tooltips.leads,
     },
@@ -411,10 +414,10 @@ const QuickStatsBar = () => {
         isVisible ? "top-16 md:top-20 translate-y-0" : "top-16 md:top-20 -translate-y-full opacity-0"
       }`}
     >
-      <div className="bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm">
+      <div className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
           <TooltipProvider delayDuration={300}>
-            <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2.5 overflow-x-auto scrollbar-hide">
               {statItems.map((stat) => {
                 const content = (
                   <>
