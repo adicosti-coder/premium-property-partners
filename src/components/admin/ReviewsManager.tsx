@@ -306,7 +306,7 @@ const ReviewsManager = () => {
 
   // Reply mutation
   const replyMutation = useMutation({
-    mutationFn: async ({ id, reply }: { id: string; reply: string | null }) => {
+    mutationFn: async ({ id, reply, review }: { id: string; reply: string | null; review: Review }) => {
       const { data: { user } } = await supabaseClient.auth.getUser();
       const { error } = await supabase
         .from("property_reviews")
@@ -317,6 +317,27 @@ const ReviewsManager = () => {
         })
         .eq("id", id);
       if (error) throw error;
+
+      // Send email notification to guest if they have an email and this is a new/updated reply
+      if (reply && review.guest_email) {
+        try {
+          await supabase.functions.invoke("send-review-reply-notification", {
+            body: {
+              guestEmail: review.guest_email,
+              guestName: review.guest_name,
+              propertyName: review.property?.name || "proprietatea noastră",
+              reviewTitle: review.title,
+              reviewContent: review.content,
+              adminReply: reply,
+              rating: review.rating,
+            },
+          });
+          console.log("Reply notification email sent successfully");
+        } catch (emailError) {
+          console.error("Failed to send reply notification email:", emailError);
+          // Don't throw - the reply was saved, email is secondary
+        }
+      }
     },
     onSuccess: (_, { reply }) => {
       queryClient.invalidateQueries({ queryKey: ["admin-reviews"] });
@@ -398,6 +419,7 @@ const ReviewsManager = () => {
     replyMutation.mutate({
       id: replyingReview.id,
       reply: replyText.trim() || null,
+      review: replyingReview,
     });
   };
 
@@ -406,6 +428,7 @@ const ReviewsManager = () => {
     replyMutation.mutate({
       id: replyingReview.id,
       reply: null,
+      review: replyingReview,
     });
   };
 
