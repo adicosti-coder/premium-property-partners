@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ConfettiEffect from "@/components/ConfettiEffect";
+import UserReferralsList from "@/components/UserReferralsList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -623,6 +624,18 @@ const ReferralProgram = () => {
               )}
             </div>
           </div>
+
+          {/* User's Referrals Section - Only for authenticated users */}
+          {user && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-12"
+            >
+              <UserReferralsList userEmail={user.email || ""} userId={user.id} />
+            </motion.div>
+          )}
         </div>
       </section>
 
