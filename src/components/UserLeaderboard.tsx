@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Award, Crown, Medal, Users, Trophy, Star } from "lucide-react";
+import { Award, Crown, Medal, Users, Trophy, Star, ExternalLink } from "lucide-react";
 import UserBadges from "@/components/UserBadges";
 import { cn } from "@/lib/utils";
 
@@ -212,10 +213,11 @@ const UserLeaderboard = ({ maxDisplay = 10, className }: UserLeaderboardProps) =
           const rank = index + 1;
 
           return (
-            <div
+            <Link
               key={user.user_id}
+              to={`/comunitate/profil/${user.user_id}`}
               className={cn(
-                "flex items-center gap-3 p-4 border-b last:border-b-0 transition-colors",
+                "flex items-center gap-3 p-4 border-b last:border-b-0 transition-colors group cursor-pointer",
                 getRankStyle(rank)
               )}
             >
@@ -225,7 +227,7 @@ const UserLeaderboard = ({ maxDisplay = 10, className }: UserLeaderboardProps) =
               </div>
 
               {/* Avatar */}
-              <Avatar className="w-10 h-10 border-2 border-background shrink-0">
+              <Avatar className="w-10 h-10 border-2 border-background shrink-0 group-hover:ring-2 group-hover:ring-primary/30 transition-all">
                 <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || ""} />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm">
                   {getInitials(user.full_name)}
@@ -235,7 +237,7 @@ const UserLeaderboard = ({ maxDisplay = 10, className }: UserLeaderboardProps) =
               {/* User Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-medium text-foreground text-sm truncate">
+                  <h4 className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">
                     {user.full_name || t.anonymous}
                   </h4>
                   {user.win_count > 0 && (
@@ -259,10 +261,11 @@ const UserLeaderboard = ({ maxDisplay = 10, className }: UserLeaderboardProps) =
               </div>
 
               {/* Badges Display */}
-              <div className="shrink-0 hidden sm:block">
+              <div className="shrink-0 hidden sm:flex items-center gap-2">
                 <UserBadges userId={user.user_id} size="sm" maxDisplay={3} />
+                <ExternalLink className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
               </div>
-            </div>
+            </Link>
           );
         })}
       </CardContent>

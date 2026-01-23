@@ -378,11 +378,14 @@ const CommunityArticleDetail = () => {
               {article.title}
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
+              <Link 
+                to={`/comunitate/profil/${article.user_id}`}
+                className="flex items-center gap-2 hover:text-primary transition-colors group"
+              >
                 <UserIcon className="w-4 h-4" />
-                <span>{t.by} {article.author_name}</span>
+                <span className="group-hover:underline">{t.by} {article.author_name}</span>
                 <UserBadges userId={article.user_id} size="sm" maxDisplay={3} />
-              </div>
+              </Link>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span>{t.published} {format(new Date(article.created_at), "d MMMM yyyy", { locale: dateLocale })}</span>
