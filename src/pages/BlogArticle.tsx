@@ -19,8 +19,11 @@ interface BlogArticle {
   id: string;
   slug: string;
   title: string;
+  title_en: string | null;
   excerpt: string;
+  excerpt_en: string | null;
   content: string;
+  content_en: string | null;
   cover_image: string | null;
   category: string;
   tags: string[];
@@ -126,8 +129,12 @@ const BlogArticle = () => {
     );
   }
 
-  const readingTime = Math.ceil(article.content.length / 1000);
+  const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
+  const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
+  const displayContent = language === 'en' && article.content_en ? article.content_en : article.content;
+  const readingTime = Math.ceil(displayContent.length / 1000);
   const coverImage = getBlogCoverImage(article.slug, article.cover_image);
+  
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -147,10 +154,10 @@ const BlogArticle = () => {
           <header className="mb-8">
             <Badge className="mb-4">{article.category}</Badge>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-4">
-              {article.title}
+              {displayTitle}
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
-              {article.excerpt}
+              {displayExcerpt}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -182,7 +189,7 @@ const BlogArticle = () => {
             <div className="relative aspect-video mb-8 rounded-xl overflow-hidden">
               <img
                 src={coverImage}
-                alt={article.title}
+                alt={displayTitle}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -191,7 +198,7 @@ const BlogArticle = () => {
           {/* Article Content */}
           <div
             className="prose prose-lg dark:prose-invert max-w-none mb-8"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: displayContent }}
           />
 
           {/* Tags */}

@@ -21,7 +21,9 @@ interface BlogArticle {
   id: string;
   slug: string;
   title: string;
+  title_en: string | null;
   excerpt: string;
+  excerpt_en: string | null;
   cover_image: string | null;
   category: string;
   tags: string[];
@@ -235,6 +237,8 @@ const Blog = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredArticles.map((article) => {
                 const coverImage = getBlogCoverImage(article.slug, article.cover_image);
+                const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
+                const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
                 return (
                 <Link key={article.id} to={`/blog/${article.slug}`}>
                   <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow group">
@@ -242,7 +246,7 @@ const Blog = () => {
                       <div className="relative h-48 overflow-hidden">
                         <img
                           src={coverImage}
-                          alt={article.title}
+                          alt={displayTitle}
                           loading="lazy"
                           decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -257,10 +261,10 @@ const Blog = () => {
                         <Badge className="mb-3">{article.category}</Badge>
                       )}
                       <h2 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                        {article.title}
+                        {displayTitle}
                       </h2>
                       <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                        {article.excerpt}
+                        {displayExcerpt}
                       </p>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-4">
