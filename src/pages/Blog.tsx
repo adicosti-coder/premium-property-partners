@@ -15,6 +15,7 @@ import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
+import { getBlogCoverImage } from "@/utils/blogImageMap";
 
 interface BlogArticle {
   id: string;
@@ -232,13 +233,15 @@ const Blog = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article) => (
+              {filteredArticles.map((article) => {
+                const coverImage = getBlogCoverImage(article.slug, article.cover_image);
+                return (
                 <Link key={article.id} to={`/blog/${article.slug}`}>
                   <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow group">
-                    {article.cover_image && (
+                    {coverImage && (
                       <div className="relative h-48 overflow-hidden">
                         <img
-                          src={article.cover_image}
+                          src={coverImage}
                           alt={article.title}
                           loading="lazy"
                           decoding="async"
@@ -250,7 +253,7 @@ const Blog = () => {
                       </div>
                     )}
                     <CardContent className="p-6">
-                      {!article.cover_image && (
+                      {!coverImage && (
                         <Badge className="mb-3">{article.category}</Badge>
                       )}
                       <h2 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
@@ -279,7 +282,7 @@ const Blog = () => {
                     </CardContent>
                   </Card>
                 </Link>
-              ))}
+              );})}
             </div>
           )}
         </div>
