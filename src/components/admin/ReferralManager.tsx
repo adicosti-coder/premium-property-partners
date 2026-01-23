@@ -69,7 +69,16 @@ interface Referral {
   meeting_date: string | null;
   contract_signed_at: string | null;
   reward_granted_at: string | null;
+  reward_property_id: string | null;
+  reward_check_in: string | null;
+  reward_check_out: string | null;
   created_at: string;
+}
+
+interface Property {
+  id: string;
+  name: string;
+  location: string;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
@@ -90,6 +99,24 @@ const ReferralManager = () => {
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [rewardPropertyId, setRewardPropertyId] = useState<string>("");
+  const [rewardCheckIn, setRewardCheckIn] = useState<string>("");
+  const [rewardCheckOut, setRewardCheckOut] = useState<string>("");
+
+  // Fetch properties for reward selection
+  const { data: properties } = useQuery({
+    queryKey: ["admin-properties-for-reward"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, name, location")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      return data as Property[];
+    },
+  });
 
   const { data: referrals, isLoading, refetch } = useQuery({
     queryKey: ["admin-referrals"],
@@ -105,7 +132,21 @@ const ReferralManager = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
+    mutationFn: async ({ 
+      id, 
+      status, 
+      notes,
+      rewardPropertyId,
+      rewardCheckIn,
+      rewardCheckOut 
+    }: { 
+      id: string; 
+      status: string; 
+      notes: string;
+      rewardPropertyId?: string;
+      rewardCheckIn?: string;
+      rewardCheckOut?: string;
+    }) => {
       const updates: Record<string, unknown> = {
         status,
         admin_notes: notes,
@@ -122,12 +163,32 @@ const ReferralManager = () => {
         updates.reward_granted_at = new Date().toISOString();
       }
 
+      // Add reward details if granting reward
+      if (status === "reward_granted") {
+        if (rewardPropertyId) {
+          updates.reward_property_id = rewardPropertyId;
+        }
+        if (rewardCheckIn) {
+          updates.reward_check_in = rewardCheckIn;
+        }
+        if (rewardCheckOut) {
+          updates.reward_check_out = rewardCheckOut;
+        }
+      }
+
       const { error } = await supabase
         .from("referrals")
         .update(updates)
         .eq("id", id);
 
       if (error) throw error;
+
+      // Get reward property name for email
+      let rewardPropertyName: string | undefined;
+      if (status === "reward_granted" && rewardPropertyId && properties) {
+        const property = properties.find(p => p.id === rewardPropertyId);
+        rewardPropertyName = property?.name;
+      }
 
       // Send email notification if status changed
       if (selectedReferral && status !== selectedReferral.status) {
@@ -140,6 +201,9 @@ const ReferralManager = () => {
               newStatus: status,
               oldStatus: selectedReferral.status,
               propertyLocation: selectedReferral.property_location,
+              rewardPropertyName,
+              rewardCheckIn,
+              rewardCheckOut,
             },
           });
 
@@ -191,6 +255,9 @@ const ReferralManager = () => {
     setSelectedReferral(referral);
     setEditStatus(referral.status);
     setEditNotes(referral.admin_notes || "");
+    setRewardPropertyId(referral.reward_property_id || "");
+    setRewardCheckIn(referral.reward_check_in || "");
+    setRewardCheckOut(referral.reward_check_out || "");
     setIsEditOpen(true);
   };
 
@@ -200,6 +267,9 @@ const ReferralManager = () => {
       id: selectedReferral.id,
       status: editStatus,
       notes: editNotes,
+      rewardPropertyId: rewardPropertyId || undefined,
+      rewardCheckIn: rewardCheckIn || undefined,
+      rewardCheckOut: rewardCheckOut || undefined,
     });
   };
 
@@ -483,6 +553,65 @@ const ReferralManager = () => {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Reward Details - only show when status is reward_granted or contract_signed */}
+            {(editStatus === "reward_granted" || editStatus === "contract_signed") && (
+              <div className="space-y-4 p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                <h4 className="font-semibold text-sm flex items-center gap-2 text-amber-600">
+                  <Gift className="w-4 h-4" />
+                  Detalii Premiu Weekend Gratuit
+                </h4>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Proprietate pentru Premiu</label>
+                  <Select value={rewardPropertyId} onValueChange={setRewardPropertyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selectează proprietatea..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {properties?.map((property) => (
+                        <SelectItem key={property.id} value={property.id}>
+                          {property.name} - {property.location}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Check-in</label>
+                    <Input
+                      type="date"
+                      value={rewardCheckIn}
+                      onChange={(e) => setRewardCheckIn(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Check-out</label>
+                    <Input
+                      type="date"
+                      value={rewardCheckOut}
+                      onChange={(e) => setRewardCheckOut(e.target.value)}
+                      min={rewardCheckIn || new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                </div>
+                
+                {rewardPropertyId && rewardCheckIn && rewardCheckOut && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-sm">
+                    <p className="text-emerald-600 font-medium">
+                      ✓ Premiu configurat: {properties?.find(p => p.id === rewardPropertyId)?.name}
+                    </p>
+                    <p className="text-emerald-600/80 text-xs mt-1">
+                      Perioada: {rewardCheckIn} → {rewardCheckOut}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div>
               <label className="text-sm font-medium mb-2 block">Note Admin</label>
               <Textarea
