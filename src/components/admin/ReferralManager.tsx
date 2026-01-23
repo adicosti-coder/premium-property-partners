@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, differenceInDays, subDays } from "date-fns";
 import { ro } from "date-fns/locale";
 import {
   Gift,
@@ -49,7 +50,12 @@ import {
   Trash2,
   RefreshCw,
   Home,
+  TrendingUp,
+  Target,
+  Award,
+  BarChart3,
 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface Referral {
   id: string;
@@ -279,12 +285,48 @@ const ReferralManager = () => {
     (r) => filterStatus === "all" || r.status === filterStatus
   );
 
+  // Calculate stats
   const stats = {
     total: referrals?.length || 0,
     pending: referrals?.filter((r) => r.status === "pending").length || 0,
+    contacted: referrals?.filter((r) => r.status === "contacted").length || 0,
+    meetingScheduled: referrals?.filter((r) => r.status === "meeting_scheduled").length || 0,
     signed: referrals?.filter((r) => r.status === "contract_signed").length || 0,
     rewarded: referrals?.filter((r) => r.status === "reward_granted").length || 0,
+    rejected: referrals?.filter((r) => r.status === "rejected").length || 0,
   };
+
+  // Calculate conversion metrics
+  const converted = stats.signed + stats.rewarded;
+  const conversionRate = stats.total > 0 ? Math.round((converted / stats.total) * 100) : 0;
+  const pendingRate = stats.total > 0 ? Math.round((stats.pending / stats.total) * 100) : 0;
+  const inProgressRate = stats.total > 0 ? Math.round(((stats.contacted + stats.meetingScheduled) / stats.total) * 100) : 0;
+
+  // Referrals in last 30 days
+  const thirtyDaysAgo = subDays(new Date(), 30);
+  const recentReferrals = referrals?.filter((r) => new Date(r.created_at) >= thirtyDaysAgo).length || 0;
+  
+  // Average time to convert (for signed/rewarded referrals)
+  const convertedReferrals = referrals?.filter((r) => 
+    (r.status === "contract_signed" || r.status === "reward_granted") && r.contract_signed_at
+  ) || [];
+  const avgDaysToConvert = convertedReferrals.length > 0
+    ? Math.round(
+        convertedReferrals.reduce((sum, r) => 
+          sum + differenceInDays(new Date(r.contract_signed_at!), new Date(r.created_at)), 0
+        ) / convertedReferrals.length
+      )
+    : 0;
+
+  // Pie chart data
+  const pieData = [
+    { name: "În așteptare", value: stats.pending, color: "#eab308" },
+    { name: "Contactat", value: stats.contacted, color: "#3b82f6" },
+    { name: "Întâlnire", value: stats.meetingScheduled, color: "#8b5cf6" },
+    { name: "Contract", value: stats.signed, color: "#10b981" },
+    { name: "Premiu", value: stats.rewarded, color: "#f59e0b" },
+    { name: "Respins", value: stats.rejected, color: "#ef4444" },
+  ].filter(d => d.value > 0);
 
   if (isLoading) {
     return (
@@ -297,34 +339,188 @@ const ReferralManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      {/* Enhanced Stats Dashboard */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Stats Cards */}
+        <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-3xl font-bold">{stats.total}</p>
+                </div>
+                <Users className="w-10 h-10 text-primary/20" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                +{recentReferrals} în ultimele 30 zile
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-yellow-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">În Așteptare</p>
+                  <p className="text-3xl font-bold">{stats.pending}</p>
+                </div>
+                <Clock className="w-10 h-10 text-yellow-500/20" />
+              </div>
+              <Progress value={pendingRate} className="mt-2 h-1" />
+              <p className="text-xs text-muted-foreground mt-1">{pendingRate}% din total</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-emerald-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Convertite</p>
+                  <p className="text-3xl font-bold">{converted}</p>
+                </div>
+                <CheckCircle className="w-10 h-10 text-emerald-500/20" />
+              </div>
+              <div className="flex items-center gap-1 mt-2">
+                <TrendingUp className="w-3 h-3 text-emerald-500" />
+                <span className="text-xs font-medium text-emerald-600">{conversionRate}% rată succes</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-amber-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Premii</p>
+                  <p className="text-3xl font-bold">{stats.rewarded}</p>
+                </div>
+                <Gift className="w-10 h-10 text-amber-500/20" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Weekend-uri acordate
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Conversion Funnel & Chart */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Distribuție Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pieData.length > 0 ? (
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={25}
+                        outerRadius={40}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => [value, "Referraluri"]}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 space-y-1">
+                  {pieData.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <div 
+                          className="w-2 h-2 rounded-full" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-muted-foreground">{item.name}</span>
+                      </div>
+                      <span className="font-medium">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nicio dată disponibilă
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* KPIs Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">Total Referraluri</p>
+        <Card className="bg-gradient-to-br from-primary/5 to-transparent">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Target className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{conversionRate}%</p>
+                <p className="text-xs text-muted-foreground">Rată Conversie</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <Clock className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
-            <p className="text-2xl font-bold">{stats.pending}</p>
-            <p className="text-xs text-muted-foreground">În Așteptare</p>
+
+        <Card className="bg-gradient-to-br from-blue-500/5 to-transparent">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-blue-500/10">
+                <Calendar className="w-4 h-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{avgDaysToConvert}</p>
+                <p className="text-xs text-muted-foreground">Zile Medie Conversie</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-500" />
-            <p className="text-2xl font-bold">{stats.signed}</p>
-            <p className="text-xs text-muted-foreground">Contracte Semnate</p>
+
+        <Card className="bg-gradient-to-br from-purple-500/5 to-transparent">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-purple-500/10">
+                <TrendingUp className="w-4 h-4 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.contacted + stats.meetingScheduled}</p>
+                <p className="text-xs text-muted-foreground">În Progres</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <Gift className="w-8 h-8 mx-auto mb-2 text-amber-500" />
-            <p className="text-2xl font-bold">{stats.rewarded}</p>
-            <p className="text-xs text-muted-foreground">Premii Acordate</p>
+
+        <Card className="bg-gradient-to-br from-amber-500/5 to-transparent">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-amber-500/10">
+                <Award className="w-4 h-4 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.rewarded * 300}€</p>
+                <p className="text-xs text-muted-foreground">Valoare Premii</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
