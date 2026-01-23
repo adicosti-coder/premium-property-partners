@@ -151,7 +151,7 @@ const Hero = () => {
       </div>
       
       {/* Content gradient overlay - theme-aware for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/30 to-transparent dark:from-background/60 dark:via-background/20 z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-transparent dark:from-background/70 dark:via-background/30 z-[1]" />
       
       {/* Dramatic cinematic vignette */}
       <div
@@ -256,16 +256,23 @@ const TypingTitle = ({ title, titleMid, highlight }: { title: string; titleMid: 
 
   return (
     <span className="block">
-      <span className="block text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{titleText}</span>
+      <span className="block">{titleText}</span>
       {titleComplete && (
-        <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-white/80 my-2 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+        <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-muted-foreground my-2">
           {titleMid}
         </span>
       )}
+
       {titleComplete && (
-        <span className="block text-gradient-gold drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)' }}>
-          {highlightText}
-          <span className={`inline-block w-0.5 h-[0.9em] bg-primary ml-1 align-middle transition-opacity duration-300 ${highlightComplete ? 'opacity-0' : 'animate-pulse'}`} />
+        <span className="block">
+          <span className="inline-flex items-baseline gap-1 px-2 py-1 rounded-lg bg-background/35 backdrop-blur-sm border border-border/40">
+            <span className="text-gradient-gold">{highlightText}</span>
+            <span
+              className={`inline-block w-0.5 h-[0.9em] bg-primary align-middle transition-opacity duration-300 ${
+                highlightComplete ? "opacity-0" : "animate-pulse"
+              }`}
+            />
+          </span>
         </span>
       )}
     </span>
@@ -298,9 +305,13 @@ const HeroContent = ({
 
   return (
     <>
-      <p className="text-lg md:text-xl text-white/90 max-w-2xl mb-8 leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+      <p className="text-lg md:text-xl text-foreground/85 dark:text-muted-foreground max-w-2xl mb-8 leading-relaxed">
         {subtitleText}
-        <span className={`inline-block w-0.5 h-[1em] bg-white/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete ? 'opacity-0' : 'animate-pulse'}`} />
+        <span
+          className={`inline-block w-0.5 h-[1em] bg-foreground/40 dark:bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${
+            subtitleComplete ? "opacity-0" : "animate-pulse"
+          }`}
+        />
       </p>
       
       {/* CTAs */}
