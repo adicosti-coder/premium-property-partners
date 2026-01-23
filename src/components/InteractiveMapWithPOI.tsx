@@ -20,8 +20,8 @@ import {
   Clapperboard
 } from 'lucide-react';
 
-// Main apartment location in Bucharest
-const APARTMENT_LOCATION: [number, number] = [26.1025, 44.4268];
+// Main apartment location in Timișoara
+const APARTMENT_LOCATION: [number, number] = [21.2270, 45.7540];
 
 interface POI {
   id: string;
@@ -204,7 +204,7 @@ const InteractiveMapWithPOI = () => {
       <div style="padding: 8px; text-align: center;">
         <strong style="color: #c9a962;">${t.apartment}</strong>
         <br/>
-        <small style="color: #666;">ApArt Hotel București</small>
+        <small style="color: #666;">ApArt Hotel Timișoara</small>
       </div>
     `);
 
