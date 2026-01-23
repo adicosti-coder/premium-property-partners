@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogComments from "@/components/BlogComments";
+import BlogNewsletterCTA from "@/components/BlogNewsletterCTA";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -212,8 +213,11 @@ const BlogArticle = () => {
             </div>
           )}
 
+          {/* Newsletter CTA */}
+          <BlogNewsletterCTA />
+
           {/* CTA Section */}
-          <div className="mt-10 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
             <p className="text-foreground">
               {language === "ro" 
                 ? "Vrei să fii aproape de locațiile importante din Timișoara? Vezi apartamentele noastre premium aici: "
