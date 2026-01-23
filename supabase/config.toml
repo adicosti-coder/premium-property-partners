@@ -62,3 +62,6 @@ verify_jwt = true
 
 [functions.send-article-notification]
 verify_jwt = false
+
+[functions.send-referral-notification]
+verify_jwt = false

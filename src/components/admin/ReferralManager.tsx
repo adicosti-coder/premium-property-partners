@@ -128,6 +128,30 @@ const ReferralManager = () => {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Send email notification if status changed
+      if (selectedReferral && status !== selectedReferral.status) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke("send-referral-notification", {
+            body: {
+              referrerName: selectedReferral.referrer_name,
+              referrerEmail: selectedReferral.referrer_email,
+              ownerName: selectedReferral.owner_name,
+              newStatus: status,
+              oldStatus: selectedReferral.status,
+              propertyLocation: selectedReferral.property_location,
+            },
+          });
+
+          if (emailError) {
+            console.error("Error sending notification email:", emailError);
+          } else {
+            console.log("Notification email sent successfully");
+          }
+        } catch (emailErr) {
+          console.error("Failed to send notification email:", emailErr);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-referrals"] });
