@@ -32,9 +32,10 @@ interface BlogArticle {
   published_at: string | null;
   created_at: string;
   is_premium: boolean;
+  view_count: number;
 }
 
-type SortOption = "newest" | "oldest" | "title";
+type SortOption = "newest" | "oldest" | "title" | "popular";
 type AccessFilter = "all" | "public" | "premium";
 
 const Blog = () => {
@@ -106,6 +107,8 @@ const Blog = () => {
                  new Date(b.published_at || b.created_at).getTime();
         case "title":
           return a.title.localeCompare(b.title, language);
+        case "popular":
+          return (b.view_count || 0) - (a.view_count || 0);
         case "newest":
         default:
           return new Date(b.published_at || b.created_at).getTime() - 
@@ -128,6 +131,7 @@ const Blog = () => {
       newest: "Cele mai noi",
       oldest: "Cele mai vechi",
       titleSort: "Alfabetic",
+      popular: "Cele mai populare",
       promoTitle: "Rezervă direct și economisește 5%!",
       promoDescription: "Folosește codul DIRECT5 pentru 5% reducere la orice rezervare directă.",
       promoButton: "Află mai multe",
@@ -150,6 +154,7 @@ const Blog = () => {
       newest: "Newest",
       oldest: "Oldest",
       titleSort: "Alphabetical",
+      popular: "Most popular",
       promoTitle: "Book direct and save 5%!",
       promoDescription: "Use code DIRECT5 for 5% off any direct booking.",
       promoButton: "Learn more",
@@ -219,6 +224,7 @@ const Blog = () => {
                   <SelectContent>
                     <SelectItem value="newest">{t.newest}</SelectItem>
                     <SelectItem value="oldest">{t.oldest}</SelectItem>
+                    <SelectItem value="popular">{t.popular}</SelectItem>
                     <SelectItem value="title">{t.titleSort}</SelectItem>
                   </SelectContent>
                 </Select>
