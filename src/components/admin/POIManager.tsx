@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown } from "lucide-react";
-import { useRef, useCallback } from "react";
+import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter } from "lucide-react";
+import { useRef, useCallback, useMemo } from "react";
 
 interface POI {
   id: string;
@@ -52,6 +52,12 @@ const POIManager = () => {
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [premiumFilter, setPremiumFilter] = useState<string>('all');
   const [formData, setFormData] = useState({
     name: '',
     name_en: '',
@@ -82,6 +88,43 @@ const POIManager = () => {
       return data as POI[];
     },
   });
+
+  // Filtered POIs
+  const filteredPois = useMemo(() => {
+    if (!pois) return [];
+    
+    return pois.filter((poi) => {
+      // Search filter
+      const matchesSearch = searchQuery === '' || 
+        poi.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        poi.name_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (poi.address && poi.address.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Category filter
+      const matchesCategory = categoryFilter === 'all' || poi.category === categoryFilter;
+      
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && poi.is_active) ||
+        (statusFilter === 'inactive' && !poi.is_active);
+      
+      // Premium filter
+      const matchesPremium = premiumFilter === 'all' ||
+        (premiumFilter === 'premium' && poi.is_premium) ||
+        (premiumFilter === 'standard' && !poi.is_premium);
+      
+      return matchesSearch && matchesCategory && matchesStatus && matchesPremium;
+    });
+  }, [pois, searchQuery, categoryFilter, statusFilter, premiumFilter]);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+    setPremiumFilter('all');
+  };
+
+  const hasActiveFilters = searchQuery !== '' || categoryFilter !== 'all' || statusFilter !== 'all' || premiumFilter !== 'all';
 
   const createMutation = useMutation({
     mutationFn: async (data: Omit<POI, 'id'>) => {
@@ -486,7 +529,74 @@ const POIManager = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Lista Punctelor de Interes ({pois?.length || 0})</CardTitle>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">
+                Lista Punctelor de Interes ({filteredPois.length}{pois && filteredPois.length !== pois.length ? ` din ${pois.length}` : ''})
+              </CardTitle>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                  <X className="w-4 h-4 mr-1" />
+                  Resetează filtre
+                </Button>
+              )}
+            </div>
+            
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Caută după nume sau adresă..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              {/* Category Filter */}
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Categorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate categoriile</SelectItem>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Premium Filter */}
+              <Select value={premiumFilter} onValueChange={setPremiumFilter}>
+                <SelectTrigger className="w-[130px]">
+                  <Crown className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Tip" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -503,7 +613,13 @@ const POIManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pois?.map((poi) => {
+                {filteredPois.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      {hasActiveFilters ? 'Nu s-au găsit rezultate pentru filtrele selectate.' : 'Nu există puncte de interes.'}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredPois.map((poi) => {
                   const categoryInfo = getCategoryInfo(poi.category);
                   return (
                     <TableRow key={poi.id}>
