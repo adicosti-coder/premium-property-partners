@@ -25,6 +25,8 @@ import AboutUs from "./pages/AboutUs";
 import PentruProprietari from "./pages/PentruProprietari";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import CommunityArticles from "./pages/CommunityArticles";
+import SubmitArticle from "./pages/SubmitArticle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +60,8 @@ const App = () => (
                 <Route path="/pentru-proprietari" element={<PentruProprietari />} />
                 <Route path="/profil" element={<Profile />} />
                 <Route path="/setari" element={<Settings />} />
+                <Route path="/comunitate" element={<CommunityArticles />} />
+                <Route path="/comunitate/trimite" element={<SubmitArticle />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

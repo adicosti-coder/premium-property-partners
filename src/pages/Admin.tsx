@@ -51,6 +51,7 @@ import {
   Lightbulb,
   FlaskConical,
   Shield,
+  PenLine,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -75,6 +76,7 @@ import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
 import ABTestManager from "@/components/admin/ABTestManager";
 import ReviewsManager from "@/components/admin/ReviewsManager";
 import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
+import CommunityManager from "@/components/admin/CommunityManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -323,6 +325,10 @@ const Admin = () => {
               <Shield className="w-4 h-4" />
               Captcha
             </TabsTrigger>
+            <TabsTrigger value="community" className="flex items-center gap-2">
+              <PenLine className="w-4 h-4" />
+              Comunitate
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -411,6 +417,11 @@ const Admin = () => {
           {/* Captcha Logs Tab */}
           <TabsContent value="captcha">
             <CaptchaLogsManager />
+          </TabsContent>
+
+          {/* Community Tab */}
+          <TabsContent value="community">
+            <CommunityManager />
           </TabsContent>
         </Tabs>
       </div>
