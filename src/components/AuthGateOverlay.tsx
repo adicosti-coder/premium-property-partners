@@ -34,6 +34,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       signup: "Creează cont gratuit",
       loginTooltip: "Accesează contul tău pentru a vedea istoricul simulărilor și ofertele personalizate",
       recommended: "Recomandat",
+      urgency: "🔥 Ofertă limitată • Acces gratuit doar azi",
       benefits: [
         "Salvează simulările tale",
         "Acces la istoric complet",
@@ -48,6 +49,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       signup: "Create free account",
       loginTooltip: "Access your account to view simulation history and personalized offers",
       recommended: "Recommended",
+      urgency: "🔥 Limited offer • Free access today only",
       benefits: [
         "Save your simulations",
         "Access complete history",
@@ -175,6 +177,16 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
               </Link>
             </Button>
           </motion.div>
+
+          {/* Urgency message */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-xs text-muted-foreground text-center animate-pulse"
+          >
+            {text.urgency}
+          </motion.p>
           
           <TooltipProvider>
             <Tooltip>
