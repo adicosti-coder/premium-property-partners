@@ -67,6 +67,7 @@ interface BlogArticle {
   tags: string[];
   author_name: string;
   is_published: boolean;
+  is_premium: boolean;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -99,6 +100,7 @@ const BlogManager = () => {
     tags: [] as string[],
     author_name: "RealTrust",
     is_published: false,
+    is_premium: false,
   });
 
   const translations = {
@@ -118,6 +120,9 @@ const BlogManager = () => {
       addTag: "Adaugă tag",
       author: "Autor",
       published: "Publicat",
+      premium: "Premium (doar autentificați)",
+      premiumLabel: "Premium",
+      publicLabel: "Public",
       save: "Salvează",
       cancel: "Anulează",
       delete: "Șterge",
@@ -130,6 +135,7 @@ const BlogManager = () => {
         title: "Titlu",
         category: "Categorie",
         status: "Status",
+        access: "Acces",
         translations: "Traduceri",
         date: "Data",
         actions: "Acțiuni",
@@ -163,6 +169,9 @@ const BlogManager = () => {
       addTag: "Add tag",
       author: "Author",
       published: "Published",
+      premium: "Premium (authenticated only)",
+      premiumLabel: "Premium",
+      publicLabel: "Public",
       save: "Save",
       cancel: "Cancel",
       delete: "Delete",
@@ -175,6 +184,7 @@ const BlogManager = () => {
         title: "Title",
         category: "Category",
         status: "Status",
+        access: "Access",
         translations: "Translations",
         date: "Date",
         actions: "Actions",
@@ -328,6 +338,7 @@ const BlogManager = () => {
         tags: article.tags,
         author_name: article.author_name,
         is_published: article.is_published,
+        is_premium: article.is_premium,
       });
     } else {
       setEditingArticle(null);
@@ -344,6 +355,7 @@ const BlogManager = () => {
         tags: [],
         author_name: "RealTrust",
         is_published: false,
+        is_premium: false,
       });
     }
     setActiveTab("ro");
@@ -375,6 +387,7 @@ const BlogManager = () => {
         tags: formData.tags,
         author_name: formData.author_name,
         is_published: formData.is_published,
+        is_premium: formData.is_premium,
         published_at: formData.is_published ? new Date().toISOString() : null,
       };
 
@@ -465,6 +478,7 @@ const BlogManager = () => {
                 <TableRow>
                   <TableHead>{t.tableHeaders.title}</TableHead>
                   <TableHead>{t.tableHeaders.category}</TableHead>
+                  <TableHead>{t.tableHeaders.access}</TableHead>
                   <TableHead>{t.tableHeaders.translations}</TableHead>
                   <TableHead>{t.tableHeaders.status}</TableHead>
                   <TableHead>{t.tableHeaders.date}</TableHead>
@@ -479,6 +493,17 @@ const BlogManager = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{article.category}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {article.is_premium ? (
+                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                          {t.premiumLabel}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-green-500 border-green-500/30">
+                          {t.publicLabel}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {hasEnglishTranslation(article) ? (
@@ -752,15 +777,28 @@ const BlogManager = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Switch
-                id="is_published"
-                checked={formData.is_published}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, is_published: checked }))
-                }
-              />
-              <Label htmlFor="is_published">{t.published}</Label>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="is_published"
+                  checked={formData.is_published}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_published: checked }))
+                  }
+                />
+                <Label htmlFor="is_published">{t.published}</Label>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="is_premium"
+                  checked={formData.is_premium}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, is_premium: checked }))
+                  }
+                />
+                <Label htmlFor="is_premium">{t.premium}</Label>
+              </div>
             </div>
           </div>
 

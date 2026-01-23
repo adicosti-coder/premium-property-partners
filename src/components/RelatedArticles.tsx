@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Crown, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
+import { User } from "@supabase/supabase-js";
 
 interface RelatedArticlesProps {
   currentArticleId: string;
@@ -28,11 +30,25 @@ interface BlogArticle {
   tags: string[];
   published_at: string | null;
   created_at: string;
+  is_premium: boolean;
 }
 
 const RelatedArticles = ({ currentArticleId, category, tags }: RelatedArticlesProps) => {
   const { language } = useLanguage();
   const dateLocale = language === "ro" ? ro : enUS;
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: relatedArticles, isLoading } = useQuery({
     queryKey: ["related-articles", currentArticleId, category, tags],
@@ -77,11 +93,15 @@ const RelatedArticles = ({ currentArticleId, category, tags }: RelatedArticlesPr
       title: "Articole Similare",
       noArticles: "Nu există articole similare.",
       minRead: "min citire",
+      premium: "Premium",
+      loginToRead: "Autentifică-te",
     },
     en: {
       title: "Related Articles",
       noArticles: "No related articles found.",
       minRead: "min read",
+      premium: "Premium",
+      loginToRead: "Login to read",
     },
   };
 
@@ -128,27 +148,51 @@ const RelatedArticles = ({ currentArticleId, category, tags }: RelatedArticlesPr
             : article.excerpt;
           const readingTime = Math.ceil(article.content.length / 1000);
           const coverImage = getBlogCoverImage(article.slug, article.cover_image);
+          const isPremiumLocked = article.is_premium && !user;
 
           return (
             <Link 
               key={article.id} 
-              to={`/blog/${article.slug}`}
+              to={isPremiumLocked ? "/auth" : `/blog/${article.slug}`}
+              state={isPremiumLocked ? { from: `/blog/${article.slug}` } : undefined}
               className="group"
             >
               <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                 {coverImage && (
-                  <div className="aspect-video overflow-hidden">
+                  <div className="aspect-video overflow-hidden relative">
                     <img
                       src={coverImage}
                       alt={displayTitle}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
                     />
+                    {article.is_premium && (
+                      <Badge className="absolute top-2 right-2 bg-amber-500/90 text-white border-amber-600">
+                        <Crown className="w-3 h-3 mr-1" />
+                        {t.premium}
+                      </Badge>
+                    )}
+                    {isPremiumLocked && (
+                      <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                        <div className="flex items-center gap-1 bg-background/90 px-3 py-1.5 rounded-full text-sm">
+                          <Lock className="w-3 h-3 text-amber-500" />
+                          {t.loginToRead}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 <CardContent className="p-4">
-                  <Badge variant="secondary" className="mb-2 text-xs">
-                    {article.category}
-                  </Badge>
+                  <div className="flex gap-2 mb-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {article.category}
+                    </Badge>
+                    {!coverImage && article.is_premium && (
+                      <Badge className="bg-amber-500/90 text-white border-amber-600 text-xs">
+                        <Crown className="w-3 h-3 mr-1" />
+                        {t.premium}
+                      </Badge>
+                    )}
+                  </div>
                   <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                     {displayTitle}
                   </h3>
@@ -168,6 +212,9 @@ const RelatedArticles = ({ currentArticleId, category, tags }: RelatedArticlesPr
                       <Clock className="w-3 h-3" />
                       {readingTime} {t.minRead}
                     </span>
+                    {isPremiumLocked && (
+                      <Lock className="w-3 h-3 text-amber-500 ml-auto" />
+                    )}
                   </div>
                 </CardContent>
               </Card>

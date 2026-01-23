@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,11 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles } from "lucide-react";
+import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
+import { User } from "@supabase/supabase-js";
 
 interface BlogArticle {
   id: string;
@@ -30,6 +31,7 @@ interface BlogArticle {
   author_name: string;
   published_at: string | null;
   created_at: string;
+  is_premium: boolean;
 }
 
 type SortOption = "newest" | "oldest" | "title";
@@ -41,6 +43,19 @@ const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["blog-articles"],
@@ -110,6 +125,8 @@ const Blog = () => {
       promoTitle: "Rezervă direct și economisește 5%!",
       promoDescription: "Folosește codul DIRECT5 pentru 5% reducere la orice rezervare directă.",
       promoButton: "Află mai multe",
+      premiumBadge: "Premium",
+      loginToRead: "Autentifică-te pentru a citi",
     },
     en: {
       title: "Blog",
@@ -127,6 +144,8 @@ const Blog = () => {
       promoTitle: "Book direct and save 5%!",
       promoDescription: "Use code DIRECT5 for 5% off any direct booking.",
       promoButton: "Learn more",
+      premiumBadge: "Premium",
+      loginToRead: "Login to read",
     },
   };
 
@@ -239,9 +258,15 @@ const Blog = () => {
                 const coverImage = getBlogCoverImage(article.slug, article.cover_image);
                 const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
                 const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
+                const isPremiumLocked = article.is_premium && !user;
+                
                 return (
-                <Link key={article.id} to={`/blog/${article.slug}`}>
-                  <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow group">
+                <Link 
+                  key={article.id} 
+                  to={isPremiumLocked ? "/auth" : `/blog/${article.slug}`}
+                  state={isPremiumLocked ? { from: `/blog/${article.slug}` } : undefined}
+                >
+                  <Card className={`overflow-hidden h-full hover:shadow-lg transition-shadow group ${isPremiumLocked ? 'opacity-90' : ''}`}>
                     {coverImage && (
                       <div className="relative h-48 overflow-hidden">
                         <img
@@ -249,16 +274,40 @@ const Blog = () => {
                           alt={displayTitle}
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
                         />
-                        <Badge className="absolute top-3 left-3">
-                          {article.category}
-                        </Badge>
+                        <div className="absolute top-3 left-3 flex gap-2">
+                          <Badge>
+                            {article.category}
+                          </Badge>
+                          {article.is_premium && (
+                            <Badge className="bg-amber-500/90 text-white border-amber-600">
+                              <Crown className="w-3 h-3 mr-1" />
+                              {t.premiumBadge}
+                            </Badge>
+                          )}
+                        </div>
+                        {isPremiumLocked && (
+                          <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                            <div className="flex items-center gap-2 bg-background/90 px-4 py-2 rounded-full shadow-lg">
+                              <Lock className="w-4 h-4 text-amber-500" />
+                              <span className="text-sm font-medium">{t.loginToRead}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                     <CardContent className="p-6">
                       {!coverImage && (
-                        <Badge className="mb-3">{article.category}</Badge>
+                        <div className="flex gap-2 mb-3">
+                          <Badge>{article.category}</Badge>
+                          {article.is_premium && (
+                            <Badge className="bg-amber-500/90 text-white border-amber-600">
+                              <Crown className="w-3 h-3 mr-1" />
+                              {t.premiumBadge}
+                            </Badge>
+                          )}
+                        </div>
                       )}
                       <h2 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
                         {displayTitle}
@@ -281,7 +330,11 @@ const Blog = () => {
                             {Math.ceil(article.excerpt.length / 200)} {t.minRead}
                           </span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+                        {isPremiumLocked ? (
+                          <Lock className="w-4 h-4 text-amber-500" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+                        )}
                       </div>
                     </CardContent>
                   </Card>
