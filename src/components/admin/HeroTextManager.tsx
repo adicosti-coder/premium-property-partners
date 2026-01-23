@@ -21,7 +21,8 @@ import {
   Languages,
   Plus,
   X,
-  Tag
+  Tag,
+  Eye
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -82,6 +83,7 @@ const HeroTextManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("ro");
+  const [showPreview, setShowPreview] = useState(true);
   const [newTagRo, setNewTagRo] = useState("");
   const [newTagEn, setNewTagEn] = useState("");
 
@@ -255,6 +257,32 @@ const HeroTextManager = () => {
     return settings[field] || [];
   };
 
+  // Get current preview values
+  const getPreviewValue = (field: keyof HeroTextSettings, lang: "ro" | "en") => {
+    const langField = `${field.replace("_ro", "").replace("_en", "")}_${lang}` as keyof HeroTextSettings;
+    return settings[langField] || defaultTexts[langField as keyof typeof defaultTexts] || "";
+  };
+
+  const previewTitle = activeTab === "ro" 
+    ? (settings.hero_title_ro || defaultTexts.hero_title_ro)
+    : (settings.hero_title_en || defaultTexts.hero_title_en);
+
+  const previewHighlight = activeTab === "ro"
+    ? (settings.hero_highlight_ro || defaultTexts.hero_highlight_ro)
+    : (settings.hero_highlight_en || defaultTexts.hero_highlight_en);
+
+  const previewSubtitle = activeTab === "ro"
+    ? (settings.hero_subtitle_ro || defaultTexts.hero_subtitle_ro)
+    : (settings.hero_subtitle_en || defaultTexts.hero_subtitle_en);
+
+  const previewCtaPrimary = activeTab === "ro"
+    ? (settings.hero_cta_primary_ro || defaultTexts.hero_cta_primary_ro)
+    : (settings.hero_cta_primary_en || defaultTexts.hero_cta_primary_en);
+
+  const previewCtaSecondary = activeTab === "ro"
+    ? (settings.hero_cta_secondary_ro || defaultTexts.hero_cta_secondary_ro)
+    : (settings.hero_cta_secondary_en || defaultTexts.hero_cta_secondary_en);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -275,6 +303,73 @@ const HeroTextManager = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Live Preview Toggle */}
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <Eye className="w-4 h-4" />
+            Preview Live
+          </Label>
+          <Button
+            variant={showPreview ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? "Ascunde Preview" : "Arată Preview"}
+          </Button>
+        </div>
+
+        {/* Live Preview Section */}
+        {showPreview && (
+          <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
+            {/* Simulated Hero Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-transparent z-0" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
+            
+            <div className="relative z-10 max-w-lg">
+              {/* Title */}
+              <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground leading-tight mb-2">
+                {previewTitle}
+              </h2>
+              
+              {/* Title Mid (pentru/for) */}
+              <p className="text-lg font-normal italic text-foreground/90 mb-2">
+                {activeTab === "ro" ? "pentru" : "for"}
+              </p>
+              
+              {/* Highlight */}
+              <div className="mb-4">
+                <span className="inline-flex items-baseline gap-1 px-2 py-1 rounded-lg bg-background/35 backdrop-blur-sm border border-border/40">
+                  <span className="text-xl md:text-2xl font-serif font-semibold text-gradient-gold">
+                    {previewHighlight}
+                  </span>
+                </span>
+              </div>
+              
+              {/* Subtitle */}
+              <p className="text-sm text-foreground/85 mb-4 leading-relaxed">
+                {previewSubtitle}
+              </p>
+              
+              {/* CTA Buttons */}
+              <div className="flex flex-col gap-2">
+                <Button variant="hero" size="sm" className="w-fit text-xs">
+                  {previewCtaPrimary}
+                </Button>
+                <Button variant="heroOutline" size="sm" className="w-fit text-xs">
+                  {previewCtaSecondary}
+                </Button>
+              </div>
+            </div>
+            
+            {/* Preview Label */}
+            <div className="absolute top-2 right-2">
+              <Badge variant="secondary" className="text-xs">
+                Preview {activeTab.toUpperCase()}
+              </Badge>
+            </div>
+          </div>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="ro" className="flex items-center gap-2">
