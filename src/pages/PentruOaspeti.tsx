@@ -54,7 +54,7 @@ const PentruOaspeti = () => {
     ro: {
       badge: "Experiența ApArt Hotel",
       title: "Cazare Premium",
-      titleHighlight: "în Brașov",
+      titleHighlight: "în Timișoara",
       subtitle: "Apartamente complet echipate, curățenie profesională și servicii de hotel 5 stele într-un mediu intim și confortabil.",
       stats: [
         { value: "9.4", label: "Rating Booking.com", icon: Star },
@@ -162,7 +162,7 @@ const PentruOaspeti = () => {
     en: {
       badge: "The ApArt Hotel Experience",
       title: "Premium Accommodation",
-      titleHighlight: "in Brașov",
+      titleHighlight: "in Timișoara",
       subtitle: "Fully equipped apartments, professional cleaning and 5-star hotel services in an intimate and comfortable environment.",
       stats: [
         { value: "9.4", label: "Booking.com Rating", icon: Star },
