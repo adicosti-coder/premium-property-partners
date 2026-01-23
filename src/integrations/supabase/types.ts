@@ -983,6 +983,63 @@ export type Database = {
           },
         ]
       }
+      property_reviews: {
+        Row: {
+          booking_id: string | null
+          content: string | null
+          created_at: string
+          guest_email: string | null
+          guest_name: string
+          id: string
+          is_published: boolean
+          property_id: string
+          rating: number
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          content?: string | null
+          created_at?: string
+          guest_email?: string | null
+          guest_name: string
+          id?: string
+          is_published?: boolean
+          property_id: string
+          rating: number
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          content?: string | null
+          created_at?: string
+          guest_email?: string | null
+          guest_name?: string
+          id?: string
+          is_published?: boolean
+          property_id?: string
+          rating?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth: string
