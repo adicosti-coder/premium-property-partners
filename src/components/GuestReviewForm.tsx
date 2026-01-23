@@ -113,6 +113,18 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
 
       if (error) throw error;
 
+      // Send email notification to admins (fire and forget)
+      supabase.functions.invoke("send-review-notification", {
+        body: {
+          propertyName,
+          guestName: data.guest_name,
+          rating,
+          title: data.title || undefined,
+          content: data.content,
+          guestEmail: data.guest_email || undefined,
+        },
+      }).catch((err) => console.error("Failed to send review notification:", err));
+
       setIsSubmitted(true);
       toast({
         title: t.successTitle,
