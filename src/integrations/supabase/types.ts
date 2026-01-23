@@ -1247,6 +1247,9 @@ export type Database = {
           hero_video_url: string | null
           id: string
           last_conversion_alert_at: string | null
+          last_spam_alert_at: string | null
+          spam_alert_enabled: boolean | null
+          spam_rate_threshold: number | null
           updated_at: string
           weekly_report_enabled: boolean | null
           weekly_report_recipients: string[] | null
@@ -1275,6 +1278,9 @@ export type Database = {
           hero_video_url?: string | null
           id?: string
           last_conversion_alert_at?: string | null
+          last_spam_alert_at?: string | null
+          spam_alert_enabled?: boolean | null
+          spam_rate_threshold?: number | null
           updated_at?: string
           weekly_report_enabled?: boolean | null
           weekly_report_recipients?: string[] | null
@@ -1303,6 +1309,9 @@ export type Database = {
           hero_video_url?: string | null
           id?: string
           last_conversion_alert_at?: string | null
+          last_spam_alert_at?: string | null
+          spam_alert_enabled?: boolean | null
+          spam_rate_threshold?: number | null
           updated_at?: string
           weekly_report_enabled?: boolean | null
           weekly_report_recipients?: string[] | null
