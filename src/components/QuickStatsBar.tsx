@@ -402,7 +402,7 @@ const QuickStatsBar = () => {
   ];
 
   // Select which stats to show based on auth status
-  const statItems = isAdmin 
+  const allStatItems = isAdmin 
     ? adminStatItems 
     : user 
       ? authenticatedStatItems 
@@ -418,7 +418,10 @@ const QuickStatsBar = () => {
         <div className="container mx-auto px-4">
           <TooltipProvider delayDuration={300}>
             <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2.5 overflow-x-auto scrollbar-hide">
-              {statItems.map((stat) => {
+              {allStatItems.map((stat, index) => {
+                // On mobile, show only first 4 stats
+                const hideOnMobile = index >= 4;
+                
                 const content = (
                   <>
                     <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
@@ -446,14 +449,14 @@ const QuickStatsBar = () => {
                 const wrappedContent = stat.link ? (
                   <Link
                     to={stat.link}
-                    className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
+                    className={`flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all ${hideOnMobile ? 'hidden md:flex' : ''}`}
                   >
                     {content}
                   </Link>
                 ) : (
                   <button
                     onClick={stat.action}
-                    className="flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all"
+                    className={`flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all ${hideOnMobile ? 'hidden md:flex' : ''}`}
                   >
                     {content}
                   </button>
@@ -505,18 +508,18 @@ const QuickStatsBar = () => {
                         : "bg-primary/10 hover:bg-primary/20"
                     }`}>
                       {isAdmin ? (
-                        <Shield className="w-3.5 h-3.5 text-amber-500" />
+                        <Shield className="w-3.5 h-3.5 text-primary" />
                       ) : (
                         <UserIcon className="w-3.5 h-3.5 text-primary" />
                       )}
                       <span className={`text-[10px] uppercase tracking-wider font-medium ${
                         isAdmin 
-                          ? "text-amber-600 dark:text-amber-400" 
+                          ? "text-primary" 
                           : "text-primary"
                       }`}>
                         {isAdmin ? "Admin" : (language === "ro" ? "Cont" : "User")}
                       </span>
-                      <ChevronDown className={`w-3 h-3 ${isAdmin ? "text-amber-500" : "text-primary"}`} />
+                      <ChevronDown className="w-3 h-3 text-primary" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
@@ -578,8 +581,8 @@ const QuickStatsBar = () => {
                 <TooltipTrigger asChild>
                   <div className="hidden md:flex items-center gap-1.5 pl-3 border-l border-border/50 flex-shrink-0 cursor-help">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                     </span>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                       Live
