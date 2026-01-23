@@ -81,7 +81,7 @@ const HubSection = ({
           </h2>
 
           {/* Subtitle */}
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-lg">
+          <p className="text-foreground/70 dark:text-muted-foreground max-w-2xl mx-auto mb-8 text-lg">
             {subtitle}
           </p>
 

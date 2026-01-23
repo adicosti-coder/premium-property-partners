@@ -92,7 +92,7 @@ const TestimonialCard = ({ testimonial, isVisible, index }: { testimonial: Testi
     </div>
 
     {/* Content */}
-    <p className="text-muted-foreground mb-6 md:mb-8 text-base md:text-lg text-premium">
+    <p className="text-foreground/70 dark:text-muted-foreground mb-6 md:mb-8 text-base md:text-lg text-premium">
       "{testimonial.content}"
     </p>
 
@@ -128,9 +128,9 @@ const TestimonialCard = ({ testimonial, isVisible, index }: { testimonial: Testi
         </div>
       </div>
       
-      {/* Source badge - verified style */}
-      <div className="flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-xs text-green-400">
-        <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse" />
+      {/* Source badge - verified style - improved contrast */}
+      <div className="flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-600 dark:text-emerald-400">
+        <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-emerald-500 animate-pulse" />
         <span className="font-medium">Verificat</span>
       </div>
     </div>
@@ -195,7 +195,7 @@ const Testimonials = () => {
           <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-6">
             {t.testimonials.title} <span className="text-gradient-gold">{t.testimonials.titleHighlight}</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto text-premium">
+          <p className="text-foreground/70 dark:text-muted-foreground text-lg max-w-2xl mx-auto text-premium">
             {t.testimonials.subtitle}
           </p>
         </div>
@@ -285,7 +285,7 @@ const Testimonials = () => {
               <h3 className="text-2xl md:text-3xl lg:text-4xl heading-premium text-foreground">
                 {t.testimonials.platformReviewsTitle || 'Peste 500 de recenzii de 5 stele'}
               </h3>
-              <p className="text-muted-foreground text-sm mt-3 text-premium">
+              <p className="text-foreground/60 dark:text-muted-foreground text-sm mt-3 text-premium">
                 {t.testimonials.platformReviewsSubtitle || 'de la oaspeții noștri pe toate platformele'}
               </p>
             </div>
@@ -342,15 +342,15 @@ const Testimonials = () => {
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div className="text-center">
               <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9/5</p>
-              <p className="text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
+              <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '100ms' }}>
               <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">500+</p>
-              <p className="text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
+              <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '200ms' }}>
               <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">98%</p>
-              <p className="text-muted-foreground text-sm">{t.testimonials.happyClients}</p>
+              <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.happyClients}</p>
             </div>
           </div>
         </div>

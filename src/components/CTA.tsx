@@ -13,7 +13,7 @@ const CTA = () => {
             {t.cta.title} <span className="text-gradient-gold">{t.cta.titleHighlight}</span>?
           </h2>
           
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 font-sans">
+          <p className="text-lg text-foreground/70 dark:text-muted-foreground max-w-2xl mx-auto mb-10 font-sans">
             {t.cta.subtitle}
           </p>
           
@@ -28,7 +28,7 @@ const CTA = () => {
             </Button>
           </div>
           
-          <p className="mt-8 text-sm text-muted-foreground font-sans">
+          <p className="mt-8 text-sm text-foreground/60 dark:text-muted-foreground font-sans">
             {t.cta.footer}
           </p>
         </div>

@@ -41,7 +41,7 @@ const ContactSection = () => {
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
             {t.contactSection.title} <span className="text-gradient-gold">{t.contactSection.titleHighlight}</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-foreground/70 dark:text-muted-foreground max-w-2xl mx-auto">
             {t.contactSection.subtitle}
           </p>
         </div>
@@ -63,7 +63,7 @@ const ContactSection = () => {
                     <Phone className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.contactSection.phone}</p>
+                    <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.phone}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
                       0723 154 520
                     </p>
@@ -78,7 +78,7 @@ const ContactSection = () => {
                     <Mail className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.contactSection.email}</p>
+                    <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.email}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
                       adicosti@gmail.com
                     </p>
@@ -90,7 +90,7 @@ const ContactSection = () => {
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.contactSection.location}</p>
+                    <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.location}</p>
                     <p className="text-foreground font-medium">Timișoara, România</p>
                   </div>
                 </div>
@@ -115,15 +115,15 @@ const ContactSection = () => {
               <h4 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t.contactSection.mondayFriday}</span>
+                  <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.mondayFriday}</span>
                   <span className="text-foreground">09:00 - 18:00</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t.contactSection.saturday}</span>
+                  <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.saturday}</span>
                   <span className="text-foreground">10:00 - 14:00</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t.contactSection.guestSupport}</span>
+                  <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.guestSupport}</span>
                   <span className="text-primary font-medium">24/7</span>
                 </div>
               </div>
@@ -156,11 +156,11 @@ const ContactSection = () => {
               </Button>
             </div>
 
-            <div className="bg-secondary/50 p-6 rounded-xl font-mono text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed border border-border">
+            <div className="bg-secondary/50 p-6 rounded-xl font-mono text-sm text-foreground/60 dark:text-muted-foreground whitespace-pre-wrap leading-relaxed border border-border">
               {t.contactSection.template}
             </div>
 
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-4 text-sm text-foreground/60 dark:text-muted-foreground">
               {t.contactSection.templateDescription}
             </p>
 

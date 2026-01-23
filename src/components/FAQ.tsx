@@ -54,7 +54,7 @@ const FAQ = () => {
                 <AccordionTrigger className="text-left heading-premium text-foreground hover:text-primary py-6 text-lg">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-6 text-premium text-base">
+                <AccordionContent className="text-foreground/70 dark:text-muted-foreground pb-6 text-premium text-base">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -68,7 +68,7 @@ const FAQ = () => {
             contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <p className="text-muted-foreground text-lg mb-5">
+          <p className="text-foreground/70 dark:text-muted-foreground text-lg mb-5">
             {t.faq.notFound}
           </p>
           <a 
