@@ -77,7 +77,7 @@ const CompanyTimeline = () => {
           icon: Sparkles,
           title: "Integrare Totală",
           description: "Unificarea brandurilor RealTrust și ApArt Hotel sub aceeași viziune și consolidarea sinergiilor.",
-          highlight: "Portofoliu de 50+ proprietăți"
+          highlight: "Portofoliu extins"
         },
         {
           year: "2026+",
@@ -147,7 +147,7 @@ const CompanyTimeline = () => {
           icon: Sparkles,
           title: "Total Integration",
           description: "Unification of RealTrust and ApArt Hotel brands under the same vision and consolidation of synergies.",
-          highlight: "Portfolio of 50+ properties"
+          highlight: "Extended portfolio"
         },
         {
           year: "2026+",
