@@ -13,8 +13,10 @@ import { getBlogCoverImage } from "@/utils/blogImageMap";
 interface BlogArticle {
   id: string;
   title: string;
+  title_en: string | null;
   slug: string;
   excerpt: string;
+  excerpt_en: string | null;
   cover_image: string | null;
   category: string;
   published_at: string | null;
@@ -47,7 +49,7 @@ const BlogPreview = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_articles")
-        .select("id, title, slug, excerpt, cover_image, category, published_at, created_at")
+        .select("id, title, title_en, slug, excerpt, excerpt_en, cover_image, category, published_at, created_at")
         .eq("is_published", true)
         .order("published_at", { ascending: false })
         .limit(3);
@@ -116,6 +118,8 @@ const BlogPreview = () => {
         <div className="grid md:grid-cols-3 gap-8">
           {articles.map((article) => {
             const coverImage = getBlogCoverImage(article.slug, article.cover_image);
+            const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
+            const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
             return (
             <PrefetchLink key={article.id} to={`/blog/${article.slug}`} blogSlug={article.slug}>
               <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
@@ -123,7 +127,7 @@ const BlogPreview = () => {
                   <div className="aspect-video overflow-hidden">
                     <img
                       src={coverImage}
-                      alt={article.title}
+                      alt={displayTitle}
                       loading="lazy"
                       decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -141,14 +145,14 @@ const BlogPreview = () => {
                     </Badge>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      <span>{calculateReadTime(article.excerpt)} {t.minRead}</span>
+                      <span>{calculateReadTime(displayExcerpt)} {t.minRead}</span>
                     </div>
                   </div>
                   <h3 className="font-semibold text-lg text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {article.title}
+                    {displayTitle}
                   </h3>
                   <p className="text-muted-foreground text-sm line-clamp-2 mb-4">
-                    {article.excerpt}
+                    {displayExcerpt}
                   </p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">

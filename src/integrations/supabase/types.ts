@@ -106,45 +106,54 @@ export type Database = {
           author_name: string
           category: string
           content: string
+          content_en: string | null
           cover_image: string | null
           created_at: string
           excerpt: string
+          excerpt_en: string | null
           id: string
           is_published: boolean
           published_at: string | null
           slug: string
           tags: string[]
           title: string
+          title_en: string | null
           updated_at: string
         }
         Insert: {
           author_name?: string
           category?: string
           content: string
+          content_en?: string | null
           cover_image?: string | null
           created_at?: string
           excerpt: string
+          excerpt_en?: string | null
           id?: string
           is_published?: boolean
           published_at?: string | null
           slug: string
           tags?: string[]
           title: string
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
           author_name?: string
           category?: string
           content?: string
+          content_en?: string | null
           cover_image?: string | null
           created_at?: string
           excerpt?: string
+          excerpt_en?: string | null
           id?: string
           is_published?: boolean
           published_at?: string | null
           slug?: string
           tags?: string[]
           title?: string
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
