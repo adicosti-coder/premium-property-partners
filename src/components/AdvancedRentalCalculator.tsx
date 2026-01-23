@@ -39,6 +39,8 @@ import { format } from 'date-fns';
 import { ro, enUS } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import SimulationCompareModal from './SimulationCompareModal';
+import AuthGateOverlay from './AuthGateOverlay';
+import { cn } from '@/lib/utils';
 
 type Scenario = 'conservator' | 'piata' | 'optimist';
 
@@ -639,7 +641,12 @@ const AdvancedRentalCalculator = () => {
             </div>
 
             {/* Results Section */}
-            <div className="bg-muted/30 border-t border-border p-6 md:p-8">
+            <div className="bg-muted/30 border-t border-border p-6 md:p-8 relative">
+              {/* Auth Gate Overlay - show blur when not authenticated */}
+              {!isAuthenticated && (
+                <AuthGateOverlay />
+              )}
+
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-foreground">{t.results}</h3>
                 <p className="text-sm text-muted-foreground">{t.resultsHelp}</p>
@@ -647,7 +654,10 @@ const AdvancedRentalCalculator = () => {
 
               {/* Bar Chart Comparison */}
               <motion.div
-                className="mb-6 p-4 rounded-xl bg-card border border-border"
+                className={cn(
+                  "mb-6 p-4 rounded-xl bg-card border border-border",
+                  !isAuthenticated && "blur-sm pointer-events-none select-none"
+                )}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
@@ -741,7 +751,10 @@ const AdvancedRentalCalculator = () => {
                 )}
               </motion.div>
 
-              <div className="space-y-3">
+              <div className={cn(
+                "space-y-3",
+                !isAuthenticated && "blur-sm pointer-events-none select-none"
+              )}>
                 {/* Classic Rent Result */}
                 <motion.div
                   className="p-4 rounded-xl bg-muted/50 border border-border flex justify-between items-center"
@@ -932,7 +945,10 @@ const AdvancedRentalCalculator = () => {
               {/* WhatsApp CTA */}
               <Button
                 onClick={handleWhatsAppClick}
-                className="w-full mt-6 bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl"
+                className={cn(
+                  "w-full mt-6 bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl",
+                  !isAuthenticated && "blur-sm pointer-events-none select-none"
+                )}
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 {t.whatsappCTA}

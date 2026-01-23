@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, MapPin, Home, Sparkles, TrendingUp, MessageCircle, Check, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,9 @@ import { useParallax } from '@/hooks/useParallax';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AuthGateOverlay from './AuthGateOverlay';
+import { cn } from '@/lib/utils';
+import { User } from '@supabase/supabase-js';
 
 interface CalculatorData {
   city: string;
@@ -45,12 +48,29 @@ const RentalIncomeCalculator = () => {
   const [showResults, setShowResults] = useState(false);
   const [isSavingLead, setIsSavingLead] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [data, setData] = useState<CalculatorData>({
     city: '',
     rooms: '',
     locationType: '',
     phone: '',
   });
+
+  const isAuthenticated = !!user;
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const totalSteps = 3;
 
@@ -456,8 +476,17 @@ const RentalIncomeCalculator = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
+                    className="relative"
                   >
-                    <div className="text-center mb-8">
+                    {/* Auth Gate Overlay - show blur when not authenticated */}
+                    {!isAuthenticated && (
+                      <AuthGateOverlay />
+                    )}
+
+                    <div className={cn(
+                      "text-center mb-8",
+                      !isAuthenticated && "blur-sm pointer-events-none select-none"
+                    )}>
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -483,7 +512,10 @@ const RentalIncomeCalculator = () => {
                     </div>
 
                     {/* Comparison Chart */}
-                    <div className="bg-muted/30 rounded-xl p-6 mb-6">
+                    <div className={cn(
+                      "bg-muted/30 rounded-xl p-6 mb-6",
+                      !isAuthenticated && "blur-sm pointer-events-none select-none"
+                    )}>
                       <div className="flex items-center gap-2 mb-4">
                         <TrendingUp className="w-5 h-5 text-gold" />
                         <h4 className="font-semibold text-foreground">Comparație Venituri</h4>
@@ -512,7 +544,10 @@ const RentalIncomeCalculator = () => {
                     </div>
 
                     {/* CTA Buttons */}
-                    <div className="space-y-3">
+                    <div className={cn(
+                      "space-y-3",
+                      !isAuthenticated && "blur-sm pointer-events-none select-none"
+                    )}>
                       <Button
                         onClick={handleWhatsAppClick}
                         disabled={isSavingLead}
