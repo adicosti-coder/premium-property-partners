@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 import ConfettiEffect from "./ConfettiEffect";
+import { useUISound } from "@/hooks/useUISound";
 
 interface AuthGateOverlayProps {
   title?: string;
@@ -15,9 +16,11 @@ interface AuthGateOverlayProps {
 const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
   const { language } = useLanguage();
   const [showConfetti, setShowConfetti] = useState(false);
+  const { playSound } = useUISound();
 
   const handleSignupClick = () => {
     setShowConfetti(true);
+    playSound("success");
     // Reset after animation completes
     setTimeout(() => setShowConfetti(false), 3000);
   };
