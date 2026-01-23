@@ -221,7 +221,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke("verify-hcaptcha", {
-        body: { token },
+        body: { token, formType: 'guest_review_form' },
       });
       
       if (error) {

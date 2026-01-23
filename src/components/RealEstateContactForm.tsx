@@ -84,7 +84,7 @@ const RealEstateContactForm = () => {
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
-        body: { token }
+        body: { token, formType: 'real_estate_contact_form' }
       });
       if (error) throw error;
       return data.success === true;
