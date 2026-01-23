@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown } from "lucide-react";
 import { useRef, useCallback } from "react";
 
 interface POI {
@@ -29,6 +29,7 @@ interface POI {
   website: string | null;
   rating: number | null;
   is_active: boolean;
+  is_premium: boolean;
   display_order: number;
   image_url: string | null;
 }
@@ -41,6 +42,7 @@ const CATEGORIES = [
   { value: 'transport', label: 'Transport', labelEn: 'Transport', color: 'bg-blue-500' },
   { value: 'health', label: 'Sănătate', labelEn: 'Health', color: 'bg-red-500' },
   { value: 'entertainment', label: 'Divertisment', labelEn: 'Entertainment', color: 'bg-green-500' },
+  { value: 'sports', label: 'Sport', labelEn: 'Sports', color: 'bg-teal-500' },
 ];
 
 const POIManager = () => {
@@ -62,6 +64,7 @@ const POIManager = () => {
     website: '',
     rating: '',
     is_active: true,
+    is_premium: false,
     display_order: 0,
     image_url: '',
   });
@@ -142,6 +145,7 @@ const POIManager = () => {
       website: '',
       rating: '',
       is_active: true,
+      is_premium: false,
       display_order: 0,
       image_url: '',
     });
@@ -189,6 +193,7 @@ const POIManager = () => {
       website: poi.website || '',
       rating: poi.rating ? String(poi.rating) : '',
       is_active: poi.is_active,
+      is_premium: poi.is_premium,
       display_order: poi.display_order,
       image_url: poi.image_url || '',
     });
@@ -211,6 +216,7 @@ const POIManager = () => {
       website: formData.website || null,
       rating: formData.rating ? parseFloat(formData.rating) : null,
       is_active: formData.is_active,
+      is_premium: formData.is_premium,
       display_order: formData.display_order,
       image_url: formData.image_url || null,
     };
@@ -433,7 +439,7 @@ const POIManager = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="display_order">Ordine afișare</Label>
                   <Input
@@ -450,6 +456,17 @@ const POIManager = () => {
                     onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                   />
                   <Label htmlFor="is_active">Activ</Label>
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <Switch
+                    id="is_premium"
+                    checked={formData.is_premium}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_premium: checked })}
+                  />
+                  <Label htmlFor="is_premium" className="flex items-center gap-1">
+                    <Crown className="w-4 h-4 text-primary" />
+                    Premium
+                  </Label>
                 </div>
               </div>
 
@@ -480,6 +497,7 @@ const POIManager = () => {
                   <TableHead>Adresă</TableHead>
                   <TableHead>Rating</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Premium</TableHead>
                   <TableHead className="text-right">Acțiuni</TableHead>
                 </TableRow>
               </TableHeader>
@@ -517,6 +535,16 @@ const POIManager = () => {
                         <Badge variant={poi.is_active ? "default" : "secondary"}>
                           {poi.is_active ? 'Activ' : 'Inactiv'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {poi.is_premium ? (
+                          <Badge className="bg-primary/20 text-primary border border-primary/30">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center gap-1 justify-end">
