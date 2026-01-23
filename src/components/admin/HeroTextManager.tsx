@@ -43,18 +43,18 @@ interface HeroTextSettings {
 }
 
 const defaultTexts = {
-  hero_title_ro: "Transformă-ți apartamentul într-o sursă de",
-  hero_title_en: "Transform your apartment into a source of",
-  hero_highlight_ro: "venit pasiv",
-  hero_highlight_en: "passive income",
-  hero_subtitle_ro: "Administrăm proprietăți în regim hotelier în Brașov, oferind proprietarilor venituri maximizate și oaspeților experiențe de neuitat.",
-  hero_subtitle_en: "We manage short-term rental properties in Brașov, offering owners maximized income and guests unforgettable experiences.",
-  hero_badge_ro: "Premium Property Management",
-  hero_badge_en: "Premium Property Management",
-  hero_cta_primary_ro: "Start rapid",
-  hero_cta_primary_en: "Quick Start",
-  hero_cta_secondary_ro: "Contactează-ne",
-  hero_cta_secondary_en: "Contact Us",
+  hero_title_ro: "1 Sistem Complet",
+  hero_title_en: "1 Complete System",
+  hero_highlight_ro: "Randament Real",
+  hero_highlight_en: "Real Return",
+  hero_subtitle_ro: "De la achiziție (imobiliare) la venit hotelier: administrare completă + cazare premium, într-un sistem clar orientat spre randament.",
+  hero_subtitle_en: "From acquisition (real estate) to hotel income: complete management + premium accommodation, in a clear system oriented towards returns.",
+  hero_badge_ro: "Vânzare · Administrare · Cazare\n1 singur sistem",
+  hero_badge_en: "Sales · Management · Accommodation\n1 single system",
+  hero_cta_primary_ro: "Vreau să știu cât pot câștiga cu voi",
+  hero_cta_primary_en: "I want to know how much I can earn with you",
+  hero_cta_secondary_ro: "Vezi cele 3 opțiuni",
+  hero_cta_secondary_en: "See the 3 options",
 };
 
 const defaultTags = {
