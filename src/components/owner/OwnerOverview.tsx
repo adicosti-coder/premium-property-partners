@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
+import OwnerNotifications from "./OwnerNotifications";
 
 interface OwnerOverviewProps {
   propertyId: string;
@@ -237,68 +238,74 @@ const OwnerOverview = ({ propertyId }: OwnerOverviewProps) => {
         </Card>
       </div>
 
-      {/* Recent Bookings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.recentBookings}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {bookings && bookings.length > 0 ? (
-            <div className="space-y-4">
-              {bookings.slice(0, 5).map((booking) => {
-                const checkIn = parseISO(booking.check_in);
-                const checkOut = parseISO(booking.check_out);
-                const today = new Date();
-                const isCurrent = isWithinInterval(today, { start: checkIn, end: checkOut });
-                const isUpcoming = checkIn > today;
+      {/* Two Column Layout: Notifications + Recent Bookings */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Notifications */}
+        <OwnerNotifications />
 
-                return (
-                  <div 
-                    key={booking.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full ${
-                        isCurrent ? "bg-green-500" : isUpcoming ? "bg-blue-500" : "bg-muted-foreground"
-                      }`} />
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {booking.guest_name || "Guest"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(checkIn, "d MMM", { locale: dateLocale })} - {format(checkOut, "d MMM", { locale: dateLocale })}
-                        </p>
+        {/* Recent Bookings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.recentBookings}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {bookings && bookings.length > 0 ? (
+              <div className="space-y-4">
+                {bookings.slice(0, 5).map((booking) => {
+                  const checkIn = parseISO(booking.check_in);
+                  const checkOut = parseISO(booking.check_out);
+                  const today = new Date();
+                  const isCurrent = isWithinInterval(today, { start: checkIn, end: checkOut });
+                  const isUpcoming = checkIn > today;
+
+                  return (
+                    <div 
+                      key={booking.id}
+                      className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-3 h-3 rounded-full ${
+                          isCurrent ? "bg-green-500" : isUpcoming ? "bg-blue-500" : "bg-muted-foreground"
+                        }`} />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {booking.guest_name || "Guest"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(checkIn, "d MMM", { locale: dateLocale })} - {format(checkOut, "d MMM", { locale: dateLocale })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          booking.source === "direct" 
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                        }`}>
+                          {booking.source || "Direct"}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          isCurrent 
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : isUpcoming
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {isCurrent ? t.current : isUpcoming ? t.upcoming : t.confirmed}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        booking.source === "direct" 
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                      }`}>
-                        {booking.source || "Direct"}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        isCurrent 
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : isUpcoming
-                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                          : "bg-muted text-muted-foreground"
-                      }`}>
-                        {isCurrent ? t.current : isUpcoming ? t.upcoming : t.confirmed}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">
-              {t.noBookings}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                {t.noBookings}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
