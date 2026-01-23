@@ -370,6 +370,57 @@ export type Database = {
           },
         ]
       }
+      community_badges: {
+        Row: {
+          code: string
+          color: string
+          created_at: string
+          description_en: string
+          description_ro: string
+          display_order: number
+          icon: string
+          id: string
+          is_active: boolean
+          name_en: string
+          name_ro: string
+          requirement_type: string
+          requirement_value: number
+          tier: string
+        }
+        Insert: {
+          code: string
+          color?: string
+          created_at?: string
+          description_en: string
+          description_ro: string
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name_en: string
+          name_ro: string
+          requirement_type: string
+          requirement_value?: number
+          tier?: string
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string
+          description_en?: string
+          description_ro?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name_en?: string
+          name_ro?: string
+          requirement_type?: string
+          requirement_value?: number
+          tier?: string
+        }
+        Relationships: []
+      }
       complex_images: {
         Row: {
           complex_id: string
@@ -1533,6 +1584,35 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "community_badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_notifications: {
         Row: {
           action_label: string | null
@@ -1694,6 +1774,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_award_badges: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
