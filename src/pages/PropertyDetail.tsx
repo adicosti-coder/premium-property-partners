@@ -14,6 +14,7 @@ import StayCalculator from "@/components/StayCalculator";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import PriceCompareWidget from "@/components/PriceCompareWidget";
 import SmartFeaturesBadge from "@/components/SmartFeaturesBadge";
+import PropertyReviews from "@/components/PropertyReviews";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
@@ -28,6 +29,11 @@ interface PropertyImage {
   is_primary: boolean;
 }
 
+interface DbProperty {
+  id: string;
+  name: string;
+}
+
 const PropertyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const property = getPropertyBySlug(slug || "");
@@ -37,6 +43,7 @@ const PropertyDetail = () => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   const [dbImages, setDbImages] = useState<PropertyImage[]>([]);
+  const [dbPropertyId, setDbPropertyId] = useState<string | null>(null);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
@@ -59,6 +66,7 @@ const PropertyDetail = () => {
           .maybeSingle();
 
         if (dbProperty) {
+          setDbPropertyId(dbProperty.id);
           // Fetch images for this property
           const { data: images } = await supabase
             .from("property_images")
@@ -419,6 +427,14 @@ const PropertyDetail = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Guest Reviews */}
+              {dbPropertyId && (
+                <PropertyReviews 
+                  propertyId={dbPropertyId} 
+                  propertyName={property.name} 
+                />
+              )}
             </div>
 
             {/* Right Column - Stay Calculator & Booking Card */}
