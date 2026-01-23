@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Lock, LogIn, UserPlus, Sparkles, Star, Clock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 import ConfettiEffect from "./ConfettiEffect";
 import { useUISound } from "@/hooks/useUISound";
-
+import { toast } from "@/hooks/use-toast";
 interface AuthGateOverlayProps {
   title?: string;
   description?: string;
@@ -43,6 +43,25 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
     return () => clearInterval(timer);
   }, []);
 
+  // Fake names for toast notifications
+  const fakeNames = {
+    ro: ["Maria D.", "Andrei P.", "Elena M.", "Alexandru T.", "Ioana C.", "Mihai R.", "Cristina L.", "Dan S.", "Ana V.", "George B."],
+    en: ["John D.", "Sarah M.", "Michael P.", "Emma L.", "David R.", "Anna K.", "James T.", "Lisa C.", "Robert B.", "Sophie W."]
+  };
+
+  const showSignupToast = useCallback(() => {
+    const names = fakeNames[language as keyof typeof fakeNames] || fakeNames.ro;
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    const message = language === "ro" 
+      ? `${randomName} tocmai s-a înregistrat` 
+      : `${randomName} just signed up`;
+    
+    toast({
+      title: language === "ro" ? "🎉 Înregistrare nouă" : "🎉 New signup",
+      description: message,
+    });
+  }, [language]);
+
   // Simulated recent signups counter
   useEffect(() => {
     // Start with a base number between 15-25
@@ -58,6 +77,27 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
 
     return () => clearInterval(incrementInterval);
   }, []);
+
+  // Periodic toast notifications for social proof
+  useEffect(() => {
+    // Show first toast after 5-10 seconds
+    const initialDelay = 5000 + Math.random() * 5000;
+    const initialTimeout = setTimeout(() => {
+      showSignupToast();
+    }, initialDelay);
+
+    // Then show periodically every 15-25 seconds
+    const toastInterval = setInterval(() => {
+      if (Math.random() > 0.4) {
+        showSignupToast();
+      }
+    }, 15000 + Math.random() * 10000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(toastInterval);
+    };
+  }, [showSignupToast]);
 
   const handleSignupClick = () => {
     setShowConfetti(true);
