@@ -263,8 +263,8 @@ const PentruProprietari = () => {
       {/* Testimonials */}
       <Testimonials />
 
-      {/* Video Testimonials */}
-      <VideoTestimonials />
+      {/* Video Testimonials - Hidden until we have content */}
+      {/* <VideoTestimonials /> */}
 
       {/* Owner Portal CTA */}
       <section className="py-20 bg-gradient-to-r from-primary/10 via-gold/10 to-primary/10 relative overflow-hidden">
