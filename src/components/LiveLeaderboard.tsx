@@ -8,12 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Medal, TrendingUp, Heart, Crown, Flame } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import UserBadges from "@/components/UserBadges";
 
 interface LeaderboardEntry {
   id: string;
   title: string;
   vote_count: number;
   author_name: string;
+  user_id: string;
   cover_image_url: string | null;
   previousRank?: number;
 }
@@ -267,9 +269,12 @@ const LiveLeaderboard = ({ contestId }: LiveLeaderboardProps) => {
                     <h4 className="font-medium text-foreground text-sm line-clamp-1 group-hover:text-primary transition-colors">
                       {entry.title}
                     </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.author_name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {entry.author_name}
+                      </p>
+                      <UserBadges userId={entry.user_id} size="sm" maxDisplay={2} />
+                    </div>
                   </div>
 
                   {/* Votes & Rank Change */}

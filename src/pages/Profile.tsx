@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BadgeShowcase from "@/components/BadgeShowcase";
 
 const Profile = () => {
   const { language } = useLanguage();
@@ -59,6 +60,7 @@ const Profile = () => {
       avatarDeleted: "Avatar șters cu succes!",
       deleteError: "Eroare la ștergerea avatarului",
       notLoggedIn: "Trebuie să fii autentificat pentru a accesa această pagină",
+      badges: "Badge-uri Comunitate",
     },
     en: {
       title: "My Profile",
@@ -83,6 +85,7 @@ const Profile = () => {
       avatarDeleted: "Avatar deleted successfully!",
       deleteError: "Error deleting avatar",
       notLoggedIn: "You must be logged in to access this page",
+      badges: "Community Badges",
     },
   };
 
@@ -412,6 +415,11 @@ const Profile = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Badge Showcase */}
+        {user && (
+          <BadgeShowcase userId={user.id} className="mt-6" />
+        )}
       </main>
 
       <Footer />

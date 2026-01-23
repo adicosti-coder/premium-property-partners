@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import UserBadges from "@/components/UserBadges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -380,6 +381,7 @@ const CommunityArticleDetail = () => {
               <div className="flex items-center gap-2">
                 <UserIcon className="w-4 h-4" />
                 <span>{t.by} {article.author_name}</span>
+                <UserBadges userId={article.user_id} size="sm" maxDisplay={3} />
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
