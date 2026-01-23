@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.send-referral-notification]
 verify_jwt = false
+
+[functions.check-referral-reminders]
+verify_jwt = false
