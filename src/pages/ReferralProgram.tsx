@@ -51,6 +51,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import UrgencyTimer from "@/components/UrgencyTimer";
 
 const formSchema = z.object({
   referrerName: z.string().min(2, "Numele trebuie să aibă cel puțin 2 caractere"),
@@ -307,6 +308,16 @@ const ReferralProgram = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
               {text.heroSubtitle}
             </p>
+
+            {/* Urgency Timer */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="max-w-sm mx-auto mb-6"
+            >
+              <UrgencyTimer variant="default" />
+            </motion.div>
 
             {/* Prize Card */}
             <motion.div

@@ -19,6 +19,8 @@ import GuestReviewForm from "@/components/GuestReviewForm";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
+import StickyPropertyCTA from "@/components/StickyPropertyCTA";
+import SEOHead from "@/components/SEOHead";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,33 +105,18 @@ const PropertyDetail = () => {
     : property?.images || [];
 
   const nextImage = useCallback(() => {
+    if (galleryImages.length === 0) return;
     setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
   }, [galleryImages.length]);
 
   const prevImage = useCallback(() => {
+    if (galleryImages.length === 0) return;
     setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   }, [galleryImages.length]);
 
-  if (!property) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-serif font-bold text-foreground mb-4">{t.propertyDetail.notFound}</h1>
-          <p className="text-muted-foreground mb-8">{t.propertyDetail.notFoundMessage}</p>
-          <Link to="/#portofoliu">
-            <Button variant="default">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t.propertyDetail.backToPortfolio}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Keyboard navigation
   useEffect(() => {
-    if (!lightboxOpen) return;
+    if (!lightboxOpen || !property) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -154,11 +141,11 @@ const PropertyDetail = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, nextImage, prevImage]);
+  }, [lightboxOpen, nextImage, prevImage, property]);
 
   // Autoplay slideshow
   useEffect(() => {
-    if (isAutoplay && lightboxOpen) {
+    if (isAutoplay && lightboxOpen && property) {
       autoplayRef.current = setInterval(() => {
         nextImage();
       }, 3000);
@@ -174,7 +161,7 @@ const PropertyDetail = () => {
         clearInterval(autoplayRef.current);
       }
     };
-  }, [isAutoplay, lightboxOpen, nextImage]);
+  }, [isAutoplay, lightboxOpen, nextImage, property]);
 
   // Touch swipe handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -201,7 +188,25 @@ const PropertyDetail = () => {
 
     touchStartX.current = null;
     touchEndX.current = null;
-  }, [nextImage, prevImage]);
+  }, [nextImage, prevImage, minSwipeDistance]);
+
+  // Early return AFTER all hooks
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-serif font-bold text-foreground mb-4">{t.propertyDetail.notFound}</h1>
+          <p className="text-muted-foreground mb-8">{t.propertyDetail.notFoundMessage}</p>
+          <Link to="/#portofoliu">
+            <Button variant="default">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t.propertyDetail.backToPortfolio}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleShare = async () => {
     const description = language === 'en' ? property.descriptionEn : property.description;
@@ -224,8 +229,27 @@ const PropertyDetail = () => {
   const amenities = language === 'en' ? property.amenitiesEn : property.amenities;
   const houseRules = language === 'en' ? property.houseRulesEn : property.houseRules;
 
+  const seoDescription = language === "en" 
+    ? `${property.name} - Premium apartment in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct for best price!`
+    : `${property.name} - Apartament premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct pentru cel mai bun preț!`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`${property.name} | ApArt Hotel Timișoara`}
+        description={seoDescription}
+        image={galleryImages[0] || "https://realtrustaparthotel.lovable.app/og-image.jpg"}
+        url={`https://realtrustaparthotel.lovable.app/proprietate/${slug}`}
+        type="product"
+        productPrice={property.pricePerNight}
+        productCurrency="EUR"
+        productAvailability="InStock"
+        breadcrumbItems={[
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrustaparthotel.lovable.app" },
+          { name: language === "ro" ? "Proprietăți" : "Properties", url: "https://realtrustaparthotel.lovable.app/oaspeti" },
+          { name: property.name, url: `https://realtrustaparthotel.lovable.app/proprietate/${slug}` },
+        ]}
+      />
       <Header />
       
       <main className="pt-20">
@@ -591,6 +615,13 @@ const PropertyDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Sticky CTA Bar */}
+      <StickyPropertyCTA 
+        propertyName={property.name}
+        price={property.pricePerNight}
+        onBookClick={() => setBookingOpen(true)}
+      />
 
       {/* Booking Form */}
       <BookingForm 

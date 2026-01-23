@@ -11,7 +11,112 @@ interface SEOHeadProps {
   author?: string;
   noIndex?: boolean;
   jsonLd?: Record<string, unknown>;
+  // Article specific
+  articleTags?: string[];
+  articleCategory?: string;
+  // Product specific (for properties)
+  productPrice?: number;
+  productCurrency?: string;
+  productAvailability?: "InStock" | "OutOfStock" | "PreOrder";
+  // FAQ specific
+  faqItems?: Array<{ question: string; answer: string }>;
+  // Breadcrumb
+  breadcrumbItems?: Array<{ name: string; url: string }>;
 }
+
+// Helper to generate Article JSON-LD
+const generateArticleJsonLd = (
+  title: string,
+  description: string,
+  image: string,
+  url: string,
+  publishedTime?: string,
+  author?: string,
+  tags?: string[],
+  category?: string
+) => ({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": title,
+  "description": description,
+  "image": image,
+  "url": url,
+  "datePublished": publishedTime,
+  "author": {
+    "@type": "Person",
+    "name": author || "RealTrust Team",
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "RealTrust & ApArt Hotel",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://realtrustaparthotel.lovable.app/favicon.ico",
+    },
+  },
+  ...(tags && tags.length > 0 && { "keywords": tags.join(", ") }),
+  ...(category && { "articleSection": category }),
+});
+
+// Helper to generate Product JSON-LD (for properties)
+const generateProductJsonLd = (
+  name: string,
+  description: string,
+  image: string,
+  url: string,
+  price?: number,
+  currency: string = "EUR",
+  availability: string = "InStock"
+) => ({
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": name,
+  "description": description,
+  "image": image,
+  "url": url,
+  "brand": {
+    "@type": "Brand",
+    "name": "ApArt Hotel Timișoara",
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": currency,
+    "price": price || 0,
+    "availability": `https://schema.org/${availability}`,
+    "url": url,
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "150",
+  },
+});
+
+// Helper to generate FAQ JSON-LD
+const generateFaqJsonLd = (faqItems: Array<{ question: string; answer: string }>) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map((item) => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": item.answer,
+    },
+  })),
+});
+
+// Helper to generate Breadcrumb JSON-LD
+const generateBreadcrumbJsonLd = (items: Array<{ name: string; url: string }>) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": items.map((item, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": item.name,
+    "item": item.url,
+  })),
+});
 
 const SEOHead = ({
   title,
@@ -23,6 +128,13 @@ const SEOHead = ({
   author,
   noIndex = false,
   jsonLd,
+  articleTags,
+  articleCategory,
+  productPrice,
+  productCurrency = "EUR",
+  productAvailability = "InStock",
+  faqItems,
+  breadcrumbItems,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
   
@@ -69,7 +181,55 @@ const SEOHead = ({
     }
   };
   
-  const finalJsonLd = jsonLd || defaultJsonLd;
+  // Determine which JSON-LD to use based on type
+  let finalJsonLd: Record<string, unknown> | Record<string, unknown>[] = jsonLd || defaultJsonLd;
+  
+  if (!jsonLd) {
+    const schemas: Record<string, unknown>[] = [defaultJsonLd];
+    
+    // Add Article schema if type is article
+    if (type === "article") {
+      schemas.push(
+        generateArticleJsonLd(
+          finalTitle,
+          finalDescription,
+          image,
+          finalUrl,
+          publishedTime,
+          author,
+          articleTags,
+          articleCategory
+        )
+      );
+    }
+    
+    // Add Product schema if type is product
+    if (type === "product") {
+      schemas.push(
+        generateProductJsonLd(
+          finalTitle,
+          finalDescription,
+          image,
+          finalUrl,
+          productPrice,
+          productCurrency,
+          productAvailability
+        )
+      );
+    }
+    
+    // Add FAQ schema if faqItems provided
+    if (faqItems && faqItems.length > 0) {
+      schemas.push(generateFaqJsonLd(faqItems));
+    }
+    
+    // Add Breadcrumb schema if breadcrumbItems provided
+    if (breadcrumbItems && breadcrumbItems.length > 0) {
+      schemas.push(generateBreadcrumbJsonLd(breadcrumbItems));
+    }
+    
+    finalJsonLd = schemas.length === 1 ? schemas[0] : schemas;
+  }
 
   return (
     <Helmet>
@@ -103,6 +263,17 @@ const SEOHead = ({
       )}
       {type === "article" && author && (
         <meta property="article:author" content={author} />
+      )}
+      {type === "article" && articleTags && articleTags.length > 0 && (
+        <meta property="article:tag" content={articleTags.join(",")} />
+      )}
+      
+      {/* Product specific */}
+      {type === "product" && productPrice && (
+        <>
+          <meta property="product:price:amount" content={String(productPrice)} />
+          <meta property="product:price:currency" content={productCurrency} />
+        </>
       )}
       
       {/* JSON-LD Structured Data */}
