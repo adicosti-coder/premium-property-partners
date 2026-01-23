@@ -16,7 +16,7 @@ import PentruOaspeti from "./pages/PentruOaspeti";
 import Guests from "./pages/Guests";
 import Imobiliare from "./pages/Imobiliare";
 import Blog from "./pages/Blog";
-import BlogArticle from "./pages/BlogArticle";
+import BlogArticlePage from "./pages/BlogArticle";
 import OnlineCheckIn from "./pages/OnlineCheckIn";
 import WhyBookDirect from "./pages/WhyBookDirect";
 import OwnerAuth from "./pages/OwnerAuth";
@@ -48,7 +48,7 @@ const App = () => (
                 <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
                 <Route path="/imobiliare" element={<Imobiliare />} />
                 <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogArticle />} />
+                <Route path="/blog/:slug" element={<BlogArticlePage />} />
                 <Route path="/proprietate/:slug" element={<PropertyDetail />} />
                 <Route path="/online-check-in" element={<OnlineCheckIn />} />
                 <Route path="/rezerva-direct" element={<WhyBookDirect />} />
