@@ -1319,6 +1319,92 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          admin_notes: string | null
+          contacted_at: string | null
+          contract_signed_at: string | null
+          created_at: string
+          id: string
+          meeting_date: string | null
+          owner_email: string
+          owner_message: string | null
+          owner_name: string
+          owner_phone: string
+          property_location: string | null
+          property_rooms: number | null
+          property_type: string | null
+          referrer_email: string
+          referrer_name: string
+          referrer_phone: string | null
+          referrer_user_id: string | null
+          reward_check_in: string | null
+          reward_check_out: string | null
+          reward_granted_at: string | null
+          reward_property_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          contacted_at?: string | null
+          contract_signed_at?: string | null
+          created_at?: string
+          id?: string
+          meeting_date?: string | null
+          owner_email: string
+          owner_message?: string | null
+          owner_name: string
+          owner_phone: string
+          property_location?: string | null
+          property_rooms?: number | null
+          property_type?: string | null
+          referrer_email: string
+          referrer_name: string
+          referrer_phone?: string | null
+          referrer_user_id?: string | null
+          reward_check_in?: string | null
+          reward_check_out?: string | null
+          reward_granted_at?: string | null
+          reward_property_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          contacted_at?: string | null
+          contract_signed_at?: string | null
+          created_at?: string
+          id?: string
+          meeting_date?: string | null
+          owner_email?: string
+          owner_message?: string | null
+          owner_name?: string
+          owner_phone?: string
+          property_location?: string | null
+          property_rooms?: number | null
+          property_type?: string | null
+          referrer_email?: string
+          referrer_name?: string
+          referrer_phone?: string | null
+          referrer_user_id?: string | null
+          reward_check_in?: string | null
+          reward_check_out?: string | null
+          reward_granted_at?: string | null
+          reward_property_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_reward_property_id_fkey"
+            columns: ["reward_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       residential_complexes: {
         Row: {
           created_at: string

@@ -30,6 +30,7 @@ import CommunityArticleDetail from "./pages/CommunityArticleDetail";
 import SubmitArticle from "./pages/SubmitArticle";
 import EditArticle from "./pages/EditArticle";
 import PublicProfile from "./pages/PublicProfile";
+import ReferralProgram from "./pages/ReferralProgram";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
                 <Route path="/comunitate/trimite" element={<SubmitArticle />} />
                 <Route path="/comunitate/editeaza/:id" element={<EditArticle />} />
                 <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
+                <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
