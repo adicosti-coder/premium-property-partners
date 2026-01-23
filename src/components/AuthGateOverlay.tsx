@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, LogIn, UserPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
+import ConfettiEffect from "./ConfettiEffect";
 
 interface AuthGateOverlayProps {
   title?: string;
@@ -12,6 +14,13 @@ interface AuthGateOverlayProps {
 
 const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
   const { language } = useLanguage();
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleSignupClick = () => {
+    setShowConfetti(true);
+    // Reset after animation completes
+    setTimeout(() => setShowConfetti(false), 3000);
+  };
 
   const t = {
     ro: {
@@ -45,11 +54,13 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
   const text = t[language as keyof typeof t] || t.ro;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="absolute inset-0 z-20 flex items-center justify-center"
-    >
+    <>
+      <ConfettiEffect isActive={showConfetti} particleCount={60} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 z-20 flex items-center justify-center"
+      >
       {/* Blur backdrop */}
       <div className="absolute inset-0 backdrop-blur-md bg-background/60" />
       
@@ -115,8 +126,9 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
               asChild 
               className="w-full transition-transform duration-200 hover:scale-105 active:scale-95 bg-gradient-to-r from-primary via-primary/80 to-primary bg-[length:200%_100%] animate-[gradient-shift_3s_ease-in-out_infinite]" 
               size="lg"
+              onClick={handleSignupClick}
             >
-              <Link to="/auth?mode=signup">
+              <Link to="/auth?mode=signup" onClick={handleSignupClick}>
                 <UserPlus className="w-4 h-4 mr-2" />
                 {text.signup}
               </Link>
@@ -140,7 +152,8 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
           </TooltipProvider>
         </div>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 
