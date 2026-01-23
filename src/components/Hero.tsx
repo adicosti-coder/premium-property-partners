@@ -150,14 +150,14 @@ const Hero = () => {
         )}
       </div>
       
-      {/* Content gradient overlay - subtle for text readability while keeping image visible */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/20 to-transparent z-[1]" />
+      {/* Content gradient overlay - theme-aware for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/30 to-transparent dark:from-background/60 dark:via-background/20 z-[1]" />
       
       {/* Dramatic cinematic vignette */}
       <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.5) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.45) 100%)",
         }}
       />
       
@@ -222,13 +222,13 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* KPI Overlay Badges */}
+      {/* KPI Overlay Badges - improved contrast */}
       <div className="absolute bottom-32 right-6 lg:right-12 z-20 hidden md:flex flex-col gap-3">
-        <div className="kpi-badge px-5 py-3 bg-background/80 backdrop-blur-sm rounded-xl border border-primary/40 shadow-lg">
+        <div className="kpi-badge px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
           <span className="text-primary font-bold text-xl">+40% Yield</span>
           <span className="text-xs text-muted-foreground block">vs Chirie clasică</span>
         </div>
-        <div className="kpi-badge px-5 py-3 bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
+        <div className="kpi-badge px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
           <span className="font-bold text-foreground text-lg">Zero Stress</span>
           <span className="text-xs text-muted-foreground block">Operare full</span>
         </div>
@@ -298,9 +298,9 @@ const HeroContent = ({
 
   return (
     <>
-      <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8 leading-relaxed">
+      <p className="text-lg md:text-xl text-foreground/80 dark:text-muted-foreground max-w-2xl mb-8 leading-relaxed">
         {subtitleText}
-        <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete ? 'opacity-0' : 'animate-pulse'}`} />
+        <span className={`inline-block w-0.5 h-[1em] bg-foreground/40 dark:bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete ? 'opacity-0' : 'animate-pulse'}`} />
       </p>
       
       {/* CTAs */}
@@ -330,10 +330,10 @@ const HeroContent = ({
         className={`mt-6 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
         style={{ transitionDelay: subtitleComplete ? '180ms' : '0ms' }}
       >
-        <p className="text-muted-foreground text-sm">
+        <p className="text-foreground/70 dark:text-muted-foreground text-sm">
           {t.hero.trustText} <span className="font-semibold text-foreground">24h</span>
         </p>
-        <p className="text-muted-foreground/70 text-sm mt-1">
+        <p className="text-foreground/50 dark:text-muted-foreground/70 text-sm mt-1">
           {t.hero.trustPrivacy}
         </p>
       </div>
@@ -343,16 +343,16 @@ const HeroContent = ({
         className={`grid grid-cols-1 gap-3 mt-8 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
         style={{ transitionDelay: subtitleComplete ? '250ms' : '0ms' }}
       >
-        <div className="p-4 bg-card/60 border border-border/50 rounded-xl backdrop-blur-sm">
-          <p className="text-muted-foreground text-sm">{t.hero.features?.payments || "Plăți"}</p>
+        <div className="p-4 bg-card/80 dark:bg-card/60 border border-border/60 dark:border-border/50 rounded-xl backdrop-blur-sm shadow-sm">
+          <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.hero.features?.payments || "Plăți"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
         </div>
-        <div className="p-4 bg-card/60 border border-border/50 rounded-xl backdrop-blur-sm">
-          <p className="text-muted-foreground text-sm">{t.hero.features?.model || "Model"}</p>
+        <div className="p-4 bg-card/80 dark:bg-card/60 border border-border/60 dark:border-border/50 rounded-xl backdrop-blur-sm shadow-sm">
+          <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.hero.features?.model || "Model"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
         </div>
-        <div className="p-4 bg-card/60 border border-border/50 rounded-xl backdrop-blur-sm">
-          <p className="text-muted-foreground text-sm">{t.hero.features?.response || "Răspuns"}</p>
+        <div className="p-4 bg-card/80 dark:bg-card/60 border border-border/60 dark:border-border/50 rounded-xl backdrop-blur-sm shadow-sm">
+          <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.hero.features?.response || "Răspuns"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
         </div>
       </div>

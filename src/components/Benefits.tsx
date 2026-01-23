@@ -21,7 +21,7 @@ const Benefits = () => {
           <h2 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-6">
             {t.benefits.title} <span className="text-gradient-gold">{t.benefits.titleHighlight}</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto text-premium">
+          <p className="text-foreground/70 dark:text-muted-foreground text-lg max-w-2xl mx-auto text-premium">
             {t.benefits.subtitle}
           </p>
         </div>
@@ -46,7 +46,7 @@ const Benefits = () => {
                   {benefit.title}
                 </h3>
                 
-                <p className="text-muted-foreground text-premium">
+                <p className="text-foreground/70 dark:text-muted-foreground text-premium">
                   {benefit.description}
                 </p>
                 

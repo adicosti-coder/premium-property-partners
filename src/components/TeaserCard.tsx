@@ -47,7 +47,7 @@ const TeaserCard = ({
       </h3>
       <p
         className={cn(
-          "text-muted-foreground leading-relaxed",
+          "text-foreground/70 dark:text-muted-foreground leading-relaxed",
           isCompact ? "text-xs" : "text-sm"
         )}
       >

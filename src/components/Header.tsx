@@ -97,7 +97,7 @@ const Header = () => {
       
       <header className="fixed top-0 left-0 right-0 z-50">
       {/* Main header bar */}
-      <div className="glass border-b border-border">
+      <div className="glass border-b border-border/50 dark:border-border shadow-sm dark:shadow-none">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -121,7 +121,7 @@ const Header = () => {
               const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)]";
               const activeClasses = isActive 
                 ? "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]" 
-                : "text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
+                : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
 
               return link.isHome ? (
                 <a
@@ -224,7 +224,7 @@ const Header = () => {
                   const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
                   const activeClasses = isActive 
                     ? "text-primary font-semibold translate-x-2 scale-105 animate-glow-pulse before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
-                    : "text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
+                    : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
 
                   return (
                     <motion.div
