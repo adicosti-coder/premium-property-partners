@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Lock, LogIn, UserPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 
@@ -19,6 +20,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       description: description || "Creează un cont gratuit pentru a vedea estimările și a-ți salva simulările.",
       login: "Autentifică-te",
       signup: "Creează cont gratuit",
+      loginTooltip: "Accesează contul tău pentru a vedea istoricul simulărilor și ofertele personalizate",
       benefits: [
         "Salvează simulările tale",
         "Acces la istoric complet",
@@ -31,6 +33,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       description: description || "Create a free account to view estimates and save your simulations.",
       login: "Sign in",
       signup: "Create free account",
+      loginTooltip: "Access your account to view simulation history and personalized offers",
       benefits: [
         "Save your simulations",
         "Access complete history",
@@ -116,12 +119,21 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
             </Button>
           </motion.div>
           
-          <Button asChild variant="outline" className="w-full" size="lg">
-            <Link to="/auth">
-              <LogIn className="w-4 h-4 mr-2" />
-              {text.login}
-            </Link>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button asChild variant="outline" className="w-full" size="lg">
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {text.login}
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-center">
+                <p>{text.loginTooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </motion.div>
     </motion.div>
