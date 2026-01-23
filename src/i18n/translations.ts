@@ -537,7 +537,7 @@ Mulțumesc!`,
     // Floating WhatsApp
     floatingWhatsapp: {
       ariaLabel: "Contactează-ne pe WhatsApp",
-      message: "Bună ziua! Sunt interesat de serviciile RealTrust.",
+      message: "Bună ziua! Sunt interesat de serviciile RealTrust & ApArt Hotel.",
     },
     
     // Auth
@@ -1592,7 +1592,7 @@ Thank you!`,
     // Floating WhatsApp
     floatingWhatsapp: {
       ariaLabel: "Contact us on WhatsApp",
-      message: "Hello! I'm interested in RealTrust services.",
+      message: "Hello! I'm interested in RealTrust & ApArt Hotel services.",
     },
     
     // Auth
