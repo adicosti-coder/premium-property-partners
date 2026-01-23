@@ -433,47 +433,67 @@ const CommunityArticles = () => {
                     const isWinner = submission.status === "winner";
 
                     return (
-                      <Card key={submission.id} className={`overflow-hidden group hover:shadow-lg transition-shadow ${isWinner ? 'border-amber-500/50 ring-2 ring-amber-500/20' : ''}`}>
-                        {submission.cover_image_url && (
-                          <div className="relative h-48 overflow-hidden">
-                            <img
-                              src={submission.cover_image_url}
-                              alt={submission.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div className="absolute top-3 left-3 flex gap-2">
-                              {index < 3 && (
-                                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                                  #{index + 1}
-                                </Badge>
-                              )}
-                              {isWinner && (
-                                <Badge className="bg-amber-500 text-white">
-                                  <Trophy className="w-3 h-3 mr-1" />
-                                  {t.winner}
-                                </Badge>
-                              )}
+                      <Card key={submission.id} className={`overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer ${isWinner ? 'border-amber-500/50 ring-2 ring-amber-500/20' : ''}`}>
+                        <Link to={`/comunitate/articol/${submission.id}`}>
+                          {submission.cover_image_url && (
+                            <div className="relative h-48 overflow-hidden">
+                              <img
+                                src={submission.cover_image_url}
+                                alt={submission.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute top-3 left-3 flex gap-2">
+                                {index < 3 && (
+                                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                                    #{index + 1}
+                                  </Badge>
+                                )}
+                                {isWinner && (
+                                  <Badge className="bg-amber-500 text-white">
+                                    <Trophy className="w-3 h-3 mr-1" />
+                                    {t.winner}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        <CardContent className="p-6">
-                          <h3 className="text-lg font-serif font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                            {submission.title}
-                          </h3>
-                          {submission.excerpt && (
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                              {submission.excerpt}
-                            </p>
                           )}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <UserIcon className="w-4 h-4" />
-                              <span>{t.by} {submission.author_name}</span>
+                          <CardContent className="p-6">
+                            <h3 className="text-lg font-serif font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                              {submission.title}
+                            </h3>
+                            {submission.excerpt && (
+                              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                {submission.excerpt}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <UserIcon className="w-4 h-4" />
+                                <span>{t.by} {submission.author_name}</span>
+                              </div>
                             </div>
+                          </CardContent>
+                        </Link>
+                        <CardContent className="pt-0 pb-4 px-6">
+                          <div className="flex items-center justify-between">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              asChild
+                              className="text-muted-foreground"
+                            >
+                              <Link to={`/comunitate/articol/${submission.id}`}>
+                                <ChevronRight className="w-4 h-4 mr-1" />
+                                {t.readMore}
+                              </Link>
+                            </Button>
                             <Button
                               variant={hasVoted ? "default" : "outline"}
                               size="sm"
-                              onClick={() => handleVote(submission.id)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleVote(submission.id);
+                              }}
                               disabled={voteMutation.isPending}
                               className="gap-1"
                             >
@@ -498,35 +518,38 @@ const CommunityArticles = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-4">
+              <div className="space-y-4">
                   {pastWinners.map((winner) => (
-                    <Card key={winner.contest.id} className="overflow-hidden border-amber-500/30">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                          <div className="p-3 bg-amber-500/10 rounded-full shrink-0">
-                            <Trophy className="w-8 h-8 text-amber-500" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs">
-                                {format(new Date(winner.contest.end_date), "MMM yyyy", { locale: dateLocale })}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">{winner.contest.name}</span>
+                    <Link key={winner.contest.id} to={`/comunitate/articol/${winner.submission?.id}`}>
+                      <Card className="overflow-hidden border-amber-500/30 hover:shadow-lg transition-shadow cursor-pointer">
+                        <CardContent className="p-6">
+                          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                            <div className="p-3 bg-amber-500/10 rounded-full shrink-0">
+                              <Trophy className="w-8 h-8 text-amber-500" />
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground">{winner.submission?.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {t.by} {winner.submission?.author_name} • {winner.submission?.vote_count} {t.votes}
-                            </p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {format(new Date(winner.contest.end_date), "MMM yyyy", { locale: dateLocale })}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">{winner.contest.name}</span>
+                              </div>
+                              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">{winner.submission?.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {t.by} {winner.submission?.author_name} • {winner.submission?.vote_count} {t.votes}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1 text-amber-600 font-medium text-sm">
+                                <Gift className="w-4 h-4" />
+                                {winner.contest.prize_description}
+                              </span>
+                              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1 text-amber-600 font-medium">
-                              <Gift className="w-4 h-4" />
-                              {winner.contest.prize_description}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               )}
