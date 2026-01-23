@@ -258,7 +258,7 @@ const TypingTitle = ({ title, titleMid, highlight }: { title: string; titleMid: 
     <span className="block">
       <span className="block">{titleText}</span>
       {titleComplete && (
-        <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-muted-foreground my-2">
+        <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-foreground/90 my-2">
           {titleMid}
         </span>
       )}
@@ -305,10 +305,10 @@ const HeroContent = ({
 
   return (
     <>
-      <p className="text-lg md:text-xl text-foreground/85 dark:text-muted-foreground max-w-2xl mb-8 leading-relaxed">
+      <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
         {subtitleText}
         <span
-          className={`inline-block w-0.5 h-[1em] bg-foreground/40 dark:bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${
+          className={`inline-block w-0.5 h-[1em] bg-foreground/60 ml-0.5 align-middle transition-opacity duration-300 ${
             subtitleComplete ? "opacity-0" : "animate-pulse"
           }`}
         />
@@ -341,10 +341,10 @@ const HeroContent = ({
         className={`mt-6 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
         style={{ transitionDelay: subtitleComplete ? '180ms' : '0ms' }}
       >
-        <p className="text-foreground/70 dark:text-muted-foreground text-sm">
+        <p className="text-foreground/90 text-sm">
           {t.hero.trustText} <span className="font-semibold text-foreground">24h</span>
         </p>
-        <p className="text-foreground/50 dark:text-muted-foreground/70 text-sm mt-1">
+        <p className="text-foreground/80 text-sm mt-1">
           {t.hero.trustPrivacy}
         </p>
       </div>
@@ -354,16 +354,16 @@ const HeroContent = ({
         className={`grid grid-cols-1 gap-3 mt-8 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
         style={{ transitionDelay: subtitleComplete ? '250ms' : '0ms' }}
       >
-        <div className="p-4 bg-card/80 dark:bg-card/60 border border-border/60 dark:border-border/50 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.hero.features?.payments || "Plăți"}</p>
+        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+          <p className="text-foreground/80 text-sm">{t.hero.features?.payments || "Plăți"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
         </div>
-        <div className="p-4 bg-card/80 dark:bg-card/60 border border-border/60 dark:border-border/50 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.hero.features?.model || "Model"}</p>
+        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+          <p className="text-foreground/80 text-sm">{t.hero.features?.model || "Model"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
         </div>
-        <div className="p-4 bg-card/80 dark:bg-card/60 border border-border/60 dark:border-border/50 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.hero.features?.response || "Răspuns"}</p>
+        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+          <p className="text-foreground/80 text-sm">{t.hero.features?.response || "Răspuns"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
         </div>
       </div>
