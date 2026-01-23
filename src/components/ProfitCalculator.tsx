@@ -315,8 +315,8 @@ const ProfitCalculator = () => {
               resultsVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
             )}
           >
-            {/* Auth Gate Overlay - show blur when user has interacted but not authenticated */}
-            {hasInteracted && !isAuthenticated && (
+            {/* Auth Gate Overlay - show blur when not authenticated */}
+            {!isAuthenticated && (
               <AuthGateOverlay />
             )}
 
@@ -375,7 +375,7 @@ const ProfitCalculator = () => {
             <div className={cn(
               "bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden transition-all duration-500 delay-300",
               resultsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
-              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+              !isAuthenticated && "blur-sm pointer-events-none select-none"
             )}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
               <div className="relative z-10">
@@ -398,7 +398,7 @@ const ProfitCalculator = () => {
             {/* Secondary KPIs */}
             <div className={cn(
               "grid grid-cols-2 gap-4",
-              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+              !isAuthenticated && "blur-sm pointer-events-none select-none"
             )}>
               <div className="bg-card p-6 rounded-xl border border-border">
                 <div className="flex items-center gap-2 mb-2">
@@ -426,7 +426,7 @@ const ProfitCalculator = () => {
             {/* Cost Breakdown with Chart */}
             <div className={cn(
               "bg-card p-6 rounded-xl border border-border",
-              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
+              !isAuthenticated && "blur-sm pointer-events-none select-none"
             )}>
               <h4 className="font-semibold text-foreground mb-4">{t.calculator.costBreakdown}</h4>
               
