@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import FloatingReferralButton from "@/components/FloatingReferralButton";
 import OwnerBenefits from "@/components/OwnerBenefits";
 import TrustBadges from "@/components/TrustBadges";
 import FinancialTransparency from "@/components/FinancialTransparency";
@@ -347,6 +348,7 @@ const PentruProprietari = () => {
 
       <Footer />
       <FloatingWhatsApp />
+      <FloatingReferralButton />
     </div>
   );
 };
