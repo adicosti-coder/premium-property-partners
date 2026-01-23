@@ -537,8 +537,8 @@ const AboutUs = () => {
         {/* Company Timeline */}
         <CompanyTimeline />
 
-        {/* Team Section */}
-        <TeamSection />
+        {/* Team Section - temporarily hidden */}
+        {/* <TeamSection /> */}
 
         {/* Values Section */}
         <section className="py-20 bg-muted/30">
