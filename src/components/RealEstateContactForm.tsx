@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
+import { Send, Loader2, CheckCircle2, Phone, Mail, MapPin, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 // Custom refinement for international phone validation
 const formSchema = z.object({
@@ -36,7 +37,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const RealEstateContactForm = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const form = t.realEstateForm;
 
   const [formData, setFormData] = useState<FormData>({
@@ -51,6 +52,47 @@ const RealEstateContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  
+  // hCaptcha state
+  const captchaRef = useRef<HCaptcha>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+
+  // Fetch hCaptcha site key on mount
+  useEffect(() => {
+    const fetchSiteKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        if (error) throw error;
+        setHcaptchaSiteKey(data.siteKey);
+      } catch (error) {
+        console.error("Failed to fetch hCaptcha site key:", error);
+      }
+    };
+    fetchSiteKey();
+  }, []);
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
+  const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+        body: { token }
+      });
+      if (error) throw error;
+      return data.success === true;
+    } catch (error) {
+      console.error("Captcha verification error:", error);
+      return false;
+    }
+  };
 
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,7 +118,26 @@ const RealEstateContactForm = () => {
       return;
     }
 
+    // Verify hCaptcha
+    if (!captchaToken) {
+      toast.error(language === 'en' ? "Please complete the captcha verification" : "Vă rugăm să completați verificarea captcha");
+      return;
+    }
+
     setIsSubmitting(true);
+    setIsVerifyingCaptcha(true);
+
+    // Server-side captcha verification
+    const isCaptchaValid = await verifyCaptchaOnServer(captchaToken);
+    setIsVerifyingCaptcha(false);
+
+    if (!isCaptchaValid) {
+      toast.error(language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Încercați din nou.");
+      setCaptchaToken(null);
+      captchaRef.current?.resetCaptcha();
+      setIsSubmitting(false);
+      return;
+    }
 
     // Build WhatsApp message
     const message = `${form.whatsappIntro}
@@ -121,7 +182,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
     
     toast.success(form.successMessage);
 
-    // Reset form
+    // Reset form and captcha
     setFormData({
       name: "",
       phone: "",
@@ -131,6 +192,8 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
       listingUrl: "",
       message: "",
     });
+    setCaptchaToken(null);
+    captchaRef.current?.resetCaptcha();
   };
 
   const serviceTypes = [
@@ -336,17 +399,46 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                   />
                 </div>
 
+                {/* hCaptcha widget */}
+                <div className="flex flex-col items-center gap-2">
+                  {hcaptchaSiteKey ? (
+                    <>
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={hcaptchaSiteKey}
+                        onVerify={handleCaptchaVerify}
+                        onExpire={handleCaptchaExpire}
+                        languageOverride={language}
+                      />
+                      {captchaToken && (
+                        <div className="flex items-center gap-1 text-sm text-primary">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>{language === "ro" ? "Verificat" : "Verified"}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-pulse text-muted-foreground text-sm">
+                        {language === "ro" ? "Se încarcă verificarea..." : "Loading verification..."}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <Button
                   type="submit"
                   variant="hero"
                   size="lg"
                   className="w-full group"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      {form.sending}
+                      {isVerifyingCaptcha 
+                        ? (language === 'en' ? "Verifying..." : "Se verifică...")
+                        : form.sending}
                     </>
                   ) : (
                     <>
