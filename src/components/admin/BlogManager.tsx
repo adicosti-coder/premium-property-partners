@@ -48,6 +48,7 @@ import {
   Copy,
   Globe,
   Languages,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -81,6 +82,7 @@ const BlogManager = () => {
   const [editingArticle, setEditingArticle] = useState<BlogArticle | null>(null);
   const [deleteArticle, setDeleteArticle] = useState<BlogArticle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
 
@@ -140,6 +142,10 @@ const BlogManager = () => {
       copySuccess: "Conținut copiat în engleză!",
       hasTranslation: "EN",
       noTranslation: "Lipsește EN",
+      translateAI: "Traduce cu AI",
+      translating: "Se traduce...",
+      translateSuccess: "Articol tradus cu succes!",
+      translateError: "Eroare la traducere. Încearcă din nou.",
     },
     en: {
       title: "Blog Manager",
@@ -181,6 +187,10 @@ const BlogManager = () => {
       copySuccess: "Content copied to English!",
       hasTranslation: "EN",
       noTranslation: "Missing EN",
+      translateAI: "Translate with AI",
+      translating: "Translating...",
+      translateSuccess: "Article translated successfully!",
+      translateError: "Translation error. Please try again.",
     },
   };
 
@@ -254,6 +264,52 @@ const BlogManager = () => {
     }));
     setActiveTab("en");
     toast({ title: t.copySuccess });
+  };
+
+  const handleTranslateWithAI = async () => {
+    if (!formData.title || !formData.excerpt || !formData.content) {
+      toast({
+        title: t.error,
+        description: "Completează câmpurile în română înainte de a traduce.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-blog-article", {
+        body: {
+          title: formData.title,
+          excerpt: formData.excerpt,
+          content: formData.content,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        title_en: data.title_en,
+        excerpt_en: data.excerpt_en,
+        content_en: data.content_en,
+      }));
+      setActiveTab("en");
+      toast({ title: t.translateSuccess });
+    } catch (error) {
+      console.error("Translation error:", error);
+      toast({
+        title: t.translateError,
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const openDialog = (article?: BlogArticle) => {
@@ -504,16 +560,32 @@ const BlogManager = () => {
               </TabsList>
               
               {activeTab === "ro" && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyToEnglish}
-                  className="gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  {t.copyToEn}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyToEnglish}
+                    className="gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    {t.copyToEn}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleTranslateWithAI}
+                    disabled={isTranslating}
+                    className="gap-2"
+                  >
+                    {isTranslating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    {isTranslating ? t.translating : t.translateAI}
+                  </Button>
+                </div>
               )}
             </div>
 
