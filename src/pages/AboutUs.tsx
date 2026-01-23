@@ -42,7 +42,31 @@ const AboutUs = () => {
       },
       story: {
         title: "Povestea Noastră",
-        content: "Am pornit cu o idee simplă: proprietarii din Timișoara merită servicii imobiliare la standarde internaționale. Prea mulți proprietari se confruntau cu agenții netransparente, randamente sub așteptări și lipsă de comunicare. Am construit RealTrust & ApArt Hotel pentru a schimba acest lucru — pas cu pas, proprietate cu proprietate."
+        subtitle: "Peste 25 de ani de excelență în imobiliare",
+        intro: "Cu o experiență de peste un sfert de secol în piața imobiliară din România, am devenit un partener de încredere pentru mii de clienți. Am început această călătorie cu pasiunea pentru imobiliare și cu dorința de a aduce standarde internaționale în Timișoara.",
+        realEstate: {
+          title: "Servicii Imobiliare Complete",
+          description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
+          services: [
+            { title: "Vânzări", description: "Strategii de marketing personalizate, fotografii profesionale, prezență pe toate platformele majore și negociere expertă pentru maximizarea valorii proprietății." },
+            { title: "Achiziții", description: "Identificarea oportunităților potrivite, due diligence complet, asistență juridică și suport în procesul de finanțare." },
+            { title: "Închirieri", description: "Găsirea chiriașilor potriviți, verificarea bonității, contracte profesionale și administrarea relației proprietar-chiriaș." },
+            { title: "Administrare Imobile", description: "Gestionarea completă a proprietăților: colectare chirii, relații cu chiriașii, coordonare mentenanță și raportare financiară transparentă." }
+          ]
+        },
+        hotelManagement: {
+          title: "Administrare în Regim Hotelier",
+          description: "Prin ApArt Hotel, transformăm apartamentele în surse de venit pasiv profitabile:",
+          services: [
+            { title: "Curățenie Profesională", description: "Echipe dedicate, standarde hoteliere, lenjerie premium și control riguros al calității după fiecare sejur." },
+            { title: "Mentenanță Proactivă", description: "Verificări regulate, reparații rapide, coordonare meșteri de încredere și raportare fotografică a intervențiilor." },
+            { title: "Digitalizare Completă", description: "Check-in online, ghid digital pentru oaspeți, sistem de smart-lock, monitorizare IoT și automatizare a proceselor." },
+            { title: "Prezență Multi-Platformă", description: "Listare optimizată pe Airbnb, Booking.com, VRBO și rezervări directe, cu pricing dinamic pentru maximizarea veniturilor." },
+            { title: "Fotografii Profesionale", description: "Ședințe foto cu echipamente profesionale, editare avansată, virtual staging și actualizare sezonieră a imaginilor." },
+            { title: "Experiență Oaspeți", description: "Comunicare 24/7, check-in flexibil, recomandări locale personalizate și rezolvare rapidă a oricărei situații." }
+          ]
+        },
+        conclusion: "Am învățat că succesul în imobiliare nu vine din promisiuni, ci din rezultate măsurabile. Fiecare proprietate pe care o administrăm primește aceeași atenție la detalii pe care am perfecționat-o în peste 25 de ani de activitate."
       },
       brands: {
         title: "Două Branduri, Servicii Complete",
@@ -142,7 +166,31 @@ const AboutUs = () => {
       },
       story: {
         title: "Our Story",
-        content: "We started with a simple idea: property owners in Timișoara deserve real estate services at international standards. Too many owners faced non-transparent agencies, below-expectation returns, and lack of communication. We built RealTrust & ApArt Hotel to change this — step by step, property by property."
+        subtitle: "Over 25 Years of Excellence in Real Estate",
+        intro: "With more than a quarter century of experience in the Romanian real estate market, we have become a trusted partner for thousands of clients. We started this journey with a passion for real estate and the desire to bring international standards to Timișoara.",
+        realEstate: {
+          title: "Complete Real Estate Services",
+          description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
+          services: [
+            { title: "Sales", description: "Personalized marketing strategies, professional photography, presence on all major platforms, and expert negotiation to maximize property value." },
+            { title: "Acquisitions", description: "Identifying suitable opportunities, complete due diligence, legal assistance, and financing support." },
+            { title: "Rentals", description: "Finding the right tenants, creditworthiness verification, professional contracts, and landlord-tenant relationship management." },
+            { title: "Property Management", description: "Complete property management: rent collection, tenant relations, maintenance coordination, and transparent financial reporting." }
+          ]
+        },
+        hotelManagement: {
+          title: "Short-Term Rental Management",
+          description: "Through ApArt Hotel, we transform apartments into profitable passive income sources:",
+          services: [
+            { title: "Professional Cleaning", description: "Dedicated teams, hotel standards, premium linens, and rigorous quality control after each stay." },
+            { title: "Proactive Maintenance", description: "Regular inspections, quick repairs, coordination with trusted contractors, and photographic reporting of interventions." },
+            { title: "Complete Digitalization", description: "Online check-in, digital guest guide, smart-lock system, IoT monitoring, and process automation." },
+            { title: "Multi-Platform Presence", description: "Optimized listings on Airbnb, Booking.com, VRBO, and direct bookings, with dynamic pricing to maximize revenue." },
+            { title: "Professional Photography", description: "Photo sessions with professional equipment, advanced editing, virtual staging, and seasonal image updates." },
+            { title: "Guest Experience", description: "24/7 communication, flexible check-in, personalized local recommendations, and quick resolution of any situation." }
+          ]
+        },
+        conclusion: "We've learned that success in real estate doesn't come from promises, but from measurable results. Every property we manage receives the same attention to detail that we've perfected over 25 years of activity."
       },
       brands: {
         title: "Two Brands, Complete Services",
@@ -288,14 +336,85 @@ const AboutUs = () => {
           </div>
         </section>
 
-        {/* Story Section */}
-        <section className="py-16 bg-muted/30">
+        {/* Story Section - Expanded */}
+        <section className="py-20 md:py-28 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-6">{t.story.title}</h2>
+            {/* Header */}
+            <div className="max-w-4xl mx-auto text-center mb-16">
+              <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium border-primary/30 bg-primary/5">
+                <Award className="w-4 h-4 mr-2 text-primary" />
+                {t.story.subtitle}
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">{t.story.title}</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                {t.story.content}
+                {t.story.intro}
               </p>
+            </div>
+
+            {/* Real Estate Services */}
+            <div className="max-w-6xl mx-auto mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">{t.story.realEstate.title}</h3>
+                  <p className="text-muted-foreground">{t.story.realEstate.description}</p>
+                </div>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {t.story.realEstate.services.map((service, idx) => (
+                  <Card key={idx} className="border-l-4 border-l-primary/50 hover:border-l-primary transition-colors">
+                    <CardContent className="p-6">
+                      <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                        {service.title}
+                      </h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {service.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Hotel Management Services */}
+            <div className="max-w-6xl mx-auto mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Home className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">{t.story.hotelManagement.title}</h3>
+                  <p className="text-muted-foreground">{t.story.hotelManagement.description}</p>
+                </div>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {t.story.hotelManagement.services.map((service, idx) => (
+                  <Card key={idx} className="border-t-4 border-t-amber-500/50 hover:border-t-amber-500 transition-colors hover:shadow-lg">
+                    <CardContent className="p-6">
+                      <h4 className="text-lg font-semibold mb-2">{service.title}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {service.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Conclusion */}
+            <div className="max-w-3xl mx-auto">
+              <Card className="bg-gradient-to-r from-primary/5 via-card to-primary/5 border-primary/20">
+                <CardContent className="p-8 text-center">
+                  <p className="text-lg text-foreground leading-relaxed italic">
+                    "{t.story.conclusion}"
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
