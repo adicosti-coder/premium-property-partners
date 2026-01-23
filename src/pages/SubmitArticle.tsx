@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,17 +11,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, Trophy } from "lucide-react";
+import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, Trophy, Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const SubmitArticle = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,21 +77,87 @@ const SubmitArticle = () => {
     enabled: !!user,
   });
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error(language === "ro" ? "Selectează o imagine validă" : "Please select a valid image");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(language === "ro" ? "Imaginea trebuie să fie mai mică de 5MB" : "Image must be smaller than 5MB");
+      return;
+    }
+
+    setCoverImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCoverImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setCoverImage(null);
+    setCoverImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!coverImage || !user) return null;
+
+    const fileExt = coverImage.name.split(".").pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("community-articles")
+      .upload(fileName, coverImage);
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from("community-articles")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  };
+
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase
-        .from("user_article_submissions")
-        .insert({
-          user_id: user.id,
-          title,
-          content,
-          excerpt: excerpt || content.substring(0, 200),
-          contest_period_id: activeContest?.id || null,
-        });
+      setIsUploading(true);
+      let coverImageUrl: string | null = null;
 
-      if (error) throw error;
+      try {
+        if (coverImage) {
+          coverImageUrl = await uploadImage();
+        }
+
+        const { error } = await supabase
+          .from("user_article_submissions")
+          .insert({
+            user_id: user.id,
+            title,
+            content,
+            excerpt: excerpt || content.substring(0, 200),
+            contest_period_id: activeContest?.id || null,
+            cover_image_url: coverImageUrl,
+          });
+
+        if (error) throw error;
+      } finally {
+        setIsUploading(false);
+      }
     },
     onSuccess: () => {
       toast.success(translations[language].successMessage);
@@ -143,6 +213,12 @@ const SubmitArticle = () => {
       rejected: "Respins",
       winner: "Câștigător",
       characters: "caractere",
+      coverImage: "Imagine de Cover",
+      coverImageDesc: "Adaugă o imagine atractivă pentru articolul tău (opțional)",
+      uploadImage: "Încarcă imagine",
+      changeImage: "Schimbă imaginea",
+      removeImage: "Șterge",
+      imageRequirements: "JPG, PNG sau WebP, max 5MB",
     },
     en: {
       title: "Submit an Article",
@@ -174,6 +250,12 @@ const SubmitArticle = () => {
       rejected: "Rejected",
       winner: "Winner",
       characters: "characters",
+      coverImage: "Cover Image",
+      coverImageDesc: "Add an attractive image for your article (optional)",
+      uploadImage: "Upload image",
+      changeImage: "Change image",
+      removeImage: "Remove",
+      imageRequirements: "JPG, PNG or WebP, max 5MB",
     },
   };
 
@@ -253,6 +335,59 @@ const SubmitArticle = () => {
                       />
                     </div>
 
+                    {/* Cover Image Upload */}
+                    <div className="space-y-2">
+                      <Label>{t.coverImage}</Label>
+                      <p className="text-xs text-muted-foreground">{t.coverImageDesc}</p>
+                      
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+
+                      {coverImagePreview ? (
+                        <div className="relative rounded-lg overflow-hidden border border-border">
+                          <img
+                            src={coverImagePreview}
+                            alt="Cover preview"
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              {t.changeImage}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={removeImage}
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              {t.removeImage}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                        >
+                          <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+                          <span className="text-sm text-muted-foreground">{t.uploadImage}</span>
+                          <span className="text-xs text-muted-foreground/70">{t.imageRequirements}</span>
+                        </button>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="excerpt">{t.excerpt}</Label>
                       <Textarea
@@ -284,10 +419,13 @@ const SubmitArticle = () => {
                     <Button 
                       type="submit" 
                       className="w-full gap-2"
-                      disabled={submitMutation.isPending}
+                      disabled={submitMutation.isPending || isUploading}
                     >
-                      {submitMutation.isPending ? (
-                        t.submitting
+                      {submitMutation.isPending || isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {t.submitting}
+                        </>
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
