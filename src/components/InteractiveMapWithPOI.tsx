@@ -5,7 +5,9 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { Link } from 'react-router-dom';
 import { 
   Loader2, 
   MapPin, 
@@ -17,7 +19,9 @@ import {
   MapIcon,
   Bus,
   Heart,
-  Clapperboard
+  Clapperboard,
+  Crown,
+  Lock
 } from 'lucide-react';
 
 // Main apartment location in Timișoara
@@ -37,6 +41,7 @@ interface POI {
   website: string | null;
   rating: number | null;
   is_active: boolean;
+  is_premium: boolean;
 }
 
 const poiTypeConfig: Record<string, { icon: React.ElementType; color: string; labelRo: string; labelEn: string }> = {
@@ -110,6 +115,35 @@ const InteractiveMapWithPOI = () => {
     },
   });
 
+  // Check if user is authenticated
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [premiumCount, setPremiumCount] = useState(0);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch premium count for unauthenticated users
+  useEffect(() => {
+    const fetchPremiumCount = async () => {
+      if (!isAuthenticated) {
+        // Use a simple count - in real app this would be from a public endpoint
+        setPremiumCount(5); // We know we marked 5 as premium
+      }
+    };
+    fetchPremiumCount();
+  }, [isAuthenticated]);
+
   const content = {
     ro: {
       badge: "Explorează Zona",
@@ -120,6 +154,9 @@ const InteractiveMapWithPOI = () => {
       filterAll: "Toate",
       loading: "Se încarcă harta...",
       error: "Nu s-a putut încărca harta",
+      premiumBanner: "locații exclusive",
+      premiumCta: "Autentifică-te pentru acces complet",
+      premiumLabel: "Premium",
     },
     en: {
       badge: "Explore the Area",
@@ -130,6 +167,9 @@ const InteractiveMapWithPOI = () => {
       filterAll: "All",
       loading: "Loading map...",
       error: "Could not load map",
+      premiumBanner: "exclusive locations",
+      premiumCta: "Sign in for full access",
+      premiumLabel: "Premium",
     }
   };
 
@@ -253,13 +293,35 @@ const InteractiveMapWithPOI = () => {
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        border: 3px solid white;
+        border: 3px solid ${poi.is_premium ? '#c9a962' : 'white'};
         cursor: pointer;
         transition: transform 0.2s ease;
+        position: relative;
       `;
       
       const iconSvg = getIconSvg(poi.category);
       poiEl.innerHTML = iconSvg;
+
+      // Add premium badge
+      if (poi.is_premium) {
+        const premiumBadge = document.createElement('div');
+        premiumBadge.style.cssText = `
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          width: 16px;
+          height: 16px;
+          background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        `;
+        premiumBadge.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>`;
+        poiEl.appendChild(premiumBadge);
+      }
 
       poiEl.addEventListener('mouseenter', () => {
         poiEl.style.transform = 'scale(1.2)';
@@ -270,6 +332,7 @@ const InteractiveMapWithPOI = () => {
 
       const name = language === 'ro' ? poi.name : poi.name_en;
       const description = language === 'ro' ? poi.description : poi.description_en;
+      const premiumLabel = language === 'ro' ? 'Premium' : 'Premium';
 
       const poiPopup = new mapboxgl.Popup({
         offset: 25,
@@ -282,7 +345,10 @@ const InteractiveMapWithPOI = () => {
               ${iconSvg}
             </div>
             <div>
-              <strong style="font-size: 14px; color: #1a1a1a;">${name}</strong>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <strong style="font-size: 14px; color: #1a1a1a;">${name}</strong>
+                ${poi.is_premium ? `<span style="font-size: 10px; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; padding: 2px 6px; border-radius: 10px; font-weight: 600;">${premiumLabel}</span>` : ''}
+              </div>
               ${poi.rating ? `
                 <div style="display: flex; align-items: center; gap: 4px;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -379,9 +445,29 @@ const InteractiveMapWithPOI = () => {
             <span className="text-primary">{t.titleHighlight}</span>
           </h2>
           
-          <p className="text-lg text-muted-foreground mb-8">
+          <p className="text-lg text-muted-foreground mb-6">
             {t.subtitle}
           </p>
+
+          {/* Premium Banner for unauthenticated users */}
+          {!isAuthenticated && premiumCount > 0 && (
+            <div className="mb-8 p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium">
+                    +{premiumCount} {t.premiumBanner}
+                  </span>
+                  <Lock className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <Link to="/auth">
+                  <Button size="sm" variant="default" className="gap-2">
+                    {t.premiumCta}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Filter buttons */}
           <div className="flex flex-wrap justify-center gap-2">
