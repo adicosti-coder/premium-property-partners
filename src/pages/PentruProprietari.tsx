@@ -29,6 +29,7 @@ import WhyUs from "@/components/WhyUs";
 import Testimonials from "@/components/Testimonials";
 import VideoTestimonials from "@/components/VideoTestimonials";
 import FAQ from "@/components/FAQ";
+import ReferralBanner from "@/components/ReferralBanner";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -300,6 +301,13 @@ const PentruProprietari = () => {
               </Button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Referral Banner */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-6">
+          <ReferralBanner variant="hero" />
         </div>
       </section>
 

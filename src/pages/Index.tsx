@@ -16,6 +16,7 @@ import AccessibilityPanel from "@/components/AccessibilityPanel";
 import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
 import QuickStatsBar from "@/components/QuickStatsBar";
+import ReferralBanner from "@/components/ReferralBanner";
 
 // Hub Teaser Components
 import ServicesOverview from "@/components/hub/ServicesOverview";
@@ -71,6 +72,13 @@ const Index = () => {
         
         {/* Blog Preview */}
         <BlogPreview />
+        
+        {/* Referral Banner */}
+        <section className="py-12">
+          <div className="container mx-auto px-6">
+            <ReferralBanner variant="hero" />
+          </div>
+        </section>
         
         {/* FAQ - Keep for SEO */}
         <FAQ />
