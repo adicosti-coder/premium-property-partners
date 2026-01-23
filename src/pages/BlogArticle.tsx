@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogComments from "@/components/BlogComments";
 import BlogNewsletterCTA from "@/components/BlogNewsletterCTA";
+import RelatedArticles from "@/components/RelatedArticles";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -212,6 +213,13 @@ const BlogArticle = () => {
               ))}
             </div>
           )}
+
+          {/* Related Articles */}
+          <RelatedArticles 
+            currentArticleId={article.id}
+            category={article.category}
+            tags={article.tags}
+          />
 
           {/* Newsletter CTA */}
           <BlogNewsletterCTA />
