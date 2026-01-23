@@ -216,7 +216,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="border-t border-border/50 dark:border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-foreground/60 dark:text-muted-foreground text-sm font-sans">
-            © 2024 RealTrust. {t.footer.rights}
+            © 2026 RealTrust. {t.footer.rights}
           </p>
           <nav className="flex items-center gap-6 text-sm font-sans">
             <a href="#" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
