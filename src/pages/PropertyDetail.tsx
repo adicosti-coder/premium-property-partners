@@ -15,6 +15,7 @@ import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import PriceCompareWidget from "@/components/PriceCompareWidget";
 import SmartFeaturesBadge from "@/components/SmartFeaturesBadge";
 import PropertyReviews from "@/components/PropertyReviews";
+import GuestReviewForm from "@/components/GuestReviewForm";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
@@ -433,6 +434,14 @@ const PropertyDetail = () => {
                 <PropertyReviews 
                   propertyId={dbPropertyId} 
                   propertyName={property.name} 
+                />
+              )}
+
+              {/* Guest Review Form */}
+              {dbPropertyId && (
+                <GuestReviewForm
+                  propertyId={dbPropertyId}
+                  propertyName={property.name}
                 />
               )}
             </div>
