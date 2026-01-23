@@ -80,7 +80,7 @@ const CompanyTimeline = () => {
           highlight: "Portofoliu de 50+ proprietăți"
         },
         {
-          year: "2024+",
+          year: "2026+",
           icon: TrendingUp,
           title: "Viitorul",
           description: "Expansiune regională, inovații tehnologice și consolidarea poziției de lider în management imobiliar premium.",
@@ -150,7 +150,7 @@ const CompanyTimeline = () => {
           highlight: "Portfolio of 50+ properties"
         },
         {
-          year: "2024+",
+          year: "2026+",
           icon: TrendingUp,
           title: "The Future",
           description: "Regional expansion, technological innovations, and consolidation of the position as leader in premium property management.",
