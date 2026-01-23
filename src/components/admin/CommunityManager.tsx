@@ -159,9 +159,39 @@ const CommunityManager = () => {
     },
   });
 
+  // Send notification email
+  const sendNotificationEmail = async (
+    type: "approved" | "rejected" | "winner",
+    submission: Submission,
+    extraData?: { feedback?: string; contestName?: string; prizeName?: string }
+  ) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-article-notification", {
+        body: {
+          type,
+          submissionId: submission.id,
+          submissionTitle: submission.title,
+          userEmail: submission.author_email,
+          userName: submission.author_name || "Utilizator",
+          feedback: extraData?.feedback,
+          contestName: extraData?.contestName,
+          prizeName: extraData?.prizeName,
+        },
+      });
+      if (error) throw error;
+      console.log(`${type} notification sent successfully`);
+    } catch (error) {
+      console.error(`Failed to send ${type} notification:`, error);
+      // Don't throw - we don't want to block the main action
+    }
+  };
+
   // Select winner
   const selectWinnerMutation = useMutation({
-    mutationFn: async ({ contestId, submissionId }: { contestId: string; submissionId: string }) => {
+    mutationFn: async ({ contestId, submissionId, submission }: { contestId: string; submissionId: string; submission: Submission }) => {
+      // Get contest details for notification
+      const contest = contests?.find(c => c.id === contestId);
+      
       // Update contest with winner
       const { error: contestError } = await supabase
         .from("contest_periods")
@@ -179,17 +209,23 @@ const CommunityManager = () => {
         .update({ status: "winner" })
         .eq("id", submissionId);
       if (subError) throw subError;
+
+      // Send winner notification
+      await sendNotificationEmail("winner", submission, {
+        contestName: contest?.name,
+        prizeName: contest?.prize_description,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-contests"] });
       queryClient.invalidateQueries({ queryKey: ["admin-submissions"] });
-      toast.success("Câștigător selectat!");
+      toast.success("Câștigător selectat și notificat!");
     },
   });
 
   // Update submission status
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, feedback }: { id: string; status: string; feedback?: string }) => {
+    mutationFn: async ({ id, status, feedback, submission }: { id: string; status: string; feedback?: string; submission?: Submission }) => {
       const { error } = await supabase
         .from("user_article_submissions")
         .update({ 
@@ -199,12 +235,18 @@ const CommunityManager = () => {
         })
         .eq("id", id);
       if (error) throw error;
+
+      // Send notification email
+      if (submission && (status === "approved" || status === "rejected")) {
+        await sendNotificationEmail(status as "approved" | "rejected", submission, { feedback });
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-submissions"] });
       setSelectedSubmission(null);
       setFeedback("");
-      toast.success("Status articol actualizat!");
+      const action = variables.status === "approved" ? "aprobat" : "respins";
+      toast.success(`Articol ${action} și notificare trimisă!`);
     },
   });
 
@@ -363,7 +405,7 @@ const CommunityManager = () => {
                                   </div>
                                   <div className="flex gap-2">
                                     <Button 
-                                      onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "approved" })}
+                                      onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "approved", submission: sub })}
                                       className="gap-1"
                                     >
                                       <Check className="w-4 h-4" />
@@ -371,7 +413,7 @@ const CommunityManager = () => {
                                     </Button>
                                     <Button 
                                       variant="destructive"
-                                      onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "rejected", feedback })}
+                                      onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "rejected", feedback, submission: sub })}
                                       className="gap-1"
                                     >
                                       <X className="w-4 h-4" />
@@ -389,7 +431,7 @@ const CommunityManager = () => {
                               size="sm" 
                               variant="ghost"
                               className="text-green-600 hover:text-green-700"
-                              onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "approved" })}
+                              onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "approved", submission: sub })}
                             >
                               <Check className="w-4 h-4" />
                             </Button>
@@ -397,7 +439,7 @@ const CommunityManager = () => {
                               size="sm" 
                               variant="ghost"
                               className="text-red-600 hover:text-red-700"
-                              onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "rejected" })}
+                              onClick={() => updateStatusMutation.mutate({ id: sub.id, status: "rejected", submission: sub })}
                             >
                               <X className="w-4 h-4" />
                             </Button>
@@ -533,6 +575,7 @@ const CommunityManager = () => {
                                 onClick={() => selectWinnerMutation.mutate({
                                   contestId: contest.id,
                                   submissionId: topSubmission.id,
+                                  submission: topSubmission,
                                 })}
                                 className="gap-1"
                               >
