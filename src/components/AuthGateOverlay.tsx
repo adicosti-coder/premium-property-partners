@@ -111,7 +111,11 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
             }}
             className="rounded-lg"
           >
-            <Button asChild className="w-full transition-transform duration-200 hover:scale-105 active:scale-95" size="lg">
+            <Button 
+              asChild 
+              className="w-full transition-transform duration-200 hover:scale-105 active:scale-95 bg-gradient-to-r from-primary via-primary/80 to-primary bg-[length:200%_100%] animate-[gradient-shift_3s_ease-in-out_infinite]" 
+              size="lg"
+            >
               <Link to="/auth?mode=signup">
                 <UserPlus className="w-4 h-4 mr-2" />
                 {text.signup}
