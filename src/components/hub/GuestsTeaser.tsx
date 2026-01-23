@@ -1,40 +1,46 @@
 import { Link } from "react-router-dom";
-import { Key, Star, MapPin, Wifi, ArrowRight } from "lucide-react";
+import { Key, Wifi, Sparkles, ShieldCheck, Clock, MapPin, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
-import { properties } from "@/data/properties";
 
 const GuestsTeaser = () => {
   const { language } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
-  const { ref: cardsRef, isVisible: cardsVisible } = useScrollAnimation({ threshold: 0.1 });
-
-  // Get top 3 properties by rating
-  const topProperties = [...properties]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 3);
+  const { ref: benefitsRef, isVisible: benefitsVisible } = useScrollAnimation({ threshold: 0.1 });
 
   const content = {
     ro: {
       badge: "Pentru Oaspeți",
-      title: "Descoperă",
-      titleHighlight: "Apartamentul Perfect",
-      subtitle: "Apartamente premium în cele mai căutate zone. Self check-in, WiFi rapid, și tot ce ai nevoie pentru o ședere de vis.",
-      cta: "Vezi Toate Proprietățile",
-      bookDirect: "De ce să rezervi direct?",
-      perNight: "/noapte",
-      reviews: "recenzii",
+      title: "Experiență de",
+      titleHighlight: "5 Stele",
+      subtitle: "Apartamente premium cu toate facilitățile pentru o ședere perfectă. Self check-in, curățenie profesională și suport dedicat.",
+      cta: "Explorează Apartamentele",
+      ctaSecondary: "De ce să rezervi direct?",
+      benefits: [
+        { icon: Key, title: "Self Check-in 24/7", desc: "Acces non-stop cu cod digital" },
+        { icon: Wifi, title: "WiFi Ultra-Rapid", desc: "Internet de mare viteză" },
+        { icon: Sparkles, title: "Curățenie Premium", desc: "Standard hotelier garantat" },
+        { icon: ShieldCheck, title: "Rezervare Sigură", desc: "Politică flexibilă de anulare" },
+        { icon: Clock, title: "Check-in Flexibil", desc: "Program adaptat nevoilor tale" },
+        { icon: MapPin, title: "Locații Premium", desc: "În centrul atracțiilor" },
+      ],
     },
     en: {
       badge: "For Guests",
-      title: "Discover",
-      titleHighlight: "Your Perfect Stay",
-      subtitle: "Premium apartments in the most sought-after locations. Self check-in, fast WiFi, and everything you need for a perfect stay.",
-      cta: "View All Properties",
-      bookDirect: "Why book direct?",
-      perNight: "/night",
-      reviews: "reviews",
+      title: "A",
+      titleHighlight: "5-Star Experience",
+      subtitle: "Premium apartments with all the amenities for a perfect stay. Self check-in, professional cleaning, and dedicated support.",
+      cta: "Explore Apartments",
+      ctaSecondary: "Why book direct?",
+      benefits: [
+        { icon: Key, title: "24/7 Self Check-in", desc: "Non-stop access with digital code" },
+        { icon: Wifi, title: "Ultra-Fast WiFi", desc: "High-speed internet" },
+        { icon: Sparkles, title: "Premium Cleaning", desc: "Hotel-grade standard guaranteed" },
+        { icon: ShieldCheck, title: "Secure Booking", desc: "Flexible cancellation policy" },
+        { icon: Clock, title: "Flexible Check-in", desc: "Schedule adapted to your needs" },
+        { icon: MapPin, title: "Prime Locations", desc: "In the heart of attractions" },
+      ],
     },
   };
 
@@ -43,7 +49,7 @@ const GuestsTeaser = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-16 md:py-20 bg-background relative overflow-hidden"
+      className="py-16 md:py-20 bg-card relative overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -72,61 +78,33 @@ const GuestsTeaser = () => {
           </p>
         </div>
 
-        {/* Property Preview Cards */}
+        {/* Benefits Grid */}
         <div
-          ref={cardsRef}
-          className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10"
+          ref={benefitsRef}
+          className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto mb-10"
         >
-          {topProperties.map((property, index) => (
-            <Link
-              key={property.id}
-              to={`/proprietate/${property.slug}`}
-              className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
-                cardsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: cardsVisible ? `${index * 100}ms` : "0ms" }}
-            >
-              {/* Image */}
-              <div className="relative h-40 overflow-hidden">
-                <img
-                  src={property.images[0]}
-                  alt={property.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-                  <span className="text-xs font-bold text-primary-foreground">
-                    {property.rating}
-                  </span>
+          {t.benefits.map((benefit, index) => {
+            const Icon = benefit.icon;
+            return (
+              <div
+                key={index}
+                className={`group p-4 md:p-5 rounded-xl bg-background/50 border border-border hover:border-primary/20 transition-all duration-500 text-center ${
+                  benefitsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: benefitsVisible ? `${index * 75}ms` : "0ms" }}
+              >
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                 </div>
-                <div className="absolute bottom-3 left-3 px-2 py-1 rounded-full bg-background/90 backdrop-blur-sm flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-primary" />
-                  <span className="text-xs font-medium text-foreground">
-                    {property.location}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-4">
-                <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-                  {property.name}
+                <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">
+                  {benefit.title}
                 </h3>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Wifi className="w-3 h-3" />
-                    <span>{property.reviews} {t.reviews}</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-bold text-primary">
-                      €{property.pricePerNight}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{t.perNight}</span>
-                  </div>
-                </div>
+                <p className="text-muted-foreground text-xs md:text-sm">
+                  {benefit.desc}
+                </p>
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTAs */}
@@ -141,8 +119,15 @@ const GuestsTeaser = () => {
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
-          <Button asChild variant="heroOutline" size="xl">
-            <Link to="/oaspeti">{t.bookDirect}</Link>
+          <Button 
+            variant="heroOutline" 
+            size="xl"
+            onClick={() => {
+              const portfolioSection = document.getElementById('portofoliu');
+              portfolioSection?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            {t.ctaSecondary}
           </Button>
         </div>
       </div>
