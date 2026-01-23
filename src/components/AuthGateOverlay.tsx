@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Lock, LogIn, UserPlus, Sparkles, Star } from "lucide-react";
+import { Lock, LogIn, UserPlus, Sparkles, Star, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -17,6 +17,30 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
   const { language } = useLanguage();
   const [showConfetti, setShowConfetti] = useState(false);
   const { playSound } = useUISound();
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  // Countdown to midnight
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      
+      return {
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSignupClick = () => {
     setShowConfetti(true);
@@ -34,7 +58,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       signup: "Creează cont gratuit",
       loginTooltip: "Accesează contul tău pentru a vedea istoricul simulărilor și ofertele personalizate",
       recommended: "Recomandat",
-      urgency: "🔥 Ofertă limitată • Acces gratuit doar azi",
+      urgency: "Ofertă expiră în",
       benefits: [
         "Salvează simulările tale",
         "Acces la istoric complet",
@@ -49,7 +73,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       signup: "Create free account",
       loginTooltip: "Access your account to view simulation history and personalized offers",
       recommended: "Recommended",
-      urgency: "🔥 Limited offer • Free access today only",
+      urgency: "Offer expires in",
       benefits: [
         "Save your simulations",
         "Access complete history",
@@ -178,15 +202,29 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
             </Button>
           </motion.div>
 
-          {/* Urgency message */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          {/* Countdown timer */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="text-xs text-muted-foreground text-center animate-pulse"
+            className="flex items-center justify-center gap-2 text-xs text-muted-foreground"
           >
-            {text.urgency}
-          </motion.p>
+            <Clock className="w-3.5 h-3.5 text-destructive" />
+            <span>{text.urgency}</span>
+            <div className="flex items-center gap-1 font-mono font-semibold text-destructive">
+              <span className="bg-destructive/10 px-1.5 py-0.5 rounded">
+                {String(timeLeft.hours).padStart(2, '0')}
+              </span>
+              <span>:</span>
+              <span className="bg-destructive/10 px-1.5 py-0.5 rounded">
+                {String(timeLeft.minutes).padStart(2, '0')}
+              </span>
+              <span>:</span>
+              <span className="bg-destructive/10 px-1.5 py-0.5 rounded">
+                {String(timeLeft.seconds).padStart(2, '0')}
+              </span>
+            </div>
+          </motion.div>
           
           <TooltipProvider>
             <Tooltip>
