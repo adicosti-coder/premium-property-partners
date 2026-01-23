@@ -16,7 +16,6 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import FloatingReferralButton from "@/components/FloatingReferralButton";
 import OwnerBenefits from "@/components/OwnerBenefits";
 import TrustBadges from "@/components/TrustBadges";
@@ -31,6 +30,10 @@ import Testimonials from "@/components/Testimonials";
 import VideoTestimonials from "@/components/VideoTestimonials";
 import FAQ from "@/components/FAQ";
 import ReferralBanner from "@/components/ReferralBanner";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -104,9 +107,36 @@ const PentruProprietari = () => {
     window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
   };
 
+  const seoContent = {
+    ro: {
+      title: "Pentru Proprietari | Administrare Apartamente Timișoara | RealTrust",
+      description: "Transformă-ți apartamentul într-o sursă de venit pasiv. Comision 20%, rată ocupare 98%, transparență totală. Evaluare gratuită!"
+    },
+    en: {
+      title: "For Property Owners | Apartment Management Timișoara | RealTrust",
+      description: "Transform your apartment into a passive income source. 20% commission, 98% occupancy rate, full transparency. Free evaluation!"
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Pentru Proprietari" : "For Owners" }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        url="https://realtrustaparthotel.lovable.app/pentru-proprietari"
+      />
       <Header />
+      
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-6 pt-24">
+        <PageBreadcrumb items={breadcrumbItems} />
+      </div>
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 via-primary/5 to-background overflow-hidden">
@@ -347,8 +377,9 @@ const PentruProprietari = () => {
       </section>
 
       <Footer />
-      <FloatingWhatsApp />
       <FloatingReferralButton />
+      <GlobalConversionWidgets />
+      <BackToTop />
     </div>
   );
 };

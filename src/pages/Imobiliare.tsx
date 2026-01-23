@@ -1,8 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +21,10 @@ import {
   CheckCircle2,
   ArrowRight
 } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 
 const Imobiliare = () => {
   const { t, language } = useLanguage();
@@ -101,11 +103,36 @@ const Imobiliare = () => {
     { number: "04", title: realEstate.process.steps[3].title, description: realEstate.process.steps[3].description },
   ];
 
+  const seoContent = {
+    ro: {
+      title: "Servicii Imobiliare Timișoara | Vânzări, Achiziții, Închirieri | RealTrust",
+      description: "Servicii imobiliare complete în Timișoara. Vânzări, achiziții, închirieri și consultanță. Experiență de 25+ ani. Contactați-ne!"
+    },
+    en: {
+      title: "Real Estate Services Timișoara | Sales, Acquisitions, Rentals | RealTrust",
+      description: "Complete real estate services in Timișoara. Sales, acquisitions, rentals and consulting. 25+ years experience. Contact us!"
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services" }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        url="https://realtrustaparthotel.lovable.app/imobiliare"
+      />
       <Header />
       
-      {/* Hero Section */}
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-6 pt-24">
+        <PageBreadcrumb items={breadcrumbItems} />
+      </div>
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
@@ -417,8 +444,8 @@ const Imobiliare = () => {
       </section>
 
       <Footer />
-      <FloatingWhatsApp />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets />
+      <BackToTop />
     </div>
   );
 };

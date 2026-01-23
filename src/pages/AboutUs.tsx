@@ -2,7 +2,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import TeamSection from "@/components/TeamSection";
 import CompanyTimeline from "@/components/CompanyTimeline";
 import {
@@ -25,6 +24,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 
 const AboutUs = () => {
   const { language } = useLanguage();
@@ -286,11 +289,37 @@ const AboutUs = () => {
 
   const t = content[language];
 
+  const seoContent = {
+    ro: {
+      title: "Despre Noi | RealTrust & ApArt Hotel Timișoara",
+      description: "Două branduri, o viziune. 25+ ani experiență în imobiliare. Servicii complete de vânzări, achiziții și administrare în regim hotelier."
+    },
+    en: {
+      title: "About Us | RealTrust & ApArt Hotel Timișoara",
+      description: "Two brands, one vision. 25+ years real estate experience. Complete sales, acquisitions and short-term rental management services."
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Despre Noi" : "About Us" }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        url="https://realtrustaparthotel.lovable.app/despre-noi"
+      />
       <Header />
       
       <main className="pt-20">
+        {/* Breadcrumb */}
+        <div className="container mx-auto px-4 pt-4">
+          <PageBreadcrumb items={breadcrumbItems} />
+        </div>
         {/* Hero Section */}
         <section className="py-20 md:py-28 bg-gradient-to-b from-primary/5 via-background to-background relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
@@ -629,7 +658,8 @@ const AboutUs = () => {
       </main>
 
       <Footer />
-      <FloatingWhatsApp />
+      <GlobalConversionWidgets />
+      <BackToTop />
     </div>
   );
 };
