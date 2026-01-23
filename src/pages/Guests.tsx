@@ -8,8 +8,6 @@ import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import PropertyImageCarousel from "@/components/PropertyImageCarousel";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -17,6 +15,10 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { properties } from "@/data/properties";
 import { toast } from "sonner";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -181,9 +183,36 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
     });
   };
 
+  const seoContent = {
+    ro: {
+      title: "Apartamente Timișoara | Cazare Regim Hotelier | ApArt Hotel",
+      description: "Cazare premium în Timișoara. Apartamente complet mobilate, check-in automat, WiFi gratuit. Rezervă direct și economisește 5%!"
+    },
+    en: {
+      title: "Apartments Timișoara | Short-Term Accommodation | ApArt Hotel",
+      description: "Premium accommodation in Timișoara. Fully furnished apartments, self check-in, free WiFi. Book direct and save 5%!"
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Apartamente" : "Apartments" }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        url="https://realtrustaparthotel.lovable.app/oaspeti"
+      />
       <Header />
+      
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-6 pt-24">
+        <PageBreadcrumb items={breadcrumbItems} />
+      </div>
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
@@ -651,8 +680,8 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
       </section>
 
       <Footer />
-      <FloatingWhatsApp />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets />
+      <BackToTop />
     </div>
   );
 };

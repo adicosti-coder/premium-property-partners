@@ -47,6 +47,10 @@ import {
   Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 
 const formSchema = z.object({
   referrerName: z.string().min(2, "Numele trebuie să aibă cel puțin 2 caractere"),
@@ -244,10 +248,37 @@ const ReferralProgram = () => {
     { icon: Gift, title: text.step4Title, desc: text.step4Desc },
   ];
 
+  const seoContent = {
+    ro: {
+      title: "Program Recomandare | Câștigă o Noapte Gratuită | RealTrust",
+      description: "Recomandă un proprietar și câștigă o noapte gratuită de cazare. Program exclusiv RealTrust & ApArt Hotel."
+    },
+    en: {
+      title: "Referral Program | Win a Free Night | RealTrust",
+      description: "Refer a property owner and win a free night stay. Exclusive RealTrust & ApArt Hotel program."
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Program Recomandare" : "Referral Program" }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        url="https://realtrustaparthotel.lovable.app/recomanda-proprietar"
+      />
       <Header />
       <ConfettiEffect isActive={showConfetti} duration={4000} particleCount={80} />
+      
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-6 pt-24">
+        <PageBreadcrumb items={breadcrumbItems} />
+      </div>
       
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-b from-primary/5 via-primary/10 to-background relative overflow-hidden">
@@ -640,6 +671,8 @@ const ReferralProgram = () => {
       </section>
 
       <Footer />
+      <GlobalConversionWidgets showMobileCTA={false} />
+      <BackToTop />
     </div>
   );
 };

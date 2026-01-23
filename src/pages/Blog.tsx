@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,10 @@ import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User } from "@supabase/supabase-js";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 
 interface BlogArticle {
   id: string;
@@ -187,12 +190,37 @@ const Blog = () => {
 
   const t = translations[language] || translations.ro;
 
+  const seoContent = {
+    ro: {
+      title: "Blog | Sfaturi Proprietari & Oaspeți | RealTrust & ApArt Hotel",
+      description: "Articole, ghiduri și sfaturi pentru proprietari și oaspeți. Maximizează randamentul proprietății tale. Citește acum!"
+    },
+    en: {
+      title: "Blog | Tips for Owners & Guests | RealTrust & ApArt Hotel",
+      description: "Articles, guides and tips for property owners and guests. Maximize your property returns. Read now!"
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const breadcrumbItems = [
+    { label: "Blog" }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        url="https://realtrustaparthotel.lovable.app/blog"
+      />
       <Header />
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={breadcrumbItems} className="mb-8" />
+
           {/* Hero Section */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
@@ -458,7 +486,8 @@ const Blog = () => {
       </main>
 
       <Footer />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets />
+      <BackToTop />
     </div>
   );
 };
