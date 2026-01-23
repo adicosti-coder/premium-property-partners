@@ -40,9 +40,9 @@ const CompanyTimeline = () => {
         {
           year: "2010",
           icon: Award,
-          title: "Recunoaștere",
-          description: "Consolidarea poziției de lider regional, cu o echipă de experți dedicați și procese standardizate.",
-          highlight: "Echipă de 10+ profesioniști"
+          title: "Diversificare",
+          description: "Lansarea serviciilor de property management și administrare de imobile pentru proprietari absenți.",
+          highlight: "Servicii complete de administrare"
         },
         {
           year: "2015",
@@ -103,9 +103,9 @@ const CompanyTimeline = () => {
         {
           year: "2010",
           icon: Award,
-          title: "Recognition",
-          description: "Consolidating the position as a regional leader, with a team of dedicated experts and standardized processes.",
-          highlight: "Team of 10+ professionals"
+          title: "Diversification",
+          description: "Launching property management and building administration services for absentee owners.",
+          highlight: "Complete management services"
         },
         {
           year: "2015",
