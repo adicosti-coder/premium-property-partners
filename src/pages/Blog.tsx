@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown } from "lucide-react";
+import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -385,6 +385,10 @@ const Blog = () => {
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {Math.ceil(article.excerpt.length / 200)} {t.minRead}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            {(article.view_count || 0).toLocaleString()}
                           </span>
                         </div>
                         {isPremiumLocked ? (
