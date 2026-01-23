@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Loader2, CheckCircle, Link } from "lucide-react";
+import { FileText, Loader2, CheckCircle, Link, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -12,6 +12,7 @@ import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
@@ -39,7 +40,7 @@ const LeadCaptureForm = ({
   calculatedYearlyProfit,
   simulationData,
 }: LeadCaptureFormProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [name, setName] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
@@ -49,6 +50,57 @@ const LeadCaptureForm = ({
   const [phoneError, setPhoneError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // hCaptcha state
+  const captchaRef = useRef<HCaptcha>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+
+  // Fetch hCaptcha site key
+  useEffect(() => {
+    const fetchSiteKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        if (error) throw error;
+        setHcaptchaSiteKey(data.siteKey);
+      } catch (error) {
+        console.error("Failed to fetch hCaptcha site key:", error);
+      }
+    };
+    if (isOpen) {
+      fetchSiteKey();
+    }
+  }, [isOpen]);
+
+  // Reset captcha when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCaptchaToken(null);
+      captchaRef.current?.resetCaptcha();
+    }
+  }, [isOpen]);
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+  };
+
+  const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+        body: { token }
+      });
+      if (error) throw error;
+      return data.success === true;
+    } catch (error) {
+      console.error("Captcha verification error:", error);
+      return false;
+    }
+  };
 
   const handlePhoneChange = (value: string) => {
     setWhatsappNumber(value);
@@ -113,7 +165,34 @@ const LeadCaptureForm = ({
       }
     }
 
+    // Verify hCaptcha
+    if (!captchaToken) {
+      toast({
+        title: language === 'en' ? "Verification required" : "Verificare necesară",
+        description: language === 'en' ? "Please complete the captcha verification" : "Vă rugăm să completați verificarea captcha",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setIsVerifyingCaptcha(true);
+
+    // Server-side captcha verification
+    const isCaptchaValid = await verifyCaptchaOnServer(captchaToken);
+    setIsVerifyingCaptcha(false);
+
+    if (!isCaptchaValid) {
+      toast({
+        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
+        description: language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Încercați din nou.",
+        variant: "destructive",
+      });
+      setCaptchaToken(null);
+      captchaRef.current?.resetCaptcha();
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.from("leads").insert({
@@ -161,6 +240,8 @@ const LeadCaptureForm = ({
         setPropertyType("");
         setListingUrl("");
         setIsSuccess(false);
+        setCaptchaToken(null);
+        captchaRef.current?.resetCaptcha();
         onClose();
       }, 2000);
     } catch (error) {
@@ -281,11 +362,40 @@ const LeadCaptureForm = ({
               </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {/* hCaptcha widget */}
+            <div className="flex flex-col items-center gap-2">
+              {hcaptchaSiteKey ? (
+                <>
+                  <HCaptcha
+                    ref={captchaRef}
+                    sitekey={hcaptchaSiteKey}
+                    onVerify={handleCaptchaVerify}
+                    onExpire={handleCaptchaExpire}
+                    languageOverride={language}
+                  />
+                  {captchaToken && (
+                    <div className="flex items-center gap-1 text-sm text-primary">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>{language === "ro" ? "Verificat" : "Verified"}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-3">
+                  <div className="animate-pulse text-muted-foreground text-sm">
+                    {language === "ro" ? "Se încarcă verificarea..." : "Loading verification..."}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t.leadForm.sending}
+                  {isVerifyingCaptcha 
+                    ? (language === 'en' ? "Verifying..." : "Se verifică...")
+                    : t.leadForm.sending}
                 </>
               ) : (
                 t.leadForm.submit
