@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogComments from "@/components/BlogComments";
@@ -15,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
@@ -37,6 +38,7 @@ interface BlogArticle {
   published_at: string | null;
   created_at: string;
   is_premium: boolean;
+  view_count: number;
 }
 
 const BlogArticlePage = () => {
@@ -46,19 +48,6 @@ const BlogArticlePage = () => {
   const dateLocale = language === "ro" ? ro : enUS;
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setIsCheckingAuth(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const { data: article, isLoading, error } = useQuery({
     queryKey: ["blog-article", slug],
@@ -74,6 +63,22 @@ const BlogArticlePage = () => {
       return data as BlogArticle | null;
     },
   });
+
+  // Track article view (must be before any conditionals)
+  useArticleViewTracking(article?.id);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsCheckingAuth(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const translations = {
     ro: {
@@ -275,6 +280,10 @@ const BlogArticlePage = () => {
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 {readingTime} {t.minRead}
+              </span>
+              <span className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                {article.view_count.toLocaleString()} {language === "ro" ? "vizualizări" : "views"}
               </span>
             </div>
 

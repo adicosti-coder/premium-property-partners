@@ -101,6 +101,38 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_article_views: {
+        Row: {
+          article_id: string
+          id: string
+          session_id: string
+          user_id: string | null
+          viewed_at: string
+        }
+        Insert: {
+          article_id: string
+          id?: string
+          session_id: string
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          article_id?: string
+          id?: string
+          session_id?: string
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_article_views_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "blog_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_articles: {
         Row: {
           author_name: string
@@ -120,6 +152,7 @@ export type Database = {
           title: string
           title_en: string | null
           updated_at: string
+          view_count: number
         }
         Insert: {
           author_name?: string
@@ -139,6 +172,7 @@ export type Database = {
           title: string
           title_en?: string | null
           updated_at?: string
+          view_count?: number
         }
         Update: {
           author_name?: string
@@ -158,6 +192,7 @@ export type Database = {
           title?: string
           title_en?: string | null
           updated_at?: string
+          view_count?: number
         }
         Relationships: []
       }
