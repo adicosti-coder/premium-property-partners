@@ -335,6 +335,41 @@ export type Database = {
         }
         Relationships: []
       }
+      community_article_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          submission_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          submission_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          submission_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_article_comments_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "user_article_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complex_images: {
         Row: {
           complex_id: string

@@ -26,6 +26,7 @@ import PentruProprietari from "./pages/PentruProprietari";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import CommunityArticles from "./pages/CommunityArticles";
+import CommunityArticleDetail from "./pages/CommunityArticleDetail";
 import SubmitArticle from "./pages/SubmitArticle";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => (
                 <Route path="/profil" element={<Profile />} />
                 <Route path="/setari" element={<Settings />} />
                 <Route path="/comunitate" element={<CommunityArticles />} />
+                <Route path="/comunitate/articol/:id" element={<CommunityArticleDetail />} />
                 <Route path="/comunitate/trimite" element={<SubmitArticle />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
