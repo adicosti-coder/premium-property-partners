@@ -100,12 +100,18 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
         {/* Benefits */}
         <ul className="text-left space-y-2 mb-6">
           {text.benefits.map((benefit, index) => (
-            <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+            <motion.li 
+              key={index} 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
+              className="flex items-center gap-2 text-sm text-muted-foreground"
+            >
               <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-primary text-xs">✓</span>
               </div>
               {benefit}
-            </li>
+            </motion.li>
           ))}
         </ul>
 
