@@ -43,6 +43,7 @@ const CATEGORIES = [
   { value: 'health', label: 'Sănătate', labelEn: 'Health', color: 'bg-red-500' },
   { value: 'entertainment', label: 'Divertisment', labelEn: 'Entertainment', color: 'bg-green-500' },
   { value: 'sports', label: 'Sport', labelEn: 'Sports', color: 'bg-teal-500' },
+  { value: 'services', label: 'Servicii', labelEn: 'Services', color: 'bg-slate-500' },
 ];
 
 const POIManager = () => {
