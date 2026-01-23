@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
+import { MessageSquare } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import BookingManager from "@/components/admin/BookingManager";
@@ -71,6 +72,7 @@ import LeadsManager from "@/components/admin/LeadsManager";
 import LocalTipsManager from "@/components/admin/LocalTipsManager";
 import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
 import ABTestManager from "@/components/admin/ABTestManager";
+import ReviewsManager from "@/components/admin/ReviewsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -311,6 +313,10 @@ const Admin = () => {
               <FlaskConical className="w-4 h-4" />
               A/B Testing
             </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Reviews
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -389,6 +395,11 @@ const Admin = () => {
           {/* A/B Testing Tab */}
           <TabsContent value="ab-testing">
             <ABTestManager />
+          </TabsContent>
+
+          {/* Reviews Tab */}
+          <TabsContent value="reviews">
+            <ReviewsManager />
           </TabsContent>
         </Tabs>
       </div>
