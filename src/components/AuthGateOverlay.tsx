@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, LogIn, UserPlus, Sparkles } from "lucide-react";
+import { Lock, LogIn, UserPlus, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -33,6 +33,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       login: "Autentifică-te",
       signup: "Creează cont gratuit",
       loginTooltip: "Accesează contul tău pentru a vedea istoricul simulărilor și ofertele personalizate",
+      recommended: "Recomandat",
       benefits: [
         "Salvează simulările tale",
         "Acces la istoric complet",
@@ -46,6 +47,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       login: "Sign in",
       signup: "Create free account",
       loginTooltip: "Access your account to view simulation history and personalized offers",
+      recommended: "Recommended",
       benefits: [
         "Save your simulations",
         "Access complete history",
@@ -133,6 +135,19 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
         </ul>
 
         <div className="space-y-3">
+          {/* Recommended badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex justify-center"
+          >
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 border border-gold/30 text-gold text-xs font-semibold">
+              <Star className="w-3 h-3 fill-gold" />
+              {text.recommended}
+            </span>
+          </motion.div>
+
           <motion.div
             animate={{ 
               boxShadow: [
