@@ -4,7 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import TeamSection from "@/components/TeamSection";
-import { 
+import CompanyTimeline from "@/components/CompanyTimeline";
+import {
   Building2, 
   Home, 
   Users, 
@@ -532,6 +533,9 @@ const AboutUs = () => {
             </Card>
           </div>
         </section>
+
+        {/* Company Timeline */}
+        <CompanyTimeline />
 
         {/* Team Section */}
         <TeamSection />
