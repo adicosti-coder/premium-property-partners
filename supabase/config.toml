@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.get-hcaptcha-site-key]
 verify_jwt = false
+
+[functions.send-review-reply-notification]
+verify_jwt = false
+
+[functions.check-spam-rate-alert]
+verify_jwt = false
