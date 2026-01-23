@@ -17,6 +17,9 @@ import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
 import QuickStatsBar from "@/components/QuickStatsBar";
 import ReferralBanner from "@/components/ReferralBanner";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
+import SocialProofNotifications from "@/components/SocialProofNotifications";
+import AIChatbot from "@/components/AIChatbot";
 
 // Hub Teaser Components
 import ServicesOverview from "@/components/hub/ServicesOverview";
@@ -93,6 +96,9 @@ const Index = () => {
       <MobileCTABar />
       <FloatingWhatsApp />
       <AccessibilityPanel />
+      <ExitIntentPopup />
+      <SocialProofNotifications />
+      <AIChatbot />
     </div>
   );
 };
