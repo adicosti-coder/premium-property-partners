@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, Trophy, Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, Trophy, Upload, X, Image as ImageIcon, Loader2, Pencil } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -213,6 +213,7 @@ const SubmitArticle = () => {
       rejected: "Respins",
       winner: "Câștigător",
       characters: "caractere",
+      edit: "Editează",
       coverImage: "Imagine de Cover",
       coverImageDesc: "Adaugă o imagine atractivă pentru articolul tău (opțional)",
       uploadImage: "Încarcă imagine",
@@ -250,6 +251,7 @@ const SubmitArticle = () => {
       rejected: "Rejected",
       winner: "Winner",
       characters: "characters",
+      edit: "Edit",
       coverImage: "Cover Image",
       coverImageDesc: "Add an attractive image for your article (optional)",
       uploadImage: "Upload image",
@@ -465,7 +467,20 @@ const SubmitArticle = () => {
                     {userSubmissions.slice(0, 5).map((sub) => (
                       <div key={sub.id} className="flex items-center justify-between gap-2 p-2 rounded bg-muted/50">
                         <span className="text-sm text-foreground truncate flex-1">{sub.title}</span>
-                        {getStatusBadge(sub.status)}
+                        <div className="flex items-center gap-2">
+                          {sub.status === "pending" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/comunitate/editeaza/${sub.id}`)}
+                              className="h-7 px-2 text-primary hover:text-primary"
+                            >
+                              <Pencil className="w-3 h-3 mr-1" />
+                              {t.edit}
+                            </Button>
+                          )}
+                          {getStatusBadge(sub.status)}
+                        </div>
                       </div>
                     ))}
                   </CardContent>
