@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Star, Send, CheckCircle, Clock } from "lucide-react";
+import { Star, Send, CheckCircle, Clock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const RATE_LIMIT_KEY = "review_submissions";
 const RATE_LIMIT_HOURS = 24; // 1 review per property per 24 hours
@@ -62,6 +63,8 @@ const translations = {
     hours: "ore",
     minutes: "minute",
     tooFastError: "Te rugăm să completezi formularul mai încet.",
+    captchaError: "Te rugăm să completezi verificarea de securitate.",
+    captchaVerifying: "Se verifică...",
   },
   en: {
     title: "Leave a Review",
@@ -87,6 +90,8 @@ const translations = {
     hours: "hours",
     minutes: "minutes",
     tooFastError: "Please fill out the form more slowly.",
+    captchaError: "Please complete the security verification.",
+    captchaVerifying: "Verifying...",
   },
 };
 
@@ -163,7 +168,26 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
   const formLoadTime = useRef(Date.now());
+  const captchaRef = useRef<HCaptcha>(null);
+
+  // Fetch hCaptcha site key on mount
+  useEffect(() => {
+    const fetchSiteKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-hcaptcha-site-key");
+        if (!error && data?.siteKey) {
+          setHcaptchaSiteKey(data.siteKey);
+        }
+      } catch (err) {
+        console.error("Failed to fetch hCaptcha site key:", err);
+      }
+    };
+    fetchSiteKey();
+  }, []);
 
   // Check rate limit on mount
   useEffect(() => {
@@ -185,6 +209,32 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
       website: "", // Honeypot
     },
   });
+
+  const handleCaptchaVerify = useCallback((token: string) => {
+    setCaptchaToken(token);
+  }, []);
+
+  const handleCaptchaExpire = useCallback(() => {
+    setCaptchaToken(null);
+  }, []);
+
+  const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-hcaptcha", {
+        body: { token },
+      });
+      
+      if (error) {
+        console.error("Captcha verification error:", error);
+        return false;
+      }
+      
+      return data?.success === true;
+    } catch (err) {
+      console.error("Failed to verify captcha:", err);
+      return false;
+    }
+  };
 
   const onSubmit = async (data: ReviewFormData) => {
     // Check honeypot - if filled, silently "succeed" (bot trap)
@@ -227,7 +277,34 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
       return;
     }
 
+    // Check captcha
+    if (!captchaToken) {
+      toast({
+        title: t.errorTitle,
+        description: t.captchaError,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setIsVerifyingCaptcha(true);
+
+    // Verify captcha on server
+    const captchaValid = await verifyCaptchaOnServer(captchaToken);
+    setIsVerifyingCaptcha(false);
+
+    if (!captchaValid) {
+      toast({
+        title: t.errorTitle,
+        description: t.captchaError,
+        variant: "destructive",
+      });
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.from("property_reviews").insert({
@@ -421,9 +498,34 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {/* hCaptcha widget */}
+            {hcaptchaSiteKey ? (
+              <div className="flex flex-col items-center gap-2">
+                <HCaptcha
+                  ref={captchaRef}
+                  sitekey={hcaptchaSiteKey}
+                  onVerify={handleCaptchaVerify}
+                  onExpire={handleCaptchaExpire}
+                  languageOverride={language}
+                />
+                {captchaToken && (
+                  <div className="flex items-center gap-1 text-sm text-primary">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>{language === "ro" ? "Verificat" : "Verified"}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-pulse text-muted-foreground text-sm">
+                  {language === "ro" ? "Se încarcă verificarea..." : "Loading verification..."}
+                </div>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}>
               {isSubmitting ? (
-                t.submitting
+                isVerifyingCaptcha ? t.captchaVerifying : t.submitting
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
