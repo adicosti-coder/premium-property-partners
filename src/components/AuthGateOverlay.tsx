@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Lock, LogIn, UserPlus } from "lucide-react";
+import { Lock, LogIn, UserPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
@@ -14,6 +14,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
 
   const t = {
     ro: {
+      badge: "🔐 Cont gratuit • Acces instant",
       title: title || "Autentifică-te pentru a vedea rezultatele",
       description: description || "Creează un cont gratuit pentru a vedea estimările și a-ți salva simulările.",
       login: "Autentifică-te",
@@ -25,6 +26,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       ],
     },
     en: {
+      badge: "🔐 Free account • Instant access",
       title: title || "Sign in to see the results",
       description: description || "Create a free account to view estimates and save your simulations.",
       login: "Sign in",
@@ -55,6 +57,17 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
         transition={{ delay: 0.1 }}
         className="relative z-10 bg-card border border-border rounded-2xl p-8 max-w-md mx-4 shadow-2xl text-center"
       >
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold mb-6"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="text-sm font-medium">{text.badge}</span>
+        </motion.div>
+
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
           <Lock className="w-8 h-8 text-primary" />
         </div>
