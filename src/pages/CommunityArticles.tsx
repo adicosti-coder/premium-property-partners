@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
+import LiveLeaderboard from "@/components/LiveLeaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -361,29 +362,36 @@ const CommunityArticles = () => {
             </Card>
           )}
 
-          {/* How It Works */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">{t.howItWorks}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[
-                { icon: PenLine, title: t.step1Title, desc: t.step1Desc },
-                { icon: Clock, title: t.step2Title, desc: t.step2Desc },
-                { icon: ThumbsUp, title: t.step3Title, desc: t.step3Desc },
-                { icon: Award, title: t.step4Title, desc: t.step4Desc },
-              ].map((step, i) => (
-                <Card key={i} className="text-center">
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                      <step.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">
-                      {i + 1}
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground">{step.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
+          {/* Live Leaderboard Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div className="lg:col-span-1">
+              <LiveLeaderboard contestId={activeContest?.id} />
+            </div>
+            
+            {/* How It Works */}
+            <div className="lg:col-span-2">
+              <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center lg:text-left">{t.howItWorks}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { icon: PenLine, title: t.step1Title, desc: t.step1Desc },
+                  { icon: Clock, title: t.step2Title, desc: t.step2Desc },
+                  { icon: ThumbsUp, title: t.step3Title, desc: t.step3Desc },
+                  { icon: Award, title: t.step4Title, desc: t.step4Desc },
+                ].map((step, i) => (
+                  <Card key={i} className="text-center relative">
+                    <CardContent className="p-6">
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <step.icon className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">
+                        {i + 1}
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
+                      <p className="text-sm text-muted-foreground">{step.desc}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
 
