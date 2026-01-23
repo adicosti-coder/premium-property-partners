@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Lock, LogIn, UserPlus, Sparkles, Star, Clock } from "lucide-react";
+import { Lock, LogIn, UserPlus, Sparkles, Star, Clock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -18,6 +18,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const { playSound } = useUISound();
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [recentSignups, setRecentSignups] = useState(0);
 
   // Countdown to midnight
   useEffect(() => {
@@ -42,6 +43,22 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
     return () => clearInterval(timer);
   }, []);
 
+  // Simulated recent signups counter
+  useEffect(() => {
+    // Start with a base number between 15-25
+    const baseNumber = 15 + Math.floor(Math.random() * 10);
+    setRecentSignups(baseNumber);
+
+    // Occasionally increment to simulate real-time activity
+    const incrementInterval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        setRecentSignups(prev => prev + 1);
+      }
+    }, 8000);
+
+    return () => clearInterval(incrementInterval);
+  }, []);
+
   const handleSignupClick = () => {
     setShowConfetti(true);
     playSound("success");
@@ -59,6 +76,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       loginTooltip: "Accesează contul tău pentru a vedea istoricul simulărilor și ofertele personalizate",
       recommended: "Recomandat",
       urgency: "Ofertă expiră în",
+      recentSignups: "s-au înregistrat în ultima oră",
       benefits: [
         "Salvează simulările tale",
         "Acces la istoric complet",
@@ -74,6 +92,7 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
       loginTooltip: "Access your account to view simulation history and personalized offers",
       recommended: "Recommended",
       urgency: "Offer expires in",
+      recentSignups: "signed up in the last hour",
       benefits: [
         "Save your simulations",
         "Access complete history",
@@ -111,6 +130,27 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
         >
           <Sparkles className="w-4 h-4" />
           <span className="text-sm font-medium">{text.badge}</span>
+        </motion.div>
+
+        {/* Recent signups counter */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25 }}
+          className="flex items-center justify-center gap-2 mb-4 text-xs text-muted-foreground"
+        >
+          <Users className="w-3.5 h-3.5 text-primary" />
+          <span>
+            <motion.span
+              key={recentSignups}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-block font-semibold text-primary"
+            >
+              {recentSignups}
+            </motion.span>
+            {" "}{text.recentSignups}
+          </span>
         </motion.div>
 
         <motion.div 
