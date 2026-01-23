@@ -24,10 +24,10 @@ const CompanyTimeline = () => {
       subtitle: "O călătorie de peste un sfert de secol în imobiliare",
       milestones: [
         {
-          year: "1998",
+          year: "1999",
           icon: Rocket,
           title: "Începuturile",
-          description: "Fondarea primei agenții imobiliare în Timișoara, cu viziunea de a aduce standarde internaționale în piața locală.",
+          description: "Punerea fundamentelor unei agenții imobiliare în Timișoara, cu viziunea de a aduce standarde internaționale în piața locală.",
           highlight: "Prima tranzacție încheiată"
         },
         {
@@ -87,10 +87,10 @@ const CompanyTimeline = () => {
       subtitle: "A journey of over a quarter century in real estate",
       milestones: [
         {
-          year: "1998",
+          year: "1999",
           icon: Rocket,
           title: "The Beginning",
-          description: "Founding the first real estate agency in Timișoara, with the vision of bringing international standards to the local market.",
+          description: "Laying the foundations of a real estate agency in Timișoara, with the vision of bringing international standards to the local market.",
           highlight: "First transaction completed"
         },
         {
