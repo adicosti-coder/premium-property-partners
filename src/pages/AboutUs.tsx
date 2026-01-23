@@ -138,7 +138,7 @@ const AboutUs = () => {
         title: "În Cifre",
         items: [
           { value: "50+", label: "Proprietăți gestionate" },
-          { value: "95%", label: "Rată de ocupare" },
+          { value: "+80%", label: "Rată de ocupare" },
           { value: "4.9★", label: "Rating mediu" },
           { value: "500+", label: "Oaspeți mulțumiți" }
         ]
@@ -262,7 +262,7 @@ const AboutUs = () => {
         title: "In Numbers",
         items: [
           { value: "50+", label: "Properties managed" },
-          { value: "95%", label: "Occupancy rate" },
+          { value: "+80%", label: "Occupancy rate" },
           { value: "4.9★", label: "Average rating" },
           { value: "500+", label: "Happy guests" }
         ]
