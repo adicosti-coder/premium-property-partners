@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.send-advanced-simulation-followup]
 verify_jwt = false
+
+[functions.send-simulation-reminder]
+verify_jwt = false
