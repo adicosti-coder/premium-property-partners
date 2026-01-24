@@ -169,6 +169,29 @@ const PropertyDetail = () => {
     };
   }, [isAutoplay, lightboxOpen, nextImage, property]);
 
+  // Preload adjacent images in lightbox for faster navigation
+  useEffect(() => {
+    if (!lightboxOpen || galleryImages.length <= 1) return;
+
+    const nextIndex = (currentImageIndex + 1) % galleryImages.length;
+    const prevIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+
+    // Preload next image
+    const nextImg = new Image();
+    nextImg.src = galleryImages[nextIndex];
+
+    // Preload previous image
+    const prevImg = new Image();
+    prevImg.src = galleryImages[prevIndex];
+
+    // Preload two images ahead for smoother slideshow
+    if (galleryImages.length > 2) {
+      const nextNextIndex = (currentImageIndex + 2) % galleryImages.length;
+      const nextNextImg = new Image();
+      nextNextImg.src = galleryImages[nextNextIndex];
+    }
+  }, [lightboxOpen, currentImageIndex, galleryImages]);
+
   // Touch swipe handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchEndX.current = null;
