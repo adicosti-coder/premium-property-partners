@@ -480,102 +480,98 @@ const RentalIncomeCalculator = () => {
                   >
                     {/* Auth Gate Overlay - show blur when not authenticated */}
                     {!isAuthenticated && (
-                      <AuthGateOverlay />
+                      <AuthGateOverlay context="calculator" />
                     )}
 
+                    {/* All results wrapped in blur container */}
                     <div className={cn(
-                      "text-center mb-8",
-                      !isAuthenticated && "blur-sm pointer-events-none select-none"
+                      !isAuthenticated && "blur-lg pointer-events-none select-none"
                     )}>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', delay: 0.2 }}
-                        className="w-16 h-16 rounded-full bg-gradient-to-r from-gold to-gold/80 mx-auto mb-4 flex items-center justify-center"
-                      >
-                        <Sparkles className="w-8 h-8 text-white" />
-                      </motion.div>
-                      <h3 className="text-xl font-medium text-muted-foreground mb-2">
-                        Venitul tău lunar estimat
-                      </h3>
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3, type: 'spring' }}
-                        className="text-5xl md:text-6xl font-bold text-gold mb-2"
-                      >
-                        {income.min}€ - {income.max}€
-                      </motion.div>
-                      <p className="text-muted-foreground">
-                        {roomTypes.find(r => r.id === data.rooms)?.name} • {locationTypes.find(l => l.id === data.locationType)?.name} • {cities.find(c => c.id === data.city)?.name}
-                      </p>
-                    </div>
-
-                    {/* Comparison Chart */}
-                    <div className={cn(
-                      "bg-muted/30 rounded-xl p-6 mb-6",
-                      !isAuthenticated && "blur-sm pointer-events-none select-none"
-                    )}>
-                      <div className="flex items-center gap-2 mb-4">
-                        <TrendingUp className="w-5 h-5 text-gold" />
-                        <h4 className="font-semibold text-foreground">Comparație Venituri</h4>
+                      <div className="text-center mb-8">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', delay: 0.2 }}
+                          className="w-16 h-16 rounded-full bg-gradient-to-r from-gold to-gold/80 mx-auto mb-4 flex items-center justify-center"
+                        >
+                          <Sparkles className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <h3 className="text-xl font-medium text-muted-foreground mb-2">
+                          Venitul tău lunar estimat
+                        </h3>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.3, type: 'spring' }}
+                          className="text-5xl md:text-6xl font-bold text-gold mb-2"
+                        >
+                          {income.min}€ - {income.max}€
+                        </motion.div>
+                        <p className="text-muted-foreground">
+                          {roomTypes.find(r => r.id === data.rooms)?.name} • {locationTypes.find(l => l.id === data.locationType)?.name} • {cities.find(c => c.id === data.city)?.name}
+                        </p>
                       </div>
-                      <div className="h-32">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={chartData} layout="vertical">
-                            <XAxis type="number" hide />
-                            <YAxis type="category" dataKey="name" width={100} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                            <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                              {chartData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="text-center mt-4 text-foreground"
-                      >
-                        Aceasta este cu <span className="font-bold text-gold">+{income.percentageIncrease}%</span> mai mare decât chiria medie pe termen lung de <span className="font-bold">{income.longTermRent}€</span> în {cities.find(c => c.id === data.city)?.name}
-                      </motion.p>
-                    </div>
 
-                    {/* CTA Buttons */}
-                    <div className={cn(
-                      "space-y-3",
-                      !isAuthenticated && "blur-sm pointer-events-none select-none"
-                    )}>
-                      <Button
-                        onClick={handleWhatsAppClick}
-                        disabled={isSavingLead}
-                        className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-70"
-                      >
-                        {isSavingLead ? (
-                          <>
-                            <motion.div
-                              className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            />
-                            Se salvează...
-                          </>
-                        ) : (
-                          <>
-                            <MessageCircle className="w-5 h-5 mr-2" />
-                            Obțineți Raportul Complet pe WhatsApp
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleReset}
-                        className="w-full py-4"
-                      >
-                        Calculează din nou
-                      </Button>
+                      {/* Comparison Chart */}
+                      <div className="bg-muted/30 rounded-xl p-6 mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <TrendingUp className="w-5 h-5 text-gold" />
+                          <h4 className="font-semibold text-foreground">Comparație Venituri</h4>
+                        </div>
+                        <div className="h-32">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData} layout="vertical">
+                              <XAxis type="number" hide />
+                              <YAxis type="category" dataKey="name" width={100} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                              <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+                                {chartData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="text-center mt-4 text-foreground"
+                        >
+                          Aceasta este cu <span className="font-bold text-gold">+{income.percentageIncrease}%</span> mai mare decât chiria medie pe termen lung de <span className="font-bold">{income.longTermRent}€</span> în {cities.find(c => c.id === data.city)?.name}
+                        </motion.p>
+                      </div>
+
+                      {/* CTA Buttons */}
+                      <div className="space-y-3">
+                        <Button
+                          onClick={handleWhatsAppClick}
+                          disabled={isSavingLead}
+                          className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-70"
+                        >
+                          {isSavingLead ? (
+                            <>
+                              <motion.div
+                                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              />
+                              Se salvează...
+                            </>
+                          ) : (
+                            <>
+                              <MessageCircle className="w-5 h-5 mr-2" />
+                              Obțineți Raportul Complet pe WhatsApp
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleReset}
+                          className="w-full py-4"
+                        >
+                          Calculează din nou
+                        </Button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
