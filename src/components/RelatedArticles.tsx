@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User } from "@supabase/supabase-js";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface RelatedArticlesProps {
   currentArticleId: string;
@@ -160,10 +161,11 @@ const RelatedArticles = ({ currentArticleId, category, tags }: RelatedArticlesPr
               <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                 {coverImage && (
                   <div className="aspect-video overflow-hidden relative">
-                    <img
+                    <OptimizedImage
                       src={coverImage}
                       alt={displayTitle}
-                      className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
+                      className={`w-full h-full transition-transform duration-300 group-hover:scale-105 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
+                      aspectRatio="16/9"
                     />
                     {article.is_premium && (
                       <Badge className="absolute top-2 right-2 bg-amber-500/90 text-white border-amber-600">
