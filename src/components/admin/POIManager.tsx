@@ -63,6 +63,7 @@ const POIManager = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [premiumFilter, setPremiumFilter] = useState<string>('all');
+  const [imageFilter, setImageFilter] = useState<string>('all');
   const [formData, setFormData] = useState({
     name: '',
     name_en: '',
@@ -285,19 +286,26 @@ const POIManager = () => {
       const matchesPremium = premiumFilter === 'all' ||
         (premiumFilter === 'premium' && poi.is_premium) ||
         (premiumFilter === 'standard' && !poi.is_premium);
+
+      // Image filter
+      const matchesImage = imageFilter === 'all' ||
+        (imageFilter === 'missing' && !poi.image_url && !poi.image_fetch_failed) ||
+        (imageFilter === 'failed' && poi.image_fetch_failed) ||
+        (imageFilter === 'has_image' && !!poi.image_url);
       
-      return matchesSearch && matchesCategory && matchesStatus && matchesPremium;
+      return matchesSearch && matchesCategory && matchesStatus && matchesPremium && matchesImage;
     });
-  }, [pois, searchQuery, categoryFilter, statusFilter, premiumFilter]);
+  }, [pois, searchQuery, categoryFilter, statusFilter, premiumFilter, imageFilter]);
 
   const clearFilters = () => {
     setSearchQuery('');
     setCategoryFilter('all');
     setStatusFilter('all');
     setPremiumFilter('all');
+    setImageFilter('all');
   };
 
-  const hasActiveFilters = searchQuery !== '' || categoryFilter !== 'all' || statusFilter !== 'all' || premiumFilter !== 'all';
+  const hasActiveFilters = searchQuery !== '' || categoryFilter !== 'all' || statusFilter !== 'all' || premiumFilter !== 'all' || imageFilter !== 'all';
 
   const createMutation = useMutation({
     mutationFn: async (data: Omit<POI, 'id'>) => {
@@ -875,6 +883,20 @@ const POIManager = () => {
                   <SelectItem value="all">Toate</SelectItem>
                   <SelectItem value="premium">Premium</SelectItem>
                   <SelectItem value="standard">Standard</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Image Filter */}
+              <Select value={imageFilter} onValueChange={setImageFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Imagine" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="has_image">Cu imagine</SelectItem>
+                  <SelectItem value="missing">Fără imagine</SelectItem>
+                  <SelectItem value="failed">Fetch eșuat</SelectItem>
                 </SelectContent>
               </Select>
             </div>
