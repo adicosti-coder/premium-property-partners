@@ -1089,6 +1089,8 @@ export type Database = {
           description_en: string | null
           display_order: number
           id: string
+          image_fetch_attempted_at: string | null
+          image_fetch_failed: boolean
           image_url: string | null
           is_active: boolean
           is_premium: boolean
@@ -1109,6 +1111,8 @@ export type Database = {
           description_en?: string | null
           display_order?: number
           id?: string
+          image_fetch_attempted_at?: string | null
+          image_fetch_failed?: boolean
           image_url?: string | null
           is_active?: boolean
           is_premium?: boolean
@@ -1129,6 +1133,8 @@ export type Database = {
           description_en?: string | null
           display_order?: number
           id?: string
+          image_fetch_attempted_at?: string | null
+          image_fetch_failed?: boolean
           image_url?: string | null
           is_active?: boolean
           is_premium?: boolean

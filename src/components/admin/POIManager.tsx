@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter, Sparkles, RotateCcw, AlertCircle } from "lucide-react";
 import { useRef, useCallback, useMemo, useState as useStateReact } from "react";
 
 interface POI {
@@ -32,6 +32,8 @@ interface POI {
   is_premium: boolean;
   display_order: number;
   image_url: string | null;
+  image_fetch_failed: boolean;
+  image_fetch_attempted_at: string | null;
 }
 
 const CATEGORIES = [
@@ -92,10 +94,16 @@ const POIManager = () => {
     },
   });
 
-  // Count POIs without images
+  // Count POIs without images (excluding ones where fetch failed)
   const poisWithoutImagesCount = useMemo(() => {
     if (!pois) return 0;
-    return pois.filter(poi => !poi.image_url).length;
+    return pois.filter(poi => !poi.image_url && !poi.image_fetch_failed).length;
+  }, [pois]);
+
+  // Count POIs where image fetch failed
+  const poisWithFailedFetchCount = useMemo(() => {
+    if (!pois) return 0;
+    return pois.filter(poi => poi.image_fetch_failed).length;
   }, [pois]);
 
   // Fetch photo from Google Places
@@ -139,14 +147,15 @@ const POIManager = () => {
     }
   };
 
-  // Bulk fetch photos for all POIs without images
+  // Bulk fetch photos for all POIs without images (skip failed ones)
   const bulkFetchMissingPhotos = async () => {
     if (!pois) return;
     
-    const poisWithoutImages = pois.filter(poi => !poi.image_url);
+    // Filter out POIs that already have images or previously failed
+    const poisWithoutImages = pois.filter(poi => !poi.image_url && !poi.image_fetch_failed);
     
     if (poisWithoutImages.length === 0) {
-      toast.info('Toate POI-urile au deja imagini!');
+      toast.info('Toate POI-urile au deja imagini sau au fost marcate ca indisponibile!');
       return;
     }
 
@@ -177,10 +186,14 @@ const POIManager = () => {
         const data = response.data;
         
         if (data.photo_url) {
-          // Update POI with new image
+          // Update POI with new image and reset failed flag
           const { error: updateError } = await supabase
             .from('points_of_interest')
-            .update({ image_url: data.photo_url })
+            .update({ 
+              image_url: data.photo_url,
+              image_fetch_failed: false,
+              image_fetch_attempted_at: new Date().toISOString()
+            })
             .eq('id', poi.id);
 
           if (updateError) {
@@ -190,11 +203,30 @@ const POIManager = () => {
           successCount++;
           setBulkProgress(prev => ({ ...prev, success: successCount }));
         } else {
+          // Mark as failed so we don't try again
+          await supabase
+            .from('points_of_interest')
+            .update({ 
+              image_fetch_failed: true,
+              image_fetch_attempted_at: new Date().toISOString()
+            })
+            .eq('id', poi.id);
+
           failedCount++;
           setBulkProgress(prev => ({ ...prev, failed: failedCount }));
         }
       } catch (error) {
         console.error(`Failed to fetch photo for ${poi.name}:`, error);
+        
+        // Mark as failed on error too
+        await supabase
+          .from('points_of_interest')
+          .update({ 
+            image_fetch_failed: true,
+            image_fetch_attempted_at: new Date().toISOString()
+          })
+          .eq('id', poi.id);
+
         failedCount++;
         setBulkProgress(prev => ({ ...prev, failed: failedCount }));
       }
@@ -208,10 +240,26 @@ const POIManager = () => {
     queryClient.invalidateQueries({ queryKey: ['pois'] });
 
     if (successCount > 0) {
-      toast.success(`${successCount} imagini adăugate cu succes!${failedCount > 0 ? ` (${failedCount} eșuate)` : ''}`);
+      toast.success(`${successCount} imagini adăugate cu succes!${failedCount > 0 ? ` (${failedCount} marcate ca indisponibile)` : ''}`);
     } else {
-      toast.error('Nu am putut găsi imagini pentru niciun POI.');
+      toast.error('Nu am putut găsi imagini pentru niciun POI. Au fost marcate ca indisponibile.');
     }
+  };
+
+  // Reset failed status for all POIs
+  const resetFailedPois = async () => {
+    const { error } = await supabase
+      .from('points_of_interest')
+      .update({ image_fetch_failed: false })
+      .eq('image_fetch_failed', true);
+
+    if (error) {
+      toast.error('Eroare la resetare: ' + error.message);
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+    toast.success('Status resetat! Poți încerca din nou.');
   };
 
   // Filtered POIs
@@ -433,6 +481,20 @@ const POIManager = () => {
                   Auto-imagini ({poisWithoutImagesCount} lipsă)
                 </>
               )}
+            </Button>
+          )}
+
+          {/* Reset failed POIs button */}
+          {poisWithFailedFetchCount > 0 && !isBulkFetching && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetFailedPois}
+              className="text-muted-foreground hover:text-foreground"
+              title="Resetează POI-urile marcate ca indisponibile pentru a încerca din nou"
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Resetează ({poisWithFailedFetchCount})
             </Button>
           )}
           
@@ -842,12 +904,23 @@ const POIManager = () => {
                 ) : filteredPois.map((poi) => {
                   const categoryInfo = getCategoryInfo(poi.category);
                   return (
-                    <TableRow key={poi.id}>
+                    <TableRow key={poi.id} className={poi.image_fetch_failed ? 'bg-destructive/5' : ''}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-primary" />
+                          {poi.image_fetch_failed ? (
+                            <span title="Imagine indisponibilă pe Google Places">
+                              <AlertCircle className="w-4 h-4 text-destructive" />
+                            </span>
+                          ) : (
+                            <MapPin className="w-4 h-4 text-primary" />
+                          )}
                           <div>
-                            <div className="font-medium">{poi.name}</div>
+                            <div className="font-medium flex items-center gap-1">
+                              {poi.name}
+                              {!poi.image_url && !poi.image_fetch_failed && (
+                                <span className="text-xs text-muted-foreground">(fără imagine)</span>
+                              )}
+                            </div>
                             <div className="text-xs text-muted-foreground">{poi.name_en}</div>
                           </div>
                         </div>
