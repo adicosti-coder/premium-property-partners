@@ -313,7 +313,7 @@ const ProfitCalculator = () => {
           <div 
             ref={resultsRef}
             className={cn(
-              "space-y-6 transition-all duration-700 delay-150 relative",
+              "transition-all duration-700 delay-150 relative",
               resultsVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
             )}
           >
@@ -353,276 +353,272 @@ const ProfitCalculator = () => {
               )}
             </AnimatePresence>
 
-            {/* Auth Gate Overlay - show blur when not authenticated */}
-            {!isAuthenticated && (
-              <AuthGateOverlay context="calculator" />
-            )}
-
-            {/* History toggle button for authenticated users */}
-            {isAuthenticated && simulations.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSimulationHistory(!showSimulationHistory)}
-                className="mb-2"
-              >
-                <History className="w-4 h-4 mr-2" />
-                {showSimulationHistory ? lt.hideHistory : lt.viewHistory} ({simulations.length})
-              </Button>
-            )}
-
-            {/* Simulation History */}
-            {isAuthenticated && showSimulationHistory && (
-              <div className="bg-card p-4 rounded-xl border border-border mb-4 space-y-3">
-                <h4 className="font-semibold text-foreground flex items-center gap-2">
-                  <History className="w-4 h-4 text-primary" />
-                  {lt.simulationHistory}
-                </h4>
-                {simulations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{lt.noSimulations}</p>
-                ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {simulations.slice(0, 5).map((sim) => (
-                      <div
-                        key={sim.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {sim.realtrurst_income.toLocaleString()} €{lt.monthly}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(sim.created_at).toLocaleDateString(language === 'ro' ? 'ro-RO' : 'en-US')}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteSimulation(sim.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Main KPI Card */}
-            <div className={cn(
-              "bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden transition-all duration-500 delay-300",
-              resultsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
-              !isAuthenticated && "blur-sm pointer-events-none select-none"
-            )}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <span className="text-primary font-semibold">{t.calculator.netProfit}</span>
-                </div>
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-5xl md:text-6xl font-serif font-bold text-foreground">
-                    {calculations.netProfit.toLocaleString()}
-                  </span>
-                  <span className="text-2xl text-foreground/70">€{t.calculator.perMonth}</span>
-                </div>
-                <p className="text-muted-foreground">
-                  {t.calculator.approximately} <span className="text-primary font-semibold">{calculations.yearlyNet.toLocaleString()} €</span> {t.calculator.perYear}
-                </p>
-              </div>
-            </div>
-
-            {/* Secondary KPIs */}
-            <div className={cn(
-              "grid grid-cols-2 gap-4",
-              !isAuthenticated && "blur-sm pointer-events-none select-none"
-            )}>
-              <div className="bg-card p-6 rounded-xl border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">{t.calculator.grossRevenue}</span>
-                </div>
-                <p className="text-2xl font-serif font-bold text-foreground">
-                  {calculations.grossRevenue.toLocaleString()} €
-                </p>
-                <p className="text-sm text-muted-foreground">{t.calculator.perMonth}</p>
-              </div>
-
-              <div className="bg-card p-6 rounded-xl border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <DollarSign className="w-4 h-4 text-destructive" />
-                  <span className="text-sm text-muted-foreground">{t.calculator.totalCosts}</span>
-                </div>
-                <p className="text-2xl font-serif font-bold text-foreground">
-                  {calculations.totalCosts.toLocaleString()} €
-                </p>
-                <p className="text-sm text-muted-foreground">{t.calculator.perMonth}</p>
-              </div>
-            </div>
-
-            {/* Cost Breakdown with Chart */}
-            <div className={cn(
-              "bg-card p-6 rounded-xl border border-border",
-              !isAuthenticated && "blur-sm pointer-events-none select-none"
-            )}>
-              <h4 className="font-semibold text-foreground mb-4">{t.calculator.costBreakdown}</h4>
-              
-              {/* Donut Chart */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-32 h-32 flex-shrink-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: t.calculator.cleaning, value: calculations.cleaningCosts, color: "hsl(var(--chart-1))" },
-                          { name: t.calculator.managementCommission, value: calculations.managementCost, color: "hsl(var(--chart-2))" },
-                          { name: t.calculator.platformCommission, value: calculations.platformCost, color: "hsl(var(--chart-3))" },
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={35}
-                        outerRadius={55}
-                        paddingAngle={3}
-                        dataKey="value"
-                      >
-                        {[
-                          { color: "hsl(var(--chart-1))" },
-                          { color: "hsl(var(--chart-2))" },
-                          { color: "hsl(var(--chart-3))" },
-                        ].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: number) => [`${value} €`, '']}
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                {/* Legend & Breakdown */}
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-1))" }} />
-                    <div className="flex-1 flex justify-between">
-                      <span className="text-sm text-muted-foreground">{t.calculator.cleaning}</span>
-                      <span className="text-sm font-medium text-foreground">{calculations.cleaningCosts} €</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-2))" }} />
-                    <div className="flex-1 flex justify-between">
-                      <span className="text-sm text-muted-foreground">{t.calculator.managementCommission?.split(' ')[0] || 'Management'}</span>
-                      <span className="text-sm font-medium text-foreground">{calculations.managementCost} €</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-3))" }} />
-                    <div className="flex-1 flex justify-between">
-                      <span className="text-sm text-muted-foreground">{t.calculator.platformCommission?.split(' ')[0] || 'Platforme'}</span>
-                      <span className="text-sm font-medium text-foreground">{calculations.platformCost} €</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Percentage bars */}
-              <div className="space-y-2">
-                {calculations.totalCosts > 0 && (
-                  <>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{t.calculator.cleaning} ({calculations.numberOfStays} {t.calculator.stays})</span>
-                        <span className="text-foreground">{Math.round((calculations.cleaningCosts / calculations.totalCosts) * 100)}%</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500" 
-                          style={{ 
-                            width: `${(calculations.cleaningCosts / calculations.totalCosts) * 100}%`,
-                            backgroundColor: "hsl(var(--chart-1))"
-                          }} 
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{t.calculator.managementCommission} ({managementFee}%)</span>
-                        <span className="text-foreground">{Math.round((calculations.managementCost / calculations.totalCosts) * 100)}%</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500" 
-                          style={{ 
-                            width: `${(calculations.managementCost / calculations.totalCosts) * 100}%`,
-                            backgroundColor: "hsl(var(--chart-2))"
-                          }} 
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{t.calculator.platformCommission} ({platformFee}%)</span>
-                        <span className="text-foreground">{Math.round((calculations.platformCost / calculations.totalCosts) * 100)}%</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500" 
-                          style={{ 
-                            width: `${(calculations.platformCost / calculations.totalCosts) * 100}%`,
-                            backgroundColor: "hsl(var(--chart-3))"
-                          }} 
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              {/* Total */}
-              <div className="border-t border-border pt-3 mt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-foreground font-semibold">{t.calculator.totalCostsLabel}</span>
-                  <span className="text-primary font-bold text-lg">{calculations.totalCosts} €</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className={cn(
-              "grid grid-cols-2 gap-4",
-              hasInteracted && !isAuthenticated && "blur-sm pointer-events-none select-none"
-            )}>
-              <div className="bg-secondary/50 p-4 rounded-lg text-center">
-                <p className="text-2xl font-serif font-bold text-foreground">{calculations.occupiedDays}</p>
-                <p className="text-sm text-muted-foreground">{t.calculator.occupiedDays}</p>
-              </div>
-              <div className="bg-secondary/50 p-4 rounded-lg text-center">
-                <p className="text-2xl font-serif font-bold text-foreground">{calculations.numberOfStays}</p>
-                <p className="text-sm text-muted-foreground">{t.calculator.staysPerMonth}</p>
-              </div>
-            </div>
-
-            {/* Lead Capture CTA */}
-            <Button 
-              onClick={() => setIsLeadFormOpen(true)}
-              className={cn(
-                "w-full py-6 text-lg",
-                hasInteracted && !isAuthenticated && "blur-sm pointer-events-none"
+            {/* Results content wrapper with blur overlay */}
+            <div className="relative">
+              {/* Auth Gate Overlay - show blur when not authenticated */}
+              {!isAuthenticated && (
+                <AuthGateOverlay context="calculator" />
               )}
-              size="lg"
-              disabled={hasInteracted && !isAuthenticated}
-            >
-              <FileText className="w-5 h-5 mr-2" />
-              {t.calculator.getAnalysis}
-            </Button>
+
+              {/* Blurred content container */}
+              <div className={cn(
+                "space-y-6",
+                !isAuthenticated && "blur-lg pointer-events-none select-none"
+              )}>
+                {/* History toggle button for authenticated users */}
+                {isAuthenticated && simulations.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSimulationHistory(!showSimulationHistory)}
+                    className="mb-2"
+                  >
+                    <History className="w-4 h-4 mr-2" />
+                    {showSimulationHistory ? lt.hideHistory : lt.viewHistory} ({simulations.length})
+                  </Button>
+                )}
+
+                {/* Simulation History */}
+                {isAuthenticated && showSimulationHistory && (
+                  <div className="bg-card p-4 rounded-xl border border-border mb-4 space-y-3">
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <History className="w-4 h-4 text-primary" />
+                      {lt.simulationHistory}
+                    </h4>
+                    {simulations.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">{lt.noSimulations}</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {simulations.slice(0, 5).map((sim) => (
+                          <div
+                            key={sim.id}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                          >
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {sim.realtrurst_income.toLocaleString()} €{lt.monthly}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(sim.created_at).toLocaleDateString(language === 'ro' ? 'ro-RO' : 'en-US')}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteSimulation(sim.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Main KPI Card */}
+                <div className={cn(
+                  "bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/30 relative overflow-hidden transition-all duration-500 delay-300",
+                  resultsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                )}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <span className="text-primary font-semibold">{t.calculator.netProfit}</span>
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-5xl md:text-6xl font-serif font-bold text-foreground">
+                        {calculations.netProfit.toLocaleString()}
+                      </span>
+                      <span className="text-2xl text-foreground/70">€{t.calculator.perMonth}</span>
+                    </div>
+                    <p className="text-muted-foreground">
+                      {t.calculator.approximately} <span className="text-primary font-semibold">{calculations.yearlyNet.toLocaleString()} €</span> {t.calculator.perYear}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Secondary KPIs */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-card p-6 rounded-xl border border-border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <span className="text-sm text-muted-foreground">{t.calculator.grossRevenue}</span>
+                    </div>
+                    <p className="text-2xl font-serif font-bold text-foreground">
+                      {calculations.grossRevenue.toLocaleString()} €
+                    </p>
+                    <p className="text-sm text-muted-foreground">{t.calculator.perMonth}</p>
+                  </div>
+
+                  <div className="bg-card p-6 rounded-xl border border-border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-destructive" />
+                      <span className="text-sm text-muted-foreground">{t.calculator.totalCosts}</span>
+                    </div>
+                    <p className="text-2xl font-serif font-bold text-foreground">
+                      {calculations.totalCosts.toLocaleString()} €
+                    </p>
+                    <p className="text-sm text-muted-foreground">{t.calculator.perMonth}</p>
+                  </div>
+                </div>
+
+                {/* Cost Breakdown with Chart */}
+                <div className="bg-card p-6 rounded-xl border border-border">
+                  <h4 className="font-semibold text-foreground mb-4">{t.calculator.costBreakdown}</h4>
+                  
+                  {/* Donut Chart */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-32 h-32 flex-shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: t.calculator.cleaning, value: calculations.cleaningCosts, color: "hsl(var(--chart-1))" },
+                              { name: t.calculator.managementCommission, value: calculations.managementCost, color: "hsl(var(--chart-2))" },
+                              { name: t.calculator.platformCommission, value: calculations.platformCost, color: "hsl(var(--chart-3))" },
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={35}
+                            outerRadius={55}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {[
+                              { color: "hsl(var(--chart-1))" },
+                              { color: "hsl(var(--chart-2))" },
+                              { color: "hsl(var(--chart-3))" },
+                            ].map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            formatter={(value: number) => [`${value} €`, '']}
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              color: 'hsl(var(--foreground))'
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    
+                    {/* Legend & Breakdown */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-1))" }} />
+                        <div className="flex-1 flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t.calculator.cleaning}</span>
+                          <span className="text-sm font-medium text-foreground">{calculations.cleaningCosts} €</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-2))" }} />
+                        <div className="flex-1 flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t.calculator.managementCommission?.split(' ')[0] || 'Management'}</span>
+                          <span className="text-sm font-medium text-foreground">{calculations.managementCost} €</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--chart-3))" }} />
+                        <div className="flex-1 flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t.calculator.platformCommission?.split(' ')[0] || 'Platforme'}</span>
+                          <span className="text-sm font-medium text-foreground">{calculations.platformCost} €</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Percentage bars */}
+                  <div className="space-y-2">
+                    {calculations.totalCosts > 0 && (
+                      <>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">{t.calculator.cleaning} ({calculations.numberOfStays} {t.calculator.stays})</span>
+                            <span className="text-foreground">{Math.round((calculations.cleaningCosts / calculations.totalCosts) * 100)}%</span>
+                          </div>
+                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500" 
+                              style={{ 
+                                width: `${(calculations.cleaningCosts / calculations.totalCosts) * 100}%`,
+                                backgroundColor: "hsl(var(--chart-1))"
+                              }} 
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">{t.calculator.managementCommission} ({managementFee}%)</span>
+                            <span className="text-foreground">{Math.round((calculations.managementCost / calculations.totalCosts) * 100)}%</span>
+                          </div>
+                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500" 
+                              style={{ 
+                                width: `${(calculations.managementCost / calculations.totalCosts) * 100}%`,
+                                backgroundColor: "hsl(var(--chart-2))"
+                              }} 
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">{t.calculator.platformCommission} ({platformFee}%)</span>
+                            <span className="text-foreground">{Math.round((calculations.platformCost / calculations.totalCosts) * 100)}%</span>
+                          </div>
+                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500" 
+                              style={{ 
+                                width: `${(calculations.platformCost / calculations.totalCosts) * 100}%`,
+                                backgroundColor: "hsl(var(--chart-3))"
+                              }} 
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Total */}
+                  <div className="border-t border-border pt-3 mt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-foreground font-semibold">{t.calculator.totalCostsLabel}</span>
+                      <span className="text-primary font-bold text-lg">{calculations.totalCosts} €</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-secondary/50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-serif font-bold text-foreground">{calculations.occupiedDays}</p>
+                    <p className="text-sm text-muted-foreground">{t.calculator.occupiedDays}</p>
+                  </div>
+                  <div className="bg-secondary/50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-serif font-bold text-foreground">{calculations.numberOfStays}</p>
+                    <p className="text-sm text-muted-foreground">{t.calculator.staysPerMonth}</p>
+                  </div>
+                </div>
+
+                {/* Lead Capture CTA */}
+                <Button 
+                  onClick={() => setIsLeadFormOpen(true)}
+                  className="w-full py-6 text-lg"
+                  size="lg"
+                >
+                  <FileText className="w-5 h-5 mr-2" />
+                  {t.calculator.getAnalysis}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

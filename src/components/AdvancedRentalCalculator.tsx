@@ -644,24 +644,25 @@ const AdvancedRentalCalculator = () => {
             <div className="bg-muted/30 border-t border-border p-6 md:p-8 relative">
               {/* Auth Gate Overlay - show blur when not authenticated */}
               {!isAuthenticated && (
-                <AuthGateOverlay />
+                <AuthGateOverlay context="calculator" />
               )}
 
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-foreground">{t.results}</h3>
-                <p className="text-sm text-muted-foreground">{t.resultsHelp}</p>
-              </div>
+              {/* All results wrapped in blur container */}
+              <div className={cn(
+                !isAuthenticated && "blur-lg pointer-events-none select-none"
+              )}>
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-foreground">{t.results}</h3>
+                  <p className="text-sm text-muted-foreground">{t.resultsHelp}</p>
+                </div>
 
-              {/* Bar Chart Comparison */}
-              <motion.div
-                className={cn(
-                  "mb-6 p-4 rounded-xl bg-card border border-border",
-                  !isAuthenticated && "blur-sm pointer-events-none select-none"
-                )}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
+                {/* Bar Chart Comparison */}
+                <motion.div
+                  className="mb-6 p-4 rounded-xl bg-card border border-border"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
                 <div className="flex items-center gap-2 mb-4">
                   <BarChart3 className="w-5 h-5 text-gold" />
                   <h4 className="font-semibold text-foreground">{t.chartTitle}</h4>
@@ -751,10 +752,7 @@ const AdvancedRentalCalculator = () => {
                 )}
               </motion.div>
 
-              <div className={cn(
-                "space-y-3",
-                !isAuthenticated && "blur-sm pointer-events-none select-none"
-              )}>
+              <div className="space-y-3">
                 {/* Classic Rent Result */}
                 <motion.div
                   className="p-4 rounded-xl bg-muted/50 border border-border flex justify-between items-center"
@@ -943,16 +941,14 @@ const AdvancedRentalCalculator = () => {
               </div>
 
               {/* WhatsApp CTA */}
-              <Button
-                onClick={handleWhatsAppClick}
-                className={cn(
-                  "w-full mt-6 bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl",
-                  !isAuthenticated && "blur-sm pointer-events-none select-none"
-                )}
-              >
+                <Button
+                  onClick={handleWhatsAppClick}
+                  className="w-full mt-6 bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl"
+                >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 {t.whatsappCTA}
               </Button>
+              </div>
             </div>
           </div>
         </motion.div>
