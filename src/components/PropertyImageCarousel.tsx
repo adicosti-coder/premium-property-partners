@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 
 interface PropertyImageCarouselProps {
@@ -9,11 +9,22 @@ interface PropertyImageCarouselProps {
   className?: string;
 }
 
+// Skeleton component for loading state
+const CarouselSkeleton = () => (
+  <div className="w-full h-56 bg-gradient-to-br from-muted/80 to-muted/40 animate-pulse flex items-center justify-center">
+    <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+      <ImageIcon className="w-8 h-8" />
+      <div className="h-2 w-20 bg-muted-foreground/20 rounded-full" />
+    </div>
+  </div>
+);
+
 const PropertyImageCarousel = ({ images, propertyName, className = "" }: PropertyImageCarouselProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
   const scrollPrev = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,6 +81,10 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
     }
   }, [selectedIndex, displayImages]);
 
+  const handleImageLoad = useCallback((index: number) => {
+    setLoadedImages(prev => new Set(prev).add(index));
+  }, []);
+
   return (
     <div className={`relative group/carousel ${className}`}>
       <div className="overflow-hidden" ref={emblaRef}>
@@ -77,8 +92,14 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
           {displayImages.map((image, index) => (
             <div 
               key={index} 
-              className="flex-[0_0_100%] min-w-0"
+              className="flex-[0_0_100%] min-w-0 relative"
             >
+              {/* Skeleton shown until image loads */}
+              {!loadedImages.has(index) && (
+                <div className="absolute inset-0 z-10">
+                  <CarouselSkeleton />
+                </div>
+              )}
               <OptimizedImage
                 src={image}
                 alt={`${propertyName} - ${index + 1}`}
@@ -86,6 +107,7 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
                 aspectRatio="16/9"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                 priority={index === 0}
+                onLoad={() => handleImageLoad(index)}
               />
             </div>
           ))}
