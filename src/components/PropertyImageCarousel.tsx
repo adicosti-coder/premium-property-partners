@@ -60,8 +60,8 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
                 src={image}
                 alt={`${propertyName} - ${index + 1}`}
                 className="w-full h-56"
-                width={400}
-                height={224}
+                aspectRatio="16/9"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                 priority={index === 0}
               />
             </div>
