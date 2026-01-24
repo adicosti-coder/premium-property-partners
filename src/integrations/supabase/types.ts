@@ -498,6 +498,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cta_analytics: {
+        Row: {
+          created_at: string
+          cta_type: string
+          id: string
+          metadata: Json | null
+          page_path: string
+          property_id: string | null
+          property_name: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          cta_type: string
+          id?: string
+          metadata?: Json | null
+          page_path: string
+          property_id?: string | null
+          property_name?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          cta_type?: string
+          id?: string
+          metadata?: Json | null
+          page_path?: string
+          property_id?: string | null
+          property_name?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       email_ab_assignments: {
         Row: {
           created_at: string

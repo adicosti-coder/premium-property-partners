@@ -1,9 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const CTA = () => {
   const { t } = useLanguage();
+  const { trackCall, trackFormSubmit } = useCtaAnalytics();
+
+  const handleCall = () => {
+    trackCall();
+    window.location.href = "tel:+40723154520";
+  };
+
+  const handlePrimaryCta = () => {
+    trackFormSubmit("cta_primary");
+    document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <section className="py-24 bg-gradient-subtle">
@@ -18,11 +30,16 @@ const CTA = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="premium" size="xl">
+            <Button variant="premium" size="xl" onClick={handlePrimaryCta}>
               {t.cta.primaryButton}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="outline" size="xl" className="border-primary/20 hover:bg-primary hover:text-primary-foreground">
+            <Button 
+              variant="outline" 
+              size="xl" 
+              className="border-primary/20 hover:bg-primary hover:text-primary-foreground"
+              onClick={handleCall}
+            >
               <Phone className="mr-2 h-5 w-5" />
               {t.cta.secondaryButton}
             </Button>

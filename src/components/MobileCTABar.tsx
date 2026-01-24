@@ -2,10 +2,12 @@ import { Phone, Users, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const MobileCTABar = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { trackCall } = useCtaAnalytics();
   
   const translations = {
     ro: { call: "Sună", guests: "OASPEȚI", owners: "Proprietari" },
@@ -15,6 +17,7 @@ const MobileCTABar = () => {
   const t = translations[language];
 
   const handleCall = () => {
+    trackCall();
     window.location.href = "tel:+40723154520";
   };
 

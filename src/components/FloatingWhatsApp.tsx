@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const FloatingWhatsApp = () => {
   const { t } = useLanguage();
+  const { trackWhatsApp } = useCtaAnalytics();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -21,6 +23,7 @@ const FloatingWhatsApp = () => {
   }, []);
   
   const handleClick = () => {
+    trackWhatsApp();
     const message = encodeURIComponent(t.floatingWhatsapp.message);
     window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
   };
