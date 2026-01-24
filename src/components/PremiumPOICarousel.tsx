@@ -1,10 +1,10 @@
 import React from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { motion } from 'framer-motion';
-import { Crown, Star, MapPin, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Crown, Star, MapPin, Heart } from 'lucide-react';
 import OptimizedImage from './OptimizedImage';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
+import Autoplay from 'embla-carousel-autoplay';
 import {
   Carousel,
   CarouselContent,
@@ -96,12 +96,19 @@ const PremiumPOICarousel: React.FC<PremiumPOICarouselProps> = ({ pois }) => {
         </p>
       </div>
 
-      {/* Carousel */}
+      {/* Carousel with Autoplay */}
       <Carousel
         opts={{
           align: "start",
           loop: true,
         }}
+        plugins={[
+          Autoplay({
+            delay: 4000,
+            stopOnInteraction: true,
+            stopOnMouseEnter: true,
+          }),
+        ]}
         className="w-full"
       >
         <CarouselContent className="-ml-2 md:-ml-4">
