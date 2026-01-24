@@ -58,7 +58,7 @@ const FloatingReferralButton = () => {
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 100, scale: 0.8 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="fixed bottom-[264px] right-4 z-40"
+          className="fixed bottom-[264px] right-4 z-40 hidden md:block"
         >
           <div className="relative">
             {/* Dismiss button */}

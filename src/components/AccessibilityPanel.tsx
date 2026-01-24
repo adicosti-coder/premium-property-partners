@@ -69,7 +69,16 @@ const AccessibilityPanel = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Apply font size
+  // Listen for custom event from FloatingActionMenu
+  useEffect(() => {
+    const handleTogglePanel = () => {
+      setIsOpen(prev => !prev);
+    };
+
+    window.addEventListener('toggle-accessibility-panel', handleTogglePanel);
+    return () => window.removeEventListener('toggle-accessibility-panel', handleTogglePanel);
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
     const sizes = {
@@ -200,6 +209,7 @@ const AccessibilityPanel = () => {
           "fixed bottom-[200px] right-4 z-50 w-12 h-12 rounded-full shadow-lg",
           "bg-primary hover:bg-primary/90 text-primary-foreground",
           "transition-all duration-500 ease-out",
+          "hidden md:flex", // Hide on mobile, show on desktop
           isOpen && "rotate-180 bg-accent text-accent-foreground hover:bg-accent/90",
           isVisible 
             ? "opacity-100 translate-y-0 scale-100" 
