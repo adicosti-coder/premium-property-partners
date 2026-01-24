@@ -51,7 +51,7 @@ const PentruProprietari = () => {
       stats: [
         { value: "+40%", label: "Randament Superior", description: "Față de chiria pe termen lung" },
         { value: "20%", label: "Comision Transparent", description: "Fără costuri ascunse" },
-        { value: "98%", label: "Rată Ocupare", description: "Media portofoliului nostru" },
+        { value: "+80%", label: "Rată Ocupare", description: "Media portofoliului nostru" },
         { value: "24/7", label: "Suport Complet", description: "Pentru tine și oaspeți" },
       ],
       trustPoints: [
