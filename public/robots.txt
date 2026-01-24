@@ -12,3 +12,6 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap
