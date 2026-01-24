@@ -59,6 +59,46 @@ serve(async (req) => {
   }
 
   try {
+    const { query, address, latitude, longitude, forcePixabay } = await req.json();
+    
+    if (!query && !address) {
+      return new Response(
+        JSON.stringify({ error: 'Query or address is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const searchQuery = query || address;
+    console.log(`Searching for place: ${searchQuery}${forcePixabay ? ' (Pixabay only mode)' : ''}`);
+
+    // If forcePixabay is true, skip Google Places entirely
+    if (forcePixabay) {
+      console.log('Force Pixabay mode - skipping Google Places');
+      const pixabayUrl = await searchPixabay(searchQuery);
+      
+      if (pixabayUrl) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            photo_url: pixabayUrl,
+            place_name: searchQuery,
+            source: 'pixabay',
+            message: 'Image from Pixabay (forced mode)'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'No images found on Pixabay', 
+          query: searchQuery 
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Normal flow: Try Google Places first
     const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY');
     
     if (!GOOGLE_PLACES_API_KEY) {
@@ -69,19 +109,7 @@ serve(async (req) => {
       );
     }
 
-    const { query, address, latitude, longitude } = await req.json();
-    
-    if (!query && !address) {
-      return new Response(
-        JSON.stringify({ error: 'Query or address is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`Searching for place: ${query || address}`);
-
     // Step 1: Find Place using Text Search
-    const searchQuery = query || address;
     let locationBias = '';
     
     if (latitude && longitude) {
