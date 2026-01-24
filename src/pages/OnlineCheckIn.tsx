@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,11 +152,25 @@ const OnlineCheckIn = () => {
     );
   }
 
+  const breadcrumbItems = [
+    { label: language === 'ro' ? 'Oaspeți' : 'Guests', href: '/oaspeti' },
+    { label: language === 'ro' ? 'Online Check-In' : 'Online Check-In' }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={language === 'ro' ? 'Online Check-In' : 'Online Check-In'}
+        description={language === 'ro' 
+          ? 'Completează check-in-ul online pentru a economisi timp la sosire. Proces simplu și rapid.'
+          : 'Complete your online check-in to save time on arrival. Simple and fast process.'}
+      />
       <Header />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={breadcrumbItems} className="mb-8" />
+          
           {/* Header Section */}
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-foreground mb-4">
@@ -524,7 +541,8 @@ const OnlineCheckIn = () => {
         </div>
       </main>
       <Footer />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets showExitIntent={false} />
+      <BackToTop />
     </div>
   );
 };

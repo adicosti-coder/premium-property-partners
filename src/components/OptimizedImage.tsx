@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect, memo } from "react";
 
+interface ImageSize {
+  width: number;
+  suffix: string;
+}
+
 interface OptimizedImageProps {
   src: string;
   alt: string;
@@ -7,9 +12,30 @@ interface OptimizedImageProps {
   width?: number;
   height?: number;
   priority?: boolean;
+  sizes?: string;
+  aspectRatio?: string;
   onLoad?: () => void;
   onClick?: () => void;
 }
+
+// Generate srcset for responsive images
+const generateSrcSet = (src: string, sizes: ImageSize[]): string => {
+  return sizes
+    .map(({ width, suffix }) => {
+      const baseName = src.replace(/\.(jpg|jpeg|png|webp)$/i, '');
+      const ext = src.match(/\.(jpg|jpeg|png|webp)$/i)?.[0] || '.jpg';
+      return `${baseName}${suffix}${ext} ${width}w`;
+    })
+    .join(', ');
+};
+
+// Default responsive sizes
+const defaultSizes: ImageSize[] = [
+  { width: 320, suffix: '-sm' },
+  { width: 640, suffix: '-md' },
+  { width: 1024, suffix: '-lg' },
+  { width: 1920, suffix: '' },
+];
 
 const OptimizedImage = memo(({
   src,
@@ -18,6 +44,8 @@ const OptimizedImage = memo(({
   width,
   height,
   priority = false,
+  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  aspectRatio,
   onLoad,
   onClick
 }: OptimizedImageProps) => {
@@ -40,7 +68,7 @@ const OptimizedImage = memo(({
         });
       },
       {
-        rootMargin: "100px", // Start loading 100px before entering viewport
+        rootMargin: "200px", // Start loading 200px before entering viewport
         threshold: 0.01
       }
     );
@@ -61,18 +89,33 @@ const OptimizedImage = memo(({
     setHasError(true);
   };
 
+  // Generate WebP srcset
+  const webpSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+  
+  // For local assets, use simple srcset; for external URLs, use original
+  const isLocalAsset = src.startsWith('/') || src.startsWith('./') || src.includes('/assets/');
+  const srcSetValue = isLocalAsset ? generateSrcSet(src, defaultSizes) : undefined;
+  const webpSrcSetValue = isLocalAsset ? generateSrcSet(webpSrc, defaultSizes) : undefined;
+
+  const containerStyle: React.CSSProperties = {
+    width,
+    height,
+    ...(aspectRatio ? { aspectRatio } : {})
+  };
+
   return (
     <div
       ref={imgRef}
       className={`relative overflow-hidden ${className}`}
-      style={{ width, height }}
+      style={containerStyle}
       onClick={onClick}
     >
       {/* Blur placeholder / skeleton */}
       <div
         className={`absolute inset-0 bg-gradient-to-br from-muted/60 to-muted/40 animate-pulse transition-opacity duration-500 ${
-          isLoaded ? "opacity-0" : "opacity-100"
+          isLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
+        aria-hidden="true"
       />
 
       {/* Error fallback */}
@@ -84,6 +127,7 @@ const OptimizedImage = memo(({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -100,12 +144,18 @@ const OptimizedImage = memo(({
       {/* Actual image - only render when in view */}
       {isInView && !hasError && (
         <picture>
-          {/* WebP source for modern browsers */}
+          {/* WebP source for modern browsers with srcset */}
           <source
-            srcSet={src.replace(/\.(jpg|jpeg|png)$/i, '.webp')}
+            srcSet={webpSrcSetValue || webpSrc}
+            sizes={sizes}
             type="image/webp"
           />
-          {/* Original format fallback */}
+          {/* Original format with srcset fallback */}
+          <source
+            srcSet={srcSetValue || src}
+            sizes={sizes}
+            type={src.match(/\.png$/i) ? "image/png" : "image/jpeg"}
+          />
           <img
             src={src}
             alt={alt}

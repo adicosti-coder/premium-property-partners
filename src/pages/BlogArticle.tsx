@@ -9,9 +9,12 @@ import Footer from "@/components/Footer";
 import BlogComments from "@/components/BlogComments";
 import BlogNewsletterCTA from "@/components/BlogNewsletterCTA";
 import RelatedArticles from "@/components/RelatedArticles";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import SocialShareButtons from "@/components/blog/SocialShareButtons";
 import BlogArticleCTA from "@/components/blog/BlogArticleCTA";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -231,20 +234,60 @@ const BlogArticlePage = () => {
               category={article.category}
               tags={article.tags}
             />
-          </article>
-        </main>
-        <Footer />
-        <AccessibilityPanel />
-      </div>
-    );
+        </article>
+      </main>
+      <Footer />
+      <GlobalConversionWidgets showExitIntent={false} />
+    </div>
+  );
   }
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": displayTitle,
+    "description": displayExcerpt,
+    "image": coverImage || undefined,
+    "datePublished": article.published_at || article.created_at,
+    "dateModified": article.published_at || article.created_at,
+    "author": {
+      "@type": "Person",
+      "name": article.author_name
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "RealTrust",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://realtrustaparthotel.lovable.app/favicon.ico"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": articleUrl
+    }
+  };
+
+  const breadcrumbItems = [
+    { label: "Blog", href: "/blog" },
+    { label: displayTitle }
+  ];
   
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={displayTitle}
+        description={displayExcerpt}
+        type="article"
+        image={coverImage || undefined}
+        jsonLd={articleJsonLd}
+      />
       <Header />
 
       <main className="pt-24 pb-16">
         <article className="container mx-auto px-6 max-w-4xl">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
+          
           {/* Back Button */}
           <Link
             to="/blog"
@@ -353,7 +396,8 @@ const BlogArticlePage = () => {
       </main>
 
       <Footer />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets showExitIntent={false} />
+      <BackToTop />
     </div>
   );
 };

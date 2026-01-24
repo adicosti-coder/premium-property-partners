@@ -2,8 +2,11 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import QuickBookingForm from "@/components/QuickBookingForm";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -192,8 +195,33 @@ const WhyBookDirect = () => {
     },
   ];
 
+  const breadcrumbItems = [
+    { label: language === 'ro' ? 'Oaspeți' : 'Guests', href: '/oaspeti' },
+    { label: language === 'ro' ? 'Rezervă Direct' : 'Book Direct' }
+  ];
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map(item => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={language === 'ro' ? 'De Ce Să Rezervi Direct' : 'Why Book Direct'}
+        description={language === 'ro' 
+          ? 'Economisește până la 15% rezervând direct. Beneficiază de prețuri mai bune, comunicare directă și flexibilitate maximă.'
+          : 'Save up to 15% by booking direct. Get better prices, direct communication and maximum flexibility.'}
+        jsonLd={faqJsonLd}
+      />
       <Header />
       
       <main className="pt-20 md:pt-24">
@@ -203,6 +231,7 @@ const WhyBookDirect = () => {
           className="section-padding bg-gradient-to-b from-primary/5 to-background"
         >
           <div className="container mx-auto px-6">
+            <PageBreadcrumb items={breadcrumbItems} className="mb-8" />
             <div className={`max-w-4xl mx-auto text-center transition-all duration-700 ${
               heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
@@ -550,7 +579,8 @@ const WhyBookDirect = () => {
       </main>
 
       <Footer />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets />
+      <BackToTop />
     </div>
   );
 };
