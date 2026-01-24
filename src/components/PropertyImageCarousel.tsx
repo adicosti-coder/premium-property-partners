@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
@@ -46,6 +46,29 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
   }, [emblaApi, onSelect]);
 
   const displayImages = images.slice(0, 5); // Limit to 5 images
+
+  // Preload next and previous images for faster navigation
+  useEffect(() => {
+    if (displayImages.length <= 1) return;
+
+    const nextIndex = (selectedIndex + 1) % displayImages.length;
+    const prevIndex = (selectedIndex - 1 + displayImages.length) % displayImages.length;
+
+    // Preload next image
+    const nextImg = new Image();
+    nextImg.src = displayImages[nextIndex];
+
+    // Preload previous image
+    const prevImg = new Image();
+    prevImg.src = displayImages[prevIndex];
+
+    // Optionally preload one more ahead
+    if (displayImages.length > 2) {
+      const nextNextIndex = (selectedIndex + 2) % displayImages.length;
+      const nextNextImg = new Image();
+      nextNextImg.src = displayImages[nextNextIndex];
+    }
+  }, [selectedIndex, displayImages]);
 
   return (
     <div className={`relative group/carousel ${className}`}>
