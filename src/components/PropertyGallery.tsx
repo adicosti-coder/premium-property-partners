@@ -337,6 +337,8 @@ const PropertyGallery = () => {
                       src={property.images[0]}
                       alt={property.name}
                       className="w-full h-full"
+                      aspectRatio="4/3"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       priority={index < 3}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
