@@ -10,7 +10,9 @@ import { toast } from "sonner";
 import { exportFavoritesPdf } from "@/utils/exportFavoritesPdf";
 import PropertyCompareModal from "@/components/PropertyCompareModal";
 import BookingForm from "@/components/BookingForm";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import BackToTop from "@/components/BackToTop";
 import NotificationSettings from "@/components/NotificationSettings";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -116,6 +118,12 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={t.favorites.title}
+        description={language === 'ro' 
+          ? 'Proprietățile tale favorite salvate pentru comparare și rezervare rapidă.'
+          : 'Your favorite properties saved for comparison and quick booking.'}
+      />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -320,7 +328,8 @@ const Favorites = () => {
         onClose={() => setBookingOpen(false)}
         propertyName={selectedProperty}
       />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets showExitIntent={false} />
+      <BackToTop />
     </div>
   );
 };

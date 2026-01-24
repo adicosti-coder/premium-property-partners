@@ -23,6 +23,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import BackToTop from "@/components/BackToTop";
 import BadgeShowcase from "@/components/BadgeShowcase";
 
 const Profile = () => {
@@ -281,6 +284,10 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={text.title}
+        description={text.subtitle}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-24 max-w-2xl">
@@ -423,6 +430,8 @@ const Profile = () => {
       </main>
 
       <Footer />
+      <GlobalConversionWidgets showExitIntent={false} showSocialProof={false} />
+      <BackToTop />
     </div>
   );
 };

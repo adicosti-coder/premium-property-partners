@@ -4,7 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import LiveLeaderboard from "@/components/LiveLeaderboard";
 import UserLeaderboard from "@/components/UserLeaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -296,12 +299,21 @@ const CommunityArticles = () => {
 
   const isContestEnded = activeContest && new Date(activeContest.end_date) < new Date();
 
+  const breadcrumbItems = [
+    { label: t.title }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={t.title}
+        description={t.subtitle}
+      />
       <Header />
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-6">
+          <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-4">
@@ -569,7 +581,8 @@ const CommunityArticles = () => {
       </main>
 
       <Footer />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets showExitIntent={false} />
+      <BackToTop />
     </div>
   );
 };
