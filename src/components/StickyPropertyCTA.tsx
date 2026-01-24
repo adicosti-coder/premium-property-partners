@@ -4,15 +4,18 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 interface StickyPropertyCTAProps {
   propertyName: string;
+  propertyId?: string;
   price: number;
   onBookClick: () => void;
 }
 
-const StickyPropertyCTA = ({ propertyName, price, onBookClick }: StickyPropertyCTAProps) => {
+const StickyPropertyCTA = ({ propertyName, propertyId, price, onBookClick }: StickyPropertyCTAProps) => {
   const { language } = useLanguage();
+  const { trackCall, trackWhatsApp, trackBooking } = useCtaAnalytics();
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -54,16 +57,23 @@ const StickyPropertyCTA = ({ propertyName, price, onBookClick }: StickyPropertyC
   }, []);
 
   const handleCall = () => {
+    trackCall(propertyId, propertyName);
     window.location.href = "tel:+40723154520";
   };
 
   const handleWhatsApp = () => {
+    trackWhatsApp(propertyId, propertyName);
     const message = encodeURIComponent(
       language === "ro"
         ? `Bună! Sunt interesat de proprietatea "${propertyName}". Aș dori mai multe detalii.`
         : `Hello! I'm interested in the property "${propertyName}". I'd like more details.`
     );
     window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+  };
+
+  const handleBook = () => {
+    trackBooking(propertyId, propertyName);
+    onBookClick();
   };
 
   return (
@@ -87,7 +97,7 @@ const StickyPropertyCTA = ({ propertyName, price, onBookClick }: StickyPropertyC
             <div className="flex-shrink-0">
               <p className="text-xs text-muted-foreground">{text.from}</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-xl md:text-2xl font-bold text-primary">{price}€</span>
+                <span className="text-xl md:text-2xl font-bold text-primary">{price}</span>
                 <span className="text-sm text-muted-foreground">/{text.night}</span>
               </div>
             </div>
@@ -122,7 +132,7 @@ const StickyPropertyCTA = ({ propertyName, price, onBookClick }: StickyPropertyC
               <Button
                 variant="premium"
                 size={isMobile ? "sm" : "lg"}
-                onClick={onBookClick}
+                onClick={handleBook}
                 className="gap-1.5 shadow-lg"
               >
                 <Calendar className="w-4 h-4" />
