@@ -25,6 +25,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
 
 const Imobiliare = () => {
   const { t, language } = useLanguage();
@@ -120,12 +121,20 @@ const Imobiliare = () => {
     { label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services" }
   ];
 
+  // Generate Schema.org structured data
+  const realEstateAgentSchema = generateRealEstateAgentSchema();
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Acasă", url: "https://realtrustaparthotel.lovable.app" },
+    { name: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", url: "https://realtrustaparthotel.lovable.app/imobiliare" }
+  ]);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
         title={seo.title}
         description={seo.description}
         url="https://realtrustaparthotel.lovable.app/imobiliare"
+        jsonLd={[realEstateAgentSchema, breadcrumbSchema]}
       />
       <Header />
       

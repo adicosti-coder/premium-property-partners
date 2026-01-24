@@ -21,8 +21,10 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import SocialProofNotifications from "@/components/SocialProofNotifications";
 import AIChatbot from "@/components/AIChatbot";
 import SEOHead from "@/components/SEOHead";
-import { generateLocalBusinessSchema, generateWebSiteSchema, generateFAQSchema } from "@/utils/schemaGenerators";
+import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // Hub Teaser Components
 import ServicesOverview from "@/components/hub/ServicesOverview";
@@ -33,31 +35,66 @@ import AboutTeaser from "@/components/hub/AboutTeaser";
 const Index = () => {
   const { t, language } = useLanguage();
   
-  // Generate combined JSON-LD for homepage
+  // Fetch published reviews for Schema.org
+  const { data: reviews } = useQuery({
+    queryKey: ["homepage-reviews-schema"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("property_reviews")
+        .select(`
+          id,
+          guest_name,
+          rating,
+          content,
+          title,
+          created_at,
+          property_id,
+          properties:property_id (name)
+        `)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      
+      return (data || []).map((review) => ({
+        id: review.id,
+        guest_name: review.guest_name,
+        rating: review.rating,
+        content: review.content,
+        title: review.title,
+        created_at: review.created_at,
+        property_name: (review.properties as { name: string } | null)?.name,
+      })) as DatabaseReview[];
+    },
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+  });
+  
+  // Generate combined JSON-LD for homepage with database reviews
+  const faqSchema = generateFAQSchema([
+    { 
+      question: language === "ro" ? "Ce servicii oferă RealTrust?" : "What services does RealTrust offer?",
+      answer: language === "ro" 
+        ? "Oferim administrare profesională de apartamente în regim hotelier, incluzând marketing, rezervări, curățenie, check-in/out și mentenanță."
+        : "We offer professional apartment management for short-term rentals, including marketing, bookings, cleaning, check-in/out and maintenance."
+    },
+    {
+      question: language === "ro" ? "Care este rata de ocupare medie?" : "What is the average occupancy rate?",
+      answer: language === "ro"
+        ? "Proprietățile noastre din Timișoara au o rată de ocupare medie de 98%, cu venituri semnificativ mai mari decât închirierea tradițională."
+        : "Our properties in Timișoara have an average occupancy rate of 98%, with significantly higher income than traditional rentals."
+    },
+    {
+      question: language === "ro" ? "Cum funcționează colaborarea?" : "How does the partnership work?",
+      answer: language === "ro"
+        ? "Noi ne ocupăm de tot: de la fotografii profesionale și listare pe platforme, până la comunicarea cu oaspeții și curățenie. Tu primești rapoarte lunare și plăți transparente."
+        : "We handle everything: from professional photos and platform listings, to guest communication and cleaning. You receive monthly reports and transparent payments."
+    },
+  ]);
+  
   const homepageSchemas = [
-    generateLocalBusinessSchema(),
-    generateWebSiteSchema(),
-    // FAQ Schema with actual FAQ items
-    generateFAQSchema([
-      { 
-        question: language === "ro" ? "Ce servicii oferă RealTrust?" : "What services does RealTrust offer?",
-        answer: language === "ro" 
-          ? "Oferim administrare profesională de apartamente în regim hotelier, incluzând marketing, rezervări, curățenie, check-in/out și mentenanță."
-          : "We offer professional apartment management for short-term rentals, including marketing, bookings, cleaning, check-in/out and maintenance."
-      },
-      {
-        question: language === "ro" ? "Care este rata de ocupare medie?" : "What is the average occupancy rate?",
-        answer: language === "ro"
-          ? "Proprietățile noastre din Timișoara au o rată de ocupare medie de 98%, cu venituri semnificativ mai mari decât închirierea tradițională."
-          : "Our properties in Timișoara have an average occupancy rate of 98%, with significantly higher income than traditional rentals."
-      },
-      {
-        question: language === "ro" ? "Cum funcționează colaborarea?" : "How does the partnership work?",
-        answer: language === "ro"
-          ? "Noi ne ocupăm de tot: de la fotografii profesionale și listare pe platforme, până la comunicarea cu oaspeții și curățenie. Tu primești rapoarte lunare și plăți transparente."
-          : "We handle everything: from professional photos and platform listings, to guest communication and cleaning. You receive monthly reports and transparent payments."
-      },
-    ]),
+    ...generateHomepageSchemas(reviews),
+    faqSchema,
   ];
 
   return (
