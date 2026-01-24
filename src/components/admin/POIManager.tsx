@@ -57,6 +57,8 @@ const POIManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingGooglePhoto, setIsFetchingGooglePhoto] = useState(false);
   const [isFetchingPixabayPhoto, setIsFetchingPixabayPhoto] = useState(false);
+  const [isFetchingPexelsPhoto, setIsFetchingPexelsPhoto] = useState(false);
+  const [isFetchingUnsplashPhoto, setIsFetchingUnsplashPhoto] = useState(false);
   const [isBulkFetching, setIsBulkFetching] = useState(false);
   const [isBulkPixabayFetching, setIsBulkPixabayFetching] = useState(false);
   const [isBulkPexelsFetching, setIsBulkPexelsFetching] = useState(false);
@@ -205,6 +207,96 @@ const POIManager = () => {
       toast.error('Nu am putut găsi o imagine pe Pixabay: ' + (error.message || 'Eroare necunoscută'));
     } finally {
       setIsFetchingPixabayPhoto(false);
+    }
+  };
+
+  // Fetch photo directly from Pexels
+  const fetchPexelsPhoto = async () => {
+    if (!formData.name && !formData.address) {
+      toast.error('Te rog completează numele sau adresa POI-ului');
+      return;
+    }
+
+    setIsFetchingPexelsPhoto(true);
+    try {
+      const response = await supabase.functions.invoke('fetch-place-photo', {
+        body: {
+          query: formData.name || formData.address,
+          forcePexels: true,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = response.data;
+      
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data.photo_url) {
+        setFormData(prev => ({ 
+          ...prev, 
+          image_url: data.photo_url,
+          image_source: 'pexels'
+        }));
+        toast.success(`Imagine Pexels găsită pentru "${data.place_name}"!`);
+      } else {
+        toast.error('Nu s-a găsit imagine pe Pexels');
+      }
+    } catch (error: any) {
+      console.error('Error fetching Pexels photo:', error);
+      toast.error('Nu am putut găsi o imagine pe Pexels: ' + (error.message || 'Eroare necunoscută'));
+    } finally {
+      setIsFetchingPexelsPhoto(false);
+    }
+  };
+
+  // Fetch photo directly from Unsplash
+  const fetchUnsplashPhoto = async () => {
+    if (!formData.name && !formData.address) {
+      toast.error('Te rog completează numele sau adresa POI-ului');
+      return;
+    }
+
+    setIsFetchingUnsplashPhoto(true);
+    try {
+      const response = await supabase.functions.invoke('fetch-place-photo', {
+        body: {
+          query: formData.name || formData.address,
+          forceUnsplash: true,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = response.data;
+      
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data.photo_url) {
+        setFormData(prev => ({ 
+          ...prev, 
+          image_url: data.photo_url,
+          image_source: 'unsplash'
+        }));
+        toast.success(`Imagine Unsplash găsită pentru "${data.place_name}"!`);
+      } else {
+        toast.error('Nu s-a găsit imagine pe Unsplash');
+      }
+    } catch (error: any) {
+      console.error('Error fetching Unsplash photo:', error);
+      toast.error('Nu am putut găsi o imagine pe Unsplash: ' + (error.message || 'Eroare necunoscută'));
+    } finally {
+      setIsFetchingUnsplashPhoto(false);
     }
   };
 
@@ -1150,7 +1242,7 @@ const POIManager = () => {
                       type="button"
                       variant="secondary"
                       onClick={fetchPixabayPhoto}
-                      disabled={isFetchingPixabayPhoto || isFetchingGooglePhoto || (!formData.name && !formData.address)}
+                      disabled={isFetchingPixabayPhoto || isFetchingGooglePhoto || isFetchingPexelsPhoto || isFetchingUnsplashPhoto || (!formData.name && !formData.address)}
                       className="w-full h-10"
                     >
                       {isFetchingPixabayPhoto ? (
@@ -1159,6 +1251,38 @@ const POIManager = () => {
                         <ImageIcon className="w-4 h-4 mr-2" />
                       )}
                       {isFetchingPixabayPhoto ? 'Se caută pe Pixabay...' : '🖼️ Caută doar pe Pixabay (gratuit)'}
+                    </Button>
+                    
+                    {/* Pexels Direct Search Button */}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={fetchPexelsPhoto}
+                      disabled={isFetchingPexelsPhoto || isFetchingGooglePhoto || isFetchingPixabayPhoto || isFetchingUnsplashPhoto || (!formData.name && !formData.address)}
+                      className="w-full h-10 border-teal-600/30"
+                    >
+                      {isFetchingPexelsPhoto ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                      )}
+                      {isFetchingPexelsPhoto ? 'Se caută pe Pexels...' : '📷 Caută doar pe Pexels (gratuit)'}
+                    </Button>
+                    
+                    {/* Unsplash Direct Search Button */}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={fetchUnsplashPhoto}
+                      disabled={isFetchingUnsplashPhoto || isFetchingGooglePhoto || isFetchingPixabayPhoto || isFetchingPexelsPhoto || (!formData.name && !formData.address)}
+                      className="w-full h-10 border-purple-600/30"
+                    >
+                      {isFetchingUnsplashPhoto ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                      )}
+                      {isFetchingUnsplashPhoto ? 'Se caută pe Unsplash...' : '🌄 Caută doar pe Unsplash (gratuit)'}
                     </Button>
                     
                     <div className="flex items-center gap-2">
