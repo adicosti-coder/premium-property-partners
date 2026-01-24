@@ -51,6 +51,7 @@ import {
   Lightbulb,
   FlaskConical,
   Shield,
+  ShieldCheck,
   PenLine,
   MousePointerClick,
 } from "lucide-react";
@@ -79,6 +80,7 @@ import ReviewsManager from "@/components/admin/ReviewsManager";
 import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
 import CommunityManager from "@/components/admin/CommunityManager";
 import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
+import SecurityChecklist from "@/components/admin/SecurityChecklist";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -335,6 +337,10 @@ const Admin = () => {
               <MousePointerClick className="w-4 h-4" />
               CTA Analytics
             </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Securitate
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -433,6 +439,11 @@ const Admin = () => {
           {/* CTA Analytics Tab */}
           <TabsContent value="cta-analytics">
             <CtaAnalyticsManager />
+          </TabsContent>
+
+          {/* Security Checklist Tab */}
+          <TabsContent value="security">
+            <SecurityChecklist />
           </TabsContent>
         </Tabs>
       </div>
