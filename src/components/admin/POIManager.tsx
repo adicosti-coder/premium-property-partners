@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter } from "lucide-react";
-import { useRef, useCallback, useMemo } from "react";
+import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter, Sparkles } from "lucide-react";
+import { useRef, useCallback, useMemo, useState as useStateReact } from "react";
 
 interface POI {
   id: string;
@@ -51,6 +51,7 @@ const POIManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFetchingGooglePhoto, setIsFetchingGooglePhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Filter states
@@ -75,6 +76,47 @@ const POIManager = () => {
     display_order: 0,
     image_url: '',
   });
+
+  // Fetch photo from Google Places
+  const fetchGooglePlacePhoto = async () => {
+    if (!formData.name && !formData.address) {
+      toast.error('Te rog completează numele sau adresa POI-ului');
+      return;
+    }
+
+    setIsFetchingGooglePhoto(true);
+    try {
+      const response = await supabase.functions.invoke('fetch-place-photo', {
+        body: {
+          query: formData.name,
+          address: formData.address,
+          latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+          longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = response.data;
+      
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data.photo_url) {
+        setFormData(prev => ({ ...prev, image_url: data.photo_url }));
+        toast.success(`Imagine găsită pentru "${data.place_name}"!`);
+      }
+    } catch (error: any) {
+      console.error('Error fetching Google photo:', error);
+      toast.error('Nu am putut găsi o imagine: ' + (error.message || 'Eroare necunoscută'));
+    } finally {
+      setIsFetchingGooglePhoto(false);
+    }
+  };
 
   const { data: pois, isLoading } = useQuery({
     queryKey: ['admin-pois'],
@@ -338,19 +380,20 @@ const POIManager = () => {
                   </div>
                 ) : (
                   <div className="space-y-2">
+                    {/* Google Places Auto-fetch Button */}
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="w-full h-16 border-dashed"
+                      variant="default"
+                      onClick={fetchGooglePlacePhoto}
+                      disabled={isFetchingGooglePhoto || (!formData.name && !formData.address)}
+                      className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     >
-                      {isUploading ? (
+                      {isFetchingGooglePhoto ? (
                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
                       ) : (
-                        <Upload className="w-5 h-5 mr-2" />
+                        <Sparkles className="w-5 h-5 mr-2" />
                       )}
-                      {isUploading ? 'Se încarcă...' : 'Încarcă imagine'}
+                      {isFetchingGooglePhoto ? 'Se caută...' : '✨ Găsește imagine automată (Google Places)'}
                     </Button>
                     
                     <div className="flex items-center gap-2">
@@ -359,10 +402,31 @@ const POIManager = () => {
                       <div className="flex-1 h-px bg-border" />
                     </div>
                     
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="w-full h-14 border-dashed"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="w-5 h-5 mr-2" />
+                      )}
+                      {isUploading ? 'Se încarcă...' : 'Încarcă imagine manual'}
+                    </Button>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-xs text-muted-foreground">sau URL extern</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    
                     {/* External URL Input */}
                     <div className="flex gap-2">
                       <Input
-                        placeholder="URL imagine extern (ex: Wikimedia Commons)"
+                        placeholder="URL imagine (ex: Wikimedia Commons)"
                         value={formData.image_url}
                         onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
                         className="flex-1 text-xs"
@@ -382,7 +446,7 @@ const POIManager = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      💡 Sfat: Folosește imagini de pe Wikimedia Commons pentru fotografii reale verificate.
+                      💡 Completează numele POI-ului mai sus, apoi apasă butonul pentru găsire automată.
                     </p>
                   </div>
                 )}
