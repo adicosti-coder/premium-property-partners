@@ -24,6 +24,7 @@ import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useImagePreload } from "@/hooks/useImagePreload";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   generatePropertyPageSchemas, 
@@ -169,28 +170,19 @@ const PropertyDetail = () => {
     };
   }, [isAutoplay, lightboxOpen, nextImage, property]);
 
-  // Preload adjacent images in lightbox for faster navigation
+  // Use reusable preload hook for lightbox images
+  const { preloadAround } = useImagePreload(galleryImages, {
+    preloadAhead: 2,
+    preloadBehind: 1,
+    enabled: lightboxOpen,
+  });
+
+  // Preload adjacent images when lightbox index changes
   useEffect(() => {
-    if (!lightboxOpen || galleryImages.length <= 1) return;
-
-    const nextIndex = (currentImageIndex + 1) % galleryImages.length;
-    const prevIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
-
-    // Preload next image
-    const nextImg = new Image();
-    nextImg.src = galleryImages[nextIndex];
-
-    // Preload previous image
-    const prevImg = new Image();
-    prevImg.src = galleryImages[prevIndex];
-
-    // Preload two images ahead for smoother slideshow
-    if (galleryImages.length > 2) {
-      const nextNextIndex = (currentImageIndex + 2) % galleryImages.length;
-      const nextNextImg = new Image();
-      nextNextImg.src = galleryImages[nextNextIndex];
+    if (lightboxOpen) {
+      preloadAround(currentImageIndex);
     }
-  }, [lightboxOpen, currentImageIndex, galleryImages]);
+  }, [lightboxOpen, currentImageIndex, preloadAround]);
 
   // Touch swipe handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
