@@ -45,6 +45,7 @@ import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiI
 import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
+import OptimizedImage from './OptimizedImage';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -914,15 +915,18 @@ const CityGuideSection: React.FC = () => {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     className={`group relative rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
                   >
-                    {/* Image */}
+                    {/* Image with lazy loading and optimization */}
                     {poi.image_url && (
                       <div className="relative h-40 overflow-hidden">
-                        <img 
+                        <OptimizedImage 
                           src={poi.image_url} 
                           alt={language === 'ro' ? poi.name : poi.name_en}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                          aspectRatio="16/10"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          priority={index < 3}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
                         
                         {/* Favorite button on image */}
                         <button
