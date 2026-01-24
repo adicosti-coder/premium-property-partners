@@ -197,7 +197,7 @@ const AccessibilityPanel = () => {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-40 right-4 z-50 w-12 h-12 rounded-full shadow-lg",
+          "fixed bottom-[200px] right-4 z-50 w-12 h-12 rounded-full shadow-lg",
           "bg-primary hover:bg-primary/90 text-primary-foreground",
           "transition-all duration-500 ease-out",
           isOpen && "rotate-180 bg-accent text-accent-foreground hover:bg-accent/90",
@@ -218,7 +218,7 @@ const AccessibilityPanel = () => {
       {/* Panel */}
       <div
         className={cn(
-          "fixed bottom-56 right-4 z-50 w-72 bg-card border border-border rounded-xl shadow-2xl",
+          "fixed bottom-[264px] right-4 z-50 w-72 bg-card border border-border rounded-xl shadow-2xl",
           "transition-all duration-300 ease-out origin-bottom-right",
           isOpen
             ? "opacity-100 scale-100 translate-y-0"
