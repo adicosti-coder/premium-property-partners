@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter, Sparkles, RotateCcw, AlertCircle, Download } from "lucide-react";
-import { useRef, useCallback, useMemo, useState as useStateReact } from "react";
+import { useRef, useMemo } from "react";
+import BulkProgressIndicator from "./BulkProgressIndicator";
 
 interface POI {
   id: string;
@@ -739,7 +740,26 @@ const POIManager = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating bulk progress indicators */}
+      <BulkProgressIndicator
+        isActive={isBulkFetching}
+        current={bulkProgress.current}
+        total={bulkProgress.total}
+        success={bulkProgress.success}
+        failed={bulkProgress.failed}
+        type="google"
+      />
+      
+      <BulkProgressIndicator
+        isActive={isBulkPixabayFetching}
+        current={bulkPixabayProgress.current}
+        total={bulkPixabayProgress.total}
+        success={bulkPixabayProgress.success}
+        failed={bulkPixabayProgress.failed}
+        type="pixabay"
+      />
+
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-serif font-bold text-foreground">Puncte de Interes</h2>
@@ -752,13 +772,13 @@ const POIManager = () => {
             <Button
               variant="outline"
               onClick={bulkFetchMissingPhotos}
-              disabled={isBulkFetching}
+              disabled={isBulkFetching || isBulkPixabayFetching}
               className="border-primary/30 hover:bg-primary/10"
             >
               {isBulkFetching ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {bulkProgress.current}/{bulkProgress.total} ({bulkProgress.success} ✓)
+                  {bulkProgress.current}/{bulkProgress.total}
                 </>
               ) : (
                 <>
@@ -780,7 +800,7 @@ const POIManager = () => {
               {isBulkPixabayFetching ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Pixabay {bulkPixabayProgress.current}/{bulkPixabayProgress.total} ({bulkPixabayProgress.success} ✓)
+                  Pixabay {bulkPixabayProgress.current}/{bulkPixabayProgress.total}
                 </>
               ) : (
                 <>
@@ -806,7 +826,7 @@ const POIManager = () => {
           )}
 
           {/* Export POIs without images */}
-          {poisWithoutImagesCount > 0 || poisWithFailedFetchCount > 0 ? (
+          {(poisWithoutImagesCount > 0 || poisWithFailedFetchCount > 0) && (
             <Button
               variant="ghost"
               size="sm"
@@ -817,39 +837,26 @@ const POIManager = () => {
               <Download className="w-4 h-4 mr-1" />
               Export CSV
             </Button>
-          ) : null}
-          
-          {/* Progress indicator when bulk fetching */}
-          {isBulkFetching && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
-                />
-              </div>
-              <span className="text-xs">
-                {bulkProgress.success} ✓ {bulkProgress.failed > 0 && `${bulkProgress.failed} ✗`}
-              </span>
-            </div>
           )}
+        </div>
+      </div>
         
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Adaugă POI
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingPOI ? 'Editează Punct de Interes' : 'Adaugă Punct de Interes'}
-                </DialogTitle>
-              </DialogHeader>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) resetForm();
+      }}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Adaugă POI
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPOI ? 'Editează Punct de Interes' : 'Adaugă Punct de Interes'}
+            </DialogTitle>
+          </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Image Upload */}
@@ -1143,8 +1150,6 @@ const POIManager = () => {
             </form>
           </DialogContent>
         </Dialog>
-        </div>
-      </div>
 
       <Card>
         <CardHeader>
