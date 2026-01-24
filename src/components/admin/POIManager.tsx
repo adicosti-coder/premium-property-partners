@@ -59,10 +59,14 @@ const POIManager = () => {
   const [isFetchingPixabayPhoto, setIsFetchingPixabayPhoto] = useState(false);
   const [isBulkFetching, setIsBulkFetching] = useState(false);
   const [isBulkPixabayFetching, setIsBulkPixabayFetching] = useState(false);
+  const [isBulkPexelsFetching, setIsBulkPexelsFetching] = useState(false);
+  const [isBulkUnsplashFetching, setIsBulkUnsplashFetching] = useState(false);
   const [retryingPoiId, setRetryingPoiId] = useState<string | null>(null);
   const [pixabayRetryingPoiId, setPixabayRetryingPoiId] = useState<string | null>(null);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
   const [bulkPixabayProgress, setBulkPixabayProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
+  const [bulkPexelsProgress, setBulkPexelsProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
+  const [bulkUnsplashProgress, setBulkUnsplashProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Filter states
@@ -430,6 +434,158 @@ const POIManager = () => {
     }
   };
 
+  // Bulk fetch photos from Pexels only for all POIs without images
+  const bulkFetchPexelsPhotos = async () => {
+    if (!pois) return;
+    
+    const poisWithoutImages = pois.filter(poi => !poi.image_url);
+    
+    if (poisWithoutImages.length === 0) {
+      toast.info('Toate POI-urile au deja imagini!');
+      return;
+    }
+
+    setIsBulkPexelsFetching(true);
+    setBulkPexelsProgress({ current: 0, total: poisWithoutImages.length, success: 0, failed: 0 });
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < poisWithoutImages.length; i++) {
+      const poi = poisWithoutImages[i];
+      setBulkPexelsProgress(prev => ({ ...prev, current: i + 1 }));
+
+      try {
+        const response = await supabase.functions.invoke('fetch-place-photo', {
+          body: {
+            query: poi.name,
+            forcePexels: true,
+          },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        const data = response.data;
+        
+        if (data.photo_url) {
+          const { error: updateError } = await supabase
+            .from('points_of_interest')
+            .update({ 
+              image_url: data.photo_url,
+              image_source: data.source || 'pexels',
+              image_fetch_failed: false,
+              image_fetch_attempted_at: new Date().toISOString()
+            })
+            .eq('id', poi.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          successCount++;
+          setBulkPexelsProgress(prev => ({ ...prev, success: successCount }));
+        } else {
+          failedCount++;
+          setBulkPexelsProgress(prev => ({ ...prev, failed: failedCount }));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch Pexels photo for ${poi.name}:`, error);
+        failedCount++;
+        setBulkPexelsProgress(prev => ({ ...prev, failed: failedCount }));
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    setIsBulkPexelsFetching(false);
+    queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+    queryClient.invalidateQueries({ queryKey: ['pois'] });
+
+    if (successCount > 0) {
+      toast.success(`${successCount} imagini Pexels adăugate cu succes!${failedCount > 0 ? ` (${failedCount} negăsite)` : ''}`);
+    } else {
+      toast.error('Nu am putut găsi imagini Pexels pentru niciun POI.');
+    }
+  };
+
+  // Bulk fetch photos from Unsplash only for all POIs without images
+  const bulkFetchUnsplashPhotos = async () => {
+    if (!pois) return;
+    
+    const poisWithoutImages = pois.filter(poi => !poi.image_url);
+    
+    if (poisWithoutImages.length === 0) {
+      toast.info('Toate POI-urile au deja imagini!');
+      return;
+    }
+
+    setIsBulkUnsplashFetching(true);
+    setBulkUnsplashProgress({ current: 0, total: poisWithoutImages.length, success: 0, failed: 0 });
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < poisWithoutImages.length; i++) {
+      const poi = poisWithoutImages[i];
+      setBulkUnsplashProgress(prev => ({ ...prev, current: i + 1 }));
+
+      try {
+        const response = await supabase.functions.invoke('fetch-place-photo', {
+          body: {
+            query: poi.name,
+            forceUnsplash: true,
+          },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        const data = response.data;
+        
+        if (data.photo_url) {
+          const { error: updateError } = await supabase
+            .from('points_of_interest')
+            .update({ 
+              image_url: data.photo_url,
+              image_source: data.source || 'unsplash',
+              image_fetch_failed: false,
+              image_fetch_attempted_at: new Date().toISOString()
+            })
+            .eq('id', poi.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          successCount++;
+          setBulkUnsplashProgress(prev => ({ ...prev, success: successCount }));
+        } else {
+          failedCount++;
+          setBulkUnsplashProgress(prev => ({ ...prev, failed: failedCount }));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch Unsplash photo for ${poi.name}:`, error);
+        failedCount++;
+        setBulkUnsplashProgress(prev => ({ ...prev, failed: failedCount }));
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    setIsBulkUnsplashFetching(false);
+    queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+    queryClient.invalidateQueries({ queryKey: ['pois'] });
+
+    if (successCount > 0) {
+      toast.success(`${successCount} imagini Unsplash adăugate cu succes!${failedCount > 0 ? ` (${failedCount} negăsite)` : ''}`);
+    } else {
+      toast.error('Nu am putut găsi imagini Unsplash pentru niciun POI.');
+    }
+  };
+
   // Reset failed status for all POIs
   const resetFailedPois = async () => {
     const { error } = await supabase
@@ -776,6 +932,24 @@ const POIManager = () => {
         failed={bulkPixabayProgress.failed}
         type="pixabay"
       />
+      
+      <BulkProgressIndicator
+        isActive={isBulkPexelsFetching}
+        current={bulkPexelsProgress.current}
+        total={bulkPexelsProgress.total}
+        success={bulkPexelsProgress.success}
+        failed={bulkPexelsProgress.failed}
+        type="pexels"
+      />
+      
+      <BulkProgressIndicator
+        isActive={isBulkUnsplashFetching}
+        current={bulkUnsplashProgress.current}
+        total={bulkUnsplashProgress.total}
+        success={bulkUnsplashProgress.success}
+        failed={bulkUnsplashProgress.failed}
+        type="unsplash"
+      />
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -811,8 +985,9 @@ const POIManager = () => {
             <Button
               variant="outline"
               onClick={bulkFetchPixabayPhotos}
-              disabled={isBulkFetching || isBulkPixabayFetching}
-              className="border-green-500/30 hover:bg-green-500/10 text-green-700 dark:text-green-400"
+              disabled={isBulkFetching || isBulkPixabayFetching || isBulkPexelsFetching || isBulkUnsplashFetching}
+              className="border-green-600/30 hover:bg-green-600/10 text-green-700 dark:text-green-400"
+              title="Bulk fetch imagini de pe Pixabay"
             >
               {isBulkPixabayFetching ? (
                 <>
@@ -822,14 +997,60 @@ const POIManager = () => {
               ) : (
                 <>
                   <ImageIcon className="w-4 h-4 mr-2" />
-                  Bulk Pixabay ({(poisWithoutImagesCount + poisWithFailedFetchCount)} fără img)
+                  Pixabay
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Bulk Pexels fetch button */}
+          {(poisWithoutImagesCount > 0 || poisWithFailedFetchCount > 0) && (
+            <Button
+              variant="outline"
+              onClick={bulkFetchPexelsPhotos}
+              disabled={isBulkFetching || isBulkPixabayFetching || isBulkPexelsFetching || isBulkUnsplashFetching}
+              className="border-teal-600/30 hover:bg-teal-600/10 text-teal-700 dark:text-teal-400"
+              title="Bulk fetch imagini de pe Pexels"
+            >
+              {isBulkPexelsFetching ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Pexels {bulkPexelsProgress.current}/{bulkPexelsProgress.total}
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Pexels
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Bulk Unsplash fetch button */}
+          {(poisWithoutImagesCount > 0 || poisWithFailedFetchCount > 0) && (
+            <Button
+              variant="outline"
+              onClick={bulkFetchUnsplashPhotos}
+              disabled={isBulkFetching || isBulkPixabayFetching || isBulkPexelsFetching || isBulkUnsplashFetching}
+              className="border-purple-600/30 hover:bg-purple-600/10 text-purple-700 dark:text-purple-400"
+              title="Bulk fetch imagini de pe Unsplash"
+            >
+              {isBulkUnsplashFetching ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Unsplash {bulkUnsplashProgress.current}/{bulkUnsplashProgress.total}
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Unsplash
                 </>
               )}
             </Button>
           )}
 
           {/* Reset failed POIs button */}
-          {poisWithFailedFetchCount > 0 && !isBulkFetching && !isBulkPixabayFetching && (
+          {poisWithFailedFetchCount > 0 && !isBulkFetching && !isBulkPixabayFetching && !isBulkPexelsFetching && !isBulkUnsplashFetching && (
             <Button
               variant="ghost"
               size="sm"
