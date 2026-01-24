@@ -51,9 +51,31 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
+  // Check WebGL support
+  const isWebGLSupported = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      return !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Fetch Mapbox token
   useEffect(() => {
     const fetchToken = async () => {
+      // Check WebGL support first
+      if (!isWebGLSupported()) {
+        setError(language === 'ro' 
+          ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
+          : 'Browser does not support WebGL for map display');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         if (error) throw error;
@@ -70,7 +92,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       }
     };
     fetchToken();
-  }, []);
+  }, [language]);
 
   // Initialize map when token is available
   useEffect(() => {
@@ -78,18 +100,36 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
     mapboxgl.accessToken = mapboxToken;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [21.2270, 45.7540],
-      zoom: 12,
-      pitch: 0,
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [21.2270, 45.7540],
+        zoom: 12,
+        pitch: 0,
+      });
 
-    map.current.addControl(
-      new mapboxgl.NavigationControl({ visualizePitch: true }),
-      'top-right'
-    );
+      // Handle map errors (including WebGL failures)
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e);
+        if (e.error?.message?.includes('WebGL')) {
+          setError(language === 'ro' 
+            ? 'Eroare WebGL - harta nu poate fi afișată' 
+            : 'WebGL error - map cannot be displayed');
+        }
+      });
+
+      map.current.addControl(
+        new mapboxgl.NavigationControl({ visualizePitch: true }),
+        'top-right'
+      );
+    } catch (err: any) {
+      console.error('Failed to initialize map:', err);
+      setError(language === 'ro' 
+        ? 'Nu s-a putut inițializa harta' 
+        : 'Could not initialize map');
+      return;
+    }
 
     // Add markers
     properties.forEach((property) => {

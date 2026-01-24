@@ -102,8 +102,22 @@ const InteractiveMapWithPOI = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
+  const [webglSupported, setWebglSupported] = useState(true);
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
+
+  // Check WebGL support
+  const isWebGLSupported = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      return !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+      );
+    } catch (e) {
+      return false;
+    }
+  };
 
   // Fetch POIs from Supabase
   const { data: pois = [], isLoading: poisLoading } = useQuery({
@@ -183,6 +197,16 @@ const InteractiveMapWithPOI = () => {
   // Fetch Mapbox token
   useEffect(() => {
     const fetchToken = async () => {
+      // Check WebGL support first
+      if (!isWebGLSupported()) {
+        setWebglSupported(false);
+        setTokenError(language === 'ro' 
+          ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
+          : 'Browser does not support WebGL for map display');
+        setTokenLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         if (error) throw error;
@@ -199,21 +223,39 @@ const InteractiveMapWithPOI = () => {
       }
     };
     fetchToken();
-  }, [t.error]);
+  }, [t.error, language]);
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapboxToken || !webglSupported) return;
 
     mapboxgl.accessToken = mapboxToken;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: APARTMENT_LOCATION,
-      zoom: 13,
-      pitch: 0,
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: APARTMENT_LOCATION,
+        zoom: 13,
+        pitch: 0,
+      });
+
+      // Handle map errors (including WebGL failures)
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e);
+        if (e.error?.message?.includes('WebGL')) {
+          setTokenError(language === 'ro' 
+            ? 'Eroare WebGL - harta nu poate fi afișată' 
+            : 'WebGL error - map cannot be displayed');
+        }
+      });
+    } catch (err: any) {
+      console.error('Failed to initialize map:', err);
+      setTokenError(language === 'ro' 
+        ? 'Nu s-a putut inițializa harta' 
+        : 'Could not initialize map');
+      return;
+    }
 
     map.current.addControl(
       new mapboxgl.NavigationControl({ visualizePitch: true }),
