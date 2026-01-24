@@ -5,8 +5,144 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Pexels API search
+async function searchPexels(query: string): Promise<{ url: string; source: string } | null> {
+  const PEXELS_API_KEY = Deno.env.get('PEXELS_API_KEY');
+  
+  if (!PEXELS_API_KEY) {
+    console.log('Pexels API key not configured, skipping');
+    return null;
+  }
+
+  try {
+    const searchTerms = `${query} Romania`;
+    console.log(`Searching Pexels for: ${searchTerms}`);
+    
+    const response = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchTerms)}&per_page=5&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': PEXELS_API_KEY,
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      console.log(`Pexels API error: ${response.status}`);
+      await response.text();
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data.photos && data.photos.length > 0) {
+      const imageUrl = data.photos[0].src.large || data.photos[0].src.medium;
+      console.log(`Pexels found image: ${imageUrl}`);
+      return { url: imageUrl, source: 'pexels' };
+    }
+    
+    // Try broader search without location
+    console.log('No Pexels results with location, trying broader search...');
+    const broaderResponse = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': PEXELS_API_KEY,
+        },
+      }
+    );
+    
+    if (!broaderResponse.ok) {
+      await broaderResponse.text();
+      return null;
+    }
+    
+    const broaderData = await broaderResponse.json();
+    
+    if (broaderData.photos && broaderData.photos.length > 0) {
+      const imageUrl = broaderData.photos[0].src.large || broaderData.photos[0].src.medium;
+      console.log(`Pexels broader search found image: ${imageUrl}`);
+      return { url: imageUrl, source: 'pexels' };
+    }
+    
+    console.log('No Pexels images found');
+    return null;
+  } catch (error) {
+    console.error('Pexels search error:', error);
+    return null;
+  }
+}
+
+// Unsplash API search
+async function searchUnsplash(query: string): Promise<{ url: string; source: string } | null> {
+  const UNSPLASH_ACCESS_KEY = Deno.env.get('UNSPLASH_ACCESS_KEY');
+  
+  if (!UNSPLASH_ACCESS_KEY) {
+    console.log('Unsplash API key not configured, skipping');
+    return null;
+  }
+
+  try {
+    const searchTerms = `${query} Romania`;
+    console.log(`Searching Unsplash for: ${searchTerms}`);
+    
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchTerms)}&per_page=5&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      console.log(`Unsplash API error: ${response.status}`);
+      await response.text();
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      const imageUrl = data.results[0].urls.regular || data.results[0].urls.small;
+      console.log(`Unsplash found image: ${imageUrl}`);
+      return { url: imageUrl, source: 'unsplash' };
+    }
+    
+    // Try broader search without location
+    console.log('No Unsplash results with location, trying broader search...');
+    const broaderResponse = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+        },
+      }
+    );
+    
+    if (!broaderResponse.ok) {
+      await broaderResponse.text();
+      return null;
+    }
+    
+    const broaderData = await broaderResponse.json();
+    
+    if (broaderData.results && broaderData.results.length > 0) {
+      const imageUrl = broaderData.results[0].urls.regular || broaderData.results[0].urls.small;
+      console.log(`Unsplash broader search found image: ${imageUrl}`);
+      return { url: imageUrl, source: 'unsplash' };
+    }
+    
+    console.log('No Unsplash images found');
+    return null;
+  } catch (error) {
+    console.error('Unsplash search error:', error);
+    return null;
+  }
+}
+
 // Pixabay fallback search
-async function searchPixabay(query: string): Promise<string | null> {
+async function searchPixabay(query: string): Promise<{ url: string; source: string } | null> {
   const PIXABAY_API_KEY = Deno.env.get('PIXABAY_API_KEY');
   
   if (!PIXABAY_API_KEY) {
@@ -15,7 +151,6 @@ async function searchPixabay(query: string): Promise<string | null> {
   }
 
   try {
-    // Search for images related to the query + Timisoara for local relevance
     const searchTerms = `${query} Timisoara Romania`;
     const pixabayUrl = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${encodeURIComponent(searchTerms)}&image_type=photo&orientation=horizontal&min_width=640&per_page=5&lang=ro`;
     
@@ -25,10 +160,9 @@ async function searchPixabay(query: string): Promise<string | null> {
     const data = await response.json();
     
     if (data.hits && data.hits.length > 0) {
-      // Return the large image URL of the first result
       const imageUrl = data.hits[0].webformatURL || data.hits[0].largeImageURL;
       console.log(`Pixabay found image: ${imageUrl}`);
-      return imageUrl;
+      return { url: imageUrl, source: 'pixabay' };
     }
     
     // Try a broader search without location if no results
@@ -41,7 +175,7 @@ async function searchPixabay(query: string): Promise<string | null> {
     if (broaderData.hits && broaderData.hits.length > 0) {
       const imageUrl = broaderData.hits[0].webformatURL || broaderData.hits[0].largeImageURL;
       console.log(`Pixabay broader search found image: ${imageUrl}`);
-      return imageUrl;
+      return { url: imageUrl, source: 'pixabay' };
     }
     
     console.log('No Pixabay images found');
@@ -52,6 +186,26 @@ async function searchPixabay(query: string): Promise<string | null> {
   }
 }
 
+// Cascade fallback through all free image sources
+async function searchFreeImageSources(query: string): Promise<{ url: string; source: string } | null> {
+  console.log('Starting cascade fallback through free image sources...');
+  
+  // Try Pixabay first (usually best results for specific locations)
+  const pixabayResult = await searchPixabay(query);
+  if (pixabayResult) return pixabayResult;
+  
+  // Try Pexels second
+  const pexelsResult = await searchPexels(query);
+  if (pexelsResult) return pexelsResult;
+  
+  // Try Unsplash last
+  const unsplashResult = await searchUnsplash(query);
+  if (unsplashResult) return unsplashResult;
+  
+  console.log('No images found in any free source');
+  return null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -59,7 +213,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, address, latitude, longitude, forcePixabay } = await req.json();
+    const { query, address, latitude, longitude, forcePixabay, forcePexels, forceUnsplash, forceFreeOnly } = await req.json();
     
     if (!query && !address) {
       return new Response(
@@ -69,21 +223,73 @@ serve(async (req) => {
     }
 
     const searchQuery = query || address;
-    console.log(`Searching for place: ${searchQuery}${forcePixabay ? ' (Pixabay only mode)' : ''}`);
+    console.log(`Searching for place: ${searchQuery}`);
 
-    // If forcePixabay is true, skip Google Places entirely
+    // Force specific free source modes
     if (forcePixabay) {
-      console.log('Force Pixabay mode - skipping Google Places');
-      const pixabayUrl = await searchPixabay(searchQuery);
-      
-      if (pixabayUrl) {
+      console.log('Force Pixabay mode');
+      const result = await searchPixabay(searchQuery);
+      if (result) {
         return new Response(
           JSON.stringify({
             success: true,
-            photo_url: pixabayUrl,
+            photo_url: result.url,
             place_name: searchQuery,
-            source: 'pixabay',
+            source: result.source,
             message: 'Image from Pixabay (forced mode)'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (forcePexels) {
+      console.log('Force Pexels mode');
+      const result = await searchPexels(searchQuery);
+      if (result) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            photo_url: result.url,
+            place_name: searchQuery,
+            source: result.source,
+            message: 'Image from Pexels (forced mode)'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (forceUnsplash) {
+      console.log('Force Unsplash mode');
+      const result = await searchUnsplash(searchQuery);
+      if (result) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            photo_url: result.url,
+            place_name: searchQuery,
+            source: result.source,
+            message: 'Image from Unsplash (forced mode)'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Force free sources only (cascade through Pixabay → Pexels → Unsplash)
+    if (forceFreeOnly || forcePixabay || forcePexels || forceUnsplash) {
+      console.log('Free sources only mode - cascade fallback');
+      const freeResult = await searchFreeImageSources(searchQuery);
+      
+      if (freeResult) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            photo_url: freeResult.url,
+            place_name: searchQuery,
+            source: freeResult.source,
+            message: `Image from ${freeResult.source} (free sources cascade)`
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -91,20 +297,35 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
-          error: 'No images found on Pixabay', 
+          error: 'No images found in any free source', 
           query: searchQuery 
         }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Normal flow: Try Google Places first
+    // Normal flow: Try Google Places first, then cascade through free sources
     const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY');
     
     if (!GOOGLE_PLACES_API_KEY) {
-      console.error('Missing GOOGLE_PLACES_API_KEY');
+      console.log('Google Places API key not configured, using free sources');
+      const freeResult = await searchFreeImageSources(searchQuery);
+      
+      if (freeResult) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            photo_url: freeResult.url,
+            place_name: searchQuery,
+            source: freeResult.source,
+            message: `Image from ${freeResult.source} (Google API unavailable)`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Google Places API key not configured' }),
+        JSON.stringify({ error: 'No API keys configured and no free images found' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -137,18 +358,18 @@ serve(async (req) => {
       console.log('Text Search Response status:', textSearchData.status);
       
       if (textSearchData.status !== 'OK' || !textSearchData.results || textSearchData.results.length === 0) {
-        // Try Pixabay as last resort
-        console.log('Google Places found nothing, trying Pixabay fallback...');
-        const pixabayUrl = await searchPixabay(searchQuery);
+        // Try free sources cascade as last resort
+        console.log('Google Places found nothing, trying free sources cascade...');
+        const freeResult = await searchFreeImageSources(searchQuery);
         
-        if (pixabayUrl) {
+        if (freeResult) {
           return new Response(
             JSON.stringify({
               success: true,
-              photo_url: pixabayUrl,
+              photo_url: freeResult.url,
               place_name: searchQuery,
-              source: 'pixabay',
-              message: 'Image from Pixabay (Google Places found no results)'
+              source: freeResult.source,
+              message: `Image from ${freeResult.source} (Google Places found no results)`
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -168,20 +389,20 @@ serve(async (req) => {
       const place = textSearchData.results[0];
       
       if (!place.photos || place.photos.length === 0) {
-        // Try Pixabay as fallback for places without photos
-        console.log('Place found but no photos, trying Pixabay fallback...');
-        const pixabayUrl = await searchPixabay(place.name || searchQuery);
+        // Try free sources cascade for places without photos
+        console.log('Place found but no photos, trying free sources cascade...');
+        const freeResult = await searchFreeImageSources(place.name || searchQuery);
         
-        if (pixabayUrl) {
+        if (freeResult) {
           return new Response(
             JSON.stringify({
               success: true,
-              photo_url: pixabayUrl,
+              photo_url: freeResult.url,
               place_name: place.name,
               place_id: place.place_id,
               address: place.formatted_address,
-              source: 'pixabay',
-              message: 'Image from Pixabay (Google Places had no photos)'
+              source: freeResult.source,
+              message: `Image from ${freeResult.source} (Google Places had no photos)`
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -197,17 +418,14 @@ serve(async (req) => {
         );
       }
       
-      // Get photo URL
+      // Get photo URL from Google Places
       const photoReference = place.photos[0].photo_reference;
       const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`;
       
       console.log('Fetching photo from Text Search result...');
       
-      // Fetch the actual photo to get the final URL (Google redirects)
       const photoResponse = await fetch(photoUrl, { redirect: 'follow' });
       const finalPhotoUrl = photoResponse.url;
-      
-      // Consume the response body to prevent resource leaks
       await photoResponse.arrayBuffer();
       
       console.log('Photo URL obtained successfully');
@@ -229,20 +447,20 @@ serve(async (req) => {
     const place = findPlaceData.candidates[0];
     
     if (!place.photos || place.photos.length === 0) {
-      // Try Pixabay as fallback for places without photos
-      console.log('Place found but no photos, trying Pixabay fallback...');
-      const pixabayUrl = await searchPixabay(place.name || searchQuery);
+      // Try free sources cascade for places without photos
+      console.log('Place found but no photos, trying free sources cascade...');
+      const freeResult = await searchFreeImageSources(place.name || searchQuery);
       
-      if (pixabayUrl) {
+      if (freeResult) {
         return new Response(
           JSON.stringify({
             success: true,
-            photo_url: pixabayUrl,
+            photo_url: freeResult.url,
             place_name: place.name,
             place_id: place.place_id,
             address: place.formatted_address,
-            source: 'pixabay',
-            message: 'Image from Pixabay (Google Places had no photos)'
+            source: freeResult.source,
+            message: `Image from ${freeResult.source} (Google Places had no photos)`
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -258,17 +476,14 @@ serve(async (req) => {
       );
     }
 
-    // Step 2: Get Photo URL
+    // Step 2: Get Photo URL from Google Places
     const photoReference = place.photos[0].photo_reference;
     const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`;
     
     console.log('Fetching photo...');
     
-    // Fetch the actual photo to get the final URL (Google redirects)
     const photoResponse = await fetch(photoUrl, { redirect: 'follow' });
     const finalPhotoUrl = photoResponse.url;
-    
-    // Consume the response body to prevent resource leaks
     await photoResponse.arrayBuffer();
     
     console.log('Photo URL obtained successfully');
