@@ -20,6 +20,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface BlogArticle {
   id: string;
@@ -393,12 +394,11 @@ const Blog = () => {
                   <Card className={`overflow-hidden h-full hover:shadow-lg transition-shadow group ${isPremiumLocked ? 'opacity-90' : ''}`}>
                     {coverImage && (
                       <div className="relative h-48 overflow-hidden">
-                        <img
+                        <OptimizedImage
                           src={coverImage}
                           alt={displayTitle}
-                          loading="lazy"
-                          decoding="async"
-                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
+                          className={`w-full h-full group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
+                          aspectRatio="16/9"
                         />
                         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                           <Badge>
