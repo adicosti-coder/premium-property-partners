@@ -20,6 +20,9 @@ import ReferralBanner from "@/components/ReferralBanner";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import SocialProofNotifications from "@/components/SocialProofNotifications";
 import AIChatbot from "@/components/AIChatbot";
+import SEOHead from "@/components/SEOHead";
+import { generateLocalBusinessSchema, generateWebSiteSchema, generateFAQSchema } from "@/utils/schemaGenerators";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // Hub Teaser Components
 import ServicesOverview from "@/components/hub/ServicesOverview";
@@ -28,8 +31,38 @@ import GuestsTeaser from "@/components/hub/GuestsTeaser";
 import AboutTeaser from "@/components/hub/AboutTeaser";
 
 const Index = () => {
+  const { t, language } = useLanguage();
+  
+  // Generate combined JSON-LD for homepage
+  const homepageSchemas = [
+    generateLocalBusinessSchema(),
+    generateWebSiteSchema(),
+    // FAQ Schema with actual FAQ items
+    generateFAQSchema([
+      { 
+        question: language === "ro" ? "Ce servicii oferă RealTrust?" : "What services does RealTrust offer?",
+        answer: language === "ro" 
+          ? "Oferim administrare profesională de apartamente în regim hotelier, incluzând marketing, rezervări, curățenie, check-in/out și mentenanță."
+          : "We offer professional apartment management for short-term rentals, including marketing, bookings, cleaning, check-in/out and maintenance."
+      },
+      {
+        question: language === "ro" ? "Care este rata de ocupare medie?" : "What is the average occupancy rate?",
+        answer: language === "ro"
+          ? "Proprietățile noastre din Timișoara au o rată de ocupare medie de 98%, cu venituri semnificativ mai mari decât închirierea tradițională."
+          : "Our properties in Timișoara have an average occupancy rate of 98%, with significantly higher income than traditional rentals."
+      },
+      {
+        question: language === "ro" ? "Cum funcționează colaborarea?" : "How does the partnership work?",
+        answer: language === "ro"
+          ? "Noi ne ocupăm de tot: de la fotografii profesionale și listare pe platforme, până la comunicarea cu oaspeții și curățenie. Tu primești rapoarte lunare și plăți transparente."
+          : "We handle everything: from professional photos and platform listings, to guest communication and cleaning. You receive monthly reports and transparent payments."
+      },
+    ]),
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead jsonLd={homepageSchemas} />
       <PromoBanner />
       <Header />
       <QuickStatsBar />

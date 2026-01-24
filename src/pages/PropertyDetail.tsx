@@ -24,6 +24,11 @@ import SEOHead from "@/components/SEOHead";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  generatePropertyPageSchemas, 
+  generateBreadcrumbSchema,
+  type PropertySchemaData 
+} from "@/utils/schemaGenerators";
 
 interface PropertyImage {
   id: string;
@@ -233,6 +238,33 @@ const PropertyDetail = () => {
     ? `${property.name} - Premium apartment in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct for best price!`
     : `${property.name} - Apartament premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct pentru cel mai bun preț!`;
 
+  // Generate enhanced Schema.org structured data
+  const propertySchemaData: PropertySchemaData = {
+    name: property.name,
+    slug: property.slug,
+    description: seoDescription,
+    image: galleryImages[0] || "https://realtrustaparthotel.lovable.app/og-image.jpg",
+    images: galleryImages,
+    location: property.location,
+    pricePerNight: property.pricePerNight,
+    capacity: property.capacity,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    size: property.size,
+    rating: property.rating,
+    reviewCount: property.reviews,
+    amenities: amenities,
+  };
+
+  const propertySchemas = generatePropertyPageSchemas(propertySchemaData);
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrustaparthotel.lovable.app" },
+    { name: language === "ro" ? "Proprietăți" : "Properties", url: "https://realtrustaparthotel.lovable.app/oaspeti" },
+    { name: property.name, url: `https://realtrustaparthotel.lovable.app/proprietate/${slug}` },
+  ]);
+
+  const combinedJsonLd = [...propertySchemas, breadcrumbSchema];
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
@@ -244,11 +276,7 @@ const PropertyDetail = () => {
         productPrice={property.pricePerNight}
         productCurrency="EUR"
         productAvailability="InStock"
-        breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrustaparthotel.lovable.app" },
-          { name: language === "ro" ? "Proprietăți" : "Properties", url: "https://realtrustaparthotel.lovable.app/oaspeti" },
-          { name: property.name, url: `https://realtrustaparthotel.lovable.app/proprietate/${slug}` },
-        ]}
+        jsonLd={combinedJsonLd}
       />
       <Header />
       

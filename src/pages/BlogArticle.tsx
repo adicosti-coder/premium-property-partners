@@ -15,6 +15,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import { generateArticleSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -241,31 +242,28 @@ const BlogArticlePage = () => {
     </div>
   );
   }
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": displayTitle,
-    "description": displayExcerpt,
-    "image": coverImage || undefined,
-    "datePublished": article.published_at || article.created_at,
-    "dateModified": article.published_at || article.created_at,
-    "author": {
-      "@type": "Person",
-      "name": article.author_name
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "RealTrust",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://realtrustaparthotel.lovable.app/favicon.ico"
-      }
-    },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": articleUrl
-    }
-  };
+  
+  // Generate enhanced Schema.org structured data
+  const articleSchemaData = generateArticleSchema({
+    headline: displayTitle,
+    description: displayExcerpt,
+    image: coverImage || undefined,
+    datePublished: article.published_at || article.created_at,
+    dateModified: article.published_at || article.created_at,
+    author: article.author_name,
+    url: articleUrl,
+    category: article.category,
+    tags: article.tags,
+    wordCount: displayContent.length,
+  });
+
+  const breadcrumbSchemaData = generateBreadcrumbSchema([
+    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrustaparthotel.lovable.app" },
+    { name: "Blog", url: "https://realtrustaparthotel.lovable.app/blog" },
+    { name: displayTitle, url: articleUrl },
+  ]);
+
+  const combinedJsonLd = [articleSchemaData, breadcrumbSchemaData];
 
   const breadcrumbItems = [
     { label: "Blog", href: "/blog" },
@@ -279,7 +277,11 @@ const BlogArticlePage = () => {
         description={displayExcerpt}
         type="article"
         image={coverImage || undefined}
-        jsonLd={articleJsonLd}
+        jsonLd={combinedJsonLd}
+        publishedTime={article.published_at || article.created_at}
+        author={article.author_name}
+        articleTags={article.tags}
+        articleCategory={article.category}
       />
       <Header />
 

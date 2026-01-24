@@ -10,7 +10,7 @@ interface SEOHeadProps {
   publishedTime?: string;
   author?: string;
   noIndex?: boolean;
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   // Article specific
   articleTags?: string[];
   articleCategory?: string;
@@ -183,7 +183,6 @@ const SEOHead = ({
   
   // Determine which JSON-LD to use based on type
   let finalJsonLd: Record<string, unknown> | Record<string, unknown>[] = jsonLd || defaultJsonLd;
-  
   if (!jsonLd) {
     const schemas: Record<string, unknown>[] = [defaultJsonLd];
     
