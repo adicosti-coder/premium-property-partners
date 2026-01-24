@@ -21,6 +21,7 @@ import Footer from "@/components/Footer";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -305,10 +306,13 @@ const PropertyDetail = () => {
                 className="relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group"
                 onClick={() => setLightboxOpen(true)}
               >
-                <img 
+                <OptimizedImage
                   src={galleryImages[0]} 
                   alt={property.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  aspectRatio="4/3"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority={true}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -342,10 +346,12 @@ const PropertyDetail = () => {
                       setLightboxOpen(true);
                     }}
                   >
-                    <img 
+                    <OptimizedImage
                       src={image} 
                       alt={`${property.name} - ${index + 2}`}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                      aspectRatio="4/3"
+                      sizes="(max-width: 768px) 50vw, 25vw"
                     />
                     {/* Show "+X more" on last thumbnail if there are more images */}
                     {index === 3 && galleryImages.length > 5 && (
@@ -596,11 +602,12 @@ const PropertyDetail = () => {
           </button>
 
           <div className="max-w-5xl w-full select-none">
-            <img
+            <OptimizedImage
               src={galleryImages[currentImageIndex]}
               alt={`${property.name} - ${currentImageIndex + 1}`}
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              draggable={false}
+              className="w-full max-h-[80vh] rounded-lg"
+              sizes="100vw"
+              priority={true}
             />
             <div className="text-center mt-4 flex items-center justify-center gap-4">
               <p className="text-muted-foreground">
