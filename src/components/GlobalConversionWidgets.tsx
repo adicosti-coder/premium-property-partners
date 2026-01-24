@@ -4,6 +4,7 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import SocialProofNotifications from "@/components/SocialProofNotifications";
 import AIChatbot from "@/components/AIChatbot";
 import MobileCTABar from "@/components/MobileCTABar";
+import FloatingActionMenu from "@/components/FloatingActionMenu";
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -25,11 +26,14 @@ const GlobalConversionWidgets = ({
   return (
     <>
       {showMobileCTA && <MobileCTABar />}
+      {/* Desktop floating buttons */}
       <FloatingWhatsApp />
       <AccessibilityPanel />
+      {showChatbot && <AIChatbot />}
+      {/* Mobile FAB menu - groups all floating buttons */}
+      <FloatingActionMenu showChatbot={showChatbot} />
       {showExitIntent && <ExitIntentPopup />}
       {showSocialProof && <SocialProofNotifications />}
-      {showChatbot && <AIChatbot />}
     </>
   );
 };
