@@ -7,6 +7,59 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ============= INPUT VALIDATION & SANITIZATION =============
+
+// HTML escape function to prevent XSS in email templates
+function escapeHtml(text: string | undefined | null): string {
+  if (text === undefined || text === null) return '';
+  const str = String(text);
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return str.replace(/[&<>"']/g, (m) => map[m]);
+}
+
+// Validate and sanitize phone number
+function sanitizePhone(phone: string | undefined): string {
+  if (!phone) return '';
+  // Remove all non-digit, non-plus characters for phone numbers
+  return String(phone).replace(/[^\d+\s()-]/g, '').slice(0, 30);
+}
+
+// Validate date format (YYYY-MM-DD or ISO string)
+function isValidDate(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime());
+}
+
+// Validate email format
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
+// Validate string with max length
+function validateString(value: unknown, maxLength: number): string {
+  if (typeof value !== 'string') return '';
+  return value.slice(0, maxLength);
+}
+
+// Validate positive integer (for guests count)
+function validateGuestsCount(value: unknown): string {
+  const str = String(value || '1');
+  const num = parseInt(str, 10);
+  if (isNaN(num) || num < 1) return '1';
+  if (num > 50) return '50';
+  return String(num);
+}
+
+// ============= VALIDATION =============
+
 interface BookingNotificationRequest {
   guestName: string;
   guestEmail: string;
@@ -19,6 +72,59 @@ interface BookingNotificationRequest {
   propertyName: string;
 }
 
+function validateBookingRequest(data: any): BookingNotificationRequest {
+  const guestName = validateString(data.guestName, 100);
+  const guestEmail = validateString(data.guestEmail, 255);
+  const guestPhone = sanitizePhone(data.guestPhone);
+  const checkIn = validateString(data.checkIn, 50);
+  const checkOut = validateString(data.checkOut, 50);
+  const guests = validateGuestsCount(data.guests);
+  const country = validateString(data.country, 100);
+  const message = data.message ? validateString(data.message, 1000) : undefined;
+  const propertyName = validateString(data.propertyName, 200);
+
+  // Validate required fields
+  if (!guestName || guestName.length < 1) {
+    throw new Error("Numele este obligatoriu");
+  }
+  if (!guestEmail || !isValidEmail(guestEmail)) {
+    throw new Error("Email invalid");
+  }
+  if (!guestPhone || guestPhone.length < 5) {
+    throw new Error("Număr telefon invalid");
+  }
+  if (!checkIn || !isValidDate(checkIn)) {
+    throw new Error("Data check-in invalidă");
+  }
+  if (!checkOut || !isValidDate(checkOut)) {
+    throw new Error("Data check-out invalidă");
+  }
+  if (!propertyName || propertyName.length < 1) {
+    throw new Error("Numele proprietății este obligatoriu");
+  }
+
+  // Validate check-out is after check-in
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = new Date(checkOut);
+  if (checkOutDate <= checkInDate) {
+    throw new Error("Data check-out trebuie să fie după check-in");
+  }
+
+  return {
+    guestName,
+    guestEmail,
+    guestPhone,
+    checkIn,
+    checkOut,
+    guests,
+    country,
+    message,
+    propertyName,
+  };
+}
+
+// ============= HANDLER =============
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -26,8 +132,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const data: BookingNotificationRequest = await req.json();
-    console.log("Received booking notification request:", data);
+    const rawData = await req.json();
+    console.log("Raw booking notification request received");
+
+    // Validate and sanitize input
+    const data = validateBookingRequest(rawData);
+    console.log("Validated booking data for:", escapeHtml(data.guestName));
 
     const {
       guestName,
@@ -52,6 +162,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
     };
 
+    // Clean phone for WhatsApp link (only digits)
+    const phoneClean = guestPhone.replace(/[^0-9]/g, '');
+
     const sendEmail = async (to: string[], subject: string, html: string) => {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -75,10 +188,10 @@ const handler = async (req: Request): Promise<Response> => {
       return res.json();
     };
 
-    // Send notification email to admin
+    // Send notification email to admin (with escaped HTML)
     const adminEmailResponse = await sendEmail(
       ["contact@realtrust.ro"],
-      `🏠 Nouă Cerere de Rezervare - ${guestName}`,
+      `🏠 Nouă Cerere de Rezervare - ${escapeHtml(guestName)}`,
       `
         <!DOCTYPE html>
         <html>
@@ -108,54 +221,54 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div class="info-row">
                 <span class="info-label">👤 Nume:</span>
-                <span class="info-value">${guestName}</span>
+                <span class="info-value">${escapeHtml(guestName)}</span>
               </div>
               
               <div class="info-row">
                 <span class="info-label">📧 Email:</span>
-                <span class="info-value"><a href="mailto:${guestEmail}">${guestEmail}</a></span>
+                <span class="info-value"><a href="mailto:${escapeHtml(guestEmail)}">${escapeHtml(guestEmail)}</a></span>
               </div>
               
               <div class="info-row">
                 <span class="info-label">📱 Telefon:</span>
-                <span class="info-value"><a href="tel:${guestPhone}">${guestPhone}</a></span>
+                <span class="info-value"><a href="tel:${escapeHtml(guestPhone)}">${escapeHtml(guestPhone)}</a></span>
               </div>
               
               <div class="info-row">
                 <span class="info-label">🌍 Țara:</span>
-                <span class="info-value">${country}</span>
+                <span class="info-value">${escapeHtml(country)}</span>
               </div>
 
               <h2>Detalii Rezervare</h2>
               
               <div class="info-row">
                 <span class="info-label">🏡 Proprietate:</span>
-                <span class="info-value">${propertyName}</span>
+                <span class="info-value">${escapeHtml(propertyName)}</span>
               </div>
               
               <div class="info-row">
                 <span class="info-label">📅 Check-in:</span>
-                <span class="info-value">${formatDate(checkIn)}</span>
+                <span class="info-value">${escapeHtml(formatDate(checkIn))}</span>
               </div>
               
               <div class="info-row">
                 <span class="info-label">📅 Check-out:</span>
-                <span class="info-value">${formatDate(checkOut)}</span>
+                <span class="info-value">${escapeHtml(formatDate(checkOut))}</span>
               </div>
               
               <div class="info-row">
                 <span class="info-label">👥 Nr. Oaspeți:</span>
-                <span class="info-value">${guests}</span>
+                <span class="info-value">${escapeHtml(guests)}</span>
               </div>
 
               ${message ? `
               <div class="highlight-box">
                 <strong>💬 Mesaj de la oaspete:</strong><br>
-                ${message}
+                ${escapeHtml(message)}
               </div>
               ` : ''}
 
-              <a href="https://wa.me/${guestPhone.replace(/[^0-9]/g, '')}" class="cta-button">
+              <a href="https://wa.me/${phoneClean}" class="cta-button">
                 📱 Contactează pe WhatsApp
               </a>
             </div>
@@ -171,7 +284,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Admin email sent successfully:", adminEmailResponse);
 
-    // Send confirmation email to guest
+    // Send confirmation email to guest (with escaped HTML)
     const guestEmailResponse = await sendEmail(
       [guestEmail],
       "✅ Am primit cererea ta de rezervare - RealTrust",
@@ -198,7 +311,7 @@ const handler = async (req: Request): Promise<Response> => {
               <h1>✅ Cerere Primită!</h1>
             </div>
             <div class="content">
-              <h2 style="margin-top: 0;">Bună, ${guestName}!</h2>
+              <h2 style="margin-top: 0;">Bună, ${escapeHtml(guestName)}!</h2>
               
               <p>Îți mulțumim pentru interesul acordat! Am primit cererea ta de rezervare și te vom contacta în cel mai scurt timp posibil pentru confirmare.</p>
 
@@ -206,19 +319,19 @@ const handler = async (req: Request): Promise<Response> => {
                 <h3 style="margin-top: 0; color: #c9a961;">📋 Rezumat Cerere</h3>
                 <div class="summary-row">
                   <span>Proprietate:</span>
-                  <strong>${propertyName}</strong>
+                  <strong>${escapeHtml(propertyName)}</strong>
                 </div>
                 <div class="summary-row">
                   <span>Check-in:</span>
-                  <strong>${formatDate(checkIn)}</strong>
+                  <strong>${escapeHtml(formatDate(checkIn))}</strong>
                 </div>
                 <div class="summary-row">
                   <span>Check-out:</span>
-                  <strong>${formatDate(checkOut)}</strong>
+                  <strong>${escapeHtml(formatDate(checkOut))}</strong>
                 </div>
                 <div class="summary-row">
                   <span>Număr oaspeți:</span>
-                  <strong>${guests}</strong>
+                  <strong>${escapeHtml(guests)}</strong>
                 </div>
               </div>
 
@@ -254,7 +367,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        status: 500,
+        status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
