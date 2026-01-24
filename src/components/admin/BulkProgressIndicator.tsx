@@ -8,9 +8,42 @@ interface BulkProgressIndicatorProps {
   total: number;
   success: number;
   failed: number;
-  type: 'google' | 'pixabay';
+  type: 'google' | 'pixabay' | 'pexels' | 'unsplash';
   className?: string;
 }
+
+const getTypeConfig = (type: BulkProgressIndicatorProps['type']) => {
+  switch (type) {
+    case 'google':
+      return {
+        Icon: Sparkles,
+        label: 'Google Places + Fallback',
+        accentClass: 'text-primary',
+        progressClass: 'bg-primary',
+      };
+    case 'pixabay':
+      return {
+        Icon: ImageIcon,
+        label: 'Pixabay',
+        accentClass: 'text-green-600 dark:text-green-400',
+        progressClass: 'bg-green-500',
+      };
+    case 'pexels':
+      return {
+        Icon: ImageIcon,
+        label: 'Pexels',
+        accentClass: 'text-teal-600 dark:text-teal-400',
+        progressClass: 'bg-teal-500',
+      };
+    case 'unsplash':
+      return {
+        Icon: ImageIcon,
+        label: 'Unsplash',
+        accentClass: 'text-purple-600 dark:text-purple-400',
+        progressClass: 'bg-purple-500',
+      };
+  }
+};
 
 const BulkProgressIndicator = ({
   isActive,
@@ -26,11 +59,8 @@ const BulkProgressIndicator = ({
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
   const successRate = current > 0 ? Math.round((success / current) * 100) : 0;
   
-  const isGoogle = type === 'google';
-  const Icon = isGoogle ? Sparkles : ImageIcon;
-  const label = isGoogle ? 'Google Places + Pixabay' : 'Pixabay';
-  const accentClass = isGoogle ? 'text-primary' : 'text-green-600 dark:text-green-400';
-  const progressClass = isGoogle ? 'bg-primary' : 'bg-green-500';
+  const config = getTypeConfig(type);
+  const { Icon, label, accentClass, progressClass } = config;
 
   return (
     <div className={cn(
