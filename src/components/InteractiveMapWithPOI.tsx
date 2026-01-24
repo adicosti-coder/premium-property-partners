@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Link } from 'react-router-dom';
+import PremiumBenefitsBadge from './PremiumBenefitsBadge';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Loader2, 
   MapPin, 
@@ -21,7 +23,9 @@ import {
   Heart,
   Clapperboard,
   Crown,
-  Lock
+  Lock,
+  Sparkles,
+  ChevronRight
 } from 'lucide-react';
 
 // Main apartment location in Timișoara
@@ -449,25 +453,73 @@ const InteractiveMapWithPOI = () => {
             {t.subtitle}
           </p>
 
-          {/* Premium Banner for unauthenticated users */}
-          {!isAuthenticated && premiumCount > 0 && (
-            <div className="mb-8 p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium">
-                    +{premiumCount} {t.premiumBanner}
-                  </span>
-                  <Lock className="w-4 h-4 text-muted-foreground" />
+          {/* Enhanced Premium Banner for unauthenticated users */}
+          <AnimatePresence>
+            {!isAuthenticated && premiumCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="mb-8"
+              >
+                <div className="relative p-5 rounded-2xl bg-gradient-to-br from-gold/15 via-gold/5 to-gold/10 border border-gold/30 shadow-lg shadow-gold/5 overflow-hidden">
+                  {/* Animated background shimmer */}
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer-sweep_3s_infinite] bg-gradient-to-r from-transparent via-gold/10 to-transparent skew-x-12 pointer-events-none" />
+                  
+                  <div className="relative flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity, 
+                          repeatDelay: 3 
+                        }}
+                        className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center flex-shrink-0"
+                      >
+                        <Crown className="w-6 h-6 text-gold" />
+                      </motion.div>
+                      
+                      <div className="text-left">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-lg font-semibold text-foreground">
+                            +{premiumCount} {t.premiumBanner}
+                          </span>
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-gold/20 text-gold rounded-full uppercase tracking-wide">
+                            {t.premiumLabel}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {language === 'ro' 
+                            ? 'Restaurante, cafenele și locuri ascunse doar pentru membrii noștri' 
+                            : 'Restaurants, cafés and hidden gems only for our members'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <PremiumBenefitsBadge variant="compact" className="hidden sm:flex" />
+                      
+                      <Link to="/auth?mode=signup">
+                        <Button 
+                          size="default" 
+                          className="gap-2 bg-gold hover:bg-gold/90 text-gold-foreground font-semibold shadow-md shadow-gold/20 hover:shadow-lg hover:shadow-gold/30 transition-all hover:scale-105"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          {language === 'ro' ? 'Deblochează Gratuit' : 'Unlock Free'}
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <Link to="/auth">
-                  <Button size="sm" variant="default" className="gap-2">
-                    {t.premiumCta}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Filter buttons */}
           <div className="flex flex-wrap justify-center gap-2">
