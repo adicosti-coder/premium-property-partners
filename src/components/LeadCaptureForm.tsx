@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,13 +33,13 @@ interface LeadCaptureFormProps {
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
-const LeadCaptureForm = ({
+const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   isOpen,
   onClose,
   calculatedNetProfit,
   calculatedYearlyProfit,
   simulationData,
-}: LeadCaptureFormProps) => {
+}, ref) => {
   const { t, language } = useLanguage();
   const [name, setName] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
@@ -406,6 +406,8 @@ const LeadCaptureForm = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+LeadCaptureForm.displayName = "LeadCaptureForm";
 
 export default LeadCaptureForm;
