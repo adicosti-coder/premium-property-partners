@@ -309,24 +309,164 @@ export const generateWebSiteSchema = () => ({
 });
 
 // RealEstateAgent Schema for Imobiliare page
-export const generateRealEstateAgentSchema = () => ({
+export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
+  const baseSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": `${BASE_URL}/imobiliare`,
+    "name": "RealTrust Imobiliare",
+    "alternateName": "RealTrust - Servicii Imobiliare Timișoara",
+    "description": "Servicii imobiliare complete în Timișoara: vânzări, achiziții, închirieri și consultanță. Experiență de peste 25 ani în piața imobiliară.",
+    "url": `${BASE_URL}/imobiliare`,
+    "telephone": "+40723154520",
+    "email": "imobiliare@realtrust.ro",
+    "image": `${BASE_URL}/og-image.jpg`,
+    "logo": `${BASE_URL}/favicon.ico`,
+    "priceRange": "€€-€€€",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Timișoara",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "postalCode": "300000",
+      "addressCountry": "RO",
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 45.7489,
+      "longitude": 21.2087,
+    },
+    "areaServed": [
+      {
+        "@type": "City",
+        "name": "Timișoara",
+      },
+      {
+        "@type": "AdministrativeArea",
+        "name": "Județul Timiș",
+      },
+    ],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Servicii Imobiliare",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Vânzare Proprietăți",
+            "description": "Servicii complete de vânzare imobiliară cu evaluare, marketing și negociere",
+          },
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Achiziție Proprietăți",
+            "description": "Asistență în identificarea și achiziționarea proprietății ideale",
+          },
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Închiriere & Administrare",
+            "description": "Servicii de închiriere pe termen lung și scurt cu administrare completă",
+          },
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Consultanță Imobiliară",
+            "description": "Analiză de piață, evaluare proprietăți și consiliere investiții",
+          },
+        },
+      ],
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "09:00",
+        "closes": "18:00",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": "Saturday",
+        "opens": "10:00",
+        "closes": "14:00",
+      },
+    ],
+    "sameAs": [
+      "https://www.facebook.com/realtrust.ro",
+      "https://www.instagram.com/realtrust_timisoara",
+    ],
+  };
+
+  // Add aggregate rating if available
+  if (rating && rating.reviewCount > 0) {
+    baseSchema["aggregateRating"] = {
+      "@type": "AggregateRating",
+      "ratingValue": rating.ratingValue.toFixed(1),
+      "reviewCount": rating.reviewCount,
+      "bestRating": rating.bestRating || 5,
+      "worstRating": rating.worstRating || 1,
+    };
+  }
+
+  return baseSchema;
+};
+
+// Generate reviews schema from database reviews
+export interface DatabaseReview {
+  id: string;
+  guest_name: string;
+  rating: number;
+  content: string | null;
+  title: string | null;
+  created_at: string;
+  property_name?: string;
+}
+
+export const generateReviewsFromDatabase = (
+  reviews: DatabaseReview[],
+  itemName: string,
+  itemUrl: string
+): Record<string, unknown> => ({
   "@context": "https://schema.org",
-  "@type": "RealEstateAgent",
-  "name": "RealTrust Imobiliare",
-  "url": `${BASE_URL}/imobiliare`,
-  "telephone": "+40723154520",
-  "email": "imobiliare@realtrust.ro",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Timișoara",
-    "addressRegion": "Timiș",
-    "addressCountry": "RO",
+  "@type": "Product",
+  "name": itemName,
+  "url": itemUrl,
+  "review": reviews.slice(0, 10).map((review) => ({
+    "@type": "Review",
+    "author": {
+      "@type": "Person",
+      "name": review.guest_name,
+    },
+    "datePublished": review.created_at.split("T")[0],
+    "reviewBody": review.content || review.title || "Experiență excelentă!",
+    "name": review.title || undefined,
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": review.rating,
+      "bestRating": 5,
+      "worstRating": 1,
+    },
+    ...(review.property_name && {
+      "itemReviewed": {
+        "@type": "Apartment",
+        "name": review.property_name,
+      },
+    }),
+  })),
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1),
+    "reviewCount": reviews.length,
+    "bestRating": 5,
+    "worstRating": 1,
   },
-  "areaServed": {
-    "@type": "City",
-    "name": "Timișoara",
-  },
-  "serviceType": ["Property Sales", "Property Consulting", "Property Valuation"],
 });
 
 // Combined schema for property pages
@@ -358,6 +498,26 @@ export const generatePropertyPageSchemas = (
         property.name,
         `${BASE_URL}/proprietate/${property.slug}`,
         reviews.slice(0, 5) // Limit to 5 reviews for structured data
+      )
+    );
+  }
+
+  return schemas;
+};
+
+// Homepage combined schema with reviews from database
+export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
+  const schemas: Record<string, unknown>[] = [
+    generateLocalBusinessSchema(),
+    generateWebSiteSchema(),
+  ];
+
+  if (reviews && reviews.length > 0) {
+    schemas.push(
+      generateReviewsFromDatabase(
+        reviews,
+        "RealTrust & ApArt Hotel Timișoara",
+        BASE_URL
       )
     );
   }
