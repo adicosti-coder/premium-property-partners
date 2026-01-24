@@ -35,6 +35,7 @@ interface POI {
   image_url: string | null;
   image_fetch_failed: boolean;
   image_fetch_attempted_at: string | null;
+  image_source: string | null;
 }
 
 const CATEGORIES = [
@@ -86,6 +87,7 @@ const POIManager = () => {
     is_premium: false,
     display_order: 0,
     image_url: '',
+    image_source: '' as string,
   });
 
   const { data: pois, isLoading } = useQuery({
@@ -143,7 +145,11 @@ const POIManager = () => {
       }
 
       if (data.photo_url) {
-        setFormData(prev => ({ ...prev, image_url: data.photo_url }));
+        setFormData(prev => ({ 
+          ...prev, 
+          image_url: data.photo_url,
+          image_source: data.source || 'google_places'
+        }));
         const sourceLabel = data.source === 'pixabay' ? 'Pixabay' : 'Google Places';
         toast.success(`Imagine găsită pentru "${data.place_name}" (${sourceLabel})!`);
       }
@@ -183,7 +189,11 @@ const POIManager = () => {
       }
 
       if (data.photo_url) {
-        setFormData(prev => ({ ...prev, image_url: data.photo_url }));
+        setFormData(prev => ({ 
+          ...prev, 
+          image_url: data.photo_url,
+          image_source: 'pixabay'
+        }));
         toast.success(`Imagine Pixabay găsită pentru "${data.place_name}"!`);
       }
     } catch (error: any) {
@@ -217,6 +227,7 @@ const POIManager = () => {
           .from('points_of_interest')
           .update({ 
             image_url: data.photo_url,
+            image_source: data.source || 'pixabay',
             image_fetch_failed: false,
             image_fetch_attempted_at: new Date().toISOString()
           })
@@ -284,6 +295,7 @@ const POIManager = () => {
             .from('points_of_interest')
             .update({ 
               image_url: data.photo_url,
+              image_source: data.source || 'google_places',
               image_fetch_failed: false,
               image_fetch_attempted_at: new Date().toISOString()
             })
@@ -381,6 +393,7 @@ const POIManager = () => {
             .from('points_of_interest')
             .update({ 
               image_url: data.photo_url,
+              image_source: 'pixabay',
               image_fetch_failed: false,
               image_fetch_attempted_at: new Date().toISOString()
             })
@@ -508,6 +521,7 @@ const POIManager = () => {
           .from('points_of_interest')
           .update({ 
             image_url: data.photo_url,
+            image_source: data.source || 'google_places',
             image_fetch_failed: false,
             image_fetch_attempted_at: new Date().toISOString()
           })
@@ -651,6 +665,7 @@ const POIManager = () => {
       is_premium: false,
       display_order: 0,
       image_url: '',
+      image_source: '',
     });
     setEditingPOI(null);
   };
@@ -672,7 +687,7 @@ const POIManager = () => {
         .from('property-images')
         .getPublicUrl(filePath);
 
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      setFormData(prev => ({ ...prev, image_url: publicUrl, image_source: 'manual' }));
       toast.success('Imagine încărcată cu succes!');
     } catch (error: any) {
       toast.error('Eroare la încărcare: ' + error.message);
@@ -699,6 +714,7 @@ const POIManager = () => {
       is_premium: poi.is_premium,
       display_order: poi.display_order,
       image_url: poi.image_url || '',
+      image_source: poi.image_source || '',
     });
     setIsDialogOpen(true);
   };
@@ -722,6 +738,7 @@ const POIManager = () => {
       is_premium: formData.is_premium,
       display_order: formData.display_order,
       image_url: formData.image_url || null,
+      image_source: formData.image_source || null,
     };
 
     if (editingPOI) {
@@ -1275,6 +1292,22 @@ const POIManager = () => {
                               {poi.name}
                               {!poi.image_url && !poi.image_fetch_failed && (
                                 <span className="text-xs text-muted-foreground">(fără imagine)</span>
+                              )}
+                              {poi.image_url && poi.image_source && (
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-[10px] px-1 py-0 h-4 ${
+                                    poi.image_source === 'pixabay' 
+                                      ? 'border-green-500/50 text-green-600 dark:text-green-400' 
+                                      : poi.image_source === 'google_places'
+                                      ? 'border-blue-500/50 text-blue-600 dark:text-blue-400'
+                                      : 'border-muted-foreground/50 text-muted-foreground'
+                                  }`}
+                                >
+                                  {poi.image_source === 'pixabay' ? 'Pixabay' : 
+                                   poi.image_source === 'google_places' ? 'Google' : 
+                                   poi.image_source === 'manual' ? 'Manual' : poi.image_source}
+                                </Badge>
                               )}
                             </div>
                             <div className="text-xs text-muted-foreground">{poi.name_en}</div>

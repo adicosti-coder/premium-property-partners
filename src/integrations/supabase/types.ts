@@ -1091,6 +1091,7 @@ export type Database = {
           id: string
           image_fetch_attempted_at: string | null
           image_fetch_failed: boolean
+          image_source: string | null
           image_url: string | null
           is_active: boolean
           is_premium: boolean
@@ -1113,6 +1114,7 @@ export type Database = {
           id?: string
           image_fetch_attempted_at?: string | null
           image_fetch_failed?: boolean
+          image_source?: string | null
           image_url?: string | null
           is_active?: boolean
           is_premium?: boolean
@@ -1135,6 +1137,7 @@ export type Database = {
           id?: string
           image_fetch_attempted_at?: string | null
           image_fetch_failed?: boolean
+          image_source?: string | null
           image_url?: string | null
           is_active?: boolean
           is_premium?: boolean
