@@ -56,9 +56,11 @@ const POIManager = () => {
   const [isFetchingGooglePhoto, setIsFetchingGooglePhoto] = useState(false);
   const [isFetchingPixabayPhoto, setIsFetchingPixabayPhoto] = useState(false);
   const [isBulkFetching, setIsBulkFetching] = useState(false);
+  const [isBulkPixabayFetching, setIsBulkPixabayFetching] = useState(false);
   const [retryingPoiId, setRetryingPoiId] = useState<string | null>(null);
   const [pixabayRetryingPoiId, setPixabayRetryingPoiId] = useState<string | null>(null);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
+  const [bulkPixabayProgress, setBulkPixabayProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Filter states
@@ -333,6 +335,84 @@ const POIManager = () => {
       toast.success(`${successCount} imagini adăugate cu succes!${failedCount > 0 ? ` (${failedCount} marcate ca indisponibile)` : ''}`);
     } else {
       toast.error('Nu am putut găsi imagini pentru niciun POI. Au fost marcate ca indisponibile.');
+    }
+  };
+
+  // Bulk fetch photos from Pixabay only for all POIs without images
+  const bulkFetchPixabayPhotos = async () => {
+    if (!pois) return;
+    
+    // Filter POIs that don't have images (include failed ones since Pixabay might find them)
+    const poisWithoutImages = pois.filter(poi => !poi.image_url);
+    
+    if (poisWithoutImages.length === 0) {
+      toast.info('Toate POI-urile au deja imagini!');
+      return;
+    }
+
+    setIsBulkPixabayFetching(true);
+    setBulkPixabayProgress({ current: 0, total: poisWithoutImages.length, success: 0, failed: 0 });
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < poisWithoutImages.length; i++) {
+      const poi = poisWithoutImages[i];
+      setBulkPixabayProgress(prev => ({ ...prev, current: i + 1 }));
+
+      try {
+        const response = await supabase.functions.invoke('fetch-place-photo', {
+          body: {
+            query: poi.name,
+            forcePixabay: true,
+          },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        const data = response.data;
+        
+        if (data.photo_url) {
+          // Update POI with new image
+          const { error: updateError } = await supabase
+            .from('points_of_interest')
+            .update({ 
+              image_url: data.photo_url,
+              image_fetch_failed: false,
+              image_fetch_attempted_at: new Date().toISOString()
+            })
+            .eq('id', poi.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          successCount++;
+          setBulkPixabayProgress(prev => ({ ...prev, success: successCount }));
+        } else {
+          failedCount++;
+          setBulkPixabayProgress(prev => ({ ...prev, failed: failedCount }));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch Pixabay photo for ${poi.name}:`, error);
+        failedCount++;
+        setBulkPixabayProgress(prev => ({ ...prev, failed: failedCount }));
+      }
+
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    setIsBulkPixabayFetching(false);
+    queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+    queryClient.invalidateQueries({ queryKey: ['pois'] });
+
+    if (successCount > 0) {
+      toast.success(`${successCount} imagini Pixabay adăugate cu succes!${failedCount > 0 ? ` (${failedCount} negăsite)` : ''}`);
+    } else {
+      toast.error('Nu am putut găsi imagini Pixabay pentru niciun POI.');
     }
   };
 
@@ -689,8 +769,30 @@ const POIManager = () => {
             </Button>
           )}
 
+          {/* Bulk Pixabay fetch button */}
+          {(poisWithoutImagesCount > 0 || poisWithFailedFetchCount > 0) && (
+            <Button
+              variant="outline"
+              onClick={bulkFetchPixabayPhotos}
+              disabled={isBulkFetching || isBulkPixabayFetching}
+              className="border-green-500/30 hover:bg-green-500/10 text-green-700 dark:text-green-400"
+            >
+              {isBulkPixabayFetching ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Pixabay {bulkPixabayProgress.current}/{bulkPixabayProgress.total} ({bulkPixabayProgress.success} ✓)
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Bulk Pixabay ({(poisWithoutImagesCount + poisWithFailedFetchCount)} fără img)
+                </>
+              )}
+            </Button>
+          )}
+
           {/* Reset failed POIs button */}
-          {poisWithFailedFetchCount > 0 && !isBulkFetching && (
+          {poisWithFailedFetchCount > 0 && !isBulkFetching && !isBulkPixabayFetching && (
             <Button
               variant="ghost"
               size="sm"
