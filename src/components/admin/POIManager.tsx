@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter, Sparkles, RotateCcw, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Star, ExternalLink, Phone, Upload, X, Loader2, Image as ImageIcon, Crown, Search, Filter, Sparkles, RotateCcw, AlertCircle, Download } from "lucide-react";
 import { useRef, useCallback, useMemo, useState as useStateReact } from "react";
 
 interface POI {
@@ -263,6 +263,55 @@ const POIManager = () => {
     toast.success('Status resetat! Poți încerca din nou.');
   };
 
+  // Export POIs without images to CSV
+  const exportMissingImagesPoisCsv = () => {
+    if (!pois) return;
+
+    const poisWithoutImages = pois.filter(poi => !poi.image_url);
+    
+    if (poisWithoutImages.length === 0) {
+      toast.info('Toate POI-urile au imagini!');
+      return;
+    }
+
+    // CSV headers
+    const headers = ['ID', 'Nume', 'Nume EN', 'Categorie', 'Adresă', 'Latitudine', 'Longitudine', 'Website', 'Telefon', 'Fetch Eșuat', 'Ultima Încercare'];
+    
+    // CSV rows
+    const rows = poisWithoutImages.map(poi => [
+      poi.id,
+      `"${poi.name.replace(/"/g, '""')}"`,
+      `"${poi.name_en.replace(/"/g, '""')}"`,
+      poi.category,
+      poi.address ? `"${poi.address.replace(/"/g, '""')}"` : '',
+      poi.latitude,
+      poi.longitude,
+      poi.website || '',
+      poi.phone || '',
+      poi.image_fetch_failed ? 'Da' : 'Nu',
+      poi.image_fetch_attempted_at || ''
+    ]);
+
+    // Build CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `poi-fara-imagini-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`${poisWithoutImages.length} POI-uri exportate în CSV!`);
+  };
+
   // Filtered POIs
   const filteredPois = useMemo(() => {
     if (!pois) return [];
@@ -505,6 +554,20 @@ const POIManager = () => {
               Resetează ({poisWithFailedFetchCount})
             </Button>
           )}
+
+          {/* Export POIs without images */}
+          {poisWithoutImagesCount > 0 || poisWithFailedFetchCount > 0 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={exportMissingImagesPoisCsv}
+              className="text-muted-foreground hover:text-foreground"
+              title="Exportă POI-urile fără imagine în CSV"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Export CSV
+            </Button>
+          ) : null}
           
           {/* Progress indicator when bulk fetching */}
           {isBulkFetching && (
