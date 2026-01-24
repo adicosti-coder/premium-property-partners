@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface BlogArticle {
   id: string;
@@ -125,12 +126,11 @@ const BlogPreview = () => {
               <Card className="overflow-hidden h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
                 {coverImage ? (
                   <div className="aspect-video overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={coverImage}
                       alt={displayTitle}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                      aspectRatio="16/9"
                     />
                   </div>
                 ) : (
