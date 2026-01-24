@@ -32,7 +32,7 @@ const FloatingWhatsApp = () => {
     <button
       onClick={handleClick}
       className={cn(
-        "fixed bottom-24 md:bottom-8 right-6 z-40 w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg hover:shadow-xl hover:scale-110 flex items-center justify-center animate-pulse-glow",
+        "fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg hover:shadow-xl hover:scale-110 flex items-center justify-center animate-pulse-glow",
         "transition-all duration-500 ease-out",
         isVisible 
           ? "opacity-100 translate-y-0 scale-100" 

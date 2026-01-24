@@ -161,7 +161,7 @@ const AIChatbot = () => {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", damping: 20 }}
             onClick={handleOpen}
-            className="fixed bottom-24 right-20 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl hover:scale-110 transition-all flex items-center justify-center group"
+            className="fixed bottom-[136px] right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl hover:scale-110 transition-all flex items-center justify-center group"
           >
             <MessageCircle className="w-6 h-6" />
             
