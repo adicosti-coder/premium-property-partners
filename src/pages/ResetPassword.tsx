@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Loader2, Lock, ArrowLeft, CheckCircle, Check, X } from "lucide-react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
+import PasswordStrengthIndicator, { validatePassword } from "@/components/PasswordStrengthIndicator";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -20,8 +20,13 @@ const ResetPassword = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isValidSession, setIsValidSession] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
 
-  const passwordSchema = z.string().min(6, t.auth.invalidPasswordMessage);
+  const passwordSchema = z.string().min(8, t.auth.invalidPasswordMessage);
+
+  const handlePasswordStrengthChange = useCallback((isValid: boolean) => {
+    setIsPasswordValid(isValid);
+  }, []);
 
   useEffect(() => {
     // Check if we have a valid recovery session
@@ -65,6 +70,17 @@ const ResetPassword = () => {
       toast({
         title: t.auth.invalidPassword,
         description: passwordResult.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password strength
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      toast({
+        title: t.auth.weakPassword,
+        description: t.auth.weakPasswordMessage,
         variant: "destructive",
       });
       return;
@@ -197,11 +213,14 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
                   required
-                  minLength={6}
+                  minLength={8}
                   maxLength={72}
                 />
               </div>
-              <PasswordStrengthIndicator password={password} />
+              <PasswordStrengthIndicator 
+                password={password} 
+                onStrengthChange={handlePasswordStrengthChange}
+              />
             </div>
 
             <div className="space-y-2">
@@ -222,7 +241,7 @@ const ResetPassword = () => {
                       : ""
                   }`}
                   required
-                  minLength={6}
+                  minLength={8}
                   maxLength={72}
                 />
                 {/* Password match indicator */}
@@ -256,7 +275,11 @@ const ResetPassword = () => {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || !isPasswordValid || password !== confirmPassword}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
