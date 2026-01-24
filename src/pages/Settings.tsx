@@ -27,6 +27,10 @@ import { ArrowLeft, Bell, Globe, Key, Loader2, Settings as SettingsIcon, Trash2,
 import { useUISound } from "@/hooks/useUISound";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import { z } from "zod";
 
 const passwordSchema = z.object({
@@ -372,11 +376,23 @@ const Settings = () => {
     );
   }
 
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Profil" : "Profile", href: "/profil" },
+    { label: text.title }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`${text.title} | RealTrust`}
+        description={text.subtitle}
+        noIndex={true}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-24 max-w-2xl">
+        <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
+        
         <Button
           variant="ghost"
           className="mb-6"
@@ -655,6 +671,8 @@ const Settings = () => {
       </main>
 
       <Footer />
+      <GlobalConversionWidgets showExitIntent={false} showSocialProof={false} />
+      <BackToTop />
     </div>
   );
 };

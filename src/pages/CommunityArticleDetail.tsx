@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -337,12 +340,27 @@ const CommunityArticleDetail = () => {
 
   const isWinner = article.status === "winner";
 
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Comunitate" : "Community", href: "/comunitate" },
+    { label: article.title.length > 40 ? article.title.substring(0, 40) + "..." : article.title }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`${article.title} | ${language === "ro" ? "Comunitate" : "Community"}`}
+        description={article.excerpt || article.content.substring(0, 160)}
+        type="article"
+        publishedTime={article.created_at}
+        author={article.author_name}
+        image={article.cover_image_url || undefined}
+      />
       <Header />
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-6 max-w-4xl">
+          <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
+          
           {/* Back button */}
           <Button 
             variant="ghost" 
@@ -525,7 +543,8 @@ const CommunityArticleDetail = () => {
       </main>
 
       <Footer />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets showExitIntent={false} showSocialProof={false} />
+      <BackToTop />
     </div>
   );
 };
