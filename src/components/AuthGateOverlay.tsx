@@ -1,6 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Lock, LogIn, UserPlus, Sparkles, Star, Clock, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Lock, 
+  LogIn, 
+  UserPlus, 
+  Sparkles, 
+  Star, 
+  Clock, 
+  Users,
+  MapPin,
+  History,
+  Heart,
+  Share2,
+  Bell,
+  Calculator,
+  FileText,
+  Crown,
+  ChevronRight,
+  Check
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,17 +26,20 @@ import { Link } from "react-router-dom";
 import ConfettiEffect from "./ConfettiEffect";
 import { useUISound } from "@/hooks/useUISound";
 import { toast } from "@/hooks/use-toast";
+
 interface AuthGateOverlayProps {
   title?: string;
   description?: string;
+  context?: "calculator" | "city-guide" | "favorites" | "general";
 }
 
-const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
+const AuthGateOverlay = ({ title, description, context = "general" }: AuthGateOverlayProps) => {
   const { language } = useLanguage();
   const [showConfetti, setShowConfetti] = useState(false);
   const { playSound } = useUISound();
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [recentSignups, setRecentSignups] = useState(0);
+  const [hoveredBenefit, setHoveredBenefit] = useState<number | null>(null);
 
   // Countdown to midnight
   useEffect(() => {
@@ -64,11 +85,9 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
 
   // Simulated recent signups counter
   useEffect(() => {
-    // Start with a base number between 15-25
     const baseNumber = 15 + Math.floor(Math.random() * 10);
     setRecentSignups(baseNumber);
 
-    // Occasionally increment to simulate real-time activity
     const incrementInterval = setInterval(() => {
       if (Math.random() > 0.7) {
         setRecentSignups(prev => prev + 1);
@@ -80,13 +99,11 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
 
   // Periodic toast notifications for social proof
   useEffect(() => {
-    // Show first toast after 5-10 seconds
     const initialDelay = 5000 + Math.random() * 5000;
     const initialTimeout = setTimeout(() => {
       showSignupToast();
     }, initialDelay);
 
-    // Then show periodically every 15-25 seconds
     const toastInterval = setInterval(() => {
       if (Math.random() > 0.4) {
         showSignupToast();
@@ -102,46 +119,73 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
   const handleSignupClick = () => {
     setShowConfetti(true);
     playSound("success");
-    // Reset after animation completes
     setTimeout(() => setShowConfetti(false), 3000);
+  };
+
+  // Premium benefits with context-based highlighting
+  const premiumBenefits = {
+    ro: [
+      { icon: MapPin, text: "50+ locații exclusive City Guide", tooltip: "Descoperă restaurante, cafenele și atracții ascunse", category: "city-guide" },
+      { icon: History, text: "Istoric simulări salvate", tooltip: "Compară și revizuiește estimările tale anterioare", category: "calculator" },
+      { icon: Heart, text: "Favorite sincronizate pe toate dispozitivele", tooltip: "Accesează-ți locurile preferate de oriunde", category: "favorites" },
+      { icon: Share2, text: "Partajare locații cu prietenii", tooltip: "Trimite recomandări personalizate", category: "city-guide" },
+      { icon: Bell, text: "Notificări personalizate", tooltip: "Fii primul care află despre oferte noi", category: "general" },
+      { icon: Calculator, text: "Estimări detaliate de randament", tooltip: "Analiză completă pentru investiții imobiliare", category: "calculator" },
+      { icon: FileText, text: "Export PDF personalizat", tooltip: "Descarcă ghiduri și rapoarte pentru offline", category: "general" },
+      { icon: Star, text: "Suport prioritar 24/7", tooltip: "Răspuns rapid la întrebările tale", category: "general" },
+    ],
+    en: [
+      { icon: MapPin, text: "50+ exclusive City Guide spots", tooltip: "Discover hidden restaurants, cafes and attractions", category: "city-guide" },
+      { icon: History, text: "Saved simulation history", tooltip: "Compare and review your previous estimates", category: "calculator" },
+      { icon: Heart, text: "Favorites synced across devices", tooltip: "Access your favorite places from anywhere", category: "favorites" },
+      { icon: Share2, text: "Share locations with friends", tooltip: "Send personalized recommendations", category: "city-guide" },
+      { icon: Bell, text: "Personalized notifications", tooltip: "Be the first to know about new offers", category: "general" },
+      { icon: Calculator, text: "Detailed yield estimates", tooltip: "Complete analysis for real estate investments", category: "calculator" },
+      { icon: FileText, text: "Custom PDF export", tooltip: "Download guides and reports for offline use", category: "general" },
+      { icon: Star, text: "Priority support 24/7", tooltip: "Quick response to your questions", category: "general" },
+    ],
   };
 
   const t = {
     ro: {
-      badge: "✨ Înregistrare gratuită • Rezultate în 10 secunde",
-      title: title || "Autentifică-te pentru a vedea rezultatele",
-      description: description || "Creează un cont gratuit pentru a vedea estimările și a-ți salva simulările.",
+      badge: "✨ Cont gratuit • Acces complet în 10 secunde",
+      premiumBadge: "Beneficii Premium",
+      title: title || "Autentifică-te pentru acces complet",
+      description: description || "Creează un cont gratuit pentru a debloca toate funcționalitățile platformei.",
       login: "Autentifică-te",
       signup: "Creează cont gratuit",
       loginTooltip: "Accesează contul tău pentru a vedea istoricul simulărilor și ofertele personalizate",
       recommended: "Recomandat",
       urgency: "Ofertă expiră în",
       recentSignups: "s-au înregistrat în ultima oră",
-      benefits: [
-        "Salvează simulările tale",
-        "Acces la istoric complet",
-        "Primește oferte personalizate",
-      ],
+      freeForever: "Gratuit pentru totdeauna",
+      noCardRequired: "Fără card de credit",
     },
     en: {
-      badge: "✨ Free signup • Results in 10 seconds",
-      title: title || "Sign in to see the results",
-      description: description || "Create a free account to view estimates and save your simulations.",
+      badge: "✨ Free signup • Full access in 10 seconds",
+      premiumBadge: "Premium Benefits",
+      title: title || "Sign in for full access",
+      description: description || "Create a free account to unlock all platform features.",
       login: "Sign in",
       signup: "Create free account",
       loginTooltip: "Access your account to view simulation history and personalized offers",
       recommended: "Recommended",
       urgency: "Offer expires in",
       recentSignups: "signed up in the last hour",
-      benefits: [
-        "Save your simulations",
-        "Access complete history",
-        "Receive personalized offers",
-      ],
+      freeForever: "Free forever",
+      noCardRequired: "No credit card required",
     },
   };
 
   const text = t[language as keyof typeof t] || t.ro;
+  const benefits = premiumBenefits[language as keyof typeof premiumBenefits] || premiumBenefits.ro;
+
+  // Sort benefits to show context-relevant ones first
+  const sortedBenefits = [...benefits].sort((a, b) => {
+    if (a.category === context && b.category !== context) return -1;
+    if (a.category !== context && b.category === context) return 1;
+    return 0;
+  });
 
   return (
     <>
@@ -222,23 +266,107 @@ const AuthGateOverlay = ({ title, description }: AuthGateOverlayProps) => {
           {text.description}
         </p>
 
-        {/* Benefits */}
-        <ul className="text-left space-y-2 mb-6">
-          {text.benefits.map((benefit, index) => (
-            <motion.li 
-              key={index} 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-            >
-              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary text-xs">✓</span>
-              </div>
-              {benefit}
-            </motion.li>
-          ))}
-        </ul>
+        {/* Premium Benefits Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="flex items-center justify-center gap-2 mb-4"
+        >
+          <motion.div
+            animate={{ 
+              rotate: [0, 10, -10, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              repeatDelay: 3 
+            }}
+          >
+            <Crown className="w-4 h-4 text-gold" />
+          </motion.div>
+          <span className="text-sm font-semibold text-gold">{text.premiumBadge}</span>
+        </motion.div>
+
+        {/* Enhanced Benefits List */}
+        <div className="text-left space-y-2 mb-6 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+          {sortedBenefits.map((benefit, index) => {
+            const isHighlighted = benefit.category === context;
+            return (
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
+                      onMouseEnter={() => setHoveredBenefit(index)}
+                      onMouseLeave={() => setHoveredBenefit(null)}
+                      className={`
+                        flex items-center gap-3 p-2 rounded-lg cursor-pointer
+                        transition-all duration-200
+                        ${isHighlighted 
+                          ? "bg-gold/10 border border-gold/20" 
+                          : "hover:bg-muted/50"
+                        }
+                        ${hoveredBenefit === index ? "scale-[1.02]" : ""}
+                      `}
+                    >
+                      <motion.div 
+                        animate={hoveredBenefit === index ? { scale: 1.1 } : { scale: 1 }}
+                        className={`
+                          w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                          ${isHighlighted 
+                            ? "bg-gold/20" 
+                            : "bg-primary/10"
+                          }
+                        `}
+                      >
+                        <benefit.icon className={`w-4 h-4 ${isHighlighted ? "text-gold" : "text-primary"}`} />
+                      </motion.div>
+                      <span className={`text-sm ${isHighlighted ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {benefit.text}
+                      </span>
+                      <AnimatePresence>
+                        {hoveredBenefit === index && (
+                          <motion.div
+                            initial={{ opacity: 0, x: -5 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -5 }}
+                            className="ml-auto"
+                          >
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-xs">
+                    <p className="text-sm">{benefit.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })}
+        </div>
+
+        {/* Free forever badges */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex items-center justify-center gap-4 mb-4"
+        >
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            {text.freeForever}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            {text.noCardRequired}
+          </span>
+        </motion.div>
 
         <div className="space-y-3">
           {/* Recommended badge */}
