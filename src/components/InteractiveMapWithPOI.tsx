@@ -46,6 +46,7 @@ interface POI {
   rating: number | null;
   is_active: boolean;
   is_premium: boolean;
+  image_url: string | null;
 }
 
 const poiTypeConfig: Record<string, { icon: React.ElementType; color: string; labelRo: string; labelEn: string }> = {
@@ -341,29 +342,56 @@ const InteractiveMapWithPOI = () => {
       const poiPopup = new mapboxgl.Popup({
         offset: 25,
         closeButton: true,
-        maxWidth: '280px',
+        maxWidth: '300px',
       }).setHTML(`
-        <div style="padding: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <div style="width: 28px; height: 28px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              ${iconSvg}
-            </div>
-            <div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <strong style="font-size: 14px; color: #1a1a1a;">${name}</strong>
-                ${poi.is_premium ? `<span style="font-size: 10px; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; padding: 2px 6px; border-radius: 10px; font-weight: 600;">${premiumLabel}</span>` : ''}
-              </div>
+        <div style="padding: 0; overflow: hidden; border-radius: 8px;">
+          ${poi.image_url ? `
+            <div style="position: relative; width: 100%; height: 120px; overflow: hidden; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
+              <img 
+                src="${poi.image_url}" 
+                alt="${name}"
+                loading="lazy"
+                decoding="async"
+                style="width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease;"
+                onload="this.style.opacity='1'"
+                onerror="this.parentElement.style.display='none'"
+              />
+              ${poi.is_premium ? `
+                <div style="position: absolute; top: 8px; left: 8px; display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; font-size: 10px; font-weight: 600; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/></svg>
+                  ${premiumLabel}
+                </div>
+              ` : ''}
               ${poi.rating ? `
-                <div style="display: flex; align-items: center; gap: 4px;">
+                <div style="position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 3px; padding: 4px 8px; background: rgba(255,255,255,0.95); border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  <span style="font-size: 12px; color: #666;">${poi.rating}</span>
+                  <span style="font-size: 11px; font-weight: 600; color: #1a1a1a;">${poi.rating}</span>
                 </div>
               ` : ''}
             </div>
+          ` : ''}
+          <div style="padding: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <div style="width: 28px; height: 28px; background: ${config.color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                ${iconSvg}
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <strong style="font-size: 14px; color: #1a1a1a;">${name}</strong>
+                  ${!poi.image_url && poi.is_premium ? `<span style="font-size: 10px; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; padding: 2px 6px; border-radius: 10px; font-weight: 600;">${premiumLabel}</span>` : ''}
+                </div>
+                ${!poi.image_url && poi.rating ? `
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span style="font-size: 12px; color: #666;">${poi.rating}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            ${description ? `<p style="font-size: 12px; color: #666; margin: 0 0 8px 0; line-height: 1.4;">${description}</p>` : ''}
+            ${poi.address ? `<p style="font-size: 11px; color: #888; margin: 0 0 6px 0; display: flex; align-items: flex-start; gap: 4px;"><span>📍</span> <span>${poi.address}</span></p>` : ''}
+            ${poi.website ? `<a href="${poi.website}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #3b82f6; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">🔗 Website</a>` : ''}
           </div>
-          ${description ? `<p style="font-size: 12px; color: #666; margin: 0 0 8px 0;">${description}</p>` : ''}
-          ${poi.address ? `<p style="font-size: 11px; color: #888; margin: 0;"><strong>📍</strong> ${poi.address}</p>` : ''}
-          ${poi.website ? `<a href="${poi.website}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #3b82f6; text-decoration: none;">🔗 Website</a>` : ''}
         </div>
       `);
 
