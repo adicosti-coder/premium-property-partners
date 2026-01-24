@@ -45,6 +45,7 @@ import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiI
 import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
+import PremiumPOICarousel from './PremiumPOICarousel';
 import OptimizedImage from './OptimizedImage';
 import {
   DropdownMenu,
@@ -67,6 +68,7 @@ interface POI {
   is_active: boolean;
   display_order: number;
   image_url: string | null;
+  is_premium: boolean;
 }
 
 const CityGuideSection: React.FC = () => {
@@ -676,6 +678,11 @@ const CityGuideSection: React.FC = () => {
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Premium Locations Carousel */}
+        {!isLoading && pois.length > 0 && !showSharedPois && !showFavoritesOnly && (
+          <PremiumPOICarousel pois={pois} />
+        )}
 
         {/* Search and Filters */}
         {!isLoading && pois.length > 0 && (
