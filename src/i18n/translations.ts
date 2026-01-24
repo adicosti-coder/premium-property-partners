@@ -91,7 +91,7 @@ export const translations = {
       subtitle: "Oferim soluții complete de asset management pentru proprietari care urmăresc randamente superioare și protecția activelor imobiliare.",
       commission: "Comision de administrare",
       commissionValue: "20%",
-      commissionSuffix: "din veniturile nete",
+      commissionSuffix: "din încasările nete",
       items: [
         { title: "Audit & Fotografiere Profesională", description: "Evaluare detaliată a proprietății și sesiune foto cu echipament de top pentru maximizarea atractivității." },
         { title: "Revenue Management", description: "Algoritm proprietar de pricing dinamic bazat pe analiza pieței, sezonalitate și evenimente locale." },
@@ -1161,7 +1161,7 @@ Mulțumesc!`,
       subtitle: "We offer comprehensive asset management solutions for property owners seeking superior returns and real estate asset protection.",
       commission: "Management fee",
       commissionValue: "20%",
-      commissionSuffix: "of net revenue",
+      commissionSuffix: "of net income",
       items: [
         { title: "Audit & Professional Photography", description: "Detailed property assessment and professional photo session to maximize listing appeal." },
         { title: "Revenue Management", description: "Proprietary dynamic pricing algorithm based on market analysis, seasonality, and local events." },
