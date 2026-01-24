@@ -54,8 +54,10 @@ const POIManager = () => {
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingGooglePhoto, setIsFetchingGooglePhoto] = useState(false);
+  const [isFetchingPixabayPhoto, setIsFetchingPixabayPhoto] = useState(false);
   const [isBulkFetching, setIsBulkFetching] = useState(false);
   const [retryingPoiId, setRetryingPoiId] = useState<string | null>(null);
+  const [pixabayRetryingPoiId, setPixabayRetryingPoiId] = useState<string | null>(null);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -139,13 +141,99 @@ const POIManager = () => {
 
       if (data.photo_url) {
         setFormData(prev => ({ ...prev, image_url: data.photo_url }));
-        toast.success(`Imagine găsită pentru "${data.place_name}"!`);
+        const sourceLabel = data.source === 'pixabay' ? 'Pixabay' : 'Google Places';
+        toast.success(`Imagine găsită pentru "${data.place_name}" (${sourceLabel})!`);
       }
     } catch (error: any) {
       console.error('Error fetching Google photo:', error);
       toast.error('Nu am putut găsi o imagine: ' + (error.message || 'Eroare necunoscută'));
     } finally {
       setIsFetchingGooglePhoto(false);
+    }
+  };
+
+  // Fetch photo directly from Pixabay (skip Google)
+  const fetchPixabayPhoto = async () => {
+    if (!formData.name && !formData.address) {
+      toast.error('Te rog completează numele sau adresa POI-ului');
+      return;
+    }
+
+    setIsFetchingPixabayPhoto(true);
+    try {
+      const response = await supabase.functions.invoke('fetch-place-photo', {
+        body: {
+          query: formData.name || formData.address,
+          forcePixabay: true,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = response.data;
+      
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data.photo_url) {
+        setFormData(prev => ({ ...prev, image_url: data.photo_url }));
+        toast.success(`Imagine Pixabay găsită pentru "${data.place_name}"!`);
+      }
+    } catch (error: any) {
+      console.error('Error fetching Pixabay photo:', error);
+      toast.error('Nu am putut găsi o imagine pe Pixabay: ' + (error.message || 'Eroare necunoscută'));
+    } finally {
+      setIsFetchingPixabayPhoto(false);
+    }
+  };
+
+  // Retry fetching image from Pixabay only for a single POI in table
+  const retryFetchPixabayForPoi = async (poi: POI) => {
+    setPixabayRetryingPoiId(poi.id);
+    
+    try {
+      const response = await supabase.functions.invoke('fetch-place-photo', {
+        body: {
+          query: poi.name,
+          forcePixabay: true,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = response.data;
+      
+      if (data.photo_url) {
+        const { error: updateError } = await supabase
+          .from('points_of_interest')
+          .update({ 
+            image_url: data.photo_url,
+            image_fetch_failed: false,
+            image_fetch_attempted_at: new Date().toISOString()
+          })
+          .eq('id', poi.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+        queryClient.invalidateQueries({ queryKey: ['pois'] });
+        toast.success(`Imagine Pixabay găsită pentru "${poi.name}"!`);
+      } else {
+        toast.error(`Nu s-a găsit imagine Pixabay pentru "${poi.name}"`);
+      }
+    } catch (error: any) {
+      console.error(`Failed to fetch Pixabay photo for ${poi.name}:`, error);
+      toast.error('Eroare la căutare Pixabay: ' + (error.message || 'Eroare necunoscută'));
+    } finally {
+      setPixabayRetryingPoiId(null);
     }
   };
 
@@ -699,7 +787,7 @@ const POIManager = () => {
                       type="button"
                       variant="default"
                       onClick={fetchGooglePlacePhoto}
-                      disabled={isFetchingGooglePhoto || (!formData.name && !formData.address)}
+                      disabled={isFetchingGooglePhoto || isFetchingPixabayPhoto || (!formData.name && !formData.address)}
                       className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     >
                       {isFetchingGooglePhoto ? (
@@ -708,6 +796,22 @@ const POIManager = () => {
                         <Sparkles className="w-5 h-5 mr-2" />
                       )}
                       {isFetchingGooglePhoto ? 'Se caută...' : '✨ Găsește imagine automată (Google Places)'}
+                    </Button>
+                    
+                    {/* Pixabay Direct Search Button */}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={fetchPixabayPhoto}
+                      disabled={isFetchingPixabayPhoto || isFetchingGooglePhoto || (!formData.name && !formData.address)}
+                      className="w-full h-10"
+                    >
+                      {isFetchingPixabayPhoto ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                      )}
+                      {isFetchingPixabayPhoto ? 'Se caută pe Pixabay...' : '🖼️ Caută doar pe Pixabay (gratuit)'}
                     </Button>
                     
                     <div className="flex items-center gap-2">
@@ -1103,19 +1207,36 @@ const POIManager = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center gap-1 justify-end">
-                          {/* Retry fetch button for failed POIs */}
+                          {/* Retry fetch button for failed POIs - Google Places */}
                           {(poi.image_fetch_failed || (!poi.image_url && !poi.image_fetch_failed)) && (
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => retryFetchImageForPoi(poi)}
-                              disabled={retryingPoiId === poi.id}
-                              title={poi.image_fetch_failed ? 'Încearcă din nou să găsești imagine' : 'Caută imagine pe Google Places'}
+                              disabled={retryingPoiId === poi.id || pixabayRetryingPoiId === poi.id}
+                              title={poi.image_fetch_failed ? 'Încearcă din nou să găsești imagine (Google)' : 'Caută imagine pe Google Places'}
                             >
                               {retryingPoiId === poi.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
                                 <Sparkles className="w-4 h-4 text-primary" />
+                              )}
+                            </Button>
+                          )}
+                          {/* Pixabay direct search button */}
+                          {(poi.image_fetch_failed || !poi.image_url) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => retryFetchPixabayForPoi(poi)}
+                              disabled={pixabayRetryingPoiId === poi.id || retryingPoiId === poi.id}
+                              title="Caută imagine doar pe Pixabay (gratuit)"
+                              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            >
+                              {pixabayRetryingPoiId === poi.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <ImageIcon className="w-4 h-4" />
                               )}
                             </Button>
                           )}
