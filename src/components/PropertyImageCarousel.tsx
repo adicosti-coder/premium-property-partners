@@ -9,12 +9,28 @@ interface PropertyImageCarouselProps {
   className?: string;
 }
 
-// Skeleton component for loading state
+// Premium shimmer skeleton component for loading state
 const CarouselSkeleton = () => (
-  <div className="w-full h-56 bg-gradient-to-br from-muted/80 to-muted/40 animate-pulse flex items-center justify-center">
-    <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
-      <ImageIcon className="w-8 h-8" />
-      <div className="h-2 w-20 bg-muted-foreground/20 rounded-full" />
+  <div className="w-full h-56 relative overflow-hidden bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60">
+    {/* Shimmer overlay */}
+    <div 
+      className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_ease-in-out_infinite]"
+      style={{
+        background: 'linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.08) 50%, transparent 100%)'
+      }}
+    />
+    {/* Blurred backdrop effect */}
+    <div className="absolute inset-0 backdrop-blur-[2px] bg-gradient-to-t from-background/20 to-transparent" />
+    {/* Content placeholder */}
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+      <div className="w-12 h-12 rounded-full bg-muted-foreground/10 flex items-center justify-center">
+        <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+      </div>
+      <div className="flex gap-1.5">
+        <div className="h-1.5 w-8 bg-muted-foreground/15 rounded-full" />
+        <div className="h-1.5 w-12 bg-muted-foreground/10 rounded-full" />
+        <div className="h-1.5 w-6 bg-muted-foreground/15 rounded-full" />
+      </div>
     </div>
   </div>
 );
