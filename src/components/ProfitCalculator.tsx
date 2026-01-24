@@ -1,16 +1,18 @@
 import { useState, useMemo, useEffect } from "react";
-import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2 } from "lucide-react";
+import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2, Crown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import LeadCaptureForm from "./LeadCaptureForm";
 import AuthGateOverlay from "./AuthGateOverlay";
+import PremiumBenefitsBadge from "./PremiumBenefitsBadge";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
 import { useSimulations } from "@/hooks/useSimulations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ProfitCalculator = () => {
   const { t, language } = useLanguage();
@@ -315,9 +317,45 @@ const ProfitCalculator = () => {
               resultsVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
             )}
           >
+            {/* Premium Benefits Badge for unauthenticated users */}
+            <AnimatePresence>
+              {!isAuthenticated && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-4"
+                >
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/25">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 8, -8, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity, 
+                          repeatDelay: 3 
+                        }}
+                      >
+                        <Crown className="w-5 h-5 text-gold" />
+                      </motion.div>
+                      <span className="text-sm font-medium text-foreground">
+                        {language === 'ro' 
+                          ? 'Salvează și compară simulările tale' 
+                          : 'Save and compare your simulations'}
+                      </span>
+                    </div>
+                    <PremiumBenefitsBadge variant="compact" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Auth Gate Overlay - show blur when not authenticated */}
             {!isAuthenticated && (
-              <AuthGateOverlay />
+              <AuthGateOverlay context="calculator" />
             )}
 
             {/* History toggle button for authenticated users */}
