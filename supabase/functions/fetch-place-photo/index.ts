@@ -5,6 +5,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Pixabay fallback search
+async function searchPixabay(query: string): Promise<string | null> {
+  const PIXABAY_API_KEY = Deno.env.get('PIXABAY_API_KEY');
+  
+  if (!PIXABAY_API_KEY) {
+    console.log('Pixabay API key not configured, skipping fallback');
+    return null;
+  }
+
+  try {
+    // Search for images related to the query + Timisoara for local relevance
+    const searchTerms = `${query} Timisoara Romania`;
+    const pixabayUrl = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${encodeURIComponent(searchTerms)}&image_type=photo&orientation=horizontal&min_width=640&per_page=5&lang=ro`;
+    
+    console.log(`Searching Pixabay for: ${searchTerms}`);
+    
+    const response = await fetch(pixabayUrl);
+    const data = await response.json();
+    
+    if (data.hits && data.hits.length > 0) {
+      // Return the large image URL of the first result
+      const imageUrl = data.hits[0].webformatURL || data.hits[0].largeImageURL;
+      console.log(`Pixabay found image: ${imageUrl}`);
+      return imageUrl;
+    }
+    
+    // Try a broader search without location if no results
+    console.log('No Pixabay results with location, trying broader search...');
+    const broaderUrl = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${encodeURIComponent(query)}&image_type=photo&orientation=horizontal&min_width=640&per_page=5`;
+    
+    const broaderResponse = await fetch(broaderUrl);
+    const broaderData = await broaderResponse.json();
+    
+    if (broaderData.hits && broaderData.hits.length > 0) {
+      const imageUrl = broaderData.hits[0].webformatURL || broaderData.hits[0].largeImageURL;
+      console.log(`Pixabay broader search found image: ${imageUrl}`);
+      return imageUrl;
+    }
+    
+    console.log('No Pixabay images found');
+    return null;
+  } catch (error) {
+    console.error('Pixabay search error:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -62,6 +109,23 @@ serve(async (req) => {
       console.log('Text Search Response status:', textSearchData.status);
       
       if (textSearchData.status !== 'OK' || !textSearchData.results || textSearchData.results.length === 0) {
+        // Try Pixabay as last resort
+        console.log('Google Places found nothing, trying Pixabay fallback...');
+        const pixabayUrl = await searchPixabay(searchQuery);
+        
+        if (pixabayUrl) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              photo_url: pixabayUrl,
+              place_name: searchQuery,
+              source: 'pixabay',
+              message: 'Image from Pixabay (Google Places found no results)'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
             error: 'Place not found', 
@@ -76,6 +140,25 @@ serve(async (req) => {
       const place = textSearchData.results[0];
       
       if (!place.photos || place.photos.length === 0) {
+        // Try Pixabay as fallback for places without photos
+        console.log('Place found but no photos, trying Pixabay fallback...');
+        const pixabayUrl = await searchPixabay(place.name || searchQuery);
+        
+        if (pixabayUrl) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              photo_url: pixabayUrl,
+              place_name: place.name,
+              place_id: place.place_id,
+              address: place.formatted_address,
+              source: 'pixabay',
+              message: 'Image from Pixabay (Google Places had no photos)'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
             error: 'No photos available for this place',
@@ -108,7 +191,8 @@ serve(async (req) => {
           place_name: place.name,
           place_id: place.place_id,
           address: place.formatted_address,
-          photos_available: place.photos.length
+          photos_available: place.photos.length,
+          source: 'google_places'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -117,6 +201,25 @@ serve(async (req) => {
     const place = findPlaceData.candidates[0];
     
     if (!place.photos || place.photos.length === 0) {
+      // Try Pixabay as fallback for places without photos
+      console.log('Place found but no photos, trying Pixabay fallback...');
+      const pixabayUrl = await searchPixabay(place.name || searchQuery);
+      
+      if (pixabayUrl) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            photo_url: pixabayUrl,
+            place_name: place.name,
+            place_id: place.place_id,
+            address: place.formatted_address,
+            source: 'pixabay',
+            message: 'Image from Pixabay (Google Places had no photos)'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: 'No photos available for this place',
@@ -149,7 +252,8 @@ serve(async (req) => {
         place_name: place.name,
         place_id: place.place_id,
         address: place.formatted_address,
-        photos_available: place.photos.length
+        photos_available: place.photos.length,
+        source: 'google_places'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
