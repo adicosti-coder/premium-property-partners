@@ -19,6 +19,10 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import BadgeShowcase from "@/components/BadgeShowcase";
 import { formatDistanceToNow } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -229,12 +233,24 @@ const PublicProfile = () => {
   }
 
   const displayName = profile.full_name || text.anonymousUser;
+  
+  const breadcrumbItems = [
+    { label: language === 'ro' ? 'Comunitate' : 'Community', href: '/comunitate' },
+    { label: displayName }
+  ];
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`${displayName} - ${language === 'ro' ? 'Profil Comunitate' : 'Community Profile'}`}
+        description={`${text.articles}: ${stats?.totalArticles || 0}, ${text.votes}: ${stats?.totalVotes || 0}`}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-24 max-w-4xl">
+        {/* Breadcrumb */}
+        <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
+        
         {/* Back Button */}
         <Button variant="ghost" asChild className="mb-6">
           <Link to="/comunitate">
@@ -391,6 +407,8 @@ const PublicProfile = () => {
       </main>
 
       <Footer />
+      <GlobalConversionWidgets showExitIntent={false} showSocialProof={false} />
+      <BackToTop />
     </div>
   );
 };
