@@ -31,7 +31,9 @@ import {
   Download,
   Share2,
   Check,
-  Copy
+  Copy,
+  Crown,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +44,7 @@ import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiImport } from '@/utils/exportPoiFavoritesPdf';
 import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
+import PremiumBenefitsBadge from './PremiumBenefitsBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -603,9 +606,74 @@ const CityGuideSection: React.FC = () => {
             </span>
           </h2>
           
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
             {t.subtitle}
           </p>
+
+          {/* Premium Benefits Banner for unauthenticated users */}
+          <AnimatePresence>
+            {!isAuthenticated && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ duration: 0.3 }}
+                className="max-w-2xl mx-auto"
+              >
+                <div className="relative p-4 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/25 overflow-hidden">
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer-sweep_3s_infinite] bg-gradient-to-r from-transparent via-gold/10 to-transparent skew-x-12 pointer-events-none" />
+                  
+                  <div className="relative flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 8, -8, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity, 
+                          repeatDelay: 4 
+                        }}
+                        className="w-10 h-10 rounded-lg bg-gold/20 flex items-center justify-center flex-shrink-0"
+                      >
+                        <Crown className="w-5 h-5 text-gold" />
+                      </motion.div>
+                      
+                      <div className="text-left">
+                        <span className="text-sm font-semibold text-foreground">
+                          {language === 'ro' 
+                            ? 'Deblochează toate locațiile exclusive' 
+                            : 'Unlock all exclusive locations'}
+                        </span>
+                        <p className="text-xs text-muted-foreground">
+                          {language === 'ro' 
+                            ? 'Salvează favorite, partajează și exportă PDF' 
+                            : 'Save favorites, share and export PDF'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <PremiumBenefitsBadge variant="compact" className="hidden md:flex" />
+                      
+                      <RouterLink to="/auth?mode=signup">
+                        <Button 
+                          size="sm" 
+                          className="gap-1.5 bg-gold hover:bg-gold/90 text-gold-foreground font-medium shadow-sm"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {language === 'ro' ? 'Gratuit' : 'Free'}
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </RouterLink>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Search and Filters */}
