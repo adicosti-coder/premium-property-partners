@@ -52,6 +52,8 @@ const POIManager = () => {
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingGooglePhoto, setIsFetchingGooglePhoto] = useState(false);
+  const [isBulkFetching, setIsBulkFetching] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Filter states
@@ -76,6 +78,25 @@ const POIManager = () => {
     display_order: 0,
     image_url: '',
   });
+
+  const { data: pois, isLoading } = useQuery({
+    queryKey: ['admin-pois'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('points_of_interest')
+        .select('*')
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as POI[];
+    },
+  });
+
+  // Count POIs without images
+  const poisWithoutImagesCount = useMemo(() => {
+    if (!pois) return 0;
+    return pois.filter(poi => !poi.image_url).length;
+  }, [pois]);
 
   // Fetch photo from Google Places
   const fetchGooglePlacePhoto = async () => {
@@ -118,18 +139,80 @@ const POIManager = () => {
     }
   };
 
-  const { data: pois, isLoading } = useQuery({
-    queryKey: ['admin-pois'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('points_of_interest')
-        .select('*')
-        .order('display_order', { ascending: true });
-      
-      if (error) throw error;
-      return data as POI[];
-    },
-  });
+  // Bulk fetch photos for all POIs without images
+  const bulkFetchMissingPhotos = async () => {
+    if (!pois) return;
+    
+    const poisWithoutImages = pois.filter(poi => !poi.image_url);
+    
+    if (poisWithoutImages.length === 0) {
+      toast.info('Toate POI-urile au deja imagini!');
+      return;
+    }
+
+    setIsBulkFetching(true);
+    setBulkProgress({ current: 0, total: poisWithoutImages.length, success: 0, failed: 0 });
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (let i = 0; i < poisWithoutImages.length; i++) {
+      const poi = poisWithoutImages[i];
+      setBulkProgress(prev => ({ ...prev, current: i + 1 }));
+
+      try {
+        const response = await supabase.functions.invoke('fetch-place-photo', {
+          body: {
+            query: poi.name,
+            address: poi.address,
+            latitude: poi.latitude,
+            longitude: poi.longitude,
+          },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        const data = response.data;
+        
+        if (data.photo_url) {
+          // Update POI with new image
+          const { error: updateError } = await supabase
+            .from('points_of_interest')
+            .update({ image_url: data.photo_url })
+            .eq('id', poi.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          successCount++;
+          setBulkProgress(prev => ({ ...prev, success: successCount }));
+        } else {
+          failedCount++;
+          setBulkProgress(prev => ({ ...prev, failed: failedCount }));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch photo for ${poi.name}:`, error);
+        failedCount++;
+        setBulkProgress(prev => ({ ...prev, failed: failedCount }));
+      }
+
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    setIsBulkFetching(false);
+    queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+    queryClient.invalidateQueries({ queryKey: ['pois'] });
+
+    if (successCount > 0) {
+      toast.success(`${successCount} imagini adăugate cu succes!${failedCount > 0 ? ` (${failedCount} eșuate)` : ''}`);
+    } else {
+      toast.error('Nu am putut găsi imagini pentru niciun POI.');
+    }
+  };
 
   // Filtered POIs
   const filteredPois = useMemo(() => {
@@ -324,28 +407,66 @@ const POIManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-serif font-bold text-foreground">Puncte de Interes</h2>
           <p className="text-muted-foreground">Gestionează locațiile afișate pe hartă</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Adaugă POI
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Bulk fetch button */}
+          {poisWithoutImagesCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={bulkFetchMissingPhotos}
+              disabled={isBulkFetching}
+              className="border-primary/30 hover:bg-primary/10"
+            >
+              {isBulkFetching ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {bulkProgress.current}/{bulkProgress.total} ({bulkProgress.success} ✓)
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Auto-imagini ({poisWithoutImagesCount} lipsă)
+                </>
+              )}
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingPOI ? 'Editează Punct de Interes' : 'Adaugă Punct de Interes'}
-              </DialogTitle>
-            </DialogHeader>
+          )}
+          
+          {/* Progress indicator when bulk fetching */}
+          {isBulkFetching && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs">
+                {bulkProgress.success} ✓ {bulkProgress.failed > 0 && `${bulkProgress.failed} ✗`}
+              </span>
+            </div>
+          )}
+        
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Adaugă POI
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingPOI ? 'Editează Punct de Interes' : 'Adaugă Punct de Interes'}
+                </DialogTitle>
+              </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Image Upload */}
@@ -623,6 +744,7 @@ const POIManager = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
