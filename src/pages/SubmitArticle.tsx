@@ -5,6 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -282,12 +286,24 @@ const SubmitArticle = () => {
     return null;
   }
 
+  const breadcrumbItems = [
+    { label: language === "ro" ? "Comunitate" : "Community", href: "/comunitate" },
+    { label: t.title }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`${t.title} | RealTrust`}
+        description={t.subtitle}
+        noIndex={true}
+      />
       <Header />
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-6 max-w-4xl">
+          <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
+          
           <Button 
             variant="ghost" 
             onClick={() => navigate("/comunitate")}
@@ -492,6 +508,8 @@ const SubmitArticle = () => {
       </main>
 
       <Footer />
+      <GlobalConversionWidgets showExitIntent={false} showSocialProof={false} />
+      <BackToTop />
     </div>
   );
 };
