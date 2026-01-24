@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
+import PasswordStrengthIndicator, { validatePassword } from "@/components/PasswordStrengthIndicator";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -26,9 +26,14 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
 
   const emailSchema = z.string().email(t.auth.invalidEmailMessage);
-  const passwordSchema = z.string().min(6, t.auth.invalidPasswordMessage);
+  const passwordSchema = z.string().min(8, t.auth.invalidPasswordMessage);
+
+  const handlePasswordStrengthChange = useCallback((isValid: boolean) => {
+    setIsPasswordValid(isValid);
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -112,6 +117,19 @@ const Auth = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // For signup, validate password strength
+    if (mode === "signup") {
+      const validation = validatePassword(password);
+      if (!validation.isValid) {
+        toast({
+          title: t.auth.weakPassword,
+          description: t.auth.weakPasswordMessage,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -270,11 +288,20 @@ const Auth = () => {
                     maxLength={72}
                   />
                 </div>
-                {mode === "signup" && <PasswordStrengthIndicator password={password} />}
+                {mode === "signup" && (
+                  <PasswordStrengthIndicator 
+                    password={password} 
+                    onStrengthChange={handlePasswordStrengthChange}
+                  />
+                )}
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || (mode === "signup" && password.length > 0 && !isPasswordValid)}
+            >
               {getButtonText()}
             </Button>
           </form>

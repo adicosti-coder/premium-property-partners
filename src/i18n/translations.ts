@@ -612,6 +612,8 @@ Mulțumesc!`,
         avoidCommon: "Evită cuvinte comune, numele tău sau date importante",
         strongPassword: "Excelent! Parola ta este puternică și sigură.",
       },
+      weakPassword: "Parolă prea slabă",
+      weakPasswordMessage: "Parola nu îndeplinește cerințele minime de securitate. Verifică recomandările de mai sus.",
     },
     
     // Admin
@@ -1680,6 +1682,8 @@ Thank you!`,
         avoidCommon: "Avoid common words, your name, or important dates",
         strongPassword: "Excellent! Your password is strong and secure.",
       },
+      weakPassword: "Password too weak",
+      weakPasswordMessage: "The password does not meet minimum security requirements. Check the recommendations above.",
     },
     
     // Admin
