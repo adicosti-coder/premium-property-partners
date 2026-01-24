@@ -47,6 +47,7 @@ import SharedLinksStats from './SharedLinksStats';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
 import PremiumPOICarousel from './PremiumPOICarousel';
 import OptimizedImage from './OptimizedImage';
+import POIPlaceholder from './POIPlaceholder';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -922,9 +923,9 @@ const CityGuideSection: React.FC = () => {
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                     className={`group relative rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
                   >
-                    {/* Image with lazy loading and optimization */}
-                    {poi.image_url && (
-                      <div className="relative h-40 overflow-hidden">
+                    {/* Image with lazy loading and optimization OR Placeholder */}
+                    <div className="relative h-40 overflow-hidden">
+                      {poi.image_url ? (
                         <OptimizedImage 
                           src={poi.image_url} 
                           alt={language === 'ro' ? poi.name : poi.name_en}
@@ -933,71 +934,43 @@ const CityGuideSection: React.FC = () => {
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           priority={index < 3}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-                        
-                        {/* Favorite button on image */}
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleFavorite(poi.id);
-                          }}
-                          className="absolute top-3 left-3 w-9 h-9 rounded-full bg-background/90 flex items-center justify-center hover:bg-background transition-colors z-10"
-                          aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          <Heart 
-                            className={`w-5 h-5 transition-colors ${
-                              isFavorite(poi.id) 
-                                ? 'text-rose-500 fill-rose-500' 
-                                : 'text-muted-foreground hover:text-rose-500'
-                            }`} 
-                          />
-                        </button>
-                        
-                        {poi.rating && (
-                          <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
-                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                            <span className="font-medium">{poi.rating}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <div className="p-6">
-                      {/* Category Icon - show only if no image */}
-                      {!poi.image_url && (
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-background/80 flex items-center justify-center shadow-sm">
-                            <Icon className={`w-6 h-6 ${iconColor}`} />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {/* Favorite button */}
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleFavorite(poi.id);
-                              }}
-                              className="w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
-                              aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
-                            >
-                              <Heart 
-                                className={`w-5 h-5 transition-colors ${
-                                  isFavorite(poi.id) 
-                                    ? 'text-rose-500 fill-rose-500' 
-                                    : 'text-muted-foreground hover:text-rose-500'
-                                }`} 
-                              />
-                            </button>
-                            {poi.rating && (
-                              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 text-sm">
-                                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                                <span className="font-medium">{poi.rating}</span>
-                              </div>
-                            )}
-                          </div>
+                      ) : (
+                        <POIPlaceholder 
+                          category={poi.category} 
+                          name={language === 'ro' ? poi.name : poi.name_en}
+                          className="group-hover:scale-105 transition-transform duration-500"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                      
+                      {/* Favorite button on image */}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleFavorite(poi.id);
+                        }}
+                        className="absolute top-3 left-3 w-9 h-9 rounded-full bg-background/90 flex items-center justify-center hover:bg-background transition-colors z-10"
+                        aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        <Heart 
+                          className={`w-5 h-5 transition-colors ${
+                            isFavorite(poi.id) 
+                              ? 'text-rose-500 fill-rose-500' 
+                              : 'text-muted-foreground hover:text-rose-500'
+                          }`} 
+                        />
+                      </button>
+                      
+                      {poi.rating && (
+                        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          <span className="font-medium">{poi.rating}</span>
                         </div>
                       )}
+                    </div>
+                    
+                    <div className="p-6">
 
                       {/* Content */}
                       <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">

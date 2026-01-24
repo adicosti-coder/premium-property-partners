@@ -307,7 +307,7 @@ const POIManager = () => {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Image Upload */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Imagine (opțional)</Label>
                 <input
                   ref={fileInputRef}
@@ -337,20 +337,54 @@ const POIManager = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-full h-20 border-dashed"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    ) : (
-                      <Upload className="w-5 h-5 mr-2" />
-                    )}
-                    {isUploading ? 'Se încarcă...' : 'Încarcă imagine'}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="w-full h-16 border-dashed"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="w-5 h-5 mr-2" />
+                      )}
+                      {isUploading ? 'Se încarcă...' : 'Încarcă imagine'}
+                    </Button>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-xs text-muted-foreground">sau</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    
+                    {/* External URL Input */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="URL imagine extern (ex: Wikimedia Commons)"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                        className="flex-1 text-xs"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={!formData.image_url}
+                        onClick={() => {
+                          if (formData.image_url) {
+                            toast.success('URL imagine setat!');
+                          }
+                        }}
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      💡 Sfat: Folosește imagini de pe Wikimedia Commons pentru fotografii reale verificate.
+                    </p>
+                  </div>
                 )}
               </div>
 
