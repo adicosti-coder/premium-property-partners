@@ -55,6 +55,7 @@ const POIManager = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingGooglePhoto, setIsFetchingGooglePhoto] = useState(false);
   const [isBulkFetching, setIsBulkFetching] = useState(false);
+  const [retryingPoiId, setRetryingPoiId] = useState<string | null>(null);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -310,6 +311,65 @@ const POIManager = () => {
     URL.revokeObjectURL(url);
 
     toast.success(`${poisWithoutImages.length} POI-uri exportate în CSV!`);
+  };
+
+  // Retry fetching image for a single POI
+  const retryFetchImageForPoi = async (poi: POI) => {
+    setRetryingPoiId(poi.id);
+    
+    try {
+      const response = await supabase.functions.invoke('fetch-place-photo', {
+        body: {
+          query: poi.name,
+          address: poi.address,
+          latitude: poi.latitude,
+          longitude: poi.longitude,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const data = response.data;
+      
+      if (data.photo_url) {
+        // Update POI with new image and reset failed flag
+        const { error: updateError } = await supabase
+          .from('points_of_interest')
+          .update({ 
+            image_url: data.photo_url,
+            image_fetch_failed: false,
+            image_fetch_attempted_at: new Date().toISOString()
+          })
+          .eq('id', poi.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+        queryClient.invalidateQueries({ queryKey: ['pois'] });
+        toast.success(`Imagine găsită pentru "${poi.name}"!`);
+      } else {
+        // Still no image found
+        await supabase
+          .from('points_of_interest')
+          .update({ 
+            image_fetch_failed: true,
+            image_fetch_attempted_at: new Date().toISOString()
+          })
+          .eq('id', poi.id);
+
+        queryClient.invalidateQueries({ queryKey: ['admin-pois'] });
+        toast.error(`Nu s-a găsit imagine pentru "${poi.name}"`);
+      }
+    } catch (error: any) {
+      console.error(`Failed to fetch photo for ${poi.name}:`, error);
+      toast.error('Eroare la căutare: ' + (error.message || 'Eroare necunoscută'));
+    } finally {
+      setRetryingPoiId(null);
+    }
   };
 
   // Filtered POIs
@@ -1043,6 +1103,22 @@ const POIManager = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center gap-1 justify-end">
+                          {/* Retry fetch button for failed POIs */}
+                          {(poi.image_fetch_failed || (!poi.image_url && !poi.image_fetch_failed)) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => retryFetchImageForPoi(poi)}
+                              disabled={retryingPoiId === poi.id}
+                              title={poi.image_fetch_failed ? 'Încearcă din nou să găsești imagine' : 'Caută imagine pe Google Places'}
+                            >
+                              {retryingPoiId === poi.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Sparkles className="w-4 h-4 text-primary" />
+                              )}
+                            </Button>
+                          )}
                           {poi.website && (
                             <Button
                               variant="ghost"
