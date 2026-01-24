@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
+import { useImagePreload } from "@/hooks/useImagePreload";
 
 interface PropertyImageCarouselProps {
   images: string[];
@@ -42,6 +43,15 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
+  const displayImages = images.slice(0, 5); // Limit to 5 images
+
+  // Use the reusable preload hook
+  const { preloadAround } = useImagePreload(displayImages, {
+    preloadAhead: 2,
+    preloadBehind: 1,
+    enabled: true,
+  });
+
   const scrollPrev = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -72,30 +82,10 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
     };
   }, [emblaApi, onSelect]);
 
-  const displayImages = images.slice(0, 5); // Limit to 5 images
-
-  // Preload next and previous images for faster navigation
+  // Preload adjacent images when index changes
   useEffect(() => {
-    if (displayImages.length <= 1) return;
-
-    const nextIndex = (selectedIndex + 1) % displayImages.length;
-    const prevIndex = (selectedIndex - 1 + displayImages.length) % displayImages.length;
-
-    // Preload next image
-    const nextImg = new Image();
-    nextImg.src = displayImages[nextIndex];
-
-    // Preload previous image
-    const prevImg = new Image();
-    prevImg.src = displayImages[prevIndex];
-
-    // Optionally preload one more ahead
-    if (displayImages.length > 2) {
-      const nextNextIndex = (selectedIndex + 2) % displayImages.length;
-      const nextNextImg = new Image();
-      nextNextImg.src = displayImages[nextNextIndex];
-    }
-  }, [selectedIndex, displayImages]);
+    preloadAround(selectedIndex);
+  }, [selectedIndex, preloadAround]);
 
   const handleImageLoad = useCallback((index: number) => {
     setLoadedImages(prev => new Set(prev).add(index));
