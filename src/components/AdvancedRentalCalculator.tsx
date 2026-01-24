@@ -23,8 +23,10 @@ import {
   LogIn,
   X,
   BarChart3,
-  GitCompare
+  GitCompare,
+  Crown
 } from 'lucide-react';
+import PremiumBenefitsBadge from './PremiumBenefitsBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -639,6 +641,40 @@ const AdvancedRentalCalculator = () => {
                 )}
               </Button>
             </div>
+
+            {/* Premium Banner for unauthenticated users */}
+            <AnimatePresence>
+              {!isAuthenticated && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="px-6 md:px-8 pt-6"
+                >
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/25">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 2, 
+                          repeat: Infinity, 
+                          repeatDelay: 3 
+                        }}
+                      >
+                        <Crown className="w-5 h-5 text-gold" />
+                      </motion.div>
+                      <span className="text-sm font-medium text-foreground">
+                        {language === 'ro' ? 'Salvează și compară simulările tale' : 'Save and compare your simulations'}
+                      </span>
+                    </div>
+                    <PremiumBenefitsBadge variant="compact" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Results Section */}
             <div className="bg-muted/30 border-t border-border p-6 md:p-8 relative">
