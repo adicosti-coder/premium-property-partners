@@ -33,8 +33,8 @@ const OwnersTeaser = () => {
         },
         {
           icon: Building2,
-          title: "Comision 15%",
-          description: "Cel mai mic comision din piață, fără costuri ascunse",
+          title: "Comision 20%",
+          description: "Comision transparent din încasările nete, fără costuri ascunse",
         },
       ],
     },
@@ -62,8 +62,8 @@ const OwnersTeaser = () => {
         },
         {
           icon: Building2,
-          title: "15% Commission",
-          description: "Lowest commission in the market, no hidden fees",
+          title: "20% Commission",
+          description: "Transparent commission of net income, no hidden fees",
         },
       ],
     },
