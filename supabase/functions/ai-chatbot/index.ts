@@ -5,6 +5,77 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute window
+const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute per IP
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // Cleanup every 5 minutes
+
+// In-memory rate limiting store
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Cleanup old entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of rateLimitStore.entries()) {
+    if (data.resetTime < now) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, CLEANUP_INTERVAL_MS);
+
+// Check and update rate limit for an IP
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const existing = rateLimitStore.get(ip);
+
+  if (!existing || existing.resetTime < now) {
+    // New window or expired - reset
+    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+
+  if (existing.count >= MAX_REQUESTS_PER_WINDOW) {
+    // Rate limit exceeded
+    const resetIn = existing.resetTime - now;
+    return { allowed: false, remaining: 0, resetIn };
+  }
+
+  // Increment counter
+  existing.count++;
+  rateLimitStore.set(ip, existing);
+  return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - existing.count, resetIn: existing.resetTime - now };
+}
+
+// Get client IP from request headers
+function getClientIP(req: Request): string {
+  // Check various headers for the real client IP
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  
+  const realIP = req.headers.get("x-real-ip");
+  if (realIP) {
+    return realIP.trim();
+  }
+  
+  // Fallback to a hash of user-agent and other identifying info
+  const userAgent = req.headers.get("user-agent") || "";
+  const apiKey = req.headers.get("apikey") || "";
+  return `fallback-${hashCode(userAgent + apiKey)}`;
+}
+
+// Simple hash function for fallback IP generation
+function hashCode(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(16);
+}
+
 interface ChatRequest {
   message: string;
   language?: string;
@@ -80,10 +151,54 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Apply rate limiting
+  const clientIP = getClientIP(req);
+  const rateLimit = checkRateLimit(clientIP);
+
+  console.log(`AI Chatbot - IP: ${clientIP}, Remaining: ${rateLimit.remaining}, Allowed: ${rateLimit.allowed}`);
+
+  if (!rateLimit.allowed) {
+    console.warn(`Rate limit exceeded for IP: ${clientIP}`);
+    return new Response(
+      JSON.stringify({
+        error: "Too many requests",
+        response: "Ai trimis prea multe mesaje într-un timp scurt. Te rog așteaptă un moment sau contactează-ne pe WhatsApp: +40723154520",
+        retryAfter: Math.ceil(rateLimit.resetIn / 1000)
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": Math.ceil(rateLimit.resetIn / 1000).toString(),
+          "X-RateLimit-Limit": MAX_REQUESTS_PER_WINDOW.toString(),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": Math.ceil(Date.now() / 1000 + rateLimit.resetIn / 1000).toString(),
+          ...corsHeaders,
+        },
+      }
+    );
+  }
+
   try {
     const { message, language = "ro", conversationHistory = [] }: ChatRequest = await req.json();
 
-    console.log(`AI Chatbot request - Language: ${language}, Message: ${message}`);
+    // Validate message length to prevent abuse
+    if (!message || message.length > 2000) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid message",
+          response: language === "en"
+            ? "Message is too long or empty. Please keep messages under 2000 characters."
+            : "Mesajul este prea lung sau gol. Te rog păstrează mesajele sub 2000 de caractere."
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    console.log(`AI Chatbot request - Language: ${language}, Message length: ${message.length}`);
 
     const systemPrompt = language === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_RO;
 
@@ -120,7 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        console.error("Rate limit exceeded");
+        console.error("Upstream rate limit exceeded");
         return new Response(
           JSON.stringify({ 
             error: "Rate limit exceeded",
@@ -161,7 +276,12 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ response: assistantResponse }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-RateLimit-Limit": MAX_REQUESTS_PER_WINDOW.toString(),
+          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+          ...corsHeaders 
+        },
       }
     );
   } catch (error: any) {
