@@ -599,6 +599,104 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaign_sends: {
+        Row: {
+          campaign_id: string | null
+          clicked_at: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          recipient_user_id: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          recipient_user_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_user_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          campaign_type: string
+          click_count: number | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          open_count: number | null
+          recipient_filter: Json | null
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number | null
+          status: string
+          subject: string
+          total_recipients: number | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_type?: string
+          click_count?: number | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          open_count?: number | null
+          recipient_filter?: Json | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject: string
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_type?: string
+          click_count?: number | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          open_count?: number | null
+          recipient_filter?: Json | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject?: string
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_click_tracking: {
         Row: {
           clicked_at: string

@@ -80,3 +80,9 @@ verify_jwt = false
 
 [functions.fetch-place-photo]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-campaign-email]
+verify_jwt = true
