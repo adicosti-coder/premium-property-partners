@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
@@ -351,10 +352,10 @@ const BlogArticlePage = () => {
             </div>
           )}
 
-          {/* Article Content */}
+          {/* Article Content - sanitized for XSS protection */}
           <div
             className="prose prose-lg dark:prose-invert max-w-none mb-8"
-            dangerouslySetInnerHTML={{ __html: displayContent }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
           />
 
           {/* Tags and Share */}
