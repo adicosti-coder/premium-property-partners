@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Sparkles, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 interface Message {
   id: string;
@@ -23,6 +24,13 @@ const AIChatbot = () => {
   const [hasUnread, setHasUnread] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const captchaRef = useRef<HCaptcha>(null);
+  
+  // CAPTCHA state
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaSiteKey, setCaptchaSiteKey] = useState<string>("");
+  const [captchaLoading, setCaptchaLoading] = useState(true);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   const t = {
     ro: {
@@ -33,6 +41,9 @@ const AIChatbot = () => {
       thinking: "Gândesc...",
       error: "A apărut o eroare. Te rog încearcă din nou.",
       poweredBy: "Powered by AI",
+      captchaRequired: "Te rog completează verificarea de securitate pentru a putea trimite mesaje.",
+      captchaVerified: "Verificare completă",
+      verifySecurity: "Verifică pentru a trimite mesaje",
     },
     en: {
       title: "Virtual Assistant",
@@ -42,10 +53,30 @@ const AIChatbot = () => {
       thinking: "Thinking...",
       error: "An error occurred. Please try again.",
       poweredBy: "Powered by AI",
+      captchaRequired: "Please complete the security verification to send messages.",
+      captchaVerified: "Verification complete",
+      verifySecurity: "Verify to send messages",
     },
   };
 
   const text = t[language as keyof typeof t] || t.ro;
+
+  // Fetch hCaptcha site key
+  useEffect(() => {
+    const fetchSiteKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-hcaptcha-site-key");
+        if (!error && data?.siteKey) {
+          setCaptchaSiteKey(data.siteKey);
+        }
+      } catch (err) {
+        console.error("Failed to fetch hCaptcha site key:", err);
+      } finally {
+        setCaptchaLoading(false);
+      }
+    };
+    fetchSiteKey();
+  }, []);
 
   // Initialize with greeting message
   useEffect(() => {
@@ -81,10 +112,10 @@ const AIChatbot = () => {
 
   // Focus input when opened
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (isOpen && inputRef.current && captchaVerified) {
       inputRef.current.focus();
     }
-  }, [isOpen]);
+  }, [isOpen, captchaVerified]);
 
   // Listen for custom event from FloatingActionMenu
   useEffect(() => {
@@ -97,13 +128,24 @@ const AIChatbot = () => {
     return () => window.removeEventListener('open-ai-chatbot', handleOpenChatbot);
   }, []);
 
+  const handleCaptchaVerify = useCallback((token: string) => {
+    setCaptchaToken(token);
+    setCaptchaVerified(true);
+    console.log("CAPTCHA verified for AI chatbot");
+  }, []);
+
+  const handleCaptchaExpire = useCallback(() => {
+    setCaptchaToken(null);
+    setCaptchaVerified(false);
+  }, []);
+
   const handleOpen = () => {
     setIsOpen(true);
     setHasUnread(false);
   };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !captchaVerified || !captchaToken) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -121,6 +163,7 @@ const AIChatbot = () => {
         body: {
           message: userMessage.content,
           language,
+          captchaToken,
           conversationHistory: messages.slice(-10).map((m) => ({
             role: m.role,
             content: m.content,
@@ -278,21 +321,55 @@ const AIChatbot = () => {
               </div>
             </ScrollArea>
 
-            {/* Input */}
+            {/* CAPTCHA & Input */}
             <div className="p-4 border-t border-border shrink-0">
+              {/* CAPTCHA Section */}
+              {!captchaVerified && captchaSiteKey && (
+                <div className="mb-3">
+                  <p className="text-xs text-muted-foreground mb-2 text-center">
+                    {text.verifySecurity}
+                  </p>
+                  <div className="flex justify-center">
+                    <HCaptcha
+                      ref={captchaRef}
+                      sitekey={captchaSiteKey}
+                      onVerify={handleCaptchaVerify}
+                      onExpire={handleCaptchaExpire}
+                      size="compact"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Verified badge */}
+              {captchaVerified && (
+                <div className="flex items-center justify-center gap-1 mb-2 text-xs text-primary">
+                  <ShieldCheck className="w-3 h-3" />
+                  {text.captchaVerified}
+                </div>
+              )}
+
+              {/* Loading CAPTCHA */}
+              {captchaLoading && !captchaSiteKey && (
+                <div className="flex items-center justify-center gap-2 mb-3 text-xs text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Loading security...
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={text.placeholder}
+                  placeholder={captchaVerified ? text.placeholder : text.captchaRequired}
                   className="flex-1"
-                  disabled={isLoading}
+                  disabled={isLoading || !captchaVerified}
                 />
                 <Button
                   onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
+                  disabled={!input.trim() || isLoading || !captchaVerified}
                   size="icon"
                   className="shrink-0"
                 >
