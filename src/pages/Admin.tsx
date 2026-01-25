@@ -45,6 +45,7 @@ import {
   Wrench,
   Mail,
   MailCheck,
+  Megaphone,
   Play,
   MapPin,
   Film,
@@ -81,6 +82,7 @@ import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
 import CommunityManager from "@/components/admin/CommunityManager";
 import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
 import SecurityChecklist from "@/components/admin/SecurityChecklist";
+import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -341,6 +343,10 @@ const Admin = () => {
               <ShieldCheck className="w-4 h-4" />
               Securitate
             </TabsTrigger>
+            <TabsTrigger value="email-campaigns" className="flex items-center gap-2">
+              <Megaphone className="w-4 h-4" />
+              Email Marketing
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -444,6 +450,11 @@ const Admin = () => {
           {/* Security Checklist Tab */}
           <TabsContent value="security">
             <SecurityChecklist />
+          </TabsContent>
+
+          {/* Email Campaigns Tab */}
+          <TabsContent value="email-campaigns">
+            <EmailCampaignManager />
           </TabsContent>
         </Tabs>
       </div>
