@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,6 +81,53 @@ interface ChatRequest {
   message: string;
   language?: string;
   conversationHistory?: Array<{ role: string; content: string }>;
+  captchaToken?: string;
+}
+
+// Verify hCaptcha token
+async function verifyCaptcha(token: string, formType: string, ipAddress: string, userAgent: string): Promise<boolean> {
+  const secretKey = Deno.env.get("HCAPTCHA_SECRET_KEY");
+  
+  if (!secretKey) {
+    console.error("HCAPTCHA_SECRET_KEY not configured");
+    return false;
+  }
+
+  try {
+    const verifyResponse = await fetch("https://api.hcaptcha.com/siteverify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret: secretKey,
+        response: token,
+      }),
+    });
+
+    const result = await verifyResponse.json();
+    console.log("hCaptcha verification result:", JSON.stringify(result));
+
+    // Log to captcha_logs table
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    await supabase.from("captcha_logs").insert({
+      form_type: formType,
+      ip_address: ipAddress,
+      user_agent: userAgent,
+      success: result.success,
+      error_codes: result["error-codes"] || null,
+      score: result.score || null,
+      hostname: result.hostname || null,
+    });
+
+    return result.success === true;
+  } catch (error) {
+    console.error("CAPTCHA verification error:", error);
+    return false;
+  }
 }
 
 const SYSTEM_PROMPT_RO = `Ești asistentul virtual al ApArt Hotel Timișoara, un serviciu premium de administrare apartamente în regim hotelier.
@@ -180,7 +228,43 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [] }: ChatRequest = await req.json();
+    const { message, language = "ro", conversationHistory = [], captchaToken }: ChatRequest = await req.json();
+
+    // Verify CAPTCHA token
+    if (!captchaToken) {
+      console.warn("Missing CAPTCHA token from IP:", clientIP);
+      return new Response(
+        JSON.stringify({
+          error: "CAPTCHA required",
+          response: language === "en"
+            ? "Please complete the CAPTCHA verification to continue."
+            : "Te rog completează verificarea CAPTCHA pentru a continua."
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const userAgent = req.headers.get("user-agent") || "unknown";
+    const captchaValid = await verifyCaptcha(captchaToken, "ai_chatbot", clientIP, userAgent);
+
+    if (!captchaValid) {
+      console.warn("CAPTCHA verification failed for IP:", clientIP);
+      return new Response(
+        JSON.stringify({
+          error: "CAPTCHA verification failed",
+          response: language === "en"
+            ? "CAPTCHA verification failed. Please try again."
+            : "Verificarea CAPTCHA a eșuat. Te rog încearcă din nou."
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     // Validate message length to prevent abuse
     if (!message || message.length > 2000) {
@@ -198,7 +282,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`AI Chatbot request - Language: ${language}, Message length: ${message.length}`);
+    console.log(`AI Chatbot request - Language: ${language}, Message length: ${message.length}, CAPTCHA: verified`);
 
     const systemPrompt = language === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_RO;
 
