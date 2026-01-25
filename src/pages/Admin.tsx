@@ -83,6 +83,7 @@ import CommunityManager from "@/components/admin/CommunityManager";
 import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
 import SecurityChecklist from "@/components/admin/SecurityChecklist";
 import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
+import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -347,6 +348,10 @@ const Admin = () => {
               <Megaphone className="w-4 h-4" />
               Email Marketing
             </TabsTrigger>
+            <TabsTrigger value="discount-codes" className="flex items-center gap-2">
+              <Euro className="w-4 h-4" />
+              Coduri Promo
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -455,6 +460,11 @@ const Admin = () => {
           {/* Email Campaigns Tab */}
           <TabsContent value="email-campaigns">
             <EmailCampaignManager />
+          </TabsContent>
+
+          {/* Discount Codes Tab */}
+          <TabsContent value="discount-codes">
+            <DiscountCodeManager />
           </TabsContent>
         </Tabs>
       </div>

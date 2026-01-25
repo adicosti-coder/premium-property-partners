@@ -534,6 +534,104 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_code_uses: {
+        Row: {
+          code_id: string
+          discount_amount: number
+          final_amount: number
+          id: string
+          nights: number
+          original_amount: number
+          property_name: string | null
+          used_at: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          code_id: string
+          discount_amount: number
+          final_amount: number
+          id?: string
+          nights?: number
+          original_amount: number
+          property_name?: string | null
+          used_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          code_id?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          nights?: number
+          original_amount?: number
+          property_name?: string | null
+          used_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_code_uses_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_booking_nights: number | null
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          description?: string | null
+          discount_type?: string
+          discount_value: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_booking_nights?: number | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_booking_nights?: number | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       email_ab_assignments: {
         Row: {
           created_at: string

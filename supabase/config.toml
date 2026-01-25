@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.send-campaign-email]
 verify_jwt = true
+
+[functions.validate-discount-code]
+verify_jwt = false
