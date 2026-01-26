@@ -34,6 +34,9 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import ServiceOptionsComparison from "@/components/ServiceOptionsComparison";
+import ServiceGuaranteesGrid from "@/components/ServiceGuaranteesGrid";
+import ProcessStepsTimeline from "@/components/ProcessStepsTimeline";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -266,11 +269,20 @@ const PentruProprietari = () => {
       {/* Trust Badges */}
       <TrustBadges />
 
+      {/* The 3 Options Comparison - NEW from realtrust.ro */}
+      <ServiceOptionsComparison />
+
       {/* Owner Benefits */}
       <OwnerBenefits />
 
+      {/* Service Guarantees Grid - NEW from realtrust.ro */}
+      <ServiceGuaranteesGrid />
+
       {/* Financial Transparency */}
       <FinancialTransparency />
+
+      {/* Process Steps Timeline - NEW from realtrust.ro */}
+      <ProcessStepsTimeline />
 
       {/* Partnership Timeline */}
       <PartnershipTimeline />
