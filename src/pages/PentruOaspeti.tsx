@@ -9,6 +9,7 @@ import PropertyMap from "@/components/PropertyMap";
 import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
 import QuickAvailabilitySearch from "@/components/QuickAvailabilitySearch";
 import CityGuideSection from "@/components/CityGuideSection";
+import SEOHead from "@/components/SEOHead";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
@@ -274,6 +275,13 @@ const PentruOaspeti = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={language === "ro" ? "Pentru Oaspeți | Cazare Premium Timișoara | ApArt Hotel" : "For Guests | Premium Accommodation Timișoara | ApArt Hotel"}
+        description={language === "ro" 
+          ? "Cazare premium în Timișoara cu facilități hoteliere, check-in automat și suport 24/7. Rezervă direct pentru cel mai bun preț!"
+          : "Premium accommodation in Timișoara with hotel-style amenities, self check-in and 24/7 support. Book direct for the best price!"}
+        url="https://realtrust.ro/pentru-oaspeti"
+      />
       <Header />
       
       <main className="pt-20">

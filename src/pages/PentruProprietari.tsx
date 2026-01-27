@@ -132,7 +132,7 @@ const PentruProprietari = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrustaparthotel.lovable.app/pentru-proprietari"
+        url="https://realtrust.ro/pentru-proprietari"
       />
       <Header />
       

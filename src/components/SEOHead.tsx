@@ -1,6 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
 
+const BASE_URL = "https://realtrust.ro";
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -22,6 +24,8 @@ interface SEOHeadProps {
   faqItems?: Array<{ question: string; answer: string }>;
   // Breadcrumb
   breadcrumbItems?: Array<{ name: string; url: string }>;
+  // Enable WebSite schema with SearchAction (for homepage)
+  includeWebSiteSchema?: boolean;
 }
 
 // Helper to generate Article JSON-LD
@@ -51,7 +55,7 @@ const generateArticleJsonLd = (
     "name": "RealTrust & ApArt Hotel",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://realtrustaparthotel.lovable.app/favicon.ico",
+      "url": `${BASE_URL}/favicon.ico`,
     },
   },
   ...(tags && tags.length > 0 && { "keywords": tags.join(", ") }),
@@ -118,10 +122,28 @@ const generateBreadcrumbJsonLd = (items: Array<{ name: string; url: string }>) =
   })),
 });
 
+// Helper to generate WebSite schema with SearchAction
+const generateWebSiteJsonLd = () => ({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "RealTrust & ApArt Hotel Timișoara",
+  "alternateName": "RealTrust",
+  "url": BASE_URL,
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": `${BASE_URL}/oaspeti?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+  "inLanguage": ["ro-RO", "en-US"],
+});
+
 const SEOHead = ({
   title,
   description,
-  image = "https://realtrustaparthotel.lovable.app/og-image.jpg",
+  image = `${BASE_URL}/og-image.jpg`,
   url,
   type = "website",
   publishedTime,
@@ -135,6 +157,7 @@ const SEOHead = ({
   productAvailability = "InStock",
   faqItems,
   breadcrumbItems,
+  includeWebSiteSchema = false,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
   
@@ -150,7 +173,14 @@ const SEOHead = ({
   
   const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
   const finalDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
-  const finalUrl = url || (typeof window !== "undefined" ? window.location.href : "https://realtrustaparthotel.lovable.app");
+  const finalUrl = url || (typeof window !== "undefined" ? window.location.href : BASE_URL);
+  
+  // Generate alternate URLs for hreflang
+  const getAlternateUrl = (lang: string) => {
+    const baseUrl = url || BASE_URL;
+    if (lang === "ro") return baseUrl;
+    return baseUrl.includes("?") ? `${baseUrl}&lang=${lang}` : `${baseUrl}?lang=${lang}`;
+  };
   
   // Default JSON-LD for LocalBusiness
   const defaultJsonLd = {
@@ -159,9 +189,10 @@ const SEOHead = ({
     "name": "RealTrust & ApArt Hotel Timișoara",
     "image": image,
     "description": finalDescription,
-    "@id": "https://realtrustaparthotel.lovable.app",
-    "url": "https://realtrustaparthotel.lovable.app",
+    "@id": BASE_URL,
+    "url": BASE_URL,
     "telephone": "+40723154520",
+    "email": "adicosti@gmail.com",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Timișoara",
@@ -227,6 +258,11 @@ const SEOHead = ({
       schemas.push(generateBreadcrumbJsonLd(breadcrumbItems));
     }
     
+    // Add WebSite schema with SearchAction if enabled
+    if (includeWebSiteSchema) {
+      schemas.push(generateWebSiteJsonLd());
+    }
+    
     finalJsonLd = schemas.length === 1 ? schemas[0] : schemas;
   }
 
@@ -237,6 +273,13 @@ const SEOHead = ({
       <meta name="title" content={finalTitle} />
       <meta name="description" content={finalDescription} />
       <link rel="canonical" href={finalUrl} />
+      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
+      <html lang={language} />
+      
+      {/* Hreflang for multilingual support */}
+      <link rel="alternate" hrefLang="ro" href={getAlternateUrl("ro")} />
+      <link rel="alternate" hrefLang="en" href={getAlternateUrl("en")} />
+      <link rel="alternate" hrefLang="x-default" href={getAlternateUrl("ro")} />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <html lang={language} />
       

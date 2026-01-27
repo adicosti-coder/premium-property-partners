@@ -99,7 +99,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead jsonLd={homepageSchemas} />
+      <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />
       <PromoBanner />
       <Header />
       <QuickStatsBar />

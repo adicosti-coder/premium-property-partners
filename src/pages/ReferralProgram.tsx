@@ -271,7 +271,7 @@ const ReferralProgram = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrustaparthotel.lovable.app/recomanda-proprietar"
+        url="https://realtrust.ro/recomanda-proprietar"
       />
       <Header />
       <ConfettiEffect isActive={showConfetti} duration={4000} particleCount={80} />
