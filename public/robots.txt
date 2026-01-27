@@ -1,8 +1,10 @@
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
 User-agent: Twitterbot
 Allow: /
@@ -12,6 +14,13 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+Disallow: /auth
 
-# Sitemap
+# Sitemaps
+Sitemap: https://realtrust.ro/sitemap.xml
 Sitemap: https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap
+
+# Host
+Host: https://realtrust.ro

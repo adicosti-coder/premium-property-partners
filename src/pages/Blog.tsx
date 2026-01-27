@@ -213,7 +213,7 @@ const Blog = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrustaparthotel.lovable.app/blog"
+        url="https://realtrust.ro/blog"
       />
       <Header />
 

@@ -311,7 +311,7 @@ const AboutUs = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrustaparthotel.lovable.app/despre-noi"
+        url="https://realtrust.ro/despre-noi"
       />
       <Header />
       

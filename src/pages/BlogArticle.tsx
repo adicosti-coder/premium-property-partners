@@ -259,8 +259,8 @@ const BlogArticlePage = () => {
   });
 
   const breadcrumbSchemaData = generateBreadcrumbSchema([
-    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrustaparthotel.lovable.app" },
-    { name: "Blog", url: "https://realtrustaparthotel.lovable.app/blog" },
+    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+    { name: "Blog", url: "https://realtrust.ro/blog" },
     { name: displayTitle, url: articleUrl },
   ]);
 

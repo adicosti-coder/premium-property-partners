@@ -259,7 +259,7 @@ const PropertyDetail = () => {
     name: property.name,
     slug: property.slug,
     description: seoDescription,
-    image: galleryImages[0] || "https://realtrustaparthotel.lovable.app/og-image.jpg",
+    image: galleryImages[0] || "https://realtrust.ro/og-image.jpg",
     images: galleryImages,
     location: property.location,
     pricePerNight: property.pricePerNight,
@@ -274,9 +274,9 @@ const PropertyDetail = () => {
 
   const propertySchemas = generatePropertyPageSchemas(propertySchemaData);
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrustaparthotel.lovable.app" },
-    { name: language === "ro" ? "Proprietăți" : "Properties", url: "https://realtrustaparthotel.lovable.app/oaspeti" },
-    { name: property.name, url: `https://realtrustaparthotel.lovable.app/proprietate/${slug}` },
+    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+    { name: language === "ro" ? "Proprietăți" : "Properties", url: "https://realtrust.ro/oaspeti" },
+    { name: property.name, url: `https://realtrust.ro/proprietate/${slug}` },
   ]);
 
   const combinedJsonLd = [...propertySchemas, breadcrumbSchema];
@@ -286,8 +286,8 @@ const PropertyDetail = () => {
       <SEOHead 
         title={`${property.name} | ApArt Hotel Timișoara`}
         description={seoDescription}
-        image={galleryImages[0] || "https://realtrustaparthotel.lovable.app/og-image.jpg"}
-        url={`https://realtrustaparthotel.lovable.app/proprietate/${slug}`}
+        image={galleryImages[0] || "https://realtrust.ro/og-image.jpg"}
+        url={`https://realtrust.ro/proprietate/${slug}`}
         type="product"
         productPrice={property.pricePerNight}
         productCurrency="EUR"

@@ -205,7 +205,7 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrustaparthotel.lovable.app/oaspeti"
+        url="https://realtrust.ro/oaspeti"
       />
       <Header />
       
