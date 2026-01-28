@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import DOMPurify from "dompurify";
 import {
   Table,
   TableBody,
@@ -593,7 +594,12 @@ const EmailCampaignManager = () => {
                 <p className="text-sm font-medium mb-2">{t.preview}:</p>
                 <div
                   className="bg-muted/30 p-4 rounded-lg prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: previewCampaign.content }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: DOMPurify.sanitize(previewCampaign.content, {
+                      ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'span', 'div', 'img', 'table', 'tr', 'td', 'th', 'thead', 'tbody'],
+                      ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'style', 'class', 'width', 'height']
+                    })
+                  }}
                 />
               </div>
               {previewCampaign.sent_at && (
