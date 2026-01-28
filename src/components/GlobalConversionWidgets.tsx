@@ -5,6 +5,8 @@ import SocialProofNotifications from "@/components/SocialProofNotifications";
 import AIChatbot from "@/components/AIChatbot";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingActionMenu from "@/components/FloatingActionMenu";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import OfflineIndicator from "@/components/OfflineIndicator";
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -25,6 +27,10 @@ const GlobalConversionWidgets = ({
 }: GlobalConversionWidgetsProps) => {
   return (
     <>
+      {/* PWA & Offline */}
+      <OfflineIndicator />
+      <PWAInstallPrompt />
+      
       {showMobileCTA && <MobileCTABar />}
       {/* Desktop floating buttons */}
       <FloatingWhatsApp />
