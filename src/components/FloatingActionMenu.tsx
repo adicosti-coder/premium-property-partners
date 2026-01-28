@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 
 interface FloatingActionMenuProps {
   showChatbot?: boolean;
@@ -21,6 +22,7 @@ interface FloatingActionMenuProps {
 const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => {
   const { t, language } = useLanguage();
   const { trackWhatsApp } = useCtaAnalytics();
+  const { lightTap, mediumTap } = useHapticFeedback();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -54,6 +56,7 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
   }, [isOpen]);
 
   const handleWhatsAppClick = () => {
+    lightTap();
     trackWhatsApp();
     const message = encodeURIComponent(t.floatingWhatsapp.message);
     window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
@@ -61,8 +64,14 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
   };
 
   const handleScrollToTop = () => {
+    lightTap();
     window.scrollTo({ top: 0, behavior: "smooth" });
     setIsOpen(false);
+  };
+
+  const toggleMenu = () => {
+    mediumTap();
+    setIsOpen(!isOpen);
   };
 
   const menuItems = [
@@ -87,7 +96,7 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
       icon: Bot,
       label: "AI Chat",
       onClick: () => {
-        // Trigger chatbot open - we'll dispatch a custom event
+        lightTap();
         window.dispatchEvent(new CustomEvent('open-ai-chatbot'));
         setIsOpen(false);
       },
@@ -99,6 +108,7 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
       icon: Accessibility,
       label: language === 'ro' ? "Accesibilitate" : "Accessibility",
       onClick: () => {
+        lightTap();
         window.dispatchEvent(new CustomEvent('toggle-accessibility-panel'));
         setIsOpen(false);
       },
@@ -195,7 +205,7 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               onClick={(e) => {
                 e.stopPropagation();
-                setIsOpen(!isOpen);
+                toggleMenu();
               }}
               className={cn(
                 "w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",

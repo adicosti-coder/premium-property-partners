@@ -641,3 +641,35 @@
     background-position: 100% 50%;
   }
 }
+
+/* Mobile Safe Area padding */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Touch feedback for mobile */
+.touch-feedback {
+  @apply active:scale-95 transition-transform duration-150;
+}
+
+/* Smooth scroll for mobile */
+@supports (-webkit-overflow-scrolling: touch) {
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Pull to refresh indicator */
+.ptr-indicator {
+  @apply fixed top-0 left-1/2 -translate-x-1/2 z-50;
+}
+
+/* Mobile-optimized button targets (44px minimum) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
