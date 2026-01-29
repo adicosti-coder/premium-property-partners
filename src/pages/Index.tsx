@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import QuickLeadForm from "@/components/QuickLeadForm";
@@ -25,6 +26,7 @@ import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/ut
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
 // Hub Teaser Components
 import ServicesOverview from "@/components/hub/ServicesOverview";
@@ -34,6 +36,45 @@ import AboutTeaser from "@/components/hub/AboutTeaser";
 
 const Index = () => {
   const { t, language } = useLanguage();
+  
+  // Session analytics
+  const { trackElementView } = useSessionAnalytics();
+  const { trackFunnelStep, trackFunnelComplete } = useConversionFunnel("homepage_journey");
+
+  // Track key sections viewed
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.id;
+            if (sectionId) {
+              trackElementView(sectionId, "section");
+              
+              // Funnel steps
+              const funnelSteps: Record<string, number> = {
+                "beneficii": 1,
+                "calculator": 2,
+                "portofoliu": 3,
+              };
+              if (funnelSteps[sectionId]) {
+                trackFunnelStep(sectionId, funnelSteps[sectionId]);
+              }
+            }
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    // Observe key sections
+    ["beneficii", "calculator", "portofoliu", "oaspeti-preview"].forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [trackElementView, trackFunnelStep]);
   
   // Fetch published reviews for Schema.org
   const { data: reviews } = useQuery({

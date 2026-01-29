@@ -55,6 +55,7 @@ import {
   ShieldCheck,
   PenLine,
   MousePointerClick,
+  Target,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -84,6 +85,7 @@ import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
 import SecurityChecklist from "@/components/admin/SecurityChecklist";
 import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
 import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
+import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -340,6 +342,10 @@ const Admin = () => {
               <MousePointerClick className="w-4 h-4" />
               CTA Analytics
             </TabsTrigger>
+            <TabsTrigger value="funnel-analytics" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Funnel
+            </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" />
               Securitate
@@ -450,6 +456,11 @@ const Admin = () => {
           {/* CTA Analytics Tab */}
           <TabsContent value="cta-analytics">
             <CtaAnalyticsManager />
+          </TabsContent>
+
+          {/* Funnel Analytics Tab */}
+          <TabsContent value="funnel-analytics">
+            <FunnelAnalyticsManager />
           </TabsContent>
 
           {/* Security Checklist Tab */}
