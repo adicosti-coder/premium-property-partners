@@ -37,6 +37,13 @@ import BackToTop from "@/components/BackToTop";
 import ServiceOptionsComparison from "@/components/ServiceOptionsComparison";
 import ServiceGuaranteesGrid from "@/components/ServiceGuaranteesGrid";
 import ProcessStepsTimeline from "@/components/ProcessStepsTimeline";
+// New components from realtrust.ro
+import QuickValueBanner from "@/components/QuickValueBanner";
+import PropertyTypeSelector from "@/components/PropertyTypeSelector";
+import PropertyQualification from "@/components/PropertyQualification";
+import ServiceChainAF from "@/components/ServiceChainAF";
+import DIYvsProfessional from "@/components/DIYvsProfessional";
+import ChannelLogos from "@/components/ChannelLogos";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -141,7 +148,8 @@ const PentruProprietari = () => {
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
 
-      {/* Hero Section */}
+      {/* Quick Value Banner - NEW */}
+      <QuickValueBanner onCtaClick={scrollToCalculator} />
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 via-primary/5 to-background overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_70%)]" />
@@ -269,11 +277,28 @@ const PentruProprietari = () => {
       {/* Trust Badges */}
       <TrustBadges />
 
+      {/* Property Type Selector - NEW */}
+      <PropertyTypeSelector 
+        onContinue={() => scrollToCalculator()}
+      />
+
+      {/* Property Qualification - NEW */}
+      <PropertyQualification onContact={handleWhatsApp} />
+
       {/* The 3 Options Comparison - NEW from realtrust.ro */}
       <ServiceOptionsComparison />
 
+      {/* DIY vs Professional - NEW */}
+      <DIYvsProfessional />
+
       {/* Owner Benefits */}
       <OwnerBenefits />
+
+      {/* Service Chain A-F - NEW */}
+      <ServiceChainAF />
+
+      {/* Channel Logos - NEW */}
+      <ChannelLogos />
 
       {/* Service Guarantees Grid - NEW from realtrust.ro */}
       <ServiceGuaranteesGrid />

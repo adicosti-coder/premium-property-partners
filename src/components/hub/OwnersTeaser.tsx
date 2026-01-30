@@ -1,12 +1,15 @@
-import { Building2, TrendingUp, Shield, BarChart3 } from "lucide-react";
+import { Building2, TrendingUp, Shield, BarChart3, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import HubSection from "@/components/HubSection";
 import TeaserCard from "@/components/TeaserCard";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const OwnersTeaser = () => {
   const { language } = useLanguage();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: bannerRef, isVisible: bannerVisible } = useScrollAnimation({ threshold: 0.1 });
 
   const content = {
     ro: {
@@ -37,6 +40,10 @@ const OwnersTeaser = () => {
           description: "Comision transparent din încasările nete, fără costuri ascunse",
         },
       ],
+      quickValue: {
+        badge: "În 24h primești",
+        items: ["Estimare venit personalizată", "Recomandări optimizare", "Plan clar colaborare"],
+      },
     },
     en: {
       badge: "For Owners",
@@ -66,6 +73,10 @@ const OwnersTeaser = () => {
           description: "Transparent commission of net income, no hidden fees",
         },
       ],
+      quickValue: {
+        badge: "Within 24h you get",
+        items: ["Personalized income estimate", "Optimization tips", "Clear partnership plan"],
+      },
     },
   };
 
@@ -89,6 +100,27 @@ const OwnersTeaser = () => {
       }}
       variant="alternate"
     >
+      {/* Quick Value Banner Teaser */}
+      <div
+        ref={bannerRef}
+        className={`mb-8 p-4 rounded-xl bg-primary/10 border border-primary/20 max-w-3xl mx-auto transition-all duration-500 ${
+          bannerVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
+      >
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20">
+            <Clock className="w-4 h-4 text-primary animate-pulse" />
+            <span className="font-semibold text-primary text-sm">{t.quickValue.badge}</span>
+          </div>
+          {t.quickValue.items.map((item, index) => (
+            <div key={index} className="flex items-center gap-1.5 text-sm text-foreground">
+              <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div
         ref={gridRef}
         className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
@@ -104,6 +136,16 @@ const OwnersTeaser = () => {
             variant="compact"
           />
         ))}
+      </div>
+
+      {/* See More Link */}
+      <div className="text-center mt-8">
+        <Button asChild variant="outline" size="lg" className="group">
+          <Link to="/pentru-proprietari">
+            {language === "ro" ? "Vezi Toate Beneficiile" : "View All Benefits"}
+            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </Button>
       </div>
     </HubSection>
   );
