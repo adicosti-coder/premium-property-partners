@@ -80,6 +80,41 @@ const handler = async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
+    // Verify authentication - require valid JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("Missing Authorization header");
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+
+    if (authError || !user) {
+      console.error("Invalid authentication:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verify admin role
+    const { data: isAdmin, error: roleError } = await supabase
+      .rpc("has_role", { _user_id: user.id, _role: "admin" });
+
+    if (roleError || !isAdmin) {
+      console.error("Unauthorized: User is not admin", user.id);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - admin access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Admin ${user.id} sending campaign`);
+
     const { campaignId }: CampaignRequest = await req.json();
 
     if (!campaignId) {
