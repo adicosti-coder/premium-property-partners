@@ -7,6 +7,7 @@ import MobileCTABar from "@/components/MobileCTABar";
 import FloatingActionMenu from "@/components/FloatingActionMenu";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import DesktopStickyContactBar from "@/components/DesktopStickyContactBar";
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -32,8 +33,8 @@ const GlobalConversionWidgets = ({
       <PWAInstallPrompt />
       
       {showMobileCTA && <MobileCTABar />}
-      {/* Desktop floating buttons */}
-      <FloatingWhatsApp />
+      {/* Desktop sticky contact bar */}
+      <DesktopStickyContactBar />
       <AccessibilityPanel />
       {showChatbot && <AIChatbot />}
       {/* Mobile FAB menu - groups all floating buttons */}
