@@ -30,7 +30,6 @@ interface Stats {
   monthlyRevenue: number;
   totalGuests: number;
   yearsExperience: number;
-  cities: number;
 }
 
 const QuickStatsBar = () => {
@@ -46,8 +45,7 @@ const QuickStatsBar = () => {
     avgRating: 4.8,
     monthlyRevenue: 0,
     totalGuests: 0,
-    yearsExperience: 5,
-    cities: 3,
+    yearsExperience: 25,
   });
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -155,8 +153,7 @@ const QuickStatsBar = () => {
         avgRating: 4.8,
         monthlyRevenue: Math.max(0, monthlyRevenue),
         totalGuests: guestsRes.count || 0,
-        yearsExperience: 5,
-        cities: 3,
+        yearsExperience: 25,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -294,15 +291,6 @@ const QuickStatsBar = () => {
       color: "text-foreground",
       action: () => scrollToSection("how-it-works"),
       tooltip: t.tooltips.yearsExp,
-    },
-    {
-      icon: MapPin,
-      value: stats.cities,
-      label: t.cities,
-      suffix: "",
-      color: "text-foreground",
-      action: () => scrollToSection("property-gallery"),
-      tooltip: t.tooltips.cities,
     },
     {
       icon: TrendingUp,
