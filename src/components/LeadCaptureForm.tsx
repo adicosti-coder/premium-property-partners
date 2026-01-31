@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 //import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
+import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
@@ -127,7 +128,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
     }
 
     // Validate phone number internationally
-    //if (!isValidInternationalPhone(whatsappNumber)) {
+    if (!isValidInternationalPhone(whatsappNumber)) {
       setPhoneError(t.leadForm.invalidPhone || "Număr de telefon invalid");
       toast({
         title: t.leadForm.invalidPhone || "Număr invalid",
