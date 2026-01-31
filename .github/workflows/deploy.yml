@@ -14,8 +14,7 @@ jobs:
 
       - name: Install and Build
         run: |
-          npm install
-          npm run build
+          npm install --legacy-peer-deps
 
       - name: Sync FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
