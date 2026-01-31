@@ -7,10 +7,12 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { properties } from "@/data/properties";
+import { getActiveProperties } from "@/data/properties";
 
-// Extract unique locations from properties
-const availableLocations = [...new Set(properties.map(p => p.location))];
+// Extract unique locations from active properties
+const activeProperties = getActiveProperties();
+const locations = [...new Set(activeProperties.map(p => p.location))];
+const availableLocations = [...new Set(activeProperties.map(p => p.location))];
 
 export default function NotificationSettings() {
   const { t } = useLanguage();

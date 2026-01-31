@@ -14,7 +14,7 @@ import PropertyMap from "./PropertyMap";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
 import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { properties, Property } from "@/data/properties";
+import { properties, Property, getActiveProperties } from "@/data/properties";
 import { toast } from "sonner";
 
 const getFeatureIcon = (feature: string) => {
@@ -129,7 +129,8 @@ const PropertyGallery = () => {
 
   // Filter and sort properties
   const filteredProperties = useMemo(() => {
-    let result = properties.filter((property) => {
+    // Start with active properties only
+    let result = getActiveProperties().filter((property) => {
       // Favorites filter
       if (showFavoritesOnly && !favorites.includes(String(property.id))) {
         return false;

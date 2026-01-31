@@ -35,7 +35,7 @@ import {
   Building2,
   Navigation
 } from "lucide-react";
-import { properties } from "@/data/properties";
+import { getActiveProperties } from "@/data/properties";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -271,7 +271,7 @@ const PentruOaspeti = () => {
   };
 
   const t = content[language as keyof typeof content] || content.ro;
-  const topProperties = properties.slice(0, 3);
+  const topProperties = getActiveProperties().slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -473,7 +473,7 @@ const PentruOaspeti = () => {
                   
                   {/* Property Quick Links */}
                   <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {properties.slice(0, 8).map((property) => (
+                    {getActiveProperties().slice(0, 8).map((property) => (
                       <button
                         key={property.slug}
                         onClick={() => setSelectedProperty(property.slug)}
