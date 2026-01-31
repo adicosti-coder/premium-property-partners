@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
-import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
+//import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
