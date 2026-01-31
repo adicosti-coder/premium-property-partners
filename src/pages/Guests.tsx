@@ -43,9 +43,10 @@ const Guests = () => {
   const [selectedLocation, setSelectedLocation] = useState(() => searchParams.get("location") || "all");
   const [selectedCapacity, setSelectedCapacity] = useState(() => searchParams.get("capacity") || "all");
   
-  // Price filter
+  // Price filter - only consider active properties
   const priceRange = useMemo(() => {
-    const prices = properties.map(p => p.pricePerNight);
+    const activeProperties = properties.filter(p => p.isActive !== false);
+    const prices = activeProperties.map(p => p.pricePerNight);
     return { min: Math.min(...prices), max: Math.max(...prices) };
   }, []);
   
@@ -107,12 +108,16 @@ const Guests = () => {
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation({ threshold: 0.2 });
 
   const locations = useMemo(() => {
-    const locs = [...new Set(properties.map(p => p.location))];
+    const activeProperties = properties.filter(p => p.isActive !== false);
+    const locs = [...new Set(activeProperties.map(p => p.location))];
     return locs.sort();
   }, []);
 
   const filteredProperties = useMemo(() => {
     let result = properties.filter((property) => {
+      // Filter out inactive properties first
+      if (property.isActive === false) return false;
+      
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = property.name.toLowerCase().includes(query);

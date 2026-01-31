@@ -211,8 +211,8 @@ const PropertyDetail = () => {
     touchEndX.current = null;
   }, [nextImage, prevImage, minSwipeDistance]);
 
-  // Early return AFTER all hooks
-  if (!property) {
+  // Early return AFTER all hooks - check for missing or inactive property
+  if (!property || property.isActive === false) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

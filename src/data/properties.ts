@@ -36,6 +36,7 @@ export interface Property {
   houseRulesEn: string[];
   checkInTime: string;
   checkOutTime: string;
+  isActive?: boolean; // Default true, set false to hide property
 }
 
 export const properties: Property[] = [
@@ -272,6 +273,7 @@ export const properties: Property[] = [
     pricePerNight: 90,
     checkInTime: "15:00",
     checkOutTime: "11:00",
+    isActive: false, // Temporar ascunsă
   },
   {
     id: 10,
@@ -326,6 +328,11 @@ export const properties: Property[] = [
     checkOutTime: "11:00",
   },
 ];
+
+// Get all active properties (filters out properties with isActive: false)
+export const getActiveProperties = (): Property[] => {
+  return properties.filter((property) => property.isActive !== false);
+};
 
 export const getPropertyBySlug = (slug: string): Property | undefined => {
   return properties.find((property) => property.slug === slug);
