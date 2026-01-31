@@ -20,7 +20,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import OptimizedImage from "@/components/OptimizedImage";
+
 
 interface BlogArticle {
   id: string;
@@ -392,59 +392,46 @@ const Blog = () => {
                   state={isPremiumLocked ? { from: `/blog/${article.slug}` } : undefined}
                 >
                   <Card className={`overflow-hidden h-full hover:shadow-lg transition-shadow group ${isPremiumLocked ? 'opacity-90' : ''}`}>
-                    {coverImage && (
-                      <div className="relative h-48 overflow-hidden">
-                        <OptimizedImage
+                    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-muted/60 to-muted/40">
+                      {coverImage ? (
+                        <img
                           src={coverImage}
                           alt={displayTitle}
-                          className={`w-full h-full group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
-                          aspectRatio="16/9"
+                          loading="lazy"
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
                         />
-                        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                          <Badge>
-                            {article.category}
-                          </Badge>
-                          {isTrending && (
-                            <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-rose-600">
-                              <TrendingUp className="w-3 h-3 mr-1" />
-                              {t.trendingBadge}
-                            </Badge>
-                          )}
-                          {article.is_premium && (
-                            <Badge className="bg-amber-500/90 text-white border-amber-600">
-                              <Crown className="w-3 h-3 mr-1" />
-                              {t.premiumBadge}
-                            </Badge>
-                          )}
-                        </div>
-                        {isPremiumLocked && (
-                          <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-                            <div className="flex items-center gap-2 bg-background/90 px-4 py-2 rounded-full shadow-lg">
-                              <Lock className="w-4 h-4 text-amber-500" />
-                              <span className="text-sm font-medium">{t.loginToRead}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <CardContent className="p-6">
-                      {!coverImage && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <Badge>{article.category}</Badge>
-                          {isTrending && (
-                            <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-rose-600">
-                              <TrendingUp className="w-3 h-3 mr-1" />
-                              {t.trendingBadge}
-                            </Badge>
-                          )}
-                          {article.is_premium && (
-                            <Badge className="bg-amber-500/90 text-white border-amber-600">
-                              <Crown className="w-3 h-3 mr-1" />
-                              {t.premiumBadge}
-                            </Badge>
-                          )}
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-4xl opacity-50">📝</span>
                         </div>
                       )}
+                      <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                        <Badge>
+                          {article.category}
+                        </Badge>
+                        {isTrending && (
+                          <Badge className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-rose-600">
+                            <TrendingUp className="w-3 h-3 mr-1" />
+                            {t.trendingBadge}
+                          </Badge>
+                        )}
+                        {article.is_premium && (
+                          <Badge className="bg-amber-500/90 text-white border-amber-600">
+                            <Crown className="w-3 h-3 mr-1" />
+                            {t.premiumBadge}
+                          </Badge>
+                        )}
+                      </div>
+                      {isPremiumLocked && (
+                        <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                          <div className="flex items-center gap-2 bg-background/90 px-4 py-2 rounded-full shadow-lg">
+                            <Lock className="w-4 h-4 text-amber-500" />
+                            <span className="text-sm font-medium">{t.loginToRead}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <CardContent className="p-6">
                       <h2 className="text-xl font-serif font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
                         {displayTitle}
                       </h2>
