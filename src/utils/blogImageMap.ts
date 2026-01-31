@@ -15,8 +15,24 @@ import titluBooking from "@/assets/blog/titlu-booking.jpg";
 import perceptiePremium from "@/assets/blog/perceptie-premium.jpg";
 import mixCanale from "@/assets/blog/mix-canale.jpg";
 import dotariRoi from "@/assets/blog/dotari-roi.jpg";
+// New images
+import preturiDinamice from "@/assets/blog/preturi-dinamice-2026.jpg";
+import housekeepingQc from "@/assets/blog/housekeeping-qc.jpg";
+import minStayStrategie from "@/assets/blog/min-stay-strategie.jpg";
+import mentenantaPreventiva from "@/assets/blog/mentenanta-preventiva.jpg";
+import mesajeAutomate from "@/assets/blog/mesaje-automate.jpg";
+import veciniReguli from "@/assets/blog/vecini-reguli.jpg";
+import onboardingProprietar from "@/assets/blog/onboarding-proprietar.jpg";
+import faqObiectii from "@/assets/blog/faq-obiectii.jpg";
+import brandPremium from "@/assets/blog/brand-premium.jpg";
+import rezervariDirecte from "@/assets/blog/rezervari-directe.jpg";
+import ghidMaximizare from "@/assets/blog/ghid-maximizare.jpg";
+import greseliComune from "@/assets/blog/greseli-comune.jpg";
+import automatizareOspitalitate from "@/assets/blog/automatizare-ospitalitate.jpg";
+import timisoaraInvestitii from "@/assets/blog/timisoara-investitii.jpg";
 
 export const blogImageMap: Record<string, string> = {
+  // Existing mappings
   "plati-transparente-tu-incasezi-noi-operam": platiTransparente,
   "raportare-lunara-kpi-uri-care-conteaza": raportareKpi,
   "self-checkin-politica-elibereaza-timpul": selfCheckin,
@@ -33,6 +49,21 @@ export const blogImageMap: Record<string, string> = {
   "perceptie-premium-fara-costuri-inutile": perceptiePremium,
   "mix-canale-reduce-dependenta-booking": mixCanale,
   "dotari-cresc-conversia-roi": dotariRoi,
+  // New mappings
+  "preturi-dinamice-2026-ghid": preturiDinamice,
+  "housekeeping-qc-checklist-hotel": housekeepingQc,
+  "min-stay-strategie-adr-ocupare": minStayStrategie,
+  "mentenanta-preventiva-checklist-lunar": mentenantaPreventiva,
+  "mesaje-automate-checkin-template": mesajeAutomate,
+  "vecini-zgomot-reguli-bloc": veciniReguli,
+  "onboarding-proprietar-7-pasi": onboardingProprietar,
+  "faq-obiectii-proprietari-raspunsuri": faqObiectii,
+  "brand-premium-regim-hotelier": brandPremium,
+  "rezervari-directe-ghid-complet": rezervariDirecte,
+  "ghid-maximizare-venituri-inchirieri": ghidMaximizare,
+  "5-greseli-comune-administrare": greseliComune,
+  "automatizare-industria-ospitalitatii": automatizareOspitalitate,
+  "timisoara-investitii-imobiliare": timisoaraInvestitii,
 };
 
 export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string | null => {
