@@ -127,7 +127,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
     }
 
     // Validate phone number internationally
-    if (!isValidInternationalPhone(whatsappNumber)) {
+    //if (!isValidInternationalPhone(whatsappNumber)) {
       setPhoneError(t.leadForm.invalidPhone || "Număr de telefon invalid");
       toast({
         title: t.leadForm.invalidPhone || "Număr invalid",
