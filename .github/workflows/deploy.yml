@@ -3,7 +3,7 @@ name: Deploy to FTP
 on:
   push:
     branches:
-      - main
+      - main  # Verifică dacă branch-ul tău se numește 'main' sau 'master'
 
 jobs:
   build-and-deploy:
