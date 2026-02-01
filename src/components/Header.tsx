@@ -93,6 +93,23 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
+  const handleAnchorClick = (e: React.MouseEvent, anchor: string) => {
+    e.preventDefault();
+    const sectionId = anchor.replace("#", "");
+    
+    if (location.pathname === "/") {
+      // Already on homepage, just scroll
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Navigate to homepage, then scroll after a short delay
+      navigate("/");
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+    setMobileMenuOpen(false);
+  };
+
   const navLinks = [
     { href: "/", label: t.nav.home, isHome: true },
     { href: "/pentru-proprietari", label: language === "ro" ? "Proprietari" : "Owners", isPage: true },
@@ -266,6 +283,7 @@ const Header = () => {
                 <a
                   key={link.href}
                   href={link.href}
+                  onClick={(e) => handleAnchorClick(e, link.href)}
                   className={`${baseClasses} ${activeClasses}`}
                 >
                   {link.label}
@@ -376,7 +394,7 @@ const Header = () => {
                         <a
                           href={link.href}
                           className={`${baseClasses} ${activeClasses}`}
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={(e) => handleAnchorClick(e, link.href)}
                         >
                           {link.label}
                         </a>
