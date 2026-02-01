@@ -19,7 +19,7 @@ const AboutTeaser = () => {
       stats: [
         { icon: Building, value: "15+", label: "Proprietăți Administrate" },
         { icon: Star, value: "4.9", label: "Rating Mediu" },
-        { icon: Clock, value: "5+", label: "Ani Experiență" },
+        { icon: Clock, value: "25+", label: "Ani Experiență" },
         { icon: MapPin, value: "3", label: "Zone Premium" },
       ],
     },
@@ -32,7 +32,7 @@ const AboutTeaser = () => {
       stats: [
         { icon: Building, value: "15+", label: "Properties Managed" },
         { icon: Star, value: "4.9", label: "Average Rating" },
-        { icon: Clock, value: "5+", label: "Years Experience" },
+        { icon: Clock, value: "25+", label: "Years Experience" },
         { icon: MapPin, value: "3", label: "Premium Areas" },
       ],
     },
