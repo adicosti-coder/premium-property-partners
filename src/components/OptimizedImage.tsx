@@ -89,13 +89,15 @@ const OptimizedImage = memo(({
     setHasError(true);
   };
 
-  // Generate WebP srcset
+  // For ES6 imported assets (bundled by Vite), use the src directly
+  // Don't try to generate srcset with suffixes for bundled assets as they don't exist
+  // Bundled assets have hashed names like /assets/apt-09-abc123.jpg
   const webpSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
   
-  // For local assets, use simple srcset; for external URLs, use original
-  const isLocalAsset = src.startsWith('/') || src.startsWith('./') || src.includes('/assets/');
-  const srcSetValue = isLocalAsset ? generateSrcSet(src, defaultSizes) : undefined;
-  const webpSrcSetValue = isLocalAsset ? generateSrcSet(webpSrc, defaultSizes) : undefined;
+  // Disable srcset generation - the variant files (-sm, -md, -lg) don't exist
+  // Just use the original src directly
+  const srcSetValue = undefined;
+  const webpSrcSetValue = undefined;
 
   const containerStyle: React.CSSProperties = {
     width,
@@ -143,34 +145,20 @@ const OptimizedImage = memo(({
 
       {/* Actual image - only render when in view */}
       {isInView && !hasError && (
-        <picture>
-          {/* WebP source for modern browsers with srcset */}
-          <source
-            srcSet={webpSrcSetValue || webpSrc}
-            sizes={sizes}
-            type="image/webp"
-          />
-          {/* Original format with srcset fallback */}
-          <source
-            srcSet={srcSetValue || src}
-            sizes={sizes}
-            type={src.match(/\.png$/i) ? "image/png" : "image/jpeg"}
-          />
-          <img
-            src={src}
-            alt={alt}
-            width={width}
-            height={height}
-            loading={priority ? "eager" : "lazy"}
-            decoding={priority ? "sync" : "async"}
-            fetchPriority={priority ? "high" : "auto"}
-            onLoad={handleLoad}
-            onError={handleError}
-            className={`w-full h-full object-cover transition-all duration-500 ${
-              isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
-            }`}
-          />
-        </picture>
+        <img
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "auto"}
+          onLoad={handleLoad}
+          onError={handleError}
+          className={`w-full h-full object-cover transition-all duration-500 ${
+            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+          }`}
+        />
       )}
     </div>
   );
