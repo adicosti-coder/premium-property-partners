@@ -1,19 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Bot, User, Sparkles, Loader2, ShieldCheck } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Sparkles, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import ReactMarkdown from "react-markdown";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  isStreaming?: boolean;
 }
+
+const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chatbot-stream`;
 
 const AIChatbot = () => {
   const { language } = useLanguage();
@@ -34,27 +38,27 @@ const AIChatbot = () => {
 
   const t = {
     ro: {
-      title: "Asistent Virtual",
-      subtitle: "Răspundem instant la întrebările tale",
+      title: "Asistent AI Premium",
+      subtitle: "Răspunsuri instant cu AI avansat",
       placeholder: "Scrie mesajul tău...",
-      greeting: "Bună! 👋 Sunt asistentul virtual ApArt Hotel. Cum te pot ajuta astăzi? Pot răspunde la întrebări despre:\n\n• Disponibilitate și prețuri\n• Facilitățile apartamentelor\n• Procesul de rezervare\n• Zona Timișoara\n• Servicii pentru proprietari",
-      thinking: "Gândesc...",
+      greeting: "Bună! 👋 Sunt asistentul AI premium ApArt Hotel.\n\n**Ce pot face pentru tine:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• ℹ️ Informații despre **facilități**\n\nCum te pot ajuta?",
+      thinking: "Analizez...",
       error: "A apărut o eroare. Te rog încearcă din nou.",
-      poweredBy: "Powered by AI",
-      captchaRequired: "Te rog completează verificarea de securitate pentru a putea trimite mesaje.",
-      captchaVerified: "Verificare completă",
+      poweredBy: "Gemini 2.5 Pro",
+      captchaRequired: "Completează verificarea pentru a trimite.",
+      captchaVerified: "Verificat",
       verifySecurity: "Verifică pentru a trimite mesaje",
     },
     en: {
-      title: "Virtual Assistant",
-      subtitle: "We respond instantly to your questions",
+      title: "Premium AI Assistant",
+      subtitle: "Instant responses with advanced AI",
       placeholder: "Type your message...",
-      greeting: "Hello! 👋 I'm the ApArt Hotel virtual assistant. How can I help you today? I can answer questions about:\n\n• Availability and prices\n• Apartment facilities\n• Booking process\n• Timișoara area\n• Services for owners",
-      thinking: "Thinking...",
+      greeting: "Hello! 👋 I'm ApArt Hotel's premium AI assistant.\n\n**What I can do for you:**\n\n• 📅 Check apartment **availability**\n• 💰 Calculate **prices** for stays\n• 📊 Estimate **profit** for owners\n• ℹ️ Information about **amenities**\n\nHow can I help you?",
+      thinking: "Analyzing...",
       error: "An error occurred. Please try again.",
-      poweredBy: "Powered by AI",
-      captchaRequired: "Please complete the security verification to send messages.",
-      captchaVerified: "Verification complete",
+      poweredBy: "Gemini 2.5 Pro",
+      captchaRequired: "Complete verification to send.",
+      captchaVerified: "Verified",
       verifySecurity: "Verify to send messages",
     },
   };
@@ -144,6 +148,7 @@ const AIChatbot = () => {
     setHasUnread(false);
   };
 
+  // Streaming message handler
   const handleSend = async () => {
     if (!input.trim() || isLoading || !captchaVerified || !captchaToken) return;
 
@@ -154,13 +159,32 @@ const AIChatbot = () => {
       timestamp: new Date(),
     };
 
+    const assistantMessageId = (Date.now() + 1).toString();
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
+    // Add empty assistant message for streaming
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        isStreaming: true,
+      },
+    ]);
+
     try {
-      const { data, error } = await supabase.functions.invoke("ai-chatbot", {
-        body: {
+      const response = await fetch(STREAM_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
           message: userMessage.content,
           language,
           captchaToken,
@@ -168,30 +192,77 @@ const AIChatbot = () => {
             role: m.role,
             content: m.content,
           })),
-        },
+        }),
       });
 
-      if (error) throw error;
+      if (!response.ok || !response.body) {
+        throw new Error("Stream failed");
+      }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: data.response || text.error,
-        timestamp: new Date(),
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullContent = "";
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            
+            if (parsed.error) {
+              console.error("Stream error:", parsed.error);
+              throw new Error(parsed.error);
+            }
+
+            if (parsed.delta) {
+              fullContent += parsed.delta;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMessageId
+                    ? { ...m, content: fullContent }
+                    : m
+                )
+              );
+            }
+          } catch (e) {
+            // Incomplete JSON, continue
+          }
+        }
+      }
+
+      // Mark streaming as complete
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantMessageId
+            ? { ...m, isStreaming: false }
+            : m
+        )
+      );
     } catch (error) {
-      console.error("Chatbot error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: text.error,
-          timestamp: new Date(),
-        },
-      ]);
+      console.error("Chatbot stream error:", error);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantMessageId
+            ? { ...m, content: text.error, isStreaming: false }
+            : m
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -204,9 +275,43 @@ const AIChatbot = () => {
     }
   };
 
+  // Markdown components for styling
+  const MarkdownContent = ({ content }: { content: string }) => (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+        strong: ({ children }) => <strong className="font-semibold text-primary">{children}</strong>,
+        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+        li: ({ children }) => <li className="ml-2">{children}</li>,
+        a: ({ href, children }) => (
+          <a 
+            href={href} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary underline hover:text-primary/80 transition-colors"
+          >
+            {children}
+          </a>
+        ),
+        h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+        h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+        h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+        code: ({ children }) => (
+          <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
+        ),
+        blockquote: ({ children }) => (
+          <blockquote className="border-l-2 border-primary pl-3 italic my-2">{children}</blockquote>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+
   return (
     <>
-      {/* Chat Button */}
+      {/* Chat Button - Desktop only, hidden when menu is open on mobile */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -218,6 +323,11 @@ const AIChatbot = () => {
             className="fixed bottom-[136px] right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl hover:scale-110 transition-all hidden md:flex items-center justify-center group"
           >
             <MessageCircle className="w-6 h-6" />
+            
+            {/* Premium badge */}
+            <div className="absolute -top-1 -left-1 w-5 h-5 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center">
+              <Zap className="w-3 h-3 text-primary-foreground" />
+            </div>
             
             {/* Unread indicator */}
             {hasUnread && (
@@ -244,16 +354,23 @@ const AIChatbot = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25 }}
-            className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-6rem)] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="fixed bottom-4 right-4 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[550px] max-h-[calc(100vh-6rem)] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border p-4 flex items-center justify-between shrink-0">
+            <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-amber-500/10 border-b border-border p-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary-foreground" />
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center">
+                    <Zap className="w-2.5 h-2.5 text-primary-foreground" />
+                  </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground text-sm">{text.title}</h3>
+                  <h3 className="font-semibold text-foreground text-sm flex items-center gap-1.5">
+                    {text.title}
+                  </h3>
                   <p className="text-xs text-muted-foreground">{text.subtitle}</p>
                 </div>
               </div>
@@ -289,19 +406,28 @@ const AIChatbot = () => {
                       )}
                     </div>
                     <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                         message.role === "user"
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-foreground"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === "assistant" ? (
+                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
+                          <MarkdownContent content={message.content} />
+                          {message.isStreaming && (
+                            <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-0.5" />
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
                     </div>
                   </motion.div>
                 ))}
 
-                {/* Loading indicator */}
-                {isLoading && (
+                {/* Loading indicator - only show when no streaming message exists */}
+                {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -322,7 +448,7 @@ const AIChatbot = () => {
             </ScrollArea>
 
             {/* CAPTCHA & Input */}
-            <div className="p-4 border-t border-border shrink-0">
+            <div className="p-4 border-t border-border shrink-0 bg-gradient-to-t from-background to-transparent">
               {/* CAPTCHA Section */}
               {!captchaVerified && captchaSiteKey && (
                 <div className="mb-3">
@@ -371,14 +497,16 @@ const AIChatbot = () => {
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading || !captchaVerified}
                   size="icon"
-                  className="shrink-0"
+                  className="shrink-0 bg-gradient-to-r from-primary to-primary/80"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center justify-center gap-1 mt-2 text-[10px] text-muted-foreground">
-                <Sparkles className="w-3 h-3" />
-                {text.poweredBy}
+              <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground">
+                <Sparkles className="w-3 h-3 text-primary" />
+                <span className="text-primary font-medium">
+                  {text.poweredBy}
+                </span>
               </div>
             </div>
           </motion.div>

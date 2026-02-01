@@ -75,6 +75,9 @@ verify_jwt = false
 [functions.ai-chatbot]
 verify_jwt = false
 
+[functions.ai-chatbot-stream]
+verify_jwt = false
+
 [functions.generate-sitemap]
 verify_jwt = false
 
