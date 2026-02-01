@@ -258,7 +258,7 @@ export const translations = {
       contactUs: "Contactează-ne direct",
       items: [
         { question: "Ce comision percepeți pentru administrarea proprietății?", answer: "Percepem un comision transparent de 20% din veniturile generate. Nu există costuri ascunse - acest procent include toate serviciile: gestionare rezervări, comunicare cu oaspeții, curățenie profesională, check-in/out și suport 24/7." },
-        { question: "Cât de des primesc veniturile din închiriere?", answer: "Veniturile sunt transferate lunar, în primele 5 zile ale lunii pentru luna precedentă. Primești un raport detaliat cu toate rezervările, veniturile brute, cheltuielile și suma netă transferată." },
+        { question: "Cât de des primesc veniturile din închiriere?", answer: "Veniturile sunt transferate în contul tău bancar, zilnic, după încheierea rezervărilor. Primești de la noi un raport lunar detaliat cu toate rezervările, veniturile brute și cheltuielile." },
         { question: "Ce se întâmplă dacă un oaspete provoacă daune?", answer: "Toate rezervările sunt acoperite de asigurări ale platformelor (Airbnb, Booking). În plus, colectăm o garanție de la fiecare oaspete și facem verificări înainte de check-in. În caz de daune, gestionăm întreg procesul de despăgubire." },
         { question: "Pot folosi apartamentul când doresc?", answer: "Absolut! Îți poți bloca oricând perioadele în care dorești să folosești proprietatea. Ai acces la calendar în timp real și poți face modificări cu minimum 48 de ore înainte." },
         { question: "Ce platforme folosiți pentru listare?", answer: "Listăm proprietatea pe toate platformele majore: Airbnb, Booking.com, Expedia, Vrbo și site-ul nostru direct. Sincronizăm automat calendarele pentru a evita suprapunerile." },
@@ -1328,7 +1328,7 @@ Mulțumesc!`,
       contactUs: "Contact us directly",
       items: [
         { question: "What commission do you charge for property management?", answer: "We charge a transparent 20% commission on generated revenue. There are no hidden costs - this percentage includes all services: booking management, guest communication, professional cleaning, check-in/out and 24/7 support." },
-        { question: "How often do I receive rental income?", answer: "Revenue is transferred monthly, within the first 5 days of the month for the previous month. You receive a detailed report with all bookings, gross revenue, expenses and the net amount transferred." },
+        { question: "How often do I receive rental income?", answer: "Revenue is transferred to your bank account daily, after each booking ends. You receive a detailed monthly report from us with all bookings, gross revenue and expenses." },
         { question: "What happens if a guest causes damage?", answer: "All bookings are covered by platform insurance (Airbnb, Booking). Additionally, we collect a deposit from each guest and perform checks before check-in. In case of damage, we manage the entire compensation process." },
         { question: "Can I use the apartment whenever I want?", answer: "Absolutely! You can block any periods when you want to use the property. You have access to the calendar in real-time and can make changes with a minimum of 48 hours notice." },
         { question: "What platforms do you use for listing?", answer: "We list the property on all major platforms: Airbnb, Booking.com, Expedia, Vrbo and our direct website. We automatically sync calendars to avoid overlaps." },
