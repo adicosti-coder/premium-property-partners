@@ -62,6 +62,14 @@ const WhatsAppLogo = () => (
   </svg>
 );
 
+const ImobiliareRoLogo = () => (
+  <svg viewBox="0 0 200 50" className="w-full h-full">
+    <text x="0" y="38" className="fill-current" style={{ fontSize: '26px', fontWeight: 700, fontFamily: 'Arial, sans-serif' }}>
+      Imobiliare.ro
+    </text>
+  </svg>
+);
+
 const partners = [
   { name: "Airbnb", Logo: AirbnbLogo, url: "https://www.airbnb.com/users/show/123456789", color: "#FF5A5F" },
   { name: "Booking.com", Logo: BookingLogo, url: "https://www.booking.com/hotel/ro/realtrust.html", color: "#003580" },
@@ -71,6 +79,7 @@ const partners = [
   { name: "EuPlătesc", Logo: EuplatescLogo, url: "https://www.euplatesc.ro", color: "#E31837" },
   { name: "Pynbooking", Logo: PynbookingLogo, url: "https://www.pynbooking.com", color: "#6366F1" },
   { name: "WhatsApp", Logo: WhatsAppLogo, url: "https://wa.me/40723154520", color: "#25D366" },
+  { name: "Imobiliare.ro", Logo: ImobiliareRoLogo, url: "https://www.imobiliare.ro", color: "#E31837" },
 ];
 
 const PartnerLogos = () => {
