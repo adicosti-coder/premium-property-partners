@@ -92,7 +92,7 @@ const ServiceOptionsComparison = () => {
   };
 
   return (
-    <section className="py-20 bg-card relative overflow-hidden">
+    <section id="service-options" className="py-20 bg-card relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div
