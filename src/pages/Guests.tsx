@@ -205,12 +205,44 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
     { label: language === "ro" ? "Apartamente" : "Apartments" }
   ];
 
+  // Generate ItemList JSON-LD schema for properties
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": language === 'ro' ? "Apartamente de închiriat în Timișoara" : "Apartments for rent in Timișoara",
+    "description": seo.description,
+    "numberOfItems": filteredProperties.length,
+    "itemListElement": filteredProperties.slice(0, 10).map((property, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Apartment",
+        "name": property.name,
+        "description": language === 'ro' ? property.description : property.descriptionEn,
+        "url": `https://realtrust.ro/proprietate/${property.slug}`,
+        "image": property.images?.[0] || "/placeholder.svg",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": property.location,
+          "addressRegion": "Timiș",
+          "addressCountry": "RO"
+        },
+        "numberOfRooms": property.bedrooms,
+        "occupancy": {
+          "@type": "QuantitativeValue",
+          "value": property.capacity
+        }
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/oaspeti"
+        jsonLd={itemListSchema}
       />
       <Header />
       

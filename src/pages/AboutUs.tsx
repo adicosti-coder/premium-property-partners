@@ -302,6 +302,35 @@ const AboutUs = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
+  // Organization JSON-LD schema
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "RealTrust & ApArt Hotel",
+    "legalName": "Imo Business Centrum SRL",
+    "url": "https://realtrust.ro",
+    "logo": "https://realtrust.ro/favicon.ico",
+    "description": seo.description,
+    "foundingDate": "1999",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "addressCountry": "RO"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+40723154520",
+      "contactType": "customer service",
+      "email": "adicosti@gmail.com",
+      "availableLanguage": ["Romanian", "English"]
+    },
+    "sameAs": [
+      "https://www.facebook.com/realtrust",
+      "https://www.instagram.com/realtrust"
+    ]
+  };
+
   const breadcrumbItems = [
     { label: language === "ro" ? "Despre Noi" : "About Us" }
   ];
@@ -312,6 +341,7 @@ const AboutUs = () => {
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/despre-noi"
+        jsonLd={organizationSchema}
       />
       <Header />
       
