@@ -330,7 +330,7 @@ const HeroContent = ({
           size="xl" 
           className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] w-full sm:w-auto transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
           style={{ transitionDelay: subtitleComplete ? '120ms' : '0ms' }}
-          onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => document.getElementById('service-options')?.scrollIntoView({ behavior: 'smooth' })}
         >
           {ctaSecondary}
         </Button>
