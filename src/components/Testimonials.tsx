@@ -56,9 +56,9 @@ const testimonials: Testimonial[] = [
   },
   {
     id: 5,
-    name: "Proprietar",
+    name: "Laura M.",
     role: "Recenzie verificată · Google",
-    content: "Am primit o estimare realistă + plan clar. Exact ce aveam nevoie ca să decid. Colaborarea a fost excelentă de la început.",
+    content: "Apartament superb, exact ca în poze! Curățenia impecabilă și comunicarea excelentă. Check-in-ul a fost foarte simplu, iar locația perfectă pentru a explora orașul.",
     rating: 5,
     source: "Google Reviews",
     sourceIcon: "G",
