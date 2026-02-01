@@ -213,6 +213,27 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Legal Disclaimers */}
+        <div className="border-t border-border/50 dark:border-border pt-8 mb-8">
+          <h4 className="text-foreground font-semibold mb-4">
+            {language === 'ro' ? 'Termeni și Condiții' : 'Terms and Conditions'}
+          </h4>
+          <div className="space-y-4 text-xs text-foreground/50 dark:text-muted-foreground/70">
+            <p>
+              {language === 'ro' 
+                ? '* Toate cifrele, procentele și estimările de venit prezentate pe acest site sunt orientative și se bazează pe date istorice și previziuni de piață. Acestea nu constituie garanții ale rezultatelor viitoare. Veniturile reale pot varia în funcție de locație, sezonalitate, starea proprietății și alți factori. Vă recomandăm să discutați cu echipa noastră pentru o evaluare personalizată.'
+                : '* All figures, percentages and income estimates presented on this website are indicative and based on historical data and market forecasts. They do not constitute guarantees of future results. Actual revenues may vary depending on location, seasonality, property condition and other factors. We recommend discussing with our team for a personalized evaluation.'
+              }
+            </p>
+            <p>
+              {language === 'ro'
+                ? '** Protecția datelor personale: Datele personale furnizate prin formularele de pe acest site sunt prelucrate în conformitate cu Regulamentul (UE) 2016/679 (GDPR). Le folosim exclusiv pentru a răspunde solicitărilor dumneavoastră, a vă contacta în legătură cu serviciile noastre și a îmbunătăți experiența pe site. Datele sunt păstrate în siguranță și nu sunt transmise terților fără consimțământul dumneavoastră, cu excepția obligațiilor legale. Aveți dreptul de acces, rectificare, ștergere și portabilitate a datelor. Pentru întrebări, ne puteți contacta la adicosti@gmail.com.'
+                : '** Personal data protection: Personal data provided through forms on this website is processed in accordance with Regulation (EU) 2016/679 (GDPR). We use it exclusively to respond to your requests, contact you regarding our services and improve the site experience. Data is kept secure and not shared with third parties without your consent, except for legal obligations. You have the right to access, rectify, delete and port your data. For questions, contact us at adicosti@gmail.com.'
+              }
+            </p>
+          </div>
+        </div>
+
         {/* Bottom bar */}
         <div className="border-t border-border/50 dark:border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-foreground/60 dark:text-muted-foreground text-sm font-sans">
