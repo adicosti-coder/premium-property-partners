@@ -93,19 +93,39 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+      return true;
+    }
+    return false;
+  };
+
+  const waitForElementAndScroll = (sectionId: string, maxAttempts = 20) => {
+    let attempts = 0;
+    const tryScroll = () => {
+      if (scrollToSection(sectionId)) return;
+      attempts++;
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+    // Start after a small delay to let React render
+    setTimeout(tryScroll, 50);
+  };
+
   const handleAnchorClick = (e: React.MouseEvent, anchor: string) => {
     e.preventDefault();
     const sectionId = anchor.replace("#", "");
     
     if (location.pathname === "/") {
       // Already on homepage, just scroll
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+      scrollToSection(sectionId);
     } else {
-      // Navigate to homepage, then scroll after a short delay
+      // Navigate to homepage, then wait for element and scroll
       navigate("/");
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      waitForElementAndScroll(sectionId);
     }
     setMobileMenuOpen(false);
   };
