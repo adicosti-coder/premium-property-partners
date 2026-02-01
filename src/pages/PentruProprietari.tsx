@@ -130,6 +130,34 @@ const PentruProprietari = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
+  // Service JSON-LD schema
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": language === 'ro' ? "Administrare Apartamente în Regim Hotelier" : "Short-Term Rental Management",
+    "description": seo.description,
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "RealTrust & ApArt Hotel",
+      "telephone": "+40723154520",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Timișoara",
+        "addressRegion": "Timiș",
+        "addressCountry": "RO"
+      }
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "Timișoara"
+    },
+    "serviceType": language === 'ro' ? "Administrare proprietăți" : "Property Management",
+    "offers": {
+      "@type": "Offer",
+      "description": language === 'ro' ? "Comision 20%, fără costuri ascunse" : "20% commission, no hidden fees"
+    }
+  };
+
   const breadcrumbItems = [
     { label: language === "ro" ? "Pentru Proprietari" : "For Owners" }
   ];
@@ -140,6 +168,7 @@ const PentruProprietari = () => {
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/pentru-proprietari"
+        jsonLd={serviceSchema}
       />
       <Header />
       

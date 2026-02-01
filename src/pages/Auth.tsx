@@ -10,13 +10,14 @@ import { z } from "zod";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PasswordStrengthIndicator, { validatePassword } from "@/components/PasswordStrengthIndicator";
+import SEOHead from "@/components/SEOHead";
 
 type AuthMode = "login" | "signup" | "reset";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   // Get redirect URL and initial mode from query params
   const redirectUrl = searchParams.get('redirect') || '/admin';
@@ -217,7 +218,26 @@ const Auth = () => {
     }
   };
 
+  const seoContent = {
+    ro: {
+      title: "Autentificare | RealTrust & ApArt Hotel",
+      description: "Conectează-te la contul tău RealTrust pentru a gestiona rezervările și proprietățile tale."
+    },
+    en: {
+      title: "Login | RealTrust & ApArt Hotel",
+      description: "Sign in to your RealTrust account to manage your bookings and properties."
+    }
+  };
+
+  const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
   return (
+    <>
+      <SEOHead 
+        title={seo.title}
+        description={seo.description}
+        noIndex={true}
+      />
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-8">
@@ -328,6 +348,7 @@ const Auth = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
