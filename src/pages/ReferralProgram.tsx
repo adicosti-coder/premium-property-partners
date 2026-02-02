@@ -209,18 +209,19 @@ const ReferralProgram = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.from("referrals").insert({
-        referrer_name: data.referrerName,
-        referrer_email: data.referrerEmail,
-        referrer_phone: data.referrerPhone || null,
-        referrer_user_id: user?.id || null,
-        owner_name: data.ownerName,
-        owner_email: data.ownerEmail,
-        owner_phone: data.ownerPhone,
-        owner_message: data.ownerMessage || null,
-        property_location: data.propertyLocation || null,
-        property_type: data.propertyType || null,
-        property_rooms: data.propertyRooms ? parseInt(data.propertyRooms) : null,
+      const { error } = await supabase.functions.invoke("submit-referral", {
+        body: {
+          referrerName: data.referrerName,
+          referrerEmail: data.referrerEmail,
+          referrerPhone: data.referrerPhone || undefined,
+          ownerName: data.ownerName,
+          ownerEmail: data.ownerEmail,
+          ownerPhone: data.ownerPhone,
+          ownerMessage: data.ownerMessage || undefined,
+          propertyLocation: data.propertyLocation || undefined,
+          propertyType: data.propertyType || undefined,
+          propertyRooms: data.propertyRooms ? parseInt(data.propertyRooms) : undefined,
+        },
       });
 
       if (error) throw error;
