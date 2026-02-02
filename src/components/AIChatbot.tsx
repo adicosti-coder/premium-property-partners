@@ -510,7 +510,7 @@ const AIChatbot = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={handleOpen}
-            className="fixed bottom-[136px] right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg hidden md:flex items-center justify-center group hover:shadow-xl transition-shadow"
+            className="fixed bottom-[136px] md:bottom-[136px] bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg flex items-center justify-center group hover:shadow-xl transition-shadow"
             aria-label={text.title}
           >
             <MessageCircle className="w-6 h-6" />
