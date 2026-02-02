@@ -29,7 +29,9 @@ interface QuickAction {
   prompt: string;
 }
 
-const STREAM_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chatbot-stream`;
+// Fallback URL in case env variable is not set
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://mvzssjyzbwccioqvhjpo.supabase.co";
+const STREAM_URL = `${SUPABASE_URL}/functions/v1/ai-chatbot-stream`;
 
 // Memoized Markdown renderer with forwardRef to fix React warning
 const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStreaming?: boolean }>(
@@ -353,11 +355,16 @@ const AIChatbot = () => {
     ]);
 
     try {
+      // Fallback API key in case env variable is not set
+      const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
+      
+      console.log("[AIChatbot] Sending request to:", STREAM_URL);
+      
       const response = await fetch(STREAM_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           message: messageToSend,
@@ -370,7 +377,10 @@ const AIChatbot = () => {
         signal: abortControllerRef.current.signal,
       });
 
+      console.log("[AIChatbot] Response status:", response.status);
+
       if (!response.ok) {
+        console.error("[AIChatbot] Response not OK:", response.status, response.statusText);
         if (response.status === 429) {
           throw new Error("rate_limit");
         }
