@@ -364,25 +364,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [], captchaToken } = await req.json();
+    const { message, language = "ro", conversationHistory = [] } = await req.json();
 
-    // Verify CAPTCHA
-    if (!captchaToken) {
-      return new Response(
-        `data: ${JSON.stringify({ error: "captcha_required" })}\n\n`,
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "text/event-stream" } }
-      );
-    }
-
-    const userAgent = req.headers.get("user-agent") || "unknown";
-    const captchaValid = await verifyCaptcha(captchaToken, "ai_chatbot_stream", clientIP, userAgent);
-
-    if (!captchaValid) {
-      return new Response(
-        `data: ${JSON.stringify({ error: "captcha_failed" })}\n\n`,
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "text/event-stream" } }
-      );
-    }
+    // CAPTCHA verification removed - rate limiting provides sufficient protection
 
     if (!message || message.length > 2000) {
       return new Response(
