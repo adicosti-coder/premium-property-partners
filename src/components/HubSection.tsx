@@ -52,9 +52,9 @@ const HubSection = ({
         className
       )}
     >
-      {/* Background decoration - offset to prevent edge overflow */}
-      <div className="absolute top-0 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decoration - hidden on mobile to prevent edge shadows */}
+      <div className="absolute top-20 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl hidden md:block" />
+      <div className="absolute bottom-20 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl hidden md:block" />
 
       <div className="container mx-auto px-6 relative z-10">
         <div
