@@ -284,9 +284,9 @@ const ReferralProgram = () => {
       
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-b from-primary/5 via-primary/10 to-background relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl" />
+        {/* Decorative elements - offset to prevent visible overflow */}
+        <div className="absolute top-20 left-[10%] w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-[10%] w-48 h-48 bg-amber-500/10 rounded-full blur-3xl" />
         
         <div className="container mx-auto px-6 text-center relative z-10">
           <motion.div

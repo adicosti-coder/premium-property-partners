@@ -254,9 +254,9 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.1),transparent_70%)]" />
-        {/* Floating decorations */}
-        <div className="absolute top-40 left-10 w-20 h-20 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-        <div className="absolute top-60 right-20 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        {/* Floating decorations - offset to prevent visible edge overflow */}
+        <div className="absolute top-40 left-[10%] w-20 h-20 bg-primary/10 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute top-60 right-[10%] w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-primary/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
         
         <div 
@@ -532,9 +532,9 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
 
       {/* Properties Grid */}
       <section className="py-16 relative overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute top-20 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        {/* Background decorations - offset to prevent edge overflow */}
+        <div className="absolute top-20 -right-36 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 -left-36 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         
         <div ref={gridRef} className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -146,13 +146,13 @@ const Imobiliare = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
         
-        {/* Parallax decorative elements - Hero */}
+        {/* Parallax decorative elements - Hero - offset to prevent visible edge overflow */}
         <div 
-          className="absolute top-20 left-10 w-32 h-32 rounded-full bg-primary/5 blur-3xl"
+          className="absolute top-20 left-[10%] w-32 h-32 rounded-full bg-primary/5 blur-3xl"
           style={{ transform: `translateY(${parallaxSlow}px)` }}
         />
         <div 
-          className="absolute top-40 right-20 w-48 h-48 rounded-full bg-primary/8 blur-3xl"
+          className="absolute top-40 right-[10%] w-48 h-48 rounded-full bg-primary/8 blur-3xl"
           style={{ transform: `translateY(${parallaxMedium}px)` }}
         />
         <div 
@@ -215,13 +215,13 @@ const Imobiliare = () => {
 
       {/* Services Section */}
       <section id="services" className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
-        {/* Parallax decorative elements - Services */}
+        {/* Parallax decorative elements - Services - offset to prevent edge overflow */}
         <div 
-          className="absolute top-32 right-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+          className="absolute top-32 right-[10%] w-40 h-40 rounded-full bg-primary/5 blur-3xl"
           style={{ transform: `translateY(${parallaxMedium}px)` }}
         />
         <div 
-          className="absolute bottom-20 left-20 w-28 h-28 rounded-full bg-primary/8 blur-2xl"
+          className="absolute bottom-20 left-[10%] w-28 h-28 rounded-full bg-primary/8 blur-2xl"
           style={{ transform: `translateY(${parallaxSlow}px)` }}
         />
         
@@ -287,13 +287,13 @@ const Imobiliare = () => {
 
       {/* Benefits Section */}
       <section className="relative py-20 md:py-28 overflow-hidden">
-        {/* Parallax decorative elements - Benefits */}
+        {/* Parallax decorative elements - Benefits - offset to prevent edge overflow */}
         <div 
-          className="absolute top-16 left-16 w-36 h-36 rounded-full bg-primary/5 blur-3xl"
+          className="absolute top-16 left-[10%] w-36 h-36 rounded-full bg-primary/5 blur-3xl"
           style={{ transform: `translateY(${parallaxFast}px)` }}
         />
         <div 
-          className="absolute bottom-24 right-24 w-44 h-44 rounded-full bg-primary/6 blur-3xl"
+          className="absolute bottom-24 right-[10%] w-44 h-44 rounded-full bg-primary/6 blur-3xl"
           style={{ transform: `translateY(${parallaxMedium}px)` }}
         />
         
@@ -340,9 +340,9 @@ const Imobiliare = () => {
 
       {/* Process Section */}
       <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
-        {/* Parallax decorative elements - Process */}
+        {/* Parallax decorative elements - Process - offset to prevent edge overflow */}
         <div 
-          className="absolute top-24 right-32 w-32 h-32 rounded-full bg-primary/5 blur-3xl"
+          className="absolute top-24 right-[15%] w-32 h-32 rounded-full bg-primary/5 blur-3xl"
           style={{ transform: `translateY(${parallaxSlow}px)` }}
         />
         <div 
