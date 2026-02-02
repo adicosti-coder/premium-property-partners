@@ -100,21 +100,9 @@ const UserReferralsList = ({ userEmail, userId }: UserReferralsListProps) => {
   const { data: referrals, isLoading } = useQuery({
     queryKey: ["user-referrals", userEmail, userId],
     queryFn: async () => {
-      let query = supabase
-        .from("referrals")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // Query by user_id if available, otherwise by email
-      if (userId) {
-        query = query.or(`referrer_user_id.eq.${userId},referrer_email.eq.${userEmail}`);
-      } else {
-        query = query.eq("referrer_email", userEmail);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase.functions.invoke("get-my-referrals");
       if (error) throw error;
-      return data as Referral[];
+      return (data?.referrals ?? []) as Referral[];
     },
     enabled: !!userEmail,
   });
