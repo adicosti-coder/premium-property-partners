@@ -6,7 +6,10 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory
-  const env = loadEnv(mode, process.cwd(), '');
+  // NOTE: loadEnv reads .env* files, but CI/CD (GitHub Actions) typically provides env via process.env.
+  // Merge both so builds behave the same locally and in CI.
+  const fileEnv = loadEnv(mode, process.cwd(), "");
+  const env = { ...fileEnv, ...process.env } as Record<string, string | undefined>;
   
   return {
     server: {
