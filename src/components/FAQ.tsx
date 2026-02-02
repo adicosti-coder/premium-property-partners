@@ -15,9 +15,9 @@ const FAQ = () => {
 
   return (
     <section id="faq" className="section-padding bg-background relative overflow-hidden">
-      {/* Background decorations - offset to prevent edge overflow */}
-      <div className="absolute top-0 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 -right-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decorations - hidden on mobile to prevent edge shadows */}
+      <div className="absolute top-20 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl hidden md:block" />
+      <div className="absolute bottom-20 -right-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl hidden md:block" />
 
       <div className="container mx-auto px-6 lg:px-8 relative z-10">
         <div 

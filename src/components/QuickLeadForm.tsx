@@ -221,9 +221,9 @@ const QuickLeadForm = () => {
 
   return (
     <section className="py-12 bg-gradient-to-b from-background to-card relative overflow-hidden">
-      {/* Background decorations - offset to prevent visible overflow */}
-      <div className="absolute top-0 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decorations - hidden on mobile to prevent edge shadows */}
+      <div className="absolute top-0 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl hidden md:block" />
+      <div className="absolute bottom-0 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl hidden md:block" />
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-4xl mx-auto">

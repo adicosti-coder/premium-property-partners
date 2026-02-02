@@ -146,13 +146,13 @@ const ProfitCalculator = () => {
 
   return (
     <section id="calculator" className="section-padding bg-background relative overflow-hidden">
-      {/* Background decorations with parallax - offset to prevent edge overflow */}
+      {/* Background decorations with parallax - hidden on mobile to prevent edge shadows */}
       <div 
-        className="absolute top-0 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100" 
+        className="absolute top-20 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100 hidden md:block" 
         style={{ transform: `translateY(${parallaxOffset1}px)` }}
       />
       <div 
-        className="absolute bottom-0 -right-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute bottom-20 -right-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100 hidden md:block"
         style={{ transform: `translateY(${parallaxOffset2}px)` }}
       />
       

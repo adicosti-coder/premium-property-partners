@@ -167,9 +167,9 @@ const CompanyTimeline = () => {
       ref={ref}
       className="py-20 md:py-28 bg-gradient-to-b from-background via-muted/30 to-background relative overflow-hidden"
     >
-      {/* Decorative elements - offset to prevent visible overflow */}
-      <div className="absolute top-20 -left-36 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 -right-48 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      {/* Decorative elements - hidden on mobile to prevent edge shadows */}
+      <div className="absolute top-20 -left-36 w-72 h-72 bg-primary/5 rounded-full blur-3xl hidden md:block" />
+      <div className="absolute bottom-20 -right-48 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl hidden md:block" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
