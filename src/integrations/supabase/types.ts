@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access_logs: {
+        Row: {
+          accessed_at: string
+          action_type: string
+          admin_user_id: string
+          id: string
+          ip_address: string | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          action_type: string
+          admin_user_id: string
+          id?: string
+          ip_address?: string | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          action_type?: string
+          admin_user_id?: string
+          id?: string
+          ip_address?: string | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_alert_subscriptions: {
         Row: {
           alert_types: string[]
