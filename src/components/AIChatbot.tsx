@@ -396,53 +396,70 @@ const AIChatbot = () => {
       let buffer = "";
       let fullContent = "";
       let hasReceivedContent = false;
+      let streamCompleted = false;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-          let line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            
-            // Handle errors from the stream
-            if (parsed.error) {
-              if (parsed.error === "rate_limit" || parsed.error === "ai_rate_limit") {
-                throw new Error("rate_limit");
-              }
-              throw new Error(parsed.error);
-            }
-            
-            if (parsed.delta) {
-              fullContent += parsed.delta;
-              hasReceivedContent = true;
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMessageId 
-                    ? { ...m, content: fullContent } 
-                    : m
-                )
-              );
-            }
-          } catch (e) {
-            if (e instanceof Error && (e.message === "rate_limit" || e.message === "network")) {
-              throw e;
-            }
-            // Ignore JSON parse errors for incomplete chunks
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            streamCompleted = true;
+            break;
           }
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          let newlineIndex: number;
+          while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+            let line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.startsWith(":") || line.trim() === "") continue;
+            if (!line.startsWith("data: ")) continue;
+
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") {
+              streamCompleted = true;
+              break;
+            }
+
+            try {
+              const parsed = JSON.parse(jsonStr);
+              
+              // Handle errors from the stream
+              if (parsed.error) {
+                if (parsed.error === "rate_limit" || parsed.error === "ai_rate_limit") {
+                  throw new Error("rate_limit");
+                }
+                throw new Error(parsed.error);
+              }
+              
+              if (parsed.delta) {
+                fullContent += parsed.delta;
+                hasReceivedContent = true;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMessageId 
+                      ? { ...m, content: fullContent } 
+                      : m
+                  )
+                );
+              }
+            } catch (e) {
+              if (e instanceof Error && (e.message === "rate_limit" || e.message === "network")) {
+                throw e;
+              }
+              // Ignore JSON parse errors for incomplete chunks
+            }
+          }
+        }
+      } catch (readError: any) {
+        // If we got some content but stream was interrupted, use what we have
+        if (hasReceivedContent && fullContent.length > 50) {
+          console.log("[AIChatbot] Stream interrupted but have content, using partial response");
+          streamCompleted = true;
+        } else {
+          throw readError;
         }
       }
 
@@ -464,14 +481,28 @@ const AIChatbot = () => {
       console.error("Chatbot stream error:", error);
       
       let errorMessage = text.error;
+      let isNetworkError = false;
+      
       if (error.name === "AbortError") {
         // Request was cancelled, just clean up
         setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
         return;
       } else if (error.message === "rate_limit") {
         errorMessage = text.errorRateLimit;
-      } else if (error.message === "network" || error.message === "Failed to fetch") {
+      } else if (
+        error.message === "network" || 
+        error.message === "Failed to fetch" ||
+        error.name === "TypeError" ||
+        error.message?.includes("network") ||
+        error.message?.includes("fetch")
+      ) {
         errorMessage = text.errorNetwork;
+        isNetworkError = true;
+      }
+
+      // For network errors, check if we might have a temporary issue
+      if (isNetworkError) {
+        console.log("[AIChatbot] Network error detected, may be temporary connectivity issue");
       }
 
       setMessages((prev) =>
