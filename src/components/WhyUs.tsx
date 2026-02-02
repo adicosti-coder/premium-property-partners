@@ -62,13 +62,13 @@ const WhyUs = () => {
 
   return (
     <section className="section-padding bg-background relative overflow-hidden">
-      {/* Decorative elements with parallax */}
+      {/* Decorative elements with parallax - offset to prevent edge overflow */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute top-0 -right-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
         style={{ transform: `translateY(${parallaxOffset1}px)` }}
       />
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute bottom-0 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
         style={{ transform: `translateY(${parallaxOffset2}px)` }}
       />
       

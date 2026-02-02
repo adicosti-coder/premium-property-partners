@@ -108,9 +108,9 @@ const BlogNewsletterCTA = () => {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-8"
           >
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl" />
+            {/* Decorative elements - offset to prevent overflow */}
+            <div className="absolute top-0 -right-16 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 -left-12 w-24 h-24 bg-primary/5 rounded-full blur-2xl" />
             
             <div className="relative z-10">
               {isSubscribed ? (

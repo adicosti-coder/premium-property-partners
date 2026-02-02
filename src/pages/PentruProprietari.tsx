@@ -180,10 +180,10 @@ const PentruProprietari = () => {
       {/* Quick Value Banner - NEW */}
       <QuickValueBanner onCtaClick={scrollToCalculator} />
       <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 via-primary/5 to-background overflow-hidden">
-        {/* Background decorations */}
+        {/* Background decorations - offset to prevent visible edge overflow */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_70%)]" />
-        <div className="absolute top-40 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-60 right-20 w-48 h-48 bg-gold/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-40 left-[10%] w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-60 right-[10%] w-48 h-48 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
 
         <div

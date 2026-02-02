@@ -26,13 +26,13 @@ const CleaningStandards = () => {
 
   return (
     <section className="section-padding bg-background relative overflow-hidden">
-      {/* Background decorations with parallax */}
+      {/* Background decorations with parallax - offset to prevent visible overflow */}
       <div 
-        className="absolute top-20 right-0 w-80 h-80 bg-green-500/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute top-20 -right-40 w-80 h-80 bg-green-500/5 rounded-full blur-3xl transition-transform duration-100"
         style={{ transform: `translateY(${parallaxOffset1}px)` }}
       />
       <div 
-        className="absolute bottom-20 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
+        className="absolute bottom-20 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl transition-transform duration-100"
         style={{ transform: `translateY(${parallaxOffset2}px)` }}
       />
       

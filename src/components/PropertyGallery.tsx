@@ -226,9 +226,9 @@ const PropertyGallery = () => {
 
   return (
     <section id="portofoliu" className="py-24 bg-gradient-subtle relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-20 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 left-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decorations - offset to prevent edge overflow */}
+      <div className="absolute top-20 -right-36 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 -left-36 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-6 relative z-10">
         <div 
