@@ -6,7 +6,42 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env variables based on mode
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, process.cwd(), "");
+
+  // Prefer build-time env variables (no hardcoded fallbacks to avoid secret-scanner/publish failures)
+  const supabaseUrl =
+    env.VITE_SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL ||
+    (env as Record<string, string>).SUPABASE_URL ||
+    process.env.SUPABASE_URL;
+
+  const supabaseKey =
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    (env as Record<string, string>).SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    // Back-compat for older pipelines
+    env.VITE_SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    (env as Record<string, string>).SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY;
+
+  const supabaseProjectId =
+    env.VITE_SUPABASE_PROJECT_ID ||
+    process.env.VITE_SUPABASE_PROJECT_ID ||
+    (env as Record<string, string>).SUPABASE_PROJECT_ID ||
+    process.env.SUPABASE_PROJECT_ID;
+
+  const defineEnv: Record<string, string> = {};
+  if (supabaseUrl) {
+    defineEnv["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(supabaseUrl);
+  }
+  if (supabaseKey) {
+    defineEnv["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(supabaseKey);
+  }
+  if (supabaseProjectId) {
+    defineEnv["import.meta.env.VITE_SUPABASE_PROJECT_ID"] = JSON.stringify(supabaseProjectId);
+  }
   
   return {
     server: {
@@ -22,17 +57,6 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    define: {
-      // Ensure env variables are available at build time
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
-        env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://mvzssjyzbwccioqvhjpo.supabase.co'
-      ),
-      'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(
-        env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8'
-      ),
-      'import.meta.env.VITE_SUPABASE_PROJECT_ID': JSON.stringify(
-        env.VITE_SUPABASE_PROJECT_ID || process.env.VITE_SUPABASE_PROJECT_ID || 'mvzssjyzbwccioqvhjpo'
-      ),
-    },
+    define: defineEnv,
   };
 });

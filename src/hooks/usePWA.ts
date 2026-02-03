@@ -96,6 +96,26 @@ export async function registerServiceWorker() {
       const registration = await navigator.serviceWorker.register("/pwa-sw.js", {
         scope: "/",
       });
+
+      // Ensure we pick up updates ASAP (especially important on custom domains + aggressive caching)
+      try {
+        await registration.update();
+      } catch {
+        // ignore update errors
+      }
+
+      // Auto-reload when a new SW takes control
+      let hasRefreshed = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (hasRefreshed) return;
+        hasRefreshed = true;
+        window.location.reload();
+      });
+
+      // Re-check for updates when the tab becomes active
+      window.addEventListener("focus", () => {
+        registration.update().catch(() => null);
+      });
       
       // Check for updates
       registration.addEventListener("updatefound", () => {
@@ -103,8 +123,8 @@ export async function registerServiceWorker() {
         if (newWorker) {
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              // New content available
-              console.log("[PWA] New content available, please refresh.");
+              // New content available -> activate immediately
+              newWorker.postMessage({ type: "SKIP_WAITING" });
             }
           });
         }
