@@ -92,3 +92,6 @@ verify_jwt = true
 
 [functions.validate-discount-code]
 verify_jwt = false
+
+[functions.record-discount-usage]
+verify_jwt = false

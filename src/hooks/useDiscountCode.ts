@@ -81,20 +81,29 @@ export function useDiscountCode(): UseDiscountCodeReturn {
     nights: number;
   }): Promise<boolean> => {
     try {
-      const { error } = await supabase.from("discount_code_uses").insert({
-        code_id: params.codeId,
-        user_email: params.userEmail || null,
-        property_name: params.propertyName || null,
-        original_amount: params.originalAmount,
-        discount_amount: params.discountAmount,
-        final_amount: params.finalAmount,
-        nights: params.nights,
+      // Use edge function for secure server-side insertion
+      const { data, error } = await supabase.functions.invoke("record-discount-usage", {
+        body: {
+          codeId: params.codeId,
+          userEmail: params.userEmail,
+          propertyName: params.propertyName,
+          originalAmount: params.originalAmount,
+          discountAmount: params.discountAmount,
+          finalAmount: params.finalAmount,
+          nights: params.nights,
+        },
       });
 
       if (error) {
         console.error("Error recording discount usage:", error);
         return false;
       }
+      
+      if (!data?.success) {
+        console.error("Failed to record discount usage:", data?.error);
+        return false;
+      }
+      
       return true;
     } catch (err) {
       console.error("Error:", err);
