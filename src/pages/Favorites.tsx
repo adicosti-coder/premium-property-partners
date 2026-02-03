@@ -14,7 +14,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import BackToTop from "@/components/BackToTop";
 import NotificationSettings from "@/components/NotificationSettings";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const Favorites = () => {
   const { t, language } = useLanguage();

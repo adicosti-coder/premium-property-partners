@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useParallax } from '@/hooks/useParallax';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import AuthGateOverlay from './AuthGateOverlay';
 import { cn } from '@/lib/utils';

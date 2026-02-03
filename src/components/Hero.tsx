@@ -3,7 +3,7 @@ import heroImage from "@/assets/hero-cinematic.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeroSettings {

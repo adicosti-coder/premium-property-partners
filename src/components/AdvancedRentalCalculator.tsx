@@ -35,7 +35,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useParallax } from '@/hooks/useParallax';
 import { useAdvancedSimulations, AdvancedSimulationData } from '@/hooks/useAdvancedSimulations';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';

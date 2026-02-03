@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { Building2, MapPin, Home, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

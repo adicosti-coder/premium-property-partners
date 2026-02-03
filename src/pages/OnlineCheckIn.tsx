@@ -20,7 +20,7 @@ import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { CalendarIcon, CheckCircle2, Clock, FileText, User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
 const OnlineCheckIn = () => {

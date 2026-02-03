@@ -25,7 +25,7 @@ import SEOHead from "@/components/SEOHead";
 import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
 // Hub Teaser Components
