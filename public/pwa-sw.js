@@ -1,7 +1,9 @@
 // RealTrust PWA Service Worker
 // Handles caching, offline support, and push notifications
 
-const CACHE_NAME = 'realtrust-cache-v1';
+// Bump this when changing SW behavior to force cache refresh on clients
+const SW_VERSION = '2026-02-03-1';
+const CACHE_NAME = `realtrust-cache-${SW_VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -19,6 +21,14 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Allow the page to trigger immediate activation of the updated SW
+self.addEventListener('message', (event) => {
+  const data = event.data;
+  if (data && data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -30,7 +40,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim();
+  event.waitUntil(self.clients.claim());
 });
 
 // Fetch event - network first, cache fallback
