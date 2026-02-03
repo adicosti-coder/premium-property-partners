@@ -24,7 +24,7 @@ import { motion } from "framer-motion";
 interface Referral {
   id: string;
   owner_name: string;
-  owner_email: string;
+  // owner_email removed for security - contact info not exposed to referrers
   property_location: string | null;
   property_type: string | null;
   status: string;
@@ -237,7 +237,6 @@ const UserReferralsList = ({ userEmail, userId }: UserReferralsListProps) => {
                         </div>
                         <div>
                           <p className="font-semibold text-foreground">{referral.owner_name}</p>
-                          <p className="text-xs text-muted-foreground">{referral.owner_email}</p>
                         </div>
                       </div>
 
