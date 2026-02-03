@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect, forwardRef, memo } from "react";
 
 interface ImageSize {
   width: number;
@@ -37,7 +37,7 @@ const defaultSizes: ImageSize[] = [
   { width: 1920, suffix: '' },
 ];
 
-const OptimizedImage = memo(({
+const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   src,
   alt,
   className = "",
@@ -48,11 +48,14 @@ const OptimizedImage = memo(({
   aspectRatio,
   onLoad,
   onClick
-}: OptimizedImageProps) => {
+}, ref) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
+
+  // Use forwarded ref or internal ref
+  const containerRef = (ref as React.RefObject<HTMLDivElement>) || imgRef;
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -73,8 +76,9 @@ const OptimizedImage = memo(({
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    const currentRef = imgRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => observer.disconnect();
@@ -162,7 +166,7 @@ const OptimizedImage = memo(({
       )}
     </div>
   );
-});
+}));
 
 OptimizedImage.displayName = "OptimizedImage";
 
