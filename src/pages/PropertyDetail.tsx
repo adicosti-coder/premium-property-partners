@@ -25,7 +25,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   generatePropertyPageSchemas, 
   generateBreadcrumbSchema,

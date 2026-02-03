@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';

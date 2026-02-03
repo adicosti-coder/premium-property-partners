@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 
 interface Booking {

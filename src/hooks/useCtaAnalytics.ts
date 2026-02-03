@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export type CtaType = "call" | "whatsapp" | "booking" | "airbnb" | "email" | "form_submit";
 

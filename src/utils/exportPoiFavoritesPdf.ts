@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 interface POI {
   id: string;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut, LayoutDashboard, Settings, ChevronDown, UserCircle, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";

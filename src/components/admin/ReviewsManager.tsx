@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,7 @@ import {
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
-import { supabase as supabaseClient } from "@/integrations/supabase/client";
+import { supabase as supabaseClient } from "@/lib/supabaseClient";
 
 interface Review {
   id: string;

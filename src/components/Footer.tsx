@@ -3,7 +3,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, Phone, Mail, Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { z } from "zod";
 import AnimationToggle from "./AnimationToggle";

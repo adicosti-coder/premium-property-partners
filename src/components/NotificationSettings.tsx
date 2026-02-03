@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { getActiveProperties } from "@/data/properties";
 
 // Extract unique locations from active properties
