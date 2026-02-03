@@ -43,10 +43,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user agent and IP
+    // Get user agent and IP (anonymized for GDPR compliance)
     const userAgent = req.headers.get("user-agent") || null;
     const forwardedFor = req.headers.get("x-forwarded-for");
-    const ipAddress = forwardedFor ? forwardedFor.split(",")[0].trim() : null;
+    const rawIp = forwardedFor ? forwardedFor.split(",")[0].trim() : null;
+    // Anonymize IP by removing the last octet (GDPR compliant)
+    const ipAddress = rawIp ? rawIp.replace(/\.\d+$/, ".0") : null;
 
     // Check for duplicate opens (within 1 minute to avoid counting re-renders)
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
