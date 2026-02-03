@@ -1,34 +1,41 @@
 /**
- * Supabase Client with Fallback Values
- * 
- * This file provides a robust Supabase client that will work even if
- * environment variables are not properly injected at build time.
- * 
- * IMPORTANT: This is a safety net for production. The primary source
- * of these values should be environment variables.
+ * Backend client (Lovable Cloud)
+ *
+ * IMPORTANT:
+ * - Do NOT hardcode real keys here. Even "public" keys can be flagged by
+ *   secret scanners (JWT-shaped strings) and block production publishing.
+ * - Primary source of truth is Vite env vars injected at build time.
+ * - We keep a non-secret fallback so the app can still render (calls will fail).
  */
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
-// Hardcoded fallback values derived from the project configuration
-// These are PUBLIC keys (anon key) and are safe to include in client code
-const FALLBACK_PROJECT_ID = "mvzssjyzbwccioqvhjpo";
-const FALLBACK_URL = `https://${FALLBACK_PROJECT_ID}.supabase.co`;
-const FALLBACK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
+const normalizeEnvValue = (value: unknown): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  // Strip accidental quotes from CI/CD or secrets injection
+  return trimmed.replace(/^['"]|['"]$/g, "");
+};
 
-// Use environment variables if available, otherwise fall back to hardcoded values
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_ANON_KEY;
+const ENV_URL = normalizeEnvValue(import.meta.env.VITE_SUPABASE_URL);
+const ENV_KEY = normalizeEnvValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasEnv = Boolean(ENV_URL && ENV_KEY);
+
+// Non-secret fallback: keeps the UI from hard-crashing if env injection fails.
+// Requests will fail, but the app can still render a helpful error state.
+const FALLBACK_URL = "https://invalid.local";
+const FALLBACK_PUBLISHABLE_KEY = "invalid-publishable-key";
+
+const SUPABASE_URL = hasEnv ? ENV_URL! : FALLBACK_URL;
+const SUPABASE_PUBLISHABLE_KEY = hasEnv ? ENV_KEY! : FALLBACK_PUBLISHABLE_KEY;
 
 // Log a warning in development if using fallback values
-if (import.meta.env.DEV) {
-  if (!import.meta.env.VITE_SUPABASE_URL) {
-    console.warn('[Supabase] Using fallback URL - VITE_SUPABASE_URL not set');
-  }
-  if (!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-    console.warn('[Supabase] Using fallback key - VITE_SUPABASE_PUBLISHABLE_KEY not set');
-  }
+if (import.meta.env.DEV && !hasEnv) {
+  console.warn(
+    "[Backend] Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY; using non-secret fallback. API calls will fail until env vars are injected.",
+  );
 }
 
 // Create and export the Supabase client
@@ -43,5 +50,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Export the configuration for debugging purposes
 export const supabaseConfig = {
   url: SUPABASE_URL,
-  usingFallback: !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  usingFallback: !hasEnv,
 };
