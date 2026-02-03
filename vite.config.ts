@@ -9,28 +9,38 @@ export default defineConfig(({ mode }) => {
   // Critical: never "define" env keys to undefined, because it overrides Vite's runtime import.meta.env.
   const env = loadEnv(mode, process.cwd(), "");
 
+  // Some build environments pass quoted values (e.g. "https://...").
+  // If we JSON.stringify those, the quotes become part of the runtime string and Supabase rejects the URL.
+  const normalizeEnvValue = (value: string | undefined) => {
+    if (!value) return value;
+    const v = value.trim();
+    const isDoubleQuoted = v.length >= 2 && v.startsWith('"') && v.endsWith('"');
+    const isSingleQuoted = v.length >= 2 && v.startsWith("'") && v.endsWith("'");
+    return (isDoubleQuoted || isSingleQuoted) ? v.slice(1, -1) : v;
+  };
+
   const supabaseUrl =
-    env.VITE_SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
-    (env as Record<string, string>).SUPABASE_URL ||
-    process.env.SUPABASE_URL;
+    normalizeEnvValue(env.VITE_SUPABASE_URL) ||
+    normalizeEnvValue(process.env.VITE_SUPABASE_URL) ||
+    normalizeEnvValue((env as Record<string, string>).SUPABASE_URL) ||
+    normalizeEnvValue(process.env.SUPABASE_URL);
 
   const supabaseKey =
-    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    (env as Record<string, string>).SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    normalizeEnvValue(env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+    normalizeEnvValue(process.env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+    normalizeEnvValue((env as Record<string, string>).SUPABASE_PUBLISHABLE_KEY) ||
+    normalizeEnvValue(process.env.SUPABASE_PUBLISHABLE_KEY) ||
     // Back-compat fallbacks
-    env.VITE_SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY ||
-    (env as Record<string, string>).SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY;
+    normalizeEnvValue(env.VITE_SUPABASE_ANON_KEY) ||
+    normalizeEnvValue(process.env.VITE_SUPABASE_ANON_KEY) ||
+    normalizeEnvValue((env as Record<string, string>).SUPABASE_ANON_KEY) ||
+    normalizeEnvValue(process.env.SUPABASE_ANON_KEY);
 
   const supabaseProjectId =
-    env.VITE_SUPABASE_PROJECT_ID ||
-    process.env.VITE_SUPABASE_PROJECT_ID ||
-    (env as Record<string, string>).SUPABASE_PROJECT_ID ||
-    process.env.SUPABASE_PROJECT_ID;
+    normalizeEnvValue(env.VITE_SUPABASE_PROJECT_ID) ||
+    normalizeEnvValue(process.env.VITE_SUPABASE_PROJECT_ID) ||
+    normalizeEnvValue((env as Record<string, string>).SUPABASE_PROJECT_ID) ||
+    normalizeEnvValue(process.env.SUPABASE_PROJECT_ID);
 
   const defineEnv: Record<string, string> = {};
   if (supabaseUrl) {
