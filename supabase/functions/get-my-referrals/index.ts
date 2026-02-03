@@ -36,10 +36,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     const email = user.email ?? "";
 
+    // SECURITY: Only return non-sensitive fields to referrers
+    // Removed owner_email, owner_phone to prevent data harvesting
     const { data, error } = await supabase
       .from("referrals")
       .select(
-        "id, owner_name, owner_email, property_location, property_type, status, created_at, contacted_at, meeting_date, contract_signed_at, reward_granted_at, reward_check_in, reward_check_out"
+        "id, owner_name, property_location, property_type, status, created_at, contacted_at, meeting_date, contract_signed_at, reward_granted_at, reward_check_in, reward_check_out"
       )
       .or(`referrer_user_id.eq.${user.id},referrer_email.eq.${email}`)
       .order("created_at", { ascending: false });
