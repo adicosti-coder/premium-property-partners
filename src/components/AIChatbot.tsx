@@ -231,6 +231,18 @@ const AIChatbot = () => {
     }
   }, [isOpen, isMinimized]);
 
+  // Listen for custom event to open chatbot from FloatingActionMenu
+  useEffect(() => {
+    const handleOpenChatbot = () => {
+      setIsOpen(true);
+      setIsMinimized(false);
+      setHasUnread(false);
+    };
+
+    window.addEventListener('open-ai-chatbot', handleOpenChatbot);
+    return () => window.removeEventListener('open-ai-chatbot', handleOpenChatbot);
+  }, []);
+
   // Cleanup abort controller on unmount
   useEffect(() => {
     return () => {
