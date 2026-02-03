@@ -377,6 +377,9 @@ const AIChatbot = () => {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKey}`,
+          // Some environments require explicit apikey header for Functions gateway
+          "apikey": apiKey,
+          "Accept": "text/event-stream",
         },
         body: JSON.stringify({
           message: messageToSend,
