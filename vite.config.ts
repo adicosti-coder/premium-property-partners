@@ -42,9 +42,17 @@ export default defineConfig(({ mode }) => {
     normalizeEnvValue((env as Record<string, string>).SUPABASE_PROJECT_ID) ||
     normalizeEnvValue(process.env.SUPABASE_PROJECT_ID);
 
+  // Fallback: in some hosted build environments the URL may not be injected,
+  // but the project id is. Derive the canonical API URL from the project id.
+  const supabaseUrlDerivedFromProjectId = supabaseProjectId
+    ? `https://${supabaseProjectId}.supabase.co`
+    : undefined;
+
+  const resolvedSupabaseUrl = supabaseUrl || supabaseUrlDerivedFromProjectId;
+
   const defineEnv: Record<string, string> = {};
-  if (supabaseUrl) {
-    defineEnv["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(supabaseUrl);
+  if (resolvedSupabaseUrl) {
+    defineEnv["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(resolvedSupabaseUrl);
   }
   if (supabaseKey) {
     defineEnv["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(supabaseKey);
