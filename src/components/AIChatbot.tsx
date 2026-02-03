@@ -29,9 +29,9 @@ interface QuickAction {
   prompt: string;
 }
 
-// Fallback URL in case env variable is not set
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://mvzssjyzbwccioqvhjpo.supabase.co";
-const STREAM_URL = `${SUPABASE_URL}/functions/v1/ai-chatbot-stream`;
+// Backend function endpoint (configured via build-time env)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const STREAM_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/ai-chatbot-stream` : "";
 
 // Memoized Markdown renderer with forwardRef to fix React warning
 const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStreaming?: boolean }>(
@@ -367,8 +367,11 @@ const AIChatbot = () => {
     ]);
 
     try {
-      // Fallback API key in case env variable is not set
-      const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
+      const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      if (!apiKey || !SUPABASE_URL || !STREAM_URL) {
+        throw new Error("missing_env");
+      }
       
       console.log("[AIChatbot] Sending request to:", STREAM_URL);
       
