@@ -43,6 +43,7 @@
     --gold: 45 93% 58%;
     --gold-dark: 45 70% 45%;
     --gold-light: 45 100% 70%;
+    --gold-foreground: 222 47% 6%;
     --cream: 45 100% 96%;
     --slate: 215 20% 55%;
     --slate-light: 215 20% 70%;
@@ -116,6 +117,7 @@
     --gold: 45 90% 35%;
     --gold-dark: 45 85% 28%;
     --gold-light: 45 95% 50%;
+    --gold-foreground: 0 0% 100%;
     --cream: 40 25% 96%;
     --slate: 222 25% 38%;
     --slate-light: 222 20% 55%;
