@@ -12,6 +12,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabaseConfig, supabasePublishableKey } from "@/lib/supabaseClient";
 
 interface Message {
   id: string;
@@ -29,9 +30,8 @@ interface QuickAction {
   prompt: string;
 }
 
-// Backend function endpoint (configured via build-time env)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const STREAM_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/ai-chatbot-stream` : "";
+// Backend function endpoint (env or bootstrap fallback)
+const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 
 // Memoized Markdown renderer with forwardRef to fix React warning
 const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStreaming?: boolean }>(
@@ -367,9 +367,8 @@ const AIChatbot = () => {
     ]);
 
     try {
-      const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      if (!apiKey || !SUPABASE_URL || !STREAM_URL) {
+      const apiKey = supabasePublishableKey;
+      if (!apiKey || supabaseConfig.usingFallback) {
         throw new Error("missing_env");
       }
       
