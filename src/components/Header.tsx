@@ -266,7 +266,7 @@ const Header = () => {
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
               <span className="animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_20px_hsl(45_100%_50%/0.8),0_0_40px_hsl(45_100%_50%/0.5),0_0_60px_hsl(45_100%_50%/0.3)] transition-all duration-300">Real<span className="text-primary group-hover:text-amber-400 transition-colors duration-300">Trust</span></span>
               <span className="text-muted-foreground"> & </span>
-              <span className="text-foreground animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_20px_hsl(45_100%_50%/0.8),0_0_40px_hsl(45_100%_50%/0.5),0_0_60px_hsl(45_100%_50%/0.3)] transition-all duration-300">ApArt Hotel</span>
+              <span className="text-foreground animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_20px_hsl(45_100%_50%/0.8),0_0_40px_hsl(45_100%_50%/0.5),0_0_60px_hsl(45_100%_50%/0.3)] transition-all duration-300"><span className="text-primary group-hover:text-amber-400 transition-colors duration-300">ApArt</span> Hotel</span>
             </span>
             <span className="hidden md:block text-[9px] md:text-[10px] text-muted-foreground tracking-wide mt-0.5 animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_15px_hsl(45_100%_50%/0.6),0_0_30px_hsl(45_100%_50%/0.4)] transition-all duration-300">
               Vânzare · Administrare · Cazare <span className="text-primary/60">|</span> <span className="text-primary font-semibold group-hover:text-amber-400 transition-colors duration-300">1 singur sistem</span>
