@@ -1,5 +1,5 @@
 import { Link, LinkProps } from 'react-router-dom';
-import { useCallback, useRef } from 'react';
+import { forwardRef, useCallback, useRef } from 'react';
 import { usePrefetch } from '@/hooks/usePrefetch';
 
 interface PrefetchLinkProps extends LinkProps {
@@ -7,13 +7,13 @@ interface PrefetchLinkProps extends LinkProps {
   blogSlug?: string;
 }
 
-export const PrefetchLink = ({ 
+export const PrefetchLink = forwardRef<HTMLAnchorElement, PrefetchLinkProps>(({ 
   propertyId, 
   blogSlug, 
   onMouseEnter,
   children, 
   ...props 
-}: PrefetchLinkProps) => {
+}, ref) => {
   const { prefetchProperty, prefetchBlogArticle } = usePrefetch();
   const prefetched = useRef(false);
 
@@ -31,8 +31,10 @@ export const PrefetchLink = ({
   }, [propertyId, blogSlug, prefetchProperty, prefetchBlogArticle, onMouseEnter]);
 
   return (
-    <Link onMouseEnter={handleMouseEnter} {...props}>
+    <Link ref={ref} onMouseEnter={handleMouseEnter} {...props}>
       {children}
     </Link>
   );
-};
+});
+
+PrefetchLink.displayName = 'PrefetchLink';
