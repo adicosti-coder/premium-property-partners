@@ -70,6 +70,7 @@ export default {
           DEFAULT: "hsl(var(--gold))",
           dark: "hsl(var(--gold-dark))",
           light: "hsl(var(--gold-light))",
+          foreground: "hsl(var(--gold-foreground))",
         },
         cream: "hsl(var(--cream))",
         slate: {
