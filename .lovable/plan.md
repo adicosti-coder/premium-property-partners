@@ -16,15 +16,15 @@ Voi adăuga următoarele secrete în setările proiectului Lovable Cloud:
 
 | Nume Secret | Valoare |
 |------------|---------|
-| `VITE_SUPABASE_URL` | `https://mvzssjyzbwccioqvhjpo.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (cheia anon existentă) |
-| `VITE_SUPABASE_PROJECT_ID` | `mvzssjyzbwccioqvhjpo` |
+| `VITE_SUPABASE_URL` | *(setată în backend → Secrets; nu se hardcodează în repo)* |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | *(setată în backend → Secrets; nu se hardcodează în repo)* |
+| `VITE_SUPABASE_PROJECT_ID` | *(setată automat de platformă)* |
 
 Aceste secrete cu prefixul `VITE_` vor fi automat injectate în build-ul frontend de către platforma Lovable Cloud.
 
 ---
 
-### Partea 2: Cod de Fallback Preventiv
+### Partea 2: Cod de Fallback Preventiv (fără chei reale în repo)
 
 Voi modifica fișierul `src/integrations/supabase/client.ts` pentru a include:
 
@@ -32,9 +32,10 @@ Voi modifica fișierul `src/integrations/supabase/client.ts` pentru a include:
 2. **Mesaj de eroare informativ** - În loc de ecran negru, va afișa un mesaj clar despre problemă
 
 ```typescript
-// Fallback values (derivate din project_id)
-const FALLBACK_URL = "https://mvzssjyzbwccioqvhjpo.supabase.co";
-const FALLBACK_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6...";
+// Non-secret fallback: păstrează UI-ul funcțional dacă env injection lipsește.
+// IMPORTANT: nu include niciodată chei reale în repo.
+const FALLBACK_URL = "https://invalid.local";
+const FALLBACK_KEY = "invalid-publishable-key";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_KEY;
@@ -78,5 +79,5 @@ useEffect(() => {
 
 ## Notă Tehnică
 
-Conform instrucțiunilor Lovable Cloud, fișierul `client.ts` este generat automat și nu ar trebui modificat. Totuși, aceasta este o situație de urgență unde platforma nu injectează corect variabilele. Fallback-ul este temporar până când mecanismul nativ funcționează corect.
+Conform instrucțiunilor platformei, fișierul `src/integrations/supabase/client.ts` este generat automat și nu trebuie modificat. Fallback-ul trebuie implementat într-un client centralizat (ex: `src/lib/supabaseClient.ts`) fără chei reale.
 
