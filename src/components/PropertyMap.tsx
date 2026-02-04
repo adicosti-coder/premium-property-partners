@@ -4,7 +4,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { properties } from '@/data/properties';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Home, Loader2, MapPin } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
 
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
@@ -64,34 +63,25 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     }
   };
 
-  // Fetch Mapbox token
+  // Get Mapbox token from environment (client-side, no API call needed)
   useEffect(() => {
-    const fetchToken = async () => {
-      // Check WebGL support first
-      if (!isWebGLSupported()) {
-        setError(language === 'ro' 
-          ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
-          : 'Browser does not support WebGL for map display');
-        setIsLoading(false);
-        return;
-      }
+    // Check WebGL support first
+    if (!isWebGLSupported()) {
+      setError(language === 'ro' 
+        ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
+        : 'Browser does not support WebGL for map display');
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        if (data?.token) {
-          setMapboxToken(data.token);
-        } else {
-          setError('Token Mapbox nu a fost configurat');
-        }
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
-        setError('Nu s-a putut încărca harta');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchToken();
+    // Use client-side environment variable (safer, no edge function exposure)
+    const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+    if (token) {
+      setMapboxToken(token);
+    } else {
+      setError('Token Mapbox nu a fost configurat');
+    }
+    setIsLoading(false);
   }, [language]);
 
   // Initialize map when token is available
