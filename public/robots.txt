@@ -20,7 +20,6 @@ Disallow: /auth
 
 # Sitemaps
 Sitemap: https://realtrust.ro/sitemap.xml
-Sitemap: https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap
 
 # Host
 Host: https://realtrust.ro
