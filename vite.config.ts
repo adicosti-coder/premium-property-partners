@@ -23,15 +23,24 @@ export default defineConfig(({ mode }) => {
     readEnv("VITE_SUPABASE_PUBLISHABLE_KEY") ?? readEnv("SUPABASE_PUBLISHABLE_KEY"),
   );
 
+  // IMPORTANT:
+  // Do NOT define empty strings for VITE_SUPABASE_*.
+  // If we set them to "", we override Vite's normal env injection in Preview,
+  // which can force the app to fall back to invalid.local.
+  const defineEnv: Record<string, string> = {};
+  if (supabaseUrl) {
+    defineEnv["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(supabaseUrl);
+  }
+  if (publishableKey) {
+    defineEnv["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(publishableKey);
+  }
+
   return {
     server: {
       host: "::",
       port: 8080,
     },
-    define: {
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl ?? ""),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publishableKey ?? ""),
-    },
+    define: defineEnv,
     plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
     resolve: {
       alias: {
