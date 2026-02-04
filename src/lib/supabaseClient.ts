@@ -11,6 +11,11 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+// Build/SSR safety: publishing pipelines may evaluate modules in a non-browser context.
+// Avoid direct `localStorage` access at module scope.
+const browserStorage: Storage | undefined =
+  typeof window !== "undefined" ? window.localStorage : undefined;
+
 const normalizeEnvValue = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
@@ -46,8 +51,9 @@ const PROJECT_REF = "mvzssjyzbwccioqvhjpo";
 const BOOTSTRAP_URL = `https://${PROJECT_REF}.functions.supabase.co/functions/v1/get-client-config`;
 
 const loadCachedConfig = (): ClientConfig | null => {
+  if (!browserStorage) return null;
   try {
-    const raw = localStorage.getItem(BOOTSTRAP_CACHE_KEY);
+    const raw = browserStorage.getItem(BOOTSTRAP_CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<ClientConfig>;
     if (typeof parsed.url !== "string" || typeof parsed.publishableKey !== "string") return null;
@@ -89,6 +95,7 @@ const resolveClientConfigSync = (): ClientConfig => {
 
 // Lazy bootstrap: fetch config from backend and cache it for next load.
 const triggerBackgroundBootstrap = () => {
+  if (!browserStorage) return;
   fetch(BOOTSTRAP_URL, {
     method: "GET",
     headers: { Accept: "application/json" },
@@ -101,7 +108,7 @@ const triggerBackgroundBootstrap = () => {
       if (!url || !publishableKey) return;
 
       try {
-        localStorage.setItem(
+        browserStorage.setItem(
           BOOTSTRAP_CACHE_KEY,
           JSON.stringify({ url, publishableKey, source: "bootstrap" satisfies ClientConfig["source"] })
         );
@@ -135,7 +142,8 @@ if (import.meta.env.DEV && clientConfig.source !== "vite_env") {
 // Create and export the Supabase client
 export const supabase: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    // If we're in a non-browser context, omit storage to avoid hard-crashing.
+    storage: browserStorage,
     persistSession: true,
     autoRefreshToken: true,
   },
