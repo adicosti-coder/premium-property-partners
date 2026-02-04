@@ -194,35 +194,26 @@ const InteractiveMapWithPOI = () => {
 
   const t = content[language];
 
-  // Fetch Mapbox token
+  // Get Mapbox token from environment (client-side, no API call needed)
   useEffect(() => {
-    const fetchToken = async () => {
-      // Check WebGL support first
-      if (!isWebGLSupported()) {
-        setWebglSupported(false);
-        setTokenError(language === 'ro' 
-          ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
-          : 'Browser does not support WebGL for map display');
-        setTokenLoading(false);
-        return;
-      }
+    // Check WebGL support first
+    if (!isWebGLSupported()) {
+      setWebglSupported(false);
+      setTokenError(language === 'ro' 
+        ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
+        : 'Browser does not support WebGL for map display');
+      setTokenLoading(false);
+      return;
+    }
 
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        if (data?.token) {
-          setMapboxToken(data.token);
-        } else {
-          setTokenError(t.error);
-        }
-      } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
-        setTokenError(t.error);
-      } finally {
-        setTokenLoading(false);
-      }
-    };
-    fetchToken();
+    // Use client-side environment variable (safer, no edge function exposure)
+    const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+    if (token) {
+      setMapboxToken(token);
+    } else {
+      setTokenError(t.error);
+    }
+    setTokenLoading(false);
   }, [t.error, language]);
 
   // Initialize map
