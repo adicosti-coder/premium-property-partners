@@ -32,10 +32,13 @@ const ENV_KEY = normalizeEnvValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
 // as a last resort, and we never hardcode it to avoid secret scanners.
 const ENV_ANON_KEY = normalizeEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
-// Non-secret fallback: keeps the UI from hard-crashing if env injection fails.
-// Requests will fail, but the app can still render a helpful error state.
-const FALLBACK_URL = "https://invalid.local";
-const FALLBACK_PUBLISHABLE_KEY = "invalid-publishable-key";
+// Production fallback - use known project ref so realtrust.ro works even if env injection fails
+const KNOWN_PROJECT_REF = "mvzssjyzbwccioqvhjpo";
+const PRODUCTION_FALLBACK_URL = `https://${KNOWN_PROJECT_REF}.supabase.co`;
+
+// Final fallback: keeps the UI from hard-crashing if everything fails.
+const INVALID_FALLBACK_URL = "https://invalid.local";
+const INVALID_FALLBACK_KEY = "invalid-publishable-key";
 
 const BOOTSTRAP_CACHE_KEY = "rt_backend_cfg_v1";
 // Project ref is NOT a secret; it is required to reach backend functions even if env injection fails.
@@ -60,20 +63,28 @@ const loadCachedConfig = (): ClientConfig | null => {
  * Bootstrap is triggered lazily in background if needed.
  */
 const resolveClientConfigSync = (): ClientConfig => {
+  // Priority 1: Vite environment variables (build-time injection)
   if (ENV_URL && ENV_KEY) {
     return { url: ENV_URL, publishableKey: ENV_KEY, source: "vite_env" };
   }
 
-  // If Vite env is missing, try cached bootstrap first.
+  // Priority 2: Cached bootstrap from previous session
   const cached = loadCachedConfig();
   if (cached) return cached;
 
-  // Last resort: if ANON key exists, use it with ENV_URL.
+  // Priority 3: ANON key fallback with ENV_URL
   if (ENV_URL && ENV_ANON_KEY) {
     return { url: ENV_URL, publishableKey: ENV_ANON_KEY, source: "vite_env" };
   }
 
-  return { url: FALLBACK_URL, publishableKey: FALLBACK_PUBLISHABLE_KEY, source: "fallback" };
+  // Priority 4: Use production fallback URL with ANON key (for realtrust.ro)
+  // This ensures the production site works even if env vars are not injected
+  if (ENV_ANON_KEY) {
+    return { url: PRODUCTION_FALLBACK_URL, publishableKey: ENV_ANON_KEY, source: "fallback" };
+  }
+
+  // Final fallback: invalid values (will trigger bootstrap)
+  return { url: INVALID_FALLBACK_URL, publishableKey: INVALID_FALLBACK_KEY, source: "fallback" };
 };
 
 // Lazy bootstrap: fetch config from backend and cache it for next load.
