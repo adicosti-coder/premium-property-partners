@@ -8,7 +8,7 @@
  * - We keep a non-secret fallback so the app can still render (calls will fail).
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 const normalizeEnvValue = (value: unknown): string | undefined => {
@@ -55,44 +55,18 @@ const loadCachedConfig = (): ClientConfig | null => {
   }
 };
 
-const bootstrapConfig = async (): Promise<ClientConfig | null> => {
-  try {
-    const resp = await fetch(BOOTSTRAP_URL, {
-      method: "GET",
-      headers: { "Accept": "application/json" },
-    });
-    if (!resp.ok) return null;
-    const json = (await resp.json()) as { url?: string; publishableKey?: string };
-    const url = normalizeEnvValue(json.url);
-    const publishableKey = normalizeEnvValue(json.publishableKey);
-    if (!url || !publishableKey) return null;
-
-    try {
-      localStorage.setItem(
-        BOOTSTRAP_CACHE_KEY,
-        JSON.stringify({ url, publishableKey, source: "bootstrap" satisfies ClientConfig["source"] }),
-      );
-    } catch {
-      // ignore cache write errors
-    }
-    return { url, publishableKey, source: "bootstrap" };
-  } catch {
-    return null;
-  }
-};
-
-const resolveClientConfig = async (): Promise<ClientConfig> => {
+/**
+ * Synchronously resolve config: Vite env -> cache -> fallback.
+ * Bootstrap is triggered lazily in background if needed.
+ */
+const resolveClientConfigSync = (): ClientConfig => {
   if (ENV_URL && ENV_KEY) {
     return { url: ENV_URL, publishableKey: ENV_KEY, source: "vite_env" };
   }
 
-  // If Vite env is missing, try cached bootstrap first to avoid extra network.
+  // If Vite env is missing, try cached bootstrap first.
   const cached = loadCachedConfig();
   if (cached) return cached;
-
-  // Then attempt bootstrap via backend function.
-  const boot = await bootstrapConfig();
-  if (boot) return boot;
 
   // Last resort: if ANON key exists, use it with ENV_URL.
   if (ENV_URL && ENV_ANON_KEY) {
@@ -102,25 +76,58 @@ const resolveClientConfig = async (): Promise<ClientConfig> => {
   return { url: FALLBACK_URL, publishableKey: FALLBACK_PUBLISHABLE_KEY, source: "fallback" };
 };
 
-const clientConfig = await resolveClientConfig();
+// Lazy bootstrap: fetch config from backend and cache it for next load.
+const triggerBackgroundBootstrap = () => {
+  fetch(BOOTSTRAP_URL, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  })
+    .then(async (resp) => {
+      if (!resp.ok) return;
+      const json = (await resp.json()) as { url?: string; publishableKey?: string };
+      const url = normalizeEnvValue(json.url);
+      const publishableKey = normalizeEnvValue(json.publishableKey);
+      if (!url || !publishableKey) return;
+
+      try {
+        localStorage.setItem(
+          BOOTSTRAP_CACHE_KEY,
+          JSON.stringify({ url, publishableKey, source: "bootstrap" satisfies ClientConfig["source"] })
+        );
+      } catch {
+        // ignore cache write errors
+      }
+    })
+    .catch(() => {
+      // Silent fail; we're using fallback already.
+    });
+};
+
+// Resolve config synchronously
+const clientConfig = resolveClientConfigSync();
 
 const SUPABASE_URL = clientConfig.url;
 const SUPABASE_PUBLISHABLE_KEY = clientConfig.publishableKey;
 
+// If using fallback, trigger background bootstrap so next reload has real config.
+if (clientConfig.source === "fallback") {
+  triggerBackgroundBootstrap();
+}
+
 // Log a warning in development if using fallback values
 if (import.meta.env.DEV && clientConfig.source !== "vite_env") {
   console.warn(
-    "[Backend] Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY; using non-secret fallback. API calls will fail until env vars are injected.",
+    "[Backend] Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY; using non-secret fallback. API calls will fail until env vars are injected."
   );
 }
 
 // Create and export the Supabase client
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
 });
 
 // Export the configuration for debugging purposes
