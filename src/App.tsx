@@ -10,6 +10,18 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import { Loader2 } from "lucide-react";
 
+// Configure React Query defaults for better stability on custom domains
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minute default stale time
+      retry: 2,
+      refetchOnWindowFocus: false, // Prevent data disappearing on window focus
+      refetchOnReconnect: true,
+    },
+  },
+});
+
 // Eagerly loaded pages (critical path)
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -39,8 +51,6 @@ const SubmitArticle = lazy(() => import("./pages/SubmitArticle"));
 const EditArticle = lazy(() => import("./pages/EditArticle"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
-
-const queryClient = new QueryClient();
 
 // Loading fallback component
 const PageLoader = () => (

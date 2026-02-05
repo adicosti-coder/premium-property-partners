@@ -58,6 +58,10 @@ const BlogPreview = () => {
       if (error) throw error;
       return data as BlogArticle[];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes - don't refetch too often
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    retry: 2, // Retry twice on failure
+    refetchOnWindowFocus: false, // Don't refetch on window focus to prevent disappearing
   });
 
   const formatDate = (dateString: string) => {
