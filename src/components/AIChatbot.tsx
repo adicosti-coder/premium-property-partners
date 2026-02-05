@@ -12,7 +12,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { supabaseConfig, supabasePublishableKey } from "@/lib/supabaseClient";
+import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
 interface Message {
   id: string;
@@ -367,7 +367,7 @@ const AIChatbot = () => {
     ]);
 
     try {
-      const apiKey = supabasePublishableKey;
+      const apiKey = getSupabasePublishableKey();
       // Allow fallback mode since it now uses valid production credentials
       if (!apiKey || apiKey === "invalid-publishable-key") {
         throw new Error("missing_env");
