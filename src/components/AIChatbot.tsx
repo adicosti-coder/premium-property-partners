@@ -368,7 +368,8 @@ const AIChatbot = () => {
 
     try {
       const apiKey = supabasePublishableKey;
-      if (!apiKey || supabaseConfig.usingFallback) {
+      // Allow fallback mode since it now uses valid production credentials
+      if (!apiKey || apiKey === "invalid-publishable-key") {
         throw new Error("missing_env");
       }
       

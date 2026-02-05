@@ -11,6 +11,18 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+// Detect if running on custom domain (not *.lovable.app or localhost)
+export const isCustomDomain = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname;
+  return (
+    !hostname.includes("lovable.app") &&
+    !hostname.includes("lovableproject.com") &&
+    !hostname.includes("localhost") &&
+    hostname !== "127.0.0.1"
+  );
+};
+
 // Build/SSR safety: publishing pipelines may evaluate modules in a non-browser context.
 // Avoid direct `localStorage` access at module scope.
 const browserStorage: Storage | undefined =
@@ -48,6 +60,7 @@ const INVALID_FALLBACK_KEY = "invalid-publishable-key";
 const BOOTSTRAP_CACHE_KEY = "rt_backend_cfg_v1";
 // Project ref is NOT a secret; it is required to reach backend functions even if env injection fails.
 const PROJECT_REF = "mvzssjyzbwccioqvhjpo";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
 const BOOTSTRAP_URL = `https://${PROJECT_REF}.functions.supabase.co/functions/v1/get-client-config`;
 
 const loadCachedConfig = (): ClientConfig | null => {
@@ -89,8 +102,9 @@ const resolveClientConfigSync = (): ClientConfig => {
     return { url: PRODUCTION_FALLBACK_URL, publishableKey: ENV_ANON_KEY, source: "fallback" };
   }
 
-  // Final fallback: invalid values (will trigger bootstrap)
-  return { url: INVALID_FALLBACK_URL, publishableKey: INVALID_FALLBACK_KEY, source: "fallback" };
+  // Final fallback: use hardcoded production values (for custom domains like realtrust.ro)
+  // This ensures the site works even without any env vars
+  return { url: PRODUCTION_FALLBACK_URL, publishableKey: ANON_KEY, source: "fallback" };
 };
 
 // Lazy bootstrap: fetch config from backend and cache it for next load.
