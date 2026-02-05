@@ -24,7 +24,7 @@ import AIChatbot from "@/components/AIChatbot";
 import SEOHead from "@/components/SEOHead";
 import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
@@ -108,7 +108,12 @@ const Index = () => {
         property_name: (review.properties as { name: string } | null)?.name,
       })) as DatabaseReview[];
     },
-    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
   });
   
   // Generate combined JSON-LD for homepage with database reviews
