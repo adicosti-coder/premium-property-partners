@@ -239,7 +239,7 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
   doc.addPage();
   yPosition = 25;
   
-  drawSectionHeader("📊", isRo ? "ANALIZA PIEȚEI 2026" : "MARKET ANALYSIS 2026");
+  drawSectionHeader("01", isRo ? "ANALIZA PIEȚEI 2026" : "MARKET ANALYSIS 2026");
   
   drawSubsection(isRo ? "Timișoara - Capitala Culturală Europeană" : "Timișoara - European Capital of Culture");
   drawParagraph(isRo 
@@ -281,7 +281,7 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
   doc.addPage();
   yPosition = 25;
   
-  drawSectionHeader("💰", isRo ? "RANDAMENT HOTELIER VS CLASIC" : "HOTEL-STYLE VS CLASSIC RETURNS");
+  drawSectionHeader("02", isRo ? "RANDAMENT HOTELIER VS CLASIC" : "HOTEL-STYLE VS CLASSIC RETURNS");
   
   drawSubsection(isRo ? "Comparație Directă - Apartament 2 Camere, Zona Centrală" : "Direct Comparison - 2-Room Apartment, Central Area");
   
@@ -324,7 +324,7 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
   doc.addPage();
   yPosition = 25;
   
-  drawSectionHeader("🎯", isRo ? "STRATEGII DE MAXIMIZARE" : "MAXIMIZATION STRATEGIES");
+  drawSectionHeader("03", isRo ? "STRATEGII DE MAXIMIZARE" : "MAXIMIZATION STRATEGIES");
   
   drawSubsection(isRo ? "1. Prețuri Dinamice" : "1. Dynamic Pricing");
   drawParagraph(isRo 
@@ -368,7 +368,7 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
   doc.addPage();
   yPosition = 25;
   
-  drawSectionHeader("📍", isRo ? "ZONE PREMIUM TIMIȘOARA" : "PREMIUM ZONES TIMIȘOARA");
+  drawSectionHeader("04", isRo ? "ZONE PREMIUM TIMIȘOARA" : "PREMIUM ZONES TIMIȘOARA");
   
   const zones = isRo 
     ? [
@@ -413,7 +413,7 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
   doc.addPage();
   yPosition = 25;
   
-  drawSectionHeader("🔧", isRo ? "ADMINISTRARE PROFESIONALĂ" : "PROFESSIONAL MANAGEMENT");
+  drawSectionHeader("05", isRo ? "ADMINISTRARE PROFESIONALĂ" : "PROFESSIONAL MANAGEMENT");
   
   drawSubsection(isRo ? "Ce Include Managementul RealTrust?" : "What Does RealTrust Management Include?");
   
@@ -488,9 +488,9 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
   
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text("📧 contact@realtrust.ro", pageWidth / 2, yPosition, { align: "center" });
-  doc.text("📱 +40 756 123 456", pageWidth / 2, yPosition + 12, { align: "center" });
-  doc.text("🌐 realtrustaparthotel.lovable.app", pageWidth / 2, yPosition + 24, { align: "center" });
+  doc.text("Email: contact@realtrust.ro", pageWidth / 2, yPosition, { align: "center" });
+  doc.text("Tel: +40 756 123 456", pageWidth / 2, yPosition + 12, { align: "center" });
+  doc.text("Web: realtrustaparthotel.lovable.app", pageWidth / 2, yPosition + 24, { align: "center" });
   
   // Footer
   doc.setFontSize(8);
