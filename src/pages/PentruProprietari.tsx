@@ -44,6 +44,7 @@ import PropertyQualification from "@/components/PropertyQualification";
 import ServiceChainAF from "@/components/ServiceChainAF";
 import DIYvsProfessional from "@/components/DIYvsProfessional";
 import ChannelLogos from "@/components/ChannelLogos";
+import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -398,6 +399,13 @@ const PentruProprietari = () => {
               </Button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Lead Magnet Banner */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-6">
+          <LeadMagnetBanner variant="hero" />
         </div>
       </section>
 

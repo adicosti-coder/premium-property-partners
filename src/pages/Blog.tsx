@@ -20,6 +20,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 
 
 interface BlogArticle {
@@ -476,6 +477,11 @@ const Blog = () => {
               );})}
             </div>
           )}
+
+          {/* Lead Magnet Banner */}
+          <div className="mt-16">
+            <LeadMagnetBanner variant="hero" />
+          </div>
         </div>
       </main>
 
