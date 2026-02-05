@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
@@ -58,10 +59,13 @@ const BlogPreview = () => {
       if (error) throw error;
       return data as BlogArticle[];
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes - don't refetch too often
-    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
-    retry: 2, // Retry twice on failure
-    refetchOnWindowFocus: false, // Don't refetch on window focus to prevent disappearing
+    staleTime: Infinity, // Never consider data stale - prevents automatic refetching
+    gcTime: Infinity, // Never garbage collect - keep data forever
+    retry: 2,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't refetch when component mounts
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    placeholderData: keepPreviousData, // Keep previous data while refetching
   });
 
   const formatDate = (dateString: string) => {
