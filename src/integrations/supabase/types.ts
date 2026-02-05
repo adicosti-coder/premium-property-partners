@@ -1424,12 +1424,15 @@ export type Database = {
           description_en: string
           description_ro: string
           display_order: number
+          estimated_revenue: string | null
           features: string[]
           id: string
           image_path: string | null
           is_active: boolean
           location: string
           name: string
+          roi_percentage: string | null
+          status_operativ: string | null
           tag: string
           updated_at: string
         }
@@ -1439,12 +1442,15 @@ export type Database = {
           description_en: string
           description_ro: string
           display_order?: number
+          estimated_revenue?: string | null
           features?: string[]
           id?: string
           image_path?: string | null
           is_active?: boolean
           location: string
           name: string
+          roi_percentage?: string | null
+          status_operativ?: string | null
           tag: string
           updated_at?: string
         }
@@ -1454,12 +1460,15 @@ export type Database = {
           description_en?: string
           description_ro?: string
           display_order?: number
+          estimated_revenue?: string | null
           features?: string[]
           id?: string
           image_path?: string | null
           is_active?: boolean
           location?: string
           name?: string
+          roi_percentage?: string | null
+          status_operativ?: string | null
           tag?: string
           updated_at?: string
         }
