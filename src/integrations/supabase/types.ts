@@ -2134,7 +2134,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_admin_leads_access: { Args: never; Returns: boolean }
       check_and_award_badges: {
         Args: { p_user_id: string }
         Returns: undefined
