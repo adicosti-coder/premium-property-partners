@@ -22,6 +22,7 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import SocialProofNotifications from "@/components/SocialProofNotifications";
 import AIChatbot from "@/components/AIChatbot";
 import SEOHead from "@/components/SEOHead";
+import InvestorGuideButton from "@/components/InvestorGuideButton";
 import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -191,6 +192,21 @@ const Index = () => {
         
         {/* Blog Preview */}
         <BlogPreview />
+        
+        {/* Investor Guide CTA */}
+        <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+          <div className="container mx-auto px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+              {language === "ro" ? "Investește Inteligent în Timișoara" : "Invest Smart in Timișoara"}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+              {language === "ro" 
+                ? "Descarcă ghidul nostru gratuit cu analize de piață, randamente reale și strategii de maximizare a profitului pentru 2026."
+                : "Download our free guide with market analysis, real yields, and profit maximization strategies for 2026."}
+            </p>
+            <InvestorGuideButton size="lg" className="px-8 py-6 text-lg" />
+          </div>
+        </section>
         
         {/* Referral Banner */}
         <section className="py-12">
