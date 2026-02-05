@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { safeLocalStorage } from "@/utils/browserStorage";
 
 interface SoundPreferenceContextType {
   soundEnabled: boolean;
@@ -18,24 +19,24 @@ interface SoundPreferenceProviderProps {
 
 export function SoundPreferenceProvider({ children }: SoundPreferenceProviderProps) {
   const [soundEnabled, setSoundEnabledState] = useState<boolean>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
     return stored !== null ? stored === "true" : true; // Default to enabled
   });
 
   const [volume, setVolumeState] = useState<number>(() => {
-    const stored = localStorage.getItem(VOLUME_STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(VOLUME_STORAGE_KEY);
     return stored !== null ? parseFloat(stored) : 0.15; // Default volume
   });
 
   const setSoundEnabled = (enabled: boolean) => {
     setSoundEnabledState(enabled);
-    localStorage.setItem(STORAGE_KEY, String(enabled));
+    safeLocalStorage.setItem(STORAGE_KEY, String(enabled));
   };
 
   const setVolume = (newVolume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, newVolume));
     setVolumeState(clampedVolume);
-    localStorage.setItem(VOLUME_STORAGE_KEY, String(clampedVolume));
+    safeLocalStorage.setItem(VOLUME_STORAGE_KEY, String(clampedVolume));
   };
 
   return (
@@ -61,19 +62,19 @@ export function useSoundPreferenceSafe(): SoundPreferenceContextType {
   const context = useContext(SoundPreferenceContext);
   if (context === undefined) {
     // Return defaults when used outside provider
-    const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
     const soundEnabled = stored !== null ? stored === "true" : true;
-    const storedVolume = typeof window !== "undefined" ? localStorage.getItem(VOLUME_STORAGE_KEY) : null;
+    const storedVolume = safeLocalStorage.getItem(VOLUME_STORAGE_KEY);
     const volume = storedVolume !== null ? parseFloat(storedVolume) : 0.15;
     
     return {
       soundEnabled,
       setSoundEnabled: (enabled: boolean) => {
-        localStorage.setItem(STORAGE_KEY, String(enabled));
+        safeLocalStorage.setItem(STORAGE_KEY, String(enabled));
       },
       volume,
       setVolume: (newVolume: number) => {
-        localStorage.setItem(VOLUME_STORAGE_KEY, String(newVolume));
+        safeLocalStorage.setItem(VOLUME_STORAGE_KEY, String(newVolume));
       },
     };
   }

@@ -23,6 +23,7 @@ import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useUISound } from "@/hooks/useUISound";
 import { fuzzyFilter, getMatchIndices } from "@/utils/fuzzySearch";
 import HighlightedText from "@/components/HighlightedText";
+import { safeLocalStorage } from "@/utils/browserStorage";
 
 interface PhoneInputWithCountryProps {
   value: string;
@@ -51,7 +52,7 @@ const PhoneInputWithCountry = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(() => {
     // Try to load saved country from localStorage
-    const saved = localStorage.getItem('preferred-phone-country');
+    const saved = safeLocalStorage.getItem('preferred-phone-country');
     if (saved) {
       const found = countries.find(c => c.code === saved);
       if (found) return found;
@@ -61,11 +62,11 @@ const PhoneInputWithCountry = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [hasUserSelected, setHasUserSelected] = useState(() => {
     // If there's a saved preference, consider it as user-selected
-    return !!localStorage.getItem('preferred-phone-country');
+    return !!safeLocalStorage.getItem('preferred-phone-country');
   });
   const [isFromSavedPreference, setIsFromSavedPreference] = useState(() => {
     // Track if the initial country was loaded from saved preferences
-    return !!localStorage.getItem('preferred-phone-country');
+    return !!safeLocalStorage.getItem('preferred-phone-country');
   });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -115,7 +116,7 @@ const PhoneInputWithCountry = ({
     setSearchQuery("");
     
     // Save to localStorage for future visits
-    localStorage.setItem('preferred-phone-country', country.code);
+    safeLocalStorage.setItem('preferred-phone-country', country.code);
     
     // Replace the prefix in the current value
     const cleanValue = value.replace(/[^\d]/g, "");
@@ -132,7 +133,7 @@ const PhoneInputWithCountry = ({
 
   // Reset saved preference and return to auto-detection
   const handleResetPreference = () => {
-    localStorage.removeItem('preferred-phone-country');
+    safeLocalStorage.removeItem('preferred-phone-country');
     setIsFromSavedPreference(false);
     setHasUserSelected(false);
     

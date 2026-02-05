@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { safeLocalStorage } from "@/utils/browserStorage";
 
 // Generate a unique session ID for view tracking
 const getSessionId = (): string => {
   const storageKey = "realtrust_session_id";
-  let sessionId = localStorage.getItem(storageKey);
+  let sessionId = safeLocalStorage.getItem(storageKey);
   
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    localStorage.setItem(storageKey, sessionId);
+    safeLocalStorage.setItem(storageKey, sessionId);
   }
   
   return sessionId;

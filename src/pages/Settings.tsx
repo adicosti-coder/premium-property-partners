@@ -32,6 +32,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { z } from "zod";
+import { safeLocalStorage } from "@/utils/browserStorage";
 
 const passwordSchema = z.object({
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
@@ -60,12 +61,12 @@ const Settings = () => {
   
   // Sound preference state
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    const stored = localStorage.getItem('ui-sound-preference');
+    const stored = safeLocalStorage.getItem('ui-sound-preference');
     return stored !== null ? stored === 'true' : true;
   });
   
   const [soundVolume, setSoundVolume] = useState(() => {
-    const stored = localStorage.getItem('ui-sound-volume');
+    const stored = safeLocalStorage.getItem('ui-sound-volume');
     return stored !== null ? parseFloat(stored) : 0.15;
   });
   
