@@ -45,7 +45,8 @@ import {
   Eye,
   EyeOff,
   GripVertical,
-  Image as ImageIcon
+  Image as ImageIcon,
+  TrendingUp
 } from "lucide-react";
 import PropertyImageGallery from "./PropertyImageGallery";
 
@@ -63,6 +64,9 @@ interface Property {
   display_order: number;
   created_at: string;
   updated_at: string;
+  status_operativ: string | null;
+  estimated_revenue: string | null;
+  roi_percentage: string | null;
 }
 
 interface PropertyImage {
@@ -84,6 +88,9 @@ interface PropertyFormData {
   tag: string;
   is_active: boolean;
   display_order: number;
+  status_operativ: string;
+  estimated_revenue: string;
+  roi_percentage: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -96,6 +103,9 @@ const initialFormData: PropertyFormData = {
   tag: "",
   is_active: true,
   display_order: 0,
+  status_operativ: "cazare",
+  estimated_revenue: "",
+  roi_percentage: "",
 };
 
 export default function PropertyManager() {
@@ -180,6 +190,9 @@ export default function PropertyManager() {
         tag: formData.tag,
         is_active: formData.is_active,
         display_order: formData.display_order,
+        status_operativ: formData.status_operativ,
+        estimated_revenue: formData.estimated_revenue || null,
+        roi_percentage: formData.roi_percentage || null,
       });
 
       if (error) throw error;
@@ -229,6 +242,9 @@ export default function PropertyManager() {
           image_path: imagePath,
           is_active: formData.is_active,
           display_order: formData.display_order,
+          status_operativ: formData.status_operativ,
+          estimated_revenue: formData.estimated_revenue || null,
+          roi_percentage: formData.roi_percentage || null,
         })
         .eq("id", editingProperty.id);
 
@@ -312,6 +328,9 @@ export default function PropertyManager() {
       tag: property.tag,
       is_active: property.is_active,
       display_order: property.display_order,
+      status_operativ: property.status_operativ || "cazare",
+      estimated_revenue: property.estimated_revenue || "",
+      roi_percentage: property.roi_percentage || "",
     });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
@@ -402,6 +421,48 @@ export default function PropertyManager() {
           onChange={(e) => setFormData({ ...formData, booking_url: e.target.value })}
           placeholder="https://booking.com/..."
         />
+      </div>
+
+      {/* Investment Fields */}
+      <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          <h4 className="font-semibold text-foreground">Secțiune Investiții</h4>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Status Operativ</Label>
+          <select
+            value={formData.status_operativ}
+            onChange={(e) => setFormData({ ...formData, status_operativ: e.target.value })}
+            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            <option value="cazare">Cazare (standard)</option>
+            <option value="investitie">Investiție (afișează ROI)</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Selectează 'Investiție' pentru a afișa secțiunea ROI pe pagina proprietății
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Venit Estimat (€/lună)</Label>
+            <Input
+              value={formData.estimated_revenue}
+              onChange={(e) => setFormData({ ...formData, estimated_revenue: e.target.value })}
+              placeholder="1.450"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>ROI (%)</Label>
+            <Input
+              value={formData.roi_percentage}
+              onChange={(e) => setFormData({ ...formData, roi_percentage: e.target.value })}
+              placeholder="9.4"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Image Gallery - only show for editing existing properties */}
