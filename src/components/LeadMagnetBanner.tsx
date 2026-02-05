@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Download, CheckCircle, Loader2, Sparkles, TrendingUp, Building2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
