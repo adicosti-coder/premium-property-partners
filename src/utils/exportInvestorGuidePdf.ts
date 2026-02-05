@@ -488,9 +488,9 @@ export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions 
   
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text("Email: contact@realtrust.ro", pageWidth / 2, yPosition, { align: "center" });
-  doc.text("Tel: +40 756 123 456", pageWidth / 2, yPosition + 12, { align: "center" });
-  doc.text("Web: realtrustaparthotel.lovable.app", pageWidth / 2, yPosition + 24, { align: "center" });
+  doc.text("Email: adicosti@gmail.com", pageWidth / 2, yPosition, { align: "center" });
+  doc.text("Tel: +40723154520", pageWidth / 2, yPosition + 12, { align: "center" });
+  doc.text("Web: www.realtrust.ro", pageWidth / 2, yPosition + 24, { align: "center" });
   
   // Footer
   doc.setFontSize(8);
