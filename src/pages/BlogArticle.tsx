@@ -14,6 +14,7 @@ import SocialShareButtons from "@/components/blog/SocialShareButtons";
 import BlogArticleCTA from "@/components/blog/BlogArticleCTA";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { generateArticleSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
@@ -379,6 +380,25 @@ const BlogArticlePage = () => {
               />
             </div>
           </div>
+
+          {/* Investor Guide CTA - only for investment-related articles */}
+          {(article.category === "Investiții" || article.tags.some(tag => 
+            tag.toLowerCase().includes("investiț") || 
+            tag.toLowerCase().includes("roi") || 
+            tag.toLowerCase().includes("randament")
+          )) && (
+            <div className="my-12 p-8 bg-gradient-to-br from-primary/5 via-background to-primary/10 rounded-2xl border border-primary/20 text-center">
+              <h3 className="text-2xl font-serif font-bold mb-3">
+                {language === "ro" ? "Vrei să afli mai multe despre investiții?" : "Want to learn more about investing?"}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+                {language === "ro" 
+                  ? "Descarcă ghidul nostru complet cu analize de piață și strategii de maximizare a profitului."
+                  : "Download our complete guide with market analysis and profit maximization strategies."}
+              </p>
+              <InvestorGuideButton size="lg" />
+            </div>
+          )}
 
           {/* Related Articles */}
           <RelatedArticles 
