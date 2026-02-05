@@ -1,4 +1,5 @@
 import { Phone, Users, Building } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
@@ -6,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 const MobileCTABar = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { trackCall } = useCtaAnalytics();
   const { lightTap } = useHapticFeedback();
   
@@ -24,12 +27,28 @@ const MobileCTABar = () => {
 
   const scrollToGuests = () => {
     lightTap();
-    document.getElementById('oaspeti')?.scrollIntoView({ behavior: 'smooth' });
+    // If on homepage, scroll to section; otherwise navigate to guests page
+    if (location.pathname === '/') {
+      const section = document.getElementById('oaspeti');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    navigate('/pentru-oaspeti');
   };
 
   const scrollToOwners = () => {
     lightTap();
-    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    // If on homepage, scroll to section; otherwise navigate to owners page
+    if (location.pathname === '/') {
+      const section = document.getElementById('contact');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    navigate('/pentru-proprietari');
   };
 
   return (
