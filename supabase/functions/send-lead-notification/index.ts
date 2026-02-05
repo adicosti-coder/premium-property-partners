@@ -702,7 +702,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "RealTrust Leads <onboarding@resend.dev>",
-        to: ["contact@realtrust.ro"],
+        to: ["adicosti@gmail.com"],
         subject: emailSubject,
         html: htmlContent,
       }),
