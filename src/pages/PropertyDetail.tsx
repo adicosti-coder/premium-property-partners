@@ -88,16 +88,19 @@ const PropertyDetail = () => {
     fetchPropertyData();
   }, [property]);
 
-  // 2. Funcție Trimitere către Make.com (folosind window.prompt)
-  const handleRequestInvestmentPlan = async () => {
-    const userEmail = window.prompt("Introdu adresa ta de email pentru a primi planul de management:");
-    if (!userEmail) return;
+  // 2. Funcție Trimitere către Make.com
+  const handleSendInvestmentLead = async (email: string, name: string = "Client Site") => {
+    if (!email) {
+      toast({ title: "Eroare", description: "Te rugăm să introduci email-ul.", variant: "destructive" });
+      return;
+    }
 
     const webhookUrl = "https://hook.eu1.make.com/swcd8yafsc17xlrys9w2ivlfnhukay4p";
 
     const payload = {
       contents: {
-        email: userEmail,
+        nume: name,
+        email: email,
         mesaj: `Cerere plan management pentru: ${property?.name}`,
         proprietate: property?.name,
         roi_estimat: dbProperty?.roi_percentage || "9.4%",
@@ -193,7 +196,12 @@ const PropertyDetail = () => {
                       <p className="text-3xl font-bold">{dbProperty.roi_percentage || "9.2"}%</p>
                     </div>
                   </div>
-                  <Button size="lg" className="w-full py-7 text-lg rounded-2xl shadow-lg hover:shadow-primary/20" onClick={handleRequestInvestmentPlan}>
+                  <Button size="lg" className="w-full py-7 text-lg rounded-2xl shadow-lg hover:shadow-primary/20" onClick={async () => {
+                    const email = window.prompt("Introdu email-ul pentru planul de management:");
+                    if (email) {
+                      await handleSendInvestmentLead(email, "Client Site");
+                    }
+                  }}>
                     Vreau Planul de Management Detaliat
                   </Button>
                 </div>
