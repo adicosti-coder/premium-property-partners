@@ -40,9 +40,6 @@ import {
 interface DbPropertyData {
   id: string;
   name: string;
-  status_operativ?: string;
-  estimated_revenue?: string;
-  roi_percentage?: string;
 }
 
 const PropertyDetail = () => {
@@ -73,7 +70,7 @@ const PropertyDetail = () => {
       try {
         const { data: dbProp } = await supabase
           .from("properties")
-          .select("id, name, status_operativ, estimated_revenue, roi_percentage")
+          .select("id, name")
           .eq("name", property.name)
           .maybeSingle();
 
@@ -112,7 +109,7 @@ const PropertyDetail = () => {
         telefon: leadInfo.phone,
         mesaj: `Cerere plan management pentru: ${property?.name}`,
         proprietate: property?.name,
-        roi_estimat: dbProperty?.roi_percentage || "9.4%",
+        roi_estimat: "9.4%",
         sursa: "Property Details Page"
       }
     };
@@ -189,28 +186,7 @@ const PropertyDetail = () => {
                 <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" /> {property.location}, Timișoara</p>
               </div>
 
-              {/* SECȚIUNEA DE INVESTIȚIE (ROI) - APARE DOAR DACĂ status_operativ === 'investitie' */}
-              {dbProperty?.status_operativ === 'investitie' && (
-                <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-8 rounded-3xl shadow-sm border-l-4 border-l-primary">
-                  <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-6 h-6 text-primary" />
-                    <h2 className="text-2xl font-serif font-bold">Oportunitate de Investiție</h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Venit Estimativ</p>
-                      <p className="text-3xl font-bold text-primary">€{dbProperty.estimated_revenue || "1.200"} / lună</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Randament (ROI)</p>
-                      <p className="text-3xl font-bold">{dbProperty.roi_percentage || "9.2"}%</p>
-                    </div>
-                  </div>
-                  <Button size="lg" className="w-full py-7 text-lg rounded-2xl shadow-lg hover:shadow-primary/20" onClick={() => setIsInvestmentDialogOpen(true)}>
-                    Vreau Planul de Management Detaliat
-                  </Button>
-                </div>
-              )}
+              {/* Secțiunea de investiție a fost dezactivată temporar */}
 
               {/* Detalii Standard */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
