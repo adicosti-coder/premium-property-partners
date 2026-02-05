@@ -4,7 +4,7 @@ interface ExportOptions {
   language?: "ro" | "en";
 }
 
-export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) => {
+export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions = {}) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -14,7 +14,7 @@ export const exportInvestorGuidePdf = ({ language = "ro" }: ExportOptions = {}) 
 
   const isRo = language === "ro";
 
-  // Helper functions
+  await (await import("@/utils/pdf/ensureInvestorGuideFonts")).ensureInvestorGuideFonts(doc);
   const addNewPageIfNeeded = (requiredSpace: number) => {
     if (yPosition + requiredSpace > pageHeight - 20) {
       doc.addPage();
