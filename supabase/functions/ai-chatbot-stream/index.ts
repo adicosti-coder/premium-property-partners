@@ -148,6 +148,42 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "schedule_viewing",
+      description: "Programează o vizionare de apartament pentru oaspeți sau o evaluare gratuită pentru proprietari. Schedule an apartment viewing for guests or a free property evaluation for owners.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Numele complet al persoanei" },
+          phone: { type: "string", description: "Numărul de telefon sau WhatsApp" },
+          email: { type: "string", description: "Adresa de email (opțional)" },
+          date: { type: "string", description: "Data dorită pentru programare în format YYYY-MM-DD" },
+          time: { type: "string", description: "Ora dorită (ex: 10:00, 14:30)" },
+          type: { type: "string", description: "Tipul programării: 'viewing' (vizionare apartament) sau 'evaluation' (evaluare proprietate)" },
+          property_address: { type: "string", description: "Adresa proprietății de evaluat (pentru proprietari)" },
+          notes: { type: "string", description: "Note sau cerințe speciale" },
+        },
+        required: ["name", "phone", "date", "time", "type"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_local_recommendations",
+      description: "Oferă recomandări locale pentru oaspeți: restaurante, baruri, atracții turistice, cafenele. Get local recommendations for guests.",
+      parameters: {
+        type: "object",
+        properties: {
+          category: { type: "string", description: "Categoria: restaurants, cafes, bars, attractions, shopping, transport" },
+          preferences: { type: "string", description: "Preferințe specifice (ex: romantic, family-friendly, budget)" },
+        },
+        required: ["category"],
+      },
+    },
+  },
 ];
 
 // Execute tool calls
@@ -282,6 +318,135 @@ async function executeTool(name: string, args: Record<string, unknown>, supabase
         `📞 Contactează-ne pentru o evaluare personalizată: [WhatsApp](https://wa.me/40723154520)`;
     }
 
+    case "schedule_viewing": {
+      const name = args.name as string;
+      const phone = args.phone as string;
+      const email = (args.email as string) || "";
+      const date = args.date as string;
+      const time = args.time as string;
+      const appointmentType = (args.type as string) || "viewing";
+      const propertyAddress = (args.property_address as string) || "";
+      const notes = (args.notes as string) || "";
+
+      // Send to Make.com webhook
+      const makeWebhookUrl = Deno.env.get("MAKE_WEBHOOK_URL");
+      
+      if (makeWebhookUrl) {
+        try {
+          const webhookPayload = {
+            source: "ai_chatbot",
+            type: appointmentType,
+            appointment: {
+              name,
+              phone,
+              email,
+              date,
+              time,
+              property_address: propertyAddress,
+              notes,
+            },
+            metadata: {
+              timestamp: new Date().toISOString(),
+              language: "ro",
+            },
+          };
+
+          console.log("Sending appointment to Make.com:", JSON.stringify(webhookPayload));
+          
+          await fetch(makeWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(webhookPayload),
+          });
+        } catch (webhookError) {
+          console.error("Make.com webhook error:", webhookError);
+        }
+      }
+
+      // Also save to leads table
+      await supabase.from("leads").insert({
+        name,
+        whatsapp_number: phone,
+        email,
+        property_type: appointmentType === "evaluation" ? "evaluare" : "vizionare",
+        property_area: 0,
+        message: `Programare ${appointmentType}: ${date} la ${time}. ${propertyAddress ? `Adresă: ${propertyAddress}. ` : ""}${notes}`,
+        source: "ai_chatbot_scheduling",
+      });
+
+      if (appointmentType === "evaluation") {
+        return `✅ **Programare confirmată pentru evaluare!**\n\n` +
+          `📋 **Detalii programare:**\n` +
+          `• **Nume:** ${name}\n` +
+          `• **Telefon:** ${phone}\n` +
+          `• **Data:** ${date}\n` +
+          `• **Ora:** ${time}\n` +
+          `${propertyAddress ? `• **Adresa proprietății:** ${propertyAddress}\n` : ""}` +
+          `${notes ? `• **Note:** ${notes}\n` : ""}\n` +
+          `Un consultant ApArt Hotel te va contacta în curând pentru confirmare.\n\n` +
+          `📞 Pentru întrebări urgente: [WhatsApp](https://wa.me/40723154520)`;
+      } else {
+        return `✅ **Programare confirmată pentru vizionare!**\n\n` +
+          `📋 **Detalii programare:**\n` +
+          `• **Nume:** ${name}\n` +
+          `• **Telefon:** ${phone}\n` +
+          `• **Data:** ${date}\n` +
+          `• **Ora:** ${time}\n` +
+          `${notes ? `• **Note:** ${notes}\n` : ""}\n` +
+          `Te vom contacta pentru a confirma apartamentul disponibil și locația exactă.\n\n` +
+          `📞 Pentru întrebări: [WhatsApp](https://wa.me/40723154520)`;
+      }
+    }
+
+    case "get_local_recommendations": {
+      const category = (args.category as string).toLowerCase();
+      const preferences = (args.preferences as string) || "";
+
+      // Fetch POIs from database
+      const categoryMap: Record<string, string[]> = {
+        restaurants: ["restaurant", "fine_dining"],
+        cafes: ["cafe", "coffee"],
+        bars: ["bar", "nightlife", "cocktail"],
+        attractions: ["landmark", "museum", "park", "tourist"],
+        shopping: ["mall", "shopping"],
+        transport: ["transport", "station"],
+      };
+
+      const dbCategories = categoryMap[category] || [category];
+      
+      const { data: pois } = await supabase
+        .from("points_of_interest")
+        .select("name, name_en, description, address, rating, category")
+        .eq("is_active", true)
+        .in("category", dbCategories)
+        .order("rating", { ascending: false })
+        .limit(5);
+
+      if (pois && pois.length > 0) {
+        const categoryLabels: Record<string, string> = {
+          restaurants: "🍽️ Restaurante recomandate",
+          cafes: "☕ Cafenele de top",
+          bars: "🍸 Baruri & Viață de noapte",
+          attractions: "🏛️ Atracții turistice",
+          shopping: "🛍️ Shopping",
+          transport: "🚌 Transport",
+        };
+
+        return `${categoryLabels[category] || "📍 Locuri recomandate"}\n\n` +
+          pois.map((poi: any, idx: number) => 
+            `${idx + 1}. **${poi.name}**${poi.rating ? ` ⭐${poi.rating}` : ""}\n` +
+            `   📍 ${poi.address || "Timișoara"}\n` +
+            `   ${poi.description ? poi.description.substring(0, 80) + "..." : ""}`
+          ).join("\n\n") +
+          `\n\n💡 *Tip: Menționează că ești oaspete ApArt Hotel pentru o experiență VIP!*`;
+      } else {
+        return `🔍 Nu am găsit recomandări pentru "${category}" în baza noastră.\n\n` +
+          `Te sugerez să verifici:\n` +
+          `• Google Maps pentru opțiuni actualizate\n` +
+          `• Întreabă-ne pe WhatsApp pentru sfaturi personalizate: +40723154520`;
+      }
+    }
+
     default:
       return "Funcție necunoscută.";
   }
@@ -304,6 +469,20 @@ const SYSTEM_PROMPT_RO = `Ești asistentul virtual premium al ApArt Hotel Timiș
 - **Cod discount**: **DIRECT5** pentru 5% reducere la rezervări directe
 - **Locație**: Timișoara, România
 
+## CAPABILITĂȚI DE PROGRAMARE (FOARTE IMPORTANT!)
+Poți programa vizionări și evaluări direct din chat. Când un utilizator vrea să programeze:
+1. Cere-i informațiile necesare conversațional (nume, telefon, data, ora)
+2. Folosește tool-ul schedule_viewing pentru a finaliza programarea
+3. Pentru **oaspeți**: programează vizionări de apartamente
+4. Pentru **proprietari**: programează evaluări gratuite ale proprietății lor
+
+## SERVICII CONCIERGE LOCAL
+Poți oferi recomandări personalizate pentru oaspeți folosind tool-ul get_local_recommendations:
+- Restaurante și cafenele de top
+- Baruri și viață de noapte
+- Atracții turistice în Timișoara
+- Shopping și transport
+
 ## SERVICII PENTRU OASPEȚI
 - Self check-in 24/7 cu smart lock (cod digital)
 - Apartamente premium în zone centrale (Piața Unirii, ISHO, City of Mara)
@@ -324,14 +503,12 @@ const SYSTEM_PROMPT_RO = `Ești asistentul virtual premium al ApArt Hotel Timiș
 
 ## INSTRUCȚIUNI CRITICE
 1. **FOLOSEȘTE TOOL-URILE** pentru date precise - nu inventa disponibilități sau prețuri
-2. **FORMATEAZĂ RĂSPUNSURILE** cu Markdown pentru aspect premium:
-   - Titluri cu emoji: 📊 **Estimare Profit**
-   - Liste pentru claritate
-   - Link-uri clickabile pentru acțiuni
-3. **MENȚIONEAZĂ CODUL DIRECT5** când discuți despre rezervări
-4. **ÎNDRUMĂ CĂTRE WHATSAPP** pentru întrebări complexe sau personalizate
-5. **FII SPECIFIC** - dă numere, date, exemple concrete
-6. **OFERĂ NEXT STEPS** clare la finalul fiecărui răspuns`;
+2. **PROGRAMEAZĂ ACTIV** - când cineva vrea o întâlnire, colectează datele și folosește schedule_viewing
+3. **FORMATEAZĂ RĂSPUNSURILE** cu Markdown pentru aspect premium
+4. **MENȚIONEAZĂ CODUL DIRECT5** când discuți despre rezervări
+5. **OFERĂ RECOMANDĂRI LOCALE** când oaspeții cer sfaturi despre oraș
+6. **FII SPECIFIC** - dă numere, date, exemple concrete
+7. **OFERĂ NEXT STEPS** clare la finalul fiecărui răspuns`;
 
 const SYSTEM_PROMPT_EN = `You are the premium virtual assistant of ApArt Hotel Timișoara - an apartment management service for short-term rentals with a 4.9/5 rating and 98% occupancy.
 
@@ -349,6 +526,20 @@ const SYSTEM_PROMPT_EN = `You are the premium virtual assistant of ApArt Hotel T
 - **Quick Contact**: WhatsApp +40723154520
 - **Discount Code**: **DIRECT5** for 5% off direct bookings
 - **Location**: Timișoara, Romania
+
+## SCHEDULING CAPABILITIES (VERY IMPORTANT!)
+You can schedule viewings and evaluations directly from chat. When a user wants to schedule:
+1. Conversationally ask for required info (name, phone, date, time)
+2. Use the schedule_viewing tool to complete the booking
+3. For **guests**: schedule apartment viewings
+4. For **owners**: schedule free property evaluations
+
+## LOCAL CONCIERGE SERVICES
+You can offer personalized recommendations for guests using the get_local_recommendations tool:
+- Top restaurants and cafes
+- Bars and nightlife
+- Tourist attractions in Timișoara
+- Shopping and transport
 
 ## GUEST SERVICES
 - 24/7 self check-in with smart lock (digital code)
@@ -370,14 +561,12 @@ const SYSTEM_PROMPT_EN = `You are the premium virtual assistant of ApArt Hotel T
 
 ## CRITICAL INSTRUCTIONS
 1. **USE TOOLS** for precise data - never make up availability or prices
-2. **FORMAT RESPONSES** with Markdown for premium appearance:
-   - Titles with emoji: 📊 **Profit Estimate**
-   - Lists for clarity
-   - Clickable links for actions
-3. **MENTION DIRECT5 CODE** when discussing bookings
-4. **DIRECT TO WHATSAPP** for complex or personalized questions
-5. **BE SPECIFIC** - give numbers, dates, concrete examples
-6. **OFFER CLEAR NEXT STEPS** at the end of each response`;
+2. **ACTIVELY SCHEDULE** - when someone wants an appointment, collect data and use schedule_viewing
+3. **FORMAT RESPONSES** with Markdown for premium appearance
+4. **MENTION DIRECT5 CODE** when discussing bookings
+5. **OFFER LOCAL RECOMMENDATIONS** when guests ask about the city
+6. **BE SPECIFIC** - give numbers, dates, concrete examples
+7. **OFFER CLEAR NEXT STEPS** at the end of each response`;
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
