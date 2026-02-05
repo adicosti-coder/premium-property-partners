@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { isBrowser, safeLocalStorage } from "@/utils/browserStorage";
 
 interface ScrollMilestone {
   depth: number;
@@ -291,14 +292,16 @@ export const useConversionFunnel = (funnelName: string) => {
 // Hook for A/B testing
 export const useABTest = (testName: string, variants: string[]) => {
   const getVariant = useCallback((): string => {
+    if (!isBrowser()) return variants[0] || "control";
+
     const storageKey = `ab_test_${testName}`;
-    let variant = localStorage.getItem(storageKey);
+    let variant = safeLocalStorage.getItem(storageKey);
     
     if (!variant) {
       // Randomly assign variant
       const randomIndex = Math.floor(Math.random() * variants.length);
-      variant = variants[randomIndex];
-      localStorage.setItem(storageKey, variant);
+      variant = variants[randomIndex] || "control";
+      safeLocalStorage.setItem(storageKey, variant);
       
       // Track assignment async
       const sessionId = getSessionId();
@@ -327,7 +330,8 @@ export const useABTest = (testName: string, variants: string[]) => {
     conversionType: string,
     value?: number
   ) => {
-    const variant = localStorage.getItem(`ab_test_${testName}`);
+    if (!isBrowser()) return;
+    const variant = safeLocalStorage.getItem(`ab_test_${testName}`);
     if (!variant) return;
 
     try {
