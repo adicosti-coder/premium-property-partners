@@ -4,11 +4,17 @@ import App from "./App.tsx";
 import "./index.css";
 import { registerServiceWorker } from "./hooks/usePWA";
 
-// Register PWA service worker
-registerServiceWorker();
+// Build/prerender safety: publishing can execute parts of the bundle in a non-browser environment.
+if (typeof document !== "undefined") {
+  // Register PWA service worker
+  registerServiceWorker();
 
-createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <App />
-  </HelmetProvider>
-);
+  const rootEl = document.getElementById("root");
+  if (rootEl) {
+    createRoot(rootEl).render(
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
+    );
+  }
+}

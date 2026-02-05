@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePWA } from "@/hooks/usePWA";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
+import { isBrowser, safeLocalStorage } from "@/utils/browserStorage";
 
 const PWAInstallPrompt = () => {
   const { language } = useLanguage();
@@ -35,13 +36,17 @@ const PWAInstallPrompt = () => {
   const t = translations[language] || translations.ro;
 
   // Check if iOS Safari
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const isIOSSafari = isIOS && isSafari;
+  const isIOSSafari = (() => {
+    if (!isBrowser() || typeof navigator === "undefined" || typeof window === "undefined") return false;
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    return isIOS && isSafari;
+  })();
 
   useEffect(() => {
     // Don't show if already dismissed or installed
-    const dismissed = localStorage.getItem("pwa-prompt-dismissed");
+    const dismissed = safeLocalStorage.getItem("pwa-prompt-dismissed");
     if (dismissed || isInstalled) {
       setIsDismissed(true);
       return;
@@ -70,7 +75,7 @@ const PWAInstallPrompt = () => {
   const handleDismiss = () => {
     setIsVisible(false);
     setIsDismissed(true);
-    localStorage.setItem("pwa-prompt-dismissed", "true");
+    safeLocalStorage.setItem("pwa-prompt-dismissed", "true");
   };
 
   if (isDismissed || isInstalled || !isVisible) return null;

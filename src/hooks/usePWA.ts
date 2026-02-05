@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { isBrowser } from "@/utils/browserStorage";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -18,14 +19,22 @@ interface PWAStatus {
 
 export function usePWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [status, setStatus] = useState<PWAStatus>({
-    isInstalled: false,
-    isInstallable: false,
-    isOnline: navigator.onLine,
-    isStandalone: window.matchMedia("(display-mode: standalone)").matches,
+  const [status, setStatus] = useState<PWAStatus>(() => {
+    const browser = isBrowser();
+    return {
+      isInstalled: false,
+      isInstallable: false,
+      isOnline: browser && typeof navigator !== "undefined" ? navigator.onLine : true,
+      isStandalone:
+        browser && typeof window !== "undefined"
+          ? window.matchMedia("(display-mode: standalone)").matches
+          : false,
+    };
   });
 
   useEffect(() => {
+    if (!isBrowser()) return;
+
     // Check if already installed
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
                          (window.navigator as any).standalone === true;
@@ -91,6 +100,8 @@ export function usePWA() {
 
 // Register service worker
 export async function registerServiceWorker() {
+  if (!isBrowser() || typeof navigator === "undefined") return null;
+
   if ("serviceWorker" in navigator) {
     try {
       const registration = await navigator.serviceWorker.register("/pwa-sw.js", {
@@ -109,13 +120,15 @@ export async function registerServiceWorker() {
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (hasRefreshed) return;
         hasRefreshed = true;
-        window.location.reload();
+        if (typeof window !== "undefined") window.location.reload();
       });
 
       // Re-check for updates when the tab becomes active
-      window.addEventListener("focus", () => {
-        registration.update().catch(() => null);
-      });
+      if (typeof window !== "undefined") {
+        window.addEventListener("focus", () => {
+          registration.update().catch(() => null);
+        });
+      }
       
       // Check for updates
       registration.addEventListener("updatefound", () => {

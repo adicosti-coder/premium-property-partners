@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import { isBrowser, safeLocalStorage } from "@/utils/browserStorage";
 
 const FAVORITES_KEY = "realtrust_favorite_properties";
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem(FAVORITES_KEY);
+      const stored = safeLocalStorage.getItem(FAVORITES_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -13,7 +14,8 @@ export const useFavorites = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    if (!isBrowser()) return;
+    safeLocalStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   }, [favorites]);
 
   const toggleFavorite = useCallback((propertyId: string) => {
