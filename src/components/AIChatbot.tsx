@@ -114,7 +114,7 @@ const AIChatbot = () => {
       title: "Asistent AI Premium",
       subtitle: "Răspunsuri instant cu AI avansat",
       placeholder: "Scrie mesajul tău...",
-      greeting: "Bună! 👋 Sunt asistentul AI premium ApArt Hotel.\n\n**Ce pot face pentru tine:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• ℹ️ Informații despre **facilități**\n\nCum te pot ajuta?",
+      greeting: "Bună! 👋 Sunt asistentul AI premium ApArt Hotel.\n\n**Ce pot face pentru tine:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• 🗓️ **Programează** vizionări sau evaluări\n• 🍽️ **Recomandări** restaurante, cafenele, atracții\n\nCum te pot ajuta?",
       thinking: "Analizez...",
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
@@ -123,8 +123,8 @@ const AIChatbot = () => {
       quickActions: {
         availability: "Verifică disponibilitate",
         price: "Calculează preț",
-        profit: "Estimează profit",
-        info: "Informații generale",
+        schedule: "Programează vizită",
+        recommend: "Recomandări locale",
       },
       copied: "Copiat!",
       newChat: "Conversație nouă",
@@ -134,7 +134,7 @@ const AIChatbot = () => {
       title: "Premium AI Assistant",
       subtitle: "Instant responses with advanced AI",
       placeholder: "Type your message...",
-      greeting: "Hello! 👋 I'm ApArt Hotel's premium AI assistant.\n\n**What I can do for you:**\n\n• 📅 Check apartment **availability**\n• 💰 Calculate **prices** for stays\n• 📊 Estimate **profit** for owners\n• ℹ️ Information about **amenities**\n\nHow can I help you?",
+      greeting: "Hello! 👋 I'm ApArt Hotel's premium AI assistant.\n\n**What I can do for you:**\n\n• 📅 Check apartment **availability**\n• 💰 Calculate **prices** for stays\n• 📊 Estimate **profit** for owners\n• 🗓️ **Schedule** viewings or evaluations\n• 🍽️ **Recommendations** for restaurants, cafes, attractions\n\nHow can I help you?",
       thinking: "Analyzing...",
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",
@@ -143,8 +143,8 @@ const AIChatbot = () => {
       quickActions: {
         availability: "Check availability",
         price: "Calculate price",
-        profit: "Estimate profit",
-        info: "General info",
+        schedule: "Schedule visit",
+        recommend: "Local tips",
       },
       copied: "Copied!",
       newChat: "New chat",
@@ -172,20 +172,20 @@ const AIChatbot = () => {
         : "Calculate the price for a 3-night stay",
     },
     {
-      id: "profit",
-      icon: <Building2 className="w-3.5 h-3.5" />,
-      label: text.quickActions.profit,
+      id: "schedule",
+      icon: <Calendar className="w-3.5 h-3.5" />,
+      label: text.quickActions.schedule,
       prompt: language === "ro" 
-        ? "Estimează profitul pentru un apartament cu 2 camere de 50 mp" 
-        : "Estimate profit for a 2-room apartment of 50 sqm",
+        ? "Vreau să programez o vizionare a unui apartament sau o evaluare gratuită a proprietății mele" 
+        : "I want to schedule an apartment viewing or a free evaluation of my property",
     },
     {
-      id: "info",
+      id: "recommend",
       icon: <HelpCircle className="w-3.5 h-3.5" />,
-      label: text.quickActions.info,
+      label: text.quickActions.recommend,
       prompt: language === "ro" 
-        ? "Ce servicii oferiți pentru proprietari?" 
-        : "What services do you offer for owners?",
+        ? "Ce restaurante și cafenele îmi recomanzi în Timișoara?" 
+        : "What restaurants and cafes do you recommend in Timișoara?",
     },
   ];
 
