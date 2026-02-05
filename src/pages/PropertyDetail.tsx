@@ -103,7 +103,7 @@ const PropertyDetail = () => {
     }
 
     setIsSendingToMake(true);
-    const webhookUrl = "https://hook.eu1.make.com/ADRESA_TA_WEBHOOK"; // <-- SCHIMBĂ CU URL-UL TĂU
+    const webhookUrl = "https://hook.eu1.make.com/swcd8yafsc17xlrys9w2ivlfnhukay4p";
 
     const payload = {
       contents: {
