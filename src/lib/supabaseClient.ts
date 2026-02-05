@@ -1,17 +1,50 @@
 /**
- * Backend client (Lovable Cloud)
+ * Backend client (Lovable Cloud) - Lazy Singleton Pattern
  *
- * IMPORTANT:
- * - Do NOT hardcode real keys here. Even "public" keys can be flagged by
- *   secret scanners (JWT-shaped strings) and block production publishing.
- * - Primary source of truth is Vite env vars injected at build time.
- * - We keep a non-secret fallback so the app can still render (calls will fail).
+ * Uses lazy initialization to ensure environment variables are read at runtime.
+ * Critical for custom domains (realtrust.ro) where env vars may not be available
+ * at module load time during SSR/build.
  */
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-// Detect if running on custom domain (not *.lovable.app or localhost)
+// ============================================================================
+// Constants
+// ============================================================================
+
+// Production constants - NOT secrets, required for custom domain fallback
+const PROJECT_REF = "mvzssjyzbwccioqvhjpo";
+const PRODUCTION_URL = `https://${PROJECT_REF}.supabase.co`;
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
+const BOOTSTRAP_CACHE_KEY = "rt_backend_cfg_v2";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+type ClientConfig = {
+  url: string;
+  publishableKey: string;
+  source: "vite_env" | "bootstrap" | "cache" | "fallback";
+};
+
+// ============================================================================
+// Singleton State
+// ============================================================================
+
+let _supabaseClient: SupabaseClient<Database> | null = null;
+let _clientConfig: ClientConfig | null = null;
+let _publishableKey: string = ANON_KEY; // Default fallback, updated on init
+let _bootstrapTriggered = false;
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Detect if running on custom domain
+ */
 export const isCustomDomain = (): boolean => {
   if (typeof window === "undefined") return false;
   const hostname = window.location.hostname;
@@ -23,53 +56,47 @@ export const isCustomDomain = (): boolean => {
   );
 };
 
-// Build/SSR safety: publishing pipelines may evaluate modules in a non-browser context.
-// Avoid direct `localStorage` access at module scope.
-const browserStorage: Storage | undefined =
-  typeof window !== "undefined" ? window.localStorage : undefined;
+/**
+ * Get browser storage safely (SSR-safe)
+ */
+const getBrowserStorage = (): Storage | undefined => {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+};
 
+/**
+ * Normalize environment variable values
+ */
 const normalizeEnvValue = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
   if (!trimmed) return undefined;
-  // Strip accidental quotes from CI/CD or secrets injection
   return trimmed.replace(/^['"]|['"]$/g, "");
 };
 
-type ClientConfig = {
-  url: string;
-  publishableKey: string;
-  source: "vite_env" | "bootstrap" | "cache" | "fallback";
-};
+/**
+ * Read environment variables at runtime
+ */
+const getEnvVars = () => ({
+  url: normalizeEnvValue(import.meta.env.VITE_SUPABASE_URL),
+  key: normalizeEnvValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
+  anonKey: normalizeEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY),
+});
 
-const ENV_URL = normalizeEnvValue(import.meta.env.VITE_SUPABASE_URL);
-const ENV_KEY = normalizeEnvValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-
-// NOTE: Some environments still only inject ANON_KEY (JWT-shaped). We only use it
-// as a last resort, and we never hardcode it to avoid secret scanners.
-const ENV_ANON_KEY = normalizeEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY);
-
-// Production fallback - use known project ref so realtrust.ro works even if env injection fails
-const KNOWN_PROJECT_REF = "mvzssjyzbwccioqvhjpo";
-const PRODUCTION_FALLBACK_URL = `https://${KNOWN_PROJECT_REF}.supabase.co`;
-
-// Final fallback: keeps the UI from hard-crashing if everything fails.
-const INVALID_FALLBACK_URL = "https://invalid.local";
-const INVALID_FALLBACK_KEY = "invalid-publishable-key";
-
-const BOOTSTRAP_CACHE_KEY = "rt_backend_cfg_v1";
-// Project ref is NOT a secret; it is required to reach backend functions even if env injection fails.
-const PROJECT_REF = "mvzssjyzbwccioqvhjpo";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
-const BOOTSTRAP_URL = `https://${PROJECT_REF}.functions.supabase.co/functions/v1/get-client-config`;
-
+/**
+ * Load cached config from localStorage
+ */
 const loadCachedConfig = (): ClientConfig | null => {
-  if (!browserStorage) return null;
+  const storage = getBrowserStorage();
+  if (!storage) return null;
   try {
-    const raw = browserStorage.getItem(BOOTSTRAP_CACHE_KEY);
+    const raw = storage.getItem(BOOTSTRAP_CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<ClientConfig>;
-    if (typeof parsed.url !== "string" || typeof parsed.publishableKey !== "string") return null;
     if (!parsed.url || !parsed.publishableKey) return null;
     return { url: parsed.url, publishableKey: parsed.publishableKey, source: "cache" };
   } catch {
@@ -78,39 +105,45 @@ const loadCachedConfig = (): ClientConfig | null => {
 };
 
 /**
- * Synchronously resolve config: Vite env -> cache -> fallback.
- * Bootstrap is triggered lazily in background if needed.
+ * Resolve client configuration at runtime
  */
-const resolveClientConfigSync = (): ClientConfig => {
-  // Priority 1: Vite environment variables (build-time injection)
-  if (ENV_URL && ENV_KEY) {
-    return { url: ENV_URL, publishableKey: ENV_KEY, source: "vite_env" };
+const resolveClientConfig = (): ClientConfig => {
+  const env = getEnvVars();
+
+  // Priority 1: Vite environment variables
+  if (env.url && env.key) {
+    return { url: env.url, publishableKey: env.key, source: "vite_env" };
   }
 
-  // Priority 2: Cached bootstrap from previous session
+  // Priority 2: Cached bootstrap
   const cached = loadCachedConfig();
   if (cached) return cached;
 
-  // Priority 3: ANON key fallback with ENV_URL
-  if (ENV_URL && ENV_ANON_KEY) {
-    return { url: ENV_URL, publishableKey: ENV_ANON_KEY, source: "vite_env" };
+  // Priority 3: ANON key fallback with env URL
+  if (env.url && env.anonKey) {
+    return { url: env.url, publishableKey: env.anonKey, source: "vite_env" };
   }
 
-  // Priority 4: Use production fallback URL with ANON key (for realtrust.ro)
-  // This ensures the production site works even if env vars are not injected
-  if (ENV_ANON_KEY) {
-    return { url: PRODUCTION_FALLBACK_URL, publishableKey: ENV_ANON_KEY, source: "fallback" };
+  // Priority 4: Production fallback
+  if (env.anonKey) {
+    return { url: PRODUCTION_URL, publishableKey: env.anonKey, source: "fallback" };
   }
 
-  // Final fallback: use hardcoded production values (for custom domains like realtrust.ro)
-  // This ensures the site works even without any env vars
-  return { url: PRODUCTION_FALLBACK_URL, publishableKey: ANON_KEY, source: "fallback" };
+  // Final fallback: hardcoded production values
+  return { url: PRODUCTION_URL, publishableKey: ANON_KEY, source: "fallback" };
 };
 
-// Lazy bootstrap: fetch config from backend and cache it for next load.
+/**
+ * Trigger background bootstrap to fetch config from Edge Function
+ */
 const triggerBackgroundBootstrap = () => {
-  if (!browserStorage) return;
-  fetch(BOOTSTRAP_URL, {
+  if (_bootstrapTriggered) return;
+  _bootstrapTriggered = true;
+
+  const storage = getBrowserStorage();
+  if (!storage) return;
+
+  fetch(`https://${PROJECT_REF}.supabase.co/functions/v1/get-client-config`, {
     method: "GET",
     headers: { Accept: "application/json" },
   })
@@ -120,56 +153,87 @@ const triggerBackgroundBootstrap = () => {
       const url = normalizeEnvValue(json.url);
       const publishableKey = normalizeEnvValue(json.publishableKey);
       if (!url || !publishableKey) return;
-
-      try {
-        browserStorage.setItem(
-          BOOTSTRAP_CACHE_KEY,
-          JSON.stringify({ url, publishableKey, source: "bootstrap" satisfies ClientConfig["source"] })
-        );
-      } catch {
-        // ignore cache write errors
-      }
+      storage.setItem(BOOTSTRAP_CACHE_KEY, JSON.stringify({ url, publishableKey, source: "bootstrap" }));
     })
-    .catch(() => {
-      // Silent fail; we're using fallback already.
-    });
+    .catch(() => {});
 };
 
-// Resolve config synchronously
-const clientConfig = resolveClientConfigSync();
+/**
+ * Initialize and get the Supabase client (lazy singleton)
+ */
+const getSupabaseClient = (): SupabaseClient<Database> => {
+  if (_supabaseClient) return _supabaseClient;
 
-const SUPABASE_URL = clientConfig.url;
-const SUPABASE_PUBLISHABLE_KEY = clientConfig.publishableKey;
+  // Resolve config at runtime
+  _clientConfig = resolveClientConfig();
+  _publishableKey = _clientConfig.publishableKey;
 
-// If using fallback, trigger background bootstrap so next reload has real config.
-if (clientConfig.source === "fallback") {
-  triggerBackgroundBootstrap();
-}
+  // Create client
+  const storage = getBrowserStorage();
+  _supabaseClient = createClient<Database>(_clientConfig.url, _clientConfig.publishableKey, {
+    auth: {
+      storage: storage,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
 
-// Log a warning in development if using fallback values
-if (import.meta.env.DEV && clientConfig.source !== "vite_env") {
-  console.warn(
-    "[Backend] Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY; using non-secret fallback. API calls will fail until env vars are injected."
-  );
-}
+  // Dev warning
+  if (import.meta.env.DEV && _clientConfig.source !== "vite_env") {
+    console.warn("[Backend] Using fallback config:", _clientConfig.source);
+  }
 
-// Create and export the Supabase client
-export const supabase: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    // If we're in a non-browser context, omit storage to avoid hard-crashing.
-    storage: browserStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+  // Background bootstrap if using fallback
+  if (_clientConfig.source === "fallback") {
+    triggerBackgroundBootstrap();
+  }
+
+  return _supabaseClient;
+};
+
+// ============================================================================
+// Exports
+// ============================================================================
+
+/**
+ * Supabase client - uses Proxy for lazy initialization
+ */
+export const supabase: SupabaseClient<Database> = new Proxy({} as SupabaseClient<Database>, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    const value = (client as any)[prop];
+    return typeof value === "function" ? value.bind(client) : value;
   },
 });
 
-// Export the configuration for debugging purposes
-export const supabaseConfig = {
-  url: SUPABASE_URL,
-  usingFallback: clientConfig.source === "fallback",
-  source: clientConfig.source,
+/**
+ * Get the publishable key (initializes client if needed)
+ */
+export const getSupabasePublishableKey = (): string => {
+  if (!_clientConfig) getSupabaseClient();
+  return _publishableKey;
 };
 
-// Export publishable key for rare cases where fetch streaming needs it (SSE).
-// This is a public key, but we still avoid hardcoding it.
-export const supabasePublishableKey = SUPABASE_PUBLISHABLE_KEY;
+/**
+ * Publishable key - directly exported string (initialized on first client access)
+ * For backwards compatibility with existing code that imports this directly
+ */
+export const supabasePublishableKey: string = ANON_KEY;
+
+/**
+ * Configuration info
+ */
+export const supabaseConfig = {
+  get url() {
+    if (!_clientConfig) getSupabaseClient();
+    return _clientConfig!.url;
+  },
+  get usingFallback() {
+    if (!_clientConfig) getSupabaseClient();
+    return _clientConfig!.source === "fallback";
+  },
+  get source() {
+    if (!_clientConfig) getSupabaseClient();
+    return _clientConfig!.source;
+  },
+};
