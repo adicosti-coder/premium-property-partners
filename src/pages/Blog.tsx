@@ -21,7 +21,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
-
+import InvestorGuideButton from "@/components/InvestorGuideButton";
 
 interface BlogArticle {
   id: string;
@@ -477,6 +477,11 @@ const Blog = () => {
               );})}
             </div>
           )}
+
+          {/* Investor Guide CTA for Investment Articles */}
+          <div className="mt-12 text-center">
+            <InvestorGuideButton size="lg" />
+          </div>
 
           {/* Lead Magnet Banner */}
           <div className="mt-16">

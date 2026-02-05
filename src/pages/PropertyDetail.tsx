@@ -22,6 +22,7 @@ import AccessibilityPanel from "@/components/AccessibilityPanel";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
+import InvestorGuideButton from "@/components/InvestorGuideButton";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
@@ -196,14 +197,7 @@ const PropertyDetail = () => {
                       <p className="text-3xl font-bold">{dbProperty.roi_percentage || "9.2"}%</p>
                     </div>
                   </div>
-                  <Button size="lg" className="w-full py-7 text-lg rounded-2xl shadow-lg hover:shadow-primary/20" onClick={async () => {
-                    const email = window.prompt("Introdu email-ul pentru planul de management:");
-                    if (email) {
-                      await handleSendInvestmentLead(email, "Client Site");
-                    }
-                  }}>
-                    Vreau Planul de Management Detaliat
-                  </Button>
+                  <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
                 </div>
               )}
 

@@ -45,6 +45,7 @@ import ServiceChainAF from "@/components/ServiceChainAF";
 import DIYvsProfessional from "@/components/DIYvsProfessional";
 import ChannelLogos from "@/components/ChannelLogos";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
+import InvestorGuideButton from "@/components/InvestorGuideButton";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -341,6 +342,21 @@ const PentruProprietari = () => {
 
       {/* Partnership Timeline */}
       <PartnershipTimeline />
+
+      {/* Investor Guide CTA - Before Calculators */}
+      <section className="py-12 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
+        <div className="container mx-auto px-6 text-center">
+          <h3 className="text-2xl font-serif font-bold mb-4">
+            {language === "ro" ? "Descarcă Ghidul Investitorului 2026" : "Download the 2026 Investor's Guide"}
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+            {language === "ro" 
+              ? "Strategii de maximizare a randamentului, analiză de piață și zone premium din Timișoara."
+              : "Strategies for maximizing returns, market analysis and premium zones in Timișoara."}
+          </p>
+          <InvestorGuideButton size="lg" />
+        </div>
+      </section>
 
       {/* Calculator Section */}
       <section id="calculator">
