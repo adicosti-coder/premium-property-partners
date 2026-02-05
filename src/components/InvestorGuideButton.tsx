@@ -14,6 +14,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { Download, Sparkles, Loader2 } from "lucide-react";
 import { exportInvestorGuidePdf } from "@/utils/exportInvestorGuidePdf";
+import { supabase } from "@/lib/supabaseClient";
 
 interface InvestorGuideButtonProps {
   variant?: "default" | "outline" | "ghost";
@@ -49,24 +50,22 @@ const InvestorGuideButton = ({
     setIsSubmitting(true);
 
     try {
-      // Send to Make.com webhook for email automation & admin notification
-      const webhookUrl = "https://hook.eu1.make.com/swcd8yafsc17xlrys9w2ivlfnhukay4p";
-      
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "investor_guide_download",
+      // Use edge function to save lead and send notifications
+      const { error } = await supabase.functions.invoke("send-lead-magnet", {
+        body: {
           name: formData.name,
           email: formData.email,
+          source: "investor_guide_button",
           language: language,
-          timestamp: new Date().toISOString(),
-          source: window.location.pathname,
-        }),
+        }
       });
 
+      if (error) {
+        console.error("Edge function error:", error);
+      }
+
       // Generate and download the PDF immediately
-      exportInvestorGuidePdf({ language });
+      await exportInvestorGuidePdf({ language });
 
       toast.success(
         isRo
@@ -78,8 +77,8 @@ const InvestorGuideButton = ({
       setFormData({ name: "", email: "" });
     } catch (error) {
       console.error("Error submitting investor guide form:", error);
-      // Still download PDF even if webhook fails
-      exportInvestorGuidePdf({ language });
+      // Still download PDF even if edge function fails
+      await exportInvestorGuidePdf({ language });
       toast.success(
         isRo
           ? "Ghidul a fost descărcat!"

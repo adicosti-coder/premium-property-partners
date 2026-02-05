@@ -1,3 +1,4 @@
+// Lead Magnet Edge Function - v2.0 - Fixed deployment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -41,7 +42,26 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // 1. Save lead to database
+    // 1. Save lead to leads table for admin tracking
+    const { error: leadError } = await supabase
+      .from("leads")
+      .insert({
+        name,
+        email,
+        whatsapp_number: "",
+        property_type: "investor_guide",
+        property_area: 0,
+        source: source || "lead_magnet_guide_2026",
+        message: `Ghidul Investitorului - ${language === "ro" ? "Română" : "English"}`,
+      });
+
+    if (leadError) {
+      console.error("Lead insert error:", leadError);
+    } else {
+      console.log("Lead saved to database successfully");
+    }
+
+    // 2. Also save to newsletter subscribers
     const { error: dbError } = await supabase
       .from("newsletter_subscribers")
       .upsert(
@@ -50,7 +70,7 @@ serve(async (req) => {
       );
 
     if (dbError) {
-      console.error("Database error:", dbError);
+      console.error("Newsletter subscriber error:", dbError);
     }
 
     // 2. Send to Make.com webhook
