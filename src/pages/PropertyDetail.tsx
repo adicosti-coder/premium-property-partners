@@ -3,15 +3,11 @@ import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
   Wifi, Car, Key, Calendar, Clock, Check, X, ChevronLeft, ChevronRight,
-  ExternalLink, Share2, Heart, Loader2, Play, Pause, TrendingUp, Mail, Phone, User
+  ExternalLink, Share2, Heart, Loader2, Play, Pause, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
-} from "@/components/ui/dialog";
 import { getPropertyBySlug } from "@/data/properties";
 import BookingForm from "@/components/BookingForm";
 import StayCalculator from "@/components/StayCalculator";
@@ -51,11 +47,8 @@ const PropertyDetail = () => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   
-  // State-uri noi pentru Investiții și Pop-up
+  // State pentru proprietatea din DB
   const [dbProperty, setDbProperty] = useState<DbPropertyData | null>(null);
-  const [isInvestmentDialogOpen, setIsInvestmentDialogOpen] = useState(false);
-  const [isSendingToMake, setIsSendingToMake] = useState(false);
-  const [leadInfo, setLeadInfo] = useState({ name: "", email: "", phone: "" });
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -95,21 +88,16 @@ const PropertyDetail = () => {
     fetchPropertyData();
   }, [property]);
 
-  // 2. Funcție Trimitere către Make.com (REPARĂ EROAREA DE VALIDARE)
-  const handleSendInvestmentLead = async () => {
-    if (!leadInfo.email || !leadInfo.name) {
-      toast({ title: "Eroare", description: "Te rugăm să completezi numele și email-ul.", variant: "destructive" });
-      return;
-    }
+  // 2. Funcție Trimitere către Make.com (folosind window.prompt)
+  const handleRequestInvestmentPlan = async () => {
+    const userEmail = window.prompt("Introdu adresa ta de email pentru a primi planul de management:");
+    if (!userEmail) return;
 
-    setIsSendingToMake(true);
     const webhookUrl = "https://hook.eu1.make.com/swcd8yafsc17xlrys9w2ivlfnhukay4p";
 
     const payload = {
       contents: {
-        nume: leadInfo.name,
-        email: leadInfo.email,
-        telefon: leadInfo.phone,
+        email: userEmail,
         mesaj: `Cerere plan management pentru: ${property?.name}`,
         proprietate: property?.name,
         roi_estimat: dbProperty?.roi_percentage || "9.4%",
@@ -126,12 +114,11 @@ const PropertyDetail = () => {
 
       if (response.ok) {
         toast({ title: "Cerere trimisă!", description: "Vei primi ghidul de randament pe email în scurt timp." });
-        setIsInvestmentDialogOpen(false);
+      } else {
+        toast({ title: "Eroare la trimitere", description: "Te rugăm să încerci din nou.", variant: "destructive" });
       }
     } catch (err) {
       toast({ title: "Eroare la trimitere", description: "Te rugăm să încerci din nou.", variant: "destructive" });
-    } finally {
-      setIsSendingToMake(false);
     }
   };
 
@@ -206,7 +193,7 @@ const PropertyDetail = () => {
                       <p className="text-3xl font-bold">{dbProperty.roi_percentage || "9.2"}%</p>
                     </div>
                   </div>
-                  <Button size="lg" className="w-full py-7 text-lg rounded-2xl shadow-lg hover:shadow-primary/20" onClick={() => setIsInvestmentDialogOpen(true)}>
+                  <Button size="lg" className="w-full py-7 text-lg rounded-2xl shadow-lg hover:shadow-primary/20" onClick={handleRequestInvestmentPlan}>
                     Vreau Planul de Management Detaliat
                   </Button>
                 </div>
@@ -238,36 +225,6 @@ const PropertyDetail = () => {
         </div>
       </main>
 
-      {/* --- POP-UP PENTRU LEAD INVESTIȚII --- */}
-      <Dialog open={isInvestmentDialogOpen} onOpenChange={setIsInvestmentDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-serif">Plan de Management Premium</DialogTitle>
-            <DialogDescription>
-              Lasă-ne datele tale și îți trimitem pe email analiza financiară detaliată pentru această proprietate.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium"><User className="w-4 h-4 inline mr-1"/> Nume Complet</label>
-              <Input placeholder="Popescu Ion" value={leadInfo.name} onChange={(e) => setLeadInfo({...leadInfo, name: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium"><Mail className="w-4 h-4 inline mr-1"/> Email</label>
-              <Input type="email" placeholder="contact@exemplu.ro" value={leadInfo.email} onChange={(e) => setLeadInfo({...leadInfo, email: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium"><Phone className="w-4 h-4 inline mr-1"/> Telefon (Opțional)</label>
-              <Input placeholder="07xx xxx xxx" value={leadInfo.phone} onChange={(e) => setLeadInfo({...leadInfo, phone: e.target.value})} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button className="w-full py-6 text-lg" onClick={handleSendInvestmentLead} disabled={isSendingToMake}>
-              {isSendingToMake ? <Loader2 className="animate-spin mr-2" /> : "Descarcă Planul PDF"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Footer />
       <BookingForm isOpen={bookingOpen} onClose={() => setBookingOpen(false)} propertyName={property.name} />
