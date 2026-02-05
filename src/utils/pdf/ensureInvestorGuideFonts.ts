@@ -24,8 +24,8 @@ const loadFontBase64 = async (url: string) => {
 
 /**
  * Ensures Romanian diacritics (ȘȚĂÂÎ etc.) render correctly in jsPDF.
- * We register NotoSans under the existing "helvetica" family used in the generator,
- * so we don't need to refactor the whole PDF file.
+ * We embed NotoSans as a custom font family and transparently map any "helvetica"
+ * usage to NotoSans, so the existing PDF generator doesn't need a huge refactor.
  */
 export const ensureInvestorGuideFonts = async (doc: jsPDF) => {
   try {
@@ -33,13 +33,24 @@ export const ensureInvestorGuideFonts = async (doc: jsPDF) => {
     cachedBoldB64 ??= await loadFontBase64("/fonts/NotoSans-Bold.ttf");
 
     const anyDoc = doc as any;
+
     anyDoc.addFileToVFS("NotoSans-Regular.ttf", cachedRegularB64);
-    anyDoc.addFont("NotoSans-Regular.ttf", "helvetica", "normal");
+    anyDoc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
 
     anyDoc.addFileToVFS("NotoSans-Bold.ttf", cachedBoldB64);
-    anyDoc.addFont("NotoSans-Bold.ttf", "helvetica", "bold");
+    anyDoc.addFont("NotoSans-Bold.ttf", "NotoSans", "bold");
 
-    doc.setFont("helvetica", "normal");
+    // jsPDF treats "helvetica" as a built-in font; overriding it is unreliable.
+    // Instead, map calls to "helvetica" -> "NotoSans".
+    const originalSetFont = (doc as any).setFont?.bind(doc);
+    if (typeof originalSetFont === "function") {
+      (doc as any).setFont = (fontName?: string, fontStyle?: string) => {
+        const mappedName = fontName === "helvetica" ? "NotoSans" : fontName;
+        return originalSetFont(mappedName, fontStyle);
+      };
+    }
+
+    (doc as any).setFont?.("NotoSans", "normal");
   } catch (err) {
     // Fallback: keep built-in fonts (may render diacritics poorly)
     console.warn("ensureInvestorGuideFonts: falling back to default fonts", err);
