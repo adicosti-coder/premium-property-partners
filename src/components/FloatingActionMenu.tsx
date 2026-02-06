@@ -7,24 +7,37 @@ import {
   ChevronUp, 
   Accessibility, 
   Gift, 
-  Bot 
+  Bot,
+  Mic,
+  MicOff,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
+import { useElevenLabsVoice } from "@/components/ElevenLabsWidget";
 
 interface FloatingActionMenuProps {
   showChatbot?: boolean;
+  showVoice?: boolean;
 }
 
-const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => {
+const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingActionMenuProps) => {
   const { t, language } = useLanguage();
   const { trackWhatsApp } = useCtaAnalytics();
   const { lightTap, mediumTap } = useHapticFeedback();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  // ElevenLabs voice hook
+  const {
+    isConnecting: voiceConnecting,
+    isConnected: voiceConnected,
+    isSpeaking: voiceSpeaking,
+    toggleConversation: toggleVoice,
+  } = useElevenLabsVoice();
 
   const referralText = {
     ro: "Weekend gratuit",
@@ -69,6 +82,12 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
     setIsOpen(false);
   };
 
+  const handleVoiceClick = () => {
+    lightTap();
+    toggleVoice();
+    setIsOpen(false);
+  };
+
   const toggleMenu = () => {
     mediumTap();
     setIsOpen(!isOpen);
@@ -91,6 +110,19 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
       bgColor: "bg-primary",
       textColor: "text-primary-foreground",
     },
+    ...(showVoice ? [{
+      id: "voice",
+      icon: voiceConnecting ? Loader2 : (voiceConnected ? MicOff : Mic),
+      label: voiceConnected 
+        ? (voiceSpeaking 
+            ? (language === 'ro' ? "Vorbește..." : "Speaking...") 
+            : (language === 'ro' ? "Oprește" : "Stop"))
+        : (language === 'ro' ? "Voce AI" : "AI Voice"),
+      onClick: handleVoiceClick,
+      bgColor: voiceConnected ? "bg-red-500" : "bg-gradient-to-br from-purple-600 to-primary",
+      textColor: "text-white",
+      isAnimating: voiceConnecting,
+    }] : []),
     ...(showChatbot ? [{
       id: "chatbot",
       icon: Bot,
@@ -189,7 +221,7 @@ const FloatingActionMenu = ({ showChatbot = true }: FloatingActionMenuProps) => 
                             item.textColor
                           )}
                         >
-                          <item.icon className="w-5 h-5" />
+                          <item.icon className={cn("w-5 h-5", (item as any).isAnimating && "animate-spin")} />
                         </button>
                       )}
                     </motion.div>

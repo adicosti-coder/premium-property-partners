@@ -11,19 +11,17 @@ const AGENT_IDS = {
   en: "7201kgswwdaafzab2jqfreqbveb7",
 };
 
-export function ElevenLabsWidget() {
+// Hook for reusable ElevenLabs conversation logic
+export function useElevenLabsVoice() {
   const { language } = useLanguage();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const conversation = useConversation({
     onConnect: () => {
       console.log("[ElevenLabs] Connected to agent");
-      setIsExpanded(true);
     },
     onDisconnect: () => {
       console.log("[ElevenLabs] Disconnected from agent");
-      setIsExpanded(false);
     },
     onMessage: (message) => {
       console.log("[ElevenLabs] Message:", message);
@@ -43,10 +41,8 @@ export function ElevenLabsWidget() {
 
     setIsConnecting(true);
     try {
-      // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Get token from edge function with current language
       const { data, error } = await supabase.functions.invoke(
         "elevenlabs-conversation-token",
         {
@@ -58,7 +54,6 @@ export function ElevenLabsWidget() {
         throw new Error(error?.message || "No token received");
       }
 
-      // Start the conversation with WebRTC
       await conversation.startSession({
         conversationToken: data.token,
         connectionType: "webrtc",
@@ -96,6 +91,29 @@ export function ElevenLabsWidget() {
     }
   }, [conversation.status, startConversation, stopConversation]);
 
+  return {
+    conversation,
+    isConnecting,
+    isConnected: conversation.status === "connected",
+    isSpeaking: conversation.isSpeaking,
+    startConversation,
+    stopConversation,
+    toggleConversation,
+    language,
+  };
+}
+
+// Desktop-only floating widget
+export function ElevenLabsWidget() {
+  const {
+    isConnecting,
+    isConnected,
+    isSpeaking,
+    toggleConversation,
+    language,
+    conversation,
+  } = useElevenLabsVoice();
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -105,11 +123,9 @@ export function ElevenLabsWidget() {
     };
   }, []);
 
-  const isConnected = conversation.status === "connected";
-  const isSpeaking = conversation.isSpeaking;
-
   return (
-    <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-2">
+    // Hidden on mobile (md:flex), visible on desktop only
+    <div className="fixed bottom-24 right-4 z-50 hidden md:flex flex-col items-end gap-2">
       {/* Status indicator when connected */}
       {isConnected && (
         <div
@@ -169,15 +185,6 @@ export function ElevenLabsWidget() {
           <Mic className="h-6 w-6" />
         )}
       </Button>
-
-      {/* Tooltip when not connected */}
-      {!isConnected && !isConnecting && (
-        <div className="absolute bottom-16 right-0 mb-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
-          <span className="px-2 py-1 text-xs bg-background/95 backdrop-blur-sm rounded border shadow-sm">
-            {language === "ro" ? "Conversație vocală" : "Voice chat"}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
