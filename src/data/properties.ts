@@ -282,7 +282,7 @@ export const properties: Property[] = [
     location: "Calea Torontalului",
     images: [apt07],
     features: ["Balcon Mare", "Parcare Gratuită", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/ateneo-studio-deluxe-modern-apartment-big-balcony-plus-free-parking-timisoara.html",
+    bookingUrl: "https://ateneo-1.pynbooking.direct/",
     description: "Apartament modern cu balcon mare și parcare gratuită",
     descriptionEn: "Modern apartment with big balcony and free parking",
     longDescription: "ATENEO ApArt Hotel - Studio DeLuxe pe Calea Torontalului 104K, Trevi 2, et.4, ap.23 oferă un apartament modern de 44mp cu balcon generos și parcare gratuită. Design elegant pentru o experiență de cazare memorabilă.",
