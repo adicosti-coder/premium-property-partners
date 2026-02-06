@@ -250,13 +250,18 @@ export const translations = {
     
     // FAQ
     faq: {
-      badge: "Întrebări Frecvente",
+      badge: "Market Insights & FAQ",
       title: "Ai",
       titleHighlight: "Întrebări?",
-      subtitle: "Găsește răspunsuri la cele mai frecvente întrebări despre serviciile noastre de administrare.",
+      subtitle: "Găsește răspunsuri la cele mai frecvente întrebări despre serviciile noastre de administrare și piața imobiliară din Timișoara.",
       notFound: "Nu ai găsit răspunsul căutat?",
       contactUs: "Contactează-ne direct",
       items: [
+        // Market Insights
+        { question: "Cum funcționează managementul proprietății în Timișoara cu RealTrust?", answer: "RealTrust oferă un sistem complet de administrare: de la optimizarea listărilor pe toate platformele (Airbnb, Booking, Expedia) și pricing dinamic bazat pe AI, până la curățenie profesională la standarde hoteliere, check-in/out automatizat și suport 24/7 pentru oaspeți. Proprietarii primesc rapoarte financiare în timp real și plăți directe după fiecare rezervare, cu transparență totală asupra costurilor." },
+        { question: "Care este rentabilitatea medie a investiției pentru chiriile pe termen scurt în Timișoara în 2026?", answer: "În 2026, randamentul mediu pentru proprietățile în regim hotelier din Timișoara se situează între 8-14% anual, semnificativ peste media de 4-6% pentru chiriile clasice pe termen lung. Factori cheie: locație (zona centrală/universitară), sezonalitate (evenimente IT, târguri, turism de weekend) și calitatea administrării. Proprietățile gestionate profesional de RealTrust ating rate de ocupare de ~95% și RevPAR (venit per cameră disponibilă) cu 30-40% peste media pieței." },
+        { question: "De ce să alegeți managementul profesional în locul auto-găzduirii pe Airbnb?", answer: "Auto-găzduirea implică 15-20 ore/săptămână: răspunsuri non-stop, coordonare curățenie, gestionare recenzii, pricing manual. Managementul profesional RealTrust oferă: algoritm de pricing dinamic care maximizează veniturile, echipă dedicată pentru comunicare 24/7, curățenie certificată, mentenanță preventivă și acoperire juridică. Rezultatul: venituri cu 25-40% mai mari, rating mediu 4.9★ și zero stress operațional pentru proprietar." },
+        // Original FAQ items
         { question: "Ce comision percepeți pentru administrarea proprietății?", answer: "Percepem un comision transparent de 20% din veniturile generate. Nu există costuri ascunse - acest procent include toate serviciile: gestionare rezervări, comunicare cu oaspeții, curățenie profesională, check-in/out și suport 24/7." },
         { question: "Cât de des primesc veniturile din închiriere?", answer: "Veniturile sunt transferate în contul tău bancar, zilnic, după încheierea rezervărilor. Primești de la noi un raport lunar detaliat cu toate rezervările, veniturile brute și cheltuielile." },
         { question: "Ce se întâmplă dacă un oaspete provoacă daune?", answer: "Toate rezervările sunt acoperite de asigurări ale platformelor (Airbnb, Booking). În plus facem verificări înainte de check-in și după check-out. Vă ajutăm să puteți încheia o asigurare de daune pentru regimul hotelier. În caz de daune, gestionăm întreg procesul de despăgubire." },
@@ -1320,13 +1325,18 @@ Mulțumesc!`,
     
     // FAQ
     faq: {
-      badge: "Frequently Asked Questions",
+      badge: "Market Insights & FAQ",
       title: "Have",
       titleHighlight: "Questions?",
-      subtitle: "Find answers to the most common questions about our management services.",
+      subtitle: "Find answers to common questions about our management services and Timișoara's real estate market.",
       notFound: "Didn't find the answer you were looking for?",
       contactUs: "Contact us directly",
       items: [
+        // Market Insights
+        { question: "How does property management in Timișoara work with RealTrust?", answer: "RealTrust provides a complete management system: from optimizing listings on all platforms (Airbnb, Booking, Expedia) and AI-powered dynamic pricing, to professional hotel-standard cleaning, automated check-in/out, and 24/7 guest support. Owners receive real-time financial reports and direct payments after each booking, with full cost transparency." },
+        { question: "What is the average return on investment for short-term rentals in Timișoara in 2026?", answer: "In 2026, the average yield for short-term rental properties in Timișoara ranges between 8-14% annually, significantly above the 4-6% average for traditional long-term rentals. Key factors: location (central/university areas), seasonality (IT events, fairs, weekend tourism), and management quality. Properties professionally managed by RealTrust achieve ~95% occupancy rates and RevPAR (revenue per available room) 30-40% above market average." },
+        { question: "Why choose professional management over self-hosting on Airbnb?", answer: "Self-hosting requires 15-20 hours/week: round-the-clock responses, cleaning coordination, review management, manual pricing. RealTrust professional management offers: dynamic pricing algorithms that maximize revenue, a dedicated 24/7 communication team, certified cleaning, preventive maintenance, and legal coverage. The result: 25-40% higher revenue, 4.9★ average rating, and zero operational stress for the owner." },
+        // Original FAQ items
         { question: "What commission do you charge for property management?", answer: "We charge a transparent 20% commission on generated revenue. There are no hidden costs - this percentage includes all services: booking management, guest communication, professional cleaning, check-in/out and 24/7 support." },
         { question: "How often do I receive rental income?", answer: "Revenue is transferred to your bank account daily, after each booking ends. You receive a detailed monthly report from us with all bookings, gross revenue and expenses." },
         { question: "What happens if a guest causes damage?", answer: "All bookings are covered by platform insurance (Airbnb, Booking). We also perform checks before check-in and after check-out. We help you arrange damage insurance for short-term rental operations. In case of damage, we manage the entire compensation process." },
