@@ -47,7 +47,7 @@ export const properties: Property[] = [
     location: "Strada Loichița Vasile",
     images: [apt09],
     features: ["Terasă Mare", "Parcare Subterană", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/ring-2-rooms-deluxe-spacious-big-terrace-plus-underground-parking.html",
+    bookingUrl: "https://ring.pynbooking.direct/",
     description: "Apartament spațios cu terasă mare și parcare subterană gratuită",
     descriptionEn: "Spacious apartment with big terrace and free underground parking",
     longDescription: "RING ApArt Hotel pe Strada Loichița Vasile 1-3, sc.B, et.3, ap.19 oferă un apartament generos de 80mp cu terasă mare și parcare subterană gratuită. Spațiu ideal pentru familii sau grupuri care caută confort și eleganță în Timișoara.",
