@@ -8,12 +8,14 @@ import FloatingActionMenu from "@/components/FloatingActionMenu";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import DesktopStickyContactBar from "@/components/DesktopStickyContactBar";
+import { ElevenLabsWidget } from "@/components/ElevenLabsWidget";
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
   showExitIntent?: boolean;
   showSocialProof?: boolean;
   showChatbot?: boolean;
+  showVoiceWidget?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ const GlobalConversionWidgets = ({
   showExitIntent = true,
   showSocialProof = true,
   showChatbot = true,
+  showVoiceWidget = true,
 }: GlobalConversionWidgetsProps) => {
   return (
     <>
@@ -37,6 +40,8 @@ const GlobalConversionWidgets = ({
       <DesktopStickyContactBar />
       <AccessibilityPanel />
       {showChatbot && <AIChatbot />}
+      {/* ElevenLabs Voice Widget - visible on all pages */}
+      {showVoiceWidget && <ElevenLabsWidget />}
       {/* Mobile FAB menu - groups all floating buttons */}
       <FloatingActionMenu showChatbot={showChatbot} />
       {showExitIntent && <ExitIntentPopup />}
