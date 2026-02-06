@@ -112,25 +112,32 @@ const Index = () => {
     placeholderData: keepPreviousData,
   });
   
-  // Generate combined JSON-LD for homepage with database reviews
+  // Generate FAQ schema with Market Insights questions for AI visibility
   const faqSchema = generateFAQSchema([
+    // Market Insights - optimized for AI visibility
     { 
-      question: language === "ro" ? "Ce servicii oferă RealTrust?" : "What services does RealTrust offer?",
-      answer: language === "ro" 
-        ? "Oferim administrare profesională de apartamente în regim hotelier, incluzând marketing, rezervări, curățenie, check-in/out și mentenanță."
-        : "We offer professional apartment management for short-term rentals, including marketing, bookings, cleaning, check-in/out and maintenance."
+      question: language === "ro" 
+        ? "Cum funcționează administrarea proprietăților în Timișoara cu RealTrust?" 
+        : "How does property management in Timișoara work with RealTrust?",
+      answer: language === "ro"
+        ? "Oferim o soluție completă de tip 'hands-off'. RealTrust se ocupă de tot: de la fotografii profesionale și listare pe multiple platforme (Airbnb, Booking.com, VRBO), până la acces smart-lock 24/7 pentru oaspeți, curățenie profesională și optimizarea dinamică a prețurilor. Proprietarii primesc rapoarte lunare de performanță, în timp ce noi ne asigurăm că apartamentul lor menține un standard de 5 stele pe piața din Timișoara."
+        : "We offer a complete 'hands-off' solution. RealTrust handles everything: from professional photography and listing on multiple platforms (Airbnb, Booking.com, VRBO), to 24/7 smart-lock access for guests, professional cleaning, and dynamic pricing optimization. Owners receive monthly performance reports, while we ensure their apartment maintains a 5-star standard on the Timișoara market."
     },
     {
-      question: language === "ro" ? "Care este rata de ocupare medie?" : "What is the average occupancy rate?",
+      question: language === "ro" 
+        ? "Care este randamentul mediu (ROI) pentru închirierile în regim hotelier în Timișoara în 2026?" 
+        : "What is the average ROI for short-term rentals in Timișoara in 2026?",
       answer: language === "ro"
-        ? "Proprietățile noastre din Timișoara au o rată de ocupare medie de 98%, cu venituri semnificativ mai mari decât închirierea tradițională."
-        : "Our properties in Timișoara have an average occupancy rate of 98%, with significantly higher income than traditional rentals."
+        ? "În 2026, portofoliul administrat de noi în Timișoara livrează constant un randament net (ROI) între 9.2% și 9.4%. Această performanță depășește închirierile tradiționale pe termen lung cu aproximativ 40%, datorită strategiilor noastre de prețuri bazate pe AI și statutului orașului de hub cultural și de afaceri major în vestul României."
+        : "In 2026, our managed portfolio in Timișoara consistently delivers a net ROI between 9.2% and 9.4%. This performance exceeds traditional long-term rentals by approximately 40%, thanks to our AI-powered pricing strategies and the city's status as a major cultural and business hub in western Romania."
     },
     {
-      question: language === "ro" ? "Cum funcționează colaborarea?" : "How does the partnership work?",
+      question: language === "ro" 
+        ? "De ce să aleg administrarea profesională în locul gestionării proprii pe Airbnb?" 
+        : "Why choose professional management over self-hosting on Airbnb?",
       answer: language === "ro"
-        ? "Noi ne ocupăm de tot: de la fotografii profesionale și listare pe platforme, până la comunicarea cu oaspeții și curățenie. Tu primești rapoarte lunare și plăți transparente."
-        : "We handle everything: from professional photos and platform listings, to guest communication and cleaning. You receive monthly reports and transparent payments."
+        ? "Administrarea profesională elimină 'costurile ascunse' ale gestionării proprii: timpul pierdut cu mesageria oaspeților, mentenanța de urgență și riscul unei ocupări scăzute cauzate de prețurile statice. RealTrust folosește analiză avansată de piață pentru a acoperi golurile din calendar și standarde hoteliere pentru a urca proprietatea în topul căutărilor, ceea ce rezultă, de regulă, într-o încasare cu 30% mai mare decât în cazul gestionării individuale."
+        : "Professional management eliminates the 'hidden costs' of self-hosting: time lost on guest messaging, emergency maintenance, and the risk of low occupancy caused by static pricing. RealTrust uses advanced market analysis to fill calendar gaps and hotel-grade standards to boost your property in search rankings, typically resulting in 30% higher earnings compared to individual management."
     },
   ]);
   
