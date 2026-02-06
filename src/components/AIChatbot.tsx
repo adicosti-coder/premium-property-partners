@@ -12,9 +12,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
+import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
