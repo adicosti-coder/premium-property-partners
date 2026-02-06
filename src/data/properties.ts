@@ -308,7 +308,7 @@ export const properties: Property[] = [
     location: "Simion Bărnuțiu",
     images: [modernStudio],
     features: ["Parcare", "WiFi", "Lângă Amazonia"],
-    bookingUrl: "https://www.booking.com/hotel/ro/modern-studio-to-aquapark-amazonia-babes-hospital-and-cardiology.html",
+    bookingUrl: "https://modern.pynbooking.direct/",
     description: "Studio modern lângă AquaPark Amazonia și Spitalele Babeș și Cardiologie",
     descriptionEn: "Modern studio near AquaPark Amazonia and Babes and Cardiology Hospitals",
     longDescription: "MODERN Studio ApArt Hotel pe Strada Simion Bărnuțiu 79, Et.5 oferă un spațiu modern de 36mp, perfect pentru cei care vizitează AquaPark Amazonia sau spitalele din zonă. Design contemporan cu toate facilitățile necesare.",
