@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "reac
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   MessageCircle, X, Send, Bot, User, Sparkles, Loader2, 
-  Calendar, Calculator, Building2, HelpCircle, RotateCcw, 
-  Copy, Check, ExternalLink, Volume2, VolumeX, Minimize2 
+  Calendar, Calculator, HelpCircle, RotateCcw, 
+  Copy, Check, ExternalLink, Volume2, VolumeX, Minimize2, Mic, MicOff, Phone, PhoneOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
+import { useConversation } from "@elevenlabs/react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -95,6 +97,33 @@ const TypingIndicator = () => (
   </div>
 );
 
+// Voice visualizer component
+const VoiceVisualizer = ({ isActive, isSpeaking }: { isActive: boolean; isSpeaking: boolean }) => (
+  <div className="flex items-center justify-center gap-1 h-8">
+    {[0, 1, 2, 3, 4].map((i) => (
+      <motion.div
+        key={i}
+        className={cn(
+          "w-1 rounded-full",
+          isSpeaking ? "bg-primary" : isActive ? "bg-primary/60" : "bg-muted"
+        )}
+        animate={{
+          height: isActive 
+            ? isSpeaking 
+              ? [8, 20 + Math.random() * 12, 8]
+              : [4, 8, 4]
+            : 4,
+        }}
+        transition={{
+          duration: 0.4,
+          repeat: Infinity,
+          delay: i * 0.1,
+        }}
+      />
+    ))}
+  </div>
+);
+
 const AIChatbot = () => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -105,9 +134,52 @@ const AIChatbot = () => {
   const [hasUnread, setHasUnread] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [isConnectingVoice, setIsConnectingVoice] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const addMessage = useCallback((role: "user" | "assistant", content: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        role,
+        content,
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
+
+  // ElevenLabs conversation hook
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("[AIChatbot] Voice connected");
+      setIsConnectingVoice(false);
+      toast.success(language === "ro" ? "Mod vocal activat!" : "Voice mode activated!");
+    },
+    onDisconnect: () => {
+      console.log("[AIChatbot] Voice disconnected");
+      setVoiceMode(false);
+      setIsConnectingVoice(false);
+    },
+    onMessage: (payload) => {
+      // This callback receives finalized messages with role and message text
+      console.log("[AIChatbot] Voice message:", payload);
+      if (payload.role === "user") {
+        addMessage("user", payload.message);
+      } else if (payload.role === "agent") {
+        addMessage("assistant", payload.message);
+      }
+    },
+    onError: (error) => {
+      console.error("[AIChatbot] Voice error:", error);
+      setVoiceMode(false);
+      setIsConnectingVoice(false);
+      toast.error(language === "ro" ? "Eroare la conexiunea vocală" : "Voice connection error");
+    },
+  });
 
   const t = {
     ro: {
@@ -129,6 +201,11 @@ const AIChatbot = () => {
       copied: "Copiat!",
       newChat: "Conversație nouă",
       retry: "Încearcă din nou",
+      voiceMode: "Activează mod vocal",
+      voiceModeActive: "Mod vocal activ",
+      voiceListening: "Ascult...",
+      voiceSpeaking: "Vorbesc...",
+      endCall: "Închide apelul",
     },
     en: {
       title: "Premium AI Assistant",
@@ -149,6 +226,11 @@ const AIChatbot = () => {
       copied: "Copied!",
       newChat: "New chat",
       retry: "Try again",
+      voiceMode: "Activate voice mode",
+      voiceModeActive: "Voice mode active",
+      voiceListening: "Listening...",
+      voiceSpeaking: "Speaking...",
+      endCall: "End call",
     },
   };
 
@@ -226,10 +308,10 @@ const AIChatbot = () => {
 
   // Focus input when opened
   useEffect(() => {
-    if (isOpen && !isMinimized && inputRef.current) {
+    if (isOpen && !isMinimized && inputRef.current && !voiceMode) {
       inputRef.current.focus();
     }
-  }, [isOpen, isMinimized]);
+  }, [isOpen, isMinimized, voiceMode]);
 
   // Listen for custom event to open chatbot from FloatingActionMenu
   useEffect(() => {
@@ -248,6 +330,10 @@ const AIChatbot = () => {
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
+      }
+      // End voice conversation if active
+      if (conversation.status === "connected") {
+        conversation.endSession();
       }
     };
   }, []);
@@ -276,6 +362,50 @@ const AIChatbot = () => {
     }
   }, [soundEnabled]);
 
+  const startVoiceMode = async () => {
+    setIsConnectingVoice(true);
+    try {
+      // Request microphone permission
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Get token from edge function
+      const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token");
+
+      if (error || !data?.token) {
+        console.error("[AIChatbot] Failed to get voice token:", error);
+        throw new Error("Failed to get voice token");
+      }
+
+      // Start the conversation with WebRTC
+      await conversation.startSession({
+        conversationToken: data.token,
+        connectionType: "webrtc",
+      });
+
+      setVoiceMode(true);
+    } catch (error: any) {
+      console.error("[AIChatbot] Voice mode error:", error);
+      setIsConnectingVoice(false);
+      
+      if (error.name === "NotAllowedError" || error.message?.includes("microphone")) {
+        toast.error(language === "ro" 
+          ? "Permite accesul la microfon pentru modul vocal" 
+          : "Allow microphone access for voice mode"
+        );
+      } else {
+        toast.error(language === "ro" 
+          ? "Nu s-a putut activa modul vocal" 
+          : "Could not activate voice mode"
+        );
+      }
+    }
+  };
+
+  const endVoiceMode = async () => {
+    await conversation.endSession();
+    setVoiceMode(false);
+  };
+
   const handleOpen = () => {
     setIsOpen(true);
     setIsMinimized(false);
@@ -293,6 +423,10 @@ const AIChatbot = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+    // End voice mode if active
+    if (voiceMode) {
+      endVoiceMode();
+    }
   };
 
   const handleNewChat = () => {
@@ -304,6 +438,10 @@ const AIChatbot = () => {
         timestamp: new Date(),
       },
     ]);
+    // End voice mode on new chat
+    if (voiceMode) {
+      endVoiceMode();
+    }
   };
 
   const handleCopyMessage = async (messageId: string, content: string) => {
@@ -555,6 +693,7 @@ const AIChatbot = () => {
         <Bot className="w-4 h-4" />
         <span className="text-sm font-medium">{text.title}</span>
         {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+        {voiceMode && <Mic className="w-3 h-3 animate-pulse" />}
       </motion.button>
     );
   }
@@ -598,17 +737,42 @@ const AIChatbot = () => {
             className="fixed bottom-20 md:bottom-4 right-2 md:right-4 left-2 md:left-auto z-50 w-auto md:w-[420px] h-[75vh] md:h-[600px] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-amber-500/10 border-b border-border p-4 flex items-center justify-between shrink-0">
+            <div className={cn(
+              "border-b border-border p-4 flex items-center justify-between shrink-0",
+              voiceMode 
+                ? "bg-gradient-to-r from-green-500/20 via-primary/10 to-green-500/20" 
+                : "bg-gradient-to-r from-primary/20 via-primary/10 to-amber-500/10"
+            )}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md">
-                  <Bot className="w-5 h-5 text-primary-foreground" />
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center shadow-md",
+                  voiceMode 
+                    ? "bg-gradient-to-br from-green-500 to-green-600" 
+                    : "bg-gradient-to-br from-primary to-primary/60"
+                )}>
+                  {voiceMode ? (
+                    <Phone className="w-5 h-5 text-white" />
+                  ) : (
+                    <Bot className="w-5 h-5 text-primary-foreground" />
+                  )}
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground text-sm flex items-center gap-1.5">
-                    {text.title}
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    {voiceMode ? text.voiceModeActive : text.title}
+                    {voiceMode ? (
+                      <Mic className="w-3.5 h-3.5 text-green-500 animate-pulse" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    )}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{text.subtitle}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {voiceMode 
+                      ? conversation.isSpeaking 
+                        ? text.voiceSpeaking 
+                        : text.voiceListening
+                      : text.subtitle
+                    }
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -621,19 +785,21 @@ const AIChatbot = () => {
                 >
                   <RotateCcw className="w-4 h-4 text-muted-foreground" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  title={soundEnabled ? "Mute" : "Unmute"}
-                >
-                  {soundEnabled ? (
-                    <Volume2 className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <VolumeX className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </Button>
+                {!voiceMode && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    title={soundEnabled ? "Mute" : "Unmute"}
+                  >
+                    {soundEnabled ? (
+                      <Volume2 className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <VolumeX className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -654,158 +820,234 @@ const AIChatbot = () => {
               </div>
             </div>
 
-            {/* Messages area */}
-            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-              <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index === messages.length - 1 ? 0.1 : 0 }}
-                    className={cn(
-                      "flex gap-3 group",
-                      message.role === "user" && "flex-row-reverse"
-                    )}
-                  >
-                    <div 
-                      className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
-                        message.role === "user" 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-gradient-to-br from-primary to-primary/60"
-                      )}
-                    >
-                      {message.role === "user" ? (
-                        <User className="w-4 h-4" />
-                      ) : (
-                        <Bot className="w-4 h-4 text-primary-foreground" />
-                      )}
-                    </div>
-                    <div 
-                      className={cn(
-                        "max-w-[80%] rounded-2xl px-4 py-3 relative",
-                        message.role === "user" 
-                          ? "bg-primary text-primary-foreground" 
-                          : message.isError 
-                            ? "bg-destructive/10 border border-destructive/20" 
-                            : "bg-secondary"
-                      )}
-                    >
-                      <MarkdownContent 
-                        content={message.content || (message.isStreaming ? "" : "...")} 
-                        isStreaming={message.isStreaming && !message.content}
-                      />
-                      
-                      {/* Message actions */}
-                      {message.role === "assistant" && message.content && !message.isStreaming && (
-                        <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={() => handleCopyMessage(message.id, message.content)}
-                          >
-                            {copiedMessageId === message.id ? (
-                              <Check className="w-3 h-3 mr-1" />
-                            ) : (
-                              <Copy className="w-3 h-3 mr-1" />
-                            )}
-                            {copiedMessageId === message.id ? text.copied : "Copy"}
-                          </Button>
-                          {message.isError && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-2 text-xs"
-                              onClick={() => {
-                                // Find the last user message before this error
-                                const userMsgIndex = messages.findIndex(m => m.id === message.id) - 1;
-                                if (userMsgIndex >= 0 && messages[userMsgIndex]?.role === "user") {
-                                  handleRetry(messages[userMsgIndex].content);
-                                }
-                              }}
-                            >
-                              <RotateCcw className="w-3 h-3 mr-1" />
-                              {text.retry}
-                            </Button>
+            {/* Voice mode overlay */}
+            {voiceMode && (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-b from-background to-muted/30">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-2xl mb-8"
+                >
+                  <VoiceVisualizer 
+                    isActive={conversation.status === "connected"} 
+                    isSpeaking={conversation.isSpeaking} 
+                  />
+                </motion.div>
+                
+                <p className="text-lg font-medium text-center mb-2">
+                  {conversation.isSpeaking ? text.voiceSpeaking : text.voiceListening}
+                </p>
+                <p className="text-sm text-muted-foreground text-center mb-8">
+                  {language === "ro" 
+                    ? "Vorbește natural, sunt aici să te ajut" 
+                    : "Speak naturally, I'm here to help"
+                  }
+                </p>
+
+                {/* Recent transcripts */}
+                {messages.length > 1 && (
+                  <ScrollArea className="w-full max-h-40 mb-8">
+                    <div className="space-y-2 px-4">
+                      {messages.slice(-4).map((m) => (
+                        <div 
+                          key={m.id} 
+                          className={cn(
+                            "text-sm p-2 rounded-lg",
+                            m.role === "user" 
+                              ? "bg-primary/10 text-right" 
+                              : "bg-muted"
                           )}
+                        >
+                          {m.content.slice(0, 100)}
+                          {m.content.length > 100 && "..."}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  </motion.div>
-                ))}
-
-                {/* Typing indicator */}
-                {isLoading && messages[messages.length - 1]?.content === "" && (
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-sm">
-                      <Bot className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                    <div className="bg-secondary rounded-2xl">
-                      <TypingIndicator />
-                    </div>
-                  </div>
+                  </ScrollArea>
                 )}
-              </div>
-            </ScrollArea>
 
-            {/* Quick actions - only show after greeting */}
-            {messages.length <= 1 && !isLoading && (
-              <div className="px-4 pb-2">
-                <div className="grid grid-cols-2 gap-2">
-                  {quickActions.map((action) => (
-                    <Button
-                      key={action.id}
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-xs justify-start gap-2 hover:bg-primary/5 hover:border-primary/30"
-                      onClick={() => handleQuickAction(action)}
-                    >
-                      {action.icon}
-                      <span className="truncate">{action.label}</span>
-                    </Button>
-                  ))}
-                </div>
+                <Button
+                  variant="destructive"
+                  size="lg"
+                  onClick={endVoiceMode}
+                  className="gap-2"
+                >
+                  <PhoneOff className="w-5 h-5" />
+                  {text.endCall}
+                </Button>
               </div>
             )}
 
-            {/* Input area */}
-            <div className="p-4 border-t border-border bg-background/50 backdrop-blur-sm">
-              <div className="flex gap-2">
-                <Input
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={text.placeholder}
-                  className="flex-1 h-11"
-                  disabled={isLoading}
-                  maxLength={2000}
-                />
-                <Button 
-                  onClick={() => handleSend()} 
-                  disabled={!input.trim() || isLoading} 
-                  size="icon"
-                  className="h-11 w-11 shrink-0"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-[10px] text-muted-foreground">
-                  {input.length}/2000
-                </span>
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <Sparkles className="w-3 h-3 text-primary" />
-                  <span className="text-primary font-medium">{text.poweredBy}</span>
+            {/* Messages area (hidden in voice mode) */}
+            {!voiceMode && (
+              <>
+                <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                  <div className="space-y-4">
+                    {messages.map((message, index) => (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index === messages.length - 1 ? 0.1 : 0 }}
+                        className={cn(
+                          "flex gap-3 group",
+                          message.role === "user" && "flex-row-reverse"
+                        )}
+                      >
+                        <div 
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
+                            message.role === "user" 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-gradient-to-br from-primary to-primary/60"
+                          )}
+                        >
+                          {message.role === "user" ? (
+                            <User className="w-4 h-4" />
+                          ) : (
+                            <Bot className="w-4 h-4 text-primary-foreground" />
+                          )}
+                        </div>
+                        <div 
+                          className={cn(
+                            "max-w-[80%] rounded-2xl px-4 py-3 relative",
+                            message.role === "user" 
+                              ? "bg-primary text-primary-foreground" 
+                              : message.isError 
+                                ? "bg-destructive/10 border border-destructive/20" 
+                                : "bg-secondary"
+                          )}
+                        >
+                          <MarkdownContent 
+                            content={message.content || (message.isStreaming ? "" : "...")} 
+                            isStreaming={message.isStreaming && !message.content}
+                          />
+                          
+                          {/* Message actions */}
+                          {message.role === "assistant" && message.content && !message.isStreaming && (
+                            <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleCopyMessage(message.id, message.content)}
+                              >
+                                {copiedMessageId === message.id ? (
+                                  <Check className="w-3 h-3 mr-1" />
+                                ) : (
+                                  <Copy className="w-3 h-3 mr-1" />
+                                )}
+                                {copiedMessageId === message.id ? text.copied : "Copy"}
+                              </Button>
+                              {message.isError && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => {
+                                    // Find the last user message before this error
+                                    const userMsgIndex = messages.findIndex(m => m.id === message.id) - 1;
+                                    if (userMsgIndex >= 0 && messages[userMsgIndex]?.role === "user") {
+                                      handleRetry(messages[userMsgIndex].content);
+                                    }
+                                  }}
+                                >
+                                  <RotateCcw className="w-3 h-3 mr-1" />
+                                  {text.retry}
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+
+                    {/* Typing indicator */}
+                    {isLoading && messages[messages.length - 1]?.content === "" && (
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-sm">
+                          <Bot className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                        <div className="bg-secondary rounded-2xl">
+                          <TypingIndicator />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+
+                {/* Quick actions - only show after greeting */}
+                {messages.length <= 1 && !isLoading && (
+                  <div className="px-4 pb-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      {quickActions.map((action) => (
+                        <Button
+                          key={action.id}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-xs justify-start gap-2 hover:bg-primary/5 hover:border-primary/30"
+                          onClick={() => handleQuickAction(action)}
+                        >
+                          {action.icon}
+                          <span className="truncate">{action.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Input area */}
+                <div className="p-4 border-t border-border bg-background/50 backdrop-blur-sm">
+                  <div className="flex gap-2">
+                    <Input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder={text.placeholder}
+                      className="flex-1 h-11"
+                      disabled={isLoading}
+                      maxLength={2000}
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-11 w-11 shrink-0"
+                      onClick={startVoiceMode}
+                      disabled={isConnectingVoice}
+                      title={text.voiceMode}
+                    >
+                      {isConnectingVoice ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Mic className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Button 
+                      onClick={() => handleSend()} 
+                      disabled={!input.trim() || isLoading} 
+                      size="icon"
+                      className="h-11 w-11 shrink-0"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[10px] text-muted-foreground">
+                      {input.length}/2000
+                    </span>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <Sparkles className="w-3 h-3 text-primary" />
+                      <span className="text-primary font-medium">{text.poweredBy}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
