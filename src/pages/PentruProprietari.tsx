@@ -46,6 +46,7 @@ import DIYvsProfessional from "@/components/DIYvsProfessional";
 import ChannelLogos from "@/components/ChannelLogos";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+import FloatingInvestorGuide from "@/components/FloatingInvestorGuide";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -174,6 +175,9 @@ const PentruProprietari = () => {
       />
       <Header />
       
+      {/* Floating Investor Guide - Mobile Only */}
+      <FloatingInvestorGuide />
+      
       {/* Breadcrumb */}
       <div className="container mx-auto px-6 pt-24">
         <PageBreadcrumb items={breadcrumbItems} />
@@ -181,12 +185,13 @@ const PentruProprietari = () => {
 
       {/* Quick Value Banner - NEW */}
       <QuickValueBanner onCtaClick={scrollToCalculator} />
-      <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 via-primary/5 to-background overflow-hidden">
-        {/* Background decorations - offset to prevent visible edge overflow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_70%)]" />
-        <div className="absolute top-40 left-[10%] w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-60 right-[10%] w-48 h-48 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+      {/* Hero Section - Investor Blue/Gold Theme */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-blue-950/80 via-blue-900/40 to-background overflow-hidden">
+        {/* Background decorations - Blue/Gold investor theme */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.1),transparent_70%)]" />
+        <div className="absolute top-40 left-[10%] w-32 h-32 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-60 right-[10%] w-48 h-48 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
 
         <div
           ref={heroRef}
@@ -195,15 +200,15 @@ const PentruProprietari = () => {
           }`}
         >
           <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
+            {/* Badge - Investor Blue/Gold */}
             <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 transition-all duration-700 ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/50 border border-amber-500/30 mb-6 transition-all duration-700 ${
                 heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
               }`}
               style={{ transitionDelay: "200ms" }}
             >
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">{t.badge}</span>
+              <Building2 className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-medium text-amber-300">{t.badge}</span>
             </div>
 
             {/* Title */}
@@ -227,7 +232,7 @@ const PentruProprietari = () => {
               {t.subtitle}
             </p>
 
-            {/* Trust Points */}
+            {/* Trust Points - Investor styled */}
             <div
               className={`flex flex-wrap justify-center gap-4 mb-10 transition-all duration-700 ${
                 heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -237,15 +242,15 @@ const PentruProprietari = () => {
               {t.trustPoints.map((point, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 px-4 py-2 bg-card/50 backdrop-blur-sm rounded-full border border-border text-foreground"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-900/30 backdrop-blur-sm rounded-full border border-blue-700/30 text-foreground"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
                   <span className="text-sm text-foreground">{point}</span>
                 </div>
               ))}
             </div>
 
-            {/* CTAs */}
+            {/* CTAs - Gold primary buttons */}
             <div
               className={`flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 ${
                 heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -256,7 +261,7 @@ const PentruProprietari = () => {
                 variant="hero"
                 size="xl"
                 onClick={scrollToCalculator}
-                className="group"
+                className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0"
               >
                 <TrendingUp className="w-5 h-5 mr-2" />
                 {t.cta}
@@ -266,6 +271,7 @@ const PentruProprietari = () => {
                 variant="heroOutline"
                 size="xl"
                 onClick={handleWhatsApp}
+                className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 {t.secondaryCta}
@@ -274,7 +280,7 @@ const PentruProprietari = () => {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {/* Stats Section - Investor Blue/Gold theme */}
         <div
           ref={statsRef}
           className={`container mx-auto px-6 mt-16 transition-all duration-700 ${
@@ -285,7 +291,7 @@ const PentruProprietari = () => {
             {t.stats.map((stat, index) => (
               <div
                 key={index}
-                className={`text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border transition-all duration-500 hover:border-primary/30 hover:shadow-lg ${
+                className={`text-center p-6 rounded-2xl bg-blue-900/30 backdrop-blur-sm border border-blue-700/30 transition-all duration-500 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10 ${
                   statsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
                 style={{ transitionDelay: statsVisible ? `${index * 100 + 200}ms` : "0ms" }}
