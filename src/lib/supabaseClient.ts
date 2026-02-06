@@ -57,6 +57,9 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(SUPABAS
     ...(storage ? { storage } : {}),
     persistSession: true,
     autoRefreshToken: true,
+    // Some browsers/iframe contexts expose navigator.locks but disallow request().
+    // Provide a no-op lock to avoid `LockManager.request: request() is not allowed in this context`.
+    lock: async (_name, _acquireTimeout, fn) => await fn(),
   },
 });
 
