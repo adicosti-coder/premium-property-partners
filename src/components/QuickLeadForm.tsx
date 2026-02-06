@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,11 +27,18 @@ const QuickLeadForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // hCaptcha state
+  // hCaptcha state - invisible mode
   const captchaRef = useRef<HCaptcha>(null);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
   const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+  const pendingSubmitRef = useRef(false);
+
+  // Store form data for submission after captcha
+  const formDataRef = useRef<{
+    name: string;
+    phone: string;
+    propertyType: string;
+    listingUrl: string;
+  } | null>(null);
 
   // Fetch hCaptcha site key on mount
   useEffect(() => {
@@ -47,14 +54,6 @@ const QuickLeadForm = () => {
     fetchSiteKey();
   }, []);
 
-  const handleCaptchaVerify = (token: string) => {
-    setCaptchaToken(token);
-  };
-
-  const handleCaptchaExpire = () => {
-    setCaptchaToken(null);
-  };
-
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
@@ -67,6 +66,101 @@ const QuickLeadForm = () => {
       return false;
     }
   };
+
+  // Submit the form after captcha verification
+  const submitForm = useCallback(async (token: string) => {
+    const formData = formDataRef.current;
+    if (!formData) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Server-side captcha verification
+    const isCaptchaValid = await verifyCaptchaOnServer(token);
+
+    if (!isCaptchaValid) {
+      toast({
+        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
+        description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
+        variant: "destructive",
+      });
+      captchaRef.current?.resetCaptcha();
+      setIsSubmitting(false);
+      pendingSubmitRef.current = false;
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("leads").insert({
+        name: formData.name,
+        whatsapp_number: formData.phone,
+        property_area: 50, // Default value
+        property_type: formData.propertyType,
+        source: "quick_form",
+        simulation_data: formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+      });
+
+      if (error) throw error;
+
+      // Try to send notification
+      try {
+        await supabase.functions.invoke("send-lead-notification", {
+          body: {
+            name: formData.name,
+            whatsappNumber: formData.phone,
+            propertyType: formData.propertyType,
+            listingUrl: formData.listingUrl || undefined,
+            source: "quick_form",
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send notification:", emailError);
+      }
+
+      setIsSuccess(true);
+      toast({
+        title: t.quickLeadForm?.successToast || "Mulțumim!",
+        description: t.quickLeadForm?.successToastMessage || "Te vom contacta în curând.",
+      });
+
+      setTimeout(() => {
+        setName("");
+        setPhone("");
+        setPropertyType("");
+        setListingUrl("");
+        setIsSuccess(false);
+        formDataRef.current = null;
+      }, 3000);
+    } catch (error) {
+      console.error("Error submitting lead:", error);
+      toast({
+        title: t.quickLeadForm?.error || "Eroare",
+        description: t.quickLeadForm?.errorMessage || "A apărut o eroare. Încearcă din nou.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+      pendingSubmitRef.current = false;
+      captchaRef.current?.resetCaptcha();
+    }
+  }, [language, t.quickLeadForm]);
+
+  // Handle invisible captcha verification
+  const handleCaptchaVerify = useCallback((token: string) => {
+    if (pendingSubmitRef.current) {
+      submitForm(token);
+    }
+  }, [submitForm]);
+
+  const handleCaptchaError = useCallback(() => {
+    toast({
+      title: language === 'en' ? "Verification error" : "Eroare verificare",
+      description: language === 'en' ? "Security check failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
+      variant: "destructive",
+    });
+    setIsSubmitting(false);
+    pendingSubmitRef.current = false;
+  }, [language]);
 
   const handleListingUrlChange = (value: string) => {
     setListingUrl(value);
@@ -113,87 +207,29 @@ const QuickLeadForm = () => {
       }
     }
 
-    // Verify hCaptcha
-    if (!captchaToken) {
+    // Check if captcha is ready
+    if (!hcaptchaSiteKey || !captchaRef.current) {
       toast({
-        title: language === 'en' ? "Verification required" : "Verificare necesară",
-        description: language === 'en' ? "Please complete the captcha verification" : "Vă rugăm să completați verificarea captcha",
+        title: language === 'en' ? "Please wait" : "Vă rugăm așteptați",
+        description: language === 'en' ? "Security check is loading..." : "Verificarea de securitate se încarcă...",
         variant: "destructive",
       });
       return;
     }
 
     setIsSubmitting(true);
-    setIsVerifyingCaptcha(true);
-
-    // Server-side captcha verification
-    const isCaptchaValid = await verifyCaptchaOnServer(captchaToken);
-    setIsVerifyingCaptcha(false);
-
-    if (!isCaptchaValid) {
-      toast({
-        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
-        description: language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Încercați din nou.",
-        variant: "destructive",
-      });
-      setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const { error } = await supabase.from("leads").insert({
-        name: name.trim(),
-        whatsapp_number: phone.trim(),
-        property_area: 50, // Default value
-        property_type: propertyType,
-        source: "quick_form",
-        simulation_data: listingUrl.trim() ? { listingUrl: listingUrl.trim() } : null,
-      });
-
-      if (error) throw error;
-
-      // Try to send notification
-      try {
-        await supabase.functions.invoke("send-lead-notification", {
-          body: {
-            name: name.trim(),
-            whatsappNumber: phone.trim(),
-            propertyType: propertyType,
-            listingUrl: listingUrl.trim() || undefined,
-            source: "quick_form",
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send notification:", emailError);
-      }
-
-      setIsSuccess(true);
-      toast({
-        title: t.quickLeadForm?.successToast || "Mulțumim!",
-        description: t.quickLeadForm?.successToastMessage || "Te vom contacta în curând.",
-      });
-
-      setTimeout(() => {
-        setName("");
-        setPhone("");
-        setPropertyType("");
-        setListingUrl("");
-        setIsSuccess(false);
-        setCaptchaToken(null);
-        captchaRef.current?.resetCaptcha();
-      }, 3000);
-    } catch (error) {
-      console.error("Error submitting lead:", error);
-      toast({
-        title: t.quickLeadForm?.error || "Eroare",
-        description: t.quickLeadForm?.errorMessage || "A apărut o eroare. Încearcă din nou.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    
+    // Store form data for after captcha verification
+    formDataRef.current = {
+      name: name.trim(),
+      phone: phone.trim(),
+      propertyType,
+      listingUrl: listingUrl.trim(),
+    };
+    
+    // Trigger invisible captcha - it will call handleCaptchaVerify on success
+    pendingSubmitRef.current = true;
+    captchaRef.current.execute();
   };
 
   if (isSuccess) {
@@ -302,47 +338,17 @@ const QuickLeadForm = () => {
                 )}
               </div>
               
-              {/* hCaptcha widget - compact for inline form */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                {hcaptchaSiteKey ? (
-                  <>
-                    <HCaptcha
-                      ref={captchaRef}
-                      sitekey={hcaptchaSiteKey}
-                      onVerify={handleCaptchaVerify}
-                      onExpire={handleCaptchaExpire}
-                      languageOverride={language}
-                      size="compact"
-                    />
-                    {captchaToken && (
-                      <div className="flex items-center gap-1 text-xs text-primary">
-                        <ShieldCheck className="w-3 h-3" />
-                        <span>{language === "ro" ? "OK" : "OK"}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center py-2 px-4">
-                    <div className="animate-pulse text-muted-foreground text-xs">
-                      {language === "ro" ? "Verificare..." : "Loading..."}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
               {/* Submit Button */}
               <Button 
                 type="submit" 
                 size="lg"
                 className="h-12 px-6 md:px-8 font-semibold"
-                disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}
+                disabled={isSubmitting || !hcaptchaSiteKey}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {isVerifyingCaptcha 
-                      ? (language === 'en' ? "..." : "...")
-                      : (t.quickLeadForm?.sending || "Se trimite...")}
+                    {t.quickLeadForm?.sending || "Se trimite..."}
                   </>
                 ) : (
                   <>
@@ -353,10 +359,26 @@ const QuickLeadForm = () => {
               </Button>
             </div>
             
-            {/* Trust text */}
-            <p className="text-center text-xs text-muted-foreground mt-4">
-              {t.quickLeadForm?.trustText || "🔒 Datele tale sunt în siguranță. Nu le partajăm cu terți."}
-            </p>
+            {/* Invisible hCaptcha - no visible UI */}
+            {hcaptchaSiteKey && (
+              <HCaptcha
+                ref={captchaRef}
+                sitekey={hcaptchaSiteKey}
+                size="invisible"
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+                onExpire={handleCaptchaError}
+                languageOverride={language}
+              />
+            )}
+            
+            {/* Trust text with security badge */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              <p className="text-xs text-muted-foreground">
+                {t.quickLeadForm?.trustText || "🔒 Datele tale sunt în siguranță. Nu le partajăm cu terți."}
+              </p>
+            </div>
           </form>
         </div>
       </div>
