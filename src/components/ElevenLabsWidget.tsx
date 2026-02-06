@@ -1,10 +1,12 @@
 import { useConversation } from "@elevenlabs/react";
 import { useState, useCallback, useEffect } from "react";
-import { Mic, MicOff, Volume2, Loader2 } from "lucide-react";
+import { Mic, MicOff, Volume2, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
+import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
+import { cn } from "@/lib/utils";
 
 const AGENT_IDS = {
   ro: "2601kgsvskeef4gvytn91he7x8y2",
@@ -15,16 +17,28 @@ const AGENT_IDS = {
 export function useElevenLabsVoice() {
   const { language } = useLanguage();
   const [isConnecting, setIsConnecting] = useState(false);
+  const sharedContext = useOptionalSharedAssistantContext();
 
   const conversation = useConversation({
     onConnect: () => {
       console.log("[ElevenLabs] Connected to agent");
+      sharedContext?.setActiveMode("voice");
     },
     onDisconnect: () => {
       console.log("[ElevenLabs] Disconnected from agent");
+      sharedContext?.setActiveMode("none");
+      sharedContext?.setVoiceTranscript("");
+      sharedContext?.setIsVoiceSpeaking(false);
     },
     onMessage: (message) => {
       console.log("[ElevenLabs] Message:", message);
+      // Add voice messages to shared context
+      if (message.role === "user" && message.message) {
+        sharedContext?.addMessage("user", message.message, "voice");
+        sharedContext?.setVoiceTranscript("");
+      } else if (message.role === "agent" && message.message) {
+        sharedContext?.addMessage("assistant", message.message, "voice");
+      }
     },
     onError: (error) => {
       console.error("[ElevenLabs] Error:", error);
@@ -35,6 +49,11 @@ export function useElevenLabsVoice() {
       );
     },
   });
+
+  // Update speaking state
+  useEffect(() => {
+    sharedContext?.setIsVoiceSpeaking(conversation.isSpeaking);
+  }, [conversation.isSpeaking, sharedContext]);
 
   const startConversation = useCallback(async () => {
     if (isConnecting || conversation.status === "connected") return;
@@ -103,7 +122,7 @@ export function useElevenLabsVoice() {
   };
 }
 
-// Desktop-only floating widget
+// Desktop-only floating widget with chat integration
 export function ElevenLabsWidget() {
   const {
     isConnecting,
@@ -113,6 +132,25 @@ export function ElevenLabsWidget() {
     language,
     conversation,
   } = useElevenLabsVoice();
+  
+  const sharedContext = useOptionalSharedAssistantContext();
+
+  // Register transfer callback
+  useEffect(() => {
+    sharedContext?.onTransferToVoice(() => {
+      if (!isConnected && !isConnecting) {
+        toggleConversation();
+      }
+    });
+  }, [isConnected, isConnecting, toggleConversation, sharedContext]);
+
+  const handleTransferToText = () => {
+    // Stop voice and open text chat
+    if (isConnected) {
+      conversation.endSession();
+    }
+    sharedContext?.requestTransferToText();
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -129,14 +167,16 @@ export function ElevenLabsWidget() {
       {/* Status indicator when connected */}
       {isConnected && (
         <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-full bg-background/95 backdrop-blur-sm border shadow-lg transition-all duration-300 ${
+          className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-full bg-background/95 backdrop-blur-sm border shadow-lg transition-all duration-300",
             isSpeaking ? "border-primary" : "border-muted"
-          }`}
+          )}
         >
           <Volume2
-            className={`h-4 w-4 ${
+            className={cn(
+              "h-4 w-4",
               isSpeaking ? "text-primary animate-pulse" : "text-muted-foreground"
-            }`}
+            )}
           />
           <span className="text-sm font-medium">
             {isSpeaking
@@ -154,6 +194,17 @@ export function ElevenLabsWidget() {
               <span className="w-1 h-2 bg-primary rounded-full animate-pulse delay-150" />
             </div>
           )}
+          
+          {/* Transfer to text button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleTransferToText}
+            className="ml-2 h-7 px-2 text-xs"
+          >
+            <MessageSquare className="h-3 w-3 mr-1" />
+            {language === "ro" ? "Text" : "Text"}
+          </Button>
         </div>
       )}
 
@@ -162,11 +213,12 @@ export function ElevenLabsWidget() {
         onClick={toggleConversation}
         disabled={isConnecting}
         size="lg"
-        className={`h-14 w-14 rounded-full shadow-xl transition-all duration-300 ${
+        className={cn(
+          "h-14 w-14 rounded-full shadow-xl transition-all duration-300",
           isConnected
             ? "bg-red-500 hover:bg-red-600 text-white"
             : "bg-primary hover:bg-primary/90"
-        }`}
+        )}
         aria-label={
           isConnected
             ? language === "ro"

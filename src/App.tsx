@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
+import { SharedAssistantProvider } from "@/hooks/useSharedAssistantContext";
 import { Loader2 } from "lucide-react";
 
 // Configure React Query defaults for better stability on custom domains
@@ -64,43 +65,45 @@ const App = () => (
     <ThemeProvider>
       <AnimationPreferenceProvider>
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/favorite" element={<Favorites />} />
-                  <Route path="/oaspeti" element={<Guests />} />
-                  <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
-                  <Route path="/imobiliare" element={<Imobiliare />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/blog/:slug" element={<BlogArticlePage />} />
-                  <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-                  <Route path="/online-check-in" element={<OnlineCheckIn />} />
-                  <Route path="/rezerva-direct" element={<WhyBookDirect />} />
-                  <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
-                  <Route path="/portal-proprietar" element={<OwnerDashboard />} />
-                  <Route path="/despre-noi" element={<AboutUs />} />
-                  <Route path="/pentru-proprietari" element={<PentruProprietari />} />
-                  <Route path="/profil" element={<Profile />} />
-                  <Route path="/setari" element={<Settings />} />
-                  <Route path="/comunitate" element={<CommunityArticles />} />
-                  <Route path="/comunitate/articol/:id" element={<CommunityArticleDetail />} />
-                  <Route path="/comunitate/trimite" element={<SubmitArticle />} />
-                  <Route path="/comunitate/editeaza/:id" element={<EditArticle />} />
-                  <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
-                  <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
+          <SharedAssistantProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/favorite" element={<Favorites />} />
+                    <Route path="/oaspeti" element={<Guests />} />
+                    <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
+                    <Route path="/imobiliare" element={<Imobiliare />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogArticlePage />} />
+                    <Route path="/proprietate/:slug" element={<PropertyDetail />} />
+                    <Route path="/online-check-in" element={<OnlineCheckIn />} />
+                    <Route path="/rezerva-direct" element={<WhyBookDirect />} />
+                    <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
+                    <Route path="/portal-proprietar" element={<OwnerDashboard />} />
+                    <Route path="/despre-noi" element={<AboutUs />} />
+                    <Route path="/pentru-proprietari" element={<PentruProprietari />} />
+                    <Route path="/profil" element={<Profile />} />
+                    <Route path="/setari" element={<Settings />} />
+                    <Route path="/comunitate" element={<CommunityArticles />} />
+                    <Route path="/comunitate/articol/:id" element={<CommunityArticleDetail />} />
+                    <Route path="/comunitate/trimite" element={<SubmitArticle />} />
+                    <Route path="/comunitate/editeaza/:id" element={<EditArticle />} />
+                    <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
+                    <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </SharedAssistantProvider>
         </LanguageProvider>
       </AnimationPreferenceProvider>
     </ThemeProvider>
