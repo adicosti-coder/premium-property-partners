@@ -203,7 +203,7 @@ export const properties: Property[] = [
     location: "Calea Torontalului",
     images: [apt05],
     features: ["Terasă Mare", "Parcare Gratuită", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/ateneo-2-rooms-modern-apartment-deluxe-big-terrace.html",
+    bookingUrl: "https://ateneo-2.pynbooking.direct/",
     description: "Apartament modern DeLuxe cu terasă mare și parcare gratuită",
     descriptionEn: "Modern DeLuxe apartment with big terrace and free parking",
     longDescription: "ATENEO - TREVI 2 ApArt Hotel pe Calea Torontalului 104K oferă un apartament modern de 68mp cu terasă generoasă și parcare gratuită. Design contemporan cu toate facilitățile necesare pentru un sejur confortabil.",
