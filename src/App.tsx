@@ -1,5 +1,4 @@
-
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,32 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import { SharedAssistantProvider } from "@/hooks/useSharedAssistantContext";
 import { Loader2 } from "lucide-react";
+
+// Handle dynamic import failures (stale cache) by reloading the page
+const handleDynamicImportError = (error: Error) => {
+  const isChunkError = error.message.includes('Failed to fetch dynamically imported module') ||
+                       error.message.includes('Loading chunk') ||
+                       error.message.includes('Loading CSS chunk');
+  
+  if (isChunkError) {
+    // Clear any service worker cache and reload
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    // Reload the page to get fresh chunks
+    window.location.reload();
+    return;
+  }
+  
+  throw error;
+};
+
+// Wrap lazy imports with error handling
+const lazyWithRetry = (importFn: () => Promise<{ default: React.ComponentType<unknown> }>) => {
+  return lazy(() => importFn().catch(handleDynamicImportError) as Promise<{ default: React.ComponentType<unknown> }>);
+};
 
 // Configure React Query defaults for better stability on custom domains
 const queryClient = new QueryClient({
@@ -28,30 +53,30 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages (code splitting for performance)
-const Auth = lazy(() => import("./pages/Auth"));
-const Admin = lazy(() => import("./pages/Admin"));
-const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const PentruOaspeti = lazy(() => import("./pages/PentruOaspeti"));
-const Guests = lazy(() => import("./pages/Guests"));
-const Imobiliare = lazy(() => import("./pages/Imobiliare"));
-const Blog = lazy(() => import("./pages/Blog"));
-const BlogArticlePage = lazy(() => import("./pages/BlogArticle"));
-const OnlineCheckIn = lazy(() => import("./pages/OnlineCheckIn"));
-const WhyBookDirect = lazy(() => import("./pages/WhyBookDirect"));
-const OwnerAuth = lazy(() => import("./pages/OwnerAuth"));
-const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
-const AboutUs = lazy(() => import("./pages/AboutUs"));
-const PentruProprietari = lazy(() => import("./pages/PentruProprietari"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Settings = lazy(() => import("./pages/Settings"));
-const CommunityArticles = lazy(() => import("./pages/CommunityArticles"));
-const CommunityArticleDetail = lazy(() => import("./pages/CommunityArticleDetail"));
-const SubmitArticle = lazy(() => import("./pages/SubmitArticle"));
-const EditArticle = lazy(() => import("./pages/EditArticle"));
-const PublicProfile = lazy(() => import("./pages/PublicProfile"));
-const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
+const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const Admin = lazyWithRetry(() => import("./pages/Admin"));
+const PropertyDetail = lazyWithRetry(() => import("./pages/PropertyDetail"));
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
+const Favorites = lazyWithRetry(() => import("./pages/Favorites"));
+const PentruOaspeti = lazyWithRetry(() => import("./pages/PentruOaspeti"));
+const Guests = lazyWithRetry(() => import("./pages/Guests"));
+const Imobiliare = lazyWithRetry(() => import("./pages/Imobiliare"));
+const Blog = lazyWithRetry(() => import("./pages/Blog"));
+const BlogArticlePage = lazyWithRetry(() => import("./pages/BlogArticle"));
+const OnlineCheckIn = lazyWithRetry(() => import("./pages/OnlineCheckIn"));
+const WhyBookDirect = lazyWithRetry(() => import("./pages/WhyBookDirect"));
+const OwnerAuth = lazyWithRetry(() => import("./pages/OwnerAuth"));
+const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
+const AboutUs = lazyWithRetry(() => import("./pages/AboutUs"));
+const PentruProprietari = lazyWithRetry(() => import("./pages/PentruProprietari"));
+const Profile = lazyWithRetry(() => import("./pages/Profile"));
+const Settings = lazyWithRetry(() => import("./pages/Settings"));
+const CommunityArticles = lazyWithRetry(() => import("./pages/CommunityArticles"));
+const CommunityArticleDetail = lazyWithRetry(() => import("./pages/CommunityArticleDetail"));
+const SubmitArticle = lazyWithRetry(() => import("./pages/SubmitArticle"));
+const EditArticle = lazyWithRetry(() => import("./pages/EditArticle"));
+const PublicProfile = lazyWithRetry(() => import("./pages/PublicProfile"));
+const ReferralProgram = lazyWithRetry(() => import("./pages/ReferralProgram"));
 
 // Loading fallback component
 const PageLoader = () => (
