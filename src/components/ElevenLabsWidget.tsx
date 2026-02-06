@@ -125,7 +125,7 @@ export function ElevenLabsWidget() {
 
   return (
     // Hidden on mobile (md:flex), visible on desktop only
-    <div className="fixed bottom-24 right-4 z-50 hidden md:flex flex-col items-end gap-2">
+    <div className="fixed bottom-[336px] right-4 z-50 hidden md:flex flex-col items-end gap-2">
       {/* Status indicator when connected */}
       {isConnected && (
         <div
