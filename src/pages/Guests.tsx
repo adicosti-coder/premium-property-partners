@@ -626,7 +626,7 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                       variant="default"
                       size="sm"
                       className="flex-1"
-                      onClick={() => window.open(`https://www.airbnb.com/rooms/${property.id}`, '_blank')}
+                      onClick={() => window.open(property.bookingUrl, '_blank')}
                     >
                       <Calendar className="w-4 h-4 mr-1" />
                       {language === 'ro' ? 'Rezervă Direct' : 'Book Direct'}
