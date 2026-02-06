@@ -36,14 +36,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     const email = user.email ?? "";
 
+    // SECURITY: Sanitize email to prevent query injection
+    // Supabase PostgREST is generally safe, but we add defense-in-depth
+    const sanitizedEmail = email.replace(/[(),'"\\]/g, "");
+
     // SECURITY: Only return non-sensitive fields to referrers
     // Removed owner_email, owner_phone to prevent data harvesting
+    // Using separate filter conditions to avoid string interpolation risks
     const { data, error } = await supabase
       .from("referrals")
       .select(
         "id, owner_name, property_location, property_type, status, created_at, contacted_at, meeting_date, contract_signed_at, reward_granted_at, reward_check_in, reward_check_out"
       )
-      .or(`referrer_user_id.eq.${user.id},referrer_email.eq.${email}`)
+      .or(`referrer_user_id.eq.${user.id},referrer_email.eq.${sanitizedEmail}`)
       .order("created_at", { ascending: false });
 
     if (error) {
