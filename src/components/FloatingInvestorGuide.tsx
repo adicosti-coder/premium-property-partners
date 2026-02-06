@@ -104,11 +104,11 @@ const FloatingInvestorGuide = () => {
   return (
     <>
       {/* Floating Banner - Investor Blue/Gold Theme */}
-      <div className="fixed top-20 left-4 right-4 z-40 animate-slide-down">
-        <div className="relative bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-xl shadow-2xl border border-amber-500/30 overflow-hidden">
+      <div className="fixed top-20 inset-x-4 z-40 animate-slide-down">
+        <div className="relative bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-xl shadow-2xl border border-amber-500/30 overflow-hidden max-w-full">
           {/* Gold shimmer effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent animate-shimmer" />
-          
+
           <div className="relative px-4 py-3">
             <button
               onClick={handleDismiss}
@@ -118,12 +118,12 @@ const FloatingInvestorGuide = () => {
               <X className="w-4 h-4 text-amber-300/70" />
             </button>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 min-w-0">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
                 <TrendingUp className="w-5 h-5 text-blue-900" />
               </div>
 
-              <div className="flex-1 min-w-0 pr-4">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-amber-100 truncate">
                   {isRo ? "Investești în imobiliare?" : "Investing in real estate?"}
                 </p>
@@ -135,7 +135,7 @@ const FloatingInvestorGuide = () => {
               <Button
                 size="sm"
                 onClick={() => setOpen(true)}
-                className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-900 font-bold shadow-lg shadow-amber-500/30 border-0"
+                className="ml-auto whitespace-nowrap bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-900 font-bold shadow-lg shadow-amber-500/30 border-0"
               >
                 <Sparkles className="w-3 h-3 mr-1" />
                 {isRo ? "Vreau" : "Get It"}
