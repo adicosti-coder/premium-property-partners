@@ -11,19 +11,19 @@ const PromoBanner = () => {
 
   return (
     <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground relative z-50">
-      <div className="container mx-auto px-4 py-2.5 flex items-center justify-center gap-3 text-sm md:text-base">
+      <div className="container mx-auto px-4 py-2.5 pr-12 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-sm md:text-base">
         <Sparkles className="w-4 h-4 flex-shrink-0 animate-pulse" />
-        <span className="font-medium">
+        <span className="font-medium min-w-0">
           {t.promoBanner.text}{" "}
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/20 rounded font-bold">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/20 rounded font-bold whitespace-nowrap">
             <Tag className="w-3.5 h-3.5" />
             DIRECT5
           </span>{" "}
           {t.promoBanner.discount}
         </span>
-        <Link 
-          to="/rezerva-direct" 
-          className="hidden sm:inline-flex items-center gap-1 ml-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs font-semibold transition-colors"
+        <Link
+          to="/rezerva-direct"
+          className="hidden sm:inline-flex items-center gap-1 ml-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs font-semibold transition-colors whitespace-nowrap"
         >
           {t.whyBookDirect?.ctaButton || "Află mai mult"}
           <ArrowRight className="w-3 h-3" />
