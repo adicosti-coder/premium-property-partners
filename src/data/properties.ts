@@ -229,7 +229,7 @@ export const properties: Property[] = [
     location: "Circumvalațiunii",
     images: [apt11],
     features: ["Parcare Subterană", "WiFi", "Modern"],
-    bookingUrl: "https://www.booking.com/hotel/ro/mara-sunset-studio.html",
+    bookingUrl: "https://m11.pynbooking.direct/",
     description: "Studio DeLuxe cu parcare subterană gratuită - by FullViewTour",
     descriptionEn: "DeLuxe studio with free underground parking - by FullViewTour",
     longDescription: "Sunset Da-Ra pe Circumvalațiunii M11 Et.6, ap.51 oferă un studio elegant de 42mp cu parcare subterană gratuită. Parte din portofoliul FullViewTour, acest apartament combină confortul modern cu o locație accesibilă în Timișoara.",
