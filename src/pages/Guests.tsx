@@ -251,13 +251,13 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
       
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.1),transparent_70%)]" />
-        {/* Floating decorations - offset to prevent visible edge overflow */}
-        <div className="absolute top-40 left-[10%] w-20 h-20 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-        <div className="absolute top-60 right-[10%] w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-primary/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+      {/* Hero Section - Guest White/Grey Minimalist Theme */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-b from-slate-100/50 dark:from-slate-800/30 to-background overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(0_0%_90%/0.3),transparent_70%)] dark:bg-[radial-gradient(ellipse_at_top,hsl(0_0%_20%/0.2),transparent_70%)]" />
+        {/* Floating decorations - subtle grey tones */}
+        <div className="absolute top-40 left-[10%] w-20 h-20 bg-slate-300/20 dark:bg-slate-700/20 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute top-60 right-[10%] w-32 h-32 bg-slate-200/20 dark:bg-slate-600/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-slate-300/20 dark:bg-slate-700/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
         
         <div 
           ref={heroRef}
@@ -267,13 +267,13 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
         >
           <div className="text-center max-w-3xl mx-auto">
             <div 
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 transition-all duration-700 ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-200/50 dark:bg-slate-700/50 border border-slate-300/50 dark:border-slate-600/50 mb-6 transition-all duration-700 ${
                 heroVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
               }`}
               style={{ transitionDelay: '200ms' }}
             >
-              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-              <span className="text-sm font-medium text-primary">
+              <Sparkles className="w-4 h-4 text-slate-600 dark:text-slate-300 animate-pulse" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 ApArt Hotel
               </span>
             </div>
@@ -284,7 +284,7 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
               style={{ transitionDelay: '300ms' }}
             >
               {language === 'ro' ? 'Găsește' : 'Find'}{' '}
-              <span className="text-gradient-gold">
+              <span className="text-slate-700 dark:text-slate-200">
                 {language === 'ro' ? 'Apartamentul Perfect' : 'Your Perfect Stay'}
               </span>
             </h1>
