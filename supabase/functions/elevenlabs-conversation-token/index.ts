@@ -6,7 +6,11 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ELEVENLABS_AGENT_ID = "2601kgsvskeef4gvytn91he7x8y2";
+// Default agents for each language
+const AGENTS = {
+  ro: "2601kgsvskeef4gvytn91he7x8y2", // Romanian agent
+  en: "2601kgsvskeef4gvytn91he7x8y2", // English agent (same for now, user can change)
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,10 +28,23 @@ serve(async (req) => {
       );
     }
 
-    console.log("[elevenlabs-conversation-token] Fetching token for agent:", ELEVENLABS_AGENT_ID);
+    // Parse request body for language/agentId
+    let agentId = AGENTS.ro; // Default to Romanian
+    try {
+      const body = await req.json();
+      if (body.agentId) {
+        agentId = body.agentId;
+      } else if (body.language && AGENTS[body.language as keyof typeof AGENTS]) {
+        agentId = AGENTS[body.language as keyof typeof AGENTS];
+      }
+    } catch {
+      // No body or invalid JSON, use default
+    }
+
+    console.log("[elevenlabs-conversation-token] Fetching token for agent:", agentId);
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${ELEVENLABS_AGENT_ID}`,
+      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
       {
         headers: {
           "xi-api-key": ELEVENLABS_API_KEY,
@@ -45,10 +62,10 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("[elevenlabs-conversation-token] Token received successfully");
+    console.log("[elevenlabs-conversation-token] Token received successfully for agent:", agentId);
 
     return new Response(
-      JSON.stringify({ token: data.token }),
+      JSON.stringify({ token: data.token, agentId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
