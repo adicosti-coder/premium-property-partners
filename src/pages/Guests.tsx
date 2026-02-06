@@ -295,8 +295,8 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
               style={{ transitionDelay: '400ms' }}
             >
               {language === 'ro' 
-                ? 'Descoperă colecția noastră de apartamente premium în cele mai căutate zone din București. Rezervare directă, fără comisioane ascunse.'
-                : 'Discover our collection of premium apartments in Bucharest\'s most sought-after locations. Direct booking, no hidden fees.'}
+                ? 'Descoperă colecția noastră de apartamente premium în cele mai căutate zone din Timișoara. Rezervare directă, fără comisioane ascunse.'
+                : 'Discover our collection of premium apartments in Timișoara\'s most sought-after locations. Direct booking, no hidden fees.'}
             </p>
           </div>
         </div>
