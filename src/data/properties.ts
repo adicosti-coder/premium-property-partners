@@ -125,7 +125,7 @@ export const properties: Property[] = [
     location: "City of Mara",
     images: [apt02],
     features: ["Parcare Subterană", "WiFi", "Premium"],
-    bookingUrl: "https://www.booking.com/hotel/ro/fullview-studio-deluxe-plus-free-underground-parking.html",
+    bookingUrl: "https://m9.pynbooking.direct/",
     description: "Studio DeLuxe cu parcare subterană gratuită",
     descriptionEn: "DeLuxe studio with free underground parking",
     longDescription: "FullView Studio DeLuxe în complexul City of Mara M9, et.9, ap.75 oferă un spațiu modern de 40mp cu parcare subterană inclusă. Design contemporan și dotări premium pentru o experiență de cazare de top în Timișoara.",
