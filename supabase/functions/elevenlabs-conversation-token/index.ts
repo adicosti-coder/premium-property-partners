@@ -9,7 +9,7 @@ const corsHeaders = {
 // Default agents for each language
 const AGENTS = {
   ro: "2601kgsvskeef4gvytn91he7x8y2", // Romanian agent
-  en: "2601kgsvskeef4gvytn91he7x8y2", // English agent (same for now, user can change)
+  en: "7201kgswwdaafzab2jqfreqbveb7", // English agent
 };
 
 serve(async (req) => {
