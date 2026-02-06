@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
+import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 
 interface Message {
   id: string;
@@ -138,18 +139,22 @@ const AIChatbot = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Shared context for assistant integration
+  const sharedContext = useOptionalSharedAssistantContext();
 
-  const addMessage = useCallback((role: "user" | "assistant", content: string) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        role,
-        content,
-        timestamp: new Date(),
-      },
-    ]);
-  }, []);
+  const addMessage = useCallback((role: "user" | "assistant", content: string, source: "text" | "voice" = "text") => {
+    const newMessage = {
+      id: Date.now().toString(),
+      role,
+      content,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    
+    // Also add to shared context
+    sharedContext?.addMessage(role, content, source);
+  }, [sharedContext]);
 
   // ElevenLabs conversation hook
   const conversation = useConversation({
@@ -167,9 +172,9 @@ const AIChatbot = () => {
       // This callback receives finalized messages with role and message text
       console.log("[AIChatbot] Voice message:", payload);
       if (payload.role === "user") {
-        addMessage("user", payload.message);
+        addMessage("user", payload.message, "voice");
       } else if (payload.role === "agent") {
-        addMessage("assistant", payload.message);
+        addMessage("assistant", payload.message, "voice");
       }
     },
     onError: (error) => {
@@ -205,6 +210,8 @@ const AIChatbot = () => {
       voiceListening: "Ascult...",
       voiceSpeaking: "Vorbesc...",
       endCall: "Închide apelul",
+      continueVoice: "Continuă vocal",
+      voiceMessage: "Mesaj vocal",
     },
     en: {
       title: "Premium AI Assistant",
@@ -230,6 +237,8 @@ const AIChatbot = () => {
       voiceListening: "Listening...",
       voiceSpeaking: "Speaking...",
       endCall: "End call",
+      continueVoice: "Continue with voice",
+      voiceMessage: "Voice message",
     },
   };
 
@@ -324,6 +333,42 @@ const AIChatbot = () => {
     return () => window.removeEventListener('open-ai-chatbot', handleOpenChatbot);
   }, []);
 
+  // Register transfer callback for voice → text
+  useEffect(() => {
+    sharedContext?.onTransferToText(() => {
+      setIsOpen(true);
+      setIsMinimized(false);
+      setHasUnread(false);
+      // End voice mode if it was active in this chatbot
+      if (voiceMode) {
+        conversation.endSession();
+        setVoiceMode(false);
+      }
+    });
+  }, [sharedContext, voiceMode, conversation]);
+
+  // Sync messages from shared context (voice messages from external widget)
+  useEffect(() => {
+    if (sharedContext?.messages) {
+      const voiceMessages = sharedContext.messages.filter(m => m.source === "voice");
+      // Add voice messages that aren't already in local messages
+      voiceMessages.forEach(vm => {
+        const exists = messages.some(m => 
+          m.content === vm.content && 
+          Math.abs(m.timestamp.getTime() - vm.timestamp.getTime()) < 1000
+        );
+        if (!exists) {
+          setMessages(prev => [...prev, {
+            id: vm.id,
+            role: vm.role,
+            content: vm.content,
+            timestamp: vm.timestamp,
+          }]);
+        }
+      });
+    }
+  }, [sharedContext?.messages]);
+
   // Cleanup abort controller on unmount
   useEffect(() => {
     return () => {
@@ -407,6 +452,14 @@ const AIChatbot = () => {
   const endVoiceMode = async () => {
     await conversation.endSession();
     setVoiceMode(false);
+  };
+
+  // Transfer to external voice widget
+  const handleTransferToVoice = () => {
+    setIsOpen(false);
+    setIsMinimized(false);
+    sharedContext?.requestTransferToVoice();
+    toast.info(language === "ro" ? "Se activează modul vocal..." : "Activating voice mode...");
   };
 
   const handleOpen = () => {
@@ -1001,6 +1054,17 @@ const AIChatbot = () => {
 
                 {/* Input area */}
                 <div className="p-4 border-t border-border bg-background/50 backdrop-blur-sm">
+                  {/* Continue with voice banner - show after some conversation */}
+                  {messages.length > 2 && sharedContext && (
+                    <button
+                      onClick={handleTransferToVoice}
+                      className="w-full mb-3 px-3 py-2 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center gap-2 text-sm text-primary transition-colors"
+                    >
+                      <Mic className="w-4 h-4" />
+                      <span className="font-medium">{text.continueVoice}</span>
+                    </button>
+                  )}
+                  
                   <div className="flex gap-2">
                     <Input
                       ref={inputRef}
