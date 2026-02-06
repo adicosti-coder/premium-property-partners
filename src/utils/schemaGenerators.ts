@@ -24,14 +24,14 @@ const ORGANIZATION = {
   },
 };
 
-// LocalBusiness Schema for homepage
+// LocalBusiness Schema for homepage - enhanced for AI visibility
 export const generateLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
   "@id": `${BASE_URL}/#organization`,
   "name": "RealTrust & ApArt Hotel Timișoara",
   "alternateName": "ApArt Hotel Timișoara",
-  "description": "Administrare profesională de apartamente în regim hotelier în Timișoara. Maximizează venitul proprietății tale cu 98% rată de ocupare.",
+  "description": "Administrare profesională de apartamente în regim hotelier în Timișoara. Maximizează venitul proprietății tale cu 98% rată de ocupare și randament net 9.2-9.4% ROI.",
   "url": BASE_URL,
   "telephone": "+40723154520",
   "email": "contact@realtrust.ro",
@@ -50,7 +50,35 @@ export const generateLocalBusinessSchema = () => ({
     "latitude": 45.7489,
     "longitude": 21.2087,
   },
-  "priceRange": "€€",
+  // Enhanced PriceRange for AI matching with user budgets
+  "priceRange": "€50-€150 per night",
+  // AggregateRating - critical for AI recommendations
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "500",
+    "bestRating": "5",
+    "worstRating": "1",
+  },
+  // AreaServed - clearly marked for Timișoara
+  "areaServed": [
+    {
+      "@type": "City",
+      "name": "Timișoara",
+      "containedInPlace": {
+        "@type": "AdministrativeArea",
+        "name": "Timiș County",
+        "containedInPlace": {
+          "@type": "Country",
+          "name": "Romania",
+        },
+      },
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Județul Timiș",
+    },
+  ],
   "openingHoursSpecification": {
     "@type": "OpeningHoursSpecification",
     "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -62,7 +90,45 @@ export const generateLocalBusinessSchema = () => ({
     { "@type": "LocationFeatureSpecification", "name": "Free WiFi", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Air Conditioning", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Parking", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Smart Lock Access", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "24/7 Guest Support", "value": true },
   ],
+  // Service offerings for AI understanding
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Short-Term Rental Management Services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Property Management",
+          "description": "Complete hands-off property management with 9.2-9.4% net ROI",
+        },
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "price": "20",
+          "priceCurrency": "EUR",
+          "unitText": "% commission on revenue",
+        },
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Short-Term Rental Accommodation",
+          "description": "Premium furnished apartments in Timișoara for business and leisure travelers",
+        },
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "minPrice": "50",
+          "maxPrice": "150",
+          "priceCurrency": "EUR",
+          "unitText": "per night",
+        },
+      },
+    ],
+  },
 });
 
 // Apartment/Property Schema
