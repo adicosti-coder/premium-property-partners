@@ -368,6 +368,145 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          language: string | null
+          last_activity_at: string
+          lead_qualified: boolean | null
+          lead_type: string | null
+          session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          last_activity_at?: string
+          lead_qualified?: boolean | null
+          lead_type?: string | null
+          session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          last_activity_at?: string
+          lead_qualified?: boolean | null
+          lead_type?: string | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          tokens_used: number | null
+          tool_name: string | null
+          tool_result: Json | null
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          tokens_used?: number | null
+          tool_name?: string | null
+          tool_result?: Json | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          tokens_used?: number | null
+          tool_name?: string | null
+          tool_result?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chatbot_appointments: {
+        Row: {
+          appointment_type: string
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          preferred_date: string | null
+          preferred_time_slot: string | null
+          property_interest: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+          webhook_sent: boolean | null
+        }
+        Insert: {
+          appointment_type: string
+          contact_email?: string | null
+          contact_name: string
+          contact_phone: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          preferred_date?: string | null
+          preferred_time_slot?: string | null
+          property_interest?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          webhook_sent?: boolean | null
+        }
+        Update: {
+          appointment_type?: string
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          preferred_date?: string | null
+          preferred_time_slot?: string | null
+          property_interest?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          webhook_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_appointments_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_article_comments: {
         Row: {
           content: string
