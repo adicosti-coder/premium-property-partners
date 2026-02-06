@@ -27,10 +27,14 @@ export default defineConfig(({ mode }) => {
     readEnv("VITE_SUPABASE_PUBLISHABLE_KEY") ?? readEnv("SUPABASE_PUBLISHABLE_KEY"),
   ) || FALLBACK_SUPABASE_KEY;
 
+  // Mapbox public token (safe to embed - starts with pk.)
+  const mapboxToken = normalizeEnvValue(readEnv("VITE_MAPBOX_PUBLIC_TOKEN"));
+
   // Always define the env vars with fallback values to prevent "supabaseUrl is required" error
   const defineEnv: Record<string, string> = {
     "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
     "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publishableKey),
+    ...(mapboxToken && { "import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN": JSON.stringify(mapboxToken) }),
   };
 
   return {
