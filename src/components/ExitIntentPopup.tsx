@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();
@@ -13,6 +14,15 @@ const ExitIntentPopup = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasShown, setHasShown] = useState(false);
+  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string>("");
+  const hcaptchaRef = useRef<HCaptcha>(null);
+
+  // Fetch hCaptcha site key on mount
+  useEffect(() => {
+    supabase.functions.invoke("get-hcaptcha-site-key").then(({ data }) => {
+      if (data?.siteKey) setHcaptchaSiteKey(data.siteKey);
+    });
+  }, []);
 
   const t = {
     ro: {
@@ -76,8 +86,35 @@ const ExitIntentPopup = () => {
       return;
     }
 
+    // Trigger invisible hCaptcha verification
+    if (hcaptchaRef.current && hcaptchaSiteKey) {
+      setIsSubmitting(true);
+      hcaptchaRef.current.execute();
+    } else {
+      // Fallback if hCaptcha not loaded
+      console.warn("hCaptcha not loaded, proceeding without verification");
+      await submitExitIntent(null);
+    }
+  };
+
+  const submitExitIntent = async (captchaToken: string | null) => {
     setIsSubmitting(true);
     try {
+      // Verify captcha if token provided
+      if (captchaToken) {
+        const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
+          "verify-hcaptcha",
+          { body: { token: captchaToken, formType: "newsletter_exit_popup" } }
+        );
+
+        if (captchaError || !captchaResult?.success) {
+          toast.error(language === "ro" ? "Verificare captcha eșuată" : "Captcha verification failed");
+          hcaptchaRef.current?.resetCaptcha();
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Save to newsletter subscribers
       const { error } = await supabase
         .from("newsletter_subscribers")
@@ -102,7 +139,12 @@ const ExitIntentPopup = () => {
       toast.error(language === "ro" ? "A apărut o eroare. Încearcă din nou." : "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
+      hcaptchaRef.current?.resetCaptcha();
     }
+  };
+
+  const handleCaptchaVerify = async (token: string) => {
+    await submitExitIntent(token);
   };
 
   return (
@@ -204,6 +246,18 @@ const ExitIntentPopup = () => {
                   >
                     {text.noThanks}
                   </button>
+                  {hcaptchaSiteKey && (
+                    <HCaptcha
+                      ref={hcaptchaRef}
+                      sitekey={hcaptchaSiteKey}
+                      size="invisible"
+                      onVerify={handleCaptchaVerify}
+                      onError={() => {
+                        setIsSubmitting(false);
+                        toast.error(language === "ro" ? "Eroare captcha" : "Captcha error");
+                      }}
+                    />
+                  )}
                 </form>
               </div>
             </div>
