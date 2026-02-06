@@ -73,7 +73,7 @@ export const properties: Property[] = [
     location: "Denya Forest",
     images: [apt06],
     features: ["Balcon", "Parcare Gratuită", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/green-forest-apart-deluxe-2-rooms-with-parking-near-amazonia.html",
+    bookingUrl: "https://denya-forest-5.pynbooking.direct/",
     description: "Apartament DeLuxe cu balcon, parcare gratuită, lângă Amazonia",
     descriptionEn: "DeLuxe apartment with balcony, free parking, near Amazonia",
     longDescription: "GREEN FOREST ApArt Hotel este situat pe Strada Constructorilor 52, în complexul Denya Forest 5, Et.7, apt.73. Oferă un apartament spațios de 58mp cu balcon, parcare gratuită și apropierea de parcul acvatic Amazonia. Rating excepțional 10/10!",
