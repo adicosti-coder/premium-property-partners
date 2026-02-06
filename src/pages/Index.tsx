@@ -11,18 +11,13 @@ import FAQ from "@/components/FAQ";
 import ContactSection from "@/components/ContactSection";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
-import MobileCTABar from "@/components/MobileCTABar";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import BlogPreview from "@/components/BlogPreview";
 import PromoBanner from "@/components/PromoBanner";
 import QuickStatsBar from "@/components/QuickStatsBar";
 import ReferralBanner from "@/components/ReferralBanner";
-import ExitIntentPopup from "@/components/ExitIntentPopup";
-import SocialProofNotifications from "@/components/SocialProofNotifications";
-import AIChatbot from "@/components/AIChatbot";
 import SEOHead from "@/components/SEOHead";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -225,12 +220,7 @@ const Index = () => {
         <CTA />
       </main>
       <Footer />
-      <MobileCTABar />
-      <FloatingWhatsApp />
-      <AccessibilityPanel />
-      <ExitIntentPopup />
-      <SocialProofNotifications />
-      <AIChatbot />
+      <GlobalConversionWidgets />
     </div>
   );
 };

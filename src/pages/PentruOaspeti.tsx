@@ -1,7 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import FacilitiesShowcase from "@/components/FacilitiesShowcase";
 import DigitalHouseManual from "@/components/DigitalHouseManual";
 import CleaningStandards from "@/components/CleaningStandards";
@@ -744,8 +743,7 @@ const PentruOaspeti = () => {
       </main>
 
       <Footer />
-      <FloatingWhatsApp />
-      <AccessibilityPanel />
+      <GlobalConversionWidgets />
     </div>
   );
 };

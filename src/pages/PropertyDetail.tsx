@@ -18,11 +18,11 @@ import PropertyReviews from "@/components/PropertyReviews";
 import GuestReviewForm from "@/components/GuestReviewForm";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
@@ -230,6 +230,7 @@ const PropertyDetail = () => {
 
       <Footer />
       <BookingForm isOpen={bookingOpen} onClose={() => setBookingOpen(false)} propertyName={property.name} />
+      <GlobalConversionWidgets showExitIntent={false} />
     </div>
   );
 };
