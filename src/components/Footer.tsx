@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, Phone, Mail, Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { z } from "zod";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import AnimationToggle from "./AnimationToggle";
 import ThemeToggle from "./ThemeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -16,6 +17,15 @@ const Footer = () => {
   const { t, language } = useLanguage();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string>("");
+  const hcaptchaRef = useRef<HCaptcha>(null);
+
+  // Fetch hCaptcha site key on mount
+  useEffect(() => {
+    supabase.functions.invoke("get-hcaptcha-site-key").then(({ data }) => {
+      if (data?.siteKey) setHcaptchaSiteKey(data.siteKey);
+    });
+  }, []);
 
   const translations = {
     ro: {
@@ -69,11 +79,38 @@ const Footer = () => {
       return;
     }
 
+    // Trigger invisible hCaptcha verification
+    if (hcaptchaRef.current && hcaptchaSiteKey) {
+      setIsLoading(true);
+      hcaptchaRef.current.execute();
+    } else {
+      // Fallback if hCaptcha not loaded - still allow submission but log warning
+      console.warn("hCaptcha not loaded, proceeding without verification");
+      await submitNewsletter(result.data, null);
+    }
+  };
+
+  const submitNewsletter = async (validatedEmail: string, captchaToken: string | null) => {
     setIsLoading(true);
     try {
+      // Verify captcha if token provided
+      if (captchaToken) {
+        const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
+          "verify-hcaptcha",
+          { body: { token: captchaToken, formType: "newsletter_footer" } }
+        );
+
+        if (captchaError || !captchaResult?.success) {
+          toast.error(language === "ro" ? "Verificare captcha eșuată" : "Captcha verification failed");
+          hcaptchaRef.current?.resetCaptcha();
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("newsletter_subscribers")
-        .insert({ email: result.data });
+        .insert({ email: validatedEmail });
 
       if (error) {
         if (error.code === "23505") {
@@ -89,6 +126,14 @@ const Footer = () => {
       toast.error(tr.errorMessage);
     } finally {
       setIsLoading(false);
+      hcaptchaRef.current?.resetCaptcha();
+    }
+  };
+
+  const handleCaptchaVerify = async (token: string) => {
+    const result = emailSchema.safeParse(email);
+    if (result.success) {
+      await submitNewsletter(result.data, token);
     }
   };
 
@@ -186,6 +231,18 @@ const Footer = () => {
               >
                 <Send className="w-4 h-4" />
               </Button>
+              {hcaptchaSiteKey && (
+                <HCaptcha
+                  ref={hcaptchaRef}
+                  sitekey={hcaptchaSiteKey}
+                  size="invisible"
+                  onVerify={handleCaptchaVerify}
+                  onError={() => {
+                    setIsLoading(false);
+                    toast.error(language === "ro" ? "Eroare captcha" : "Captcha error");
+                  }}
+                />
+              )}
             </form>
           </div>
 
