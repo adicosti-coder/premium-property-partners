@@ -151,7 +151,7 @@ export const properties: Property[] = [
     location: "Circumvalațiunii",
     images: [apt03],
     features: ["Ultracentral", "Parcare Subterană", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/avenue-of-mara-ultracentral-deluxe-studio-plus-free-parking.html",
+    bookingUrl: "https://apart-hotel.pynbooking.direct/",
     description: "Studio DeLuxe ultracentral cu parcare subterană gratuită",
     descriptionEn: "Ultracentral DeLuxe studio with free underground parking",
     longDescription: "AVENUE of MARA ApArt Hotel pe Calea Circumvalațiunii nr.1, City of Mara M8, et.1, ap.5 oferă un studio ultracentral de 40mp cu parcare subterană. Combină locația premium cu confortul modern pentru o experiență de neuitat.",
