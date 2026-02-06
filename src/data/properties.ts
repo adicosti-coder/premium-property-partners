@@ -177,7 +177,7 @@ export const properties: Property[] = [
     location: "Strada Argeș",
     images: [helios],
     features: ["Central", "Parcare", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/helios-apartment-timisoara.html",
+    bookingUrl: "https://helios.pynbooking.direct/",
     description: "Reședință DeLuxe aproape de centrul orașului",
     descriptionEn: "DeLuxe residence close to the city center",
     longDescription: "HELIOS ApArt Hotel pe Strada Argeș 4 oferă o reședință DeLuxe de 50mp cu acces facil la centrul Timișoarei. Spațiu confortabil și modern cu balcon, parcare și transfer aeroport inclus.",
