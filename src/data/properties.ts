@@ -99,7 +99,7 @@ export const properties: Property[] = [
     location: "Fructus Plaza",
     images: [apt04],
     features: ["Parcare Gratuită", "Balcon Mare", "WiFi"],
-    bookingUrl: "https://www.booking.com/hotel/ro/fructus-plaza-ultracentral-deluxe-apartment-plus-free-parking.html",
+    bookingUrl: "https://fructus-plaza.pynbooking.direct/",
     description: "Apartament DeLuxe ultracentral cu parcare gratuită și balcon mare",
     descriptionEn: "Ultracentral DeLuxe apartment with free parking and big balcony",
     longDescription: "Fructus Plaza ULTRACENTRAL ApArt Hotel, Et.7, ap.19, oferă un apartament DeLuxe spațios de 100mp într-o poziție privilegiată în centrul Timișoarei. Balconul generos și parcarea gratuită fac din acest loc alegerea perfectă pentru sejururi de afaceri sau leisure.",
