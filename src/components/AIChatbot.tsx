@@ -367,13 +367,17 @@ const AIChatbot = () => {
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Get token from edge function
-      const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token");
+      // Get token from edge function with language parameter
+      const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token", {
+        body: { language },
+      });
 
       if (error || !data?.token) {
         console.error("[AIChatbot] Failed to get voice token:", error);
         throw new Error("Failed to get voice token");
       }
+
+      console.log("[AIChatbot] Starting voice with agent:", data.agentId);
 
       // Start the conversation with WebRTC
       await conversation.startSession({
