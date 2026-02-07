@@ -67,6 +67,8 @@ interface Property {
   status_operativ: string | null;
   estimated_revenue: string | null;
   roi_percentage: string | null;
+  capital_necesar: number | null;
+  listing_type: string | null;
 }
 
 interface PropertyImage {
@@ -91,6 +93,8 @@ interface PropertyFormData {
   status_operativ: string;
   estimated_revenue: string;
   roi_percentage: string;
+  capital_necesar: string;
+  listing_type: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -106,6 +110,8 @@ const initialFormData: PropertyFormData = {
   status_operativ: "cazare",
   estimated_revenue: "",
   roi_percentage: "",
+  capital_necesar: "",
+  listing_type: "cazare",
 };
 
 export default function PropertyManager() {
@@ -193,6 +199,8 @@ export default function PropertyManager() {
         status_operativ: formData.status_operativ,
         estimated_revenue: formData.estimated_revenue || null,
         roi_percentage: formData.roi_percentage || null,
+        capital_necesar: formData.capital_necesar ? parseFloat(formData.capital_necesar) : null,
+        listing_type: formData.listing_type,
       });
 
       if (error) throw error;
@@ -245,6 +253,8 @@ export default function PropertyManager() {
           status_operativ: formData.status_operativ,
           estimated_revenue: formData.estimated_revenue || null,
           roi_percentage: formData.roi_percentage || null,
+          capital_necesar: formData.capital_necesar ? parseFloat(formData.capital_necesar) : null,
+          listing_type: formData.listing_type,
         })
         .eq("id", editingProperty.id);
 
@@ -331,6 +341,8 @@ export default function PropertyManager() {
       status_operativ: property.status_operativ || "cazare",
       estimated_revenue: property.estimated_revenue || "",
       roi_percentage: property.roi_percentage || "",
+      capital_necesar: property.capital_necesar?.toString() || "",
+      listing_type: property.listing_type || "cazare",
     });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
@@ -423,25 +435,56 @@ export default function PropertyManager() {
         />
       </div>
 
-      {/* Investment Fields */}
+      {/* Status & Listing Type Fields */}
       <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <TrendingUp className="w-5 h-5 text-primary" />
-          <h4 className="font-semibold text-foreground">Secțiune Investiții</h4>
+          <h4 className="font-semibold text-foreground">Clasificare & Investiții</h4>
         </div>
         
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Status Operativ</Label>
+            <select
+              value={formData.status_operativ}
+              onChange={(e) => setFormData({ ...formData, status_operativ: e.target.value })}
+              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="cazare">Cazare (standard)</option>
+              <option value="investitie">Investiție (afișează ROI)</option>
+              <option value="vanzare">Vânzare</option>
+              <option value="inchiriere">Închiriere</option>
+            </select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Tip Listing</Label>
+            <select
+              value={formData.listing_type}
+              onChange={(e) => setFormData({ ...formData, listing_type: e.target.value })}
+              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="cazare">Cazare</option>
+              <option value="vanzare">Vânzare</option>
+              <option value="inchiriere">Închiriere</option>
+              <option value="investitie">Investiție</option>
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Folosit pentru filtrare pe paginile Imobiliare/Investiții
+            </p>
+          </div>
+        </div>
+
         <div className="space-y-2">
-          <Label>Status Operativ</Label>
-          <select
-            value={formData.status_operativ}
-            onChange={(e) => setFormData({ ...formData, status_operativ: e.target.value })}
-            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-          >
-            <option value="cazare">Cazare (standard)</option>
-            <option value="investitie">Investiție (afișează ROI)</option>
-          </select>
+          <Label>Preț / Capital Necesar (€)</Label>
+          <Input
+            type="number"
+            value={formData.capital_necesar}
+            onChange={(e) => setFormData({ ...formData, capital_necesar: e.target.value })}
+            placeholder="145000 pentru vânzare, 450 pentru închiriere/lună"
+          />
           <p className="text-xs text-muted-foreground">
-            Selectează 'Investiție' pentru a afișa secțiunea ROI pe pagina proprietății
+            Pentru vânzare: prețul total. Pentru închiriere: chirie lunară.
           </p>
         </div>
 
