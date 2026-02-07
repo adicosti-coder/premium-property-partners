@@ -33,7 +33,7 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
 
       const { data, error } = await supabase
         .from('bookings')
-        .select('*')
+        .select('id, property_id, check_in, check_out, status')
         .eq('property_id', propertyId)
         .gte('check_out', startOfMonth.toISOString().split('T')[0])
         .lte('check_in', endOfMonth.toISOString().split('T')[0]);
