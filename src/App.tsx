@@ -63,7 +63,7 @@ const Guests = lazyWithRetry(() => import("./pages/Guests"));
 const Imobiliare = lazyWithRetry(() => import("./pages/Imobiliare"));
 const Blog = lazyWithRetry(() => import("./pages/Blog"));
 const BlogArticlePage = lazyWithRetry(() => import("./pages/BlogArticle"));
-const OnlineCheckIn = lazyWithRetry(() => import("./pages/OnlineCheckIn"));
+const Investitii = lazyWithRetry(() => import("./pages/Investitii"));
 const WhyBookDirect = lazyWithRetry(() => import("./pages/WhyBookDirect"));
 const OwnerAuth = lazyWithRetry(() => import("./pages/OwnerAuth"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
@@ -108,7 +108,7 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-                    <Route path="/online-check-in" element={<OnlineCheckIn />} />
+                    <Route path="/investitii" element={<Investitii />} />
                     <Route path="/rezerva-direct" element={<WhyBookDirect />} />
                     <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
                     <Route path="/portal-proprietar" element={<OwnerDashboard />} />

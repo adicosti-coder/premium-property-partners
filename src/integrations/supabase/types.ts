@@ -1559,6 +1559,7 @@ export type Database = {
       properties: {
         Row: {
           booking_url: string
+          capital_necesar: number | null
           created_at: string
           description_en: string
           description_ro: string
@@ -1568,6 +1569,7 @@ export type Database = {
           id: string
           image_path: string | null
           is_active: boolean
+          listing_type: string | null
           location: string
           name: string
           roi_percentage: string | null
@@ -1577,6 +1579,7 @@ export type Database = {
         }
         Insert: {
           booking_url: string
+          capital_necesar?: number | null
           created_at?: string
           description_en: string
           description_ro: string
@@ -1586,6 +1589,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           is_active?: boolean
+          listing_type?: string | null
           location: string
           name: string
           roi_percentage?: string | null
@@ -1595,6 +1599,7 @@ export type Database = {
         }
         Update: {
           booking_url?: string
+          capital_necesar?: number | null
           created_at?: string
           description_en?: string
           description_ro?: string
@@ -1604,6 +1609,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           is_active?: boolean
+          listing_type?: string | null
           location?: string
           name?: string
           roi_percentage?: string | null

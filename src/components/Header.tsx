@@ -137,7 +137,7 @@ const Header = () => {
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
     { href: "/blog", label: "Blog", isPage: true },
-    { href: "/online-check-in", label: t.nav.onlineCheckIn, isPage: true },
+    { href: "/investitii", label: language === "ro" ? "Investiții" : "Investments", isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
 

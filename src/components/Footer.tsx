@@ -201,8 +201,8 @@ const Footer = () => {
               <a href="/rezerva-direct" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 {language === 'ro' ? 'De ce să rezervi direct?' : 'Why Book Direct?'}
               </a>
-              <a href="/online-check-in" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
-                {t.nav.onlineCheckIn}
+              <a href="/investitii" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
+                {language === 'ro' ? 'Investiții' : 'Investments'}
               </a>
               <a href="#contact" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 {t.nav.contact}
