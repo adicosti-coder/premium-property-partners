@@ -26,6 +26,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
+import { usePropertyViewTracking } from "@/hooks/usePropertyViewTracking";
 import { supabase } from "@/lib/supabaseClient";
 import { 
   generatePropertyPageSchemas, 
@@ -74,6 +75,9 @@ const PropertyDetail = () => {
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track property views
+  usePropertyViewTracking(dbProperty?.id);
 
   // 1. Fetch Date din Supabase (inclusiv noile coloane)
   useEffect(() => {
