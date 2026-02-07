@@ -45,6 +45,7 @@ interface ListingProperty {
   tag: string;
   description_ro: string;
   description_en: string;
+  property_code: string | null;
 }
 
 const Imobiliare = () => {
@@ -59,7 +60,7 @@ const Imobiliare = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id, name, location, listing_type, capital_necesar, image_path, tag, description_ro, description_en")
+        .select("id, name, location, listing_type, capital_necesar, image_path, tag, description_ro, description_en, property_code")
         .eq("is_active", true)
         .eq("listing_type", listingView)
         .order("display_order");
@@ -507,7 +508,12 @@ const Imobiliare = () => {
                         <Building2 className="w-16 h-16 text-muted-foreground/30" />
                       </div>
                     )}
-                    <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
+                    {property.property_code && (
+                      <Badge className="absolute top-4 left-4 bg-slate-900/80 text-white font-mono text-xs">
+                        {property.property_code}
+                      </Badge>
+                    )}
+                    <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
                       {property.tag}
                     </Badge>
                     <Badge 
@@ -558,7 +564,7 @@ const Imobiliare = () => {
                       <Button 
                         variant="hero" 
                         className="w-full"
-                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"}: ${property.name}`)}`, '_blank')}
+                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank')}
                       >
                         <Phone className="w-4 h-4 mr-2" />
                         {language === 'ro' ? 'Programează Vizionare' : 'Schedule Viewing'}
