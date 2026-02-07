@@ -65,7 +65,7 @@ const GuestSection = () => {
                 <h3 className="text-lg font-serif font-semibold text-foreground mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
                   {feature.description}
                 </p>
               </div>
