@@ -294,7 +294,7 @@ const Favorites = () => {
                       </Button>
                       <Link to={`/proprietate/${property.slug}`}>
                         <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4" />
+                          {language === 'ro' ? 'Detalii' : 'Details'}
                         </Button>
                       </Link>
                     </div>

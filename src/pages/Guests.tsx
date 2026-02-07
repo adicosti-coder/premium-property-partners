@@ -632,8 +632,8 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                       {language === 'ro' ? 'Rezervă Direct' : 'Book Direct'}
                     </Button>
                     <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
-                      <Button variant="booking" size="sm">
-                        <Eye className="w-4 h-4" />
+                      <Button variant="outline" size="sm">
+                        {language === 'ro' ? 'Detalii' : 'Details'}
                       </Button>
                     </PrefetchLink>
                   </div>
