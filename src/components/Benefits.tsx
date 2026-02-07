@@ -46,7 +46,7 @@ const Benefits = () => {
                   {benefit.title}
                 </h3>
                 
-                <p className="text-foreground/70 dark:text-muted-foreground text-premium">
+                <p className="text-foreground/70 dark:text-muted-foreground text-premium whitespace-pre-line">
                   {benefit.description}
                 </p>
                 

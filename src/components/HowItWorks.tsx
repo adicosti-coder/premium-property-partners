@@ -60,7 +60,7 @@ const HowItWorks = () => {
                       {step.title}
                     </h3>
                     
-                    <p className="text-muted-foreground text-sm text-premium">
+                    <p className="text-muted-foreground text-sm text-premium whitespace-pre-line">
                       {step.description}
                     </p>
                   </div>
