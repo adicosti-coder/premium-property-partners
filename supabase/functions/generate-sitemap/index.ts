@@ -39,6 +39,7 @@ serve(async (req: Request) => {
       { url: "", priority: "1.0", changefreq: "daily" },
       { url: "/oaspeti", priority: "0.9", changefreq: "daily" },
       { url: "/pentru-proprietari", priority: "0.9", changefreq: "weekly" },
+      { url: "/complexe", priority: "0.9", changefreq: "weekly" },
       { url: "/blog", priority: "0.8", changefreq: "daily" },
       { url: "/despre-noi", priority: "0.7", changefreq: "monthly" },
       { url: "/imobiliare", priority: "0.8", changefreq: "weekly" },
@@ -67,6 +68,17 @@ serve(async (req: Request) => {
 
     if (propError) {
       console.error("Error fetching properties:", propError);
+    }
+
+    // Fetch active residential complexes
+    const { data: complexes, error: complexError } = await supabase
+      .from("residential_complexes")
+      .select("slug, updated_at, created_at")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+
+    if (complexError) {
+      console.error("Error fetching complexes:", complexError);
     }
 
     // Fetch approved community articles
@@ -150,9 +162,26 @@ serve(async (req: Request) => {
       }
     }
 
+    // Add residential complexes
+    if (complexes && complexes.length > 0) {
+      for (const complex of complexes as Property[]) {
+        const lastmod = complex.updated_at
+          ? new Date(complex.updated_at).toISOString().split("T")[0]
+          : new Date(complex.created_at).toISOString().split("T")[0];
+
+        xml += `  <url>
+    <loc>${BASE_URL}/complex/${complex.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+      }
+    }
+
     xml += `</urlset>`;
 
-    console.log(`Sitemap generated with ${staticPages.length + (blogArticles?.length || 0) + (properties?.length || 0) + (communityArticles?.length || 0)} URLs`);
+    console.log(`Sitemap generated with ${staticPages.length + (blogArticles?.length || 0) + (properties?.length || 0) + (communityArticles?.length || 0) + (complexes?.length || 0)} URLs`);
 
     return new Response(xml, {
       status: 200,

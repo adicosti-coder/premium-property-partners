@@ -1886,11 +1886,22 @@ export type Database = {
           description_en: string
           description_ro: string
           display_order: number
+          features: string[] | null
+          features_en: string[] | null
           id: string
           is_active: boolean
+          latitude: number | null
           location: string
+          longitude: number | null
+          meta_description_en: string | null
+          meta_description_ro: string | null
+          meta_title_en: string | null
+          meta_title_ro: string | null
           name: string
+          neighborhood: string | null
           property_count: number
+          seo_keywords: string[] | null
+          slug: string | null
           updated_at: string
         }
         Insert: {
@@ -1898,11 +1909,22 @@ export type Database = {
           description_en: string
           description_ro: string
           display_order?: number
+          features?: string[] | null
+          features_en?: string[] | null
           id?: string
           is_active?: boolean
+          latitude?: number | null
           location: string
+          longitude?: number | null
+          meta_description_en?: string | null
+          meta_description_ro?: string | null
+          meta_title_en?: string | null
+          meta_title_ro?: string | null
           name: string
+          neighborhood?: string | null
           property_count?: number
+          seo_keywords?: string[] | null
+          slug?: string | null
           updated_at?: string
         }
         Update: {
@@ -1910,11 +1932,22 @@ export type Database = {
           description_en?: string
           description_ro?: string
           display_order?: number
+          features?: string[] | null
+          features_en?: string[] | null
           id?: string
           is_active?: boolean
+          latitude?: number | null
           location?: string
+          longitude?: number | null
+          meta_description_en?: string | null
+          meta_description_ro?: string | null
+          meta_title_en?: string | null
+          meta_title_ro?: string | null
           name?: string
+          neighborhood?: string | null
           property_count?: number
+          seo_keywords?: string[] | null
+          slug?: string | null
           updated_at?: string
         }
         Relationships: []
