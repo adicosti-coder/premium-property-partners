@@ -25,9 +25,11 @@ import {
   Phone,
   CheckCircle2,
   ArrowRight,
-  Key
+  Key,
+  Eye
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { useNavigate } from "react-router-dom";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
@@ -48,6 +50,7 @@ interface ListingProperty {
 const Imobiliare = () => {
   const { t, language } = useLanguage();
   const realEstate = t.realEstatePage;
+  const navigate = useNavigate();
   const [listingView, setListingView] = useState<'vanzare' | 'inchiriere'>('vanzare');
 
   // Fetch properties for sale/rent
@@ -542,14 +545,25 @@ const Imobiliare = () => {
                       {language === 'ro' ? property.description_ro : property.description_en}
                     </p>
 
-                    <Button 
-                      variant="hero" 
-                      className="w-full"
-                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"}: ${property.name}`)}`, '_blank')}
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      {language === 'ro' ? 'Programează Vizionare' : 'Schedule Viewing'}
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => navigate(`/proprietate/${property.id}`)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        {language === 'ro' ? 'Vezi Detalii' : 'View Details'}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                      <Button 
+                        variant="hero" 
+                        className="w-full"
+                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"}: ${property.name}`)}`, '_blank')}
+                      >
+                        <Phone className="w-4 h-4 mr-2" />
+                        {language === 'ro' ? 'Programează Vizionare' : 'Schedule Viewing'}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -37,19 +37,34 @@ import {
 interface DbPropertyData {
   id: string;
   name: string;
+  location?: string;
+  description_ro?: string;
+  description_en?: string;
+  tag?: string;
+  image_path?: string | null;
+  capital_necesar?: number | null;
+  estimated_revenue?: string | null;
+  roi_percentage?: string | null;
+  listing_type?: string | null;
   status_operativ?: string;
-  estimated_revenue?: string;
-  roi_percentage?: string;
 }
+
+// Helper to check if a string is a UUID
+const isUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
 
 const PropertyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const property = getPropertyBySlug(slug || "");
+  const isDbProperty = isUUID(slug || "");
+  const staticProperty = !isDbProperty ? getPropertyBySlug(slug || "") : undefined;
   const { toast } = useToast();
   const { t, language } = useLanguage();
   
   // State pentru proprietatea din DB
   const [dbProperty, setDbProperty] = useState<DbPropertyData | null>(null);
+  const [isLoadingProperty, setIsLoadingProperty] = useState(isDbProperty);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -62,21 +77,45 @@ const PropertyDetail = () => {
   // 1. Fetch Date din Supabase (inclusiv noile coloane)
   useEffect(() => {
     const fetchPropertyData = async () => {
-      if (!property) return;
       setIsLoadingImages(true);
+      
       try {
-        const { data: dbProp } = await supabase
-          .from("properties")
-          .select("id, name, status_operativ, estimated_revenue, roi_percentage")
-          .eq("name", property.name)
-          .maybeSingle();
+        let propertyId: string | null = null;
+        
+        // If it's a UUID, fetch directly by ID
+        if (isDbProperty && slug) {
+          setIsLoadingProperty(true);
+          const { data: dbProp } = await supabase
+            .from("properties")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ")
+            .eq("id", slug)
+            .maybeSingle();
+          
+          if (dbProp) {
+            setDbProperty(dbProp);
+            propertyId = dbProp.id;
+          }
+          setIsLoadingProperty(false);
+        } else if (staticProperty) {
+          // Static property - fetch additional data by name
+          const { data: dbProp } = await supabase
+            .from("properties")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ")
+            .eq("name", staticProperty.name)
+            .maybeSingle();
+          
+          if (dbProp) {
+            setDbProperty(dbProp);
+            propertyId = dbProp.id;
+          }
+        }
 
-        if (dbProp) {
-          setDbProperty(dbProp);
+        // Fetch images if we have a property ID
+        if (propertyId) {
           const { data: images } = await supabase
             .from("property_images")
             .select("*")
-            .eq("property_id", dbProp.id)
+            .eq("property_id", propertyId)
             .order("display_order", { ascending: true });
           if (images) setDbImages(images);
         }
@@ -86,8 +125,40 @@ const PropertyDetail = () => {
         setIsLoadingImages(false);
       }
     };
-    fetchPropertyData();
-  }, [property]);
+    
+    if (isDbProperty || staticProperty) {
+      fetchPropertyData();
+    }
+  }, [slug, isDbProperty, staticProperty]);
+
+  // Create unified property object
+  const property = staticProperty || (dbProperty ? {
+    id: 0, // DB properties use UUID in dbProperty.id
+    slug: slug || "",
+    name: dbProperty.name,
+    location: dbProperty.location || "Timișoara",
+    images: dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : [],
+    features: [],
+    bookingUrl: "",
+    description: dbProperty.description_ro || "",
+    descriptionEn: dbProperty.description_en || "",
+    longDescription: dbProperty.description_ro || "",
+    longDescriptionEn: dbProperty.description_en || "",
+    rating: 0,
+    reviews: 0,
+    capacity: 0,
+    bedrooms: 0,
+    bathrooms: 0,
+    size: 0,
+    pricePerNight: dbProperty.capital_necesar || 0,
+    amenities: [],
+    amenitiesEn: [],
+    houseRules: [],
+    houseRulesEn: [],
+    checkInTime: "",
+    checkOutTime: "",
+    isActive: true,
+  } : null);
 
   // 2. Funcție Trimitere către Make.com
   const handleSendInvestmentLead = async (email: string, name: string = "Client Site") => {
@@ -148,7 +219,19 @@ const PropertyDetail = () => {
     setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   }, [galleryImages.length]);
 
-  if (!property || property.isActive === false) return null;
+  // Show loading state for DB properties
+  if (isLoadingProperty) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">{language === 'ro' ? 'Se încarcă...' : 'Loading...'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,49 +263,96 @@ const PropertyDetail = () => {
                 <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" /> {property.location}, Timișoara</p>
               </div>
 
-              {/* SECȚIUNEA DE INVESTIȚIE (ROI) - APARE DOAR DACĂ status_operativ === 'investitie' */}
-              {dbProperty?.status_operativ === 'investitie' && (
+              {/* SECȚIUNEA DE INVESTIȚIE - apare pentru DB properties sau când status_operativ === 'investitie' */}
+              {(isDbProperty || dbProperty?.status_operativ === 'investitie') && dbProperty && (dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
                 <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-8 rounded-3xl shadow-sm border-l-4 border-l-primary">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-6 h-6 text-primary" />
-                    <h2 className="text-2xl font-serif font-bold">Oportunitate de Investiție</h2>
+                    <h2 className="text-2xl font-serif font-bold">
+                      {language === 'ro' ? 'Oportunitate de Investiție' : 'Investment Opportunity'}
+                    </h2>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Venit Estimativ</p>
-                      <p className="text-3xl font-bold text-primary">€{dbProperty.estimated_revenue || "1.200"} / lună</p>
+                  {(dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                      {dbProperty.capital_necesar && (
+                        <div>
+                          <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
+                            {language === 'ro' ? 'Capital Necesar' : 'Required Capital'}
+                          </p>
+                          <p className="text-3xl font-bold">€{dbProperty.capital_necesar.toLocaleString('ro-RO')}</p>
+                        </div>
+                      )}
+                      {dbProperty.estimated_revenue && (
+                        <div>
+                          <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
+                            {language === 'ro' ? 'Venit Lunar Estimat' : 'Est. Monthly Revenue'}
+                          </p>
+                          <p className="text-3xl font-bold text-primary">€{dbProperty.estimated_revenue}</p>
+                        </div>
+                      )}
+                      {dbProperty.roi_percentage && (
+                        <div>
+                          <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
+                            {language === 'ro' ? 'Randament (ROI)' : 'Annual Yield (ROI)'}
+                          </p>
+                          <p className="text-3xl font-bold text-primary">{dbProperty.roi_percentage}%</p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Randament (ROI)</p>
-                      <p className="text-3xl font-bold">{dbProperty.roi_percentage || "9.2"}%</p>
-                    </div>
-                  </div>
+                  )}
                   <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
                 </div>
               )}
 
-              {/* Detalii Standard */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
-                <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} Oaspeți</span></div>
-                <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} Dormitoare</span></div>
-                <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} Băi</span></div>
-                <div className="flex flex-col items-center"><Maximize2 className="text-primary mb-1"/><span className="text-sm font-medium">{property.size} m²</span></div>
-              </div>
+              {/* Detalii Standard - doar pentru proprietăți cu date complete */}
+              {staticProperty && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
+                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} Oaspeți</span></div>
+                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} Dormitoare</span></div>
+                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} Băi</span></div>
+                  <div className="flex flex-col items-center"><Maximize2 className="text-primary mb-1"/><span className="text-sm font-medium">{property.size} m²</span></div>
+                </div>
+              )}
 
-              <div>
-                <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
-                <p className="text-muted-foreground leading-relaxed">{language === 'en' ? property.longDescriptionEn : property.longDescription}</p>
-              </div>
+              {property.longDescription && (
+                <div>
+                  <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
+                  <p className="text-muted-foreground leading-relaxed">{language === 'en' ? property.longDescriptionEn : property.longDescription}</p>
+                </div>
+              )}
               
               <PropertyReviews propertyId={dbProperty?.id || ""} propertyName={property.name} />
             </div>
 
-            {/* Bara Laterală - Rezervări */}
-            <div className="lg:col-span-1 space-y-6">
-              <PriceCompareWidget basePrice={property.pricePerNight} />
-              <StayCalculator property={property} onBook={() => setBookingOpen(true)} />
-              <AvailabilityCalendar propertyId={property.id} />
-            </div>
+            {/* Bara Laterală - Rezervări - doar pentru proprietăți cu date complete */}
+            {staticProperty ? (
+              <div className="lg:col-span-1 space-y-6">
+                <PriceCompareWidget basePrice={property.pricePerNight} />
+                <StayCalculator property={property as any} onBook={() => setBookingOpen(true)} />
+                <AvailabilityCalendar propertyId={property.id} />
+              </div>
+            ) : (
+              <div className="lg:col-span-1 space-y-6">
+                {/* CTA pentru proprietăți de investiție */}
+                <div className="bg-card rounded-2xl border p-6 space-y-4">
+                  <h3 className="text-xl font-semibold">
+                    {language === 'ro' ? 'Interesat?' : 'Interested?'}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {language === 'ro' 
+                      ? 'Contactează-ne pentru mai multe detalii despre această oportunitate de investiție.'
+                      : 'Contact us for more details about this investment opportunity.'}
+                  </p>
+                  <Button 
+                    variant="hero" 
+                    className="w-full"
+                    onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"}: ${property.name}`)}`, '_blank')}
+                  >
+                    {language === 'ro' ? 'Contactează-ne' : 'Contact Us'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
