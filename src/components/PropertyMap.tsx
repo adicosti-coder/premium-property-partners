@@ -63,7 +63,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     }
   };
 
-  // Get Mapbox token from environment (client-side, no API call needed)
+  // Get Mapbox token: prefer env var, fallback to edge function
   useEffect(() => {
     // Check WebGL support first
     if (!isWebGLSupported()) {
@@ -74,14 +74,42 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       return;
     }
 
-    // Use client-side environment variable (safer, no edge function exposure)
-    const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
-    if (token) {
-      setMapboxToken(token);
-    } else {
-      setError('Token Mapbox nu a fost configurat');
+    // Try client-side environment variable first
+    const envToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+    if (envToken) {
+      setMapboxToken(envToken);
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+
+    // Fallback: fetch token from edge function
+    const fetchTokenFromBackend = async () => {
+      try {
+        const response = await fetch(
+          'https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/get-mapbox-token',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8',
+            },
+          }
+        );
+        const data = await response.json();
+        if (data.token) {
+          setMapboxToken(data.token);
+        } else {
+          setError(language === 'ro' ? 'Token Mapbox nu a fost configurat' : 'Mapbox token not configured');
+        }
+      } catch (err) {
+        console.error('Failed to fetch Mapbox token:', err);
+        setError(language === 'ro' ? 'Eroare la încărcarea hărții' : 'Failed to load map');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTokenFromBackend();
   }, [language]);
 
   // Initialize map when token is available
