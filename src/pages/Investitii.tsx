@@ -7,7 +7,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Card imports removed - using custom dark theme cards
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -233,29 +233,30 @@ const Investitii = () => {
           {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="overflow-hidden">
-                  <Skeleton className="h-48 w-full" />
-                  <CardContent className="p-6">
-                    <Skeleton className="h-6 w-3/4 mb-4" />
-                    <Skeleton className="h-4 w-1/2 mb-6" />
-                    <div className="space-y-3">
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-8 w-full" />
+                <div key={i} className="bg-slate-900 rounded-3xl border border-slate-700 overflow-hidden">
+                  <Skeleton className="h-48 w-full bg-slate-800" />
+                  <div className="p-6">
+                    <Skeleton className="h-6 w-20 mb-4 bg-slate-800" />
+                    <Skeleton className="h-8 w-3/4 mb-2 bg-slate-800" />
+                    <Skeleton className="h-4 w-1/2 mb-6 bg-slate-800" />
+                    <div className="space-y-3 border-t border-slate-700 pt-6">
+                      <Skeleton className="h-6 w-full bg-slate-800" />
+                      <Skeleton className="h-6 w-full bg-slate-800" />
+                      <Skeleton className="h-6 w-full bg-slate-800" />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           ) : properties && properties.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {properties.map((property) => (
-                <Card 
+                <div 
                   key={property.id} 
-                  className="group overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5"
+                  className="group bg-slate-900 text-white p-6 rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10"
                 >
                   {/* Property Image */}
-                  <div className="relative h-48 overflow-hidden bg-muted">
+                  <div className="relative h-48 -mx-6 -mt-6 mb-6 overflow-hidden rounded-t-3xl">
                     {property.image_path ? (
                       <img 
                         src={property.image_path.startsWith("http") ? property.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${property.image_path}`}
@@ -263,82 +264,101 @@ const Investitii = () => {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Building2 className="w-16 h-16 text-muted-foreground/30" />
+                      <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                        <Building2 className="w-16 h-16 text-slate-600" />
                       </div>
                     )}
-                    <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
-                      {property.tag}
-                    </Badge>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
                   </div>
 
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                      {property.name}
-                    </CardTitle>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      {property.location}
-                    </div>
-                  </CardHeader>
+                  {/* ROI Badge */}
+                  {property.roi_percentage && (
+                    <Badge className="bg-amber-600 text-white border-0 mb-4 px-3 py-1">
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      Top ROI: {property.roi_percentage}%
+                    </Badge>
+                  )}
 
-                  <CardContent className="pt-2">
-                    {/* Investment Metrics */}
-                    <div className="space-y-3 mb-6">
-                      {property.capital_necesar && (
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Wallet className="w-4 h-4" />
-                            {t.cardCapital}
-                          </div>
-                          <span className="font-bold text-foreground">
-                            {formatCurrency(property.capital_necesar)}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {property.roi_percentage && (
-                        <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                          <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-                            <TrendingUp className="w-4 h-4" />
-                            {t.cardYield}
-                          </div>
-                          <span className="font-bold text-green-700 dark:text-green-400 text-lg">
-                            {property.roi_percentage}%
-                          </span>
-                        </div>
-                      )}
+                  {/* Property Name & Location */}
+                  <h3 className="text-2xl font-serif font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
+                    {property.name}
+                  </h3>
+                  <div className="flex items-center gap-1 text-sm text-slate-400 mb-6">
+                    <MapPin className="w-4 h-4" />
+                    {property.location}
+                  </div>
 
-                      {property.estimated_revenue && (
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <BarChart3 className="w-4 h-4" />
-                            {t.cardRevenue}
-                          </div>
-                          <span className="font-semibold text-foreground">
-                            {property.estimated_revenue} €
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  {/* Financial Metrics */}
+                  <div className="space-y-3 mb-6 border-t border-slate-700 pt-6">
+                    {property.capital_necesar && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <Wallet className="w-4 h-4" />
+                          {t.cardCapital}
+                        </span>
+                        <span className="text-white font-bold text-lg">
+                          {formatCurrency(property.capital_necesar)}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {property.estimated_revenue && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4" />
+                          {t.cardRevenue}
+                        </span>
+                        <span className="text-amber-500 font-bold text-lg">
+                          €{property.estimated_revenue}
+                        </span>
+                      </div>
+                    )}
 
-                    {/* Actions */}
-                    <div className="flex gap-3">
-                      <Link to={`/proprietate/${slugify(property.name)}`} className="flex-1">
-                        <Button variant="outline" className="w-full">
-                          {t.cardDetails}
-                        </Button>
-                      </Link>
+                    {property.roi_percentage && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4" />
+                          {t.cardYield}
+                        </span>
+                        <span className="text-green-400 font-bold text-lg">
+                          {property.roi_percentage}%
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Calculated yearly profit based on revenue */}
+                    {property.estimated_revenue && (
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-700">
+                        <span className="text-slate-300 font-medium">
+                          {language === "ro" ? "Profit Anual Estimat" : "Est. Annual Profit"}
+                        </span>
+                        <span className="text-amber-500 font-bold text-xl">
+                          €{(parseFloat(property.estimated_revenue) * 12).toLocaleString("ro-RO")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-3">
+                    <Link to={`/proprietate/${slugify(property.name)}`} className="block">
                       <Button 
-                        variant="hero" 
-                        className="flex-1"
-                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"}: ${property.name}`)}`, '_blank')}
+                        variant="outline" 
+                        className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500"
                       >
-                        {t.cardCta}
+                        {t.cardDetails}
+                        <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </Link>
+                    <Button 
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"}: ${property.name}`)}`, '_blank')}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      {t.cardCta}
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
