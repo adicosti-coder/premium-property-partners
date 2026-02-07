@@ -476,7 +476,7 @@ export default function PropertyManager() {
         </div>
 
         <div className="space-y-2">
-          <Label>Preț / Capital Necesar (€)</Label>
+          <Label>Preț (€)</Label>
           <Input
             type="number"
             value={formData.capital_necesar}
