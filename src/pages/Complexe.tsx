@@ -67,7 +67,7 @@ const Complexe = () => {
       totalProperties: "Proprietăți",
       totalPropertiesValue: "60+",
       localSeoTitle: "Management Regim Hotelier Timișoara",
-      localSeoText: "RealTrust & ApArt Hotel oferă servicii complete de administrare în regim hotelier pentru proprietățile din cele mai căutate zone ale Timișoarei: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris și multe altele. Lista se completează continuu cu noi ansambluri rezidențiale.",
+      localSeoText: "RealTrust & ApArt Hotel oferă servicii complete de administrare în regim hotelier pentru proprietățile din cele mai căutate zone ale Timișoarei: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris și multe altele. Lista se completează continuu cu noi ansambluri și complexe rezidențiale.",
     },
     en: {
       title: "Residential Complexes Timișoara | Short-Term Rental Management",
@@ -87,7 +87,7 @@ const Complexe = () => {
       totalProperties: "Properties",
       totalPropertiesValue: "60+",
       localSeoTitle: "Short-Term Rental Management Timișoara",
-      localSeoText: "RealTrust & ApArt Hotel offers complete short-term rental management services for properties in Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris and many more. The list is continuously expanding with new residential complexes.",
+      localSeoText: "RealTrust & ApArt Hotel offers complete short-term rental management services for properties in Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris and many more. The list is continuously expanding with new residential ensembles and complexes.",
     },
   };
 
