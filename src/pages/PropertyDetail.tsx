@@ -263,8 +263,18 @@ const PropertyDetail = () => {
                 <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" /> {property.location}, Timișoara</p>
               </div>
 
-              {/* SECȚIUNEA DE INVESTIȚIE - apare pentru DB properties sau când status_operativ === 'investitie' */}
-              {(isDbProperty || dbProperty?.status_operativ === 'investitie') && dbProperty && (dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
+              {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
+              {dbProperty?.listing_type === 'inchiriere' && dbProperty.capital_necesar && (
+                <div className="bg-card border p-6 rounded-2xl">
+                  <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold mb-2">
+                    {language === 'ro' ? 'Preț' : 'Price'}
+                  </p>
+                  <p className="text-3xl font-bold">€{dbProperty.capital_necesar.toLocaleString('ro-RO')}<span className="text-lg font-normal text-muted-foreground">/lună</span></p>
+                </div>
+              )}
+
+              {/* SECȚIUNEA DE INVESTIȚIE - apare pentru DB properties când NU este închiriere */}
+              {dbProperty && dbProperty.listing_type !== 'inchiriere' && (isDbProperty || dbProperty.status_operativ === 'investitie') && (dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
                 <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-8 rounded-3xl shadow-sm border-l-4 border-l-primary">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-6 h-6 text-primary" />
