@@ -149,7 +149,7 @@ const Index = () => {
       <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />
       <Header />
       <QuickStatsBar />
-      <main className="pt-10">
+      <main>
         {/* Hero - Entry Point */}
         <Hero />
         

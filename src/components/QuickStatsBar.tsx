@@ -396,11 +396,22 @@ const QuickStatsBar = () => {
       ? authenticatedStatItems 
       : publicStatItems;
 
+  // Calculate top offset based on header height (nav only, banners are inside header)
+  // Mobile: ~64px nav, Desktop: ~80px nav
+  // But we need to account that banners push content down inside the fixed header
+  // So QuickStatsBar should be positioned AFTER the entire header (which is fixed and contains banners)
+  
   return (
     <div
-      className={`fixed left-0 right-0 z-40 transition-all duration-300 ${
-        isVisible ? "top-16 md:top-20 translate-y-0" : "top-16 md:top-20 -translate-y-full opacity-0"
+      className={`fixed left-0 right-0 z-30 transition-all duration-300 ${
+        isVisible ? "translate-y-0" : "-translate-y-full opacity-0"
       }`}
+      style={{ 
+        // Position below the fixed header - estimate max header height
+        // PromoBanner (~44px) + PremiumBanner (~48px when visible) + Nav (64-80px) = ~156-172px
+        // We use a safe value that clears all elements
+        top: 'calc(env(safe-area-inset-top, 0px) + 140px)'
+      }}
     >
       <div className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
