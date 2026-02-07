@@ -77,6 +77,8 @@ const SubmitArticle = lazyWithRetry(() => import("./pages/SubmitArticle"));
 const EditArticle = lazyWithRetry(() => import("./pages/EditArticle"));
 const PublicProfile = lazyWithRetry(() => import("./pages/PublicProfile"));
 const ReferralProgram = lazyWithRetry(() => import("./pages/ReferralProgram"));
+const Complexe = lazyWithRetry(() => import("./pages/Complexe"));
+const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -122,6 +124,8 @@ const App = () => (
                     <Route path="/comunitate/editeaza/:id" element={<EditArticle />} />
                     <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
+                    <Route path="/complexe" element={<Complexe />} />
+                    <Route path="/complex/:slug" element={<ComplexDetail />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
