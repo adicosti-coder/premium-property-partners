@@ -84,7 +84,68 @@ interface ChatRequest {
   captchaToken?: string;
 }
 
+// --- Prompt-injection hardening (lightweight, low false-positive) ---
+const MAX_MESSAGE_CHARS = 2000;
+const MAX_HISTORY_MESSAGES = 20;
+const MAX_HISTORY_ITEM_CHARS = 2000;
+
+const ALLOWED_ROLES = new Set(["user", "assistant"]);
+
+const PROMPT_INJECTION_PATTERNS: Array<{ re: RegExp; weight: number }> = [
+  { re: /\b(ignore|disregard)\b[^\n]{0,80}\b(instructions|rules|system|developer)\b/i, weight: 3 },
+  { re: /^\s*(system|developer|assistant)\s*:\s*/im, weight: 3 },
+  { re: /<\|\s*(system|developer|assistant)\s*\|>/i, weight: 3 },
+  { re: /\b(jailbreak|dan\b|prompt\s*injection)\b/i, weight: 2 },
+  { re: /\b(reveal|show|print)\b[^\n]{0,80}\b(system prompt|hidden prompt|developer message)\b/i, weight: 3 },
+  { re: /\bact\s+as\b[^\n]{0,80}\b(system|developer)\b/i, weight: 2 },
+];
+
+function sanitizeText(input: unknown, maxLen: number): string {
+  if (typeof input !== "string") return "";
+
+  // Normalize newlines and strip NULs
+  let text = input.replace(/\r\n/g, "\n").replace(/\0/g, "").trim();
+
+  // Remove obvious role-prefix attempts at the start of lines
+  text = text.replace(/^\s*(system|developer|assistant)\s*:\s*/gim, "");
+  text = text.replace(/<\|\s*(system|developer|assistant)\s*\|>/gi, "");
+
+  if (text.length > maxLen) text = text.slice(0, maxLen);
+  return text;
+}
+
+function isSuspiciousPrompt(text: string): boolean {
+  const t = text.toLowerCase();
+  let score = 0;
+  for (const { re, weight } of PROMPT_INJECTION_PATTERNS) {
+    if (re.test(t)) score += weight;
+  }
+  return score >= 3;
+}
+
+function sanitizeConversationHistory(
+  input: unknown,
+): Array<{ role: "user" | "assistant"; content: string }> {
+  if (!Array.isArray(input)) return [];
+
+  const cleaned: Array<{ role: "user" | "assistant"; content: string }> = [];
+
+  for (const item of input.slice(-MAX_HISTORY_MESSAGES)) {
+    if (!item || typeof item !== "object") continue;
+
+    const role = (item as any).role;
+    const content = sanitizeText((item as any).content, MAX_HISTORY_ITEM_CHARS);
+    if (!ALLOWED_ROLES.has(role)) continue;
+    if (!content) continue;
+
+    cleaned.push({ role, content } as { role: "user" | "assistant"; content: string });
+  }
+
+  return cleaned;
+}
+
 // Verify hCaptcha token
+async function verifyCaptcha(token: string, formType: string, ipAddress: string, userAgent: string): Promise<boolean> {
 async function verifyCaptcha(token: string, formType: string, ipAddress: string, userAgent: string): Promise<boolean> {
   const secretKey = Deno.env.get("HCAPTCHA_SECRET_KEY");
   
@@ -228,7 +289,26 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [], captchaToken }: ChatRequest = await req.json();
+    const body = (await req.json().catch(() => null)) as Partial<ChatRequest> | null;
+
+    const language = body?.language === "en" ? "en" : "ro";
+    const conversationHistory = sanitizeConversationHistory(body?.conversationHistory);
+    const message = sanitizeText(body?.message, MAX_MESSAGE_CHARS);
+    const captchaToken = typeof body?.captchaToken === "string" ? body.captchaToken : undefined;
+
+    // Block common prompt-injection attempts early (best-effort)
+    if (message && isSuspiciousPrompt(message)) {
+      console.warn("Blocked suspicious prompt injection attempt from IP:", clientIP);
+      return new Response(
+        JSON.stringify({
+          error: "Suspicious input",
+          response: language === "en"
+            ? "Please rephrase your message without trying to change assistant rules (e.g., 'ignore instructions', 'system:', etc.)."
+            : "Te rog reformulează mesajul fără încercări de a schimba regulile asistentului (ex: 'ignoră instrucțiunile', 'system:', etc.).",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
 
     // Verify CAPTCHA token
     if (!captchaToken) {

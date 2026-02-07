@@ -26,7 +26,7 @@ export const usePrefetch = () => {
       queryFn: async () => {
         const { data } = await supabase
           .from('bookings')
-          .select('*')
+          .select('id, property_id, check_in, check_out, status')
           .eq('property_id', parseInt(propertyId))
           .gte('check_out', new Date().toISOString().split('T')[0]);
         return data;
