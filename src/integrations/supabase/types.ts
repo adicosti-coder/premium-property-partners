@@ -1575,6 +1575,7 @@ export type Database = {
           listing_type: string | null
           location: string
           name: string
+          property_code: string | null
           roi_percentage: string | null
           status_operativ: string | null
           tag: string
@@ -1595,6 +1596,7 @@ export type Database = {
           listing_type?: string | null
           location: string
           name: string
+          property_code?: string | null
           roi_percentage?: string | null
           status_operativ?: string | null
           tag: string
@@ -1615,6 +1617,7 @@ export type Database = {
           listing_type?: string | null
           location?: string
           name?: string
+          property_code?: string | null
           roi_percentage?: string | null
           status_operativ?: string | null
           tag?: string

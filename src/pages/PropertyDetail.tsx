@@ -47,6 +47,7 @@ interface DbPropertyData {
   roi_percentage?: string | null;
   listing_type?: string | null;
   status_operativ?: string;
+  property_code?: string | null;
 }
 
 // Helper to check if a string is a UUID
@@ -87,7 +88,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code")
             .eq("id", slug)
             .maybeSingle();
           
@@ -100,7 +101,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -259,7 +260,14 @@ const PropertyDetail = () => {
               
               {/* Header Info */}
               <div>
-                <h1 className="text-4xl font-serif font-bold mb-2">{property.name}</h1>
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  {dbProperty?.property_code && (
+                    <Badge variant="secondary" className="font-mono text-sm bg-muted">
+                      {dbProperty.property_code}
+                    </Badge>
+                  )}
+                  <h1 className="text-4xl font-serif font-bold">{property.name}</h1>
+                </div>
                 <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" /> {property.location}, Timișoara</p>
               </div>
 
@@ -356,7 +364,7 @@ const PropertyDetail = () => {
                   <Button 
                     variant="hero" 
                     className="w-full"
-                    onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"}: ${property.name}`)}`, '_blank')}
+                    onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"} ${dbProperty?.property_code ? `[${dbProperty.property_code}]` : ""}: ${property.name}`)}`, '_blank')}
                   >
                     {language === 'ro' ? 'Contactează-ne' : 'Contact Us'}
                   </Button>

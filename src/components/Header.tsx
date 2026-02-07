@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-react";
+import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PromoBanner from "./PromoBanner";
+import PropertyCodeSearch from "./PropertyCodeSearch";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/lib/supabaseClient";
@@ -314,6 +315,11 @@ const Header = () => {
               );
             })}
           </nav>
+
+          {/* Property Code Search - Desktop */}
+          <div className="hidden lg:block">
+            <PropertyCodeSearch />
+          </div>
           
           {/* CTA & Language & Mobile Menu */}
           <div className="flex items-center gap-2 md:gap-4">

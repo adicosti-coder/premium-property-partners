@@ -37,6 +37,7 @@ interface InvestmentProperty {
   tag: string;
   description_ro: string;
   description_en: string;
+  property_code: string | null;
 }
 
 const Investitii = () => {
@@ -49,7 +50,7 @@ const Investitii = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en")
+        .select("id, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en, property_code")
         .eq("is_active", true)
         .not("roi_percentage", "is", null)
         .order("display_order");
@@ -260,13 +261,20 @@ const Investitii = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
                   </div>
 
-                  {/* ROI Badge */}
-                  {property.roi_percentage && (
-                    <Badge className="bg-amber-600 text-white border-0 mb-4 px-3 py-1">
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      Top ROI: {property.roi_percentage}%
-                    </Badge>
-                  )}
+                  {/* Property Code & ROI Badge */}
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    {property.property_code && (
+                      <Badge className="bg-slate-700 text-white border-0 font-mono text-xs">
+                        {property.property_code}
+                      </Badge>
+                    )}
+                    {property.roi_percentage && (
+                      <Badge className="bg-amber-600 text-white border-0 px-3 py-1">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        Top ROI: {property.roi_percentage}%
+                      </Badge>
+                    )}
+                  </div>
 
                   {/* Property Name & Location */}
                   <h3 className="text-2xl font-serif font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
@@ -340,7 +348,7 @@ const Investitii = () => {
                     </Button>
                     <Button 
                       className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
-                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"}: ${property.name}`)}`, '_blank')}
+                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank')}
                     >
                       <Phone className="w-4 h-4 mr-2" />
                       {t.cardCta}
