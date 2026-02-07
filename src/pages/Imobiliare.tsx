@@ -1,9 +1,14 @@
+import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
@@ -19,7 +24,8 @@ import {
   MapPin,
   Phone,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Key
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
@@ -27,9 +33,38 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
 
+interface ListingProperty {
+  id: string;
+  name: string;
+  location: string;
+  listing_type: string | null;
+  capital_necesar: number | null;
+  image_path: string | null;
+  tag: string;
+  description_ro: string;
+  description_en: string;
+}
+
 const Imobiliare = () => {
   const { t, language } = useLanguage();
   const realEstate = t.realEstatePage;
+  const [listingView, setListingView] = useState<'vanzare' | 'inchiriere'>('vanzare');
+
+  // Fetch properties for sale/rent
+  const { data: listingProperties, isLoading: listingsLoading } = useQuery({
+    queryKey: ["listing-properties", listingView],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, name, location, listing_type, capital_necesar, image_path, tag, description_ro, description_en")
+        .eq("is_active", true)
+        .eq("listing_type", listingView)
+        .order("display_order");
+      if (error) throw error;
+      return data as ListingProperty[];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   // Scroll animation hooks for each section
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
@@ -395,6 +430,152 @@ const Imobiliare = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Properties Listings Section */}
+      <section id="proprietati" className="py-20 md:py-28">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
+              {language === 'ro' ? 'Portofoliu' : 'Portfolio'}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              {language === 'ro' ? 'Proprietăți Disponibile' : 'Available Properties'}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+              {language === 'ro' 
+                ? 'Explorează portofoliul nostru de proprietăți disponibile pentru vânzare sau închiriere pe termen lung.' 
+                : 'Explore our portfolio of properties available for sale or long-term rental.'}
+            </p>
+
+            {/* Tabs */}
+            <div className="flex justify-center gap-4 mb-10">
+              <Button 
+                variant={listingView === 'vanzare' ? 'default' : 'outline'}
+                onClick={() => setListingView('vanzare')}
+                className="min-w-[140px]"
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                {language === 'ro' ? 'Vânzări' : 'Sales'}
+              </Button>
+              <Button 
+                variant={listingView === 'inchiriere' ? 'default' : 'outline'}
+                onClick={() => setListingView('inchiriere')}
+                className="min-w-[140px]"
+              >
+                <Key className="w-4 h-4 mr-2" />
+                {language === 'ro' ? 'Închirieri' : 'Rentals'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Properties Grid */}
+          {listingsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="h-48 w-full" />
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-3/4 mb-4" />
+                    <Skeleton className="h-4 w-1/2 mb-6" />
+                    <Skeleton className="h-10 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : listingProperties && listingProperties.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {listingProperties.map((property) => (
+                <Card 
+                  key={property.id} 
+                  className="group overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5"
+                >
+                  {/* Property Image */}
+                  <div className="relative h-48 overflow-hidden bg-muted">
+                    {property.image_path ? (
+                      <img 
+                        src={property.image_path.startsWith("http") ? property.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${property.image_path}`}
+                        alt={property.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Building2 className="w-16 h-16 text-muted-foreground/30" />
+                      </div>
+                    )}
+                    <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
+                      {property.tag}
+                    </Badge>
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute top-4 right-4"
+                    >
+                      {listingView === 'vanzare' 
+                        ? (language === 'ro' ? 'De Vânzare' : 'For Sale')
+                        : (language === 'ro' ? 'De Închiriat' : 'For Rent')}
+                    </Badge>
+                  </div>
+
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                      {property.name}
+                    </h3>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
+                      <MapPin className="w-4 h-4" />
+                      {property.location}
+                    </div>
+                    
+                    {property.capital_necesar && (
+                      <div className="text-2xl font-bold text-primary mb-4">
+                        {new Intl.NumberFormat("ro-RO", {
+                          style: "currency",
+                          currency: "EUR",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(property.capital_necesar)}
+                        {listingView === 'inchiriere' && <span className="text-sm font-normal text-muted-foreground">/lună</span>}
+                      </div>
+                    )}
+
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {language === 'ro' ? property.description_ro : property.description_en}
+                    </p>
+
+                    <Button 
+                      variant="hero" 
+                      className="w-full"
+                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"}: ${property.name}`)}`, '_blank')}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      {language === 'ro' ? 'Programează Vizionare' : 'Schedule Viewing'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <Building2 className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {language === 'ro' 
+                  ? `Momentan nu avem proprietăți de ${listingView === 'vanzare' ? 'vânzare' : 'închiriat'}`
+                  : `No properties for ${listingView === 'vanzare' ? 'sale' : 'rent'} at the moment`}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {language === 'ro' 
+                  ? 'Contactează-ne pentru a fi notificat când apar noi proprietăți.'
+                  : 'Contact us to be notified when new properties become available.'}
+              </p>
+              <Button 
+                variant="hero"
+                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, caut o proprietate." : "Hello, I'm looking for a property.")}`, '_blank')}
+              >
+                <Phone className="w-5 h-5 mr-2" />
+                {language === 'ro' ? 'Contactează-ne' : 'Contact Us'}
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
