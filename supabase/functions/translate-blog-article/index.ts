@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,46 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client for auth validation
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify authentication - require valid JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("Missing Authorization header");
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+
+    if (authError || !user) {
+      console.error("Invalid authentication:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verify admin role - only admins can translate articles
+    const { data: isAdmin, error: roleError } = await supabase
+      .rpc("has_role", { _user_id: user.id, _role: "admin" });
+
+    if (roleError || !isAdmin) {
+      console.error("Unauthorized: User is not admin", user.id);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - admin access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Admin ${user.id} translating article`);
+
     const { title, excerpt, content } = await req.json();
 
     if (!title || !excerpt || !content) {

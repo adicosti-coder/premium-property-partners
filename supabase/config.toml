@@ -61,7 +61,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.translate-blog-article]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-article-notification]
 verify_jwt = false
