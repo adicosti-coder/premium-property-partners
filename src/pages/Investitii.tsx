@@ -24,7 +24,7 @@ import {
   Clock,
   MapPin
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface InvestmentProperty {
   id: string;
@@ -41,6 +41,7 @@ interface InvestmentProperty {
 
 const Investitii = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
 
   // Fetch only properties with ROI data (investment opportunities)
   const { data: properties, isLoading } = useQuery({
@@ -125,18 +126,6 @@ const Investitii = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
-  };
-
-  const slugify = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/ă/g, "a")
-      .replace(/â/g, "a")
-      .replace(/î/g, "i")
-      .replace(/ș/g, "s")
-      .replace(/ț/g, "t")
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]+/g, "");
   };
 
   return (
@@ -341,15 +330,14 @@ const Investitii = () => {
 
                   {/* Actions */}
                   <div className="space-y-3">
-                    <Link to={`/proprietate/${slugify(property.name)}`} className="block">
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500"
-                      >
-                        {t.cardDetails}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500"
+                      onClick={() => navigate(`/proprietate/${property.id}`)}
+                    >
+                      {t.cardDetails}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                     <Button 
                       className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
                       onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"}: ${property.name}`)}`, '_blank')}
