@@ -12,7 +12,6 @@ import ContactSection from "@/components/ContactSection";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import BlogPreview from "@/components/BlogPreview";
-import PromoBanner from "@/components/PromoBanner";
 import QuickStatsBar from "@/components/QuickStatsBar";
 import ReferralBanner from "@/components/ReferralBanner";
 import SEOHead from "@/components/SEOHead";
@@ -149,7 +148,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />
-      <PromoBanner />
       <Header />
       <QuickStatsBar />
       <main className="pt-10">

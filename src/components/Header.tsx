@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import PromoBanner from "./PromoBanner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/lib/supabaseClient";
@@ -158,6 +159,9 @@ const Header = () => {
       </AnimatePresence>
       
       <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Promo Banner - positioned at top */}
+      <PromoBanner />
+      
       {/* Premium Benefits Banner for Unauthenticated Users */}
       <AnimatePresence>
         {isAuthenticated === false && showPremiumBanner && (
