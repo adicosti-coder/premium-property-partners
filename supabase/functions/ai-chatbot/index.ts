@@ -92,12 +92,23 @@ const MAX_HISTORY_ITEM_CHARS = 2000;
 const ALLOWED_ROLES = new Set(["user", "assistant"]);
 
 const PROMPT_INJECTION_PATTERNS: Array<{ re: RegExp; weight: number }> = [
-  { re: /\b(ignore|disregard)\b[^\n]{0,80}\b(instructions|rules|system|developer)\b/i, weight: 3 },
-  { re: /^\s*(system|developer|assistant)\s*:\s*/im, weight: 3 },
-  { re: /<\|\s*(system|developer|assistant)\s*\|>/i, weight: 3 },
-  { re: /\b(jailbreak|dan\b|prompt\s*injection)\b/i, weight: 2 },
-  { re: /\b(reveal|show|print)\b[^\n]{0,80}\b(system prompt|hidden prompt|developer message)\b/i, weight: 3 },
-  { re: /\bact\s+as\b[^\n]{0,80}\b(system|developer)\b/i, weight: 2 },
+  // Role manipulation attempts
+  { re: /\b(ignore|disregard|forget|override)\b[^\n]{0,80}\b(instructions|rules|system|developer|previous|above)\b/i, weight: 3 },
+  { re: /^\s*(system|developer|assistant|admin|root)\s*:\s*/im, weight: 3 },
+  { re: /<\|\s*(system|developer|assistant|im_start|im_end)\s*\|>/i, weight: 3 },
+  // Jailbreak keywords
+  { re: /\b(jailbreak|dan\b|prompt\s*injection|bypass|hack)\b/i, weight: 2 },
+  // System prompt extraction
+  { re: /\b(reveal|show|print|display|output|repeat|echo)\b[^\n]{0,80}\b(system prompt|hidden prompt|developer message|initial prompt|original instructions)\b/i, weight: 3 },
+  // Role-playing attacks
+  { re: /\bact\s+(as|like)\b[^\n]{0,80}\b(system|developer|admin|unrestricted)\b/i, weight: 2 },
+  { re: /\b(pretend|imagine|roleplay|simulate)\b[^\n]{0,80}\b(you are|you're)\b[^\n]{0,40}\b(unrestricted|without limits|no rules)\b/i, weight: 3 },
+  // Instruction override attempts
+  { re: /\b(new instructions|from now on|starting now)\b[^\n]{0,60}\b(you (will|must|should)|ignore)\b/i, weight: 3 },
+  // Token/delimiter manipulation
+  { re: /(\[INST\]|\[\/INST\]|<<SYS>>|<\/SYS>>|\[\[|user\]\])/i, weight: 2 },
+  // Base64/encoding attempts
+  { re: /\b(base64|decode|encoded|eval)\b[^\n]{0,40}\b(instructions|prompt|message)\b/i, weight: 2 },
 ];
 
 function sanitizeText(input: unknown, maxLen: number): string {
@@ -145,7 +156,6 @@ function sanitizeConversationHistory(
 }
 
 // Verify hCaptcha token
-async function verifyCaptcha(token: string, formType: string, ipAddress: string, userAgent: string): Promise<boolean> {
 async function verifyCaptcha(token: string, formType: string, ipAddress: string, userAgent: string): Promise<boolean> {
   const secretKey = Deno.env.get("HCAPTCHA_SECRET_KEY");
   

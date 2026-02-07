@@ -371,6 +371,7 @@ export type Database = {
       chat_conversations: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
           language: string | null
           last_activity_at: string
@@ -382,6 +383,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           language?: string | null
           last_activity_at?: string
@@ -393,6 +395,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           language?: string | null
           last_activity_at?: string
@@ -2297,6 +2300,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      validate_chat_session: {
+        Args: { p_session_id: string }
         Returns: boolean
       }
     }
