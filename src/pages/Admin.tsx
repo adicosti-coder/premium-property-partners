@@ -41,6 +41,7 @@ import {
   Building,
   LayoutDashboard,
   FileText,
+  BarChart3,
   Key,
   Wrench,
   Mail,
@@ -86,6 +87,7 @@ import SecurityChecklist from "@/components/admin/SecurityChecklist";
 import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
 import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
 import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
+import PropertyViewsManager from "@/components/admin/PropertyViewsManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -358,6 +360,10 @@ const Admin = () => {
               <Euro className="w-4 h-4" />
               Coduri Promo
             </TabsTrigger>
+            <TabsTrigger value="property-views" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Vizualizări
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -476,6 +482,11 @@ const Admin = () => {
           {/* Discount Codes Tab */}
           <TabsContent value="discount-codes">
             <DiscountCodeManager />
+          </TabsContent>
+
+          {/* Property Views Tab */}
+          <TabsContent value="property-views">
+            <PropertyViewsManager />
           </TabsContent>
         </Tabs>
       </div>
