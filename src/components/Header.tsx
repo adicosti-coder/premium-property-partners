@@ -263,9 +263,9 @@ const Header = () => {
 
       <div className="glass border-b border-border/50 dark:border-border shadow-sm dark:shadow-none">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)]">
+          <div className="flex items-center justify-between h-16 md:h-20 gap-2">
+          {/* Logo - flex-shrink-0 to prevent shrinking */}
+          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0">
             {/* Shimmer overlay */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:animate-shimmer-sweep bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
             <span className="text-xl md:text-2xl font-serif font-semibold text-foreground">
@@ -278,8 +278,8 @@ const Header = () => {
             </span>
           </a>
           
-          {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center gap-4 xl:gap-6">
+          {/* Navigation - Desktop - wrapped in flex-1 container with overflow hidden */}
+          <nav className="hidden lg:flex items-center justify-center gap-3 xl:gap-5 flex-1 min-w-0 overflow-hidden">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
               const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
@@ -317,13 +317,13 @@ const Header = () => {
             })}
           </nav>
 
-          {/* Property Code Search - Desktop */}
-          <div className="hidden xl:block flex-shrink-0">
-            <PropertyCodeSearch />
-          </div>
+          {/* Right side container - search and actions */}
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            {/* Property Code Search - Desktop - only on 2xl screens */}
+            <div className="hidden 2xl:block">
+              <PropertyCodeSearch />
+            </div>
           
-          {/* CTA & Language & Mobile Menu */}
-          <div className="flex items-center gap-2 md:gap-4">
             {/* Favorites link */}
             {favorites.length > 0 && (
               <Link to="/favorite">
@@ -361,7 +361,7 @@ const Header = () => {
             <Button 
               variant="default" 
               size="default" 
-              className="hidden lg:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/40"
+              className="hidden xl:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/40"
               onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
             >
               <span className="mr-1.5">🏠</span>
@@ -370,14 +370,14 @@ const Header = () => {
             
             {/* Mobile menu button */}
             <button
-              className="md:hidden text-foreground"
+              className="lg:hidden text-foreground"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
-
+        </div>
         {/* Mobile Navigation */}
         <AnimatePresence>
           {mobileMenuOpen && (
@@ -452,7 +452,6 @@ const Header = () => {
             </motion.nav>
           )}
         </AnimatePresence>
-        </div>
       </div>
       
       </header>
