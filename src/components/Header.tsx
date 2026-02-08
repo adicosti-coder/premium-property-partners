@@ -134,11 +134,11 @@ const Header = () => {
 
   const navLinks = [
     { href: "/", label: t.nav.home, isHome: true },
-    { href: "/pentru-proprietari", label: language === "ro" ? "Proprietari" : "Owners", isPage: true },
-    { href: "/pentru-oaspeti", label: t.nav.guests, isPage: true },
-    { href: "/complexe", label: language === "ro" ? "Complexe" : "Complexes", isPage: true },
+    { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true },
+    { href: "/pentru-oaspeti", label: language === "ro" ? "Închiriere & Cazare Regim Hotelier" : "Rental & Hotel Accommodation", isPage: true },
+    { href: "/complexe", label: language === "ro" ? "Ansambluri & Complexuri Rezidențiale" : "Residential Complexes", isPage: true },
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
-    { href: "/investitii", label: language === "ro" ? "Investiții" : "Investments", isPage: true },
+    { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true },
     { href: "/blog", label: "Blog", isPage: true },
     { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
     { href: "#contact", label: t.nav.contact },
