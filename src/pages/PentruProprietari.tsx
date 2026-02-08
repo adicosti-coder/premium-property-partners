@@ -183,10 +183,8 @@ const PentruProprietari = () => {
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
 
-      {/* Quick Value Banner - NEW */}
-      <QuickValueBanner onCtaClick={scrollToCalculator} />
       {/* Hero Section - Investor Blue/Gold Theme */}
-      <section className="relative pt-32 pb-20 bg-gradient-to-b from-blue-950/80 via-blue-900/40 to-background overflow-hidden">
+      <section className="relative pt-40 md:pt-36 pb-20 bg-gradient-to-b from-blue-950/80 via-blue-900/40 to-background overflow-hidden">
         {/* Background decorations - Blue/Gold investor theme */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.1),transparent_70%)]" />
         <div className="absolute top-40 left-[10%] w-32 h-32 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
@@ -310,6 +308,9 @@ const PentruProprietari = () => {
           </div>
         </div>
       </section>
+
+      {/* Quick Value Banner - Moved below Hero */}
+      <QuickValueBanner onCtaClick={scrollToCalculator} />
 
       {/* Trust Badges */}
       <TrustBadges />
