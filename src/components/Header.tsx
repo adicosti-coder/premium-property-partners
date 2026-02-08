@@ -139,7 +139,7 @@ const Header = () => {
     { href: "/complexe", label: language === "ro" ? "Ansambluri & Complexuri Rezidențiale" : "Residential Complexes", isPage: true },
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
     { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true },
-    { href: "/blog", label: "Blog", isPage: true },
+    { href: "/blog", label: language === "ro" ? "Blog (Sfaturi, noutăți și ghiduri)" : "Blog (Tips, news & guides)", isPage: true },
     { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
