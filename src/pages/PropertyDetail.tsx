@@ -343,7 +343,10 @@ const PropertyDetail = () => {
                 </div>
               )}
               
-              <PropertyReviews propertyId={dbProperty?.id || ""} propertyName={property.name} />
+              {/* Recenzii oaspeți - doar pentru proprietăți de cazare, nu pentru vânzări/închirieri imobiliare */}
+              {staticProperty && (
+                <PropertyReviews propertyId={dbProperty?.id || ""} propertyName={property.name} />
+              )}
             </div>
 
             {/* Bara Laterală - Rezervări - doar pentru proprietăți cu date complete */}
