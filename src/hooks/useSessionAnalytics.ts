@@ -1,7 +1,12 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-import { isBrowser, safeLocalStorage } from "@/utils/browserStorage";
+import {
+  isBrowser,
+  safeLocalStorage,
+  getSessionStorage,
+  setSessionStorage,
+} from "@/utils/browserStorage";
 
 interface ScrollMilestone {
   depth: number;
@@ -25,20 +30,41 @@ interface SessionData {
 
 // Generate or retrieve session ID
 const getSessionId = (): string => {
-  let sessionId = sessionStorage.getItem("analytics_session_id");
+  if (!isBrowser()) {
+    // SSR/prerender-safe fallback
+    return `ssr-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  }
+
+  let sessionId = getSessionStorage("analytics_session_id");
   if (!sessionId) {
     sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-    sessionStorage.setItem("analytics_session_id", sessionId);
+    setSessionStorage("analytics_session_id", sessionId);
   }
   return sessionId;
 };
 
 // Get or initialize session data
 const getSessionData = (): SessionData => {
-  const stored = sessionStorage.getItem("analytics_session_data");
+  if (!isBrowser()) {
+    return {
+      sessionId: getSessionId(),
+      startTime: Date.now(),
+      pages: [],
+      scrollMilestones: [
+        { depth: 25, reached: false },
+        { depth: 50, reached: false },
+        { depth: 75, reached: false },
+        { depth: 100, reached: false },
+      ],
+      totalInteractions: 0,
+    };
+  }
+
+  const stored = getSessionStorage("analytics_session_data");
   if (stored) {
     return JSON.parse(stored);
   }
+
   const newSession: SessionData = {
     sessionId: getSessionId(),
     startTime: Date.now(),
@@ -51,13 +77,16 @@ const getSessionData = (): SessionData => {
     ],
     totalInteractions: 0,
   };
-  sessionStorage.setItem("analytics_session_data", JSON.stringify(newSession));
+
+  setSessionStorage("analytics_session_data", JSON.stringify(newSession));
   return newSession;
 };
 
 const saveSessionData = (data: SessionData) => {
-  sessionStorage.setItem("analytics_session_data", JSON.stringify(data));
+  if (!isBrowser()) return;
+  setSessionStorage("analytics_session_data", JSON.stringify(data));
 };
+
 
 export const useSessionAnalytics = () => {
   const location = useLocation();
@@ -103,17 +132,19 @@ export const useSessionAnalytics = () => {
 
   // Track scroll depth
   useEffect(() => {
+    if (!isBrowser()) return;
+
     const handleScroll = () => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       if (scrollHeight <= 0) return;
 
       const currentDepth = Math.round((window.scrollY / scrollHeight) * 100);
-      
+
       if (currentDepth > scrollDepthRef.current) {
         scrollDepthRef.current = currentDepth;
-        
+
         const sessionData = getSessionData();
-        
+
         // Check milestones
         sessionData.scrollMilestones.forEach((milestone) => {
           if (!milestone.reached && currentDepth >= milestone.depth) {
@@ -137,16 +168,18 @@ export const useSessionAnalytics = () => {
 
   // Track interactions (clicks)
   useEffect(() => {
+    if (!isBrowser()) return;
+
     const handleInteraction = () => {
       interactionCountRef.current += 1;
-      
+
       const sessionData = getSessionData();
       sessionData.totalInteractions += 1;
-      
+
       if (sessionData.pages.length > 0) {
         sessionData.pages[sessionData.pages.length - 1].interactions = interactionCountRef.current;
       }
-      
+
       saveSessionData(sessionData);
     };
 
@@ -155,20 +188,26 @@ export const useSessionAnalytics = () => {
   }, []);
 
   // Track element visibility (for conversion funnel)
-  const trackElementView = useCallback((elementId: string, elementType: string) => {
-    const sessionData = getSessionData();
-    
-    // Store in session for funnel analysis
-    const funnelData = JSON.parse(sessionStorage.getItem("funnel_events") || "[]");
-    funnelData.push({
-      elementId,
-      elementType,
-      path: location.pathname,
-      timestamp: Date.now(),
-      sessionId: sessionData.sessionId,
-    });
-    sessionStorage.setItem("funnel_events", JSON.stringify(funnelData));
-  }, [location.pathname]);
+  const trackElementView = useCallback(
+    (elementId: string, elementType: string) => {
+      if (!isBrowser()) return;
+
+      const sessionData = getSessionData();
+
+      // Store in session for funnel analysis
+      const funnelData = JSON.parse(getSessionStorage("funnel_events") || "[]");
+      funnelData.push({
+        elementId,
+        elementType,
+        path: location.pathname,
+        timestamp: Date.now(),
+        sessionId: sessionData.sessionId,
+      });
+      setSessionStorage("funnel_events", JSON.stringify(funnelData));
+    },
+    [location.pathname]
+  );
+
 
   // Send session data to backend
   const flushSessionData = useCallback(async () => {
@@ -212,6 +251,8 @@ export const useSessionAnalytics = () => {
 
   // Flush on page unload
   useEffect(() => {
+    if (!isBrowser()) return;
+
     const handleBeforeUnload = () => {
       flushSessionData();
     };

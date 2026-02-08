@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useFavorites } from "./useFavorites";
+import {
+  isBrowser,
+  getSessionStorage,
+  setSessionStorage,
+  removeSessionStorage,
+} from "@/utils/browserStorage";
 
 export const useSharedFavorites = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -8,6 +14,8 @@ export const useSharedFavorites = () => {
 
   // Check for shared favorites in URL on mount
   useEffect(() => {
+    if (!isBrowser()) return;
+
     const sharedFavs = searchParams.get("favorites");
     if (sharedFavs) {
       try {
@@ -15,7 +23,7 @@ export const useSharedFavorites = () => {
         const sharedIds = decoded.split(",").filter(Boolean);
         if (sharedIds.length > 0) {
           // Store shared favorites in sessionStorage for viewing
-          sessionStorage.setItem("shared_favorites", JSON.stringify(sharedIds));
+          setSessionStorage("shared_favorites", JSON.stringify(sharedIds));
         }
       } catch {
         // Invalid base64, ignore
@@ -24,8 +32,9 @@ export const useSharedFavorites = () => {
   }, [searchParams]);
 
   const generateShareableLink = (): string => {
+    if (!isBrowser()) return "";
     if (favorites.length === 0) return "";
-    
+
     const encoded = btoa(favorites.join(","));
     const url = new URL(window.location.href);
     url.hash = "portofoliu";
@@ -47,7 +56,7 @@ export const useSharedFavorites = () => {
 
   const getSharedFavorites = (): string[] => {
     try {
-      const stored = sessionStorage.getItem("shared_favorites");
+      const stored = getSessionStorage("shared_favorites");
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -55,7 +64,7 @@ export const useSharedFavorites = () => {
   };
 
   const clearSharedFavorites = () => {
-    sessionStorage.removeItem("shared_favorites");
+    removeSessionStorage("shared_favorites");
     // Remove the favorites param from URL
     const newParams = new URLSearchParams(searchParams);
     newParams.delete("favorites");
