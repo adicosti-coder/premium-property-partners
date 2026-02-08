@@ -68,8 +68,8 @@ const PropertyGallery = () => {
     }
   };
 
-  const handleExportPdf = () => {
-    const { exportFavoritesPdf } = require("@/utils/exportFavoritesPdf");
+  const handleExportPdf = async () => {
+    const { exportFavoritesPdf } = await import("@/utils/exportFavoritesPdf");
     const favoriteProperties = properties.filter((p) => favorites.includes(String(p.id)));
     if (favoriteProperties.length === 0) return;
 
