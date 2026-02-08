@@ -319,8 +319,8 @@ const Header = () => {
 
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-            {/* Property Code Search - Desktop - only on 2xl screens */}
-            <div className="hidden 2xl:block">
+            {/* Property Code Search - Desktop - visible from lg, kept narrow to avoid overlap */}
+            <div className="hidden lg:block w-[180px] xl:w-[210px] 2xl:w-[260px]">
               <PropertyCodeSearch />
             </div>
           
