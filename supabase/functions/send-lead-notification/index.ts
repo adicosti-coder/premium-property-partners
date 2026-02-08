@@ -3,11 +3,41 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL");
 
+// Rate limiting configuration
+const RATE_LIMIT_MAX = 10; // Max 10 requests per window
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute window
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-csrf-token",
 };
+
+// Rate limiting helper
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip);
+  
+  if (!entry || entry.resetAt < now) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 };
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count };
+}
+
+function getClientIp(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+         req.headers.get("x-real-ip") || 
+         req.headers.get("cf-connecting-ip") || 
+         "unknown";
+}
 
 // ============= INPUT VALIDATION & SANITIZATION =============
 
@@ -648,6 +678,29 @@ const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Apply rate limiting
+  const clientIp = getClientIp(req);
+  const { allowed, remaining } = checkRateLimit(clientIp);
+  
+  if (!allowed) {
+    console.log(`Rate limit exceeded for IP: ${clientIp}`);
+    return new Response(
+      JSON.stringify({ 
+        error: "Rate limit exceeded", 
+        message: "Too many requests. Please try again later." 
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+          "Retry-After": "60",
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
   }
 
   try {
