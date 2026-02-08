@@ -144,10 +144,10 @@ const Header = () => {
     { href: "#contact", label: t.nav.contact },
   ];
 
-  // Desktop nav link styling (all links visible inline, no dropdown)
-  // Use text-xs on lg, text-sm on xl for better fit, add px padding for touch targets
+  // Desktop nav link styling - optimized for 1024px+ screens
+  // Ultra-compact on lg (1024-1279), compact on xl (1280-1535), comfortable on 2xl (1536+)
   const desktopLinkBaseClasses =
-    "relative px-1.5 xl:px-2 text-xs xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
+    "relative px-1 lg:px-1.5 xl:px-2 2xl:px-3 text-[11px] lg:text-xs xl:text-xs 2xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
   const desktopLinkActiveClasses =
     "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]";
   const desktopLinkInactiveClasses =
@@ -274,27 +274,27 @@ const Header = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20 gap-2">
           {/* Logo - 3 lines layout for compact width */}
-          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0">
+          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 max-w-[140px] lg:max-w-[160px] xl:max-w-[180px] 2xl:max-w-none">
             {/* Shimmer overlay */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:animate-shimmer-sweep bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
             {/* Line 1: Brand name */}
-            <span className="text-base md:text-lg lg:text-xl font-serif font-semibold text-foreground leading-tight">
+            <span className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-serif font-semibold text-foreground leading-tight">
               <span className="animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_20px_hsl(45_100%_50%/0.8),0_0_40px_hsl(45_100%_50%/0.5),0_0_60px_hsl(45_100%_50%/0.3)] transition-all duration-300">Real<span className="text-primary group-hover:text-amber-400 transition-colors duration-300">Trust</span></span>
               <span className="text-muted-foreground"> & </span>
               <span className="text-foreground animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_20px_hsl(45_100%_50%/0.8),0_0_40px_hsl(45_100%_50%/0.5),0_0_60px_hsl(45_100%_50%/0.3)] transition-all duration-300"><span className="text-primary group-hover:text-amber-400 transition-colors duration-300">ApArt</span> Hotel</span>
             </span>
             {/* Line 2: Services */}
-            <span className="text-[8px] md:text-[9px] text-muted-foreground tracking-wide leading-tight">
+            <span className="text-[7px] lg:text-[8px] xl:text-[9px] text-muted-foreground tracking-wide leading-tight">
               Vânzare · Administrare · Cazare
             </span>
             {/* Line 3: Tagline */}
-            <span className="text-[8px] md:text-[9px] text-primary/80 font-medium tracking-wide leading-tight">
+            <span className="text-[7px] lg:text-[8px] xl:text-[9px] text-primary/80 font-medium tracking-wide leading-tight">
               | 1 singur sistem
             </span>
           </a>
           
           {/* Navigation - Desktop - ALL links visible inline (no dropdown) */}
-          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2 2xl:gap-3 flex-1 min-w-0">
+          <nav className="hidden lg:flex items-center justify-center gap-0.5 lg:gap-1 xl:gap-1.5 2xl:gap-3 flex-1 min-w-0">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
               const activeClasses = isActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses;
