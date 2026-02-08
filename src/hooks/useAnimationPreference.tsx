@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { safeLocalStorage } from "@/utils/browserStorage";
 
 interface AnimationPreferenceContextType {
   animationsEnabled: boolean;
@@ -10,19 +11,20 @@ const AnimationPreferenceContext = createContext<AnimationPreferenceContextType 
 
 export const AnimationPreferenceProvider = ({ children }: { children: ReactNode }) => {
   const [animationsEnabled, setAnimationsEnabledState] = useState<boolean>(() => {
+    // Check localStorage first (SSR-safe)
+    const stored = safeLocalStorage.getItem("animationsEnabled");
+    if (stored !== null) return stored === "true";
+
+    // Fall back to system preference (browser only)
     if (typeof window !== "undefined") {
-      // Check localStorage first
-      const stored = localStorage.getItem("animationsEnabled");
-      if (stored !== null) return stored === "true";
-      
-      // Fall back to system preference
       return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     }
+
     return true;
   });
 
   useEffect(() => {
-    localStorage.setItem("animationsEnabled", String(animationsEnabled));
+    safeLocalStorage.setItem("animationsEnabled", String(animationsEnabled));
   }, [animationsEnabled]);
 
   const toggleAnimations = () => {

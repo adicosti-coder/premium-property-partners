@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { exportInvestorGuidePdf } from "@/utils/exportInvestorGuidePdf";
 import { supabase } from "@/lib/supabaseClient";
+import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 
 const FloatingInvestorGuide = () => {
   const { language } = useLanguage();
@@ -29,7 +30,8 @@ const FloatingInvestorGuide = () => {
 
   // Check if dismissed in session
   useEffect(() => {
-    const dismissed = sessionStorage.getItem("investor-guide-dismissed");
+    if (!isBrowser()) return;
+    const dismissed = getSessionStorage("investor-guide-dismissed");
     if (dismissed) {
       setIsDismissed(true);
     }
@@ -54,7 +56,7 @@ const FloatingInvestorGuide = () => {
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    sessionStorage.setItem("investor-guide-dismissed", "true");
+    setSessionStorage("investor-guide-dismissed", "true");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

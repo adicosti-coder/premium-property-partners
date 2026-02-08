@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();
@@ -52,9 +53,11 @@ const ExitIntentPopup = () => {
   const text = t[language as keyof typeof t] || t.ro;
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
+    if (!isBrowser()) return;
+
     // Only trigger when mouse leaves from the top
     if (e.clientY <= 5 && !hasShown) {
-      const dismissed = sessionStorage.getItem("exitPopupDismissed");
+      const dismissed = getSessionStorage("exitPopupDismissed");
       if (!dismissed) {
         setIsVisible(true);
         setHasShown(true);
@@ -76,7 +79,7 @@ const ExitIntentPopup = () => {
 
   const handleClose = () => {
     setIsVisible(false);
-    sessionStorage.setItem("exitPopupDismissed", "true");
+    setSessionStorage("exitPopupDismissed", "true");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

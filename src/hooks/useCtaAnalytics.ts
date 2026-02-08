@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browserStorage";
 
 export type CtaType = "call" | "whatsapp" | "booking" | "airbnb" | "email" | "form_submit";
 
@@ -13,10 +14,12 @@ interface TrackCtaOptions {
 
 // Generate or retrieve session ID
 const getSessionId = (): string => {
-  let sessionId = sessionStorage.getItem("cta_session_id");
+  if (!isBrowser()) return `ssr-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+  let sessionId = getSessionStorage("cta_session_id");
   if (!sessionId) {
     sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-    sessionStorage.setItem("cta_session_id", sessionId);
+    setSessionStorage("cta_session_id", sessionId);
   }
   return sessionId;
 };
@@ -26,11 +29,15 @@ export const useCtaAnalytics = () => {
 
   const trackCta = useCallback(
     async (options: TrackCtaOptions) => {
+      if (!isBrowser()) return;
+
       const { ctaType, propertyId, propertyName, metadata = {} } = options;
 
       try {
         // Get current user if authenticated
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
         await supabase.from("cta_analytics").insert({
           cta_type: ctaType,

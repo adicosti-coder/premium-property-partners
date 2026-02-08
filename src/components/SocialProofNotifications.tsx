@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Clock, User } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 
 interface Notification {
   id: number;
@@ -44,8 +45,10 @@ const SocialProofNotifications = () => {
   const text = t[language as keyof typeof t] || t.ro;
 
   useEffect(() => {
+    if (!isBrowser()) return;
+
     // Check if user has dismissed notifications
-    const dismissed = sessionStorage.getItem("socialProofDismissed");
+    const dismissed = getSessionStorage("socialProofDismissed");
     if (dismissed) return;
 
     // Initial delay before showing first notification
@@ -68,8 +71,9 @@ const SocialProofNotifications = () => {
   }, [isVisible, currentNotification]);
 
   useEffect(() => {
+    if (!isBrowser()) return;
     if (isVisible) return;
-    if (sessionStorage.getItem("socialProofDismissed")) return;
+    if (getSessionStorage("socialProofDismissed")) return;
 
     // Show next notification after random interval (15-30 seconds)
     const nextInterval = Math.random() * 15000 + 15000;
@@ -89,7 +93,7 @@ const SocialProofNotifications = () => {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    sessionStorage.setItem("socialProofDismissed", "true");
+    setSessionStorage("socialProofDismissed", "true");
   };
 
   return (
