@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Mail, CheckCircle, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -17,14 +17,14 @@ const BlogNewsletterCTA = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string>("");
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hcaptchaRef = useRef<HCaptcha>(null);
 
-  // Fetch hCaptcha site key on mount
+  // Fetch Turnstile site key on mount
   useEffect(() => {
-    supabase.functions.invoke("get-hcaptcha-site-key").then(({ data }) => {
-      if (data?.siteKey) setHcaptchaSiteKey(data.siteKey);
+    supabase.functions.invoke("get-turnstile-site-key").then(({ data }) => {
+      if (data?.siteKey) setTurnstileSiteKey(data.siteKey);
     });
   }, []);
 
@@ -83,14 +83,12 @@ const BlogNewsletterCTA = () => {
       return;
     }
 
-    // Trigger invisible hCaptcha verification
-    if (hcaptchaRef.current && hcaptchaSiteKey) {
+    // Check if Turnstile verification is complete
+    if (turnstileToken && turnstileSiteKey) {
       setIsLoading(true);
-      hcaptchaRef.current.execute();
+      await submitNewsletter(result.data, turnstileToken);
     } else {
-      // Fallback if hCaptcha not loaded
-      console.warn("hCaptcha not loaded, proceeding without verification");
-      await submitNewsletter(result.data, null);
+      toast.error(language === "ro" ? "Te rugăm să aștepți verificarea de securitate" : "Please wait for security verification");
     }
   };
 
@@ -101,13 +99,13 @@ const BlogNewsletterCTA = () => {
       // Verify captcha if token provided
       if (captchaToken) {
         const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
-          "verify-hcaptcha",
+          "verify-turnstile",
           { body: { token: captchaToken, formType: "newsletter_blog" } }
         );
 
         if (captchaError || !captchaResult?.success) {
-          toast.error(language === "ro" ? "Verificare captcha eșuată" : "Captcha verification failed");
-          hcaptchaRef.current?.resetCaptcha();
+          toast.error(language === "ro" ? "Verificare de securitate eșuată" : "Security verification failed");
+          setTurnstileToken(null);
           setIsLoading(false);
           return;
         }
@@ -132,15 +130,12 @@ const BlogNewsletterCTA = () => {
       toast.error(t.error);
     } finally {
       setIsLoading(false);
-      hcaptchaRef.current?.resetCaptcha();
+      setTurnstileToken(null);
     }
   };
 
-  const handleCaptchaVerify = async (token: string) => {
-    const result = emailSchema.safeParse(email);
-    if (result.success) {
-      await submitNewsletter(result.data, token);
-    }
+  const handleTurnstileSuccess = (token: string) => {
+    setTurnstileToken(token);
   };
 
   return (
@@ -208,17 +203,18 @@ const BlogNewsletterCTA = () => {
                     >
                       {isLoading ? t.subscribing : t.subscribe}
                     </Button>
-                    {hcaptchaSiteKey && (
-                      <HCaptcha
-                        ref={hcaptchaRef}
-                        sitekey={hcaptchaSiteKey}
-                        size="invisible"
-                        onVerify={handleCaptchaVerify}
-                        onError={() => {
-                          setIsLoading(false);
-                          toast.error(language === "ro" ? "Eroare captcha" : "Captcha error");
-                        }}
-                      />
+                    {turnstileSiteKey && (
+                      <div className="flex justify-center mt-2">
+                        <Turnstile
+                          siteKey={turnstileSiteKey}
+                          onSuccess={handleTurnstileSuccess}
+                          onError={() => {
+                            setIsLoading(false);
+                            toast.error(language === "ro" ? "Eroare verificare" : "Verification error");
+                          }}
+                          options={{ theme: "auto", size: "invisible" }}
+                        />
+                      </div>
                     )}
                   </form>
                 </>

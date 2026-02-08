@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();
@@ -14,13 +14,13 @@ const ExitIntentPopup = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasShown, setHasShown] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string>("");
-  const hcaptchaRef = useRef<HCaptcha>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  // Fetch hCaptcha site key on mount
+  // Fetch Turnstile site key on mount
   useEffect(() => {
-    supabase.functions.invoke("get-hcaptcha-site-key").then(({ data }) => {
-      if (data?.siteKey) setHcaptchaSiteKey(data.siteKey);
+    supabase.functions.invoke("get-turnstile-site-key").then(({ data }) => {
+      if (data?.siteKey) setTurnstileSiteKey(data.siteKey);
     });
   }, []);
 
@@ -86,14 +86,12 @@ const ExitIntentPopup = () => {
       return;
     }
 
-    // Trigger invisible hCaptcha verification
-    if (hcaptchaRef.current && hcaptchaSiteKey) {
+    // Check if Turnstile verification is complete
+    if (turnstileToken && turnstileSiteKey) {
       setIsSubmitting(true);
-      hcaptchaRef.current.execute();
+      await submitExitIntent(turnstileToken);
     } else {
-      // Fallback if hCaptcha not loaded
-      console.warn("hCaptcha not loaded, proceeding without verification");
-      await submitExitIntent(null);
+      toast.error(language === "ro" ? "Te rugăm să aștepți verificarea de securitate" : "Please wait for security verification");
     }
   };
 
@@ -103,13 +101,13 @@ const ExitIntentPopup = () => {
       // Verify captcha if token provided
       if (captchaToken) {
         const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
-          "verify-hcaptcha",
+          "verify-turnstile",
           { body: { token: captchaToken, formType: "newsletter_exit_popup" } }
         );
 
         if (captchaError || !captchaResult?.success) {
-          toast.error(language === "ro" ? "Verificare captcha eșuată" : "Captcha verification failed");
-          hcaptchaRef.current?.resetCaptcha();
+          toast.error(language === "ro" ? "Verificare de securitate eșuată" : "Security verification failed");
+          setTurnstileToken(null);
           setIsSubmitting(false);
           return;
         }
@@ -139,12 +137,12 @@ const ExitIntentPopup = () => {
       toast.error(language === "ro" ? "A apărut o eroare. Încearcă din nou." : "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
-      hcaptchaRef.current?.resetCaptcha();
+      setTurnstileToken(null);
     }
   };
 
-  const handleCaptchaVerify = async (token: string) => {
-    await submitExitIntent(token);
+  const handleTurnstileSuccess = (token: string) => {
+    setTurnstileToken(token);
   };
 
   return (
@@ -246,17 +244,18 @@ const ExitIntentPopup = () => {
                   >
                     {text.noThanks}
                   </button>
-                  {hcaptchaSiteKey && (
-                    <HCaptcha
-                      ref={hcaptchaRef}
-                      sitekey={hcaptchaSiteKey}
-                      size="invisible"
-                      onVerify={handleCaptchaVerify}
-                      onError={() => {
-                        setIsSubmitting(false);
-                        toast.error(language === "ro" ? "Eroare captcha" : "Captcha error");
-                      }}
-                    />
+                  {turnstileSiteKey && (
+                    <div className="flex justify-center">
+                      <Turnstile
+                        siteKey={turnstileSiteKey}
+                        onSuccess={handleTurnstileSuccess}
+                        onError={() => {
+                          setIsSubmitting(false);
+                          toast.error(language === "ro" ? "Eroare verificare" : "Verification error");
+                        }}
+                        options={{ theme: "auto", size: "invisible" }}
+                      />
+                    </div>
                   )}
                 </form>
               </div>

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { z } from "zod";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 interface BookingFormProps {
   isOpen: boolean;
@@ -46,21 +46,20 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  // hCaptcha state
-  const captchaRef = useRef<HCaptcha>(null);
+  // Turnstile state
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
 
-  // Fetch hCaptcha site key
+  // Fetch Turnstile site key
   useEffect(() => {
     const fetchSiteKey = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        const { data, error } = await supabase.functions.invoke('get-turnstile-site-key');
         if (error) throw error;
-        setHcaptchaSiteKey(data.siteKey);
+        setTurnstileSiteKey(data.siteKey);
       } catch (error) {
-        console.error("Failed to fetch hCaptcha site key:", error);
+        console.error("Failed to fetch Turnstile site key:", error);
       }
     };
     if (isOpen) {
@@ -72,7 +71,6 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   useEffect(() => {
     if (!isOpen) {
       setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
     }
   }, [isOpen]);
 
@@ -86,7 +84,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', {
         body: { token, formType: 'booking_form' }
       });
       if (error) throw error;
@@ -188,11 +186,10 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     if (!isCaptchaValid) {
       toast({
         title: language === 'en' ? "Verification failed" : "Verificare eșuată",
-        description: language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Vă rugăm să încercați din nou.",
+        description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Vă rugăm să încercați din nou.",
         variant: "destructive",
       });
       setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
       setIsSubmitting(false);
       return;
     }
@@ -423,17 +420,16 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             />
           </div>
 
-          {/* hCaptcha widget */}
+          {/* Turnstile widget */}
           <div className="flex flex-col items-center gap-2 pt-2">
-            {hcaptchaSiteKey ? (
+            {turnstileSiteKey ? (
               <>
-                <HCaptcha
-                  ref={captchaRef}
-                  sitekey={hcaptchaSiteKey}
-                  onVerify={handleCaptchaVerify}
-                  onExpire={handleCaptchaExpire}
-                  languageOverride={language}
-                  theme="dark"
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onSuccess={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                  options={{ theme: "dark" }}
                 />
                 {captchaToken && (
                   <div className="flex items-center gap-1 text-sm text-primary">
@@ -463,7 +459,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}
+              disabled={isSubmitting || !captchaToken || !turnstileSiteKey}
               className="flex-1 bg-primary hover:bg-primary/90"
             >
               {isSubmitting ? (

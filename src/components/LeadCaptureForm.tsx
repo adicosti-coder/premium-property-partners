@@ -13,7 +13,7 @@ import ConfettiEffect from "./ConfettiEffect";
 //import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
@@ -52,21 +52,20 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // hCaptcha state
-  const captchaRef = useRef<HCaptcha>(null);
+  // Turnstile state
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
 
-  // Fetch hCaptcha site key
+  // Fetch Turnstile site key
   useEffect(() => {
     const fetchSiteKey = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        const { data, error } = await supabase.functions.invoke('get-turnstile-site-key');
         if (error) throw error;
-        setHcaptchaSiteKey(data.siteKey);
+        setTurnstileSiteKey(data.siteKey);
       } catch (error) {
-        console.error("Failed to fetch hCaptcha site key:", error);
+        console.error("Failed to fetch Turnstile site key:", error);
       }
     };
     if (isOpen) {
@@ -78,7 +77,6 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   useEffect(() => {
     if (!isOpen) {
       setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
     }
   }, [isOpen]);
 
@@ -92,7 +90,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', {
         body: { token, formType: 'lead_capture_form' }
       });
       if (error) throw error;
@@ -186,11 +184,10 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
     if (!isCaptchaValid) {
       toast({
         title: language === 'en' ? "Verification failed" : "Verificare eșuată",
-        description: language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Încercați din nou.",
+        description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
         variant: "destructive",
       });
       setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
       setIsSubmitting(false);
       return;
     }
@@ -242,7 +239,6 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         setListingUrl("");
         setIsSuccess(false);
         setCaptchaToken(null);
-        captchaRef.current?.resetCaptcha();
         onClose();
       }, 2000);
     } catch (error) {
@@ -363,16 +359,16 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
               </p>
             </div>
 
-            {/* hCaptcha widget */}
+            {/* Turnstile widget */}
             <div className="flex flex-col items-center gap-2">
-              {hcaptchaSiteKey ? (
+              {turnstileSiteKey ? (
                 <>
-                  <HCaptcha
-                    ref={captchaRef}
-                    sitekey={hcaptchaSiteKey}
-                    onVerify={handleCaptchaVerify}
+                  <Turnstile
+                    siteKey={turnstileSiteKey}
+                    onSuccess={handleCaptchaVerify}
                     onExpire={handleCaptchaExpire}
-                    languageOverride={language}
+                    onError={handleCaptchaExpire}
+                    options={{ theme: "auto" }}
                   />
                   {captchaToken && (
                     <div className="flex items-center gap-1 text-sm text-primary">
@@ -390,7 +386,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}>
+            <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !turnstileSiteKey}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

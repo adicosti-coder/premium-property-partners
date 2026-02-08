@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const RATE_LIMIT_KEY = "review_submissions";
 const RATE_LIMIT_HOURS = 24; // 1 review per property per 24 hours
@@ -170,20 +170,19 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
   const [remainingTime, setRemainingTime] = useState(0);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
   const formLoadTime = useRef(Date.now());
-  const captchaRef = useRef<HCaptcha>(null);
 
-  // Fetch hCaptcha site key on mount
+  // Fetch Turnstile site key on mount
   useEffect(() => {
     const fetchSiteKey = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("get-hcaptcha-site-key");
+        const { data, error } = await supabase.functions.invoke("get-turnstile-site-key");
         if (!error && data?.siteKey) {
-          setHcaptchaSiteKey(data.siteKey);
+          setTurnstileSiteKey(data.siteKey);
         }
       } catch (err) {
-        console.error("Failed to fetch hCaptcha site key:", err);
+        console.error("Failed to fetch Turnstile site key:", err);
       }
     };
     fetchSiteKey();
@@ -220,7 +219,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.functions.invoke("verify-hcaptcha", {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
         body: { token, formType: 'guest_review_form' },
       });
       
@@ -300,7 +299,6 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
         description: t.captchaError,
         variant: "destructive",
       });
-      captchaRef.current?.resetCaptcha();
       setCaptchaToken(null);
       setIsSubmitting(false);
       return;
@@ -498,15 +496,15 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
               )}
             />
 
-            {/* hCaptcha widget */}
-            {hcaptchaSiteKey ? (
+            {/* Turnstile widget */}
+            {turnstileSiteKey ? (
               <div className="flex flex-col items-center gap-2">
-                <HCaptcha
-                  ref={captchaRef}
-                  sitekey={hcaptchaSiteKey}
-                  onVerify={handleCaptchaVerify}
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onSuccess={handleCaptchaVerify}
                   onExpire={handleCaptchaExpire}
-                  languageOverride={language}
+                  onError={handleCaptchaExpire}
+                  options={{ theme: "auto" }}
                 />
                 {captchaToken && (
                   <div className="flex items-center gap-1 text-sm text-primary">
@@ -523,7 +521,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}>
+            <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !turnstileSiteKey}>
               {isSubmitting ? (
                 isVerifyingCaptcha ? t.captchaVerifying : t.submitting
               ) : (
