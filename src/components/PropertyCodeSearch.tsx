@@ -27,7 +27,12 @@ interface PropertyResult {
   listing_type: string | null;
 }
 
-const PropertyCodeSearch = () => {
+interface PropertyCodeSearchProps {
+  /** Optional classes applied to the trigger button (width, visibility, etc.) */
+  className?: string;
+}
+
+const PropertyCodeSearch = ({ className }: PropertyCodeSearchProps) => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -90,7 +95,10 @@ const PropertyCodeSearch = () => {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full md:w-[280px] justify-between gap-2 bg-background/80 backdrop-blur-sm border-primary/20 hover:border-primary/40"
+          className={cn(
+            "w-full justify-between gap-2 bg-background/80 backdrop-blur-sm border-primary/20 hover:border-primary/40",
+            className,
+          )}
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground font-normal truncate">
