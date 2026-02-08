@@ -33,3 +33,31 @@ export const safeLocalStorage = {
     }
   },
 };
+
+// Session storage utilities
+export const getSessionStorage = (key: string): string | null => {
+  if (!isBrowser()) return null;
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+export const setSessionStorage = (key: string, value: string): void => {
+  if (!isBrowser()) return;
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+};
+
+export const removeSessionStorage = (key: string): void => {
+  if (!isBrowser()) return;
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+};

@@ -8,6 +8,8 @@ import { Trash2, MessageCircle, User, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
+import { sanitizeText } from "@/utils/security/sanitize";
+import { blogCommentSchema, formatZodErrors } from "@/utils/security/validation";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface BlogComment {
@@ -96,11 +98,25 @@ const BlogComments = ({ articleId }: BlogCommentsProps) => {
     mutationFn: async (content: string) => {
       if (!user) throw new Error("Not authenticated");
       
+      // Validate with Zod schema
+      const validation = blogCommentSchema.safeParse({
+        content: content.trim(),
+        articleId,
+      });
+      
+      if (!validation.success) {
+        const errors = formatZodErrors(validation.error);
+        throw new Error(Object.values(errors)[0] || t.emptyComment);
+      }
+
+      // Sanitize the content before storing
+      const sanitizedContent = sanitizeText(validation.data.content);
+      
       const { error } = await supabase.from("blog_comments").insert({
         article_id: articleId,
         user_id: user.id,
-        author_name: user.email?.split("@")[0] || "Anonim",
-        content: content.trim(),
+        author_name: sanitizeText(user.email?.split("@")[0] || "Anonim"),
+        content: sanitizedContent,
       });
 
       if (error) throw error;
@@ -110,8 +126,8 @@ const BlogComments = ({ articleId }: BlogCommentsProps) => {
       setNewComment("");
       toast({ title: t.commentAdded });
     },
-    onError: () => {
-      toast({ title: t.errorAdding, variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: error.message || t.errorAdding, variant: "destructive" });
     },
   });
 
@@ -244,7 +260,7 @@ const BlogComments = ({ articleId }: BlogCommentsProps) => {
                   )}
                 </div>
                 <p className="text-foreground/90 whitespace-pre-wrap">
-                  {comment.content}
+                  {sanitizeText(comment.content)}
                 </p>
               </div>
             </div>
