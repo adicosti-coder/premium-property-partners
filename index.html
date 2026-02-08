@@ -85,10 +85,15 @@
     </script>
     
     <script>
-      (function() {
-        const stored = localStorage.getItem('theme');
-        const theme = stored || 'dark';
-        document.documentElement.classList.add(theme);
+      (function () {
+        try {
+          if (typeof window === "undefined" || typeof document === "undefined") return;
+          const stored = window.localStorage?.getItem("theme");
+          const theme = stored || "dark";
+          document.documentElement.classList.add(theme);
+        } catch (_) {
+          // Ignore theme bootstrap errors (e.g., storage disabled)
+        }
       })();
     </script>
 
@@ -97,16 +102,29 @@
       crossorigin="anonymous">
     </script>
     <script>
-      Sentry.init({
-        dsn: "https://9282789f3883971d6797ca4fabed59ec@o4510849594097664.ingest.us.sentry.io/4510849606090752",
-        integrations: [
-          Sentry.browserTracingIntegration(),
-          Sentry.replayIntegration(),
-        ],
-        tracesSampleRate: 1.0,
-        replaysSessionSampleRate: 0.1,
-        replaysOnErrorSampleRate: 1.0,
-      });
+      (function () {
+        try {
+          if (typeof window === "undefined") return;
+          // Sentry is loaded via external script; guard for environments where it isn't.
+          // @ts-ignore
+          if (!window.Sentry || typeof window.Sentry.init !== "function") return;
+          // @ts-ignore
+          window.Sentry.init({
+            dsn: "https://9282789f3883971d6797ca4fabed59ec@o4510849594097664.ingest.us.sentry.io/4510849606090752",
+            integrations: [
+              // @ts-ignore
+              window.Sentry.browserTracingIntegration(),
+              // @ts-ignore
+              window.Sentry.replayIntegration(),
+            ],
+            tracesSampleRate: 1.0,
+            replaysSessionSampleRate: 0.1,
+            replaysOnErrorSampleRate: 1.0,
+          });
+        } catch (_) {
+          // Ignore analytics init errors
+        }
+      })();
     </script>
     <meta property="og:title" content="RealTrust &amp; ApArt Hotel Timișoara | Imobiliare &amp; Administrare Regim Hotelier">
     <meta name="twitter:title" content="RealTrust &amp; ApArt Hotel Timișoara | Imobiliare &amp; Administrare Regim Hotelier">
