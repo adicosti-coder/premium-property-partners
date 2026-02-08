@@ -279,10 +279,10 @@ const Header = () => {
           </a>
           
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-4 xl:gap-6">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
-              const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)]";
+              const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
               const activeClasses = isActive 
                 ? "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]" 
                 : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
@@ -318,7 +318,7 @@ const Header = () => {
           </nav>
 
           {/* Property Code Search - Desktop */}
-          <div className="hidden lg:block">
+          <div className="hidden xl:block flex-shrink-0">
             <PropertyCodeSearch />
           </div>
           
