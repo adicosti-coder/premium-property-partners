@@ -1,5 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight, Search } from "lucide-react";
+import {
+  Menu,
+  X,
+  Shield,
+  Heart,
+  Crown,
+  Sparkles,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PromoBanner from "./PromoBanner";
@@ -18,6 +27,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -143,6 +159,28 @@ const Header = () => {
     { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
     { href: "#contact", label: t.nav.contact },
   ];
+
+  // On desktop, keep key conversion pages visible and move the rest into a dropdown
+  // so nothing disappears on smaller desktop widths.
+  const desktopPrimaryHrefs = new Set<string>([
+    "/pentru-proprietari",
+    "/pentru-oaspeti",
+    "/imobiliare",
+    "/investitii",
+    "#contact",
+  ]);
+  const desktopMoreHrefs = new Set<string>(["/", "/complexe", "/blog", "/despre-noi"]);
+
+  const desktopPrimaryLinks = navLinks.filter((l) => desktopPrimaryHrefs.has(l.href));
+  const desktopMoreLinks = navLinks.filter((l) => desktopMoreHrefs.has(l.href));
+  const isMoreActive = desktopMoreLinks.some((l) => activeSection === l.href);
+
+  const desktopLinkBaseClasses =
+    "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
+  const desktopLinkActiveClasses =
+    "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]";
+  const desktopLinkInactiveClasses =
+    "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
 
   return (
     <>
@@ -278,43 +316,105 @@ const Header = () => {
             </span>
           </a>
           
-          {/* Navigation - Desktop - wrapped in flex-1 container with overflow hidden */}
-          <nav className="hidden lg:flex items-center justify-center gap-3 xl:gap-5 flex-1 min-w-0 overflow-hidden">
-            {navLinks.map((link) => {
+          {/* Navigation - Desktop */}
+          <nav className="hidden lg:flex items-center justify-center gap-2 xl:gap-4 flex-1 min-w-0">
+            {desktopPrimaryLinks.map((link) => {
               const isActive = activeSection === link.href;
-              const baseClasses = "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
-              const activeClasses = isActive 
-                ? "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]" 
-                : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
+              const activeClasses = isActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses;
 
-              return link.isHome ? (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={handleHomeClick}
-                  className={`${baseClasses} ${activeClasses}`}
-                >
-                  {link.label}
-                </a>
-              ) : link.isPage ? (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`${baseClasses} ${activeClasses}`}
-                >
-                  {link.label}
-                </Link>
-              ) : (
+              if (link.isHome) {
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={handleHomeClick}
+                    className={`${desktopLinkBaseClasses} ${activeClasses}`}
+                  >
+                    {link.label}
+                  </a>
+                );
+              }
+
+              if (link.isPage) {
+                return (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className={`${desktopLinkBaseClasses} ${activeClasses}`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              }
+
+              return (
                 <a
                   key={link.href}
                   href={link.href}
                   onClick={(e) => handleAnchorClick(e, link.href)}
-                  className={`${baseClasses} ${activeClasses}`}
+                  className={`${desktopLinkBaseClasses} ${activeClasses}`}
                 >
                   {link.label}
                 </a>
               );
             })}
+
+            {/* More pages dropdown keeps all items accessible without clipping */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`${desktopLinkBaseClasses} ${
+                    isMoreActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses
+                  } flex items-center gap-1`}
+                  aria-label={language === "ro" ? "Pagini" : "More pages"}
+                >
+                  {language === "ro" ? "Pagini" : "More"}
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[180px]">
+                {desktopMoreLinks.map((link) => {
+                  if (link.href === "#contact") {
+                    return (
+                      <DropdownMenuItem
+                        key={link.href}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          const sectionId = "contact";
+                          if (location.pathname === "/") {
+                            scrollToSection(sectionId);
+                          } else {
+                            navigate("/");
+                            waitForElementAndScroll(sectionId);
+                          }
+                        }}
+                      >
+                        {link.label}
+                      </DropdownMenuItem>
+                    );
+                  }
+
+                  return (
+                    <DropdownMenuItem key={link.href} asChild>
+                      <Link to={link.href} className="w-full">
+                        {link.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  {language === "ro" ? "Sus" : "Back to top"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* Right side container - search and actions */}
