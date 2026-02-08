@@ -288,7 +288,7 @@ const Header = () => {
             </span>
             {/* Line 3: Services */}
             <span className="text-[7px] lg:text-[8px] xl:text-[9px] text-muted-foreground tracking-wide leading-tight text-center">
-              Vânzari-Închirieri  Administrări Cazări Regim Hotelier
+              Vânzări-Închirieri & Administrări Apartamente Regim Hotelier
             </span>
           </a>
           
