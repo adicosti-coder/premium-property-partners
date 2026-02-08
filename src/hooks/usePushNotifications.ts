@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { isBrowser } from '@/utils/browserStorage';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  if (!isBrowser()) {
+    return new Uint8Array(0);
+  }
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
     .replace(/-/g, '+')
