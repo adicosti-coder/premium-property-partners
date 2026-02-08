@@ -147,7 +147,7 @@ const Header = () => {
   // Desktop nav link styling - optimized for 1024px+ screens
   // Ultra-compact on lg (1024-1279), compact on xl (1280-1535), comfortable on 2xl (1536+)
   const desktopLinkBaseClasses =
-    "relative px-1 lg:px-1.5 xl:px-2 2xl:px-3 text-[11px] lg:text-xs xl:text-xs 2xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
+    "relative px-0.5 lg:px-1 xl:px-1.5 2xl:px-2.5 text-[10px] lg:text-[11px] xl:text-xs 2xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
   const desktopLinkActiveClasses =
     "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]";
   const desktopLinkInactiveClasses =
@@ -274,7 +274,7 @@ const Header = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20 gap-2">
           {/* Logo - 3 lines layout for compact width */}
-          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 max-w-[140px] lg:max-w-[160px] xl:max-w-[180px] 2xl:max-w-none">
+          <a href="/" className="group relative flex flex-col items-start gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 w-[150px] lg:w-[165px] xl:w-[185px] 2xl:w-auto 2xl:max-w-none mr-2 lg:mr-3">
             {/* Shimmer overlay */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:animate-shimmer-sweep bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
             {/* Line 1: Brand name */}
@@ -294,7 +294,7 @@ const Header = () => {
           </a>
           
           {/* Navigation - Desktop - ALL links visible inline (no dropdown) */}
-          <nav className="hidden lg:flex items-center justify-center gap-0.5 lg:gap-1 xl:gap-1.5 2xl:gap-3 flex-1 min-w-0">
+          <nav className="hidden lg:flex items-center justify-center gap-0.5 lg:gap-1 xl:gap-1.5 2xl:gap-2 flex-1 min-w-0 overflow-hidden">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
               const activeClasses = isActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses;
@@ -339,8 +339,8 @@ const Header = () => {
 
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            {/* Property Code Search - Desktop - only show on 2xl+ to free up space */}
-            <div className="hidden 2xl:block w-[200px]">
+            {/* Property Code Search - Desktop - visible from lg with responsive width */}
+            <div className="hidden lg:block w-[120px] xl:w-[150px] 2xl:w-[200px]">
               <PropertyCodeSearch />
             </div>
           
@@ -371,17 +371,17 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
+                className="hidden lg:inline-flex text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
               >
-                <Shield className="w-4 h-4 mr-2" />
-                Admin
+                <Shield className="w-4 h-4 lg:mr-0 xl:mr-1.5" />
+                <span className="hidden xl:inline">Admin</span>
               </Button>
             </Link>
-            {/* Owners CTA - distinct gold button */}
+            {/* Owners CTA - distinct gold button - visible only on 2xl+ */}
             <Button 
               variant="default" 
               size="default" 
-              className="hidden xl:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/40"
+              className="hidden 2xl:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/40"
               onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
             >
               <span className="mr-1.5">🏠</span>
