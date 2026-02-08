@@ -59,9 +59,47 @@ export function useElevenLabsVoice() {
     if (isConnecting || conversation.status === "connected") return;
 
     setIsConnecting(true);
+    
+    // CRITICAL: Request microphone access FIRST and DIRECTLY in click handler
+    // This must happen before any other async operations to maintain gesture context
+    let stream: MediaStream | null = null;
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        } 
+      });
+      console.log("[ElevenLabs] Microphone access granted");
+    } catch (error: any) {
+      console.error("[ElevenLabs] Microphone access error:", error);
+      setIsConnecting(false);
+      
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        toast.error(
+          language === "ro"
+            ? "Vă rugăm să permiteți accesul la microfon din setările browser-ului."
+            : "Please allow microphone access in your browser settings."
+        );
+      } else if (error.name === "NotFoundError") {
+        toast.error(
+          language === "ro"
+            ? "Nu s-a detectat niciun microfon. Verificați dispozitivul."
+            : "No microphone detected. Please check your device."
+        );
+      } else {
+        toast.error(
+          language === "ro"
+            ? "Eroare la accesarea microfonului. Verificați permisiunile."
+            : "Error accessing microphone. Please check permissions."
+        );
+      }
+      return;
+    }
 
+    // Now fetch token and start session
+    try {
       const { data, error } = await supabase.functions.invoke(
         "elevenlabs-conversation-token",
         {
@@ -70,29 +108,30 @@ export function useElevenLabsVoice() {
       );
 
       if (error || !data?.token) {
+        // Stop the stream since we won't use it
+        stream?.getTracks().forEach(track => track.stop());
         throw new Error(error?.message || "No token received");
       }
 
+      console.log("[ElevenLabs] Token received, starting session...");
+      
       await conversation.startSession({
         conversationToken: data.token,
         connectionType: "webrtc",
       });
+      
+      // The ElevenLabs SDK manages its own audio stream, so we can stop ours
+      stream?.getTracks().forEach(track => track.stop());
+      
     } catch (error: any) {
       console.error("[ElevenLabs] Failed to start conversation:", error);
-
-      if (error.name === "NotAllowedError") {
-        toast.error(
-          language === "ro"
-            ? "Accesul la microfon este necesar pentru conversație vocală."
-            : "Microphone access is required for voice conversation."
-        );
-      } else {
-        toast.error(
-          language === "ro"
-            ? "Nu s-a putut porni conversația. Încercați din nou."
-            : "Could not start conversation. Please try again."
-        );
-      }
+      stream?.getTracks().forEach(track => track.stop());
+      
+      toast.error(
+        language === "ro"
+          ? "Nu s-a putut porni conversația. Încercați din nou."
+          : "Could not start conversation. Please try again."
+      );
     } finally {
       setIsConnecting(false);
     }
