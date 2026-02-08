@@ -979,8 +979,8 @@ Mulțumesc!`,
     
     // Promo Banner
     promoBanner: {
-      text: "Rezervă direct și folosește codul",
-      discount: "pentru 5% reducere la orice rezervare!",
+      text: "Rezervă direct cu codul",
+      discount: "→ 5% reducere!",
     },
     
     // Price Compare Widget
@@ -2071,8 +2071,8 @@ Thank you!`,
     
     // Promo Banner
     promoBanner: {
-      text: "Book directly and use code",
-      discount: "for 5% off any reservation!",
+      text: "Book direct with code",
+      discount: "→ 5% off!",
     },
     
     // Price Compare Widget
