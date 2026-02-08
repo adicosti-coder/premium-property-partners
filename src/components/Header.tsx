@@ -145,9 +145,9 @@ const Header = () => {
   ];
 
   // Desktop nav link styling (all links visible inline, no dropdown)
-  // Use text-xs on lg, text-sm on xl for better fit
+  // Use text-xs on lg, text-sm on xl for better fit, add px padding for touch targets
   const desktopLinkBaseClasses =
-    "relative text-xs xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
+    "relative px-1.5 xl:px-2 text-xs xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
   const desktopLinkActiveClasses =
     "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]";
   const desktopLinkInactiveClasses =
