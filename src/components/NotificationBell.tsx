@@ -34,7 +34,8 @@ const NotificationBell = () => {
   const [open, setOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [celebratedBadges, setCelebratedBadges] = useState<Set<string>>(() => {
-    // Load already celebrated badges from localStorage
+    // Load already celebrated badges from localStorage (SSR-safe)
+    if (typeof window === "undefined") return new Set();
     try {
       const stored = localStorage.getItem("celebratedBadgeNotifications");
       return stored ? new Set(JSON.parse(stored)) : new Set();
