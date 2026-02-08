@@ -19,7 +19,7 @@ import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 // Custom refinement for international phone validation
 const formSchema = z.object({
@@ -53,21 +53,20 @@ const RealEstateContactForm = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   
-  // hCaptcha state
-  const captchaRef = useRef<HCaptcha>(null);
+  // Turnstile state
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
 
-  // Fetch hCaptcha site key on mount
+  // Fetch Turnstile site key on mount
   useEffect(() => {
     const fetchSiteKey = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        const { data, error } = await supabase.functions.invoke('get-turnstile-site-key');
         if (error) throw error;
-        setHcaptchaSiteKey(data.siteKey);
+        setTurnstileSiteKey(data.siteKey);
       } catch (error) {
-        console.error("Failed to fetch hCaptcha site key:", error);
+        console.error("Failed to fetch Turnstile site key:", error);
       }
     };
     fetchSiteKey();
@@ -83,7 +82,7 @@ const RealEstateContactForm = () => {
 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', {
         body: { token, formType: 'real_estate_contact_form' }
       });
       if (error) throw error;
@@ -132,9 +131,8 @@ const RealEstateContactForm = () => {
     setIsVerifyingCaptcha(false);
 
     if (!isCaptchaValid) {
-      toast.error(language === 'en' ? "Captcha verification failed. Please try again." : "Verificarea captcha a eșuat. Încercați din nou.");
+      toast.error(language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.");
       setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
       setIsSubmitting(false);
       return;
     }
@@ -193,7 +191,6 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
       message: "",
     });
     setCaptchaToken(null);
-    captchaRef.current?.resetCaptcha();
   };
 
   const serviceTypes = [
@@ -399,16 +396,16 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                   />
                 </div>
 
-                {/* hCaptcha widget */}
+                {/* Turnstile widget */}
                 <div className="flex flex-col items-center gap-2">
-                  {hcaptchaSiteKey ? (
+                  {turnstileSiteKey ? (
                     <>
-                      <HCaptcha
-                        ref={captchaRef}
-                        sitekey={hcaptchaSiteKey}
-                        onVerify={handleCaptchaVerify}
-                        onExpire={handleCaptchaExpire}
-                        languageOverride={language}
+                      <Turnstile
+                        siteKey={turnstileSiteKey}
+                        onSuccess={(token) => setCaptchaToken(token)}
+                        onExpire={() => setCaptchaToken(null)}
+                        onError={() => setCaptchaToken(null)}
+                        options={{ theme: "auto" }}
                       />
                       {captchaToken && (
                         <div className="flex items-center gap-1 text-sm text-primary">
@@ -431,7 +428,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                   variant="hero"
                   size="lg"
                   className="w-full group"
-                  disabled={isSubmitting || !captchaToken || !hcaptchaSiteKey}
+                  disabled={isSubmitting || !captchaToken || !turnstileSiteKey}
                 >
                   {isSubmitting ? (
                     <>

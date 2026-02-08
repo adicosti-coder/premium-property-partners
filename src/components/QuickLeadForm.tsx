@@ -10,7 +10,7 @@ import { z } from "zod";
 import ConfettiEffect from "./ConfettiEffect";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
@@ -27,9 +27,9 @@ const QuickLeadForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // hCaptcha state - invisible mode
-  const captchaRef = useRef<HCaptcha>(null);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string | null>(null);
+  // Turnstile state - invisible mode
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const pendingSubmitRef = useRef(false);
 
   // Store form data for submission after captcha
@@ -40,15 +40,15 @@ const QuickLeadForm = () => {
     listingUrl: string;
   } | null>(null);
 
-  // Fetch hCaptcha site key on mount
+  // Fetch Turnstile site key on mount
   useEffect(() => {
     const fetchSiteKey = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('get-hcaptcha-site-key');
+        const { data, error } = await supabase.functions.invoke('get-turnstile-site-key');
         if (error) throw error;
-        setHcaptchaSiteKey(data.siteKey);
+        setTurnstileSiteKey(data.siteKey);
       } catch (error) {
-        console.error("Failed to fetch hCaptcha site key:", error);
+        console.error("Failed to fetch Turnstile site key:", error);
       }
     };
     fetchSiteKey();
@@ -56,7 +56,7 @@ const QuickLeadForm = () => {
 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-hcaptcha', {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', {
         body: { token, formType: 'quick_lead_form' }
       });
       if (error) throw error;
@@ -84,7 +84,7 @@ const QuickLeadForm = () => {
         description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
         variant: "destructive",
       });
-      captchaRef.current?.resetCaptcha();
+      setTurnstileToken(null);
       setIsSubmitting(false);
       pendingSubmitRef.current = false;
       return;
@@ -141,18 +141,19 @@ const QuickLeadForm = () => {
     } finally {
       setIsSubmitting(false);
       pendingSubmitRef.current = false;
-      captchaRef.current?.resetCaptcha();
+      setTurnstileToken(null);
     }
   }, [language, t.quickLeadForm]);
 
-  // Handle invisible captcha verification
-  const handleCaptchaVerify = useCallback((token: string) => {
+  // Handle Turnstile success
+  const handleTurnstileSuccess = useCallback((token: string) => {
+    setTurnstileToken(token);
     if (pendingSubmitRef.current) {
       submitForm(token);
     }
   }, [submitForm]);
 
-  const handleCaptchaError = useCallback(() => {
+  const handleTurnstileError = useCallback(() => {
     toast({
       title: language === 'en' ? "Verification error" : "Eroare verificare",
       description: language === 'en' ? "Security check failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
@@ -160,6 +161,7 @@ const QuickLeadForm = () => {
     });
     setIsSubmitting(false);
     pendingSubmitRef.current = false;
+    setTurnstileToken(null);
   }, [language]);
 
   const handleListingUrlChange = (value: string) => {
@@ -208,7 +210,7 @@ const QuickLeadForm = () => {
     }
 
     // Check if captcha is ready
-    if (!hcaptchaSiteKey || !captchaRef.current) {
+    if (!turnstileSiteKey) {
       toast({
         title: language === 'en' ? "Please wait" : "Vă rugăm așteptați",
         description: language === 'en' ? "Security check is loading..." : "Verificarea de securitate se încarcă...",
@@ -217,19 +219,24 @@ const QuickLeadForm = () => {
       return;
     }
 
-    setIsSubmitting(true);
-    
-    // Store form data for after captcha verification
-    formDataRef.current = {
-      name: name.trim(),
-      phone: phone.trim(),
-      propertyType,
-      listingUrl: listingUrl.trim(),
-    };
-    
-    // Trigger invisible captcha - it will call handleCaptchaVerify on success
-    pendingSubmitRef.current = true;
-    captchaRef.current.execute();
+    // If we have a token, submit directly
+    if (turnstileToken) {
+      setIsSubmitting(true);
+      formDataRef.current = {
+        name: name.trim(),
+        phone: phone.trim(),
+        propertyType,
+        listingUrl: listingUrl.trim(),
+      };
+      pendingSubmitRef.current = true;
+      submitForm(turnstileToken);
+    } else {
+      toast({
+        title: language === 'en' ? "Verification required" : "Verificare necesară",
+        description: language === 'en' ? "Please complete the security check" : "Vă rugăm să completați verificarea de securitate",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isSuccess) {
@@ -338,12 +345,11 @@ const QuickLeadForm = () => {
                 )}
               </div>
               
-              {/* Submit Button */}
               <Button 
                 type="submit" 
                 size="lg"
                 className="h-12 px-6 md:px-8 font-semibold"
-                disabled={isSubmitting || !hcaptchaSiteKey}
+                disabled={isSubmitting || !turnstileSiteKey || !turnstileToken}
               >
                 {isSubmitting ? (
                   <>
@@ -359,17 +365,17 @@ const QuickLeadForm = () => {
               </Button>
             </div>
             
-            {/* Invisible hCaptcha - no visible UI */}
-            {hcaptchaSiteKey && (
-              <HCaptcha
-                ref={captchaRef}
-                sitekey={hcaptchaSiteKey}
-                size="invisible"
-                onVerify={handleCaptchaVerify}
-                onError={handleCaptchaError}
-                onExpire={handleCaptchaError}
-                languageOverride={language}
-              />
+            {/* Turnstile - visible widget */}
+            {turnstileSiteKey && (
+              <div className="flex justify-center mt-2">
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onSuccess={handleTurnstileSuccess}
+                  onError={handleTurnstileError}
+                  onExpire={handleTurnstileError}
+                  options={{ theme: "auto", size: "compact" }}
+                />
+              </div>
             )}
             
             {/* Trust text with security badge */}
