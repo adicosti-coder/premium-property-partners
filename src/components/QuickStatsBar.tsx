@@ -416,16 +416,16 @@ const QuickStatsBar = () => {
       <div className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
           <TooltipProvider delayDuration={300}>
-            <div className="flex items-center justify-center gap-3 md:gap-6 lg:gap-8 py-2.5 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-3 md:gap-6 lg:gap-8 py-2 overflow-x-auto scrollbar-hide">
               {allStatItems.map((stat, index) => {
                 // On mobile, show only first 4 stats
                 const hideOnMobile = index >= 4;
                 
                 const content = (
                   <>
-                    <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
+                    <stat.icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 ${stat.color} transition-transform group-hover:scale-110`} />
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-sm md:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <span className="text-xs sm:text-sm md:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                         <AnimatedStatValue 
                           value={stat.value} 
                           decimals={stat.isDecimal ? 1 : 0}
@@ -434,7 +434,7 @@ const QuickStatsBar = () => {
                         />
                       </span>
                       {stat.suffix && (
-                        <span className={`text-xs md:text-sm font-medium ${stat.color}`}>
+                        <span className={`text-[10px] sm:text-xs md:text-sm font-medium ${stat.color}`}>
                           {stat.suffix}
                         </span>
                       )}
@@ -448,14 +448,14 @@ const QuickStatsBar = () => {
                 const wrappedContent = stat.link ? (
                   <Link
                     to={stat.link}
-                    className={`flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all ${hideOnMobile ? 'hidden md:flex' : ''}`}
+                    className={`flex items-center gap-1 sm:gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-1 sm:px-2 py-0.5 sm:py-1 rounded-md transition-all ${hideOnMobile ? 'hidden md:flex' : ''}`}
                   >
                     {content}
                   </Link>
                 ) : (
                   <button
                     onClick={stat.action}
-                    className={`flex items-center gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-2 py-1 rounded-md transition-all ${hideOnMobile ? 'hidden md:flex' : ''}`}
+                    className={`flex items-center gap-1 sm:gap-1.5 md:gap-2 group cursor-pointer flex-shrink-0 hover:bg-primary/5 px-1 sm:px-2 py-0.5 sm:py-1 rounded-md transition-all ${hideOnMobile ? 'hidden md:flex' : ''}`}
                   >
                     {content}
                   </button>
@@ -482,11 +482,11 @@ const QuickStatsBar = () => {
                   <TooltipTrigger asChild>
                     <Link
                       to="/auth"
-                      className="flex items-center gap-1.5 ml-2 pl-3 border-l border-border/50 flex-shrink-0 px-2 py-1 rounded-md transition-all bg-primary/10 hover:bg-primary/20 group"
+                      className="flex items-center gap-1 sm:gap-1.5 ml-1 sm:ml-2 pl-2 sm:pl-3 border-l border-border/50 flex-shrink-0 px-1 sm:px-2 py-0.5 sm:py-1 rounded-md transition-all bg-primary/10 hover:bg-primary/20 group"
                     >
-                      <Eye className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                        {language === "ro" ? "Autentificare" : "Sign In"}
+                      <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-medium text-muted-foreground group-hover:text-primary transition-colors whitespace-nowrap">
+                        {language === "ro" ? "Login" : "Login"}
                       </span>
                     </Link>
                   </TooltipTrigger>
