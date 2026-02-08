@@ -5,24 +5,12 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// SSR-safe storage access
-const getStorage = () => {
-  if (typeof window !== 'undefined') {
-    try {
-      return window.localStorage;
-    } catch {
-      return undefined;
-    }
-  }
-  return undefined;
-};
-
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: getStorage(),
+    storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
   }
