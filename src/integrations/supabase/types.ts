@@ -2368,10 +2368,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
       check_and_award_badges: {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      check_cta_rate_limit: { Args: { p_session_id: string }; Returns: boolean }
+      cleanup_old_tracking_data: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
