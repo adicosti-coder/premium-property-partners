@@ -145,12 +145,13 @@ const Header = () => {
   ];
 
   // Desktop nav link styling (all links visible inline, no dropdown)
+  // Use text-xs on lg, text-sm on xl for better fit
   const desktopLinkBaseClasses =
-    "relative text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
+    "relative text-xs xl:text-sm font-medium transition-all duration-300 ease-out after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-primary after:transition-all after:duration-300 after:ease-out hover:-translate-y-0.5 hover:drop-shadow-[0_4px_8px_hsl(var(--primary)/0.2)] whitespace-nowrap";
   const desktopLinkActiveClasses =
     "text-primary font-semibold scale-105 animate-glow-pulse after:w-full -translate-y-0.5 drop-shadow-[0_4px_8px_hsl(var(--primary)/0.3)]";
   const desktopLinkInactiveClasses =
-    "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:scale-110 after:w-0 hover:after:w-full";
+    "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:scale-105 after:w-0 hover:after:w-full";
 
   return (
     <>
@@ -287,7 +288,7 @@ const Header = () => {
           </a>
           
           {/* Navigation - Desktop - ALL links visible inline (no dropdown) */}
-          <nav className="hidden lg:flex items-center justify-center gap-2 xl:gap-3 flex-1 min-w-0">
+          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2 2xl:gap-3 flex-1 min-w-0">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
               const activeClasses = isActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses;
