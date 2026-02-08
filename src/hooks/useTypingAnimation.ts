@@ -12,6 +12,8 @@ const useAnimationEnabled = () => {
   });
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    
     const handleStorageChange = () => {
       const stored = localStorage.getItem("animationsEnabled");
       if (stored !== null) {

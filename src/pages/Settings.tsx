@@ -555,7 +555,7 @@ const Settings = () => {
                   checked={soundEnabled}
                   onCheckedChange={(enabled) => {
                     setSoundEnabled(enabled);
-                    localStorage.setItem('ui-sound-preference', String(enabled));
+                    safeLocalStorage.setItem('ui-sound-preference', String(enabled));
                     toast.success(text.soundSaved);
                     if (enabled) {
                       // Play a preview sound when enabling
@@ -580,7 +580,7 @@ const Settings = () => {
                       onValueChange={(value) => {
                         const newVolume = value[0] / 100;
                         setSoundVolume(newVolume);
-                        localStorage.setItem('ui-sound-volume', String(newVolume));
+                        safeLocalStorage.setItem('ui-sound-volume', String(newVolume));
                       }}
                       onValueCommit={() => {
                         playSound("pop");
