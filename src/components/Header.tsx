@@ -287,7 +287,7 @@ const Header = () => {
               <span className="text-primary group-hover:text-amber-400 transition-colors duration-300">ApArt</span> Hotel
             </span>
             {/* Line 3: Services */}
-            <span className="text-[7px] lg:text-[8px] xl:text-[9px] font-bold text-primary tracking-wide leading-tight text-center animate-text-glow group-hover:animate-none group-hover:[text-shadow:0_0_12px_hsl(45_100%_50%/0.6)] transition-all duration-300">
+            <span className="text-[7px] lg:text-[8px] xl:text-[9px] font-semibold text-foreground/80 tracking-widest uppercase leading-tight text-center transition-all duration-500 group-hover:tracking-[0.2em] group-hover:text-foreground">
               Vânzări-Închirieri & Administrări Apartamente Regim Hotelier
             </span>
           </a>
