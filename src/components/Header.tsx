@@ -373,7 +373,7 @@ const Header = () => {
               className="lg:hidden text-foreground"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -382,7 +382,7 @@ const Header = () => {
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.nav 
-              className="md:hidden py-4 border-t border-border origin-top overflow-hidden"
+              className="lg:hidden py-4 px-4 border-t border-border origin-top overflow-hidden"
               initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
               animate={{ opacity: 1, height: "auto", scaleY: 1 }}
               exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
