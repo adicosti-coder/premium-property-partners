@@ -36,6 +36,12 @@
     <link rel="manifest" href="/manifest.json" />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
+    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
+    <link rel="dns-prefetch" href="https://browser.sentry-cdn.com" />
     
     <meta name="geo.region" content="RO-TM" />
     <meta name="geo.placename" content="Timișoara" />
@@ -99,7 +105,8 @@
 
     <script
       src="https://browser.sentry-cdn.com/8.0.0/bundle.min.js"
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+      defer>
     </script>
     <script>
       (function () {
