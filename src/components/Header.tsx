@@ -173,7 +173,7 @@ const Header = () => {
       {/* Promo Banner - positioned at top */}
       <PromoBanner />
       
-      {/* Premium Benefits Banner for Unauthenticated Users */}
+      {/* Premium Benefits Banner for Unauthenticated Users - Hidden on mobile to prevent overlap */}
       <AnimatePresence>
         {isAuthenticated === false && showPremiumBanner && (
           <motion.div
@@ -181,7 +181,7 @@ const Header = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border-b border-gold/20 overflow-hidden"
+            className="hidden md:block bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border-b border-gold/20 overflow-hidden"
           >
             <div className="container mx-auto px-4 py-2">
               <div className="flex items-center justify-between gap-4">
