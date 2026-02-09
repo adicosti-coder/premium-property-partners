@@ -159,7 +159,7 @@ const Header = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            className="fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 md:hidden animate-overlay-pulse"
+            className="fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 lg:hidden animate-overlay-pulse"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -293,7 +293,7 @@ const Header = () => {
           </a>
           
           {/* Navigation - Desktop - ALL links visible inline (no dropdown) */}
-          <nav className="hidden md:flex items-center justify-center gap-0.5 md:gap-0.5 lg:gap-1 xl:gap-1.5 2xl:gap-2 flex-1 min-w-0 overflow-hidden">
+          <nav className="hidden lg:flex items-center justify-center gap-0.5 lg:gap-1 xl:gap-1.5 2xl:gap-2 flex-1 min-w-0 overflow-hidden">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href;
               const activeClasses = isActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses;
@@ -339,7 +339,7 @@ const Header = () => {
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             {/* Property Code Search - Desktop - visible from lg with responsive width */}
-            <div className="hidden md:block w-[100px] lg:w-[120px] xl:w-[150px] 2xl:w-[200px]">
+            <div className="hidden lg:block w-[120px] xl:w-[150px] 2xl:w-[200px]">
               <PropertyCodeSearch />
             </div>
           
@@ -370,7 +370,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="hidden md:inline-flex text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
+                className="hidden lg:inline-flex text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
               >
                 <Shield className="w-4 h-4 md:mr-0 lg:mr-0 xl:mr-1.5" />
                 <span className="hidden xl:inline">Admin</span>
@@ -389,7 +389,7 @@ const Header = () => {
             
             {/* Mobile menu button */}
             <button
-              className="md:hidden text-foreground"
+              className="lg:hidden text-foreground"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -400,8 +400,8 @@ const Header = () => {
         {/* Mobile Navigation */}
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.nav 
-              className="md:hidden py-4 px-4 border-t border-border origin-top overflow-hidden"
+             <motion.nav 
+              className="lg:hidden py-4 px-4 border-t border-border origin-top overflow-hidden"
               initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
               animate={{ opacity: 1, height: "auto", scaleY: 1 }}
               exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
