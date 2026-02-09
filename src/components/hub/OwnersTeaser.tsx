@@ -36,7 +36,7 @@ const OwnersTeaser = () => {
         },
         {
           icon: Building2,
-          title: "Comision 20%",
+          title: "Comision 15-20%",
           description: "Comision transparent din încasările nete, fără costuri ascunse",
         },
       ],
@@ -69,7 +69,7 @@ const OwnersTeaser = () => {
         },
         {
           icon: Building2,
-          title: "20% Commission",
+          title: "15-20% Commission",
           description: "Transparent commission of net income, no hidden fees",
         },
       ],
