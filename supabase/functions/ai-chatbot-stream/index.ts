@@ -56,7 +56,7 @@ PENTRU PROPRIETARI:
 - +40% venit vs chirie tradițională
 - Fotografii profesionale gratuite
 - Raportare lunară transparentă
-- Comision: 18%
+- Comision: 15-20%
 
 REGULI:
 1. Răspunde DOAR în română
