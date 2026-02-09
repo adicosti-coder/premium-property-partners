@@ -1,35 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import QuickLeadForm from "@/components/QuickLeadForm";
-import PartnerLogos from "@/components/PartnerLogos";
-import TrustBadges from "@/components/TrustBadges";
-import ProfitCalculator from "@/components/ProfitCalculator";
-import PropertyGallery from "@/components/PropertyGallery";
-import Testimonials from "@/components/Testimonials";
-import FAQ from "@/components/FAQ";
-import ContactSection from "@/components/ContactSection";
-import CTA from "@/components/CTA";
-import Footer from "@/components/Footer";
-import BlogPreview from "@/components/BlogPreview";
-import QuickStatsBar from "@/components/QuickStatsBar";
-import ReferralBanner from "@/components/ReferralBanner";
 import SEOHead from "@/components/SEOHead";
-import InvestorGuideButton from "@/components/InvestorGuideButton";
-import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
-import BookingReviewsWidget from "@/components/BookingReviewsWidget";
-import ExternalTrustSeals from "@/components/ExternalTrustSeals";
 import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
+// Lazy load below-fold components to reduce initial bundle & main thread work
+const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
+const PartnerLogos = lazy(() => import("@/components/PartnerLogos"));
+const TrustBadges = lazy(() => import("@/components/TrustBadges"));
+const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
+const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
+const Testimonials = lazy(() => import("@/components/Testimonials"));
+const FAQ = lazy(() => import("@/components/FAQ"));
+const ContactSection = lazy(() => import("@/components/ContactSection"));
+const CTA = lazy(() => import("@/components/CTA"));
+const Footer = lazy(() => import("@/components/Footer"));
+const BlogPreview = lazy(() => import("@/components/BlogPreview"));
+const QuickStatsBar = lazy(() => import("@/components/QuickStatsBar"));
+const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
+const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const BookingReviewsWidget = lazy(() => import("@/components/BookingReviewsWidget"));
+const ExternalTrustSeals = lazy(() => import("@/components/ExternalTrustSeals"));
+
 // Hub Teaser Components
-import MainNavigationCards from "@/components/hub/MainNavigationCards";
-import OwnersTeaser from "@/components/hub/OwnersTeaser";
-import GuestsTeaser from "@/components/hub/GuestsTeaser";
-import AboutTeaser from "@/components/hub/AboutTeaser";
+const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
+const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
+const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
+const AboutTeaser = lazy(() => import("@/components/hub/AboutTeaser"));
 
 const Index = () => {
   const { t, language } = useLanguage();
@@ -150,17 +152,21 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />
       <Header />
-      <QuickStatsBar />
+      <Suspense fallback={null}>
+        <QuickStatsBar />
+      </Suspense>
       <main>
-        {/* Hero - Entry Point */}
+        {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
         
-        {/* Quick Lead Capture */}
-        <QuickLeadForm />
-        
-        {/* Trust Elements */}
-        <PartnerLogos />
-        <TrustBadges />
+        {/* Below-fold: lazy loaded */}
+        <Suspense fallback={null}>
+          {/* Quick Lead Capture */}
+          <QuickLeadForm />
+          
+          {/* Trust Elements */}
+          <PartnerLogos />
+          <TrustBadges />
         
         {/* Main Navigation Cards - Hub Navigation */}
         <MainNavigationCards />
@@ -230,9 +236,12 @@ const Index = () => {
         
         {/* Final CTA */}
         <CTA />
+        </Suspense>
       </main>
-      <Footer />
-      <GlobalConversionWidgets />
+      <Suspense fallback={null}>
+        <Footer />
+        <GlobalConversionWidgets />
+      </Suspense>
     </div>
   );
 };

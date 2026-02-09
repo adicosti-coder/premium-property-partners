@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-cinematic.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, MousePointer2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 interface HeroSettings {
   videoUrl: string;
   customFallbackImage: string | null;
@@ -95,15 +94,24 @@ const Hero = () => {
     }
   }, []);
 
-  // Parallax effect on scroll
+  // Parallax effect on scroll – desktop only, throttled via rAF
   useEffect(() => {
+    if (isMobile) return; // Skip entirely on mobile to save main thread
+
+    let ticking = false;
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobile]);
 
   // Reduce parallax calculations on mobile for performance
   const parallaxOffset = isMobile ? 0 : scrollY * 0.4;
@@ -243,13 +251,11 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* Scroll Encouragement Indicator – desktop only to reduce mobile DOM/JS */}
+      {/* Scroll Encouragement Indicator – desktop only, CSS animations to avoid framer-motion in critical path */}
       {!isMobile && (
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 3, duration: 0.6 }}
+        <div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer animate-fade-up"
+          style={{ animationDelay: '3s', animationFillMode: 'backwards' }}
           onClick={() => {
             const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
             nextSection?.scrollIntoView({ behavior: 'smooth' });
@@ -258,23 +264,11 @@ const Hero = () => {
           <span className="text-xs text-foreground/70 font-medium tracking-wider uppercase">
             {language === 'ro' ? 'Descoperă mai mult' : 'Discover more'}
           </span>
-          <motion.div
-            className="w-8 h-12 rounded-full border-2 border-primary/50 flex items-start justify-center p-2"
-            whileHover={{ borderColor: 'hsl(var(--primary))' }}
-          >
-            <motion.div
-              className="w-1.5 h-3 bg-primary rounded-full"
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 4, 0] }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="w-5 h-5 text-primary/70" />
-          </motion.div>
-        </motion.div>
+          <div className="w-8 h-12 rounded-full border-2 border-primary/50 flex items-start justify-center p-2 hover:border-primary transition-colors">
+            <div className="w-1.5 h-3 bg-primary rounded-full animate-bounce" />
+          </div>
+          <ChevronDown className="w-5 h-5 text-primary/70 animate-bounce" style={{ animationDelay: '0.2s' }} />
+        </div>
       )}
       
       {/* Bottom gradient fade */}
