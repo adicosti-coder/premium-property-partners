@@ -24,7 +24,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
 // Hub Teaser Components
-import ServicesOverview from "@/components/hub/ServicesOverview";
+import MainNavigationCards from "@/components/hub/MainNavigationCards";
 import OwnersTeaser from "@/components/hub/OwnersTeaser";
 import GuestsTeaser from "@/components/hub/GuestsTeaser";
 import AboutTeaser from "@/components/hub/AboutTeaser";
@@ -160,8 +160,8 @@ const Index = () => {
         <PartnerLogos />
         <TrustBadges />
         
-        {/* Services Overview - Hub Navigation */}
-        <ServicesOverview />
+        {/* Main Navigation Cards - Hub Navigation */}
+        <MainNavigationCards />
         
         {/* Owners Teaser Section */}
         <section id="beneficii">
