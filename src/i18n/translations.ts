@@ -270,7 +270,7 @@ export const translations = {
         // Transparență financiară
         { 
           question: "Cum asigurați transparența veniturilor și a costurilor?", 
-          answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (18% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
+          answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-20% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
         },
         // Verificare oaspeți
         { 
@@ -1362,7 +1362,7 @@ Mulțumesc!`,
         // Financial transparency
         { 
           question: "How do you ensure transparency of revenues and costs?", 
-          answer: "Owners receive detailed monthly reports, where commissions are clearly explained (18% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
+          answer: "Owners receive detailed monthly reports, where commissions are clearly explained (15-20% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
         },
         // Guest vetting
         { 
