@@ -389,10 +389,10 @@ const Header = () => {
             
             {/* Mobile menu button */}
             <button
-              className="lg:hidden text-foreground"
+              className="lg:hidden text-foreground flex items-center gap-1"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <><Menu className="w-6 h-6" /><span className="text-xs font-medium">MENIU</span></>}
             </button>
           </div>
         </div>
