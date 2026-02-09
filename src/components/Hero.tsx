@@ -242,7 +242,7 @@ const Hero = () => {
       {/* KPI Overlay Badges - improved contrast */}
       <div className="absolute bottom-32 right-6 lg:right-12 z-20 hidden md:flex flex-col gap-3">
         <div className="kpi-badge px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
-          <span className="text-primary font-bold text-xl">+40% Yield</span>
+          <span className="text-primary font-bold text-xl">+40% Randament</span>
           <span className="text-xs text-muted-foreground block">vs Chirie clasică</span>
         </div>
         <div className="kpi-badge px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
