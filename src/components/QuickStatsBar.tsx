@@ -146,7 +146,7 @@ const QuickStatsBar = () => {
       }
 
       setStats({
-        properties: propertiesRes.count || 11,
+        properties: Math.max(propertiesRes.count || 0, 11), // Minimum 11 apartments shown
         bookings: bookingsRes.count || 0,
         leads: leadsRes.count || 0,
         occupancy: 85,
@@ -266,7 +266,7 @@ const QuickStatsBar = () => {
   const publicStatItems = [
     {
       icon: Building,
-      value: stats.properties || 11,
+      value: Math.max(stats.properties, 11), // Ensure minimum 11 is shown
       label: t.properties,
       suffix: "+",
       color: "text-primary",
@@ -317,7 +317,7 @@ const QuickStatsBar = () => {
   const authenticatedStatItems = [
     {
       icon: Building,
-      value: stats.properties || 11,
+      value: Math.max(stats.properties, 11), // Ensure minimum 11 is shown
       label: t.properties,
       suffix: "+",
       color: "text-primary",
