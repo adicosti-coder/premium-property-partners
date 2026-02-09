@@ -17,6 +17,8 @@ import ReferralBanner from "@/components/ReferralBanner";
 import SEOHead from "@/components/SEOHead";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import BookingReviewsWidget from "@/components/BookingReviewsWidget";
+import ExternalTrustSeals from "@/components/ExternalTrustSeals";
 import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -185,6 +187,12 @@ const Index = () => {
         
         {/* Social Proof */}
         <Testimonials />
+        
+        {/* Booking.com Reviews Widget */}
+        <BookingReviewsWidget />
+        
+        {/* External Trust Seals */}
+        <ExternalTrustSeals />
         
         {/* About Teaser */}
         <AboutTeaser />
