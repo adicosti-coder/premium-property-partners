@@ -14,7 +14,7 @@
 
 <IfModule mod_headers.c>
   # Content Security Policy
-  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hcaptcha.com https://*.hcaptcha.com https://www.youtube.com https://s.ytimg.com https://api.mapbox.com https://events.mapbox.com https://cdn.jsdelivr.net https://js.intercomcdn.com https://widget.intercom.io; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com https://api.mapbox.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hcaptcha.com https://*.hcaptcha.com https://api.mapbox.com https://events.mapbox.com https://*.youtube.com https://www.google-analytics.com; frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;"
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://hcaptcha.com https://*.hcaptcha.com https://www.youtube.com https://s.ytimg.com https://api.mapbox.com https://events.mapbox.com https://cdn.jsdelivr.net https://js.intercomcdn.com https://widget.intercom.io https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com https://api.mapbox.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hcaptcha.com https://*.hcaptcha.com https://api.mapbox.com https://events.mapbox.com https://*.youtube.com https://www.google-analytics.com https://*.sentry.io; frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;"
 
   # Prevent clickjacking
   Header always set X-Frame-Options "SAMEORIGIN"
@@ -32,7 +32,6 @@
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=()"
 
   # HTTP Strict Transport Security (HSTS)
-  # Enable after confirming HTTPS is properly configured
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 
   # Cross-Origin policies
@@ -62,16 +61,8 @@ Options -Indexes
   Deny from all
 </FilesMatch>
 
-# Prevent hotlinking (optional - uncomment if needed)
-# <IfModule mod_rewrite.c>
-#   RewriteCond %{HTTP_REFERER} !^$
-#   RewriteCond %{HTTP_REFERER} !^https?://(www\.)?realtrust\.ro [NC]
-#   RewriteCond %{HTTP_REFERER} !^https?://(www\.)?lovable\.app [NC]
-#   RewriteRule \.(jpg|jpeg|png|gif|webp|svg)$ - [F]
-# </IfModule>
-
 # ============================================================================
-# Caching Headers
+# Caching Headers (Immutable for hashed assets)
 # ============================================================================
 
 <IfModule mod_expires.c>
@@ -83,7 +74,7 @@ Options -Indexes
   # HTML - no cache (for SPA)
   ExpiresByType text/html "access plus 0 seconds"
   
-  # CSS and JavaScript
+  # CSS and JavaScript (Vite hashed filenames = immutable)
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
   
@@ -92,6 +83,7 @@ Options -Indexes
   ExpiresByType image/png "access plus 1 year"
   ExpiresByType image/gif "access plus 1 year"
   ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/avif "access plus 1 year"
   ExpiresByType image/svg+xml "access plus 1 year"
   ExpiresByType image/x-icon "access plus 1 year"
   
@@ -104,12 +96,44 @@ Options -Indexes
   # Video
   ExpiresByType video/mp4 "access plus 1 year"
   ExpiresByType video/webm "access plus 1 year"
+  
+  # JSON & Manifest
+  ExpiresByType application/json "access plus 1 day"
+  ExpiresByType application/manifest+json "access plus 1 day"
+</IfModule>
+
+# Immutable Cache-Control for Vite hashed assets
+<IfModule mod_headers.c>
+  <FilesMatch "\.[a-zA-Z0-9]{8}\.(js|css|woff2?|jpg|jpeg|png|webp|avif|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  
+  # Service worker must not be cached aggressively
+  <FilesMatch "(sw|pwa-sw)\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
 </IfModule>
 
 # ============================================================================
-# Compression
+# Compression (Gzip + Brotli)
 # ============================================================================
 
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json text/xml application/xml
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json text/xml application/xml image/svg+xml application/manifest+json
+</IfModule>
+
+# Brotli (if available)
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/css application/javascript application/json text/xml application/xml image/svg+xml application/manifest+json
+</IfModule>
+
+# ============================================================================
+# AVIF / WebP MIME Types
+# ============================================================================
+
+<IfModule mod_mime.c>
+  AddType image/avif .avif
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType application/manifest+json .webmanifest
 </IfModule>

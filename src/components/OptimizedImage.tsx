@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, memo } from "react";
 
-interface ImageSize {
-  width: number;
-  suffix: string;
-}
-
 interface OptimizedImageProps {
   src: string;
   alt: string;
@@ -17,25 +12,6 @@ interface OptimizedImageProps {
   onLoad?: () => void;
   onClick?: () => void;
 }
-
-// Generate srcset for responsive images
-const generateSrcSet = (src: string, sizes: ImageSize[]): string => {
-  return sizes
-    .map(({ width, suffix }) => {
-      const baseName = src.replace(/\.(jpg|jpeg|png|webp)$/i, '');
-      const ext = src.match(/\.(jpg|jpeg|png|webp)$/i)?.[0] || '.jpg';
-      return `${baseName}${suffix}${ext} ${width}w`;
-    })
-    .join(', ');
-};
-
-// Default responsive sizes
-const defaultSizes: ImageSize[] = [
-  { width: 320, suffix: '-sm' },
-  { width: 640, suffix: '-md' },
-  { width: 1024, suffix: '-lg' },
-  { width: 1920, suffix: '' },
-];
 
 const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   src,
@@ -54,10 +30,8 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
 
-  // Use forwarded ref or internal ref
   const containerRef = (ref as React.RefObject<HTMLDivElement>) || imgRef;
 
-  // Intersection Observer for lazy loading
   useEffect(() => {
     if (priority || isInView) return;
 
@@ -71,7 +45,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
         });
       },
       {
-        rootMargin: "200px", // Start loading 200px before entering viewport
+        rootMargin: "200px",
         threshold: 0.01
       }
     );
@@ -93,15 +67,12 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     setHasError(true);
   };
 
-  // For ES6 imported assets (bundled by Vite), use the src directly
-  // Don't try to generate srcset with suffixes for bundled assets as they don't exist
-  // Bundled assets have hashed names like /assets/apt-09-abc123.jpg
-  const webpSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
-  
-  // Disable srcset generation - the variant files (-sm, -md, -lg) don't exist
-  // Just use the original src directly
-  const srcSetValue = undefined;
-  const webpSrcSetValue = undefined;
+  // Check if this is a bundled asset (Vite hashed) or a public/static path
+  const isBundledAsset = src.includes("/assets/") && /\-[a-zA-Z0-9]{8}\.\w+$/.test(src);
+
+  // For static images in /public, generate WebP/AVIF variants
+  const webpSrc = !isBundledAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
+  const avifSrc = !isBundledAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
 
   const containerStyle: React.CSSProperties = {
     width,
@@ -147,22 +118,27 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
         </div>
       )}
 
-      {/* Actual image - only render when in view */}
+      {/* Actual image with <picture> for format negotiation */}
       {isInView && !hasError && (
-        <img
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          loading={priority ? "eager" : "lazy"}
-          decoding={priority ? "sync" : "async"}
-          fetchPriority={priority ? "high" : "auto"}
-          onLoad={handleLoad}
-          onError={handleError}
-          className={`w-full h-full object-cover transition-all duration-500 ${
-            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
-          }`}
-        />
+        <picture>
+          {avifSrc && <source srcSet={avifSrc} type="image/avif" />}
+          {webpSrc && <source srcSet={webpSrc} type="image/webp" />}
+          <img
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            loading={priority ? "eager" : "lazy"}
+            decoding={priority ? "sync" : "async"}
+            fetchPriority={priority ? "high" : "auto"}
+            sizes={sizes}
+            onLoad={handleLoad}
+            onError={handleError}
+            className={`w-full h-full object-cover transition-all duration-500 ${
+              isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+            }`}
+          />
+        </picture>
       )}
     </div>
   );
