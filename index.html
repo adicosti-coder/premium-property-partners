@@ -40,8 +40,13 @@
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
-    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
-    <link rel="dns-prefetch" href="https://browser.sentry-cdn.com" />
+    <link rel="dns-prefetch" href="https://api.mapbox.com" />
+
+    <!-- Google Fonts – non-render-blocking (preload + swap) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     
     <meta name="geo.region" content="RO-TM" />
     <meta name="geo.placename" content="Timișoara" />
@@ -103,36 +108,7 @@
       })();
     </script>
 
-    <script
-      src="https://browser.sentry-cdn.com/8.0.0/bundle.min.js"
-      crossorigin="anonymous"
-      defer>
-    </script>
-    <script>
-      (function () {
-        try {
-          if (typeof window === "undefined") return;
-          // Sentry is loaded via external script; guard for environments where it isn't.
-          // @ts-ignore
-          if (!window.Sentry || typeof window.Sentry.init !== "function") return;
-          // @ts-ignore
-          window.Sentry.init({
-            dsn: "https://9282789f3883971d6797ca4fabed59ec@o4510849594097664.ingest.us.sentry.io/4510849606090752",
-            integrations: [
-              // @ts-ignore
-              window.Sentry.browserTracingIntegration(),
-              // @ts-ignore
-              window.Sentry.replayIntegration(),
-            ],
-            tracesSampleRate: 1.0,
-            replaysSessionSampleRate: 0.1,
-            replaysOnErrorSampleRate: 1.0,
-          });
-        } catch (_) {
-          // Ignore analytics init errors
-        }
-      })();
-    </script>
+    <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->
     <meta property="og:title" content="RealTrust &amp; ApArt Hotel Timișoara | Imobiliare &amp; Administrare Regim Hotelier">
     <meta name="twitter:title" content="RealTrust &amp; ApArt Hotel Timișoara | Imobiliare &amp; Administrare Regim Hotelier">
     <meta property="og:description" content="Maximizează-ți venitul din apartamentul tău. Administrare profesională în regim hotelier. Evaluare gratuită!">

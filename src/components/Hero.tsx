@@ -154,40 +154,48 @@ const Hero = () => {
       {/* Content gradient overlay - theme-aware for text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-transparent dark:from-background/70 dark:via-background/30 z-[1]" />
       
-      {/* Dramatic cinematic vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[1]"
-        style={{
-          background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.45) 100%)",
-        }}
-      />
+      {/* Dramatic cinematic vignette – desktop only */}
+      {!isMobile && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[1]"
+          style={{
+            background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.20) 70%, rgba(0,0,0,0.45) 100%)",
+          }}
+        />
+      )}
       
-      {/* Film grain overlay */}
-      <div className="absolute inset-0 pointer-events-none z-[2] film-grain opacity-[0.04]" />
+      {/* Film grain overlay – desktop only */}
+      {!isMobile && <div className="absolute inset-0 pointer-events-none z-[2] film-grain opacity-[0.04]" />}
       
-      {/* Warm golden color grading overlay */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-[1] mix-blend-overlay"
-        style={{
-          background: "linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(180, 140, 40, 0.05) 50%, rgba(139, 90, 43, 0.06) 100%)",
-        }}
-      />
+      {/* Warm golden color grading overlay – desktop only */}
+      {!isMobile && (
+        <div 
+          className="absolute inset-0 pointer-events-none z-[1] mix-blend-overlay"
+          style={{
+            background: "linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(180, 140, 40, 0.05) 50%, rgba(139, 90, 43, 0.06) 100%)",
+          }}
+        />
+      )}
       
-      {/* Cinematic lens flare */}
-      <div 
-        className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-[1] animate-lens-flare"
-        style={{
-          background: "radial-gradient(ellipse at 80% 20%, rgba(255, 215, 100, 0.15) 0%, rgba(255, 200, 80, 0.08) 25%, transparent 60%)",
-          transform: "translate(20%, -30%)",
-        }}
-      />
-      <div 
-        className="absolute top-20 right-40 w-16 h-16 pointer-events-none z-[1] rounded-full animate-flare-orb"
-        style={{
-          background: "radial-gradient(circle, rgba(255, 230, 150, 0.4) 0%, rgba(255, 215, 100, 0.1) 40%, transparent 70%)",
-          filter: "blur(8px)",
-        }}
-      />
+      {/* Cinematic lens flare – desktop only */}
+      {!isMobile && (
+        <>
+          <div 
+            className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-[1] animate-lens-flare"
+            style={{
+              background: "radial-gradient(ellipse at 80% 20%, rgba(255, 215, 100, 0.15) 0%, rgba(255, 200, 80, 0.08) 25%, transparent 60%)",
+              transform: "translate(20%, -30%)",
+            }}
+          />
+          <div 
+            className="absolute top-20 right-40 w-16 h-16 pointer-events-none z-[1] rounded-full animate-flare-orb"
+            style={{
+              background: "radial-gradient(circle, rgba(255, 230, 150, 0.4) 0%, rgba(255, 215, 100, 0.1) 40%, transparent 70%)",
+              filter: "blur(8px)",
+            }}
+          />
+        </>
+      )}
       
       {/* Gold accent line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
@@ -235,37 +243,39 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* Scroll Encouragement Indicator */}
-      <motion.div 
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 3, duration: 0.6 }}
-        onClick={() => {
-          const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
-          nextSection?.scrollIntoView({ behavior: 'smooth' });
-        }}
-      >
-        <span className="text-xs text-foreground/70 font-medium tracking-wider uppercase hidden sm:block">
-          {language === 'ro' ? 'Descoperă mai mult' : 'Discover more'}
-        </span>
-        <motion.div
-          className="w-8 h-12 rounded-full border-2 border-primary/50 flex items-start justify-center p-2"
-          whileHover={{ borderColor: 'hsl(var(--primary))' }}
+      {/* Scroll Encouragement Indicator – desktop only to reduce mobile DOM/JS */}
+      {!isMobile && (
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 3, duration: 0.6 }}
+          onClick={() => {
+            const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
+            nextSection?.scrollIntoView({ behavior: 'smooth' });
+          }}
         >
+          <span className="text-xs text-foreground/70 font-medium tracking-wider uppercase">
+            {language === 'ro' ? 'Descoperă mai mult' : 'Discover more'}
+          </span>
           <motion.div
-            className="w-1.5 h-3 bg-primary rounded-full"
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          />
+            className="w-8 h-12 rounded-full border-2 border-primary/50 flex items-start justify-center p-2"
+            whileHover={{ borderColor: 'hsl(var(--primary))' }}
+          >
+            <motion.div
+              className="w-1.5 h-3 bg-primary rounded-full"
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 4, 0] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="w-5 h-5 text-primary/70" />
+          </motion.div>
         </motion.div>
-        <motion.div
-          animate={{ y: [0, 4, 0] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <ChevronDown className="w-5 h-5 text-primary/70" />
-        </motion.div>
-      </motion.div>
+      )}
       
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
