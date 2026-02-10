@@ -358,7 +358,7 @@ const HeroContent = ({
           size="xl" 
           className={`relative animate-glow-pulse btn-shine w-full sm:w-auto transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
           style={{ transitionDelay: subtitleComplete ? '50ms' : '0ms' }}
-          onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
         >
           {ctaPrimary}
         </Button>
@@ -369,7 +369,7 @@ const HeroContent = ({
            className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] w-full sm:w-auto transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
            style={{ transitionDelay: subtitleComplete ? '120ms' : '0ms' }}
          >
-           <a href="/pentru-proprietari#service-options">{ctaSecondary}</a>
+           <a href="/investitii">{ctaSecondary}</a>
          </Button>
       </div>
       
