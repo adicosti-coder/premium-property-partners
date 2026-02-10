@@ -24,7 +24,7 @@ const CTA = () => {
           
           <p className="text-lg text-foreground/70 dark:text-muted-foreground max-w-2xl mx-auto mb-10 font-sans">
             {language === "ro"
-              ? "Cumpărăm, amenajăm, administrăm și generăm venit în regim hotelier — într-un sistem complet orientat spre profit."
+              ? "Vindem și cumpărăm imobile, amenajăm, administrăm și generăm venit în regim hotelier — într-un sistem complet, orientat spre profit."
               : "We buy, renovate, manage and generate hotel-style income — in a fully profit-oriented system."}
           </p>
           

@@ -22,7 +22,7 @@ export const translations = {
       title: "Transformăm apartamentele în venit lunar",
       titleMid: "fără bătăi de cap",
       titleHighlight: "pentru proprietari și investitori.",
-      subtitle: "Cumpărăm, amenajăm, administrăm și generăm venit în regim hotelier — într-un sistem complet orientat spre profit.",
+      subtitle: "Vindem și cumpărăm imobile, amenajăm, administrăm și generăm venit în regim hotelier — într-un sistem complet, orientat spre profit.",
       cta: "Află cât poate produce apartamentul tău",
       ctaSecondary: "Vreau investiție profitabilă în Timișoara",
       ctaGuests: "Pentru Oaspeți",
