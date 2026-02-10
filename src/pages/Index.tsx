@@ -161,6 +161,11 @@ const Index = () => {
         
         {/* Below-fold: lazy loaded */}
         <Suspense fallback={null}>
+          {/* Calculator - immediately after Hero for max conversion */}
+          <section id="calculator">
+            <ProfitCalculator />
+          </section>
+
           {/* Quick Lead Capture */}
           <QuickLeadForm />
           
@@ -174,11 +179,6 @@ const Index = () => {
         {/* Owners Teaser Section */}
         <section id="beneficii">
           <OwnersTeaser />
-        </section>
-        
-        {/* Calculator - Keep full version as it's a key conversion tool */}
-        <section id="calculator">
-          <ProfitCalculator />
         </section>
         
         {/* Guests Teaser Section with Property Preview */}
