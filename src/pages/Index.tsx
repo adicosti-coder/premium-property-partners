@@ -168,13 +168,13 @@ const Index = () => {
 
           {/* Quick Lead Capture */}
           <QuickLeadForm />
+
+          {/* Main Navigation Cards - Hub Navigation */}
+          <MainNavigationCards />
           
           {/* Trust Elements */}
           <PartnerLogos />
           <TrustBadges />
-        
-        {/* Main Navigation Cards - Hub Navigation */}
-        <MainNavigationCards />
         
         {/* Owners Teaser Section */}
         <section id="beneficii">
