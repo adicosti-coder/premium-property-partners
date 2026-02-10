@@ -262,7 +262,7 @@ const Hero = () => {
           }}
         >
           <span className="text-xs text-foreground/70 font-medium tracking-wider uppercase">
-            {language === 'ro' ? 'Descoperă mai mult' : 'Discover more'}
+            {language === 'ro' ? 'Cât poate produce apartamentul tău lunar?' : 'How much can your apartment earn monthly?'}
           </span>
           <div className="w-8 h-12 rounded-full border-2 border-primary/50 flex items-start justify-center p-2 hover:border-primary transition-colors">
             <div className="w-1.5 h-3 bg-primary rounded-full animate-bounce" />
