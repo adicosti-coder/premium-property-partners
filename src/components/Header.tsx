@@ -307,7 +307,7 @@ const Header = () => {
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             {/* Tagline - All screens */}
-            <p className="text-[9px] sm:text-[10px] md:text-[11px] lg:text-[11px] xl:text-xs 2xl:text-sm leading-tight text-muted-foreground max-w-[140px] sm:max-w-[200px] md:max-w-[240px] lg:max-w-[280px] xl:max-w-[340px]">
+            <p className="text-[8px] sm:text-[9px] md:text-[10px] lg:text-[11px] xl:text-xs 2xl:text-sm leading-none text-muted-foreground whitespace-nowrap">
               {language === "ro"
                 ? "De la achiziție la venit hotelier — un sistem complet orientat spre randament."
                 : "From acquisition to hotel revenue — a complete yield-oriented system."}
