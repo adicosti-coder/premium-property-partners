@@ -159,7 +159,7 @@ const Header = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            className="fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 lg:hidden animate-overlay-pulse"
+            className="fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 animate-overlay-pulse"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -302,49 +302,7 @@ const Header = () => {
             </span>
           </a>
           
-          {/* Navigation - Desktop - ALL links visible inline (no dropdown) */}
-          <nav className="hidden lg:flex items-center justify-center gap-0.5 lg:gap-1 xl:gap-1.5 2xl:gap-2 flex-1 min-w-0 overflow-hidden">
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.href;
-              const activeClasses = isActive ? desktopLinkActiveClasses : desktopLinkInactiveClasses;
-
-              if (link.isHome) {
-                return (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={handleHomeClick}
-                    className={`${desktopLinkBaseClasses} ${activeClasses}`}
-                  >
-                    {link.label}
-                  </a>
-                );
-              }
-
-              if (link.isPage) {
-                return (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className={`${desktopLinkBaseClasses} ${activeClasses}`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              }
-
-              return (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={(e) => handleAnchorClick(e, link.href)}
-                  className={`${desktopLinkBaseClasses} ${activeClasses}`}
-                >
-                  {link.label}
-                </a>
-              );
-            })}
-          </nav>
+          {/* Navigation moved to hamburger menu on all resolutions */}
 
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
@@ -399,7 +357,7 @@ const Header = () => {
             
             {/* Mobile menu button */}
             <button
-              className="lg:hidden text-foreground flex items-center gap-1"
+              className="text-foreground flex items-center gap-1"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <><Menu className="w-6 h-6" /><span className="text-xs font-medium">MENIU</span></>}
@@ -411,7 +369,7 @@ const Header = () => {
         <AnimatePresence>
           {mobileMenuOpen && (
              <motion.nav 
-              className="lg:hidden py-4 px-4 border-t border-border origin-top overflow-hidden"
+              className="py-4 px-4 border-t border-border origin-top overflow-hidden"
               initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
               animate={{ opacity: 1, height: "auto", scaleY: 1 }}
               exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
