@@ -116,3 +116,6 @@ verify_jwt = false
 
 [functions.get-client-config]
 verify_jwt = false
+
+[functions.verify-owner-code]
+verify_jwt = false
