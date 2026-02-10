@@ -214,8 +214,8 @@ const Header = () => {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="text-xs text-muted-foreground cursor-help flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-gold" />
+                            <span className="text-sm font-semibold text-gold cursor-help flex items-center gap-1.5">
+                              <Sparkles className="w-4 h-4 text-gold" />
                               {language === "ro" ? "+8 beneficii premium" : "+8 premium benefits"}
                             </span>
                           </TooltipTrigger>
