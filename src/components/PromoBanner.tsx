@@ -4,7 +4,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 
 const PromoBanner = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) return null;
@@ -22,14 +22,16 @@ const PromoBanner = () => {
             </span>
           </span>
         </div>
-        <span className="font-bold text-sm">{t.promoBanner.discount}</span>
-        <Link
-          to="/rezerva-direct"
-          className="hidden sm:inline-flex items-center gap-1 ml-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs font-semibold transition-colors whitespace-nowrap"
-        >
-          {t.whyBookDirect?.ctaButton || "Află mai mult"}
-          <ArrowRight className="w-3 h-3" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm">{t.promoBanner.discount}</span>
+          <Link
+            to="/oaspeti"
+            className="inline-flex items-center gap-1 px-3 py-0.5 bg-white/20 hover:bg-white/30 rounded-full text-xs font-semibold transition-colors whitespace-nowrap"
+          >
+            {language === "ro" ? "Vezi Proprietățile" : "View Properties"}
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
         <button
           onClick={() => setIsVisible(false)}
           className="absolute right-4 p-1 hover:bg-white/10 rounded-full transition-colors"
