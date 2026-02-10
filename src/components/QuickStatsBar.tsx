@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Building, Users, Calendar, TrendingUp, Star, Euro, UserCheck, Clock, MapPin, Award, User as UserIcon, Shield, Eye, LogOut, LayoutDashboard, Settings, ChevronDown, UserCircle, Heart } from "lucide-react";
@@ -397,8 +397,30 @@ const QuickStatsBar = () => {
 
   // Calculate top offset based on header height (nav only, banners are inside header)
   // Mobile: ~64px nav, Desktop: ~80px nav
-  // But we need to account that banners push content down inside the fixed header
-  // So QuickStatsBar should be positioned AFTER the entire header (which is fixed and contains banners)
+  // Dynamically measure the header height to position below it
+  const [headerHeight, setHeaderHeight] = useState(160);
+  
+  const measureHeader = useCallback(() => {
+    const header = document.querySelector('header');
+    if (header) {
+      setHeaderHeight(header.getBoundingClientRect().height);
+    }
+  }, []);
+
+  useEffect(() => {
+    measureHeader();
+    window.addEventListener('resize', measureHeader);
+    // Re-measure when banners might appear/disappear
+    const observer = new MutationObserver(measureHeader);
+    const header = document.querySelector('header');
+    if (header) {
+      observer.observe(header, { childList: true, subtree: true, attributes: true });
+    }
+    return () => {
+      window.removeEventListener('resize', measureHeader);
+      observer.disconnect();
+    };
+  }, [measureHeader]);
   
   return (
     <div
@@ -406,7 +428,7 @@ const QuickStatsBar = () => {
         isVisible ? "translate-y-0" : "-translate-y-full opacity-0"
       }`}
       style={{ 
-        top: 'calc(env(safe-area-inset-top, 0px) + 140px)'
+        top: `${headerHeight}px`
       }}
     >
       <div className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
