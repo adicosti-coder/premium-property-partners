@@ -403,13 +403,10 @@ const QuickStatsBar = () => {
   
   return (
     <div
-      className={`fixed left-0 right-0 z-30 transition-all duration-300 ${
+      className={`fixed left-0 right-0 z-30 transition-all duration-300 hidden md:block ${
         isVisible ? "translate-y-0" : "-translate-y-full opacity-0"
       }`}
       style={{ 
-        // Position below the fixed header - estimate max header height
-        // PromoBanner (~44px) + PremiumBanner (~48px when visible) + Nav (64-80px) = ~156-172px
-        // We use a safe value that clears all elements
         top: 'calc(env(safe-area-inset-top, 0px) + 140px)'
       }}
     >
