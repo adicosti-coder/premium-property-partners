@@ -34,6 +34,8 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Honeypot field for bot detection
+  const [honeypot, setHoneypot] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -156,6 +158,13 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot check — silently "succeed" if filled (bot trap)
+    if (honeypot) {
+      toast({ title: t.booking.success, description: t.booking.successMessage });
+      onClose();
+      return;
+    }
     
     if (!validateForm()) {
       toast({
@@ -275,6 +284,18 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Honeypot field — hidden from real users, traps bots */}
+          <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+            <label htmlFor="booking_website">Website</label>
+            <input
+              id="booking_website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-foreground flex items-center gap-2">

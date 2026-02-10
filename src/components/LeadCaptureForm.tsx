@@ -50,6 +50,8 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   const [listingUrlError, setListingUrlError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Honeypot field for bot detection
+  const [honeypot, setHoneypot] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Turnstile state
@@ -113,6 +115,13 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Honeypot check — silently "succeed" if filled (bot trap)
+    if (honeypot) {
+      setIsSuccess(true);
+      return;
+    }
+
     setPhoneError("");
     setListingUrlError("");
     
@@ -277,6 +286,18 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
           </>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Honeypot field — hidden from real users, traps bots */}
+            <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+              <label htmlFor="lead_website">Website</label>
+              <input
+                id="lead_website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="name">{t.leadForm.name}</Label>
               <Input

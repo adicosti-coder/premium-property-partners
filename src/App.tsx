@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import { SharedAssistantProvider } from "@/hooks/useSharedAssistantContext";
 import { Loader2 } from "lucide-react";
+import CookieConsent from "@/components/CookieConsent";
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error) => {
@@ -96,6 +97,7 @@ const App = () => (
             <TooltipProvider>
               <Toaster />
               <Sonner />
+              <CookieConsent />
               <BrowserRouter>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
