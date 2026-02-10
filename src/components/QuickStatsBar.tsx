@@ -122,15 +122,14 @@ const QuickStatsBar = () => {
 
       const [propertiesRes, bookingsRes, leadsRes, financialsRes, guestsRes] = await Promise.all([
         supabase.from("properties").select("id", { count: "exact" }).eq("is_active", true),
-        supabase.from("bookings").select("id", { count: "exact" }),
+        supabase.from("booking_availability").select("id", { count: "exact" }),
         supabase.from("leads").select("id", { count: "exact" }),
         supabase.from("financial_records")
           .select("amount, type")
           .gte("date", startOfMonth)
           .lte("date", endOfMonth),
-        supabase.from("bookings")
-          .select("guest_name", { count: "exact" })
-          .not("guest_name", "is", null),
+        supabase.from("booking_availability")
+          .select("id", { count: "exact" }),
       ]);
 
       // Calculate monthly revenue (income - expenses)
