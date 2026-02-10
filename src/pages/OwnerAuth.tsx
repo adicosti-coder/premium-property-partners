@@ -237,15 +237,15 @@ const OwnerAuth = () => {
         toast({ title: t.loginSuccess });
         navigate("/portal-proprietar");
       } else {
-        // Verify owner code first
-        const { data: codeData, error: codeError } = await supabase
-          .from("owner_codes")
-          .select("id, property_id")
-          .eq("code", ownerCode.trim().toUpperCase())
-          .eq("is_used", false)
-          .maybeSingle();
+        // Verify owner code via edge function (no direct table access)
+        const { data: verifyResult, error: verifyError } = await supabase.functions.invoke(
+          "verify-owner-code",
+          { body: { code: ownerCode.trim().toUpperCase() } }
+        );
 
-        if (codeError || !codeData) {
+        const codeData = verifyResult?.valid ? { id: verifyResult.code_id, property_id: verifyResult.property_id } : null;
+
+        if (verifyError || !codeData) {
           toast({
             title: t.invalidCode,
             description: t.invalidCodeMessage,
