@@ -306,8 +306,8 @@ const Header = () => {
 
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            {/* Tagline - Desktop */}
-            <p className="hidden lg:block text-[11px] xl:text-xs 2xl:text-sm leading-tight text-muted-foreground max-w-[280px] xl:max-w-[340px]">
+            {/* Tagline - All screens */}
+            <p className="text-[9px] sm:text-[10px] md:text-[11px] lg:text-[11px] xl:text-xs 2xl:text-sm leading-tight text-muted-foreground max-w-[140px] sm:max-w-[200px] md:max-w-[240px] lg:max-w-[280px] xl:max-w-[340px]">
               {language === "ro"
                 ? "De la achiziție la venit hotelier — un sistem complet orientat spre randament."
                 : "From acquisition to hotel revenue — a complete yield-oriented system."}
@@ -378,12 +378,6 @@ const Header = () => {
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div className="flex flex-col gap-4">
-                {/* Tagline - Mobile */}
-                <p className="text-xs text-muted-foreground pb-3 border-b border-border/50">
-                  {language === "ro"
-                    ? "De la achiziție la venit hotelier — un sistem complet orientat spre randament."
-                    : "From acquisition to hotel revenue — a complete yield-oriented system."}
-                </p>
                 
                 {navLinks.map((link, index) => {
                   const isActive = activeSection === link.href;
