@@ -23,7 +23,7 @@ const BookingReviewsWidget = () => {
     },
     "aggregateRating": {
       "@type": "AggregateRating",
-      "ratingValue": "9.4",
+      "ratingValue": "9.7",
       "bestRating": "10",
       "reviewCount": "527",
       "ratingCount": "527"
@@ -63,7 +63,7 @@ const BookingReviewsWidget = () => {
               />
               <span className="text-sm font-medium text-muted-foreground">Booking.com</span>
             </div>
-            <div className="text-6xl font-bold text-primary">9.4</div>
+            <div className="text-6xl font-bold text-primary">9.7</div>
             <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="w-5 h-5 fill-primary text-primary" />
