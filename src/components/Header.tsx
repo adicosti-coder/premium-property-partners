@@ -3,7 +3,7 @@ import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-re
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PromoBanner from "./PromoBanner";
-import PropertyCodeSearch from "./PropertyCodeSearch";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/lib/supabaseClient";
@@ -306,10 +306,12 @@ const Header = () => {
 
           {/* Right side container - search and actions */}
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            {/* Property Code Search - Desktop - visible from lg with responsive width */}
-            <div className="hidden lg:block w-[120px] xl:w-[150px] 2xl:w-[200px]">
-              <PropertyCodeSearch />
-            </div>
+            {/* Tagline - Desktop */}
+            <p className="hidden lg:block text-[11px] xl:text-xs 2xl:text-sm leading-tight text-muted-foreground max-w-[280px] xl:max-w-[340px]">
+              {language === "ro"
+                ? "De la achiziție la venit hotelier — un sistem complet orientat spre randament."
+                : "From acquisition to hotel revenue — a complete yield-oriented system."}
+            </p>
           
             {/* Favorites link */}
             {favorites.length > 0 && (
@@ -376,16 +378,12 @@ const Header = () => {
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div className="flex flex-col gap-4">
-                {/* Property Code Search - Mobile */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="pb-3 border-b border-border/50"
-                >
-                  <PropertyCodeSearch className="w-full" />
-                </motion.div>
+                {/* Tagline - Mobile */}
+                <p className="text-xs text-muted-foreground pb-3 border-b border-border/50">
+                  {language === "ro"
+                    ? "De la achiziție la venit hotelier — un sistem complet orientat spre randament."
+                    : "From acquisition to hotel revenue — a complete yield-oriented system."}
+                </p>
                 
                 {navLinks.map((link, index) => {
                   const isActive = activeSection === link.href;
