@@ -241,12 +241,22 @@ const Header = () => {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      
+                      <Link to="/auth?mode=signup">
+                        <Button 
+                          size="sm" 
+                          className="h-7 px-3 text-xs bg-gold hover:bg-gold/90 text-gold-foreground font-medium shadow-sm"
+                        >
+                          {language === "ro" ? "Gratuit" : "Free"}
+                          <ChevronRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Link to="/auth?mode=signup">
+                  <Link to="/auth?mode=signup" className="lg:hidden">
                     <Button 
                       size="sm" 
                       className="h-7 px-3 text-xs bg-gold hover:bg-gold/90 text-gold-foreground font-medium shadow-sm"
