@@ -261,13 +261,13 @@ const Hero = () => {
             nextSection?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          <span className="text-xs text-foreground/70 font-medium tracking-wider uppercase">
+        <span className="text-sm md:text-base font-bold text-foreground tracking-wide uppercase text-gradient-gold drop-shadow-[0_0_12px_hsl(var(--primary)/0.4)] animate-pulse" style={{ animationDuration: '3s' }}>
             {language === 'ro' ? 'Cât poate produce apartamentul tău lunar?' : 'How much can your apartment earn monthly?'}
           </span>
-          <div className="w-8 h-12 rounded-full border-2 border-primary/50 flex items-start justify-center p-2 hover:border-primary transition-colors">
-            <div className="w-1.5 h-3 bg-primary rounded-full animate-bounce" />
+          <div className="w-9 h-14 rounded-full border-2 border-primary flex items-start justify-center p-2 shadow-[0_0_16px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)] transition-shadow">
+            <div className="w-2 h-3.5 bg-primary rounded-full animate-bounce" />
           </div>
-          <ChevronDown className="w-5 h-5 text-primary/70 animate-bounce" style={{ animationDelay: '0.2s' }} />
+          <ChevronDown className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} />
         </div>
       )}
       
