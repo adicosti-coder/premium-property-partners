@@ -1714,6 +1714,13 @@ export type Database = {
             foreignKeyName: "property_reviews_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
+            referencedRelation: "booking_availability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
             referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
@@ -2365,7 +2372,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      booking_availability: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          id: string | null
+          property_id: number | null
+          status: string | null
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          id?: string | null
+          property_id?: number | null
+          status?: string | null
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          id?: string | null
+          property_id?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
