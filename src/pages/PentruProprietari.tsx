@@ -312,6 +312,14 @@ const PentruProprietari = () => {
       {/* Quick Value Banner - Moved below Hero */}
       <QuickValueBanner onCtaClick={scrollToCalculator} />
 
+      {/* Calculator Section - Moved up for visibility */}
+      <section id="calculator">
+        <ProfitCalculator />
+      </section>
+
+      {/* Advanced Rental Calculator (Estimator AI) */}
+      <AdvancedRentalCalculator />
+
       {/* Trust Badges */}
       <TrustBadges />
 
@@ -365,16 +373,8 @@ const PentruProprietari = () => {
         </div>
       </section>
 
-      {/* Calculator Section */}
-      <section id="calculator">
-        <ProfitCalculator />
-      </section>
-
       {/* Rental Income Calculator */}
       <RentalIncomeCalculator />
-
-      {/* Advanced Rental Calculator */}
-      <AdvancedRentalCalculator />
 
       {/* How It Works */}
       <HowItWorks />
