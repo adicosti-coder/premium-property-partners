@@ -93,31 +93,15 @@ const Footer = () => {
   const submitNewsletter = async (validatedEmail: string, captchaToken: string | null) => {
     setIsLoading(true);
     try {
-      // Verify captcha if token provided
-      if (captchaToken) {
-        const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
-          "verify-hcaptcha",
-          { body: { token: captchaToken, formType: "newsletter_footer" } }
-        );
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "subscribe-newsletter",
+        { body: { email: validatedEmail, captchaToken, captchaType: "hcaptcha", formType: "newsletter_footer" } }
+      );
 
-        if (captchaError || !captchaResult?.success) {
-          toast.error(language === "ro" ? "Verificare captcha eșuată" : "Captcha verification failed");
-          hcaptchaRef.current?.resetCaptcha();
-          setIsLoading(false);
-          return;
-        }
-      }
+      if (fnError) throw fnError;
 
-      const { error } = await supabase
-        .from("newsletter_subscribers")
-        .insert({ email: validatedEmail });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.error(tr.alreadySubscribed);
-        } else {
-          toast.error(tr.errorMessage);
-        }
+      if (data?.duplicate) {
+        toast.error(tr.alreadySubscribed);
       } else {
         toast.success(tr.successMessage);
         setEmail("");
