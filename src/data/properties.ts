@@ -1,3 +1,4 @@
+// Property image imports
 import apt01 from "@/assets/apt-01.jpg";
 import apt02 from "@/assets/apt-02.jpg";
 import apt03 from "@/assets/apt-03.jpg";
