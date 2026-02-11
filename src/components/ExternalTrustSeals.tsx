@@ -11,7 +11,7 @@ const ExternalTrustSeals = () => {
   const seals = [
     {
       name: "Booking.com",
-      score: "9.4 / 10",
+      score: "9.7 / 10",
       subtitle: language === "ro" ? "Scor Verificat" : "Verified Score",
       url: "https://www.booking.com/hotel/ro/apart-hotel-timisoara.html",
       logo: "https://cf.bstatic.com/static/img/favicon/9ca83ba2a5a3293ff07452cb24949a3eace9b68f.svg",
