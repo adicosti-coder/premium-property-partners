@@ -152,16 +152,19 @@ const RentalIncomeCalculator = () => {
     setIsSavingLead(true);
     
     try {
-      // Save lead to database
-      const { error } = await supabase.from('leads').insert({
-        name: `Calculator Lead - ${city}`,
-        whatsapp_number: 'pending',
-        property_type: room?.name || data.rooms,
-        property_area: room?.baseValue || 0,
-        calculated_net_profit: income.base,
-        calculated_yearly_profit: income.base * 12,
-        source: 'rental-calculator',
-        simulation_data: simulationData,
+      // Save lead via secure edge function
+      const { error } = await supabase.functions.invoke('submit-lead', {
+        body: {
+          name: `Calculator Lead - ${city}`,
+          whatsapp_number: 'pending',
+          property_type: room?.name || data.rooms,
+          property_area: room?.baseValue || 0,
+          calculated_net_profit: income.base,
+          calculated_yearly_profit: income.base * 12,
+          source: 'rental-calculator',
+          simulation_data: simulationData,
+          send_notification: true,
+        },
       });
 
       if (error) {
@@ -169,25 +172,6 @@ const RentalIncomeCalculator = () => {
         toast.error('Eroare la salvarea datelor');
       } else {
         setLeadSaved(true);
-        console.log('Lead saved successfully');
-
-        // Send email notification
-        try {
-          const { error: emailError } = await supabase.functions.invoke('send-lead-notification', {
-            body: {
-              source: 'rental-calculator',
-              simulationData,
-            },
-          });
-
-          if (emailError) {
-            console.error('Error sending email notification:', emailError);
-          } else {
-            console.log('Email notification sent successfully');
-          }
-        } catch (emailErr) {
-          console.error('Error invoking email function:', emailErr);
-        }
       }
     } catch (err) {
       console.error('Error saving lead:', err);

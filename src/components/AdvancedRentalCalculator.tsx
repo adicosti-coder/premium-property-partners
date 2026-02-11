@@ -373,16 +373,18 @@ const AdvancedRentalCalculator = () => {
         calculatedAt: new Date().toISOString(),
       };
       
-      await supabase.from('leads').insert([{
-        name: `Calculator Avansat Lead`,
-        whatsapp_number: 'pending',
-        property_type: 'Apartament',
-        property_area: 0,
-        calculated_net_profit: calculations.netWithSystem,
-        calculated_yearly_profit: calculations.netWithSystem * 12,
-        source: 'advanced-rental-calculator',
-        simulation_data: JSON.parse(JSON.stringify(simulationData)),
-      }]);
+      await supabase.functions.invoke('submit-lead', {
+        body: {
+          name: 'Calculator Avansat Lead',
+          whatsapp_number: 'pending',
+          property_type: 'Apartament',
+          property_area: 0,
+          calculated_net_profit: calculations.netWithSystem,
+          calculated_yearly_profit: calculations.netWithSystem * 12,
+          source: 'advanced-rental-calculator',
+          simulation_data: JSON.parse(JSON.stringify(simulationData)),
+        },
+      });
     } catch (err) {
       console.error('Error saving lead:', err);
     }

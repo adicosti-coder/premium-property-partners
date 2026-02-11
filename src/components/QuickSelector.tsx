@@ -571,41 +571,23 @@ const QuickSelector = () => {
         setUploadProgress({ current: i + 1, total: totalPhotos });
       }
 
-      // Save to leads table with simulation_data containing the zone and photos info
-      await supabase.from("leads").insert({
-        name: formData.name.trim(),
-        whatsapp_number: formData.phone.trim(),
-        property_area: 0,
-        property_type: "cerere_rapida",
-        calculated_net_profit: 0,
-        calculated_yearly_profit: 0,
-        simulation_data: {
-          zone: formData.zone.trim(),
-          photoUrls,
+      // Save lead via secure edge function
+      const { error: leadError } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: formData.name.trim(),
+          whatsapp_number: formData.phone.trim(),
+          property_area: 0,
+          property_type: "cerere_rapida",
           source: "quick_form",
+          simulation_data: {
+            zone: formData.zone.trim(),
+            photoUrls,
+            source: "quick_form",
+          },
         },
       });
 
-      // Send notification
-      try {
-        await supabase.functions.invoke("send-lead-notification", {
-          body: {
-            name: formData.name.trim(),
-            whatsappNumber: formData.phone.trim(),
-            propertyArea: 0,
-            propertyType: `Cerere rapidă - ${formData.zone.trim()}`,
-            calculatedNetProfit: 0,
-            calculatedYearlyProfit: 0,
-            simulationData: {
-              zone: formData.zone.trim(),
-              photoCount: photos.length,
-              photoUrls,
-            },
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send notification:", emailError);
-      }
+      if (leadError) throw leadError;
 
       setIsSuccess(true);
       toast({

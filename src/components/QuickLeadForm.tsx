@@ -75,47 +75,21 @@ const QuickLeadForm = () => {
       return;
     }
 
-    // Server-side captcha verification
-    const isCaptchaValid = await verifyCaptchaOnServer(token);
-
-    if (!isCaptchaValid) {
-      toast({
-        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
-        description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
-        variant: "destructive",
-      });
-      setTurnstileToken(null);
-      setIsSubmitting(false);
-      pendingSubmitRef.current = false;
-      return;
-    }
 
     try {
-      const { error } = await supabase.from("leads").insert({
-        name: formData.name,
-        whatsapp_number: formData.phone,
-        property_area: 50, // Default value
-        property_type: formData.propertyType,
-        source: "quick_form",
-        simulation_data: formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+      const { data, error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: formData.name,
+          whatsapp_number: formData.phone,
+          property_area: 50,
+          property_type: formData.propertyType,
+          source: "quick_form",
+          simulation_data: formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+          captcha_token: token,
+        },
       });
 
       if (error) throw error;
-
-      // Try to send notification
-      try {
-        await supabase.functions.invoke("send-lead-notification", {
-          body: {
-            name: formData.name,
-            whatsappNumber: formData.phone,
-            propertyType: formData.propertyType,
-            listingUrl: formData.listingUrl || undefined,
-            source: "quick_form",
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send notification:", emailError);
-      }
 
       setIsSuccess(true);
       toast({
