@@ -332,8 +332,8 @@ const Header = () => {
             <div className="hidden md:block"><NotificationBell /></div>
             {/* Animation toggle - hidden on mobile */}
             <div className="hidden md:block"><AnimationToggle /></div>
-            {/* Theme toggle - hidden on mobile */}
-            <div className="hidden md:block"><ThemeToggle /></div>
+            {/* Theme toggle - visible on all screens */}
+            <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
             <Link to="/auth">
