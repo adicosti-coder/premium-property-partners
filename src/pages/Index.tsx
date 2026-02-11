@@ -20,7 +20,7 @@ const ContactSection = lazy(() => import("@/components/ContactSection"));
 const CTA = lazy(() => import("@/components/CTA"));
 const Footer = lazy(() => import("@/components/Footer"));
 const BlogPreview = lazy(() => import("@/components/BlogPreview"));
-const QuickStatsBar = lazy(() => import("@/components/QuickStatsBar"));
+
 const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -152,9 +152,6 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />
       <Header />
-      <Suspense fallback={null}>
-        <QuickStatsBar />
-      </Suspense>
       <main>
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
