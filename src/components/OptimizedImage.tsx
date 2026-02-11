@@ -67,12 +67,16 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     setHasError(true);
   };
 
-  // Check if this is a bundled asset (Vite hashed) or a public/static path
-  const isBundledAsset = src.includes("/assets/") && /\-[a-zA-Z0-9]{8}\.\w+$/.test(src);
+  // Check if this is a bundled/dev asset that should NOT get .webp/.avif variants
+  // In dev mode Vite serves from /src/assets/*, in prod from /assets/* with a hash
+  const isAppAsset =
+    src.startsWith("/src/assets/") ||
+    src.startsWith("data:") ||
+    (src.includes("/assets/") && /\-[a-zA-Z0-9]{8}\.\w+$/.test(src));
 
-  // For static images in /public, generate WebP/AVIF variants
-  const webpSrc = !isBundledAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
-  const avifSrc = !isBundledAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
+  // Only generate WebP/AVIF variants for static images served from /public
+  const webpSrc = !isAppAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
+  const avifSrc = !isAppAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
 
   const containerStyle: React.CSSProperties = {
     width,
