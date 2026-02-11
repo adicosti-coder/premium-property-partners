@@ -57,7 +57,7 @@ const PentruOaspeti = () => {
       titleHighlight: "în Timișoara",
       subtitle: "Apartamente complet echipate, curățenie profesională și servicii de hotel 5 stele într-un mediu intim și confortabil.",
       stats: [
-        { value: "9.4", label: "Rating Booking.com", icon: Star },
+        { value: "9.7", label: "Rating Booking.com", icon: Star },
         { value: "500+", label: "Recenzii 5 stele", icon: Award },
         { value: "24/7", label: "Suport disponibil", icon: Clock },
       ],
@@ -165,7 +165,7 @@ const PentruOaspeti = () => {
       titleHighlight: "in Timișoara",
       subtitle: "Fully equipped apartments, professional cleaning and 5-star hotel services in an intimate and comfortable environment.",
       stats: [
-        { value: "9.4", label: "Booking.com Rating", icon: Star },
+        { value: "9.7", label: "Booking.com Rating", icon: Star },
         { value: "500+", label: "5-Star Reviews", icon: Award },
         { value: "24/7", label: "Support Available", icon: Clock },
       ],
