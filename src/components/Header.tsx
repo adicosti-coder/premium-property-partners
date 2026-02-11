@@ -328,12 +328,12 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            {/* Notifications */}
-            <NotificationBell />
-            {/* Animation toggle */}
-            <AnimationToggle />
-            {/* Theme toggle */}
-            <ThemeToggle />
+            {/* Notifications - hidden on mobile, visible md+ */}
+            <div className="hidden md:block"><NotificationBell /></div>
+            {/* Animation toggle - hidden on mobile */}
+            <div className="hidden md:block"><AnimationToggle /></div>
+            {/* Theme toggle - hidden on mobile */}
+            <div className="hidden md:block"><ThemeToggle /></div>
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
             <Link to="/auth">
@@ -434,6 +434,7 @@ const Header = () => {
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
+                  <NotificationBell />
                   <AnimationToggle />
                   <ThemeToggle />
                   <LanguageSwitcher />
