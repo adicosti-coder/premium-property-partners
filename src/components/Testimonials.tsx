@@ -297,7 +297,7 @@ const Testimonials = () => {
                 <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg">B</div>
                 <div className="text-left">
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-foreground">9.4</span>
+                    <span className="font-semibold text-foreground">9.7</span>
                     <span className="text-xs text-muted-foreground">/10</span>
                   </div>
                   <p className="text-xs text-muted-foreground">Booking.com</p>
