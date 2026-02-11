@@ -101,29 +101,12 @@ const ExitIntentPopup = () => {
   const submitExitIntent = async (captchaToken: string | null) => {
     setIsSubmitting(true);
     try {
-      // Verify captcha if token provided
-      if (captchaToken) {
-        const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
-          "verify-turnstile",
-          { body: { token: captchaToken, formType: "newsletter_exit_popup" } }
-        );
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "subscribe-newsletter",
+        { body: { email, captchaToken, captchaType: "turnstile", formType: "newsletter_exit_popup" } }
+      );
 
-        if (captchaError || !captchaResult?.success) {
-          toast.error(language === "ro" ? "Verificare de securitate eșuată" : "Security verification failed");
-          setTurnstileToken(null);
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // Save to newsletter subscribers
-      const { error } = await supabase
-        .from("newsletter_subscribers")
-        .insert({ email, is_active: true });
-
-      if (error && error.code !== "23505") { // Ignore duplicate key error
-        throw error;
-      }
+      if (fnError) throw fnError;
 
       // Send discount email via edge function
       await supabase.functions.invoke("send-exit-discount", {

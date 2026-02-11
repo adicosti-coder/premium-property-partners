@@ -96,31 +96,15 @@ const BlogNewsletterCTA = () => {
     setIsLoading(true);
 
     try {
-      // Verify captcha if token provided
-      if (captchaToken) {
-        const { data: captchaResult, error: captchaError } = await supabase.functions.invoke(
-          "verify-turnstile",
-          { body: { token: captchaToken, formType: "newsletter_blog" } }
-        );
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "subscribe-newsletter",
+        { body: { email: validatedEmail, captchaToken, captchaType: "turnstile", formType: "newsletter_blog" } }
+      );
 
-        if (captchaError || !captchaResult?.success) {
-          toast.error(language === "ro" ? "Verificare de securitate eșuată" : "Security verification failed");
-          setTurnstileToken(null);
-          setIsLoading(false);
-          return;
-        }
-      }
+      if (fnError) throw fnError;
 
-      const { error } = await supabase
-        .from("newsletter_subscribers")
-        .insert({ email: validatedEmail });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.info(t.alreadySubscribed);
-        } else {
-          throw error;
-        }
+      if (data?.duplicate) {
+        toast.info(t.alreadySubscribed);
       } else {
         setIsSubscribed(true);
         toast.success(t.success);
