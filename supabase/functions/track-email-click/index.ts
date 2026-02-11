@@ -1,6 +1,23 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const ALLOWED_DOMAINS = [
+  'realtrustaparthotel.lovable.app',
+  'realtrust.ro',
+  'www.realtrust.ro',
+  'localhost',
+];
+
+function isAllowedRedirect(redirectUrl: string): boolean {
+  try {
+    const target = new URL(redirectUrl);
+    if (target.protocol !== 'https:' && target.protocol !== 'http:') return false;
+    return ALLOWED_DOMAINS.some(d => target.hostname === d || target.hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -26,7 +43,7 @@ serve(async (req) => {
 
     if (!userId) {
       console.log("Missing user_id, redirecting without tracking");
-      if (redirectUrl) {
+      if (redirectUrl && isAllowedRedirect(redirectUrl)) {
         return Response.redirect(redirectUrl, 302);
       }
       return new Response("Missing parameters", { status: 400, headers: corsHeaders });
@@ -66,6 +83,10 @@ serve(async (req) => {
 
     // Redirect to the target URL
     if (redirectUrl) {
+      if (!isAllowedRedirect(redirectUrl)) {
+        console.warn(`Blocked redirect to untrusted domain: ${redirectUrl}`);
+        return new Response("Unauthorized redirect domain", { status: 403, headers: corsHeaders });
+      }
       // Add UTM parameters to the redirect URL if they exist
       const targetUrl = new URL(redirectUrl);
       if (utmSource) targetUrl.searchParams.set("utm_source", utmSource);
