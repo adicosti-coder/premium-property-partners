@@ -320,6 +320,9 @@ const PentruProprietari = () => {
       {/* Advanced Rental Calculator (Estimator AI) */}
       <AdvancedRentalCalculator />
 
+      {/* Rental Income Calculator (Calculator Pro) */}
+      <RentalIncomeCalculator />
+
       {/* Trust Badges */}
       <TrustBadges />
 
@@ -372,9 +375,6 @@ const PentruProprietari = () => {
           <InvestorGuideButton size="lg" />
         </div>
       </section>
-
-      {/* Rental Income Calculator */}
-      <RentalIncomeCalculator />
 
       {/* How It Works */}
       <HowItWorks />
