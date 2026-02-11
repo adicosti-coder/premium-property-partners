@@ -67,16 +67,19 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     setHasError(true);
   };
 
-  // Check if this is a bundled/dev asset that should NOT get .webp/.avif variants
-  // In dev mode Vite serves from /src/assets/*, in prod from /assets/* with a hash
-  const isAppAsset =
+  // Check if this is an asset that should NOT get .webp/.avif variants
+  // Skip for: bundled assets, data URIs, blob URIs, and external URLs
+  const skipVariants =
     src.startsWith("/src/assets/") ||
     src.startsWith("data:") ||
+    src.startsWith("blob:") ||
+    src.startsWith("http://") ||
+    src.startsWith("https://") ||
     (src.includes("/assets/") && /\-[a-zA-Z0-9]{8}\.\w+$/.test(src));
 
-  // Only generate WebP/AVIF variants for static images served from /public
-  const webpSrc = !isAppAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
-  const avifSrc = !isAppAsset ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
+  // Only generate WebP/AVIF variants for static images served from /public (relative paths)
+  const webpSrc = !skipVariants ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
+  const avifSrc = !skipVariants ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
 
   const containerStyle: React.CSSProperties = {
     width,
