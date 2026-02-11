@@ -184,55 +184,26 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
     }
 
     setIsSubmitting(true);
-    setIsVerifyingCaptcha(true);
-
-    // Server-side captcha verification
-    const isCaptchaValid = await verifyCaptchaOnServer(captchaToken);
-    setIsVerifyingCaptcha(false);
-
-    if (!isCaptchaValid) {
-      toast({
-        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
-        description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Încercați din nou.",
-        variant: "destructive",
-      });
-      setCaptchaToken(null);
-      setIsSubmitting(false);
-      return;
-    }
 
     try {
-      const { error } = await supabase.from("leads").insert({
-        name: name.trim(),
-        whatsapp_number: whatsappNumber.trim(),
-        property_area: parseInt(propertyArea),
-        property_type: propertyType,
-        calculated_net_profit: calculatedNetProfit,
-        calculated_yearly_profit: calculatedYearlyProfit,
-        simulation_data: {
-          ...simulationData,
-          listingUrl: listingUrl.trim() || undefined,
+      const { data, error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: name.trim(),
+          whatsapp_number: whatsappNumber.trim(),
+          property_area: parseInt(propertyArea),
+          property_type: propertyType,
+          calculated_net_profit: calculatedNetProfit,
+          calculated_yearly_profit: calculatedYearlyProfit,
+          source: "lead_capture_form",
+          simulation_data: {
+            ...simulationData,
+            listingUrl: listingUrl.trim() || undefined,
+          },
+          captcha_token: captchaToken,
         },
       });
 
       if (error) throw error;
-
-      try {
-        await supabase.functions.invoke("send-lead-notification", {
-          body: {
-            name: name.trim(),
-            whatsappNumber: whatsappNumber.trim(),
-            propertyArea: parseInt(propertyArea),
-            propertyType: propertyType,
-            listingUrl: listingUrl.trim() || undefined,
-            calculatedNetProfit,
-            calculatedYearlyProfit,
-            simulationData,
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send email notification:", emailError);
-      }
 
       setIsSuccess(true);
       toast({
