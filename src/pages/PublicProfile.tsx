@@ -103,9 +103,7 @@ const PublicProfile = () => {
       if (!userId) return null;
       
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url, created_at")
-        .eq("id", userId)
+        .rpc("get_public_profile", { p_user_id: userId })
         .single();
 
       if (error) {

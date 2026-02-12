@@ -2405,6 +2405,15 @@ export type Database = {
       }
       check_cta_rate_limit: { Args: { p_session_id: string }; Returns: boolean }
       cleanup_old_tracking_data: { Args: never; Returns: undefined }
+      get_public_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          full_name: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
