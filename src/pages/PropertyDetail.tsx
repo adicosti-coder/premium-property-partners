@@ -265,14 +265,12 @@ const PropertyDetail = () => {
               
               {/* Header Info */}
               <div>
-                <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  {dbProperty?.property_code && (
-                    <Badge variant="secondary" className="font-mono text-sm bg-muted">
-                      {dbProperty.property_code}
-                    </Badge>
-                  )}
-                  <h1 className="text-4xl font-serif font-bold">{property.name}</h1>
-                </div>
+                {dbProperty?.property_code && (
+                  <Badge variant="secondary" className="font-mono text-sm bg-muted mb-2 inline-block">
+                    {dbProperty.property_code}
+                  </Badge>
+                )}
+                <h1 className="text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
                 <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" /> {property.location}, Timișoara</p>
               </div>
 
