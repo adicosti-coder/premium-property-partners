@@ -25,6 +25,7 @@ import {
   MapPin
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import InvestmentQuickCalculator from "@/components/InvestmentQuickCalculator";
 
 interface InvestmentProperty {
   id: string;
@@ -371,6 +372,11 @@ const Investitii = () => {
               </Button>
             </div>
           )}
+
+          {/* Quick Calculator */}
+          <div className="mt-16 max-w-2xl mx-auto">
+            <InvestmentQuickCalculator />
+          </div>
         </div>
       </section>
 
