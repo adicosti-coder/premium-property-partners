@@ -18,10 +18,10 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
   const [chirie, setChirie] = useState(defaultRent);
 
   const { yieldAnual, aniAmortizare } = useMemo(() => {
-    const venitNetAnual = (chirie * 11) * 0.95;
-    const investitieTotala = pret * 1.03;
-    const yieldAnual = investitieTotala > 0 ? (venitNetAnual / investitieTotala) * 100 : 0;
-    const aniAmortizare = venitNetAnual > 0 ? investitieTotala / venitNetAnual : 0;
+    const venitBrutAnual = chirie * 12;
+    const investitieTotala = pret * 1.02;
+    const yieldAnual = investitieTotala > 0 ? (venitBrutAnual / investitieTotala) * 100 : 0;
+    const aniAmortizare = venitBrutAnual > 0 ? investitieTotala / venitBrutAnual : 0;
     return { yieldAnual, aniAmortizare };
   }, [pret, chirie]);
 
