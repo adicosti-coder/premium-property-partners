@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,41 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting: 10 requests per minute per IP
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+                     req.headers.get("cf-connecting-ip") || "unknown";
+    const rateLimitResult = checkRateLimit(`verify-owner-code:${clientIP}`, 10, 60000);
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Too many requests. Please try again later." }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders, "Retry-After": "60" } }
+      );
+    }
+
+    // Require authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Invalid authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { code } = await req.json();
 
     if (!code || typeof code !== "string" || code.trim().length < 3 || code.trim().length > 50) {
@@ -23,7 +59,6 @@ serve(async (req) => {
 
     const sanitizedCode = code.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, "");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -43,7 +78,6 @@ serve(async (req) => {
     }
 
     if (!data) {
-      // Don't reveal whether code exists but is used vs doesn't exist
       return new Response(
         JSON.stringify({ valid: false }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
