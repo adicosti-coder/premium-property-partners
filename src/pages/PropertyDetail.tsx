@@ -271,7 +271,7 @@ const PropertyDetail = () => {
                   </Badge>
                 )}
                 <h1 className="text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
-                <p className="text-muted-foreground flex items-center gap-1"><MapPin className="w-4 h-4" /> {property.location}, Timișoara</p>
+                <p className="text-muted-foreground flex items-center gap-1 break-all"><MapPin className="w-4 h-4 shrink-0" /> <span className="break-all">{property.location}</span></p>
               </div>
 
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
