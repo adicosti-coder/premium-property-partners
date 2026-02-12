@@ -31,6 +31,7 @@ import {
 import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+import InvestmentYieldCalculator from "@/components/InvestmentYieldCalculator";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
@@ -251,6 +252,9 @@ const Imobiliare = () => {
           </div>
         </div>
       </section>
+
+      {/* Investment Yield Calculator */}
+      <InvestmentYieldCalculator />
 
       {/* Services Section */}
       <section id="services" className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
