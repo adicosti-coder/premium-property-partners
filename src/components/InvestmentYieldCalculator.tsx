@@ -21,9 +21,9 @@ const InvestmentYieldCalculator = () => {
   const [vacanta, setVacanta] = useState(1);
 
   const investitieTotala = pret + renovare;
-  const venitNetAnual = chirie * (12 - vacanta) * 0.95;
-  const yieldAnual = investitieTotala > 0 ? (venitNetAnual / investitieTotala) * 100 : 0;
-  const aniAmortizare = venitNetAnual > 0 ? investitieTotala / venitNetAnual : 0;
+  const venitAnual = chirie * 12;
+  const yieldAnual = investitieTotala > 0 ? (venitAnual / investitieTotala) * 100 : 0;
+  const aniAmortizare = venitAnual > 0 ? investitieTotala / venitAnual : 0;
 
   const handleWhatsApp = useCallback(() => {
     const msg = `Bună ziua! Am simulat un randament imobiliar pe RealTrust.ro:%0A- Randament: ${yieldAnual.toFixed(2)}%%0A- Amortizare: ${aniAmortizare.toFixed(1)} ani%0A- Pagina: ${window.location.href}`;
@@ -42,14 +42,14 @@ const InvestmentYieldCalculator = () => {
       "───────────────────────────────",
       `Randament Anual (Yield): ${yieldAnual.toFixed(2)}%`,
       `Amortizare: ${aniAmortizare.toFixed(1)} ani`,
-      `Profit Net Estimat: ${Math.round(venitNetAnual).toLocaleString()} € / an`,
+      `Profit Estimat: ${Math.round(venitAnual).toLocaleString()} € / an`,
     ].join("\n");
     const blob = new Blob([text], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "Analiza-Investitie-RealTrust.txt";
     link.click();
-  }, [pret, renovare, investitieTotala, chirie, vacanta, yieldAnual, aniAmortizare, venitNetAnual]);
+  }, [pret, renovare, investitieTotala, chirie, vacanta, yieldAnual, aniAmortizare, venitAnual]);
 
   const ro = language === "ro";
 
@@ -154,7 +154,7 @@ const InvestmentYieldCalculator = () => {
               <p className="mt-3 text-sm text-muted-foreground">
                 {ro ? "Profit Net estimat: " : "Estimated Net Profit: "}
                 <strong className="text-foreground">
-                  {Math.round(venitNetAnual).toLocaleString()} € / {ro ? "an" : "year"}
+                  {Math.round(venitAnual).toLocaleString()} € / {ro ? "an" : "year"}
                 </strong>
               </p>
             </div>

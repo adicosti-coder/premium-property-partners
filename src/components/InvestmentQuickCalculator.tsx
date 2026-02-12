@@ -10,12 +10,12 @@ const InvestmentQuickCalculator = () => {
   const [pret, setPret] = useState(95000);
   const [chirie, setChirie] = useState(500);
 
-  const { yieldAnual, aniAmortizare, venitNetAnual } = useMemo(() => {
-    const venitNetAnual = (chirie * 11) * 0.95;
-    const investitieTotala = pret + (pret * 0.03);
-    const yieldAnual = investitieTotala > 0 ? (venitNetAnual / investitieTotala) * 100 : 0;
-    const aniAmortizare = venitNetAnual > 0 ? investitieTotala / venitNetAnual : 0;
-    return { yieldAnual, aniAmortizare, venitNetAnual };
+  const { yieldAnual, aniAmortizare, venitAnual } = useMemo(() => {
+    const venitAnual = chirie * 12;
+    const investitieTotala = pret * 1.02;
+    const yieldAnual = investitieTotala > 0 ? (venitAnual / investitieTotala) * 100 : 0;
+    const aniAmortizare = venitAnual > 0 ? investitieTotala / venitAnual : 0;
+    return { yieldAnual, aniAmortizare, venitAnual };
   }, [pret, chirie]);
 
   const handleWhatsApp = () => {

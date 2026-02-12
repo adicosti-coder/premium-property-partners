@@ -27,8 +27,8 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
 
   const handleWhatsAppCalc = () => {
     const msg = language === "ro"
-      ? `Bună ziua! Sunt interesat de apartamentul de pe RealTrust (${window.location.href}). Am simulat un yield de ${yieldAnual.toFixed(2)}%. Doresc să discutăm despre pașii achiziției.`
-      : `Hello! I'm interested in the property on RealTrust (${window.location.href}). I simulated a yield of ${yieldAnual.toFixed(2)}%. I'd like to discuss the acquisition steps.`;
+      ? `Bună ziua! Analizez proprietatea de pe RealTrust (${window.location.href}). Calculul pe 12 luni indică un randament brut de ${yieldAnual.toFixed(2)}%. Doresc mai multe detalii!`
+      : `Hello! I'm analyzing the property on RealTrust (${window.location.href}). The 12-month calculation shows a gross yield of ${yieldAnual.toFixed(2)}%. I'd like to discuss further!`;
     window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
