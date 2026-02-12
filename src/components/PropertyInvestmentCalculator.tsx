@@ -3,7 +3,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, CheckCircle2 } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 
 interface Props {
   propertyName: string;
@@ -16,133 +16,175 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
   const { language } = useLanguage();
   const [pret, setPret] = useState(defaultPrice);
   const [chirie, setChirie] = useState(defaultRent);
+  const [taxe, setTaxe] = useState(2000);
+  const [mentenanta, setMentenanta] = useState(600);
+  const [showCosts, setShowCosts] = useState(false);
 
-  const { yieldAnual, aniAmortizare } = useMemo(() => {
-    const venitBrutAnual = chirie * 12;
-    const investitieTotala = pret * 1.02;
-    const yieldAnual = investitieTotala > 0 ? (venitBrutAnual / investitieTotala) * 100 : 0;
-    const aniAmortizare = venitBrutAnual > 0 ? investitieTotala / venitBrutAnual : 0;
-    return { yieldAnual, aniAmortizare };
-  }, [pret, chirie]);
+  const { yieldNet, aniAmortizare, rating, ratingColor, progressPercent } = useMemo(() => {
+    if (pret <= 0 || chirie <= 0) {
+      return { yieldNet: 0, aniAmortizare: 0, rating: "", ratingColor: "text-amber-500", progressPercent: 0 };
+    }
+    const investitieTotala = pret + taxe;
+    const venitNetAnual = (chirie * 12) - mentenanta;
+    const yieldNet = investitieTotala > 0 ? (venitNetAnual / investitieTotala) * 100 : 0;
+    const aniAmortizare = venitNetAnual > 0 ? investitieTotala / venitNetAnual : 0;
+    const progressPercent = Math.min(Math.max((yieldNet / 10) * 100, 0), 100);
+
+    let rating = "";
+    let ratingColor = "text-amber-500";
+    if (yieldNet >= 7.5) {
+      rating = language === "ro" ? "INVESTIȚIE EXCELENTĂ 🔥" : "EXCELLENT INVESTMENT 🔥";
+      ratingColor = "text-emerald-400";
+    } else if (yieldNet >= 5) {
+      rating = language === "ro" ? "RANDAMENT OPTIM 👍" : "OPTIMAL YIELD 👍";
+      ratingColor = "text-amber-500";
+    } else {
+      rating = language === "ro" ? "RANDAMENT SUB MEDIE" : "BELOW AVERAGE YIELD";
+      ratingColor = "text-red-400";
+    }
+
+    return { yieldNet, aniAmortizare, rating, ratingColor, progressPercent };
+  }, [pret, chirie, taxe, mentenanta, language]);
+
+  const progressBarColor = useMemo(() => {
+    if (yieldNet >= 7.5) return "bg-emerald-400";
+    if (yieldNet >= 5) return "bg-amber-500";
+    return "bg-red-400";
+  }, [yieldNet]);
 
   const handleWhatsAppCalc = () => {
     const msg = language === "ro"
-      ? `Bună ziua! Analizez proprietatea de pe RealTrust (${window.location.href}). Calculul pe 12 luni indică un randament brut de ${yieldAnual.toFixed(2)}%. Doresc mai multe detalii!`
-      : `Hello! I'm analyzing the property on RealTrust (${window.location.href}). The 12-month calculation shows a gross yield of ${yieldAnual.toFixed(2)}%. I'd like to discuss further!`;
+      ? `Bună ziua! Analizez proprietatea: ${window.location.href}. Am simulat un yield net de ${yieldNet.toFixed(2)}%. Doresc o consultanță.`
+      : `Hello! I'm analyzing the property: ${window.location.href}. I simulated a net yield of ${yieldNet.toFixed(2)}%. I'd like a consultation.`;
     window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleWhatsAppSell = () => {
     const msg = language === "ro"
-      ? `Bună ziua! Sunt proprietar și am văzut anunțul de pe ${window.location.href}. Doresc o evaluare gratuită pentru proprietatea mea și detalii despre vânzarea rapidă prin RealTrust.`
-      : `Hello! I'm a property owner and I saw the listing at ${window.location.href}. I'd like a free evaluation for my property and details about a quick sale through RealTrust.`;
+      ? `Bună ziua! Doresc o evaluare pentru o proprietate similară cu cea de pe link: ${window.location.href}. Vă rog să mă contactați.`
+      : `Hello! I'd like an evaluation for a property similar to: ${window.location.href}. Please contact me.`;
     window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const t = language === "ro"
     ? {
-        calcTitle: "Simulează Profitabilitatea",
-        calcSubtitle: "Ești investitor? Vezi randamentul acestui apartament:",
-        pret: "Preț Achiziție (€)",
-        chirie: "Chirie Lunară Estimată (€)",
-        yieldLabel: "Yield Anual",
-        amortLabel: "Amortizare",
+        calcTitle: "Analiză Detaliată Investiție",
+        pret: "PREȚ ACHIZIȚIE (€)",
+        chirie: "CHIRIE ESTIMATĂ (€)",
+        toggleCosts: "Ajustează Cheltuieli & Taxe",
+        taxeLabel: "Taxe Notariale & Transfer (€)",
+        mentenantaLabel: "Mentenanță / Impozit anual (€)",
+        yieldLabel: "YIELD NET ANUAL",
+        amortLabel: "AMORTIZARE",
         ani: "ani",
-        calcCta: "SOLICITĂ ANALIZĂ DETALIATĂ",
-        sellTitle: "Vrei să vinzi rapid?",
-        sellDesc: "Ai o proprietate similară în Timișoara și vrei să o vinzi fără bătăi de cap?",
-        sellTeam: "Echipa RealTrust îți oferă:",
-        sellBenefits: [
-          "Evaluare gratuită la prețul pieței",
-          "Acces la baza noastră de investitori activi",
-          "Vânzare în medie în mai puțin de 30 de zile",
-        ],
-        sellCta: "VREAU O EVALUARE GRATUITĂ",
-        sellBadge: "PROPRIETARI",
+        calcCta: "Solicită Analiză Personalizată",
+        sellTitle: "Vrei să vinzi prin RealTrust?",
+        sellDesc: "Livrăm rapoarte de investiții similare cumpărătorilor noștri pentru a vinde proprietatea ta mai rapid și la prețul corect.",
+        sellCta: "EVALUARE GRATUITĂ WHATSAPP",
+        defaultRating: "Introduceți cifrele pentru calcul",
       }
     : {
-        calcTitle: "Simulate Profitability",
-        calcSubtitle: "Are you an investor? See the yield for this apartment:",
-        pret: "Purchase Price (€)",
-        chirie: "Estimated Monthly Rent (€)",
-        yieldLabel: "Annual Yield",
-        amortLabel: "Payback",
+        calcTitle: "Detailed Investment Analysis",
+        pret: "PURCHASE PRICE (€)",
+        chirie: "ESTIMATED RENT (€)",
+        toggleCosts: "Adjust Expenses & Taxes",
+        taxeLabel: "Notary & Transfer Taxes (€)",
+        mentenantaLabel: "Maintenance / Annual Tax (€)",
+        yieldLabel: "NET ANNUAL YIELD",
+        amortLabel: "PAYBACK",
         ani: "years",
-        calcCta: "REQUEST DETAILED ANALYSIS",
-        sellTitle: "Want to sell fast?",
-        sellDesc: "Do you have a similar property in Timișoara and want to sell it hassle-free?",
-        sellTeam: "The RealTrust team offers you:",
-        sellBenefits: [
-          "Free market-price evaluation",
-          "Access to our active investor base",
-          "Sale on average in less than 30 days",
-        ],
-        sellCta: "I WANT A FREE EVALUATION",
-        sellBadge: "OWNERS",
+        calcCta: "Request Personalized Analysis",
+        sellTitle: "Want to sell through RealTrust?",
+        sellDesc: "We deliver similar investment reports to our buyers to sell your property faster and at the right price.",
+        sellCta: "FREE WHATSAPP EVALUATION",
+        defaultRating: "Enter figures to calculate",
       };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 my-8">
       {/* Calculator Card */}
       <div className="border border-border p-6 rounded-2xl bg-card shadow-sm">
-        <h3 className="text-foreground font-bold text-lg border-b-2 border-amber-500 inline-block pb-1 mb-1">
+        <h3 className="text-foreground font-bold text-lg border-b-2 border-amber-500 inline-block pb-1 mb-4">
           {t.calcTitle}
         </h3>
-        <p className="text-muted-foreground text-sm mb-5">{t.calcSubtitle}</p>
 
-        <div className="space-y-4 mb-5">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs font-bold">{t.pret}</Label>
+            <Label className="text-[11px] font-bold text-muted-foreground">{t.pret}</Label>
             <Input type="number" value={pret} onChange={(e) => setPret(Number(e.target.value))} className="mt-1" />
           </div>
           <div>
-            <Label className="text-xs font-bold">{t.chirie}</Label>
+            <Label className="text-[11px] font-bold text-muted-foreground">{t.chirie}</Label>
             <Input type="number" value={chirie} onChange={(e) => setChirie(Number(e.target.value))} className="mt-1" />
           </div>
         </div>
 
-        <div className="bg-slate-900 p-4 rounded-xl flex justify-around text-center text-white">
-          <div>
-            <span className="text-[10px] uppercase text-slate-400">{t.yieldLabel}</span>
-            <div className="text-xl font-bold text-amber-500">{yieldAnual.toFixed(2)}%</div>
-          </div>
-          <div className="border-l border-slate-700 pl-4">
-            <span className="text-[10px] uppercase text-slate-400">{t.amortLabel}</span>
-            <div className="text-xl font-bold text-green-400">
-              {aniAmortizare.toFixed(1)} {t.ani}
+        {/* Expandable Costs */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowCosts(!showCosts)}
+            className="flex items-center gap-1 text-xs text-amber-500 font-bold cursor-pointer bg-transparent border-none p-0"
+          >
+            {showCosts ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            {t.toggleCosts}
+          </button>
+          {showCosts && (
+            <div className="mt-2 p-3 bg-muted/50 rounded-lg space-y-2">
+              <div>
+                <Label className="text-[10px] text-muted-foreground">{t.taxeLabel}</Label>
+                <Input type="number" value={taxe} onChange={(e) => setTaxe(Number(e.target.value))} className="mt-0.5 h-8 text-sm" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">{t.mentenantaLabel}</Label>
+                <Input type="number" value={mentenanta} onChange={(e) => setMentenanta(Number(e.target.value))} className="mt-0.5 h-8 text-sm" />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <Button onClick={handleWhatsAppCalc} className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold">
+        {/* Results */}
+        <div className="bg-slate-900 p-5 rounded-xl text-white text-center mt-5">
+          <div className="flex justify-around">
+            <div>
+              <span className="text-[10px] text-slate-400">{t.yieldLabel}</span>
+              <div className={`text-2xl font-bold ${pret > 0 && chirie > 0 ? ratingColor : "text-amber-500"}`}>
+                {yieldNet.toFixed(2)}%
+              </div>
+            </div>
+            <div className="border-l border-slate-700 pl-4">
+              <span className="text-[10px] text-slate-400">{t.amortLabel}</span>
+              <div className="text-xl font-bold text-white">
+                {aniAmortizare.toFixed(1)} {t.ani}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full h-1.5 bg-slate-700 rounded-full mt-4">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${progressBarColor}`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2 font-bold">
+            {pret > 0 && chirie > 0 ? rating : t.defaultRating}
+          </p>
+        </div>
+
+        <Button onClick={handleWhatsAppCalc} className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase text-xs">
           {t.calcCta}
         </Button>
       </div>
 
       {/* Sell Fast Card */}
-      <div className="border-2 border-amber-500 p-6 rounded-2xl bg-amber-50 dark:bg-amber-500/5 flex flex-col relative overflow-hidden">
-        <div className="absolute top-3 -right-8 bg-amber-500 text-slate-900 px-10 py-1 rotate-45 text-xs font-bold">
-          {t.sellBadge}
-        </div>
-
+      <div className="border-2 border-amber-500 p-6 rounded-2xl bg-amber-50 dark:bg-amber-500/5 flex flex-col justify-center">
         <h3 className="text-foreground font-bold text-lg mt-0">{t.sellTitle}</h3>
-        <p className="text-muted-foreground text-sm leading-relaxed mb-2">
+        <p className="text-muted-foreground text-sm leading-relaxed">
           {t.sellDesc}
-          <br /><br />
-          <strong>{t.sellTeam}</strong>
         </p>
-        <ul className="space-y-2 mb-5 text-sm text-muted-foreground pl-1">
-          {t.sellBenefits.map((b, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-              {b}
-            </li>
-          ))}
-        </ul>
-
         <Button
           onClick={handleWhatsAppSell}
-          className="w-full mt-auto bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-md"
+          className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-md text-sm"
         >
           {t.sellCta}
         </Button>
