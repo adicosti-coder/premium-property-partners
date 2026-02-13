@@ -142,7 +142,7 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
   const handlePdf = () => window.print();
 
   return (
-    <div className="max-w-[1000px] mx-auto my-8 bg-card rounded-[20px] p-6 md:p-10 shadow-xl border border-border relative print:shadow-none print:border-none print:p-5">
+    <div className="max-w-[1000px] mx-auto my-8 bg-card rounded-[20px] p-4 sm:p-6 md:p-10 shadow-xl border border-border relative print:shadow-none print:border-none print:p-5 overflow-hidden">
       {/* Brand */}
       <div className="text-right font-bold text-foreground text-xl -mb-2">
         REAL<span className="text-amber-500">TRUST</span>

@@ -252,26 +252,26 @@ const PropertyDetail = () => {
         </div>
 
         {/* Galerie - Rămâne neschimbată */}
-        <div className="container mx-auto px-6 mb-8">
+        <div className="container mx-auto px-4 sm:px-6 mb-8">
            <div className="relative aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer" onClick={() => setLightboxOpen(true)}>
              <OptimizedImage src={galleryImages[0]} alt={property.name} className="w-full h-full object-cover" priority={true} />
              <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
            </div>
         </div>
 
-        <div className="container mx-auto px-6 pb-24">
+        <div className="container mx-auto px-4 sm:px-6 pb-24 overflow-hidden">
           <div className="grid lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-8 min-w-0">
               
               {/* Header Info */}
-              <div>
+              <div className="min-w-0">
                 {dbProperty?.property_code && (
                   <Badge variant="secondary" className="font-mono text-sm bg-muted mb-2 inline-block">
                     {dbProperty.property_code}
                   </Badge>
                 )}
-                <h1 className="text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
-                <p className="text-muted-foreground flex items-center gap-1 break-all"><MapPin className="w-4 h-4 shrink-0" /> <span className="break-all">{property.location}</span></p>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
+                <p className="text-muted-foreground flex items-center gap-1 min-w-0"><MapPin className="w-4 h-4 shrink-0" /> <span className="break-all truncate">{property.location}</span></p>
               </div>
 
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
@@ -286,7 +286,7 @@ const PropertyDetail = () => {
 
               {/* SECȚIUNEA DE INVESTIȚIE - apare pentru DB properties când NU este închiriere */}
               {dbProperty && dbProperty.listing_type !== 'inchiriere' && (isDbProperty || dbProperty.status_operativ === 'investitie') && (dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
-                <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-8 rounded-3xl shadow-sm border-l-4 border-l-primary">
+                <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-5 sm:p-8 rounded-3xl shadow-sm border-l-4 border-l-primary overflow-hidden">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-6 h-6 text-primary" />
                     <h2 className="text-2xl font-serif font-bold">
