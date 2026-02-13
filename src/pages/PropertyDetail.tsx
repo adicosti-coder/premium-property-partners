@@ -240,7 +240,7 @@ const PropertyDetail = () => {
   if (!property) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead title={`${property.name} | RealTrust Timișoara`} />
       <Header />
       
