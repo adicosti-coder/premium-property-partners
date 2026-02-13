@@ -85,8 +85,8 @@ const InvestmentQuickCalculator = () => {
     futureVal: "Valoare Estimată:",
     totalProfit: "Profit Total:",
     cta: "📩 Contact WhatsApp",
-    expertName: "Adrian Costu",
-    expertRole: "Investment Specialist @ RealTrust",
+    expertName: "Adrian Costi",
+    expertRole: "Investment Specialist @ RealTrust & ApArt Hotel",
   } : {
     title: "RealTrust Investment Analysis",
     propValue: "💰 Property Value (€)",
@@ -100,8 +100,8 @@ const InvestmentQuickCalculator = () => {
     futureVal: "Estimated Value:",
     totalProfit: "Total Profit:",
     cta: "📩 Contact WhatsApp",
-    expertName: "Adrian Costu",
-    expertRole: "Investment Specialist @ RealTrust",
+    expertName: "Adrian Costi",
+    expertRole: "Investment Specialist @ RealTrust & ApArt Hotel",
   };
 
   return (

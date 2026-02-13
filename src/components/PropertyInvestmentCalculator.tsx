@@ -95,8 +95,8 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
     step3Title: "03. MANAGEMENT",
     step3Desc: "Configurăm strategia ApArt Hotel sau selectăm chiriașul ideal.",
     analyzing: "Se analizează indicatorii...",
-    expertName: "Adrian Costu",
-    expertRole: "Investment Specialist @ RealTrust Timișoara",
+    expertName: "Adrian Costi",
+    expertRole: "Investment Specialist @ RealTrust & ApArt Hotel",
     ctaWhatsApp: "📩 Contact WhatsApp",
     ctaPdf: "📄 Salvează PDF",
   } : {
@@ -122,8 +122,8 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
     step3Title: "03. MANAGEMENT",
     step3Desc: "We configure the ApArt Hotel strategy or select the ideal tenant.",
     analyzing: "Analyzing indicators...",
-    expertName: "Adrian Costu",
-    expertRole: "Investment Specialist @ RealTrust Timișoara",
+    expertName: "Adrian Costi",
+    expertRole: "Investment Specialist @ RealTrust & ApArt Hotel",
     ctaWhatsApp: "📩 Contact WhatsApp",
     ctaPdf: "📄 Save PDF",
   };
