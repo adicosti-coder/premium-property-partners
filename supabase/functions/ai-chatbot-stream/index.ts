@@ -15,81 +15,134 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
   const now = Date.now();
   const existing = rateLimitStore.get(ip);
-
   if (!existing || existing.resetTime < now) {
     rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
     return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - 1 };
   }
-
-  if (existing.count >= MAX_REQUESTS_PER_WINDOW) {
-    return { allowed: false, remaining: 0 };
-  }
-
+  if (existing.count >= MAX_REQUESTS_PER_WINDOW) return { allowed: false, remaining: 0 };
   existing.count++;
   return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - existing.count };
 }
 
 function getClientIP(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  const realIP = req.headers.get("x-real-ip");
-  if (realIP) return realIP.trim();
-  return "unknown";
+  return req.headers.get("x-forwarded-for")?.split(",")[0].trim()
+    || req.headers.get("x-real-ip")?.trim()
+    || "unknown";
 }
 
-const SYSTEM_PROMPT_RO = `Ești asistentul virtual premium al ApArt Hotel Timișoara.
+// ---------- Dynamic System Prompt Builder ----------
 
-INFO COMPANIE:
-- Nume: ApArt Hotel Timișoara (RealTrust)
-- Locație: Timișoara, România
-- Contact: WhatsApp +40723154520, email adicosti@gmail.com
-- Rating: 4.9/5, Ocupare: 98%
+async function buildSystemPrompt(language: string): Promise<string> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const sb = createClient(supabaseUrl, serviceKey);
 
-PENTRU OASPEȚI:
-- Check-in flexibil cu smart lock
-- Apartamente premium în zone centrale
-- WiFi, Netflix, facilități complete
-- Cod discount rezervări directe: DIRECT5 (5% reducere)
+  // Fetch active properties
+  const { data: properties } = await sb
+    .from("properties")
+    .select("name, booking_url, tag, location, property_code, estimated_revenue")
+    .eq("is_active", true)
+    .order("display_order");
 
-PENTRU PROPRIETARI:
-- Management complet proprietate
-- +40% venit vs chirie tradițională
-- Fotografii profesionale gratuite
-- Raportare lunară transparentă
-- Comision: 15-20%
+  const propertyLines = (properties || []).map((p: any) => {
+    const revenue = p.estimated_revenue ? ` | Venit estimat: ${p.estimated_revenue}` : "";
+    const bookingLink = p.booking_url && p.booking_url !== "#"
+      ? p.booking_url
+      : "https://realtrustaparthotel.lovable.app/oaspeti";
+    return `  • ${p.name} (${p.property_code}) – ${p.tag}${revenue}\n    Rezervare: ${bookingLink}`;
+  }).join("\n");
 
-REGULI:
-1. Răspunde DOAR în română
-2. Fii prietenos și concis
-3. Menționează codul DIRECT5 pentru rezervări
-4. Pentru prețuri specifice: îndrumă către WhatsApp`;
+  const fallbackBooking = "https://realtrustaparthotel.lovable.app/oaspeti";
+  const whatsapp = "https://wa.me/40723154520";
 
-const SYSTEM_PROMPT_EN = `You are ApArt Hotel Timișoara's premium virtual assistant.
+  if (language === "en") {
+    return `You are ApArt Hotel Timișoara's premium Digital Concierge (powered by RealTrust).
 
-COMPANY INFO:
-- Name: ApArt Hotel Timișoara (RealTrust)
-- Location: Timișoara, Romania
-- Contact: WhatsApp +40723154520, email adicosti@gmail.com
-- Rating: 4.9/5, Occupancy: 98%
+=== COMPANY INFO ===
+• Name: ApArt Hotel Timișoara (RealTrust)
+• Location: Timișoara, Romania
+• Contact: WhatsApp ${whatsapp} | email adicosti@gmail.com
+• Rating: 4.9/5 | Occupancy: 98%
 
-FOR GUESTS:
-- Flexible smart lock check-in
-- Premium apartments in central areas
-- WiFi, Netflix, full amenities
-- Direct booking discount: DIRECT5 (5% off)
+=== HOUSE RULES ===
+• Check-in: from 15:00 (flexible with prior arrangement)
+• Check-out: until 11:00
+• Quiet hours: 22:00 – 08:00
+• No smoking inside the apartments
+• Pets: accepted on request (additional cleaning fee may apply)
+• Smart lock access – no physical key needed
+• Free high-speed WiFi, Netflix, fully equipped kitchen
+• Parking: depends on property (ask for details)
+• Minimum stay: 2 nights (exceptions possible)
 
-FOR OWNERS:
-- Complete property management
-- +40% income vs traditional rent
-- Free professional photography
-- Transparent monthly reporting
-- Commission: 18%
+=== CURRENT PROPERTIES & PRICES ===
+${propertyLines || "  Contact us for current availability."}
 
-RULES:
+Direct booking page: ${fallbackBooking}
+Direct booking discount code: DIRECT5 (5% off)
+
+=== FOR PROPERTY OWNERS ===
+• Complete property management
+• +40% income vs traditional rent
+• Free professional photography
+• Transparent monthly reporting
+• Commission: 15-20%
+• Owner portal: https://realtrustaparthotel.lovable.app/portal-proprietar
+
+=== RESPONSE RULES ===
 1. Respond ONLY in English
-2. Be friendly and concise
-3. Mention DIRECT5 code for bookings
-4. For specific prices: direct to WhatsApp`;
+2. Be friendly, concise, and professional
+3. Always mention the DIRECT5 code for direct bookings
+4. For specific pricing/availability: provide the booking link or direct to WhatsApp
+5. For owner inquiries: direct to the calculator page https://realtrustaparthotel.lovable.app/pentru-proprietari
+6. Never invent prices – use only the data above or say "contact us"
+7. Format responses with markdown for readability`;
+  }
+
+  return `Ești Concierge-ul Digital premium al ApArt Hotel Timișoara (powered by RealTrust).
+
+=== INFORMAȚII COMPANIE ===
+• Nume: ApArt Hotel Timișoara (RealTrust)
+• Locație: Timișoara, România
+• Contact: WhatsApp ${whatsapp} | email adicosti@gmail.com
+• Rating: 4.9/5 | Ocupare: 98%
+
+=== REGULILE CASEI ===
+• Check-in: de la ora 15:00 (flexibil cu aranjament prealabil)
+• Check-out: până la ora 11:00
+• Liniște: 22:00 – 08:00
+• Fumatul interzis în interiorul apartamentelor
+• Animale de companie: acceptate la cerere (taxă suplimentară de curățenie)
+• Acces cu smart lock – nu ai nevoie de cheie fizică
+• WiFi gratuit de mare viteză, Netflix, bucătărie complet echipată
+• Parcare: depinde de proprietate (întreabă pentru detalii)
+• Sejur minim: 2 nopți (excepții posibile)
+
+=== PROPRIETĂȚI DISPONIBILE & PREȚURI ===
+${propertyLines || "  Contactați-ne pentru disponibilitate."}
+
+Pagina de rezervare directă: ${fallbackBooking}
+Cod discount rezervări directe: DIRECT5 (5% reducere)
+
+=== PENTRU PROPRIETARI ===
+• Management complet proprietate
+• +40% venit vs chirie tradițională
+• Fotografii profesionale gratuite
+• Raportare lunară transparentă
+• Comision: 15-20%
+• Portal proprietar: https://realtrustaparthotel.lovable.app/portal-proprietar
+
+=== REGULI RĂSPUNS ===
+1. Răspunde DOAR în română
+2. Fii prietenos, concis și profesional
+3. Menționează codul DIRECT5 pentru rezervări directe
+4. Pentru prețuri/disponibilitate specifice: oferă link-ul de rezervare sau îndrumă către WhatsApp
+5. Pentru proprietari: îndrumă către calculatorul de pe https://realtrustaparthotel.lovable.app/pentru-proprietari
+6. Nu inventa prețuri – folosește doar datele de mai sus sau spune "contactați-ne"
+7. Formatează răspunsurile cu markdown pentru lizibilitate`;
+}
+
+// ---------- Main Handler ----------
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -98,34 +151,31 @@ serve(async (req) => {
 
   const clientIP = getClientIP(req);
   const rateLimit = checkRateLimit(clientIP);
-
   if (!rateLimit.allowed) {
-    return new Response(
-      JSON.stringify({ error: "rate_limit" }),
-      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "rate_limit" }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
     const { message, language = "ro", conversationHistory = [] } = await req.json();
 
     if (!message || message.length > 2000) {
-      return new Response(
-        JSON.stringify({ error: "invalid_message" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "invalid_message" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "config_error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "config_error" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const systemPrompt = language === "en" ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_RO;
+    // Build dynamic system prompt with live DB data
+    const systemPrompt = await buildSystemPrompt(language);
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -152,22 +202,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error(`AI gateway error: ${response.status}`);
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "ai_rate_limit" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "payment_required" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      return new Response(
-        JSON.stringify({ error: "ai_error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const statusMap: Record<number, string> = { 429: "ai_rate_limit", 402: "payment_required" };
+      const errorKey = statusMap[response.status] || "ai_error";
+      return new Response(JSON.stringify({ error: errorKey }), {
+        status: response.status >= 400 && response.status < 500 ? response.status : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Stream response back to client
@@ -179,37 +219,29 @@ serve(async (req) => {
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
           buffer += decoder.decode(value, { stream: true });
-
           let newlineIndex: number;
           while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
             let line = buffer.slice(0, newlineIndex);
             buffer = buffer.slice(newlineIndex + 1);
-
             if (line.endsWith("\r")) line = line.slice(0, -1);
             if (!line.startsWith("data: ")) continue;
-
             const jsonStr = line.slice(6).trim();
             if (jsonStr === "[DONE]") {
               await writer.write(encoder.encode("data: [DONE]\n\n"));
               break;
             }
-
             try {
               const parsed = JSON.parse(jsonStr);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 await writer.write(encoder.encode(`data: ${JSON.stringify({ delta: content })}\n\n`));
               }
-            } catch {
-              // Ignore partial JSON
-            }
+            } catch { /* ignore partial JSON */ }
           }
         }
       } catch (e) {
@@ -229,9 +261,8 @@ serve(async (req) => {
     });
   } catch (error: any) {
     console.error("Error in ai-chatbot-stream:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
