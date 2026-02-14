@@ -446,10 +446,23 @@ const AIChatbot = () => {
             className="fixed bottom-[136px] md:bottom-[136px] right-4 z-40 w-16 h-16 rounded-full bg-primary text-primary-foreground shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center border-4 border-primary/20 backdrop-blur-md"
             aria-label={text.title}
           >
-            <Bot className="w-8 h-8" />
+            <Bot className="w-8 h-8 relative z-10" />
+            {/* Pulsar ring 1 */}
             <motion.div
-              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
-              transition={{ repeat: Infinity, duration: 2 }}
+              animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
+              className="absolute inset-0 border-2 border-primary rounded-full"
+            />
+            {/* Pulsar ring 2 (delayed) */}
+            <motion.div
+              animate={{ scale: [1, 1.8], opacity: [0.4, 0] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeOut", delay: 0.6 }}
+              className="absolute inset-0 border-2 border-primary rounded-full"
+            />
+            {/* Inner glow pulse */}
+            <motion.div
+              animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.05, 0.25] }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
               className="absolute inset-0 bg-primary rounded-full"
             />
             {hasUnread && (
