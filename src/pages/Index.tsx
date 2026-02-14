@@ -158,7 +158,12 @@ const Index = () => {
         
         {/* Below-fold: lazy loaded */}
         <Suspense fallback={null}>
-          {/* Calculator - immediately after Hero for max conversion */}
+          {/* Property Portfolio - moved before Calculator */}
+          <section id="portofoliu">
+            <PropertyGallery />
+          </section>
+
+          {/* Calculator */}
           <section id="calculator">
             <ProfitCalculator />
           </section>
@@ -181,11 +186,6 @@ const Index = () => {
         {/* Guests Teaser Section with Property Preview */}
         <section id="oaspeti-preview">
           <GuestsTeaser />
-        </section>
-        
-        {/* Property Portfolio - Keep as showcase */}
-        <section id="portofoliu">
-          <PropertyGallery />
         </section>
         
         {/* Social Proof */}
