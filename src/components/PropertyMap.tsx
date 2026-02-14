@@ -121,16 +121,31 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: 'mapbox://styles/mapbox/dark-v11',
         center: [21.2270, 45.7540],
         zoom: 12,
         pitch: 0,
       });
 
-      // Force resize after load to handle cases where container wasn't visible during init
+      // Force resize after load and with delays to handle lazy rendering
       map.current.on('load', () => {
         map.current?.resize();
+        // Extra resize after a short delay for mobile browsers
+        setTimeout(() => map.current?.resize(), 300);
+        setTimeout(() => map.current?.resize(), 1000);
       });
+
+      // Use ResizeObserver to handle container size changes
+      const container = mapContainer.current;
+      if (typeof ResizeObserver !== 'undefined' && container) {
+        const ro = new ResizeObserver(() => {
+          map.current?.resize();
+        });
+        ro.observe(container);
+        // Clean up observer on unmount
+        const cleanup = () => ro.disconnect();
+        container.addEventListener('remove', cleanup, { once: true });
+      }
 
       // Handle map errors (including WebGL failures)
       map.current.on('error', (e) => {
@@ -260,6 +275,21 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       }
     }
   }, [selectedProperty]);
+
+  // Trigger resize when map scrolls into view
+  useEffect(() => {
+    if (!mapContainer.current || !map.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          map.current?.resize();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(mapContainer.current);
+    return () => observer.disconnect();
+  }, [mapboxToken]);
 
   if (isLoading) {
     return (
