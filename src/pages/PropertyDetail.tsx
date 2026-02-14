@@ -342,14 +342,16 @@ const PropertyDetail = () => {
                 </div>
               )}
               
-              {/* Calculator Investiție + Card Vânzare Rapidă */}
-              <InvestmentEngineV34
-                propertyName={property.name}
-                propertyCode={dbProperty?.property_code}
-                defaultPrice={dbProperty?.capital_necesar || 120000}
-                defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
-                hideRecommendations
-              />
+              {/* Calculator Investiție + Card Vânzare Rapidă — ascuns pentru închirieri */}
+              {dbProperty?.listing_type !== 'inchiriere' && (
+                <InvestmentEngineV34
+                  propertyName={property.name}
+                  propertyCode={dbProperty?.property_code}
+                  defaultPrice={dbProperty?.capital_necesar || 120000}
+                  defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
+                  hideRecommendations
+                />
+              )}
 
               {/* Recenzii oaspeți - doar pentru proprietăți de cazare, nu pentru vânzări/închirieri imobiliare */}
               {staticProperty && (
