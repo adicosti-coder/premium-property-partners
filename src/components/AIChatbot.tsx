@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  MessageCircle, X, Send, Bot, User, Sparkles, Loader2, 
-  Calendar, Calculator, HelpCircle, RotateCcw, 
-  Copy, Check, ExternalLink, Volume2, VolumeX, Minimize2, Mic, MicOff, Phone, PhoneOff
+  X, Send, Bot, User, Sparkles, Loader2, 
+  ExternalLink, Minimize2, Mic, Headphones,
+  Layers, ShieldCheck, FileDown, RotateCcw,
+  Copy, Check, Phone, PhoneOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
+import jsPDF from "jspdf";
 
 interface Message {
   id: string;
@@ -25,79 +27,24 @@ interface Message {
   isError?: boolean;
 }
 
-interface QuickAction {
-  id: string;
-  icon: React.ReactNode;
-  label: string;
-  prompt: string;
-}
-
-// Backend function endpoint (env or bootstrap fallback)
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
+const STORAGE_KEY = "apart_ai_chat_v37";
 
-// Memoized Markdown renderer with forwardRef to fix React warning
-const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStreaming?: boolean }>(
-  ({ content, isStreaming }, ref) => (
-    <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none">
-      <ReactMarkdown
-        components={{
-          p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-          strong: ({ children }) => <strong className="font-semibold text-primary">{children}</strong>,
-          ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-          li: ({ children }) => <li className="ml-2">{children}</li>,
-          a: ({ href, children }) => (
-            <a 
-              href={href} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1"
-            >
-              {children}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          ),
-          code: ({ children }) => (
-            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
-          ),
-          h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-      {isStreaming && (
-        <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-0.5 rounded-sm" />
-      )}
-    </div>
-  )
-));
-
-MarkdownContent.displayName = "MarkdownContent";
-
-// Typing indicator component
-const TypingIndicator = () => (
-  <div className="flex gap-1.5 items-center px-4 py-3">
-    <div className="flex gap-1">
-      {[0, 1, 2].map((i) => (
-        <motion.div
-          key={i}
-          className="w-2 h-2 rounded-full bg-primary/60"
-          animate={{ y: [0, -4, 0] }}
-          transition={{
-            duration: 0.6,
-            repeat: Infinity,
-            delay: i * 0.15,
-          }}
-        />
-      ))}
-    </div>
-    <span className="text-xs text-muted-foreground ml-2">Analizez...</span>
+// --- Voice Wave Visualizer ---
+const VoiceWave = () => (
+  <div className="flex items-center justify-center gap-1 h-4">
+    {[1, 2, 3, 4, 5].map((i) => (
+      <motion.div
+        key={i}
+        animate={{ height: [4, 16, 4] }}
+        transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
+        className="w-1 bg-primary rounded-full"
+      />
+    ))}
   </div>
 );
 
-// Voice visualizer component
+// --- Full Voice Visualizer ---
 const VoiceVisualizer = ({ isActive, isSpeaking }: { isActive: boolean; isSpeaking: boolean }) => (
   <div className="flex items-center justify-center gap-1 h-8">
     {[0, 1, 2, 3, 4].map((i) => (
@@ -114,337 +61,160 @@ const VoiceVisualizer = ({ isActive, isSpeaking }: { isActive: boolean; isSpeaki
               : [4, 8, 4]
             : 4,
         }}
-        transition={{
-          duration: 0.4,
-          repeat: Infinity,
-          delay: i * 0.1,
-        }}
+        transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.1 }}
       />
     ))}
   </div>
 );
 
+// --- Premium Markdown Renderer ---
+const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStreaming?: boolean }>(
+  ({ content, isStreaming }, ref) => (
+    <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight">
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground/90">{children}</p>,
+          strong: ({ children }) => <strong className="font-bold text-primary bg-primary/5 px-1 rounded">{children}</strong>,
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline inline-flex items-center gap-0.5">
+              {children} <ExternalLink className="w-3 h-3" />
+            </a>
+          ),
+          ul: ({ children }) => <ul className="list-disc ml-4 mb-3 space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal ml-4 mb-3 space-y-1">{children}</ol>,
+          li: ({ children }) => <li className="ml-2">{children}</li>,
+          code: ({ children }) => (
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
+          ),
+          h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+      {isStreaming && (
+        <motion.span 
+          animate={{ opacity: [0, 1, 0] }} 
+          transition={{ repeat: Infinity, duration: 0.8 }} 
+          className="inline-block w-2 h-4 bg-primary/60 ml-1 rounded-sm align-middle" 
+        />
+      )}
+    </div>
+  )
+));
+MarkdownContent.displayName = "MarkdownContent";
+
 const AIChatbot = () => {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasUnread, setHasUnread] = useState(false);
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [voiceMode, setVoiceMode] = useState(false);
   const [isConnectingVoice, setIsConnectingVoice] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })) : [];
+    } catch { return []; }
+  });
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  
-  // Shared context for assistant integration
   const sharedContext = useOptionalSharedAssistantContext();
 
+  // --- Translations ---
+  const t = {
+    ro: {
+      title: "Digital Concierge",
+      status: "Disponibil 24/7",
+      greeting: "Bun venit la ApArt Hotel. Sunt asistentul tău digital de lux.\n\n**Ce pot face pentru tine:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• 🗓️ **Programează** vizionări sau evaluări\n• 🍽️ **Recomandări** restaurante, cafenele, atracții\n\nCum îți pot face experiența mai plăcută astăzi?",
+      placeholder: "Cu ce vă pot ajuta?",
+      power: "Gemini AI Ultra",
+      quickActions: ["Verifică Disponibilitate", "Calcul Investitor", "Ghid Timișoara", "Programează Vizită"],
+      error: "A apărut o eroare. Te rog încearcă din nou.",
+      errorNetwork: "Conexiune întreruptă. Verifică internetul.",
+      errorRateLimit: "Prea multe cereri. Așteaptă un moment.",
+      copied: "Copiat!",
+      newChat: "Conversație nouă",
+      retry: "Încearcă din nou",
+      voiceListening: "Ascult...",
+      voiceSpeaking: "Vorbesc...",
+      voiceModeActive: "Mod vocal activ",
+      endCall: "Închide apelul",
+      continueVoice: "Continuă vocal",
+    },
+    en: {
+      title: "Digital Concierge",
+      status: "Available 24/7",
+      greeting: "Welcome to ApArt Hotel. I am your premium digital concierge.\n\n**What I can do for you:**\n\n• 📅 Check apartment **availability**\n• 💰 Calculate **prices** for stays\n• 📊 Estimate **profit** for owners\n• 🗓️ **Schedule** viewings or evaluations\n• 🍽️ **Recommendations** for restaurants, cafes, attractions\n\nHow may I assist you today?",
+      placeholder: "How can I help you today?",
+      power: "Gemini AI Ultra",
+      quickActions: ["Check Availability", "Investor ROI", "Timișoara Guide", "Schedule Visit"],
+      error: "An error occurred. Please try again.",
+      errorNetwork: "Connection lost. Check your internet.",
+      errorRateLimit: "Too many requests. Please wait.",
+      copied: "Copied!",
+      newChat: "New chat",
+      retry: "Try again",
+      voiceListening: "Listening...",
+      voiceSpeaking: "Speaking...",
+      voiceModeActive: "Voice mode active",
+      endCall: "End call",
+      continueVoice: "Continue with voice",
+    }
+  };
+  const text = t[language as keyof typeof t] || t.ro;
+
+  // --- Add message helper ---
   const addMessage = useCallback((role: "user" | "assistant", content: string, source: "text" | "voice" = "text") => {
-    const newMessage = {
-      id: Date.now().toString(),
+    const newMessage: Message = {
+      id: crypto.randomUUID(),
       role,
       content,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, newMessage]);
-    
-    // Also add to shared context
     sharedContext?.addMessage(role, content, source);
   }, [sharedContext]);
 
-  // ElevenLabs conversation hook
+  // --- ElevenLabs Voice ---
   const conversation = useConversation({
     onConnect: () => {
-      console.log("[AIChatbot] Voice connected");
       setIsConnectingVoice(false);
       toast.success(language === "ro" ? "Mod vocal activat!" : "Voice mode activated!");
     },
-    onDisconnect: () => {
-      console.log("[AIChatbot] Voice disconnected");
-      setVoiceMode(false);
-      setIsConnectingVoice(false);
-    },
+    onDisconnect: () => { setVoiceMode(false); setIsConnectingVoice(false); },
     onMessage: (payload) => {
-      // This callback receives finalized messages with role and message text
-      console.log("[AIChatbot] Voice message:", payload);
-      if (payload.role === "user") {
-        addMessage("user", payload.message, "voice");
-      } else if (payload.role === "agent") {
-        addMessage("assistant", payload.message, "voice");
-      }
+      if (payload.role === "user") addMessage("user", payload.message, "voice");
+      else if (payload.role === "agent") addMessage("assistant", payload.message, "voice");
     },
-    onError: (error) => {
-      console.error("[AIChatbot] Voice error:", error);
-      setVoiceMode(false);
-      setIsConnectingVoice(false);
+    onError: () => {
+      setVoiceMode(false); setIsConnectingVoice(false);
       toast.error(language === "ro" ? "Eroare la conexiunea vocală" : "Voice connection error");
     },
   });
 
-  const t = {
-    ro: {
-      title: "Asistent AI Premium",
-      subtitle: "Răspunsuri instant cu AI avansat",
-      placeholder: "Scrie mesajul tău...",
-      greeting: "Bună! 👋 Sunt asistentul AI premium ApArt Hotel.\n\n**Ce pot face pentru tine:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• 🗓️ **Programează** vizionări sau evaluări\n• 🍽️ **Recomandări** restaurante, cafenele, atracții\n\nCum te pot ajuta?",
-      thinking: "Analizez...",
-      error: "A apărut o eroare. Te rog încearcă din nou.",
-      errorNetwork: "Conexiune întreruptă. Verifică internetul.",
-      errorRateLimit: "Prea multe cereri. Așteaptă un moment.",
-      poweredBy: "Gemini 2.5 Pro",
-      quickActions: {
-        availability: "Verifică disponibilitate",
-        price: "Calculează preț",
-        schedule: "Programează vizită",
-        recommend: "Recomandări locale",
-      },
-      copied: "Copiat!",
-      newChat: "Conversație nouă",
-      retry: "Încearcă din nou",
-      voiceMode: "Activează mod vocal",
-      voiceModeActive: "Mod vocal activ",
-      voiceListening: "Ascult...",
-      voiceSpeaking: "Vorbesc...",
-      endCall: "Închide apelul",
-      continueVoice: "Continuă vocal",
-      voiceMessage: "Mesaj vocal",
-    },
-    en: {
-      title: "Premium AI Assistant",
-      subtitle: "Instant responses with advanced AI",
-      placeholder: "Type your message...",
-      greeting: "Hello! 👋 I'm ApArt Hotel's premium AI assistant.\n\n**What I can do for you:**\n\n• 📅 Check apartment **availability**\n• 💰 Calculate **prices** for stays\n• 📊 Estimate **profit** for owners\n• 🗓️ **Schedule** viewings or evaluations\n• 🍽️ **Recommendations** for restaurants, cafes, attractions\n\nHow can I help you?",
-      thinking: "Analyzing...",
-      error: "An error occurred. Please try again.",
-      errorNetwork: "Connection lost. Check your internet.",
-      errorRateLimit: "Too many requests. Please wait.",
-      poweredBy: "Gemini 2.5 Pro",
-      quickActions: {
-        availability: "Check availability",
-        price: "Calculate price",
-        schedule: "Schedule visit",
-        recommend: "Local tips",
-      },
-      copied: "Copied!",
-      newChat: "New chat",
-      retry: "Try again",
-      voiceMode: "Activate voice mode",
-      voiceModeActive: "Voice mode active",
-      voiceListening: "Listening...",
-      voiceSpeaking: "Speaking...",
-      endCall: "End call",
-      continueVoice: "Continue with voice",
-      voiceMessage: "Voice message",
-    },
-  };
-
-  const text = t[language as keyof typeof t] || t.ro;
-
-  const quickActions: QuickAction[] = [
-    {
-      id: "availability",
-      icon: <Calendar className="w-3.5 h-3.5" />,
-      label: text.quickActions.availability,
-      prompt: language === "ro" 
-        ? "Vreau să verific disponibilitatea apartamentelor pentru perioada următoare" 
-        : "I want to check apartment availability for the next period",
-    },
-    {
-      id: "price",
-      icon: <Calculator className="w-3.5 h-3.5" />,
-      label: text.quickActions.price,
-      prompt: language === "ro" 
-        ? "Calculează prețul pentru un sejur de 3 nopți" 
-        : "Calculate the price for a 3-night stay",
-    },
-    {
-      id: "schedule",
-      icon: <Calendar className="w-3.5 h-3.5" />,
-      label: text.quickActions.schedule,
-      prompt: language === "ro" 
-        ? "Vreau să programez o vizionare a unui apartament sau o evaluare gratuită a proprietății mele" 
-        : "I want to schedule an apartment viewing or a free evaluation of my property",
-    },
-    {
-      id: "recommend",
-      icon: <HelpCircle className="w-3.5 h-3.5" />,
-      label: text.quickActions.recommend,
-      prompt: language === "ro" 
-        ? "Ce restaurante și cafenele îmi recomanzi în Timișoara?" 
-        : "What restaurants and cafes do you recommend in Timișoara?",
-    },
-  ];
-
-  // Initialize with greeting message
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([
-        {
-          id: "greeting",
-          role: "assistant",
-          content: text.greeting,
-          timestamp: new Date(),
-        },
-      ]);
-    }
-  }, []);
-
-  // Show initial notification after delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isOpen && messages.length <= 1) {
-        setHasUnread(true);
-      }
-    }, 15000);
-
-    return () => clearTimeout(timer);
-  }, [isOpen]);
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    if (scrollRef.current) {
-      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-    }
-  }, [messages]);
-
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen && !isMinimized && inputRef.current && !voiceMode) {
-      inputRef.current.focus();
-    }
-  }, [isOpen, isMinimized, voiceMode]);
-
-  // Listen for custom event to open chatbot from FloatingActionMenu
-  useEffect(() => {
-    const handleOpenChatbot = () => {
-      setIsOpen(true);
-      setIsMinimized(false);
-      setHasUnread(false);
-    };
-
-    window.addEventListener('open-ai-chatbot', handleOpenChatbot);
-    return () => window.removeEventListener('open-ai-chatbot', handleOpenChatbot);
-  }, []);
-
-  // Register transfer callback for voice → text
-  useEffect(() => {
-    sharedContext?.onTransferToText(() => {
-      setIsOpen(true);
-      setIsMinimized(false);
-      setHasUnread(false);
-      // End voice mode if it was active in this chatbot
-      if (voiceMode) {
-        conversation.endSession();
-        setVoiceMode(false);
-      }
-    });
-  }, [sharedContext, voiceMode, conversation]);
-
-  // Sync messages from shared context (voice messages from external widget)
-  useEffect(() => {
-    if (sharedContext?.messages) {
-      const voiceMessages = sharedContext.messages.filter(m => m.source === "voice");
-      // Add voice messages that aren't already in local messages
-      voiceMessages.forEach(vm => {
-        const exists = messages.some(m => 
-          m.content === vm.content && 
-          Math.abs(m.timestamp.getTime() - vm.timestamp.getTime()) < 1000
-        );
-        if (!exists) {
-          setMessages(prev => [...prev, {
-            id: vm.id,
-            role: vm.role,
-            content: vm.content,
-            timestamp: vm.timestamp,
-          }]);
-        }
-      });
-    }
-  }, [sharedContext?.messages]);
-
-  // Cleanup abort controller on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      // End voice conversation if active
-      if (conversation.status === "connected") {
-        conversation.endSession();
-      }
-    };
-  }, []);
-
-  const playSound = useCallback(() => {
-    if (soundEnabled) {
-      // Simple notification sound using Web Audio API
-      try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = 800;
-        oscillator.type = "sine";
-        gainNode.gain.value = 0.1;
-        
-        oscillator.start();
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        oscillator.stop(audioContext.currentTime + 0.1);
-      } catch (e) {
-        // Audio not supported
-      }
-    }
-  }, [soundEnabled]);
-
   const startVoiceMode = async () => {
     setIsConnectingVoice(true);
     try {
-      // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Get token from edge function with language parameter
-      const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token", {
-        body: { language },
-      });
-
-      if (error || !data?.token) {
-        console.error("[AIChatbot] Failed to get voice token:", error);
-        throw new Error("Failed to get voice token");
-      }
-
-      console.log("[AIChatbot] Starting voice with agent:", data.agentId);
-
-      // Start the conversation with WebRTC
-      await conversation.startSession({
-        conversationToken: data.token,
-        connectionType: "webrtc",
-      });
-
+      const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token", { body: { language } });
+      if (error || !data?.token) throw new Error("Failed to get voice token");
+      await conversation.startSession({ conversationToken: data.token, connectionType: "webrtc" });
       setVoiceMode(true);
     } catch (error: any) {
-      console.error("[AIChatbot] Voice mode error:", error);
       setIsConnectingVoice(false);
-      
-      if (error.name === "NotAllowedError" || error.message?.includes("microphone")) {
-        toast.error(language === "ro" 
-          ? "Permite accesul la microfon pentru modul vocal" 
-          : "Allow microphone access for voice mode"
-        );
+      if (error.name === "NotAllowedError") {
+        toast.error(language === "ro" ? "Permite accesul la microfon" : "Allow microphone access");
       } else {
-        toast.error(language === "ro" 
-          ? "Nu s-a putut activa modul vocal" 
-          : "Could not activate voice mode"
-        );
+        toast.error(language === "ro" ? "Nu s-a putut activa modul vocal" : "Could not activate voice mode");
       }
     }
   };
@@ -454,562 +224,409 @@ const AIChatbot = () => {
     setVoiceMode(false);
   };
 
-  // Transfer to external voice widget
-  const handleTransferToVoice = () => {
-    setIsOpen(false);
-    setIsMinimized(false);
-    sharedContext?.requestTransferToVoice();
-    toast.info(language === "ro" ? "Se activează modul vocal..." : "Activating voice mode...");
+  // --- PDF Export ---
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("ApArt Hotel - Digital Concierge Transcript", 10, 20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    let y = 35;
+    messages.forEach(m => {
+      const prefix = m.role === "user" ? "Client" : "Concierge";
+      const lines = doc.splitTextToSize(`${prefix}: ${m.content}`, 180);
+      if (y + (lines.length * 5) > 280) { doc.addPage(); y = 20; }
+      doc.text(lines, 10, y);
+      y += (lines.length * 5) + 8;
+    });
+    doc.save("ApArt_Concierge_Transcript.pdf");
   };
 
-  const handleOpen = () => {
-    setIsOpen(true);
-    setIsMinimized(false);
-    setHasUnread(false);
-  };
-
-  const handleMinimize = () => {
-    setIsMinimized(true);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-    setIsMinimized(false);
-    // Cancel ongoing request if any
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    // End voice mode if active
-    if (voiceMode) {
-      endVoiceMode();
-    }
-  };
-
-  const handleNewChat = () => {
-    setMessages([
-      {
-        id: "greeting-" + Date.now(),
-        role: "assistant",
-        content: text.greeting,
-        timestamp: new Date(),
-      },
-    ]);
-    // End voice mode on new chat
-    if (voiceMode) {
-      endVoiceMode();
-    }
-  };
-
-  const handleCopyMessage = async (messageId: string, content: string) => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopiedMessageId(messageId);
-      toast.success(text.copied);
-      setTimeout(() => setCopiedMessageId(null), 2000);
-    } catch (e) {
-      console.error("Failed to copy:", e);
-    }
-  };
-
-  const handleRetry = (messageContent: string) => {
-    // Remove the last assistant message (error) and retry
-    setMessages((prev) => prev.filter((m) => !m.isError));
-    setInput(messageContent);
-  };
-
-  const handleQuickAction = (action: QuickAction) => {
-    setInput(action.prompt);
-    // Auto-send after a brief delay to show the action
-    setTimeout(() => {
-      handleSend(action.prompt);
-    }, 100);
-  };
-
+  // --- Streaming Send ---
   const handleSend = async (overrideMessage?: string) => {
-    const messageToSend = overrideMessage || input.trim();
-    if (!messageToSend || isLoading) return;
+    const content = overrideMessage || input.trim();
+    if (!content || isLoading) return;
 
-    // Cancel previous request if any
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: messageToSend,
-      timestamp: new Date(),
-    };
-
-    const assistantMessageId = (Date.now() + 1).toString();
-
-    setMessages((prev) => [...prev, userMessage]);
+    const assistantId = crypto.randomUUID();
+    setMessages(prev => [
+      ...prev,
+      { id: crypto.randomUUID(), role: "user", content, timestamp: new Date() },
+      { id: assistantId, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
+    ]);
     setInput("");
     setIsLoading(true);
 
-    // Add placeholder for assistant response
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: assistantMessageId,
-        role: "assistant",
-        content: "",
-        timestamp: new Date(),
-        isStreaming: true,
-      },
-    ]);
-
     try {
       const apiKey = getSupabasePublishableKey();
-      // Allow fallback mode since it now uses valid production credentials
-      if (!apiKey || apiKey === "invalid-publishable-key") {
-        throw new Error("missing_env");
-      }
-      
-      console.log("[AIChatbot] Sending request to:", STREAM_URL);
-      
+      if (!apiKey || apiKey === "invalid-publishable-key") throw new Error("missing_env");
+
       const response = await fetch(STREAM_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKey}`,
-          // Some environments require explicit apikey header for Functions gateway
           "apikey": apiKey,
           "Accept": "text/event-stream",
         },
         body: JSON.stringify({
-          message: messageToSend,
+          message: content,
           language,
-          conversationHistory: messages.slice(-10).map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
         }),
         signal: abortControllerRef.current.signal,
       });
 
-      console.log("[AIChatbot] Response status:", response.status);
-
       if (!response.ok) {
-        console.error("[AIChatbot] Response not OK:", response.status, response.statusText);
-        if (response.status === 429) {
-          throw new Error("rate_limit");
-        }
+        if (response.status === 429) throw new Error("rate_limit");
+        if (response.status === 402) throw new Error("payment_required");
         throw new Error("network");
       }
 
-      if (!response.body) {
-        throw new Error("no_body");
-      }
-
-      const reader = response.body.getReader();
+      const reader = response.body?.getReader();
       const decoder = new TextDecoder();
+      let acc = "";
       let buffer = "";
-      let fullContent = "";
-      let hasReceivedContent = false;
-      let streamCompleted = false;
 
-      try {
+      if (reader) {
         while (true) {
           const { done, value } = await reader.read();
-          if (done) {
-            streamCompleted = true;
-            break;
-          }
-
+          if (done) break;
           buffer += decoder.decode(value, { stream: true });
-          
+
           let newlineIndex: number;
           while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
             let line = buffer.slice(0, newlineIndex);
             buffer = buffer.slice(newlineIndex + 1);
-
             if (line.endsWith("\r")) line = line.slice(0, -1);
             if (line.startsWith(":") || line.trim() === "") continue;
             if (!line.startsWith("data: ")) continue;
 
             const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") {
-              streamCompleted = true;
-              break;
-            }
+            if (jsonStr === "[DONE]") break;
 
             try {
               const parsed = JSON.parse(jsonStr);
-              
-              // Handle errors from the stream
               if (parsed.error) {
-                if (parsed.error === "rate_limit" || parsed.error === "ai_rate_limit") {
-                  throw new Error("rate_limit");
-                }
+                if (parsed.error === "rate_limit" || parsed.error === "ai_rate_limit") throw new Error("rate_limit");
                 throw new Error(parsed.error);
               }
-              
               if (parsed.delta) {
-                fullContent += parsed.delta;
-                hasReceivedContent = true;
-                setMessages((prev) =>
-                  prev.map((m) =>
-                    m.id === assistantMessageId 
-                      ? { ...m, content: fullContent } 
-                      : m
-                  )
-                );
+                acc += parsed.delta;
+                setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: acc } : m));
               }
             } catch (e) {
-              if (e instanceof Error && (e.message === "rate_limit" || e.message === "network")) {
-                throw e;
-              }
-              // Ignore JSON parse errors for incomplete chunks
+              if (e instanceof Error && (e.message === "rate_limit" || e.message === "network")) throw e;
             }
           }
         }
-      } catch (readError: any) {
-        // If we got some content but stream was interrupted, use what we have
-        if (hasReceivedContent && fullContent.length > 50) {
-          console.log("[AIChatbot] Stream interrupted but have content, using partial response");
-          streamCompleted = true;
-        } else {
-          throw readError;
-        }
       }
-
-      // Finalize the message
-      setMessages((prev) =>
-        prev.map((m) => 
-          m.id === assistantMessageId 
-            ? { ...m, isStreaming: false, content: fullContent || text.error } 
-            : m
-        )
-      );
-
-      // Play sound on completion
-      if (hasReceivedContent) {
-        playSound();
-      }
-
-    } catch (error: any) {
-      console.error("Chatbot stream error:", error);
-      
-      let errorMessage = text.error;
-      let isNetworkError = false;
-      
-      if (error.name === "AbortError") {
-        // Request was cancelled, just clean up
-        setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false, content: acc || text.error } : m));
+    } catch (e: any) {
+      if (e.name === "AbortError") {
+        setMessages(prev => prev.filter(m => m.id !== assistantId));
         return;
-      } else if (error.message === "rate_limit") {
-        errorMessage = text.errorRateLimit;
-      } else if (
-        error.message === "network" || 
-        error.message === "Failed to fetch" ||
-        error.name === "TypeError" ||
-        error.message?.includes("network") ||
-        error.message?.includes("fetch")
-      ) {
-        errorMessage = text.errorNetwork;
-        isNetworkError = true;
       }
+      let errorMessage = text.error;
+      if (e.message === "rate_limit") errorMessage = text.errorRateLimit;
+      else if (e.message === "network" || e.message === "Failed to fetch" || e.name === "TypeError") errorMessage = text.errorNetwork;
 
-      // For network errors, check if we might have a temporary issue
-      if (isNetworkError) {
-        console.log("[AIChatbot] Network error detected, may be temporary connectivity issue");
-      }
-
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantMessageId 
-            ? { ...m, content: errorMessage, isStreaming: false, isError: true } 
-            : m
-        )
-      );
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: errorMessage, isStreaming: false, isError: true } : m));
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  // --- Copy message ---
+  const handleCopyMessage = async (messageId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageId(messageId);
+      toast.success(text.copied);
+      setTimeout(() => setCopiedMessageId(null), 2000);
+    } catch {}
   };
 
-  // Minimized state - show small floating badge
-  if (isOpen && isMinimized) {
-    return (
-      <motion.button
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        onClick={() => setIsMinimized(false)}
-        className="fixed bottom-20 md:bottom-4 right-4 z-50 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center gap-2"
-      >
-        <Bot className="w-4 h-4" />
-        <span className="text-sm font-medium">{text.title}</span>
-        {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
-        {voiceMode && <Mic className="w-3 h-3 animate-pulse" />}
-      </motion.button>
-    );
-  }
+  // --- Effects ---
+  // Init greeting
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([{ id: "greeting", role: "assistant", content: text.greeting, timestamp: new Date() }]);
+    }
+  }, []);
+
+  // Persist messages
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-30))); } catch {}
+  }, [messages]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (scrollRef.current) {
+      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      viewport?.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Focus input
+  useEffect(() => {
+    if (isOpen && !isMinimized && inputRef.current && !voiceMode) inputRef.current.focus();
+  }, [isOpen, isMinimized, voiceMode]);
+
+  // Unread notification
+  useEffect(() => {
+    const timer = setTimeout(() => { if (!isOpen && messages.length <= 1) setHasUnread(true); }, 15000);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  // Open from external event
+  useEffect(() => {
+    const handler = () => { setIsOpen(true); setIsMinimized(false); setHasUnread(false); };
+    window.addEventListener('open-ai-chatbot', handler);
+    return () => window.removeEventListener('open-ai-chatbot', handler);
+  }, []);
+
+  // Transfer callback
+  useEffect(() => {
+    sharedContext?.onTransferToText(() => {
+      setIsOpen(true); setIsMinimized(false); setHasUnread(false);
+      if (voiceMode) { conversation.endSession(); setVoiceMode(false); }
+    });
+  }, [sharedContext, voiceMode, conversation]);
+
+  // Sync voice messages from shared context
+  useEffect(() => {
+    if (sharedContext?.messages) {
+      const voiceMessages = sharedContext.messages.filter(m => m.source === "voice");
+      voiceMessages.forEach(vm => {
+        const exists = messages.some(m => m.content === vm.content && Math.abs(m.timestamp.getTime() - vm.timestamp.getTime()) < 1000);
+        if (!exists) {
+          setMessages(prev => [...prev, { id: vm.id, role: vm.role, content: vm.content, timestamp: vm.timestamp }]);
+        }
+      });
+    }
+  }, [sharedContext?.messages]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+      if (conversation.status === "connected") conversation.endSession();
+    };
+  }, []);
+
+  const handleTransferToVoice = () => {
+    setIsOpen(false);
+    sharedContext?.requestTransferToVoice();
+    toast.info(language === "ro" ? "Se activează modul vocal..." : "Activating voice mode...");
+  };
+
+  const handleNewChat = () => {
+    setMessages([{ id: "greeting-" + Date.now(), role: "assistant", content: text.greeting, timestamp: new Date() }]);
+    if (voiceMode) endVoiceMode();
+  };
+
+  // ─── RENDER ───────────────────────────────────────────────
 
   return (
     <>
-      {/* Floating button when closed */}
+      {/* Premium Floating Button */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            onClick={handleOpen}
-            className="fixed bottom-[136px] md:bottom-[136px] bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg flex items-center justify-center group hover:shadow-xl transition-shadow"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            onClick={() => { setIsOpen(true); setIsMinimized(false); setHasUnread(false); }}
+            className="fixed bottom-[136px] md:bottom-[136px] right-4 z-40 w-16 h-16 rounded-full bg-primary text-primary-foreground shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-center border-4 border-primary/20 backdrop-blur-md"
             aria-label={text.title}
           >
-            <MessageCircle className="w-6 h-6" />
+            <Bot className="w-8 h-8" />
+            <motion.div
+              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 bg-primary rounded-full"
+            />
             {hasUnread && (
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center"
-              >
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
                 <span className="text-[10px] text-destructive-foreground font-bold">1</span>
               </motion.div>
             )}
-            <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Chat window */}
+      {/* Chat Window */}
       <AnimatePresence>
-        {isOpen && !isMinimized && (
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-20 md:bottom-4 right-2 md:right-4 left-2 md:left-auto z-50 w-auto md:w-[420px] h-[75vh] md:h-[600px] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className={cn(
+              "fixed z-50 bg-card/95 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden transition-all duration-500",
+              isMinimized
+                ? "bottom-8 right-8 w-72 h-16 rounded-full"
+                : "bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[80vh] md:h-[700px] rounded-[2rem]"
+            )}
           >
-            {/* Header */}
-            <div className={cn(
-              "border-b border-border p-4 flex items-center justify-between shrink-0",
-              voiceMode 
-                ? "bg-gradient-to-r from-green-500/20 via-primary/10 to-green-500/20" 
-                : "bg-gradient-to-r from-primary/20 via-primary/10 to-amber-500/10"
-            )}>
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center shadow-md",
-                  voiceMode 
-                    ? "bg-gradient-to-br from-green-500 to-green-600" 
-                    : "bg-gradient-to-br from-primary to-primary/60"
-                )}>
-                  {voiceMode ? (
-                    <Phone className="w-5 h-5 text-white" />
-                  ) : (
-                    <Bot className="w-5 h-5 text-primary-foreground" />
-                  )}
+            {/* Stream Progress Bar */}
+            {isLoading && (
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 15, ease: "linear" }}
+                className="h-0.5 bg-primary absolute top-0 left-0 z-10"
+              />
+            )}
+
+            {/* ─── Premium Header ─── */}
+            <div className="p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg",
+                    voiceMode
+                      ? "bg-accent/20 border-accent/30"
+                      : "bg-primary/20 border-primary/30"
+                  )}>
+                    {voiceMode ? <Phone className="w-6 h-6 text-accent" /> : <Bot className="w-7 h-7 text-primary" />}
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent border-[3px] border-card rounded-full" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm flex items-center gap-1.5">
-                    {voiceMode ? text.voiceModeActive : text.title}
-                    {voiceMode ? (
-                      <Mic className="w-3.5 h-3.5 text-green-500 animate-pulse" />
-                    ) : (
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    )}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {voiceMode 
-                      ? conversation.isSpeaking 
-                        ? text.voiceSpeaking 
-                        : text.voiceListening
-                      : text.subtitle
-                    }
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleNewChat}
-                  title={text.newChat}
-                >
-                  <RotateCcw className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                {!voiceMode && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setSoundEnabled(!soundEnabled)}
-                    title={soundEnabled ? "Mute" : "Unmute"}
-                  >
-                    {soundEnabled ? (
-                      <Volume2 className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <VolumeX className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </Button>
+                {!isMinimized && (
+                  <div>
+                    <h3 className="font-bold text-base tracking-tight text-foreground">
+                      {voiceMode ? text.voiceModeActive : text.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {voiceMode ? <VoiceWave /> : (
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">
+                          {text.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hidden md:flex"
-                  onClick={handleMinimize}
-                  title="Minimize"
-                >
+              </div>
+
+              <div className="flex items-center gap-1">
+                {!isMinimized && (
+                  <>
+                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" onClick={exportPDF} title="Export PDF">
+                      <FileDown className="w-4 h-4 text-muted-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" onClick={handleNewChat} title={text.newChat}>
+                      <RotateCcw className="w-4 h-4 text-muted-foreground" />
+                    </Button>
+                    <Button
+                      variant="ghost" size="icon"
+                      className={cn("rounded-xl h-9 w-9 transition-colors", voiceMode && "bg-primary/20 text-primary")}
+                      onClick={async () => voiceMode ? endVoiceMode() : startVoiceMode()}
+                    >
+                      {isConnectingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : voiceMode ? <Headphones className="w-5 h-5 text-primary" /> : <Mic className="w-5 h-5 text-muted-foreground" />}
+                    </Button>
+                  </>
+                )}
+                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9 hidden md:flex" onClick={() => setIsMinimized(!isMinimized)}>
                   <Minimize2 className="w-4 h-4 text-muted-foreground" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleClose}
-                >
+                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" onClick={() => { setIsOpen(false); setIsMinimized(false); abortControllerRef.current?.abort(); if (voiceMode) endVoiceMode(); }}>
                   <X className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </div>
             </div>
 
-            {/* Voice mode overlay */}
-            {voiceMode && (
+            {/* ─── Voice Mode Overlay ─── */}
+            {!isMinimized && voiceMode && (
               <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-b from-background to-muted/30">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-2xl mb-8"
-                >
-                  <VoiceVisualizer 
-                    isActive={conversation.status === "connected"} 
-                    isSpeaking={conversation.isSpeaking} 
-                  />
+                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-32 h-32 rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-2xl mb-8">
+                  <VoiceVisualizer isActive={conversation.status === "connected"} isSpeaking={conversation.isSpeaking} />
                 </motion.div>
-                
                 <p className="text-lg font-medium text-center mb-2">
                   {conversation.isSpeaking ? text.voiceSpeaking : text.voiceListening}
                 </p>
                 <p className="text-sm text-muted-foreground text-center mb-8">
-                  {language === "ro" 
-                    ? "Vorbește natural, sunt aici să te ajut" 
-                    : "Speak naturally, I'm here to help"
-                  }
+                  {language === "ro" ? "Vorbește natural, sunt aici să te ajut" : "Speak naturally, I'm here to help"}
                 </p>
-
-                {/* Recent transcripts */}
                 {messages.length > 1 && (
                   <ScrollArea className="w-full max-h-40 mb-8">
                     <div className="space-y-2 px-4">
                       {messages.slice(-4).map((m) => (
-                        <div 
-                          key={m.id} 
-                          className={cn(
-                            "text-sm p-2 rounded-lg",
-                            m.role === "user" 
-                              ? "bg-primary/10 text-right" 
-                              : "bg-muted"
-                          )}
-                        >
-                          {m.content.slice(0, 100)}
-                          {m.content.length > 100 && "..."}
+                        <div key={m.id} className={cn("text-sm p-2 rounded-lg", m.role === "user" ? "bg-primary/10 text-right" : "bg-muted")}>
+                          {m.content.slice(0, 100)}{m.content.length > 100 && "..."}
                         </div>
                       ))}
                     </div>
                   </ScrollArea>
                 )}
-
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  onClick={endVoiceMode}
-                  className="gap-2"
-                >
-                  <PhoneOff className="w-5 h-5" />
-                  {text.endCall}
+                <Button variant="destructive" size="lg" onClick={endVoiceMode} className="gap-2">
+                  <PhoneOff className="w-5 h-5" /> {text.endCall}
                 </Button>
               </div>
             )}
 
-            {/* Messages area (hidden in voice mode) */}
-            {!voiceMode && (
+            {/* ─── Chat Body ─── */}
+            {!isMinimized && !voiceMode && (
               <>
-                <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                  <div className="space-y-4">
-                    {messages.map((message, index) => (
+                <ScrollArea className="flex-1 p-5" ref={scrollRef}>
+                  <div className="space-y-6">
+                    {/* Empty state */}
+                    {messages.length === 0 && (
+                      <div className="text-center py-12 space-y-6">
+                        <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto border border-primary/20">
+                          <Layers className="w-10 h-10 text-primary/40" />
+                        </div>
+                        <p className="text-sm text-muted-foreground px-10 leading-relaxed font-medium">{text.greeting}</p>
+                      </div>
+                    )}
+
+                    {/* Messages */}
+                    {messages.map((m) => (
                       <motion.div
-                        key={message.id}
+                        key={m.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index === messages.length - 1 ? 0.1 : 0 }}
-                        className={cn(
-                          "flex gap-3 group",
-                          message.role === "user" && "flex-row-reverse"
-                        )}
+                        className={cn("flex gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
                       >
-                        <div 
-                          className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
-                            message.role === "user" 
-                              ? "bg-primary text-primary-foreground" 
-                              : "bg-gradient-to-br from-primary to-primary/60"
-                          )}
-                        >
-                          {message.role === "user" ? (
-                            <User className="w-4 h-4" />
-                          ) : (
-                            <Bot className="w-4 h-4 text-primary-foreground" />
-                          )}
+                        <div className={cn(
+                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
+                          m.role === "user" ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
+                        )}>
+                          {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                         </div>
-                        <div 
-                          className={cn(
-                            "max-w-[80%] rounded-2xl px-4 py-3 relative",
-                            message.role === "user" 
-                              ? "bg-primary text-primary-foreground" 
-                              : message.isError 
-                                ? "bg-destructive/10 border border-destructive/20" 
-                                : "bg-secondary"
-                          )}
-                        >
-                          <MarkdownContent 
-                            content={message.content || (message.isStreaming ? "" : "...")} 
-                            isStreaming={message.isStreaming && !message.content}
-                          />
+                        <div className={cn(
+                          "max-w-[80%] p-4 px-5 rounded-[1.5rem] shadow-sm relative",
+                          m.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-tr-none"
+                            : m.isError
+                              ? "bg-destructive/10 border border-destructive/20 rounded-tl-none"
+                              : "bg-muted/50 rounded-tl-none border border-border/30"
+                        )}>
+                          <MarkdownContent content={m.content || (m.isStreaming ? "" : "...")} isStreaming={m.isStreaming && !m.content} />
                           
                           {/* Message actions */}
-                          {message.role === "assistant" && message.content && !message.isStreaming && (
+                          {m.role === "assistant" && m.content && !m.isStreaming && (
                             <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 px-2 text-xs"
-                                onClick={() => handleCopyMessage(message.id, message.content)}
-                              >
-                                {copiedMessageId === message.id ? (
-                                  <Check className="w-3 h-3 mr-1" />
-                                ) : (
-                                  <Copy className="w-3 h-3 mr-1" />
-                                )}
-                                {copiedMessageId === message.id ? text.copied : "Copy"}
+                              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => handleCopyMessage(m.id, m.content)}>
+                                {copiedMessageId === m.id ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                                {copiedMessageId === m.id ? text.copied : "Copy"}
                               </Button>
-                              {message.isError && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-xs"
-                                  onClick={() => {
-                                    // Find the last user message before this error
-                                    const userMsgIndex = messages.findIndex(m => m.id === message.id) - 1;
-                                    if (userMsgIndex >= 0 && messages[userMsgIndex]?.role === "user") {
-                                      handleRetry(messages[userMsgIndex].content);
-                                    }
-                                  }}
-                                >
-                                  <RotateCcw className="w-3 h-3 mr-1" />
-                                  {text.retry}
+                              {m.isError && (
+                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => {
+                                  const idx = messages.findIndex(msg => msg.id === m.id) - 1;
+                                  if (idx >= 0 && messages[idx]?.role === "user") {
+                                    setMessages(prev => prev.filter(msg => !msg.isError));
+                                    handleSend(messages[idx].content);
+                                  }
+                                }}>
+                                  <RotateCcw className="w-3 h-3 mr-1" /> {text.retry}
                                 </Button>
                               )}
                             </div>
@@ -1020,41 +637,40 @@ const AIChatbot = () => {
 
                     {/* Typing indicator */}
                     {isLoading && messages[messages.length - 1]?.content === "" && (
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-sm">
-                          <Bot className="w-4 h-4 text-primary-foreground" />
+                      <div className="flex gap-4">
+                        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
+                          <Bot className="w-5 h-5 text-primary-foreground" />
                         </div>
-                        <div className="bg-secondary rounded-2xl">
-                          <TypingIndicator />
+                        <div className="bg-muted/50 rounded-[1.5rem] rounded-tl-none border border-border/30 px-5 py-3">
+                          <div className="flex gap-1.5 items-center">
+                            {[0, 1, 2].map((i) => (
+                              <motion.div key={i} className="w-2 h-2 rounded-full bg-primary/60" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
-                </ScrollArea>
 
-                {/* Quick actions - only show after greeting */}
-                {messages.length <= 1 && !isLoading && (
-                  <div className="px-4 pb-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      {quickActions.map((action) => (
-                        <Button
-                          key={action.id}
-                          variant="outline"
-                          size="sm"
-                          className="h-9 text-xs justify-start gap-2 hover:bg-primary/5 hover:border-primary/30"
-                          onClick={() => handleQuickAction(action)}
+                  {/* Quick Actions */}
+                  {messages.length <= 1 && !isLoading && (
+                    <div className="flex flex-wrap gap-2 mt-10 justify-center px-4">
+                      {text.quickActions.map((action, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSend(action)}
+                          className="px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-[11px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary/40 transition-all text-foreground"
                         >
-                          {action.icon}
-                          <span className="truncate">{action.label}</span>
-                        </Button>
+                          {action}
+                        </button>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </ScrollArea>
 
-                {/* Input area */}
-                <div className="p-4 border-t border-border bg-background/50 backdrop-blur-sm">
-                  {/* Continue with voice banner - show after some conversation */}
+                {/* ─── Premium Input ─── */}
+                <div className="p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
+                  {/* Voice transfer banner */}
                   {messages.length > 2 && sharedContext && (
                     <button
                       onClick={handleTransferToVoice}
@@ -1064,52 +680,41 @@ const AIChatbot = () => {
                       <span className="font-medium">{text.continueVoice}</span>
                     </button>
                   )}
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      ref={inputRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder={text.placeholder}
-                      className="flex-1 h-11"
-                      disabled={isLoading}
-                      maxLength={2000}
-                    />
+
+                  <div className="flex gap-3 items-center">
+                    <div className="relative flex-1">
+                      <Input
+                        ref={inputRef}
+                        placeholder={text.placeholder}
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12"
+                        disabled={isLoading}
+                        maxLength={2000}
+                      />
+                      <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/30" />
+                    </div>
                     <Button
-                      variant="outline"
                       size="icon"
-                      className="h-11 w-11 shrink-0"
-                      onClick={startVoiceMode}
-                      disabled={isConnectingVoice}
-                      title={text.voiceMode}
+                      className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform"
+                      onClick={() => handleSend()}
+                      disabled={!input.trim() || isLoading}
                     >
-                      {isConnectingVoice ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Mic className="w-4 h-4" />
-                      )}
-                    </Button>
-                    <Button 
-                      onClick={() => handleSend()} 
-                      disabled={!input.trim() || isLoading} 
-                      size="icon"
-                      className="h-11 w-11 shrink-0"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Send className="w-4 h-4" />
-                      )}
+                      {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[10px] text-muted-foreground">
-                      {input.length}/2000
-                    </span>
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                      <Sparkles className="w-3 h-3 text-primary" />
-                      <span className="text-primary font-medium">{text.poweredBy}</span>
+
+                  <div className="flex items-center justify-between mt-3 px-2">
+                    <div className="flex items-center gap-2 opacity-40">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Secured</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">{input.length}/2000</span>
+                      <span className="text-muted-foreground/30 mx-1">·</span>
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                      <span className="text-[10px] font-bold text-primary">{text.power}</span>
                     </div>
                   </div>
                 </div>
