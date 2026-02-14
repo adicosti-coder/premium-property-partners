@@ -32,6 +32,7 @@ import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import InvestmentYieldCalculator from "@/components/InvestmentYieldCalculator";
+import PropertyGallery from "@/components/PropertyGallery";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
