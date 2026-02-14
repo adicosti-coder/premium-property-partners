@@ -253,6 +253,9 @@ const Imobiliare = () => {
         </div>
       </section>
 
+      {/* Property Portfolio - showcase before calculator */}
+      <PropertyGallery />
+
       {/* Investment Yield Calculator - only for sales, not rentals */}
       {listingView !== 'inchiriere' && <InvestmentYieldCalculator />}
 
