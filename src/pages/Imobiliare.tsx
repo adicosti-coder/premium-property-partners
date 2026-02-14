@@ -253,8 +253,8 @@ const Imobiliare = () => {
         </div>
       </section>
 
-      {/* Investment Yield Calculator */}
-      <InvestmentYieldCalculator />
+      {/* Investment Yield Calculator - only for sales, not rentals */}
+      {listingView !== 'inchiriere' && <InvestmentYieldCalculator />}
 
       {/* Services Section */}
       <section id="services" className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
