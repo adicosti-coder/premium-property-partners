@@ -22,7 +22,7 @@ import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
-import PropertyInvestmentCalculator from "@/components/PropertyInvestmentCalculator";
+import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -343,11 +343,12 @@ const PropertyDetail = () => {
               )}
               
               {/* Calculator Investiție + Card Vânzare Rapidă */}
-              <PropertyInvestmentCalculator
+              <InvestmentEngineV34
                 propertyName={property.name}
                 propertyCode={dbProperty?.property_code}
-                defaultPrice={dbProperty?.capital_necesar || 95000}
-                defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 500}
+                defaultPrice={dbProperty?.capital_necesar || 120000}
+                defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
+                hideRecommendations
               />
 
               {/* Recenzii oaspeți - doar pentru proprietăți de cazare, nu pentru vânzări/închirieri imobiliare */}
