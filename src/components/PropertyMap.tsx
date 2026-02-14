@@ -127,6 +127,11 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         pitch: 0,
       });
 
+      // Force resize after load to handle cases where container wasn't visible during init
+      map.current.on('load', () => {
+        map.current?.resize();
+      });
+
       // Handle map errors (including WebGL failures)
       map.current.on('error', (e) => {
         console.error('Mapbox error:', e);
