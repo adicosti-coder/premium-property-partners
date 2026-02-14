@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ interface Props {
   propertyCode?: string | null;
   defaultPrice?: number;
   defaultRent?: number;
-  /** Hide the property recommendations section (e.g. on property detail pages) */
   hideRecommendations?: boolean;
 }
 
@@ -36,20 +35,25 @@ interface RankedProperty {
 const InvestmentEngineV34 = ({
   propertyName,
   propertyCode,
-  defaultPrice = 120000,
-  defaultRent = 550,
+  defaultPrice,
+  defaultRent,
   hideRecommendations = false,
 }: Props) => {
   const { language } = useLanguage();
-  const [budget, setBudget] = useState(defaultPrice);
-  const [chirie, setChirie] = useState(defaultRent);
-  const [advance, setAdvance] = useState(25);
-  const [interest, setInterest] = useState(6.5);
+  const [budgetStr, setBudgetStr] = useState(defaultPrice?.toString() ?? "");
+  const [chirieStr, setChirieStr] = useState(defaultRent?.toString() ?? "");
+  const [advanceStr, setAdvanceStr] = useState("25");
+  const [interestStr, setInterestStr] = useState("6.5");
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("clasic");
   const [clientName, setClientName] = useState("");
-  const [simCount, setSimCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
+  const popupTriggered = useRef(false);
   const [dbProperties, setDbProperties] = useState<DbProperty[]>([]);
+
+  const budget = budgetStr === "" ? NaN : parseFloat(budgetStr);
+  const chirie = chirieStr === "" ? NaN : parseFloat(chirieStr);
+  const advance = advanceStr === "" ? 0 : parseFloat(advanceStr);
+  const interest = interestStr === "" ? 0 : parseFloat(interestStr);
 
   // Fetch DB properties for recommendations
   useEffect(() => {
@@ -66,7 +70,7 @@ const InvestmentEngineV34 = ({
   }, [hideRecommendations]);
 
   const calc = useMemo(() => {
-    if (!budget || budget < 10000 || !chirie || chirie < 50) return null;
+    if (isNaN(budget) || budget < 1000 || isNaN(chirie) || chirie < 10) return null;
 
     const chirieEfectiva = strategy === "hotel" ? chirie * 1.65 : chirie;
     const factorNet = strategy === "hotel" ? 0.72 : 0.95;
@@ -74,8 +78,8 @@ const InvestmentEngineV34 = ({
 
     const credit = budget * (1 - advance / 100);
     const r = (interest / 100) / 12;
-    const rata = credit > 0 && r > 0
-      ? (credit * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1))
+    const rata = credit > 0
+      ? (r > 0 ? (credit * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1)) : (credit / 300))
       : 0;
 
     const venitNetLunar = chirieEfectiva * factorNet;
@@ -88,6 +92,15 @@ const InvestmentEngineV34 = ({
 
     return { chirieEfectiva, rata, venitNetLunar, cashflow, yieldAnual, valViitoare, avereTotala, factorNet };
   }, [budget, chirie, advance, interest, strategy]);
+
+  // Trigger popup 8s after first valid calculation, once only
+  useEffect(() => {
+    if (calc && !popupTriggered.current) {
+      popupTriggered.current = true;
+      const timer = setTimeout(() => setShowPopup(true), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [calc]);
 
   // Ranked properties from DB
   const rankedProperties = useMemo((): RankedProperty[] => {
@@ -102,9 +115,9 @@ const InvestmentEngineV34 = ({
         const rent = parseFloat(p.estimated_revenue!.replace(/[^0-9.]/g, "")) || 0;
         if (!rent) return null;
         const ch = strategy === "hotel" ? rent * 1.65 : rent;
-        const credit = price * (1 - advance / 100);
-        const pmt = credit > 0 && r > 0
-          ? credit * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1)
+        const creditP = price * (1 - advance / 100);
+        const pmt = creditP > 0
+          ? (r > 0 ? creditP * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1) : creditP / 300)
           : 0;
         const netM = (ch * factorNet) - pmt;
         const yv = (ch * factorNet * 12) / (price * 1.02) * 100;
@@ -115,37 +128,27 @@ const InvestmentEngineV34 = ({
       .slice(0, 3) as RankedProperty[];
   }, [dbProperties, advance, interest, strategy, hideRecommendations]);
 
-  // Trigger popup after 5 simulations
-  useEffect(() => {
-    if (simCount >= 5 && !showPopup) setShowPopup(true);
-  }, [simCount]);
-
-  const handleInputChange = (setter: (v: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setter(Number(e.target.value));
-    setSimCount(c => c + 1);
-  };
-
   const verdict = useMemo(() => {
     if (!calc) return "";
     const { yieldAnual, cashflow } = calc;
     let msg = "";
     if (yieldAnual >= 7.5) {
       msg = language === "ro"
-        ? "<b>Oportunitate de TOP.</b> Cifrele indică o profitabilitate rară. Recomandăm strategia <b>ApArt Hotel</b> pentru a maximiza randamentul net și a profita de fluxul turistic din Timișoara."
-        : "<b>TOP Opportunity.</b> The numbers indicate rare profitability. We recommend the <b>ApArt Hotel</b> strategy to maximize net yield and capitalize on Timișoara's tourism flow.";
+        ? "<b>Oportunitate de TOP.</b> Cifrele indică o profitabilitate rară. Recomandăm strategia <b>ApArt Hotel</b> pentru a maximiza randamentul net."
+        : "<b>TOP Opportunity.</b> The numbers indicate rare profitability. We recommend the <b>ApArt Hotel</b> strategy to maximize net yield.";
     } else if (yieldAnual >= 5.5) {
       msg = language === "ro"
-        ? "<b>Investiție Echilibrată.</b> Un activ corect și stabil, ideal pentru protecția capitalului. Managementul nostru asigură un cashflow predictibil pe termen lung."
-        : "<b>Balanced Investment.</b> A solid and stable asset, ideal for capital protection. Our management ensures predictable long-term cashflow.";
+        ? "<b>Investiție Echilibrată.</b> Un activ corect și stabil, ideal pentru protecția capitalului și un cashflow predictibil."
+        : "<b>Balanced Investment.</b> A solid and stable asset, ideal for capital protection and predictable cashflow.";
     } else {
       msg = language === "ro"
-        ? "<b>Achiziție Strategică.</b> Randament curent moderat, recomandat pentru apreciere în timp sau utilizare mixtă."
-        : "<b>Strategic Acquisition.</b> Moderate current yield, recommended for long-term appreciation or mixed use.";
+        ? "<b>Achiziție Strategică.</b> Randament curent moderat, recomandat pentru apreciere în timp."
+        : "<b>Strategic Acquisition.</b> Moderate current yield, recommended for long-term appreciation.";
     }
     if (cashflow > 0) {
       msg += language === "ro"
-        ? " Proprietatea generează cashflow pozitiv (se autofinanțează)."
-        : " The property generates positive cashflow (self-financing).";
+        ? " Proprietatea generează cashflow pozitiv."
+        : " The property generates positive cashflow.";
     }
     return msg;
   }, [calc, language]);
@@ -160,11 +163,10 @@ const InvestmentEngineV34 = ({
 
   const handleWhatsApp = () => {
     const name = clientName || (language === "ro" ? "Investitor" : "Investor");
-    const yieldText = calc ? calc.yieldAnual.toFixed(2) + "%" : "";
     const propContext = propertyCode ? `[${propertyCode}] ` : "";
     const msg = language === "ro"
-      ? `Bună Adrian! Sunt ${name}. ${propContext}Am simulat un randament de ${yieldText} pe RealTrust & ApArt Hotel și doresc detalii despre vizionare.`
-      : `Hello Adrian! I'm ${name}. ${propContext}I simulated a ${yieldText} yield on RealTrust & ApArt Hotel and would like viewing details.`;
+      ? `Bună Adrian! Sunt ${name}. ${propContext}Am analizat oferta RealTrust & ApArt Hotel și doresc detalii despre vizionare.`
+      : `Hello Adrian! I'm ${name}. ${propContext}I analyzed the RealTrust & ApArt Hotel offer and would like viewing details.`;
     window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -172,11 +174,16 @@ const InvestmentEngineV34 = ({
     title: "RealTrust & ApArt Hotel",
     reportPrefix: "Raport Investiție pentru: ",
     analysisTitle: "Analiză de Profitabilitate",
-    namePlaceholder: "Numele dumneavoastră (pentru raport PDF)",
+    namePlaceholder: "Introduceți numele dumneavoastră",
+    nameLabel: "Nume Investitor (pentru Raport PDF)",
     budget: "💰 Buget (€)",
     rent: "🔑 Chirie Estimată (€/lună)",
     advance: "🏦 Avans Credit (%)",
     interest: "📈 Dobândă Anuală (%)",
+    budgetPlaceholder: "Ex: 120000",
+    rentPlaceholder: "Ex: 550",
+    advancePlaceholder: "25",
+    interestPlaceholder: "6.5",
     clasic: "Închiriere Clasică",
     hotel: "Regim Hotelier (ApArt Hotel)",
     strategy: "Strategie",
@@ -185,14 +192,14 @@ const InvestmentEngineV34 = ({
     cashflow: "Cashflow Lunar Net",
     topProperties: "Top Proprietăți Recomandate",
     chartTitle: "Comparație Grafică: Imobiliare vs Bancă",
-    aboveAvg: "Randament Peste Medie",
+    topYield: "TOP Randament",
     price: "Preț",
     yield: "Randament",
     cashflowNet: "Cashflow Net",
     perMonth: "/lună",
     expertTitle: "Verdictul Expertului RealTrust & ApArt Hotel",
     expertName: "Adrian Costi",
-    expertRole: "Investment Specialist @ RealTrust & ApArt Hotel",
+    expertRole: "Investment Specialist Timișoara",
     ctaPdf: "📄 SALVEAZĂ PDF",
     ctaWhatsApp: "💬 CONTACT WHATSAPP",
     disclaimer: "NOTĂ JURIDICĂ ȘI CLAUZĂ DE NERESPONSABILITATE:",
@@ -207,11 +214,16 @@ const InvestmentEngineV34 = ({
     title: "RealTrust & ApArt Hotel",
     reportPrefix: "Investment Report for: ",
     analysisTitle: "Profitability Analysis",
-    namePlaceholder: "Your name (for PDF report)",
+    namePlaceholder: "Enter your name",
+    nameLabel: "Investor Name (for PDF Report)",
     budget: "💰 Budget (€)",
     rent: "🔑 Estimated Rent (€/month)",
     advance: "🏦 Down Payment (%)",
     interest: "📈 Annual Interest (%)",
+    budgetPlaceholder: "e.g. 120000",
+    rentPlaceholder: "e.g. 550",
+    advancePlaceholder: "25",
+    interestPlaceholder: "6.5",
     clasic: "Classic Rental",
     hotel: "Hotel Strategy (ApArt Hotel)",
     strategy: "Strategy",
@@ -220,14 +232,14 @@ const InvestmentEngineV34 = ({
     cashflow: "Monthly Net Cashflow",
     topProperties: "Top Recommended Properties",
     chartTitle: "Chart: Real Estate vs Bank",
-    aboveAvg: "Above Average Yield",
+    topYield: "TOP Yield",
     price: "Price",
     yield: "Yield",
     cashflowNet: "Net Cashflow",
     perMonth: "/mo",
     expertTitle: "RealTrust & ApArt Hotel Expert Verdict",
     expertName: "Adrian Costi",
-    expertRole: "Investment Specialist @ RealTrust & ApArt Hotel",
+    expertRole: "Investment Specialist Timișoara",
     ctaPdf: "📄 SAVE PDF",
     ctaWhatsApp: "💬 CONTACT WHATSAPP",
     disclaimer: "LEGAL NOTICE AND DISCLAIMER:",
@@ -255,7 +267,7 @@ const InvestmentEngineV34 = ({
         {/* Client Name Card */}
         <div className="bg-card border border-border rounded-2xl p-6 text-center shadow-lg print:hidden">
           <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">
-            {language === "ro" ? "Nume Investitor (pentru Raport PDF)" : "Investor Name (for PDF Report)"}
+            {t.nameLabel}
           </Label>
           <input
             type="text"
@@ -271,26 +283,54 @@ const InvestmentEngineV34 = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{t.budget}</Label>
-              <Input type="number" value={budget} onChange={handleInputChange(setBudget)} className="mt-1 text-base font-bold" />
+              <Input
+                type="number"
+                value={budgetStr}
+                onChange={(e) => setBudgetStr(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                placeholder={t.budgetPlaceholder}
+                className="mt-1 text-base font-bold"
+              />
             </div>
             <div>
               <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{t.rent}</Label>
-              <Input type="number" value={chirie} onChange={handleInputChange(setChirie)} className="mt-1 text-base font-bold" />
+              <Input
+                type="number"
+                value={chirieStr}
+                onChange={(e) => setChirieStr(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                placeholder={t.rentPlaceholder}
+                className="mt-1 text-base font-bold"
+              />
             </div>
             <div>
               <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{t.advance}</Label>
-              <Input type="number" value={advance} onChange={handleInputChange(setAdvance)} className="mt-1 text-base font-bold" />
+              <Input
+                type="number"
+                value={advanceStr}
+                onChange={(e) => setAdvanceStr(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                placeholder={t.advancePlaceholder}
+                className="mt-1 text-base font-bold"
+              />
             </div>
             <div>
               <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">{t.interest}</Label>
-              <Input type="number" value={interest} onChange={handleInputChange(setInterest)} className="mt-1 text-base font-bold" />
+              <Input
+                type="number"
+                value={interestStr}
+                onChange={(e) => setInterestStr(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                placeholder={t.interestPlaceholder}
+                className="mt-1 text-base font-bold"
+              />
             </div>
           </div>
 
           {/* Strategy Buttons */}
           <div className="flex gap-3 mt-2">
             <button
-              onClick={() => { setStrategy("clasic"); setSimCount(c => c + 1); }}
+              onClick={() => setStrategy("clasic")}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "clasic"
                   ? "bg-foreground text-background border-foreground shadow-lg"
@@ -300,7 +340,7 @@ const InvestmentEngineV34 = ({
               {t.clasic}
             </button>
             <button
-              onClick={() => { setStrategy("hotel"); setSimCount(c => c + 1); }}
+              onClick={() => setStrategy("hotel")}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "hotel"
                   ? "bg-amber-500 text-slate-900 border-amber-500 shadow-lg"
@@ -363,7 +403,7 @@ const InvestmentEngineV34 = ({
                           {t.yield}: <b className="text-emerald-500">{p.yieldVal.toFixed(2)}%</b>
                           {p.yieldVal >= 6.5 && (
                             <Badge variant="secondary" className="ml-1 text-[9px] bg-amber-500/20 text-amber-500 px-1.5">
-                              {t.aboveAvg}
+                              {t.topYield}
                             </Badge>
                           )}
                         </div>
