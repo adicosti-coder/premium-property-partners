@@ -1,6 +1,6 @@
-// Property image imports — v6 (cache-bust 2026-02-15)
+// Property image imports — v7 (fresh-assets 2026-02-15)
 import apt01 from "@/assets/apt-01.jpg";
-import apt02 from "@/assets/apt-02.jpg";
+import apt02 from "@/assets/fullview-deluxe.jpg";
 import apt03 from "@/assets/apt-03.jpg";
 import apt04 from "@/assets/apt-04.jpg";
 import apt05 from "@/assets/apt-05.jpg";
@@ -9,7 +9,7 @@ import apt07 from "@/assets/apt-07.jpg";
 import apt08 from "@/assets/apt-08.jpg";
 import apt09 from "@/assets/apt-09.jpg";
 import apt11 from "@/assets/apt-11.jpg";
-import modernStudio from "@/assets/modern-studio.jpg";
+import modernStudio from "@/assets/modern-studio-apt.jpg";
 import helios from "@/assets/helios.jpg";
 
 export interface Property {
