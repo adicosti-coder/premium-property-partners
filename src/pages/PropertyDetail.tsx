@@ -343,7 +343,7 @@ const PropertyDetail = () => {
               )}
               
               {/* Calculator Investiție + Card Vânzare Rapidă — ascuns pentru închirieri */}
-              {dbProperty?.listing_type !== 'inchiriere' && (
+              {!staticProperty && dbProperty?.listing_type !== 'inchiriere' && (
                 <InvestmentEngineV34
                   propertyName={property.name}
                   propertyCode={dbProperty?.property_code}
