@@ -231,8 +231,8 @@ const Investitii = () => {
       </section>
 
       {/* Investment Grid */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-6">
+      <section className="py-16 md:py-24 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
               {t.gridTitle}
@@ -261,14 +261,14 @@ const Investitii = () => {
               ))}
             </div>
           ) : properties && properties.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {properties.map((property) => (
                 <div 
                   key={property.id} 
-                  className="group bg-slate-900 text-white p-6 rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10"
+                  className="group bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 min-w-0 overflow-hidden"
                 >
                   {/* Property Image */}
-                  <div className="relative h-48 -mx-6 -mt-6 mb-6 overflow-hidden rounded-t-3xl">
+                  <div className="relative h-48 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
                     {property.image_path ? (
                       <img 
                         src={property.image_path.startsWith("http") ? property.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${property.image_path}`}
@@ -302,9 +302,9 @@ const Investitii = () => {
                   <h3 className="text-2xl font-serif font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
                     {property.name}
                   </h3>
-                  <div className="flex items-center gap-1 text-sm text-slate-400 mb-6">
-                    <MapPin className="w-4 h-4" />
-                    {property.location}
+                  <div className="flex items-center gap-1 text-sm text-slate-400 mb-6 min-w-0">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{property.location}</span>
                   </div>
 
                   {/* Financial Metrics */}
