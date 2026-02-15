@@ -71,9 +71,9 @@ const ReferralPopup = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-md mx-4"
+            className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+            <div className="relative overflow-hidden rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto">
               {/* Gradient background matching the screenshot style */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500" />
 
