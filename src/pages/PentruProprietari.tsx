@@ -31,6 +31,7 @@ import VideoTestimonials from "@/components/VideoTestimonials";
 import FAQ from "@/components/FAQ";
 import ReferralBanner from "@/components/ReferralBanner";
 import SEOHead from "@/components/SEOHead";
+import PageSummary from "@/components/PageSummary";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
@@ -161,6 +162,18 @@ const PentruProprietari = () => {
     }
   };
 
+  // Speakable schema for AI/voice assistants
+  const speakableSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": seo.title,
+    "url": "https://realtrust.ro/pentru-proprietari",
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": [".page-summary", "h1", "h2"],
+    },
+  };
+
   const breadcrumbItems = [
     { label: language === "ro" ? "Pentru Proprietari" : "For Owners" }
   ];
@@ -171,15 +184,23 @@ const PentruProprietari = () => {
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/pentru-proprietari"
-        jsonLd={serviceSchema}
+        jsonLd={[serviceSchema, speakableSchema]}
       />
       <Header />
       
+      {/* AI-friendly page summary for extraction */}
+      <div className="container mx-auto px-6 pt-24">
+        <PageSummary
+          summaryRo="RealTrust oferă administrare profesională a apartamentelor în regim hotelier în Timișoara, cu comision de 20%, rată de ocupare de peste 85%, self check-in digital, și transparență financiară completă prin rapoarte lunare. Fără perioadă minimă de contract."
+          summaryEn="RealTrust provides professional short-term rental management in Timișoara, with a 20% commission, over 85% occupancy rate, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
+        />
+      </div>
+
       {/* Floating Investor Guide - Mobile Only */}
       <FloatingInvestorGuide />
       
       {/* Breadcrumb */}
-      <div className="container mx-auto px-6 pt-24">
+      <div className="container mx-auto px-6">
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
 

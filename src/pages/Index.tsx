@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
-import { generateHomepageSchemas, generateFAQSchema, DatabaseReview } from "@/utils/schemaGenerators";
+import { generateHomepageSchemas, generateFAQSchema, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
@@ -143,9 +143,16 @@ const Index = () => {
     },
   ]);
   
+  const speakableSchema = generateSpeakableSchema(
+    "RealTrust & ApArt Hotel Timișoara",
+    "https://realtrust.ro",
+    [".page-summary", "h1", "h2", ".faq-section"],
+  );
+
   const homepageSchemas = [
     ...generateHomepageSchemas(reviews),
     faqSchema,
+    speakableSchema,
   ];
 
   return (

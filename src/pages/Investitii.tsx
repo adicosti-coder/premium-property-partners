@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import PageSummary from "@/components/PageSummary";
+import { generateSpeakableSchema } from "@/utils/schemaGenerators";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
@@ -130,17 +132,32 @@ const Investitii = () => {
     }).format(value);
   };
 
+  const speakableSchema = generateSpeakableSchema(
+    t.title,
+    "https://realtrust.ro/investitii",
+    [".page-summary", "h1", "h2"],
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
         title={t.title + " | RealTrust"}
         description={t.metaDescription}
         url="https://realtrust.ro/investitii"
+        jsonLd={speakableSchema}
       />
       <Header />
       
-      {/* Breadcrumb */}
+      {/* AI-friendly page summary */}
       <div className="container mx-auto px-6 pt-24">
+        <PageSummary
+          summaryRo="RealTrust oferă oportunități de investiții imobiliare în Timișoara cu randament net verificat de 9.2-9.4% ROI. Due diligence complet, administrare profesională inclusă, raportare lunară. Noi le găsim, noi le administrăm, tu încasezi profitul."
+          summaryEn="RealTrust offers real estate investment opportunities in Timișoara with verified net yields of 9.2-9.4% ROI. Complete due diligence, professional management included, monthly reporting. We find them, we manage them, you collect the profit."
+        />
+      </div>
+      
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-6">
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
 
