@@ -14,12 +14,12 @@ const FloatingReferralButton = () => {
   const t = {
     ro: {
       title: "Weekend Gratuit!",
-      subtitle: "Recomandă un prieten proprietar",
+      subtitle: "Cazare Gratis sau Comision!",
       cta: "Află cum",
     },
     en: {
       title: "Free Weekend!",
-      subtitle: "Refer a property owner friend",
+      subtitle: "Free Stay or Commission!",
       cta: "Learn how",
     },
   };

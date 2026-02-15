@@ -16,7 +16,7 @@ const ReferralPopup = () => {
       title: "Recomanzi și câștigi:",
       highlight: "Cazare Gratis sau Comision!",
       description:
-        "Recomandă-ne la un prieten cu apartament pentru a-i administra și lui apartamentul și poți câștiga 1 noapte de cazare gratis la unul dintre apartamentele noastre sau un Comision!",
+        "Recomandă-ne la un prieten cu apartament pentru a-i administra și lui apartamentul și poți câștiga 2 nopți de cazare gratis la unul dintre apartamentele noastre sau un Comision!",
       cta: "Află cum funcționează",
       noThanks: "Nu acum",
       badge: "Nou",
@@ -26,7 +26,7 @@ const ReferralPopup = () => {
       title: "Refer & Earn:",
       highlight: "Free Stay or Commission!",
       description:
-        "Refer a friend with an apartment for us to manage and you can win 1 free night at one of our apartments or a Commission!",
+        "Refer a friend with an apartment for us to manage and you can win 2 free nights at one of our apartments or a Commission!",
       cta: "Learn how it works",
       noThanks: "Not now",
       badge: "New",
