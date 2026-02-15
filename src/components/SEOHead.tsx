@@ -280,8 +280,6 @@ const SEOHead = ({
       <link rel="alternate" hrefLang="ro" href={getAlternateUrl("ro")} />
       <link rel="alternate" hrefLang="en" href={getAlternateUrl("en")} />
       <link rel="alternate" hrefLang="x-default" href={getAlternateUrl("ro")} />
-      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
-      <html lang={language} />
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
