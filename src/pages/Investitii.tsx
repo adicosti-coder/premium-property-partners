@@ -145,6 +145,10 @@ const Investitii = () => {
         description={t.metaDescription}
         url="https://realtrust.ro/investitii"
         jsonLd={speakableSchema}
+        breadcrumbItems={[
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: t.title, url: "https://realtrust.ro/investitii" },
+        ]}
       />
       <Header />
       
