@@ -9,6 +9,7 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import DesktopStickyContactBar from "@/components/DesktopStickyContactBar";
 import { ElevenLabsWidget } from "@/components/ElevenLabsWidget";
+import ReferralPopup from "@/components/ReferralPopup";
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -46,6 +47,7 @@ const GlobalConversionWidgets = ({
       <FloatingActionMenu showChatbot={showChatbot} />
       {showExitIntent && <ExitIntentPopup />}
       {showSocialProof && <SocialProofNotifications />}
+      <ReferralPopup />
     </>
   );
 };
