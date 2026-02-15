@@ -102,8 +102,8 @@ const InvestorGuideButton = ({
             ${className}
           `}
         >
-          <Sparkles className="w-4 h-4 mr-2" />
-          {isRo ? "Vreau Ghidul Gratuit de Investiții Premium" : "Get Free Premium Investment Guide"}
+          <Sparkles className="w-4 h-4 mr-2 shrink-0" />
+          <span className="text-center whitespace-normal">{isRo ? "Vreau Ghidul Gratuit de Investiții Premium" : "Get Free Premium Investment Guide"}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
