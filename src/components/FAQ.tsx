@@ -7,14 +7,32 @@ import {
 } from "@/components/ui/accordion";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Helmet } from "react-helmet-async";
 
 const FAQ = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: contentRef, isVisible: contentVisible } = useScrollAnimation({ threshold: 0.05 });
   const { t } = useLanguage();
 
+  // Generate FAQ JSON-LD schema
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": t.faq.items.map((item: { question: string; answer: string }) => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer,
+      },
+    })),
+  };
+
   return (
-    <section id="faq" className="section-padding bg-background relative overflow-hidden">
+    <section id="faq" className="faq-section section-padding bg-background relative overflow-hidden">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+      </Helmet>
       {/* Background decorations - hidden on mobile to prevent edge shadows */}
       <div className="absolute top-20 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl hidden md:block" />
       <div className="absolute bottom-20 -right-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl hidden md:block" />

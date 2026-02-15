@@ -10,6 +10,7 @@ import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import { SharedAssistantProvider } from "@/hooks/useSharedAssistantContext";
 import { Loader2 } from "lucide-react";
 import CookieConsent from "@/components/CookieConsent";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error) => {
@@ -99,6 +100,7 @@ const App = () => (
               <Sonner />
               <CookieConsent />
               <BrowserRouter>
+                <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
@@ -132,6 +134,7 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
+                </ErrorBoundary>
               </BrowserRouter>
             </TooltipProvider>
           </SharedAssistantProvider>

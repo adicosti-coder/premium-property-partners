@@ -413,7 +413,7 @@ const BlogArticlePage = () => {
             </div>
 
             {/* Contextual Internal Links for SEO */}
-            <InternalLinks category={article.category} tags={article.tags} />
+            <InternalLinks category={article.category} tags={article.tags} currentSlug={article.slug} />
 
             {/* Auto-generated FAQ per article */}
             <ArticleFAQ category={article.category} articleTitle={displayTitle} />
