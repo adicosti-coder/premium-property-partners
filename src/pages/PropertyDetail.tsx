@@ -22,6 +22,7 @@ import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+import PropertyFAQ from "@/components/PropertyFAQ";
 import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useToast } from "@/hooks/use-toast";
@@ -357,6 +358,16 @@ const PropertyDetail = () => {
               {staticProperty && (
                 <PropertyReviews propertyId={dbProperty?.id || ""} propertyName={property.name} />
               )}
+
+              {/* FAQ Section with Schema.org markup */}
+              <PropertyFAQ
+                propertyName={property.name}
+                location={property.location}
+                capacity={staticProperty ? property.capacity : undefined}
+                bedrooms={staticProperty ? property.bedrooms : undefined}
+                pricePerNight={staticProperty ? property.pricePerNight : undefined}
+                isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
+              />
             </div>
 
             {/* Bara Laterală - Rezervări - doar pentru proprietăți cu date complete */}

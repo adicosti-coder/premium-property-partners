@@ -14,6 +14,7 @@ import SocialShareButtons from "@/components/blog/SocialShareButtons";
 import BlogArticleCTA from "@/components/blog/BlogArticleCTA";
 import ArticleTableOfContents from "@/components/blog/ArticleTableOfContents";
 import ArticleTLDR from "@/components/blog/ArticleTLDR";
+import InternalLinks from "@/components/blog/InternalLinks";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
@@ -390,7 +391,10 @@ const BlogArticlePage = () => {
                 description={displayExcerpt}
               />
             </div>
-          </div>
+            </div>
+
+            {/* Contextual Internal Links for SEO */}
+            <InternalLinks category={article.category} tags={article.tags} />
 
           {/* Investor Guide CTA - only for investment-related articles */}
           {(article.category === "Investiții" || article.tags.some(tag => 
