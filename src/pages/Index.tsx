@@ -26,6 +26,8 @@ const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const BookingReviewsWidget = lazy(() => import("@/components/BookingReviewsWidget"));
 const ExternalTrustSeals = lazy(() => import("@/components/ExternalTrustSeals"));
+const DualServicePaths = lazy(() => import("@/components/DualServicePaths"));
+const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 
 // Hub Teaser Components
 const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
@@ -179,6 +181,12 @@ const Index = () => {
           {/* Trust Elements */}
           <PartnerLogos />
           <TrustBadges />
+
+        {/* CRO: Clear distinction between Owner vs Investor paths */}
+        <DualServicePaths />
+
+        {/* CRO: Visual ROI Case Study - Classic vs ApArt Hotel */}
+        <ROICaseStudy />
         
         {/* Owners Teaser Section */}
         <section id="beneficii">
