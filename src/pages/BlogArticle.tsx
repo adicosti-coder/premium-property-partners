@@ -15,12 +15,13 @@ import BlogArticleCTA from "@/components/blog/BlogArticleCTA";
 import ArticleTableOfContents from "@/components/blog/ArticleTableOfContents";
 import ArticleTLDR from "@/components/blog/ArticleTLDR";
 import InternalLinks from "@/components/blog/InternalLinks";
+import ArticleFAQ from "@/components/blog/ArticleFAQ";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import { generateArticleSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
+import { generateArticleSchema, generateBreadcrumbSchema, generateHowToSchema } from "@/utils/schemaGenerators";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -269,7 +270,25 @@ const BlogArticlePage = () => {
     { name: displayTitle, url: articleUrl },
   ]);
 
-  const combinedJsonLd = [articleSchemaData, breadcrumbSchemaData];
+  // Add HowTo schema for guide/how-to articles
+  const isGuideArticle = article.category?.toLowerCase().includes("ghid") || 
+    article.tags?.some(t => t.toLowerCase().includes("ghid") || t.toLowerCase().includes("how-to") || t.toLowerCase().includes("cum să"));
+  
+  const combinedJsonLd: Record<string, unknown>[] = [articleSchemaData, breadcrumbSchemaData];
+  
+  if (isGuideArticle) {
+    // Extract H2 headings as HowTo steps
+    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+    const steps: { name: string; text: string }[] = [];
+    let match;
+    while ((match = h2Regex.exec(displayContent)) !== null) {
+      const name = match[1].replace(/<[^>]*>/g, '').trim();
+      if (name) steps.push({ name, text: name });
+    }
+    if (steps.length >= 2) {
+      combinedJsonLd.push(generateHowToSchema(displayTitle, displayExcerpt, steps));
+    }
+  }
 
   const breadcrumbItems = [
     { label: "Blog", href: "/blog" },
@@ -395,6 +414,9 @@ const BlogArticlePage = () => {
 
             {/* Contextual Internal Links for SEO */}
             <InternalLinks category={article.category} tags={article.tags} />
+
+            {/* Auto-generated FAQ per article */}
+            <ArticleFAQ category={article.category} articleTitle={displayTitle} />
 
           {/* Investor Guide CTA - only for investment-related articles */}
           {(article.category === "Investiții" || article.tags.some(tag => 

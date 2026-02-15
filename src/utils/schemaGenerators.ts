@@ -643,3 +643,46 @@ export const generateBlogCollectionSchema = (articles: BlogListingArticle[]) => 
     })),
   },
 });
+
+// HowTo Schema for guide/how-to articles
+export interface HowToStep {
+  name: string;
+  text: string;
+  image?: string;
+}
+
+export const generateHowToSchema = (
+  name: string,
+  description: string,
+  steps: HowToStep[],
+  totalTime?: string, // ISO 8601 duration, e.g. "PT30M"
+) => ({
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": name,
+  "description": description,
+  ...(totalTime && { "totalTime": totalTime }),
+  "step": steps.map((step, index) => ({
+    "@type": "HowToStep",
+    "position": index + 1,
+    "name": step.name,
+    "text": step.text,
+    ...(step.image && { "image": step.image }),
+  })),
+});
+
+// Speakable Schema for a page — targets CSS selectors for voice/AI assistants
+export const generateSpeakableSchema = (
+  pageName: string,
+  pageUrl: string,
+  cssSelectors: string[] = [".page-summary", "h1", "h2"],
+) => ({
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": pageName,
+  "url": pageUrl,
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": cssSelectors,
+  },
+});
