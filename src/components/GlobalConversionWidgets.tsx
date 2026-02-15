@@ -1,15 +1,18 @@
+import { lazy, Suspense, useState, useEffect } from "react";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
-import ExitIntentPopup from "@/components/ExitIntentPopup";
-import SocialProofNotifications from "@/components/SocialProofNotifications";
-import AIChatbot from "@/components/AIChatbot";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingActionMenu from "@/components/FloatingActionMenu";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import DesktopStickyContactBar from "@/components/DesktopStickyContactBar";
-import { ElevenLabsWidget } from "@/components/ElevenLabsWidget";
-import ReferralPopup from "@/components/ReferralPopup";
+
+// Defer non-critical widgets to reduce initial main-thread work
+const ExitIntentPopup = lazy(() => import("@/components/ExitIntentPopup"));
+const SocialProofNotifications = lazy(() => import("@/components/SocialProofNotifications"));
+const AIChatbot = lazy(() => import("@/components/AIChatbot"));
+const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
+const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
+const ReferralPopup = lazy(() => import("@/components/ReferralPopup"));
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -21,7 +24,7 @@ interface GlobalConversionWidgetsProps {
 
 /**
  * Global conversion widgets that should appear on most pages.
- * Use props to toggle specific widgets per page.
+ * Non-critical widgets are deferred 3s after mount for better LCP/INP.
  */
 const GlobalConversionWidgets = ({
   showMobileCTA = true,
@@ -30,24 +33,33 @@ const GlobalConversionWidgets = ({
   showChatbot = true,
   showVoiceWidget = true,
 }: GlobalConversionWidgetsProps) => {
+  const [deferredReady, setDeferredReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDeferredReady(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
-      {/* PWA & Offline */}
+      {/* Critical: always loaded */}
       <OfflineIndicator />
-      <PWAInstallPrompt />
-      
       {showMobileCTA && <MobileCTABar />}
-      {/* Desktop sticky contact bar */}
       <DesktopStickyContactBar />
       <AccessibilityPanel />
-      {showChatbot && <AIChatbot />}
-      {/* ElevenLabs Voice Widget - visible on all pages */}
-      {showVoiceWidget && <ElevenLabsWidget />}
-      {/* Mobile FAB menu - groups all floating buttons */}
       <FloatingActionMenu showChatbot={showChatbot} />
-      {showExitIntent && <ExitIntentPopup />}
-      {showSocialProof && <SocialProofNotifications />}
-      <ReferralPopup />
+
+      {/* Deferred: loaded after 3s */}
+      {deferredReady && (
+        <Suspense fallback={null}>
+          <PWAInstallPrompt />
+          {showChatbot && <AIChatbot />}
+          {showVoiceWidget && <ElevenLabsWidgetLazy />}
+          {showExitIntent && <ExitIntentPopup />}
+          {showSocialProof && <SocialProofNotifications />}
+          <ReferralPopup />
+        </Suspense>
+      )}
     </>
   );
 };
