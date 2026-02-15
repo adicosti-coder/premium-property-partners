@@ -43,9 +43,11 @@ serve(async (req: Request) => {
       { url: "/blog", priority: "0.8", changefreq: "daily" },
       { url: "/despre-noi", priority: "0.7", changefreq: "monthly" },
       { url: "/imobiliare", priority: "0.8", changefreq: "weekly" },
-      { url: "/de-ce-rezervare-directa", priority: "0.7", changefreq: "monthly" },
-      { url: "/program-referral", priority: "0.6", changefreq: "monthly" },
-      { url: "/articole-comunitate", priority: "0.6", changefreq: "weekly" },
+      { url: "/investitii", priority: "0.8", changefreq: "weekly" },
+      { url: "/rezerva-direct", priority: "0.7", changefreq: "monthly" },
+      { url: "/recomanda-proprietar", priority: "0.6", changefreq: "monthly" },
+      { url: "/comunitate", priority: "0.6", changefreq: "weekly" },
+      { url: "/pentru-oaspeti", priority: "0.7", changefreq: "weekly" },
     ];
 
     // Fetch published blog articles
@@ -153,7 +155,7 @@ serve(async (req: Request) => {
           : new Date(article.created_at).toISOString().split("T")[0];
 
         xml += `  <url>
-    <loc>${BASE_URL}/articol-comunitate/${article.id}</loc>
+    <loc>${BASE_URL}/comunitate/articol/${article.id}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

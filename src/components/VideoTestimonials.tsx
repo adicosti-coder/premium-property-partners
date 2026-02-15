@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -77,8 +78,48 @@ const VideoTestimonials = () => {
     return null;
   }
 
+  // Generate VideoObject + AggregateRating JSON-LD
+  const videoSchemas = testimonials?.map((t) => ({
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: `${t.name} – ${language === "ro" ? t.role_ro : t.role_en}`,
+    description: language === "ro" ? t.quote_ro : t.quote_en,
+    thumbnailUrl: `https://img.youtube.com/vi/${t.youtube_id}/maxresdefault.jpg`,
+    contentUrl: `https://www.youtube.com/watch?v=${t.youtube_id}`,
+    embedUrl: `https://www.youtube.com/embed/${t.youtube_id}`,
+    uploadDate: new Date().toISOString().split("T")[0],
+    publisher: {
+      "@type": "Organization",
+      name: "RealTrust & ApArt Hotel",
+    },
+  })) ?? [];
+
+  const aggregateRating =
+    testimonials && testimonials.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          name: "RealTrust & ApArt Hotel Timișoara",
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: (
+              testimonials.reduce((s, t) => s + t.rating, 0) / testimonials.length
+            ).toFixed(1),
+            reviewCount: String(testimonials.length),
+            bestRating: "5",
+          },
+        }
+      : null;
+
+  const allSchemas = [...videoSchemas, ...(aggregateRating ? [aggregateRating] : [])];
+
   return (
     <>
+      {allSchemas.length > 0 && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify(allSchemas)}</script>
+        </Helmet>
+      )}
       <section className="py-20 md:py-28 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 pointer-events-none">
