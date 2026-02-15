@@ -1,6 +1,6 @@
-// Property image imports — v3
+// Property image imports — v4
 import apt01 from "@/assets/apt-01.jpg";
-import apt02 from "@/assets/fullview-studio.jpg";
+const apt02 = "/properties/fullview-studio.jpg";
 import apt03 from "@/assets/apt-03.jpg";
 import apt04 from "@/assets/apt-04.jpg";
 import apt05 from "@/assets/apt-05.jpg";
@@ -9,7 +9,7 @@ import apt07 from "@/assets/apt-07.jpg";
 import apt08 from "@/assets/apt-08.jpg";
 import apt09 from "@/assets/apt-09.jpg";
 import apt11 from "@/assets/apt-11.jpg";
-import modernStudio from "@/assets/modern-studio-v2.jpg";
+const modernStudio = "/properties/modern-studio.jpg";
 import helios from "@/assets/helios.jpg";
 
 export interface Property {
