@@ -296,6 +296,7 @@ export interface ArticleSchemaData {
   category?: string;
   tags?: string[];
   wordCount?: number;
+  isAccessibleForFree?: boolean;
 }
 
 export const generateArticleSchema = (article: ArticleSchemaData) => ({
@@ -310,13 +311,29 @@ export const generateArticleSchema = (article: ArticleSchemaData) => ({
   "author": {
     "@type": "Person",
     "name": article.author,
+    "url": BASE_URL,
   },
   "publisher": ORGANIZATION,
   "mainEntityOfPage": {
     "@type": "WebPage",
     "@id": article.url,
   },
+  "isPartOf": {
+    "@type": "Blog",
+    "@id": `${BASE_URL}/blog`,
+    "name": "RealTrust Blog",
+    "publisher": ORGANIZATION,
+  },
+  "isAccessibleForFree": article.isAccessibleForFree !== false,
   "inLanguage": "ro-RO",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".article-tldr", "h1", ".prose h2"],
+  },
+  "about": {
+    "@type": "Thing",
+    "name": article.category || "Property Management",
+  },
   ...(article.category && { "articleSection": article.category }),
   ...(article.tags && article.tags.length > 0 && { "keywords": article.tags.join(", ") }),
   ...(article.wordCount && { "wordCount": article.wordCount }),
@@ -590,3 +607,39 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
 
   return schemas;
 };
+
+// Blog Collection Page Schema for blog listing
+export interface BlogListingArticle {
+  title: string;
+  slug: string;
+  excerpt: string;
+  cover_image?: string | null;
+  published_at?: string | null;
+  created_at: string;
+}
+
+export const generateBlogCollectionSchema = (articles: BlogListingArticle[]) => ({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${BASE_URL}/blog`,
+  "name": "Blog RealTrust & ApArt Hotel",
+  "description": "Articole, ghiduri și sfaturi pentru proprietari și oaspeți. Regim hotelier, investiții, administrare proprietăți în Timișoara.",
+  "url": `${BASE_URL}/blog`,
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "RealTrust & ApArt Hotel Timișoara",
+    "url": BASE_URL,
+  },
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": articles.length,
+    "itemListElement": articles.slice(0, 10).map((article, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": `${BASE_URL}/blog/${article.slug}`,
+      "name": article.title,
+      "description": article.excerpt,
+      ...(article.cover_image && { "image": article.cover_image }),
+    })),
+  },
+});

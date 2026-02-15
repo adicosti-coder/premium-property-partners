@@ -7,7 +7,7 @@ const corsHeaders = {
   "Content-Type": "application/xml; charset=utf-8",
 };
 
-const BASE_URL = "https://realtrustaparthotel.lovable.app";
+const BASE_URL = "https://realtrust.ro";
 
 interface BlogArticle {
   slug: string;

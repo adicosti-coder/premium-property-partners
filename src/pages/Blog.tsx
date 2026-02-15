@@ -17,6 +17,7 @@ import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User } from "@supabase/supabase-js";
 import SEOHead from "@/components/SEOHead";
+import { generateBlogCollectionSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
@@ -216,12 +217,26 @@ const Blog = () => {
     { label: "Blog" }
   ];
 
+  const blogSchemas = useMemo(() => {
+    const schemas: Record<string, unknown>[] = [
+      generateBreadcrumbSchema([
+        { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+        { name: "Blog", url: "https://realtrust.ro/blog" },
+      ]),
+    ];
+    if (articles && articles.length > 0) {
+      schemas.push(generateBlogCollectionSchema(articles));
+    }
+    return schemas;
+  }, [articles, language]);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/blog"
+        jsonLd={blogSchemas}
       />
       <Header />
 

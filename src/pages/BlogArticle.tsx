@@ -12,6 +12,8 @@ import BlogNewsletterCTA from "@/components/BlogNewsletterCTA";
 import RelatedArticles from "@/components/RelatedArticles";
 import SocialShareButtons from "@/components/blog/SocialShareButtons";
 import BlogArticleCTA from "@/components/blog/BlogArticleCTA";
+import ArticleTableOfContents from "@/components/blog/ArticleTableOfContents";
+import ArticleTLDR from "@/components/blog/ArticleTLDR";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
@@ -257,6 +259,7 @@ const BlogArticlePage = () => {
     category: article.category,
     tags: article.tags,
     wordCount: displayContent.length,
+    isAccessibleForFree: !article.is_premium,
   });
 
   const breadcrumbSchemaData = generateBreadcrumbSchema([
@@ -352,6 +355,14 @@ const BlogArticlePage = () => {
               />
             </div>
           )}
+
+          {/* TL;DR Summary for AI extraction */}
+          <div className="article-tldr">
+            <ArticleTLDR excerpt={displayExcerpt} readingTime={readingTime} />
+          </div>
+
+          {/* Table of Contents */}
+          <ArticleTableOfContents htmlContent={displayContent} />
 
           {/* Article Content - sanitized for XSS protection */}
           <div
