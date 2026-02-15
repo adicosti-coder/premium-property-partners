@@ -30,6 +30,15 @@ import ghidMaximizare from "@/assets/blog/ghid-maximizare.jpg";
 import greseliComune from "@/assets/blog/greseli-comune.jpg";
 import automatizareOspitalitate from "@/assets/blog/automatizare-ospitalitate.jpg";
 import timisoaraInvestitii from "@/assets/blog/timisoara-investitii.jpg";
+import regimHotelierForfetar from "@/assets/blog/regim-hotelier-forfetar.jpg";
+import nzebChiriiTermenLung from "@/assets/blog/nzeb-chirii-termen-lung.jpg";
+import zoneHotTimisoara from "@/assets/blog/zone-hot-timisoara.jpg";
+import analizaRoiTimisoara from "@/assets/blog/analiza-roi-timisoara.jpg";
+import diversificarePortofoliu from "@/assets/blog/diversificare-portofoliu.jpg";
+import ghidPrimulApartament from "@/assets/blog/ghid-primul-apartament.jpg";
+import checklistDueDiligence from "@/assets/blog/checklist-due-diligence.jpg";
+import fiscalitateRegimHotelier from "@/assets/blog/fiscalitate-regim-hotelier.jpg";
+import studiuCazRoi from "@/assets/blog/studiu-caz-roi.jpg";
 
 export const blogImageMap: Record<string, string> = {
   // Existing mappings
@@ -64,6 +73,15 @@ export const blogImageMap: Record<string, string> = {
   "5-greseli-comune-administrare": greseliComune,
   "automatizare-industria-ospitalitatii": automatizareOspitalitate,
   "timisoara-investitii-imobiliare": timisoaraInvestitii,
+  "regim-hotelier-2026-sistem-forfetar-taxe": regimHotelierForfetar,
+  "chirii-termen-lung-apartamente-nzeb-timisoara": nzebChiriiTermenLung,
+  "zone-hot-investitii-timisoara-2026": zoneHotTimisoara,
+  "analiza-roi-apartamente-timisoara-2026": analizaRoiTimisoara,
+  "diversificare-portofoliu-imobiliar": diversificarePortofoliu,
+  "ghid-primul-apartament-investitie": ghidPrimulApartament,
+  "checklist-due-diligence-achizitie-apartament-investitie": checklistDueDiligence,
+  "ghid-complet-fiscalitate-regim-hotelier-2026": fiscalitateRegimHotelier,
+  "studiu-caz-roi-apartament-2-camere-2026": studiuCazRoi,
 };
 
 export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string | null => {
