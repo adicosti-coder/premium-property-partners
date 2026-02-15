@@ -16,13 +16,13 @@ const ReferralBanner = ({ variant = "inline", className }: ReferralBannerProps) 
   const t = {
     ro: {
       title: "Weekend Gratuit!",
-      subtitle: "Recomandă un prieten cu apartament și câștigi 2 nopți gratis",
+      subtitle: "Recomandă-ne la un prieten cu apartament și poți câștiga 2 nopți gratis sau un comision",
       cta: "Află cum",
       badge: "Nou",
     },
     en: {
       title: "Free Weekend!",
-      subtitle: "Refer a friend with an apartment and win 2 free nights",
+      subtitle: "Refer a friend with an apartment and win 2 free nights or a commission",
       cta: "Learn how",
       badge: "New",
     },
