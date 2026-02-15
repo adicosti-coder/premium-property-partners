@@ -240,25 +240,6 @@ const Blog = () => {
             </p>
           </div>
 
-          {/* Promo Banner */}
-          <div className="mb-8 p-6 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 rounded-xl">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{t.promoTitle}</h3>
-                  <p className="text-sm text-muted-foreground">{t.promoDescription}</p>
-                </div>
-              </div>
-              <Button onClick={() => navigate("/rezerva-direct")} className="shrink-0">
-                {t.promoButton}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-
           {/* Community Contest Banner */}
           <div className="mb-8 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
