@@ -1,5 +1,4 @@
 import { lazy, Suspense, useState, useEffect } from "react";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import AccessibilityPanel from "@/components/AccessibilityPanel";
 import MobileCTABar from "@/components/MobileCTABar";
 import FloatingActionMenu from "@/components/FloatingActionMenu";
@@ -13,6 +12,7 @@ const AIChatbot = lazy(() => import("@/components/AIChatbot"));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
 const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
 const ReferralPopup = lazy(() => import("@/components/ReferralPopup"));
+const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -52,6 +52,8 @@ const GlobalConversionWidgets = ({
       {/* Deferred: loaded after 3s */}
       {deferredReady && (
         <Suspense fallback={null}>
+          <FloatingWhatsApp />
+
           <PWAInstallPrompt />
           {showChatbot && <AIChatbot />}
           {showVoiceWidget && <ElevenLabsWidgetLazy />}
