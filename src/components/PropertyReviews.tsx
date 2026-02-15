@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,8 +97,39 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     );
   }
 
+  // Generate Review + AggregateRating JSON-LD
+  const reviewSchema = reviews && reviews.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    "name": propertyName,
+    "url": `https://realtrust.ro/proprietate/${propertyId}`,
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": averageRating,
+      "reviewCount": reviews.length,
+      "bestRating": 5,
+      "worstRating": 1,
+    },
+    "review": reviews.slice(0, 5).map((r) => ({
+      "@type": "Review",
+      "author": { "@type": "Person", "name": r.guest_name },
+      "datePublished": r.created_at.split("T")[0],
+      "reviewBody": r.content || r.title || "",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": r.rating,
+        "bestRating": 5,
+      },
+    })),
+  } : null;
+
   return (
     <div className="space-y-6">
+      {reviewSchema && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify(reviewSchema)}</script>
+        </Helmet>
+      )}
       {/* Header with average rating */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">

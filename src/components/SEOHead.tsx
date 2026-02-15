@@ -173,13 +173,15 @@ const SEOHead = ({
   
   const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
   const finalDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
-  const finalUrl = url || (typeof window !== "undefined" ? window.location.href : BASE_URL);
+  
+  // Canonical URL: strip trailing slash (except root), remove duplicate params
+  const rawUrl = url || (typeof window !== "undefined" ? window.location.origin + window.location.pathname : BASE_URL);
+  const finalUrl = rawUrl.length > 1 && rawUrl.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
   
   // Generate alternate URLs for hreflang
   const getAlternateUrl = (lang: string) => {
-    const baseUrl = url || BASE_URL;
-    if (lang === "ro") return baseUrl;
-    return baseUrl.includes("?") ? `${baseUrl}&lang=${lang}` : `${baseUrl}?lang=${lang}`;
+    if (lang === "ro") return finalUrl;
+    return finalUrl.includes("?") ? `${finalUrl}&lang=${lang}` : `${finalUrl}?lang=${lang}`;
   };
   
   // Default JSON-LD for LocalBusiness

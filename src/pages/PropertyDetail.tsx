@@ -242,7 +242,17 @@ const PropertyDetail = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <SEOHead title={`${property.name} | RealTrust Timișoara`} />
+      <SEOHead 
+        title={`${property.name} | RealTrust Timișoara`}
+        description={language === 'ro' 
+          ? `${property.name} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
+          : `${property.name} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`}
+        url={`https://realtrust.ro/proprietate/${slug}`}
+        image={galleryImages[0] || undefined}
+        type="product"
+        productPrice={property.pricePerNight || undefined}
+        productCurrency="EUR"
+      />
       <Header />
       
       <main className="pt-20">
