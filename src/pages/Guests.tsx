@@ -243,6 +243,10 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
         description={seo.description}
         url="https://realtrust.ro/oaspeti"
         jsonLd={itemListSchema}
+        breadcrumbItems={[
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Apartamente" : "Apartments", url: "https://realtrust.ro/oaspeti" },
+        ]}
       />
       <Header />
       

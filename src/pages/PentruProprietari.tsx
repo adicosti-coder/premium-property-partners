@@ -185,6 +185,10 @@ const PentruProprietari = () => {
         description={seo.description}
         url="https://realtrust.ro/pentru-proprietari"
         jsonLd={[serviceSchema, speakableSchema]}
+        breadcrumbItems={[
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://realtrust.ro/pentru-proprietari" },
+        ]}
       />
       <Header />
       
