@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn, Eye } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn, Eye, Trophy, PenLine } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
@@ -399,6 +399,33 @@ const BlogArticlePage = () => {
               <InvestorGuideButton size="lg" />
             </div>
           )}
+
+          {/* Community Contest Banner */}
+          <div className="my-12 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-full">
+                  <Trophy className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">
+                    {language === "ro" ? "Scrie și câștigă!" : "Write and win!"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {language === "ro"
+                      ? "Trimite un articol și poți câștiga o noapte gratuită de cazare."
+                      : "Submit an article and you could win a free night stay."}
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="shrink-0 border-amber-500/50 hover:bg-amber-500/10">
+                <Link to="/comunitate">
+                  <PenLine className="w-4 h-4 mr-2" />
+                  {language === "ro" ? "Participă la concurs" : "Join the contest"}
+                </Link>
+              </Button>
+            </div>
+          </div>
 
           {/* Related Articles */}
           <RelatedArticles 
