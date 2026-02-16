@@ -419,10 +419,28 @@ const AIChatbot = () => {
     };
   }, []);
 
-  const handleTransferToVoice = () => {
+  const handleTransferToVoice = async () => {
     setIsOpen(false);
-    sharedContext?.requestTransferToVoice();
     toast.info(language === "ro" ? "Se activează modul vocal..." : "Activating voice mode...");
+    
+    // CRITICAL: Request microphone DIRECTLY in click handler to preserve user gesture context
+    // Mobile browsers block getUserMedia if not called directly from a user interaction
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+      });
+      // Pass the pre-acquired stream via custom event (same pattern as FloatingActionMenu)
+      window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice', { detail: { stream } }));
+    } catch (error: any) {
+      console.error("[AIChatbot] Microphone access error:", error);
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        toast.error(language === "ro" ? "Vă rugăm să permiteți accesul la microfon din setările browser-ului." : "Please allow microphone access in your browser settings.");
+      } else if (error.name === "NotFoundError") {
+        toast.error(language === "ro" ? "Nu s-a detectat niciun microfon." : "No microphone detected.");
+      } else {
+        toast.error(language === "ro" ? "Eroare la accesarea microfonului." : "Error accessing microphone.");
+      }
+    }
   };
 
   const handleNewChat = () => {
