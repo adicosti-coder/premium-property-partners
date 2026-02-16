@@ -191,6 +191,22 @@ export function ElevenLabsWidget() {
     sharedContext?.requestTransferToText();
   };
 
+  // Broadcast voice state for FloatingActionMenu
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('elevenlabs-voice-state', {
+      detail: { isConnecting, isConnected, isSpeaking }
+    }));
+  }, [isConnecting, isConnected, isSpeaking]);
+
+  // Listen for toggle requests from FloatingActionMenu
+  useEffect(() => {
+    const handleToggle = () => {
+      toggleConversation();
+    };
+    window.addEventListener('elevenlabs-toggle-voice', handleToggle);
+    return () => window.removeEventListener('elevenlabs-toggle-voice', handleToggle);
+  }, [toggleConversation]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -203,6 +219,7 @@ export function ElevenLabsWidget() {
   return (
     // Hidden on mobile (md:flex), visible on desktop only
     <div className="fixed bottom-[336px] right-4 z-50 hidden md:flex flex-col items-end gap-2">
+      {/* Voice state is active on all devices; UI only shown on desktop */}
       {/* Status indicator when connected */}
       {isConnected && (
         <div

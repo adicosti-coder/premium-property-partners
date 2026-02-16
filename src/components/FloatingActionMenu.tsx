@@ -17,7 +17,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
-import { useElevenLabsVoice } from "@/components/ElevenLabsWidget";
 
 interface FloatingActionMenuProps {
   showChatbot?: boolean;
@@ -31,13 +30,21 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // ElevenLabs voice hook
-  const {
-    isConnecting: voiceConnecting,
-    isConnected: voiceConnected,
-    isSpeaking: voiceSpeaking,
-    toggleConversation: toggleVoice,
-  } = useElevenLabsVoice();
+  // Voice state from ElevenLabsWidget via custom events
+  const [voiceConnecting, setVoiceConnecting] = useState(false);
+  const [voiceConnected, setVoiceConnected] = useState(false);
+  const [voiceSpeaking, setVoiceSpeaking] = useState(false);
+
+  useEffect(() => {
+    const handleVoiceState = (e: CustomEvent) => {
+      const { isConnecting, isConnected, isSpeaking } = e.detail;
+      setVoiceConnecting(isConnecting);
+      setVoiceConnected(isConnected);
+      setVoiceSpeaking(isSpeaking);
+    };
+    window.addEventListener('elevenlabs-voice-state', handleVoiceState as EventListener);
+    return () => window.removeEventListener('elevenlabs-voice-state', handleVoiceState as EventListener);
+  }, []);
 
   const referralText = {
     ro: "Weekend gratuit",
@@ -84,7 +91,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
 
   const handleVoiceClick = () => {
     lightTap();
-    toggleVoice();
+    window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice'));
     setIsOpen(false);
   };
 
