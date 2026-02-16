@@ -9,8 +9,8 @@ import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantCon
 import { cn } from "@/lib/utils";
 
 const AGENT_IDS = {
-  ro: "2601kgsvskeef4gvytn91he7x8y2",
-  en: "7201kgswwdaafzab2jqfreqbveb7",
+  ro: "agent_2601kgsvskeef4gvytn91he7x8y2",
+  en: "agent_7201kgswwdaafzab2jqfreqbveb7",
 };
 
 // Hook for reusable ElevenLabs conversation logic
