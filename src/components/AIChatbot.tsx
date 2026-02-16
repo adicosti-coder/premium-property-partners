@@ -134,7 +134,7 @@ const AIChatbot = () => {
     ro: {
       title: "Digital Concierge",
       status: "Disponibil 24/7",
-      greeting: "Bun venit la ApArt Hotel. Sunt asistentul tău digital de lux.\n\n**Ce pot face pentru tine:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• 🗓️ **Programează** vizionări sau evaluări\n• 🍽️ **Recomandări** restaurante, cafenele, atracții\n\nCum îți pot face experiența mai plăcută astăzi?",
+      greeting: "Bună ziua! Sunt Concierge-ul dumneavoastră Digital de la RealTrust & ApArt Hotel. Mă bucur că doriți să ne treceți pragul!\n\n**Ce pot face pentru dumneavoastră:**\n\n• 📅 Verifică **disponibilitatea** apartamentelor\n• 💰 Calculează **prețuri** pentru sejur\n• 📊 Estimează **profit** pentru proprietari\n• 🗓️ **Programează** vizionări sau evaluări\n• 🍽️ **Recomandări** restaurante, cafenele, atracții\n\nCum vă pot fi de ajutor astăzi?",
       placeholder: "Cu ce vă pot ajuta?",
       power: "Gemini AI Ultra",
       quickActions: ["Verifică Disponibilitate", "Calcul Investitor", "Ghid Timișoara", "Programează Vizită"],
