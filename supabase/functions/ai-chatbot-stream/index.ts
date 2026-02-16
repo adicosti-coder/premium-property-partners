@@ -48,11 +48,11 @@ async function buildSystemPrompt(language: string): Promise<string> {
     const revenue = p.estimated_revenue ? ` | Venit estimat: ${p.estimated_revenue}` : "";
     const bookingLink = p.booking_url && p.booking_url !== "#"
       ? p.booking_url
-      : "https://realtrustaparthotel.lovable.app/oaspeti";
+      : "https://www.realtrust.ro/oaspeti";
     return `  • ${p.name} (${p.property_code}) – ${p.tag}${revenue}\n    Rezervare: ${bookingLink}`;
   }).join("\n");
 
-  const fallbackBooking = "https://realtrustaparthotel.lovable.app/oaspeti";
+  const fallbackBooking = "https://www.realtrust.ro/oaspeti";
   const whatsapp = "https://wa.me/40723154520";
 
   if (language === "en") {
