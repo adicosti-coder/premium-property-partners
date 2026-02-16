@@ -55,87 +55,58 @@ export function useElevenLabsVoice() {
     sharedContext?.setIsVoiceSpeaking(conversation.isSpeaking);
   }, [conversation.isSpeaking, sharedContext]);
 
-  const startConversation = useCallback(async () => {
+  // Core function that starts conversation, optionally with a pre-acquired mic stream
+  const startConversationWithStream = useCallback(async (preAcquiredStream?: MediaStream) => {
     if (isConnecting || conversation.status === "connected") return;
 
     setIsConnecting(true);
     
-    // CRITICAL: Request microphone access FIRST and DIRECTLY in click handler
-    // This must happen before any other async operations to maintain gesture context
-    let stream: MediaStream | null = null;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        } 
-      });
-      console.log("[ElevenLabs] Microphone access granted");
-    } catch (error: any) {
-      console.error("[ElevenLabs] Microphone access error:", error);
-      setIsConnecting(false);
-      
-      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
-        toast.error(
-          language === "ro"
-            ? "Vă rugăm să permiteți accesul la microfon din setările browser-ului."
-            : "Please allow microphone access in your browser settings."
-        );
-      } else if (error.name === "NotFoundError") {
-        toast.error(
-          language === "ro"
-            ? "Nu s-a detectat niciun microfon. Verificați dispozitivul."
-            : "No microphone detected. Please check your device."
-        );
-      } else {
-        toast.error(
-          language === "ro"
-            ? "Eroare la accesarea microfonului. Verificați permisiunile."
-            : "Error accessing microphone. Please check permissions."
-        );
+    let stream: MediaStream | null = preAcquiredStream || null;
+    
+    // Only request mic if no pre-acquired stream was provided
+    if (!stream) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+        });
+        console.log("[ElevenLabs] Microphone access granted");
+      } catch (error: any) {
+        console.error("[ElevenLabs] Microphone access error:", error);
+        setIsConnecting(false);
+        if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+          toast.error(language === "ro" ? "Vă rugăm să permiteți accesul la microfon din setările browser-ului." : "Please allow microphone access in your browser settings.");
+        } else if (error.name === "NotFoundError") {
+          toast.error(language === "ro" ? "Nu s-a detectat niciun microfon." : "No microphone detected.");
+        } else {
+          toast.error(language === "ro" ? "Eroare la accesarea microfonului." : "Error accessing microphone.");
+        }
+        return;
       }
-      return;
+    } else {
+      console.log("[ElevenLabs] Using pre-acquired microphone stream");
     }
 
-    // Now fetch token and start session
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "elevenlabs-conversation-token",
-        {
-          body: { language },
-        }
-      );
-
+      const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token", { body: { language } });
       if (error || !data?.token) {
-        // Stop the stream since we won't use it
         stream?.getTracks().forEach(track => track.stop());
         throw new Error(error?.message || "No token received");
       }
-
       console.log("[ElevenLabs] Token received, starting session...");
-      
-      await conversation.startSession({
-        conversationToken: data.token,
-        connectionType: "webrtc",
-      });
-      
-      // The ElevenLabs SDK manages its own audio stream, so we can stop ours
+      await conversation.startSession({ conversationToken: data.token, connectionType: "webrtc" });
       stream?.getTracks().forEach(track => track.stop());
-      
     } catch (error: any) {
       console.error("[ElevenLabs] Failed to start conversation:", error);
       stream?.getTracks().forEach(track => track.stop());
-      
-      toast.error(
-        language === "ro"
-          ? "Nu s-a putut porni conversația. Încercați din nou."
-          : "Could not start conversation. Please try again."
-      );
+      toast.error(language === "ro" ? "Nu s-a putut porni conversația. Încercați din nou." : "Could not start conversation. Please try again.");
     } finally {
       setIsConnecting(false);
     }
   }, [conversation, language, isConnecting]);
+
+  const startConversation = useCallback(async () => {
+    await startConversationWithStream();
+  }, [startConversationWithStream]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
@@ -155,6 +126,7 @@ export function useElevenLabsVoice() {
     isConnected: conversation.status === "connected",
     isSpeaking: conversation.isSpeaking,
     startConversation,
+    startConversationWithStream,
     stopConversation,
     toggleConversation,
     language,
@@ -168,6 +140,7 @@ export function ElevenLabsWidget() {
     isConnected,
     isSpeaking,
     toggleConversation,
+    startConversationWithStream,
     language,
     conversation,
   } = useElevenLabsVoice();
@@ -200,12 +173,18 @@ export function ElevenLabsWidget() {
 
   // Listen for toggle requests from FloatingActionMenu
   useEffect(() => {
-    const handleToggle = () => {
-      toggleConversation();
+    const handleToggle = (e: CustomEvent) => {
+      if (conversation.status === "connected") {
+        conversation.endSession();
+      } else {
+        // If a pre-acquired stream is passed (from mobile click handler), use it
+        const preAcquiredStream = e.detail?.stream as MediaStream | undefined;
+        startConversationWithStream(preAcquiredStream);
+      }
     };
-    window.addEventListener('elevenlabs-toggle-voice', handleToggle);
-    return () => window.removeEventListener('elevenlabs-toggle-voice', handleToggle);
-  }, [toggleConversation]);
+    window.addEventListener('elevenlabs-toggle-voice', handleToggle as EventListener);
+    return () => window.removeEventListener('elevenlabs-toggle-voice', handleToggle as EventListener);
+  }, [conversation, startConversationWithStream]);
 
   // Cleanup on unmount
   useEffect(() => {
