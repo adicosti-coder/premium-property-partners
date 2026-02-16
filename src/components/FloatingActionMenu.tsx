@@ -89,10 +89,47 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
     setIsOpen(false);
   };
 
-  const handleVoiceClick = () => {
+  const handleVoiceClick = async () => {
     lightTap();
-    window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice'));
     setIsOpen(false);
+    
+    // If already connected, just toggle off (no mic needed)
+    if (voiceConnected) {
+      window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice'));
+      return;
+    }
+    
+    // CRITICAL: Request microphone DIRECTLY in click handler to preserve user gesture context
+    // Mobile browsers block getUserMedia if not called directly from a user interaction
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+      });
+      // Pass the stream to ElevenLabsWidget so it doesn't need to request mic again
+      window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice', { detail: { stream } }));
+    } catch (error: any) {
+      console.error("[FloatingActionMenu] Microphone access error:", error);
+      const { toast } = await import("sonner");
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        toast.error(
+          language === "ro"
+            ? "Vă rugăm să permiteți accesul la microfon din setările browser-ului."
+            : "Please allow microphone access in your browser settings."
+        );
+      } else if (error.name === "NotFoundError") {
+        toast.error(
+          language === "ro"
+            ? "Nu s-a detectat niciun microfon."
+            : "No microphone detected."
+        );
+      } else {
+        toast.error(
+          language === "ro"
+            ? "Eroare la accesarea microfonului."
+            : "Error accessing microphone."
+        );
+      }
+    }
   };
 
   const toggleMenu = () => {
