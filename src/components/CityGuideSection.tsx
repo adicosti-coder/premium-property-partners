@@ -977,11 +977,13 @@ const CityGuideSection: React.FC = () => {
                         {language === 'ro' ? poi.name : poi.name_en}
                       </h3>
                       
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                        {language === 'ro' 
-                          ? (poi.description || 'Fără descriere') 
-                          : (poi.description_en || 'No description')}
-                      </p>
+                      {(poi.description || poi.description_en) && (
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                          {language === 'ro' 
+                            ? (poi.description || poi.description_en) 
+                            : (poi.description_en || poi.description)}
+                        </p>
+                      )}
 
                       {/* Footer */}
                       <div className="flex items-center justify-between">
