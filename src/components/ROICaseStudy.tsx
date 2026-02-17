@@ -76,7 +76,7 @@ const ROICaseStudy = () => {
   };
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-24 bg-secondary/50 relative overflow-hidden">
+    <section ref={sectionRef} className="dark py-16 md:py-24 bg-background relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <div

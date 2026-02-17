@@ -85,7 +85,7 @@ const StatsCounters = () => {
   const t = translations[language as keyof typeof translations] || translations.en;
 
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden">
+    <section className="dark relative py-16 md:py-24 overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background" />
       <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2" />

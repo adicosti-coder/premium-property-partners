@@ -139,7 +139,7 @@ const Investitii = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="dark min-h-screen bg-background">
       <SEOHead 
         title={t.title + " | RealTrust"}
         description={t.metaDescription}

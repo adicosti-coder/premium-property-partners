@@ -444,7 +444,7 @@ const AdvancedRentalCalculator = () => {
     <section 
       ref={ref}
       id="calculator-avansat"
-      className="relative py-20 md:py-32 overflow-hidden bg-gradient-to-b from-background via-navy-900/5 to-background"
+      className="dark relative py-20 md:py-32 overflow-hidden bg-background"
     >
       {/* Background decorations */}
       <div 

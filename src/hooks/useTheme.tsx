@@ -14,10 +14,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("theme") as Theme;
-      // Default to dark if no preference stored
+      // Default to light for presentation/conversion pages
       if (stored) return stored;
     }
-    return "dark";
+    return "light";
   });
 
   useEffect(() => {
