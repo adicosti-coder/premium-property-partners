@@ -177,11 +177,13 @@ const PremiumPOICarousel: React.FC<PremiumPOICarouselProps> = ({ pois }) => {
                     {language === 'ro' ? poi.name : poi.name_en}
                   </h4>
                   
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 min-h-[2.5rem]">
-                    {language === 'ro' 
-                      ? (poi.description || 'Locație premium recomandată') 
-                      : (poi.description_en || 'Recommended premium location')}
-                  </p>
+                  {(poi.description || poi.description_en) ? (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2 min-h-[2.5rem]">
+                      {language === 'ro' 
+                        ? (poi.description || poi.description_en) 
+                        : (poi.description_en || poi.description)}
+                    </p>
+                  ) : null}
                   
                   {poi.address && (
                     <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
