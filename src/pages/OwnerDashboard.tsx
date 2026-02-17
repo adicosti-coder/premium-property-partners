@@ -135,7 +135,7 @@ const OwnerDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="dark min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-6">
@@ -154,7 +154,7 @@ const OwnerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="dark min-h-screen bg-background">
       <Header />
       
       <main className="pt-24 pb-16">

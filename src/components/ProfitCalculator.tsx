@@ -145,7 +145,7 @@ const ProfitCalculator = () => {
   const lt = localT[language as keyof typeof localT] || localT.ro;
 
   return (
-    <section id="calculator" className="section-padding bg-background relative overflow-hidden">
+    <section id="calculator" className="dark section-padding bg-background relative overflow-hidden">
       {/* Background decorations with parallax - hidden on mobile to prevent edge shadows */}
       <div 
         className="absolute top-20 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-transform duration-100 hidden md:block" 

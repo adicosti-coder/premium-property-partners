@@ -110,7 +110,7 @@
         try {
           if (typeof window === "undefined" || typeof document === "undefined") return;
           const stored = window.localStorage?.getItem("theme");
-          const theme = stored || "dark";
+          const theme = stored || "light";
           document.documentElement.classList.add(theme);
         } catch (_) {
           // Ignore theme bootstrap errors (e.g., storage disabled)
