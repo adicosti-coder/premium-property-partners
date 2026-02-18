@@ -234,15 +234,19 @@ const InteractiveMapWithPOI = () => {
 
       // Handle WebGL context loss and restoration
       const canvas = map.current.getCanvas();
+      const handleContextLost = (e: Event) => {
+        e.preventDefault();
+        console.warn('[InteractiveMap] WebGL context lost');
+        setTokenError(language === 'ro' ? 'Context grafic pierdut – reîncărcați pagina' : 'Graphics context lost – please reload');
+      };
+      const handleContextRestored = () => {
+        console.log('[InteractiveMap] WebGL context restored');
+        setTokenError(null);
+        try { map.current?.triggerRepaint(); } catch (_) {}
+      };
       if (canvas) {
-        canvas.addEventListener('webglcontextlost', (e) => {
-          e.preventDefault();
-          console.warn('[InteractiveMap] WebGL context lost');
-        });
-        canvas.addEventListener('webglcontextrestored', () => {
-          console.log('[InteractiveMap] WebGL context restored');
-          try { map.current?.triggerRepaint(); } catch (_) {}
-        });
+        canvas.addEventListener('webglcontextlost', handleContextLost);
+        canvas.addEventListener('webglcontextrestored', handleContextRestored);
       }
 
       // Handle map errors (including WebGL failures)

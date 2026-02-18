@@ -133,15 +133,19 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
       // Handle WebGL context loss and restoration
       const canvas = map.current.getCanvas();
+      const handleContextLost = (e: Event) => {
+        e.preventDefault();
+        console.warn('[PropertyMap] WebGL context lost');
+        setError(language === 'ro' ? 'Context grafic pierdut – reîncărcați pagina' : 'Graphics context lost – please reload');
+      };
+      const handleContextRestored = () => {
+        console.log('[PropertyMap] WebGL context restored');
+        setError(null);
+        try { map.current?.triggerRepaint(); } catch (_) {}
+      };
       if (canvas) {
-        canvas.addEventListener('webglcontextlost', (e) => {
-          e.preventDefault();
-          console.warn('[PropertyMap] WebGL context lost');
-        });
-        canvas.addEventListener('webglcontextrestored', () => {
-          console.log('[PropertyMap] WebGL context restored');
-          try { map.current?.triggerRepaint(); } catch (_) {}
-        });
+        canvas.addEventListener('webglcontextlost', handleContextLost);
+        canvas.addEventListener('webglcontextrestored', handleContextRestored);
       }
 
       // Force resize after load with defensive checks
