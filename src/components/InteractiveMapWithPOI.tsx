@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Link } from 'react-router-dom';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
+import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglSupport';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Loader2, 
@@ -222,6 +223,12 @@ const InteractiveMapWithPOI = () => {
 
     mapboxgl.accessToken = mapboxToken;
 
+    // Guard: only one active Mapbox instance allowed globally
+    if (!acquireMapSlot()) {
+      console.warn('[InteractiveMap] Map slot unavailable – another map is active');
+      return;
+    }
+
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -322,6 +329,8 @@ const InteractiveMapWithPOI = () => {
 
     return () => {
       map.current?.remove();
+      map.current = null;
+      releaseMapSlot();
       style.remove();
     };
   }, [mapboxToken, t.apartment]);
@@ -689,4 +698,4 @@ function getIconSvg(type: string): string {
   return icons[type] || icons.attraction;
 }
 
-export default InteractiveMapWithPOI;
+export default memo(InteractiveMapWithPOI);
