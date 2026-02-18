@@ -142,7 +142,7 @@ const Hero = () => {
           loading="eager"
         />
         {/* Video - only load when shouldLoadVideo is true and conditions are met */}
-        {shouldLoadVideo && !videoError && !isSlowConnection && (
+        {shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
             autoPlay
             muted
