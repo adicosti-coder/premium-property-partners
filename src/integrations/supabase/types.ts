@@ -448,6 +448,41 @@ export type Database = {
           },
         ]
       }
+      chat_ratings: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          rating: number
+          session_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating: number
+          session_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_ratings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatbot_appointments: {
         Row: {
           appointment_type: string
