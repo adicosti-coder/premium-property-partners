@@ -14,9 +14,10 @@ const ExternalTrustSeals = () => {
       score: "9.7 / 10",
       subtitle: language === "ro" ? "Scor Verificat" : "Verified Score",
       url: "https://www.booking.com/hotel/ro/apart-hotel-timisoara.html",
-      logo: "https://cf.bstatic.com/static/img/favicon/9ca83ba2a5a3293ff07452cb24949a3eace9b68f.svg",
+      logo: null, // Booking.com external SVG was returning 404; use icon fallback instead
       bg: "bg-[#003580]/10 dark:bg-[#003580]/20",
       border: "border-[#003580]/30",
+      icon: "booking",
       accent: "text-[#003580] dark:text-[#4a8fe7]",
     },
     {

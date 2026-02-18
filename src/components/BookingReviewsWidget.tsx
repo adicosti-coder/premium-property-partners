@@ -54,13 +54,9 @@ const BookingReviewsWidget = () => {
           {/* Score Card */}
           <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-card border border-border shadow-lg">
             <div className="flex items-center gap-2">
-              <img
-                src="https://cf.bstatic.com/static/img/favicon/9ca83ba2a5a3293ff07452cb24949a3eace9b68f.svg"
-                alt="Booking.com"
-                width={24}
-                height={24}
-                loading="lazy"
-              />
+              <svg className="w-6 h-6 text-[#003580] dark:text-[#4a8fe7] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2 7h4v10H2V7zm6-4h4v14H8V3zm6 6h4v8h-4V9zm6-2h4v10h-4V7z" opacity="0.8" />
+              </svg>
               <span className="text-sm font-medium text-muted-foreground">Booking.com</span>
             </div>
             <div className="text-6xl font-bold text-primary">9.7</div>
