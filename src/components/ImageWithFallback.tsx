@@ -167,6 +167,7 @@ const ImageWithFallback = memo(({
       sizes={sizes}
       aspectRatio={aspectRatio}
       onLoad={handleLoad}
+      onError={handleError}
       onClick={onClick}
     />
   );

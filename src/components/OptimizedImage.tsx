@@ -10,6 +10,7 @@ interface OptimizedImageProps {
   sizes?: string;
   aspectRatio?: string;
   onLoad?: () => void;
+  onError?: () => void;
   onClick?: () => void;
 }
 
@@ -23,6 +24,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
   aspectRatio,
   onLoad,
+  onError,
   onClick
 }, ref) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -65,6 +67,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
 
   const handleError = () => {
     setHasError(true);
+    onError?.();
   };
 
   // Check if this is an asset that should NOT get .webp/.avif variants
@@ -139,6 +142,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
             decoding={priority ? "sync" : "async"}
             fetchPriority={priority ? "high" : "auto"}
             sizes={sizes}
+            referrerPolicy="no-referrer"
             onLoad={handleLoad}
             onError={handleError}
             className={`w-full h-full object-cover transition-all duration-500 ${
