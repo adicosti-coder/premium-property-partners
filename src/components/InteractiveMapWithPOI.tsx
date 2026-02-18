@@ -107,18 +107,8 @@ const InteractiveMapWithPOI = () => {
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
 
-  // Check WebGL support
-  const isWebGLSupported = () => {
-    try {
-      const canvas = document.createElement('canvas');
-      return !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-      );
-    } catch (e) {
-      return false;
-    }
-  };
+  // WebGL support is checked via the imported isWebGLSupported from webglSupport.ts
+  // (no local re-declaration needed – avoids context leak)
 
   // Fetch POIs from Supabase
   const { data: pois = [], isLoading: poisLoading } = useQuery({
@@ -242,11 +232,14 @@ const InteractiveMapWithPOI = () => {
 
     mapboxgl.accessToken = mapboxToken;
 
-    // Guard: only one active Mapbox instance allowed globally
+    // Guard: only allow limited active Mapbox instances globally
     if (!acquireMapSlot()) {
       console.warn('[InteractiveMap] Map slot unavailable – another map is active');
       return;
     }
+
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    let ro: ResizeObserver | null = null;
 
     try {
       map.current = new mapboxgl.Map({
@@ -273,6 +266,29 @@ const InteractiveMapWithPOI = () => {
       if (canvas) {
         canvas.addEventListener('webglcontextlost', handleContextLost);
         canvas.addEventListener('webglcontextrestored', handleContextRestored);
+      }
+
+      // Force resize after load (critical when map is in a hidden tab)
+      map.current.on('load', () => {
+        try { map.current?.getCanvas() && map.current.resize(); } catch (_) {}
+        setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 300);
+        setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 1000);
+      });
+
+      // ResizeObserver with debounce
+      const container = mapContainer.current;
+      if (typeof ResizeObserver !== 'undefined' && container) {
+        ro = new ResizeObserver(() => {
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            try {
+              if (map.current && map.current.getCanvas() && map.current.getCanvasContainer()) {
+                map.current.resize();
+              }
+            } catch (_) {}
+          }, 250);
+        });
+        ro.observe(container);
       }
 
       // Handle map errors (including WebGL failures)
@@ -347,12 +363,29 @@ const InteractiveMapWithPOI = () => {
     document.head.appendChild(style);
 
     return () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      ro?.disconnect();
       map.current?.remove();
       map.current = null;
       releaseMapSlot();
       style.remove();
     };
   }, [mapboxToken, t.apartment]);
+
+  // Trigger resize when map becomes visible (e.g. tab switch)
+  useEffect(() => {
+    if (!mapContainer.current || !map.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          try { map.current?.getCanvas() && map.current.resize(); } catch (_) {}
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(mapContainer.current);
+    return () => observer.disconnect();
+  }, [mapboxToken]);
 
   // Add POI markers when data changes
   useEffect(() => {
