@@ -116,6 +116,9 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    let ro: ResizeObserver | null = null;
+
     mapboxgl.accessToken = mapboxToken;
 
     try {
@@ -127,24 +130,27 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         pitch: 0,
       });
 
-      // Force resize after load and with delays to handle lazy rendering
+      // Force resize after load with defensive checks
       map.current.on('load', () => {
-        map.current?.resize();
-        // Extra resize after a short delay for mobile browsers
-        setTimeout(() => map.current?.resize(), 300);
-        setTimeout(() => map.current?.resize(), 1000);
+        try { map.current?.getCanvas() && map.current.resize(); } catch (_) {}
+        setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 300);
+        setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 1000);
       });
 
-      // Use ResizeObserver to handle container size changes
+      // Use ResizeObserver with debounce to handle container size changes
       const container = mapContainer.current;
       if (typeof ResizeObserver !== 'undefined' && container) {
-        const ro = new ResizeObserver(() => {
-          map.current?.resize();
+        ro = new ResizeObserver(() => {
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            try {
+              if (map.current && map.current.getCanvas() && map.current.getCanvasContainer()) {
+                map.current.resize();
+              }
+            } catch (_) { /* canvas not ready */ }
+          }, 250);
         });
         ro.observe(container);
-        // Clean up observer on unmount
-        const cleanup = () => ro.disconnect();
-        container.addEventListener('remove', cleanup, { once: true });
       }
 
       // Handle map errors (including WebGL failures)
@@ -256,6 +262,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     });
 
     return () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      ro?.disconnect();
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
       map.current?.remove();
@@ -282,7 +290,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          map.current?.resize();
+          try { map.current?.getCanvas() && map.current.resize(); } catch (_) {}
         }
       },
       { threshold: 0.1 }
