@@ -66,6 +66,10 @@ export function useElevenLabsVoice() {
     // Only request mic if no pre-acquired stream was provided
     if (!stream) {
       try {
+        // Check if mediaDevices API is available (not available in some mobile contexts)
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw Object.assign(new Error("MediaDevices API not available"), { name: "NotSupportedError" });
+        }
         stream = await navigator.mediaDevices.getUserMedia({ 
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
         });
@@ -77,6 +81,8 @@ export function useElevenLabsVoice() {
           toast.error(language === "ro" ? "Vă rugăm să permiteți accesul la microfon din setările browser-ului." : "Please allow microphone access in your browser settings.");
         } else if (error.name === "NotFoundError") {
           toast.error(language === "ro" ? "Nu s-a detectat niciun microfon." : "No microphone detected.");
+        } else if (error.name === "NotSupportedError") {
+          toast.error(language === "ro" ? "Browser-ul nu suportă accesul la microfon. Încercați din Chrome sau Safari." : "Browser does not support microphone access. Try Chrome or Safari.");
         } else {
           toast.error(language === "ro" ? "Eroare la accesarea microfonului." : "Error accessing microphone.");
         }
@@ -87,18 +93,36 @@ export function useElevenLabsVoice() {
     }
 
     try {
+      console.log("[ElevenLabs] Requesting token for language:", language);
       const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token", { body: { language } });
-      if (error || !data?.token) {
+      
+      if (error) {
+        console.error("[ElevenLabs] Token error:", error);
         stream?.getTracks().forEach(track => track.stop());
-        throw new Error(error?.message || "No token received");
+        throw new Error(error?.message || "Token request failed");
       }
-      console.log("[ElevenLabs] Token received, starting session...");
+      
+      if (!data?.token) {
+        console.error("[ElevenLabs] No token in response:", data);
+        stream?.getTracks().forEach(track => track.stop());
+        throw new Error("No token received from server");
+      }
+      
+      console.log("[ElevenLabs] Token received for agent:", data.agentId, "- starting WebRTC session...");
       await conversation.startSession({ conversationToken: data.token, connectionType: "webrtc" });
+      // Release the pre-acquired stream after WebRTC takes over
       stream?.getTracks().forEach(track => track.stop());
     } catch (error: any) {
-      console.error("[ElevenLabs] Failed to start conversation:", error);
+      console.error("[ElevenLabs] Failed to start conversation:", error?.message || error);
       stream?.getTracks().forEach(track => track.stop());
-      toast.error(language === "ro" ? "Nu s-a putut porni conversația. Încercați din nou." : "Could not start conversation. Please try again.");
+      const msg = error?.message?.toLowerCase() || "";
+      if (msg.includes("token") || msg.includes("401") || msg.includes("403")) {
+        toast.error(language === "ro" ? "Eroare de autentificare. Verificați configurarea API." : "Authentication error. Check API configuration.");
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        toast.error(language === "ro" ? "Eroare de rețea. Verificați conexiunea la internet." : "Network error. Check your internet connection.");
+      } else {
+        toast.error(language === "ro" ? "Nu s-a putut porni conversația. Încercați din nou." : "Could not start conversation. Please try again.");
+      }
     } finally {
       setIsConnecting(false);
     }
