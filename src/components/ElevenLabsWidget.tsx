@@ -197,24 +197,39 @@ export function ElevenLabsWidget() {
 
   // Listen for toggle requests from FloatingActionMenu
   useEffect(() => {
-    const handleToggle = (e: CustomEvent) => {
-      if (conversation.status === "connected") {
-        conversation.endSession();
-      } else {
-        // If a pre-acquired stream is passed (from mobile click handler), use it
-        const preAcquiredStream = e.detail?.stream as MediaStream | undefined;
-        startConversationWithStream(preAcquiredStream);
+    let isMounted = true;
+    const handleToggle = async (e: CustomEvent) => {
+      if (!isMounted) return;
+      try {
+        if (conversation.status === "connected") {
+          await conversation.endSession();
+        } else {
+          const preAcquiredStream = e.detail?.stream as MediaStream | undefined;
+          if (isMounted) {
+            await startConversationWithStream(preAcquiredStream);
+          }
+        }
+      } catch (err) {
+        console.warn("[ElevenLabs] Toggle error (port may have closed):", err);
       }
     };
     window.addEventListener('elevenlabs-toggle-voice', handleToggle as EventListener);
-    return () => window.removeEventListener('elevenlabs-toggle-voice', handleToggle as EventListener);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('elevenlabs-toggle-voice', handleToggle as EventListener);
+    };
   }, [conversation, startConversationWithStream]);
 
   // Cleanup on unmount
   useEffect(() => {
+    const conv = conversation;
     return () => {
-      if (conversation.status === "connected") {
-        conversation.endSession();
+      try {
+        if (conv.status === "connected") {
+          conv.endSession();
+        }
+      } catch (err) {
+        console.warn("[ElevenLabs] Cleanup error:", err);
       }
     };
   }, []);
