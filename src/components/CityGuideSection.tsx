@@ -44,6 +44,7 @@ import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiImport } from '@/utils/exportPoiFavoritesPdf';
 import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
+import InteractiveMapWithPOI from './InteractiveMapWithPOI';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
 import PremiumPOICarousel from './PremiumPOICarousel';
 import ImageWithFallback from './ImageWithFallback';
@@ -904,6 +905,13 @@ const CityGuideSection: React.FC = () => {
           </div>
         )}
 
+        {/* Interactive Map */}
+        {!isLoading && pois.length > 0 && (
+          <div className="mb-12 rounded-2xl overflow-hidden shadow-lg border border-border">
+            <InteractiveMapWithPOI />
+          </div>
+        )}
+
         {/* Recommendations Grid */}
         {!isLoading && filteredPois.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -1048,21 +1056,7 @@ const CityGuideSection: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={animation.isVisible ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="text-center mt-10"
-        >
-          <Link to="/pentru-oaspeti#map">
-            <Button size="lg" variant="outline" className="group">
-              <MapPin className="w-4 h-4 mr-2" />
-              {t.seeOnMap}
-              <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-        </motion.div>
+        {/* CTA removed - map is now embedded above */}
       </div>
     </section>
   );
