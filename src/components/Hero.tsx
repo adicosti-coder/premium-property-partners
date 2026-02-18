@@ -150,11 +150,16 @@ const Hero = () => {
             playsInline
             preload="none"
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onError={() => setVideoError(true)}
+            onError={() => { console.warn('[Hero] Video failed to load/decode'); setVideoError(true); }}
             onLoadedData={() => setVideoLoaded(true)}
+            onAbort={() => setVideoError(true)}
             poster={heroSettings.customFallbackImage || heroImage}
           >
-            <source src={heroSettings.videoUrl} type="video/mp4" />
+            <source
+              src={heroSettings.videoUrl}
+              type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+              onError={() => { console.warn('[Hero] Source element error'); setVideoError(true); }}
+            />
           </video>
         )}
       </div>

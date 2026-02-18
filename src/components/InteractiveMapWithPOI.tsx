@@ -229,7 +229,21 @@ const InteractiveMapWithPOI = () => {
         center: APARTMENT_LOCATION,
         zoom: 13,
         pitch: 0,
+        failIfMajorPerformanceCaveat: false,
       });
+
+      // Handle WebGL context loss and restoration
+      const canvas = map.current.getCanvas();
+      if (canvas) {
+        canvas.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          console.warn('[InteractiveMap] WebGL context lost');
+        });
+        canvas.addEventListener('webglcontextrestored', () => {
+          console.log('[InteractiveMap] WebGL context restored');
+          try { map.current?.triggerRepaint(); } catch (_) {}
+        });
+      }
 
       // Handle map errors (including WebGL failures)
       map.current.on('error', (e) => {
