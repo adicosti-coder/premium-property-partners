@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { properties } from '@/data/properties';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Home, Loader2, MapPin } from 'lucide-react';
+import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglSupport';
 
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
@@ -50,22 +51,9 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
-  // Check WebGL support
-  const isWebGLSupported = () => {
-    try {
-      const canvas = document.createElement('canvas');
-      return !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-      );
-    } catch (e) {
-      return false;
-    }
-  };
-
   // Get Mapbox token: prefer env var, fallback to edge function
   useEffect(() => {
-    // Check WebGL support first
+    // Check WebGL support first (singleton, no context leak)
     if (!isWebGLSupported()) {
       setError(language === 'ro' 
         ? 'Browserul nu suportă WebGL pentru afișarea hărții' 
@@ -120,6 +108,12 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     let ro: ResizeObserver | null = null;
 
     mapboxgl.accessToken = mapboxToken;
+
+    // Guard: only one active Mapbox instance allowed globally
+    if (!acquireMapSlot()) {
+      setError(language === 'ro' ? 'O singură hartă poate fi activă' : 'Only one map can be active');
+      return;
+    }
 
     try {
       map.current = new mapboxgl.Map({
@@ -285,6 +279,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
       map.current?.remove();
+      map.current = null;
+      releaseMapSlot();
     };
   }, [mapboxToken, language, onPropertySelect]);
 
@@ -360,4 +356,4 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   );
 };
 
-export default PropertyMap;
+export default memo(PropertyMap);
