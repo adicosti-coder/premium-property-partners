@@ -31,7 +31,7 @@ export function isWebGLSupported(): boolean {
 let _activeMapCount = 0;
 
 export function acquireMapSlot(): boolean {
-  if (_activeMapCount >= 1) return false;
+  if (_activeMapCount >= 3) return false;
   _activeMapCount++;
   return true;
 }
