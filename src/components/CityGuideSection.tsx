@@ -46,7 +46,7 @@ import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
 import PremiumPOICarousel from './PremiumPOICarousel';
-import OptimizedImage from './OptimizedImage';
+import ImageWithFallback from './ImageWithFallback';
 import POIPlaceholder from './POIPlaceholder';
 import {
   DropdownMenu,
@@ -926,13 +926,22 @@ const CityGuideSection: React.FC = () => {
                     {/* Image with lazy loading and optimization OR Placeholder */}
                     <div className="relative h-40 overflow-hidden">
                       {poi.image_url ? (
-                        <OptimizedImage 
+                        <ImageWithFallback 
                           src={poi.image_url} 
                           alt={language === 'ro' ? poi.name : poi.name_en}
                           className="w-full h-full group-hover:scale-105 transition-transform duration-500"
                           aspectRatio="16/10"
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           priority={index < 3}
+                          fallbackType="custom"
+                          fallbackIcon={
+                            <POIPlaceholder 
+                              category={poi.category} 
+                              name={language === 'ro' ? poi.name : poi.name_en}
+                              className="w-full h-full"
+                            />
+                          }
+                          retryCount={1}
                         />
                       ) : (
                         <POIPlaceholder 

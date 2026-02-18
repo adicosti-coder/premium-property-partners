@@ -2,7 +2,8 @@ import React from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { motion } from 'framer-motion';
 import { Crown, Star, MapPin, Heart } from 'lucide-react';
-import OptimizedImage from './OptimizedImage';
+import ImageWithFallback from './ImageWithFallback';
+import POIPlaceholder from './POIPlaceholder';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 import Autoplay from 'embla-carousel-autoplay';
 import {
@@ -147,13 +148,22 @@ const PremiumPOICarousel: React.FC<PremiumPOICarouselProps> = ({ pois }) => {
 
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
-                  <OptimizedImage
+                  <ImageWithFallback
                     src={poi.image_url!}
                     alt={language === 'ro' ? poi.name : poi.name_en}
                     className="w-full h-full group-hover:scale-110 transition-transform duration-700"
                     aspectRatio="16/9"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     priority={index < 3}
+                    fallbackType="custom"
+                    fallbackIcon={
+                      <POIPlaceholder 
+                        category={poi.category} 
+                        name={language === 'ro' ? poi.name : poi.name_en}
+                        className="w-full h-full"
+                      />
+                    }
+                    retryCount={1}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
                   
