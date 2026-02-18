@@ -259,7 +259,7 @@ const Admin = () => {
       {/* Content with Tabs */}
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-card border border-border">
+          <TabsList className="bg-card border border-border flex flex-wrap h-auto gap-1 p-2 overflow-x-auto max-w-full">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" />
               {t.admin.tabs?.dashboard || "Dashboard"}
