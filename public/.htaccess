@@ -29,7 +29,8 @@
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
   # Permissions Policy (formerly Feature-Policy)
-  Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=(self), payment=()"
+  # autoplay and microphone allowed for self + ElevenLabs; cross-origin-isolated omitted (not widely supported)
+  Header always set Permissions-Policy "camera=(), microphone=(self \"https://api.elevenlabs.io\"), geolocation=(self), payment=(), autoplay=(self \"https://api.elevenlabs.io\")"
 
   # HTTP Strict Transport Security (HSTS)
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"

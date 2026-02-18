@@ -128,7 +128,21 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         center: [21.2270, 45.7540],
         zoom: 12,
         pitch: 0,
+        failIfMajorPerformanceCaveat: false,
       });
+
+      // Handle WebGL context loss and restoration
+      const canvas = map.current.getCanvas();
+      if (canvas) {
+        canvas.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          console.warn('[PropertyMap] WebGL context lost');
+        });
+        canvas.addEventListener('webglcontextrestored', () => {
+          console.log('[PropertyMap] WebGL context restored');
+          try { map.current?.triggerRepaint(); } catch (_) {}
+        });
+      }
 
       // Force resize after load with defensive checks
       map.current.on('load', () => {
