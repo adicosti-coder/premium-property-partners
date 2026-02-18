@@ -243,21 +243,24 @@ const AIChatbot = () => {
     doc.save("ApArt_Concierge_Transcript.pdf");
   };
 
-  // --- Streaming Send ---
-  const handleSend = async (overrideMessage?: string) => {
+  // --- Streaming Send with auto-retry for network errors ---
+  const handleSend = async (overrideMessage?: string, retryCount = 0) => {
     const content = overrideMessage || input.trim();
     if (!content || isLoading) return;
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
 
-    const assistantId = crypto.randomUUID();
-    setMessages(prev => [
-      ...prev,
-      { id: crypto.randomUUID(), role: "user", content, timestamp: new Date() },
-      { id: assistantId, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
-    ]);
-    setInput("");
+    const assistantId = retryCount === 0 ? crypto.randomUUID() : undefined;
+    if (retryCount === 0) {
+      setMessages(prev => [
+        ...prev,
+        { id: crypto.randomUUID(), role: "user", content, timestamp: new Date() },
+        { id: assistantId!, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
+      ]);
+      setInput("");
+    }
+    const targetId = assistantId || messages.filter(m => m.role === "assistant").pop()?.id || "";
     setIsLoading(true);
 
     try {
@@ -316,7 +319,8 @@ const AIChatbot = () => {
               }
               if (parsed.delta) {
                 acc += parsed.delta;
-                setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: acc } : m));
+                const id = retryCount === 0 ? assistantId! : targetId;
+                setMessages(prev => prev.map(m => m.id === id ? { ...m, content: acc } : m));
               }
             } catch (e) {
               if (e instanceof Error && (e.message === "rate_limit" || e.message === "network")) throw e;
@@ -324,17 +328,28 @@ const AIChatbot = () => {
           }
         }
       }
-      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false, content: acc || text.error } : m));
+      const id = retryCount === 0 ? assistantId! : targetId;
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, isStreaming: false, content: acc || text.error } : m));
     } catch (e: any) {
       if (e.name === "AbortError") {
-        setMessages(prev => prev.filter(m => m.id !== assistantId));
+        if (retryCount === 0 && assistantId) setMessages(prev => prev.filter(m => m.id !== assistantId));
         return;
       }
+
+      // Auto-retry once for network errors on mobile
+      const isNetworkError = e.message === "network" || e.message === "Failed to fetch" || e.name === "TypeError";
+      if (isNetworkError && retryCount < 1) {
+        console.log("[AIChatbot] Network error, auto-retrying in 1.5s...");
+        await new Promise(r => setTimeout(r, 1500));
+        return handleSend(content, retryCount + 1);
+      }
+
       let errorMessage = text.error;
       if (e.message === "rate_limit") errorMessage = text.errorRateLimit;
-      else if (e.message === "network" || e.message === "Failed to fetch" || e.name === "TypeError") errorMessage = text.errorNetwork;
+      else if (isNetworkError) errorMessage = text.errorNetwork;
 
-      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: errorMessage, isStreaming: false, isError: true } : m));
+      const id = retryCount === 0 ? assistantId! : targetId;
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, content: errorMessage, isStreaming: false, isError: true } : m));
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
