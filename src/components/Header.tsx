@@ -423,13 +423,30 @@ const Header = () => {
                   );
                 })}
                 
+                {/* Admin link in mobile menu */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
+                >
+                  <Link
+                    to="/auth"
+                    className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Link>
+                </motion.div>
+
                 {/* Mobile settings row */}
                 <motion.div 
                   className="flex items-center gap-2 pt-4 border-t border-border"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
+                  transition={{ duration: 0.2, delay: (navLinks.length + 1) * 0.05 }}
                 >
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
