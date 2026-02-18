@@ -54,11 +54,14 @@ self.addEventListener('fetch', (event) => {
   // Skip API requests
   if (event.request.url.includes('/functions/') || event.request.url.includes('/rest/')) return;
 
+  // Skip large media files (video) – partial 206 responses break Cache Storage
+  if (event.request.url.match(/\.(mp4|webm|ogg|avi|mov)(\?|$)/i)) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone response for caching
-        if (response.ok) {
+        // Clone response for caching – only cache full 200 responses
+        if (response.ok && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
