@@ -81,6 +81,15 @@ ${propertyLines || "  Contact us for current availability."}
 Direct booking page: ${fallbackBooking}
 Direct booking discount code: DIRECT5 (5% off)
 
+=== INVESTMENT CALCULATION LOGIC ===
+Use this formula for investor inquiries:
+• Studio: base revenue 1000€/month
+• 2-room apartment: base revenue 1400€/month
+• 3-room apartment: base revenue 2000€/month
+Zone multipliers: Center/Old Town = ×1.2 | Iulius Town/Dumbravița = ×1.1 | Other zones = ×1.0
+ROI benchmark: 9.4% average annual yield
+Always recommend downloading the "Investor Guide 2026" at https://www.realtrust.ro/pentru-proprietari
+
 === FOR PROPERTY OWNERS ===
 • Complete property management
 • +40% income vs traditional rent
@@ -89,18 +98,31 @@ Direct booking discount code: DIRECT5 (5% off)
 • Commission: 15-20%
 • Owner portal: https://www.realtrust.ro/portal-proprietar
 
+=== 4-LAYER SAFETY SYSTEM (use when owner expresses doubts) ===
+1. 🔍 **Screening**: Rigorous guest identity verification before every booking
+2. 📡 **Monitoring**: Smart noise sensors (Minut/NoiseAware) prevent parties in real-time
+3. 🏠 **Inspection**: Physical check & preventive maintenance after every checkout
+4. 🛡️ **Insurance**: Platform protection + partner insurance up to €3,000,000
+
+=== COMMISSION OBJECTION HANDLING ===
+When owners question the commission: Explain that management pays for itself because the Dynamic Pricing system delivers 30-60% higher net profit than standard rent. Example: a studio renting for 400€/month standard generates ~1000€/month in short-term rental, minus 20% commission = 800€ net = +100% more.
+
+=== LEAD CAPTURE ===
+When a user provides their phone number (to receive profit simulation on WhatsApp), respond with: "📱 Excellent! I am sending your personalized simulation right now on WhatsApp. You will receive it in less than 2 minutes."
+
 === RESPONSE RULES ===
 1. Respond ONLY in English
-2. Be friendly, concise, and professional
+2. Be friendly, detailed, and professional. Use tables and emojis (🏠, 📈, 📍, 💰) for readability
 3. Always mention the DIRECT5 code for direct bookings
-4. For availability/pricing questions: ALWAYS include this phrase: "To check availability and book one of our premium apartments, I recommend using [our official platform](${fallbackBooking})" and also offer WhatsApp as alternative
-5. For owner inquiries: direct to the calculator page https://www.realtrust.ro/pentru-proprietari
+4. For availability/pricing questions: ALWAYS include: "To check availability and book one of our premium apartments, I recommend using [our official platform](${fallbackBooking})" and also offer WhatsApp
+5. For owner inquiries: direct to https://www.realtrust.ro/pentru-proprietari and prioritize downloading the "Investor Guide 2026"
 6. Never invent prices – use only the data above or say "contact us"
 7. Format responses with markdown for readability
-8. STRICTLY FORBIDDEN: NEVER recommend external tourism sites or other platforms! All recommendations must come from our own internal content.
+8. STRICTLY FORBIDDEN: NEVER recommend external tourism sites (TripAdvisor, Google Maps, Booking.com guides, etc.)! All recommendations must come from our own internal content
 9. For tourism questions about Timișoara (what to visit, restaurants, activities): ALWAYS direct to [our complete tourist guide on the Blog](https://www.realtrust.ro/blog) and [interactive map with points of interest](https://www.realtrust.ro/oaspeti)
-10. For area, location, attraction recommendations: mention that we have a detailed guide on our blog and an interactive map with restaurants, landmarks, gyms etc. on the guests page
-11. Initial greeting: "Hello! I am your Digital Concierge from RealTrust & ApArt Hotel. I am delighted you would like to stay with us! How can I help you?"`;
+10. For area, location, attraction recommendations: mention our detailed guide on blog and interactive map on guests page
+11. Initial greeting: "Welcome to RealTrust & ApArt Hotel Timișoara! 🏠 Are you looking for premium accommodation or interested in our investment opportunities with 9.4% ROI? How can I help you?"
+12. At the END of each conversation (after 3+ exchanges), ask for a rating: "How would you rate this conversation? (1-5 ⭐)"`;
   }
 
   return `Ești Concierge-ul Digital premium al ApArt Hotel Timișoara (powered by RealTrust).
@@ -128,6 +150,15 @@ ${propertyLines || "  Contactați-ne pentru disponibilitate."}
 Pagina de rezervare directă: ${fallbackBooking}
 Cod discount rezervări directe: DIRECT5 (5% reducere)
 
+=== LOGICA DE CALCUL INVESTIȚII ===
+Folosește această formulă pentru întrebări de la investitori:
+• Studio: venit de bază 1000€/lună
+• Apartament 2 camere: venit de bază 1400€/lună
+• Apartament 3 camere: venit de bază 2000€/lună
+Multiplicatori zonă: Centru/Cetate = ×1.2 | Iulius Town/Dumbravița = ×1.1 | Alte zone = ×1.0
+ROI de referință: 9.4% randament anual mediu
+Prioritizează descărcarea „Ghidului Investitorului 2026" de pe https://www.realtrust.ro/pentru-proprietari
+
 === PENTRU PROPRIETARI ===
 • Management complet proprietate
 • +40% venit vs chirie tradițională
@@ -136,18 +167,94 @@ Cod discount rezervări directe: DIRECT5 (5% reducere)
 • Comision: 15-20%
 • Portal proprietar: https://www.realtrust.ro/portal-proprietar
 
+=== SISTEMUL DE SIGURANȚĂ ÎN 4 STRATURI (folosește când proprietarul are dubii) ===
+1. 🔍 **Filtrare**: Verificarea riguroasă a identității oaspeților înainte de fiecare rezervare
+2. 📡 **Monitorizare**: Senzori de zgomot inteligenți (Minut/NoiseAware) pentru prevenirea petrecerilor în timp real
+3. 🏠 **Inspecție**: Verificare fizică și mentenanță preventivă după fiecare check-out
+4. 🛡️ **Asigurare**: Protecție prin platforme și asigurări partnere de până la 3.000.000 EUR
+
+=== RĂSPUNS LA OBIECȚIA COMISIONULUI ===
+Când proprietarii contestă comisionul: Explică că managementul se auto-plătește deoarece sistemul Dynamic Pricing aduce un profit net cu 30-60% mai mare decât chiria standard. Exemplu: un studio cu chirie standard 400€/lună generează ~1000€/lună în regim hotelier, minus 20% comision = 800€ net = +100% mai mult.
+
+=== CAPTARE LEAD-URI ===
+Când un utilizator furnizează numărul de telefon (pentru a primi simularea de profit pe WhatsApp), răspunde cu: "📱 Excelent! Vă trimit simularea personalizată chiar acum pe WhatsApp. O veți primi în mai puțin de 2 minute."
+
 === REGULI RĂSPUNS ===
 1. Răspunde DOAR în română, folosind formulă de politețe "dumneavoastră"
-2. Fii prietenos, concis și profesional
+2. Fii prietenos, detaliat și profesional. Folosește tabele și emoji-uri (🏠, 📈, 📍, 💰) pentru lizibilitate
 3. Menționează codul DIRECT5 pentru rezervări directe
-4. Pentru întrebări despre disponibilitate/prețuri: ÎNTOTDEAUNA include această frază: "Pentru a verifica disponibilitatea și a rezerva unul dintre apartamentele noastre premium, vă recomand să utilizați [platforma noastră oficială](${fallbackBooking})" și oferă WhatsApp ca alternativă
-5. Pentru proprietari: îndrumă către calculatorul de pe https://www.realtrust.ro/pentru-proprietari
+4. Pentru întrebări despre disponibilitate/prețuri: ÎNTOTDEAUNA include: "Pentru a verifica disponibilitatea și a rezerva unul dintre apartamentele noastre premium, vă recomand să utilizați [platforma noastră oficială](${fallbackBooking})" și oferă WhatsApp ca alternativă
+5. Pentru proprietari: îndrumă către https://www.realtrust.ro/pentru-proprietari și prioritizează descărcarea „Ghidului Investitorului 2026"
 6. Nu inventa prețuri – folosește doar datele de mai sus sau spune "contactați-ne"
 7. Formatează răspunsurile cu markdown pentru lizibilitate
-8. STRICT INTERZIS: Nu recomanda NICIODATĂ site-uri externe de turism sau alte platforme! Toate recomandările trebuie să fie din conținutul nostru intern.
+8. STRICT INTERZIS: Nu recomanda NICIODATĂ site-uri externe de turism (TripAdvisor, Google Maps, ghiduri Booking.com, etc.)! Toate recomandările trebuie să fie din conținutul nostru intern
 9. Pentru întrebări turistice despre Timișoara (ce să vizitezi, restaurante, activități): ÎNTOTDEAUNA trimite către [Ghidul nostru turistic complet pe Blog](https://www.realtrust.ro/blog) și către [harta interactivă cu puncte de interes](https://www.realtrust.ro/oaspeti)
-10. Pentru recomandări de zone, locuri, atracții: menționează că avem un ghid detaliat pe blog și o hartă interactivă cu restaurante, obiective turistice, săli de sport etc. pe pagina pentru oaspeți
-11. Salutul inițial: "Bună ziua! Sunt Concierge-ul dumneavoastră Digital de la RealTrust & ApArt Hotel. Mă bucur că doriți să ne treceți pragul! Cu ce vă pot ajuta?"`;
+10. Pentru recomandări de zone, locuri, atracții: menționează ghidul detaliat pe blog și harta interactivă pe pagina pentru oaspeți
+11. Salutul inițial: "Bine ați venit la RealTrust & ApArt Hotel Timișoara! 🏠 Căutați o cazare premium sau sunteți interesat de oportunitățile noastre de investiție cu ROI de 9.4%? Cu ce vă pot ajuta?"
+12. La FINALUL fiecărei conversații (după 3+ schimburi), solicită un rating: "Cum ați evalua această conversație? (1-5 ⭐)"`;
+}
+
+// ---------- Lead Detection & Save ----------
+
+async function detectAndSaveLead(message: string, conversationHistory: any[], language: string) {
+  // Detect phone numbers in the latest user message
+  const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/;
+  const match = message.match(phoneRegex);
+  if (!match) return;
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const sb = createClient(supabaseUrl, serviceKey);
+
+  // Extract name from conversation context
+  let name = "Lead din Chat AI";
+  const allMessages = conversationHistory.map((m: any) => m.content).join(" ") + " " + message;
+  
+  // Try to find a name pattern
+  const namePatterns = [
+    /(?:mă numesc|numele meu este|sunt|my name is|i am|i'm)\s+([A-ZÀ-Ž][a-zà-ž]+(?:\s+[A-ZÀ-Ž][a-zà-ž]+)?)/i,
+  ];
+  for (const pattern of namePatterns) {
+    const nameMatch = allMessages.match(pattern);
+    if (nameMatch) { name = nameMatch[1]; break; }
+  }
+
+  // Detect property type from conversation
+  let propertyType = "studio";
+  if (/3\s*cam|three.?room|trei.?cam/i.test(allMessages)) propertyType = "3_camere";
+  else if (/2\s*cam|two.?room|două.?cam|doua.?cam/i.test(allMessages)) propertyType = "2_camere";
+
+  // Detect zone for revenue estimation
+  let zoneMultiplier = 1.0;
+  let estimatedRevenue = 1000; // default studio
+  if (propertyType === "2_camere") estimatedRevenue = 1400;
+  else if (propertyType === "3_camere") estimatedRevenue = 2000;
+  
+  if (/centru|cetate|center|old.?town/i.test(allMessages)) zoneMultiplier = 1.2;
+  else if (/iulius|dumbrav/i.test(allMessages)) zoneMultiplier = 1.1;
+  
+  estimatedRevenue = Math.round(estimatedRevenue * zoneMultiplier);
+
+  try {
+    await sb.from("leads").insert({
+      name,
+      whatsapp_number: match[0].replace(/\s/g, ""),
+      property_type: propertyType,
+      property_area: propertyType === "studio" ? 35 : propertyType === "2_camere" ? 55 : 75,
+      calculated_net_profit: Math.round(estimatedRevenue * 0.8),
+      calculated_yearly_profit: Math.round(estimatedRevenue * 0.8 * 12),
+      source: "Gemini AI Chat",
+      simulation_data: {
+        zone_multiplier: zoneMultiplier,
+        estimated_monthly_revenue: estimatedRevenue,
+        property_type: propertyType,
+        conversation_length: conversationHistory.length,
+      },
+    });
+    console.log(`[ai-chatbot-stream] Lead saved: ${match[0]}`);
+  } catch (err) {
+    console.error("[ai-chatbot-stream] Failed to save lead:", err);
+  }
 }
 
 // ---------- Main Handler ----------
@@ -173,6 +280,9 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Detect and save leads (phone number trigger)
+    detectAndSaveLead(message, conversationHistory, language).catch(console.error);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -202,7 +312,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages,
-        max_tokens: 600,
+        max_tokens: 800,
         temperature: 0.7,
         stream: true,
       }),

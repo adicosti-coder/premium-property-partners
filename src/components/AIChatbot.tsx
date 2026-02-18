@@ -4,7 +4,7 @@ import {
   X, Send, Bot, User, Sparkles, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
-  Copy, Check, Phone, PhoneOff
+  Copy, Check, Phone, PhoneOff, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +114,9 @@ const AIChatbot = () => {
   const [voiceMode, setVoiceMode] = useState(false);
   const [isConnectingVoice, setIsConnectingVoice] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+  const [ratingGiven, setRatingGiven] = useState<number | null>(null);
+  const [messageCount, setMessageCount] = useState(0);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -330,6 +333,12 @@ const AIChatbot = () => {
       }
       const id = retryCount === 0 ? assistantId! : targetId;
       setMessages(prev => prev.map(m => m.id === id ? { ...m, isStreaming: false, content: acc || text.error } : m));
+      // Show rating prompt after 3+ user messages
+      setMessageCount(prev => {
+        const next = prev + 1;
+        if (next >= 3 && !ratingGiven) setShowRating(true);
+        return next;
+      });
     } catch (e: any) {
       if (e.name === "AbortError") {
         if (retryCount === 0 && assistantId) setMessages(prev => prev.filter(m => m.id !== assistantId));
@@ -461,6 +470,31 @@ const AIChatbot = () => {
   const handleNewChat = () => {
     setMessages([{ id: "greeting-" + Date.now(), role: "assistant", content: text.greeting, timestamp: new Date() }]);
     if (voiceMode) endVoiceMode();
+    setShowRating(false);
+    setRatingGiven(null);
+    setMessageCount(0);
+  };
+
+  const handleRating = async (rating: number) => {
+    setRatingGiven(rating);
+    setShowRating(false);
+    try {
+      await supabase.from("chat_ratings").insert({
+        rating,
+        session_id: crypto.randomUUID(),
+      });
+    } catch {}
+    if (rating >= 4) {
+      const thankMsg = language === "ro"
+        ? "🙏 Mulțumim pentru evaluare! Dacă doriți, ne-ar face plăcere să ne lăsați un [review pe Google](https://g.page/realtrust-timisoara/review)."
+        : "🙏 Thank you for your rating! If you would like, we would love a [Google review](https://g.page/realtrust-timisoara/review).";
+      addMessage("assistant", thankMsg);
+    } else {
+      const supportMsg = language === "ro"
+        ? "Ne pare rău că experiența nu a fost pe măsura așteptărilor. Vă putem conecta direct cu managerul nostru pentru clarificări: [WhatsApp Manager](https://wa.me/40723154520)"
+        : "We are sorry the experience did not meet your expectations. We can connect you directly with our manager: [WhatsApp Manager](https://wa.me/40723154520)";
+      addMessage("assistant", supportMsg);
+    }
   };
 
   // ─── RENDER ───────────────────────────────────────────────
@@ -713,6 +747,30 @@ const AIChatbot = () => {
                     </div>
                   )}
                 </ScrollArea>
+
+                {/* ─── Rating Widget ─── */}
+                {showRating && !ratingGiven && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mx-5 mb-3 p-4 rounded-2xl bg-primary/5 border border-primary/20 text-center"
+                  >
+                    <p className="text-sm font-medium mb-2">
+                      {language === "ro" ? "Cum ați evalua această conversație?" : "How would you rate this conversation?"}
+                    </p>
+                    <div className="flex justify-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => handleRating(star)}
+                          className="p-1 hover:scale-125 transition-transform"
+                        >
+                          <Star className="w-7 h-7 text-yellow-500 hover:fill-yellow-500" />
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* ─── Premium Input ─── */}
                 <div className="p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
