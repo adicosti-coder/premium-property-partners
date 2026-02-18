@@ -195,7 +195,7 @@ const InteractiveMapWithPOI = () => {
 
   const t = content[language];
 
-  // Get Mapbox token from environment (client-side, no API call needed)
+  // Get Mapbox token from environment or edge function
   useEffect(() => {
     // Check WebGL support first
     if (!isWebGLSupported()) {
@@ -207,14 +207,33 @@ const InteractiveMapWithPOI = () => {
       return;
     }
 
-    // Use client-side environment variable (safer, no edge function exposure)
+    // Try client-side environment variable first
     const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
     if (token) {
       setMapboxToken(token);
-    } else {
-      setTokenError(t.error);
+      setTokenLoading(false);
+      return;
     }
-    setTokenLoading(false);
+
+    // Fallback: fetch token from edge function
+    const fetchToken = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+        if (error) throw error;
+        if (data?.token) {
+          setMapboxToken(data.token);
+        } else {
+          setTokenError(t.error);
+        }
+      } catch (err) {
+        console.error('Failed to fetch Mapbox token:', err);
+        setTokenError(t.error);
+      } finally {
+        setTokenLoading(false);
+      }
+    };
+
+    fetchToken();
   }, [t.error, language]);
 
   // Initialize map

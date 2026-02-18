@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { properties } from '@/data/properties';
+import { supabase } from '@/lib/supabaseClient';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Home, Loader2, MapPin } from 'lucide-react';
 import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglSupport';
@@ -73,18 +74,9 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     // Fallback: fetch token from edge function
     const fetchTokenFromBackend = async () => {
       try {
-        const response = await fetch(
-          'https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/get-mapbox-token',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8',
-            },
-          }
-        );
-        const data = await response.json();
-        if (data.token) {
+        const { data, error: fnError } = await supabase.functions.invoke('get-mapbox-token');
+        if (fnError) throw fnError;
+        if (data?.token) {
           setMapboxToken(data.token);
         } else {
           setError(language === 'ro' ? 'Token Mapbox nu a fost configurat' : 'Mapbox token not configured');
