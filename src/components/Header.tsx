@@ -371,7 +371,7 @@ const Header = () => {
         <AnimatePresence>
           {mobileMenuOpen && (
              <motion.nav 
-              className="py-4 px-4 border-t border-border origin-top overflow-hidden"
+              className="py-4 px-4 border-t border-border origin-top overflow-hidden bg-background"
               initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
               animate={{ opacity: 1, height: "auto", scaleY: 1 }}
               exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
