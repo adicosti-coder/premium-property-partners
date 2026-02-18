@@ -284,7 +284,7 @@ const Header = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-20 gap-2">
           {/* Logo - 3 lines layout centered */}
-          <a href="/" className="group relative flex flex-col items-center gap-0 transition-all duration-300 overflow-hidden hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 w-[130px] md:w-[145px] lg:w-[165px] xl:w-[185px] 2xl:w-auto 2xl:max-w-none mr-1 md:mr-2 lg:mr-3">
+          <a href="/" className="group relative flex flex-col items-center gap-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 mr-1 md:mr-2 lg:mr-3">
             {/* Shimmer overlay */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:animate-shimmer-sweep bg-gradient-to-r from-transparent via-amber-400/40 to-transparent skew-x-12 z-10" />
             {/* Line 1: RealTrust & */}
