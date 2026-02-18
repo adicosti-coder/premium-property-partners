@@ -359,10 +359,10 @@ const Header = () => {
             
             {/* Mobile menu button */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30 hover:from-amber-400 hover:to-amber-500 transition-all duration-200 border border-amber-400/50 min-w-[100px] justify-center"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <><Menu className="w-5 h-5" /><span className="text-xs font-bold tracking-wide">MENIU</span></>}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <><Menu className="w-5 h-5" /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
             </button>
           </div>
         </div>
