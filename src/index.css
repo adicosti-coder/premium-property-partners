@@ -6,77 +6,78 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 45 100% 96%;
+    --background: 40 25% 96%;
+    --foreground: 222 47% 11%;
 
-    --card: 222 40% 10%;
-    --card-foreground: 45 100% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 40% 10%;
-    --popover-foreground: 45 100% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 45 93% 58%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 45 90% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 15%;
-    --secondary-foreground: 45 100% 96%;
+    --secondary: 40 25% 90%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 222 25% 12%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 222 30% 40%;
 
-    --accent: 45 70% 50%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 45 85% 38%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 222 20% 18%;
-    --input: 222 20% 18%;
-    --ring: 45 93% 58%;
+    --border: 40 20% 80%;
+    --input: 40 20% 82%;
+    --ring: 45 90% 40%;
 
     --radius: 0.5rem;
 
-    /* Custom tokens - Premium Dark Theme */
-    --navy: 222 47% 6%;
-    --navy-light: 222 30% 12%;
+    /* Custom tokens - Light Theme */
+    --navy: 222 47% 11%;
+    --navy-light: 222 30% 20%;
     --navy-medium: 222 35% 15%;
-    --gold: 45 93% 58%;
-    --gold-dark: 45 70% 45%;
-    --gold-light: 45 100% 70%;
-    --gold-foreground: 222 47% 6%;
-    --cream: 45 100% 96%;
-    --slate: 215 20% 55%;
-    --slate-light: 215 20% 70%;
+    --gold: 45 90% 35%;
+    --gold-dark: 45 85% 28%;
+    --gold-light: 45 95% 50%;
+    --gold-foreground: 0 0% 100%;
+    --cream: 40 25% 96%;
+    --slate: 222 25% 38%;
+    --slate-light: 222 20% 55%;
     
-    /* Text contrast helpers */
-    --text-strong: 45 100% 96%;
-    --text-medium: 45 60% 85%;
-    --text-subtle: 215 20% 65%;
+    /* Text contrast helpers - WCAG AA compliant */
+    --text-strong: 222 47% 11%;
+    --text-medium: 222 40% 25%;
+    --text-subtle: 222 25% 38%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(222 47% 6%) 0%, hsl(222 30% 12%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45 93% 58%) 0%, hsl(45 70% 45%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 35% 10%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(222 40% 10%) 0%, hsl(222 35% 8%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(40 25% 96%) 0%, hsl(40 20% 92%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45 90% 35%) 0%, hsl(45 85% 28%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(40 25% 96%) 0%, hsl(40 20% 93%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(40 15% 97%) 100%);
 
     /* Shadows */
-    --shadow-elegant: 0 25px 50px -12px hsl(0 0% 0% / 0.5);
-    --shadow-card: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 0 60px hsl(45 93% 58% / 0.2);
-    --shadow-gold: 0 10px 40px -10px hsl(45 93% 58% / 0.3);
+    --shadow-elegant: 0 25px 50px -12px hsl(222 40% 20% / 0.18);
+    --shadow-card: 0 10px 40px -10px hsl(222 40% 20% / 0.12);
+    --shadow-glow: 0 0 40px hsl(45 90% 35% / 0.25);
+    --shadow-gold: 0 10px 40px -10px hsl(45 90% 35% / 0.35);
 
     /* Sidebar tokens */
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 45 100% 96%;
-    --sidebar-primary: 45 93% 58%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 222 30% 12%;
-    --sidebar-accent-foreground: 45 100% 96%;
-    --sidebar-border: 222 20% 18%;
-    --sidebar-ring: 45 93% 58%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 45 90% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 25% 94%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 40 20% 85%;
+    --sidebar-ring: 45 90% 40%;
   }
 
   .light {
+    /* Explicit light class - same as :root for consistency */
     --background: 40 25% 96%;
     --foreground: 222 47% 11%;
 
@@ -105,12 +106,12 @@
     --input: 40 20% 82%;
     --ring: 45 90% 40%;
     
-    /* Text contrast helpers - Light Theme - WCAG AA compliant */
+    /* Text contrast helpers */
     --text-strong: 222 47% 11%;
     --text-medium: 222 40% 25%;
     --text-subtle: 222 25% 38%;
     
-    /* Custom tokens for light theme */
+    /* Custom tokens */
     --navy: 222 47% 11%;
     --navy-light: 222 30% 20%;
     --navy-medium: 222 35% 15%;
@@ -122,13 +123,11 @@
     --slate: 222 25% 38%;
     --slate-light: 222 20% 55%;
     
-    /* Light mode gradients */
     --gradient-hero: linear-gradient(135deg, hsl(40 25% 96%) 0%, hsl(40 20% 92%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(40 25% 96%) 0%, hsl(40 20% 93%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(40 15% 97%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(45 90% 35%) 0%, hsl(45 85% 28%) 100%);
     
-    /* Light mode shadows - more visible */
     --shadow-elegant: 0 25px 50px -12px hsl(222 40% 20% / 0.18);
     --shadow-card: 0 10px 40px -10px hsl(222 40% 20% / 0.12);
     --shadow-glow: 0 0 40px hsl(45 90% 35% / 0.25);
@@ -172,6 +171,35 @@
     --border: 222 20% 18%;
     --input: 222 20% 18%;
     --ring: 45 93% 58%;
+
+    /* Custom tokens - Premium Dark Theme */
+    --navy: 222 47% 6%;
+    --navy-light: 222 30% 12%;
+    --navy-medium: 222 35% 15%;
+    --gold: 45 93% 58%;
+    --gold-dark: 45 70% 45%;
+    --gold-light: 45 100% 70%;
+    --gold-foreground: 222 47% 6%;
+    --cream: 45 100% 96%;
+    --slate: 215 20% 55%;
+    --slate-light: 215 20% 70%;
+    
+    /* Text contrast helpers */
+    --text-strong: 45 100% 96%;
+    --text-medium: 45 60% 85%;
+    --text-subtle: 215 20% 65%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 6%) 0%, hsl(222 30% 12%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45 93% 58%) 0%, hsl(45 70% 45%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 35% 10%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(222 40% 10%) 0%, hsl(222 35% 8%) 100%);
+
+    /* Shadows */
+    --shadow-elegant: 0 25px 50px -12px hsl(0 0% 0% / 0.5);
+    --shadow-card: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 60px hsl(45 93% 58% / 0.2);
+    --shadow-gold: 0 10px 40px -10px hsl(45 93% 58% / 0.3);
 
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 45 100% 96%;
