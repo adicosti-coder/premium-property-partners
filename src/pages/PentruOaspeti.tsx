@@ -461,12 +461,14 @@ const PentruOaspeti = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="properties" className="mt-0">
-                    <PropertyMap 
-                      onPropertySelect={setSelectedProperty}
-                      selectedProperty={selectedProperty}
-                      className="w-full h-[500px] md:h-[600px] rounded-2xl shadow-xl border border-border"
-                    />
+                <TabsContent value="properties" className="mt-0" forceMount={undefined}>
+                    {activeMapTab === 'properties' && (
+                      <PropertyMap 
+                        onPropertySelect={setSelectedProperty}
+                        selectedProperty={selectedProperty}
+                        className="w-full h-[500px] md:h-[600px] rounded-2xl shadow-xl border border-border"
+                      />
+                    )}
                   
                   {/* Property Quick Links */}
                   <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -490,8 +492,8 @@ const PentruOaspeti = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="poi" className="mt-0">
-                    <InteractiveMapWithPOI />
+                <TabsContent value="poi" className="mt-0" forceMount={undefined}>
+                    {activeMapTab === 'poi' && <InteractiveMapWithPOI />}
                 </TabsContent>
               </Tabs>
 
