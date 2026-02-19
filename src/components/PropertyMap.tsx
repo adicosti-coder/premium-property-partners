@@ -51,6 +51,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
+  const [slotRetry, setSlotRetry] = useState(0);
 
   // Get Mapbox token: prefer env var, fallback to edge function
   useEffect(() => {
@@ -101,8 +102,13 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
     mapboxgl.accessToken = mapboxToken;
 
-    // Guard: only one active Mapbox instance allowed globally
+    // Guard: only allow limited active Mapbox instances globally
+    // Retry with delay to handle tab-switch race condition
     if (!acquireMapSlot()) {
+      if (slotRetry < 3) {
+        const retryTimer = setTimeout(() => setSlotRetry(prev => prev + 1), 400);
+        return () => clearTimeout(retryTimer);
+      }
       setError(language === 'ro' ? 'O singură hartă poate fi activă' : 'Only one map can be active');
       return;
     }
@@ -274,7 +280,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       map.current = null;
       releaseMapSlot();
     };
-  }, [mapboxToken, language, onPropertySelect]);
+  }, [mapboxToken, language, onPropertySelect, slotRetry]);
 
   // Fly to selected property
   useEffect(() => {
