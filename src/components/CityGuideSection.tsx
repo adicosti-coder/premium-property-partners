@@ -905,12 +905,7 @@ const CityGuideSection: React.FC = () => {
           </div>
         )}
 
-        {/* Interactive Map */}
-        {!isLoading && pois.length > 0 && (
-          <div className="mb-12 rounded-2xl overflow-hidden shadow-lg border border-border">
-            <InteractiveMapWithPOI />
-          </div>
-        )}
+        {/* Interactive Map - removed: rendered in PentruOaspeti tabs to avoid WebGL context exhaustion */}
 
         {/* Recommendations Grid */}
         {!isLoading && filteredPois.length > 0 && (
