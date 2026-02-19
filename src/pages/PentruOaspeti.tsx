@@ -462,13 +462,11 @@ const PentruOaspeti = () => {
                 </TabsList>
 
                 <TabsContent value="properties" className="mt-0">
-                  <div className="rounded-2xl overflow-hidden shadow-xl border border-border">
                     <PropertyMap 
                       onPropertySelect={setSelectedProperty}
                       selectedProperty={selectedProperty}
-                      className="w-full h-[500px] md:h-[600px]"
+                      className="w-full h-[500px] md:h-[600px] rounded-2xl shadow-xl border border-border"
                     />
-                  </div>
                   
                   {/* Property Quick Links */}
                   <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -493,9 +491,7 @@ const PentruOaspeti = () => {
                 </TabsContent>
 
                 <TabsContent value="poi" className="mt-0">
-                  <div className="rounded-2xl overflow-hidden shadow-xl border border-border">
                     <InteractiveMapWithPOI />
-                  </div>
                 </TabsContent>
               </Tabs>
 
