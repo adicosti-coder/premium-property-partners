@@ -26,7 +26,10 @@ import {
   Crown,
   Lock,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Wine,
+  Dumbbell,
+  Wrench
 } from 'lucide-react';
 
 // Main center point for the map in Timișoara
@@ -107,6 +110,24 @@ const poiTypeConfig: Record<string, { icon: React.ElementType; color: string; la
     color: '#10b981',
     labelRo: 'Divertisment',
     labelEn: 'Entertainment',
+  },
+  bar: {
+    icon: Wine,
+    color: '#f59e0b',
+    labelRo: 'Baruri & Terase',
+    labelEn: 'Bars & Terraces',
+  },
+  sports: {
+    icon: Dumbbell,
+    color: '#06b6d4',
+    labelRo: 'Sport',
+    labelEn: 'Sports',
+  },
+  services: {
+    icon: Wrench,
+    color: '#64748b',
+    labelRo: 'Servicii',
+    labelEn: 'Services',
   },
 };
 
