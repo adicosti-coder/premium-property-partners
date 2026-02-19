@@ -462,33 +462,121 @@ const PentruOaspeti = () => {
                 </TabsList>
 
                 <TabsContent value="properties" className="mt-0" forceMount={undefined}>
+                    {/* Global style for card highlight */}
+                    <style>{`
+                      .ring-highlight-property {
+                        outline: 2px solid hsl(var(--primary));
+                        outline-offset: 3px;
+                        animation: prop-highlight-fade 2s ease forwards;
+                      }
+                      @keyframes prop-highlight-fade {
+                        0% { outline-color: hsl(var(--primary)); }
+                        100% { outline-color: transparent; }
+                      }
+                    `}</style>
+
                     {activeMapTab === 'properties' && (
                       <PropertyMap 
-                        onPropertySelect={setSelectedProperty}
+                        onPropertySelect={(slug) => {
+                          setSelectedProperty(slug);
+                          // scroll to card
+                          setTimeout(() => {
+                            const card = document.getElementById(`property-card-${slug}`);
+                            if (card) {
+                              card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                              card.classList.add('ring-highlight-property');
+                              setTimeout(() => card.classList.remove('ring-highlight-property'), 2000);
+                            }
+                          }, 100);
+                        }}
                         selectedProperty={selectedProperty}
                         className="w-full h-[500px] md:h-[600px] rounded-2xl shadow-xl border border-border"
                       />
                     )}
                   
-                  {/* Property Quick Links */}
-                  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {getActiveProperties().slice(0, 8).map((property) => (
-                      <button
-                        key={property.slug}
-                        onClick={() => setSelectedProperty(property.slug)}
-                        className={`p-3 rounded-xl border text-left transition-all duration-300 ${
-                          selectedProperty === property.slug
-                            ? 'border-primary bg-primary/10 shadow-md'
-                            : 'border-border bg-card hover:border-primary/30 hover:shadow-sm'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <MapPin className={`w-3 h-3 ${selectedProperty === property.slug ? 'text-primary' : 'text-muted-foreground'}`} />
-                          <span className="text-xs text-muted-foreground truncate">{property.location}</span>
+                  {/* Property Cards - synced with map */}
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {getActiveProperties().map((property) => {
+                      const isSelected = selectedProperty === property.slug;
+                      return (
+                        <div
+                          key={property.slug}
+                          id={`property-card-${property.slug}`}
+                          className={`group rounded-xl border overflow-hidden bg-card transition-all duration-300 cursor-pointer ${
+                            isSelected
+                              ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary ring-offset-2'
+                              : 'border-border hover:border-primary/30 hover:shadow-md'
+                          }`}
+                          onClick={() => {
+                            setSelectedProperty(property.slug);
+                            // scroll map into view and fly to property
+                            const mapEl = document.querySelector('.mapboxgl-canvas');
+                            if (mapEl) {
+                              const mapSection = mapEl.closest('section') || mapEl.closest('[class*="rounded"]');
+                              mapSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          }}
+                        >
+                          {/* Image */}
+                          <div className="relative h-36 overflow-hidden">
+                            <img
+                              src={property.images[0]}
+                              alt={property.name}
+                              loading="lazy"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 text-white text-xs font-medium flex items-center gap-1">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              {property.rating}
+                            </div>
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                                <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                  <Navigation className="w-3 h-3" />
+                                  {language === 'ro' ? 'Pe hartă' : 'On map'}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div className="p-3">
+                            <h4 className="font-semibold text-sm line-clamp-1 mb-1 group-hover:text-primary transition-colors">
+                              {property.name}
+                            </h4>
+                            <div className="flex items-center gap-1 text-muted-foreground text-xs mb-2">
+                              <MapPin className="w-3 h-3 flex-shrink-0" />
+                              <span className="line-clamp-1">{property.location}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-bold text-primary">€{property.pricePerNight}<span className="text-muted-foreground font-normal text-xs">/noapte</span></span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProperty(property.slug);
+                                    const mapEl = document.querySelector('.mapboxgl-canvas-container');
+                                    mapEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                >
+                                  <Navigation className="w-3 h-3" />
+                                  {language === 'ro' ? 'Hartă' : 'Map'}
+                                </button>
+                                <Link
+                                  to={`/proprietate/${property.slug}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-muted text-muted-foreground hover:bg-muted/70 transition-colors"
+                                >
+                                  <ArrowRight className="w-3 h-3" />
+                                  {language === 'ro' ? 'Detalii' : 'Details'}
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <h4 className="text-sm font-medium truncate">{property.name}</h4>
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </TabsContent>
 

@@ -47,6 +47,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const markersBySlug = useRef<Record<string, mapboxgl.Marker>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -262,9 +263,18 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         .setPopup(popup)
         .addTo(map.current!);
 
+      markersBySlug.current[property.slug] = marker;
+
       markerEl.addEventListener('click', () => {
         if (onPropertySelect) {
           onPropertySelect(property.slug);
+        }
+        // Scroll to property card below the map
+        const card = document.getElementById(`property-card-${property.slug}`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          card.classList.add('ring-highlight-property');
+          setTimeout(() => card.classList.remove('ring-highlight-property'), 2000);
         }
       });
 
@@ -276,13 +286,14 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       ro?.disconnect();
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
+      markersBySlug.current = {};
       map.current?.remove();
       map.current = null;
       releaseMapSlot();
     };
   }, [mapboxToken, language, onPropertySelect, slotRetry]);
 
-  // Fly to selected property
+  // Fly to selected property and open its popup
   useEffect(() => {
     if (selectedProperty && map.current) {
       const coords = propertyCoordinates[selectedProperty];
@@ -292,6 +303,13 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
           zoom: 15,
           duration: 1500,
         });
+        // Open popup after fly animation
+        setTimeout(() => {
+          const marker = markersBySlug.current[selectedProperty];
+          if (marker && map.current) {
+            marker.getPopup()?.addTo(map.current);
+          }
+        }, 800);
       }
     }
   }, [selectedProperty]);
