@@ -97,6 +97,7 @@ const poiTypeConfig: Record<string, { icon: React.ElementType; color: string; la
 
 const InteractiveMapWithPOI = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -104,11 +105,21 @@ const InteractiveMapWithPOI = () => {
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [webglSupported, setWebglSupported] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
 
-  // WebGL support is checked via the imported isWebGLSupported from webglSupport.ts
-  // (no local re-declaration needed – avoids context leak)
+  // Lazy visibility detection – only init map when scrolled into view
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
+      { rootMargin: '200px', threshold: 0 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // Fetch POIs from Supabase
   const { data: pois = [], isLoading: poisLoading } = useQuery({
@@ -187,6 +198,7 @@ const InteractiveMapWithPOI = () => {
 
   // Get Mapbox token from environment or edge function
   useEffect(() => {
+    if (!isVisible) return;
     // Check WebGL support first
     if (!isWebGLSupported()) {
       setWebglSupported(false);
@@ -224,7 +236,7 @@ const InteractiveMapWithPOI = () => {
     };
 
     fetchToken();
-  }, [t.error, language]);
+  }, [t.error, language, isVisible]);
 
   // Initialize map
   useEffect(() => {
@@ -698,7 +710,7 @@ const InteractiveMapWithPOI = () => {
         </div>
 
         {/* Map */}
-        <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-border">
+        <div ref={wrapperRef} className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-border">
           <div ref={mapContainer} className="absolute inset-0" />
           
           {/* Legend */}
