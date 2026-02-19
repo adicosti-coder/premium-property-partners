@@ -29,8 +29,23 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-// Main apartment location in Timișoara
-const APARTMENT_LOCATION: [number, number] = [21.2270, 45.7540];
+// Main center point for the map in Timișoara
+const MAP_CENTER: [number, number] = [21.2270, 45.7540];
+
+// All apartment coordinates – same as PropertyMap
+const apartmentCoordinates: { name: string; slug: string; coords: [number, number] }[] = [
+  { name: 'Ring ApArt Hotel – Spacious Deluxe', slug: 'ring-apart-hotel-spacious-deluxe', coords: [21.2175, 45.7510] },
+  { name: 'Green Forest ApArt Hotel', slug: 'green-forest-apart-hotel', coords: [21.1950, 45.7750] },
+  { name: 'Fructus Plaza Ultracentral', slug: 'fructus-plaza-ultracentral-apart-hotel', coords: [21.2260, 45.7565] },
+  { name: 'Fullview Studio Deluxe', slug: 'fullview-studio-deluxe', coords: [21.2170, 45.7505] },
+  { name: 'Avenue of Mara ApArt Hotel', slug: 'avenue-of-mara-apart-hotel', coords: [21.2165, 45.7500] },
+  { name: 'Helios ApArt Hotel', slug: 'helios-apart-hotel', coords: [21.2280, 45.7490] },
+  { name: 'Ateneo Trevi 2 ApArt Hotel', slug: 'ateneo-trevi-2-apart-hotel', coords: [21.2050, 45.7780] },
+  { name: 'Sunset Da Ra Studio Deluxe', slug: 'sunset-da-ra-studio-deluxe', coords: [21.2180, 45.7495] },
+  { name: 'Mara Luxury Golden ApArt Hotel', slug: 'mara-luxury-golden-apart-hotel', coords: [21.2240, 45.7555] },
+  { name: 'Ateneo ApArt Hotel Studio Deluxe', slug: 'ateneo-apart-hotel-studio-deluxe', coords: [21.2055, 45.7785] },
+  { name: 'Modern Studio ApArt Hotel', slug: 'modern-studio-apart-hotel', coords: [21.2100, 45.7350] },
+];
 
 interface POI {
   id: string;
@@ -241,7 +256,7 @@ const InteractiveMapWithPOI = () => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        center: APARTMENT_LOCATION,
+        center: MAP_CENTER,
         zoom: 13,
         pitch: 0,
         failIfMajorPerformanceCaveat: false,
@@ -309,43 +324,50 @@ const InteractiveMapWithPOI = () => {
       'top-right'
     );
 
-    // Add main apartment marker
-    const apartmentEl = document.createElement('div');
-    apartmentEl.className = 'apartment-marker';
-    apartmentEl.style.cssText = `
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(201, 169, 98, 0.5);
-      border: 4px solid white;
-      animation: pulse 2s infinite;
-    `;
-    apartmentEl.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-    `;
+    // Add apartment markers for all properties
+    apartmentCoordinates.forEach((apt) => {
+      const apartmentEl = document.createElement('div');
+      apartmentEl.className = 'apartment-marker';
+      apartmentEl.style.cssText = `
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(201, 169, 98, 0.4);
+        border: 3px solid white;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      `;
+      apartmentEl.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      `;
+      apartmentEl.addEventListener('mouseenter', () => { apartmentEl.style.transform = 'scale(1.15)'; });
+      apartmentEl.addEventListener('mouseleave', () => { apartmentEl.style.transform = 'scale(1)'; });
 
-    const apartmentPopup = new mapboxgl.Popup({
-      offset: 30,
-      closeButton: false,
-    }).setHTML(`
-      <div style="padding: 8px; text-align: center;">
-        <strong style="color: #c9a962;">${t.apartment}</strong>
-        <br/>
-        <small style="color: #666;">ApArt Hotel Timișoara</small>
-      </div>
-    `);
+      const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: true,
+      }).setHTML(`
+        <div style="padding: 8px; text-align: center; min-width: 160px;">
+          <strong style="color: #c9a962; font-size: 13px;">${apt.name}</strong>
+          <br/>
+          <a href="/proprietate/${apt.slug}" style="color: #b8963e; font-size: 11px; text-decoration: underline; margin-top: 4px; display: inline-block;">
+            ${language === 'ro' ? 'Vezi detalii →' : 'View details →'}
+          </a>
+        </div>
+      `);
 
-    new mapboxgl.Marker(apartmentEl)
-      .setLngLat(APARTMENT_LOCATION)
-      .setPopup(apartmentPopup)
-      .addTo(map.current);
+      new mapboxgl.Marker(apartmentEl)
+        .setLngLat(apt.coords)
+        .setPopup(popup)
+        .addTo(map.current!);
+    });
 
     // Add CSS for pulse animation
     const style = document.createElement('style');
