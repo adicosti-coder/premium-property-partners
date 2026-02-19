@@ -696,8 +696,8 @@ const InteractiveMapWithPOI = () => {
         </div>
 
         {/* Map */}
-        <div ref={wrapperRef} className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-border">
-          <div ref={mapContainer} className="absolute inset-0" />
+        <div ref={wrapperRef} className="relative h-[500px] rounded-2xl shadow-2xl border border-border">
+          <div ref={mapContainer} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 'inherit' }} />
           
           {/* Legend */}
           <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border max-w-xs">
