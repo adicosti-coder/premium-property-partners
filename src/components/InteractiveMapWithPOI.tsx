@@ -105,21 +105,8 @@ const InteractiveMapWithPOI = () => {
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [webglSupported, setWebglSupported] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
-
-  // Lazy visibility detection – only init map when scrolled into view
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { rootMargin: '200px', threshold: 0 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   // Fetch POIs from Supabase
   const { data: pois = [], isLoading: poisLoading } = useQuery({
@@ -198,7 +185,6 @@ const InteractiveMapWithPOI = () => {
 
   // Get Mapbox token from environment or edge function
   useEffect(() => {
-    if (!isVisible) return;
     // Check WebGL support first
     if (!isWebGLSupported()) {
       setWebglSupported(false);
@@ -236,7 +222,7 @@ const InteractiveMapWithPOI = () => {
     };
 
     fetchToken();
-  }, [t.error, language, isVisible]);
+  }, [t.error, language]);
 
   // Initialize map
   useEffect(() => {
