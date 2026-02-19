@@ -105,6 +105,7 @@ const InteractiveMapWithPOI = () => {
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [webglSupported, setWebglSupported] = useState(true);
+  const [slotRetry, setSlotRetry] = useState(0);
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
 
@@ -230,11 +231,8 @@ const InteractiveMapWithPOI = () => {
 
     mapboxgl.accessToken = mapboxToken;
 
-    // Guard: only allow limited active Mapbox instances globally
-    if (!acquireMapSlot()) {
-      console.warn('[InteractiveMap] Map slot unavailable – another map is active');
-      return;
-    }
+    // Note: acquireMapSlot guard removed – conditional rendering in PentruOaspeti
+    // ensures only one map is active at a time (activeMapTab === 'poi').
 
     let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     let ro: ResizeObserver | null = null;
@@ -365,10 +363,10 @@ const InteractiveMapWithPOI = () => {
       ro?.disconnect();
       map.current?.remove();
       map.current = null;
-      releaseMapSlot();
+      // releaseMapSlot() removed – no longer using slot guard
       style.remove();
     };
-  }, [mapboxToken, t.apartment]);
+  }, [mapboxToken, t.apartment, slotRetry]);
 
   // Trigger resize when map becomes visible (e.g. tab switch)
   useEffect(() => {
@@ -566,14 +564,9 @@ const InteractiveMapWithPOI = () => {
   }
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-muted/30 to-background relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-gradient-to-b from-muted/30 to-background relative">
       <div
-        ref={animation.ref}
-        className={`container mx-auto px-4 relative z-10 transition-all duration-700 ${
-          animation.isVisible
-            ? 'opacity-100 translate-y-0'
-            : 'opacity-0 translate-y-8'
-        }`}
+        className="container mx-auto px-4 relative z-10"
       >
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
