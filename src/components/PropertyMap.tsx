@@ -45,29 +45,15 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   className = "w-full h-[500px]" 
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
-  // Lazy visibility detection – only init map when scrolled into view
+  // Get Mapbox token: prefer env var, fallback to edge function
   useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { rootMargin: '200px', threshold: 0 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  // Get Mapbox token: prefer env var, fallback to edge function (only when visible)
-  useEffect(() => {
-    if (!isVisible) return;
     // Check WebGL support first (singleton, no context leak)
     if (!isWebGLSupported()) {
       setError(language === 'ro' 
@@ -104,7 +90,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     };
 
     fetchTokenFromBackend();
-  }, [language, isVisible]);
+  }, [language]);
 
   // Initialize map when token is available
   useEffect(() => {
@@ -321,7 +307,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
   if (isLoading) {
     return (
-      <div ref={wrapperRef} className={`relative ${className} bg-muted rounded-xl flex items-center justify-center`}>
+      <div className={`relative ${className} bg-muted rounded-xl flex items-center justify-center`}>
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <span className="text-sm text-muted-foreground">
@@ -334,7 +320,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
   if (error) {
     return (
-      <div ref={wrapperRef} className={`relative ${className} bg-muted rounded-xl flex items-center justify-center`}>
+      <div className={`relative ${className} bg-muted rounded-xl flex items-center justify-center`}>
         <div className="flex flex-col items-center gap-3 text-center px-4">
           <MapPin className="w-8 h-8 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">{error}</span>
@@ -344,7 +330,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   }
 
   return (
-    <div ref={wrapperRef} className={`relative ${className}`}>
+    <div className={`relative ${className}`}>
       <div ref={mapContainer} className="absolute inset-0 rounded-xl shadow-lg overflow-hidden" />
       
       {/* Legend */}
