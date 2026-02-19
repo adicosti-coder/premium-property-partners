@@ -121,6 +121,7 @@ const InteractiveMapWithPOI = () => {
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [webglSupported, setWebglSupported] = useState(true);
   const [slotRetry, setSlotRetry] = useState(0);
+  const [mapReady, setMapReady] = useState(false);
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
 
@@ -284,6 +285,7 @@ const InteractiveMapWithPOI = () => {
         try { map.current?.getCanvas() && map.current.resize(); } catch (_) {}
         setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 300);
         setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 1000);
+        setMapReady(true);
       });
 
       // ResizeObserver with debounce
@@ -385,7 +387,7 @@ const InteractiveMapWithPOI = () => {
       ro?.disconnect();
       map.current?.remove();
       map.current = null;
-      // releaseMapSlot() removed – no longer using slot guard
+      setMapReady(false);
       style.remove();
     };
   }, [mapboxToken, t.apartment, slotRetry]);
@@ -407,7 +409,7 @@ const InteractiveMapWithPOI = () => {
 
   // Add POI markers when data changes
   useEffect(() => {
-    if (!map.current || !pois.length) return;
+    if (!map.current || !mapReady || !pois.length) return;
 
     // Clear existing POI markers
     markersRef.current.forEach(marker => marker.remove());
@@ -532,7 +534,7 @@ const InteractiveMapWithPOI = () => {
 
       markersRef.current.push(marker);
     });
-  }, [pois, language]);
+  }, [pois, language, mapReady]);
 
   // Filter POI markers
   useEffect(() => {
