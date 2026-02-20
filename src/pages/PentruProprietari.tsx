@@ -48,6 +48,7 @@ import ChannelLogos from "@/components/ChannelLogos";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import FloatingInvestorGuide from "@/components/FloatingInvestorGuide";
+import { generatePropertyManagementServiceSchema, generateSpeakableSchema } from "@/utils/schemaGenerators";
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -134,45 +135,9 @@ const PentruProprietari = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
-  // Service JSON-LD schema
-  const serviceSchema = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "name": language === 'ro' ? "Administrare Apartamente în Regim Hotelier" : "Short-Term Rental Management",
-    "description": seo.description,
-    "provider": {
-      "@type": "LocalBusiness",
-      "name": "RealTrust & ApArt Hotel",
-      "telephone": "+40723154520",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Timișoara",
-        "addressRegion": "Timiș",
-        "addressCountry": "RO"
-      }
-    },
-    "areaServed": {
-      "@type": "City",
-      "name": "Timișoara"
-    },
-    "serviceType": language === 'ro' ? "Administrare proprietăți" : "Property Management",
-    "offers": {
-      "@type": "Offer",
-      "description": language === 'ro' ? "Comision 20%, fără costuri ascunse" : "20% commission, no hidden fees"
-    }
-  };
-
-  // Speakable schema for AI/voice assistants
-  const speakableSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": seo.title,
-    "url": "https://realtrust.ro/pentru-proprietari",
-    "speakable": {
-      "@type": "SpeakableSpecification",
-      "cssSelector": [".page-summary", "h1", "h2"],
-    },
-  };
+  // Service JSON-LD schema - folosim generatorul centralizat
+  const serviceSchema = generatePropertyManagementServiceSchema();
+  const speakableSchema = generateSpeakableSchema(seo.title, "https://realtrust.ro/pentru-proprietari");
 
   const breadcrumbItems = [
     { label: language === "ro" ? "Pentru Proprietari" : "For Owners" }

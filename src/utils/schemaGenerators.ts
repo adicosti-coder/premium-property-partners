@@ -686,3 +686,102 @@ export const generateSpeakableSchema = (
     "cssSelector": cssSelectors,
   },
 });
+
+// VideoObject Schema for video testimonials
+export interface VideoTestimonialSchemaData {
+  name: string;
+  description: string;
+  youtubeId: string;
+  uploadDate?: string;
+  thumbnailUrl?: string;
+}
+
+export const generateVideoObjectSchema = (video: VideoTestimonialSchemaData) => ({
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  "name": video.name,
+  "description": video.description,
+  "embedUrl": `https://www.youtube.com/embed/${video.youtubeId}`,
+  "contentUrl": `https://www.youtube.com/watch?v=${video.youtubeId}`,
+  "thumbnailUrl": video.thumbnailUrl || `https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`,
+  "uploadDate": video.uploadDate || new Date().toISOString().split("T")[0],
+  "publisher": ORGANIZATION,
+});
+
+// ItemList Schema for property listing pages
+export interface PropertyListItem {
+  name: string;
+  slug: string;
+  description: string;
+  image?: string;
+  price?: number;
+}
+
+export const generatePropertyListSchema = (properties: PropertyListItem[]) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Apartamente ApArt Hotel Timișoara",
+  "description": "Apartamente premium în regim hotelier în Timișoara, administrate profesional de RealTrust.",
+  "url": `${BASE_URL}/oaspeti`,
+  "numberOfItems": properties.length,
+  "itemListElement": properties.map((prop, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "item": {
+      "@type": "LodgingBusiness",
+      "name": prop.name,
+      "url": `${BASE_URL}/proprietate/${prop.slug}`,
+      "description": prop.description,
+      ...(prop.image && { "image": prop.image }),
+      ...(prop.price && {
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "EUR",
+          "price": prop.price,
+          "availability": "https://schema.org/InStock",
+        },
+      }),
+    },
+  })),
+});
+
+// Service Schema for property management service page
+export const generatePropertyManagementServiceSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": `${BASE_URL}/pentru-proprietari#service`,
+  "name": "Administrare Apartamente Regim Hotelier Timișoara",
+  "alternateName": "Property Management Short-Term Rental Timișoara",
+  "description": "Serviciu complet de administrare a apartamentelor în regim hotelier în Timișoara. Include management Airbnb/Booking.com, check-in/check-out, curățenie, mentenanță și raportare financiară transparentă.",
+  "url": `${BASE_URL}/pentru-proprietari`,
+  "provider": ORGANIZATION,
+  "areaServed": {
+    "@type": "City",
+    "name": "Timișoara",
+    "containedInPlace": { "@type": "Country", "name": "Romania" },
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Pachete Administrare",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Management Complet",
+        "description": "Administrare 100% hands-off: listing, check-in/out, curățenie, mentenanță, rapoarte lunare",
+        "priceSpecification": {
+          "@type": "PriceSpecification",
+          "price": "20",
+          "priceCurrency": "EUR",
+          "unitText": "% din venitul brut",
+        },
+      },
+    ],
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "500",
+    "bestRating": "5",
+    "worstRating": "1",
+  },
+});

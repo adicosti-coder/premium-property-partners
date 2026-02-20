@@ -7,18 +7,31 @@ const corsHeaders = {
   "Content-Type": "application/xml; charset=utf-8",
 };
 
+const escapeXml = (str: string) =>
+  str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
 const BASE_URL = "https://realtrust.ro";
 
 interface BlogArticle {
   slug: string;
+  title: string;
   published_at: string | null;
   created_at: string;
+  cover_image: string | null;
 }
 
 interface Property {
+  id: string;
   slug: string;
+  name: string;
   updated_at: string | null;
   created_at: string;
+  image_path: string | null;
 }
 
 serve(async (req: Request) => {
@@ -50,10 +63,10 @@ serve(async (req: Request) => {
       { url: "/pentru-oaspeti", priority: "0.7", changefreq: "weekly" },
     ];
 
-    // Fetch published blog articles
+    // Fetch published blog articles (with image for image sitemap)
     const { data: blogArticles, error: blogError } = await supabase
       .from("blog_articles")
-      .select("slug, published_at, created_at")
+      .select("slug, title, published_at, created_at, cover_image")
       .eq("is_published", true)
       .order("published_at", { ascending: false });
 
@@ -61,12 +74,12 @@ serve(async (req: Request) => {
       console.error("Error fetching blog articles:", blogError);
     }
 
-    // Fetch active properties
+    // Fetch active properties (with image for image sitemap)
     const { data: properties, error: propError } = await supabase
       .from("properties")
-      .select("slug, updated_at, created_at")
+      .select("id, slug, name, updated_at, created_at, image_path")
       .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .order("display_order", { ascending: true });
 
     if (propError) {
       console.error("Error fetching properties:", propError);
@@ -120,36 +133,65 @@ ${hreflang(page.url)}
 `;
     }
 
-    // Add blog articles
+    // Add blog articles (with image sitemap)
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+    const STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/blog-images`;
+
     if (blogArticles && blogArticles.length > 0) {
       for (const article of blogArticles as BlogArticle[]) {
         const lastmod = article.published_at
           ? new Date(article.published_at).toISOString().split("T")[0]
           : new Date(article.created_at).toISOString().split("T")[0];
 
+        // Resolve cover image URL
+        let imageTag = "";
+        if (article.cover_image) {
+          const imgUrl = article.cover_image.startsWith("http")
+            ? article.cover_image
+            : `${STORAGE_BASE}/${article.cover_image}`;
+          imageTag = `
+    <image:image>
+      <image:loc>${escapeXml(imgUrl)}</image:loc>
+      <image:title>${escapeXml(article.title)}</image:title>
+    </image:image>`;
+        }
+
         xml += `  <url>
     <loc>${BASE_URL}/blog/${article.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.7</priority>${imageTag}
 ${hreflang(`/blog/${article.slug}`)}
   </url>
 `;
       }
     }
 
-    // Add properties
+    // Add properties (with image sitemap)
+    const PROPERTY_STORAGE_BASE = `${SUPABASE_URL}/storage/v1/object/public/property-images`;
     if (properties && properties.length > 0) {
       for (const property of properties as Property[]) {
         const lastmod = property.updated_at
           ? new Date(property.updated_at).toISOString().split("T")[0]
           : new Date(property.created_at).toISOString().split("T")[0];
 
+        let imageTag = "";
+        if (property.image_path) {
+          const imgUrl = property.image_path.startsWith("http")
+            ? property.image_path
+            : `${PROPERTY_STORAGE_BASE}/${property.image_path}`;
+          imageTag = `
+    <image:image>
+      <image:loc>${escapeXml(imgUrl)}</image:loc>
+      <image:title>${escapeXml(property.name)} - ApArt Hotel Timișoara</image:title>
+    </image:image>`;
+        }
+
         xml += `  <url>
     <loc>${BASE_URL}/proprietate/${property.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.8</priority>${imageTag}
 ${hreflang(`/proprietate/${property.slug}`)}
   </url>
 `;
