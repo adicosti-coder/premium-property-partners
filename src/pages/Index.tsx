@@ -207,11 +207,11 @@ const Index = () => {
           <PropertyGallery />
         </section>
         
-        {/* Social Proof */}
-        <Testimonials />
-        
-        {/* Booking.com Reviews Widget */}
-        <BookingReviewsWidget />
+        {/* Social Proof - mutat imediat după portofoliu pentru impact maxim */}
+          <Testimonials />
+          
+          {/* Booking.com Reviews Widget */}
+          <BookingReviewsWidget />
         
         {/* External Trust Seals */}
         <ExternalTrustSeals />
