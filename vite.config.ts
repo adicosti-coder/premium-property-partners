@@ -67,77 +67,28 @@ export default defineConfig(({ mode }) => {
         output: {
           // Granular manual chunks — keeps each async route lean
           manualChunks(id) {
-            // Core React runtime — always first to load
-            if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react/jsx-runtime")) {
-              return "vendor-react";
-            }
-            // Router
-            if (id.includes("node_modules/react-router-dom/") || id.includes("node_modules/@remix-run/")) {
-              return "vendor-router";
-            }
-            // Data fetching
-            if (id.includes("node_modules/@tanstack/")) {
-              return "vendor-query";
-            }
-            // Supabase client
-            if (id.includes("node_modules/@supabase/")) {
-              return "vendor-supabase";
-            }
-            // Animation — heavy, only needed when visible
-            if (id.includes("node_modules/framer-motion/")) {
-              return "vendor-motion";
-            }
-            // Charts — only on /investitii + owner portal
-            if (id.includes("node_modules/recharts/") || id.includes("node_modules/d3-")) {
-              return "vendor-charts";
-            }
-            // Map — only on guest/POI pages
+            // Heavy standalone libs — load only when needed
             if (id.includes("node_modules/mapbox-gl/")) {
               return "vendor-mapbox";
             }
-            // PDF — only when download triggered
+            if (id.includes("node_modules/recharts/") || id.includes("node_modules/d3-")) {
+              return "vendor-charts";
+            }
             if (id.includes("node_modules/jspdf/")) {
               return "vendor-pdf";
             }
-            // Rich text editor — only in admin
             if (id.includes("node_modules/@tiptap/")) {
               return "vendor-tiptap";
             }
-            // Date utilities
-            if (id.includes("node_modules/date-fns/")) {
-              return "vendor-dates";
-            }
-            // Radix UI primitives (split from heavy libs)
-            if (id.includes("node_modules/@radix-ui/")) {
-              return "vendor-radix";
-            }
-            // DnD kit — only in admin
-            if (id.includes("node_modules/@dnd-kit/")) {
-              return "vendor-dnd";
-            }
-            // ElevenLabs voice widget
             if (id.includes("node_modules/@elevenlabs/")) {
               return "vendor-elevenlabs";
             }
-            // Carousel
-            if (id.includes("node_modules/embla-carousel")) {
-              return "vendor-carousel";
-            }
-            // Markdown rendering
-            if (id.includes("node_modules/react-markdown/") || id.includes("node_modules/remark") || id.includes("node_modules/unified")) {
-              return "vendor-markdown";
+            if (id.includes("node_modules/@dnd-kit/")) {
+              return "vendor-dnd";
             }
             // Admin components — lazy loaded, separate chunk
             if (id.includes("/src/components/admin/")) {
               return "admin-components";
-            }
-            // Blog components — lazy loaded
-            if (id.includes("/src/components/blog/")) {
-              return "blog-components";
-            }
-            // Owner portal components
-            if (id.includes("/src/components/owner/")) {
-              return "owner-components";
             }
           },
           // Use content hashes for long-term caching
