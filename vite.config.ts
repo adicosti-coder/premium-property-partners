@@ -51,20 +51,126 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react/jsx-runtime", "mapbox-gl"],
     },
     build: {
+      // Use esbuild for faster, smaller output
+      minify: "esbuild",
+      // Reduce CSS code splitting overhead
+      cssCodeSplit: true,
+      // Source maps only in dev (saves ~30% bundle size in prod)
+      sourcemap: false,
+      // Target modern browsers — avoids polyfill overhead
+      target: ["es2020", "chrome87", "firefox78", "safari14"],
       rollupOptions: {
         output: {
-          manualChunks: {
-            "vendor-react": ["react", "react-dom", "react-router-dom"],
-            "vendor-query": ["@tanstack/react-query"],
-            "vendor-ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-popover", "@radix-ui/react-tooltip", "@radix-ui/react-tabs"],
-            "vendor-motion": ["framer-motion"],
-            "vendor-charts": ["recharts"],
-            "vendor-supabase": ["@supabase/supabase-js"],
+          // Granular manual chunks — keeps each async route lean
+          manualChunks(id) {
+            // Core React runtime — always first to load
+            if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/") || id.includes("node_modules/react/jsx-runtime")) {
+              return "vendor-react";
+            }
+            // Router
+            if (id.includes("node_modules/react-router-dom/") || id.includes("node_modules/@remix-run/")) {
+              return "vendor-router";
+            }
+            // Data fetching
+            if (id.includes("node_modules/@tanstack/")) {
+              return "vendor-query";
+            }
+            // Supabase client
+            if (id.includes("node_modules/@supabase/")) {
+              return "vendor-supabase";
+            }
+            // Animation — heavy, only needed when visible
+            if (id.includes("node_modules/framer-motion/")) {
+              return "vendor-motion";
+            }
+            // Charts — only on /investitii + owner portal
+            if (id.includes("node_modules/recharts/") || id.includes("node_modules/d3-")) {
+              return "vendor-charts";
+            }
+            // Map — only on guest/POI pages
+            if (id.includes("node_modules/mapbox-gl/")) {
+              return "vendor-mapbox";
+            }
+            // PDF — only when download triggered
+            if (id.includes("node_modules/jspdf/")) {
+              return "vendor-pdf";
+            }
+            // Rich text editor — only in admin
+            if (id.includes("node_modules/@tiptap/")) {
+              return "vendor-tiptap";
+            }
+            // Date utilities
+            if (id.includes("node_modules/date-fns/")) {
+              return "vendor-dates";
+            }
+            // Radix UI primitives (split from heavy libs)
+            if (id.includes("node_modules/@radix-ui/")) {
+              return "vendor-radix";
+            }
+            // DnD kit — only in admin
+            if (id.includes("node_modules/@dnd-kit/")) {
+              return "vendor-dnd";
+            }
+            // ElevenLabs voice widget
+            if (id.includes("node_modules/@elevenlabs/")) {
+              return "vendor-elevenlabs";
+            }
+            // Carousel
+            if (id.includes("node_modules/embla-carousel")) {
+              return "vendor-carousel";
+            }
+            // Markdown rendering
+            if (id.includes("node_modules/react-markdown/") || id.includes("node_modules/remark") || id.includes("node_modules/unified")) {
+              return "vendor-markdown";
+            }
+            // Admin components — lazy loaded, separate chunk
+            if (id.includes("/src/components/admin/")) {
+              return "admin-components";
+            }
+            // Blog components — lazy loaded
+            if (id.includes("/src/components/blog/")) {
+              return "blog-components";
+            }
+            // Owner portal components
+            if (id.includes("/src/components/owner/")) {
+              return "owner-components";
+            }
           },
+          // Use content hashes for long-term caching
+          chunkFileNames: "assets/[name]-[hash].js",
+          entryFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash].[ext]",
+        },
+        // Tree-shake unused exports aggressively
+        treeshake: {
+          moduleSideEffects: false,
+          propertyReadSideEffects: false,
+          unknownGlobalSideEffects: false,
         },
       },
-      // Increase chunk size warning limit given vendor splitting
-      chunkSizeWarningLimit: 600,
+      // Increase warning limit since we've split aggressively
+      chunkSizeWarningLimit: 400,
+      // Optimize dep bundling
+      commonjsOptions: {
+        ignoreDynamicRequires: true,
+      },
+    },
+    // Optimize dev server performance
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react-router-dom",
+        "@tanstack/react-query",
+        "@supabase/supabase-js",
+      ],
+      exclude: [
+        "mapbox-gl",
+        "jspdf",
+        "@tiptap/react",
+        "@dnd-kit/core",
+        "@elevenlabs/react",
+      ],
     },
   };
 });
