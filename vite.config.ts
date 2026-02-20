@@ -43,10 +43,6 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     define: defineEnv,
-    // Web Worker support — enables new Worker(new URL('./worker', import.meta.url))
-    worker: {
-      format: 'es',
-    },
     plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
     resolve: {
       alias: {
@@ -55,76 +51,20 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react/jsx-runtime", "mapbox-gl"],
     },
     build: {
-      // Use esbuild for faster, smaller output
-      minify: "esbuild",
-      // Reduce CSS code splitting overhead
-      cssCodeSplit: true,
-      // Source maps only in dev (saves ~30% bundle size in prod)
-      sourcemap: false,
-      // Target modern browsers — avoids polyfill overhead
-      target: ["es2020", "chrome87", "firefox78", "safari14"],
       rollupOptions: {
         output: {
-          // Granular manual chunks — keeps each async route lean
-          manualChunks(id) {
-            // Heavy standalone libs — load only when needed
-            if (id.includes("node_modules/mapbox-gl/")) {
-              return "vendor-mapbox";
-            }
-            if (id.includes("node_modules/recharts/") || id.includes("node_modules/d3-")) {
-              return "vendor-charts";
-            }
-            if (id.includes("node_modules/jspdf/")) {
-              return "vendor-pdf";
-            }
-            if (id.includes("node_modules/@tiptap/")) {
-              return "vendor-tiptap";
-            }
-            if (id.includes("node_modules/@elevenlabs/")) {
-              return "vendor-elevenlabs";
-            }
-            if (id.includes("node_modules/@dnd-kit/")) {
-              return "vendor-dnd";
-            }
-            // Admin components — lazy loaded, separate chunk
-            if (id.includes("/src/components/admin/")) {
-              return "admin-components";
-            }
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-query": ["@tanstack/react-query"],
+            "vendor-ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-popover", "@radix-ui/react-tooltip", "@radix-ui/react-tabs"],
+            "vendor-motion": ["framer-motion"],
+            "vendor-charts": ["recharts"],
+            "vendor-supabase": ["@supabase/supabase-js"],
           },
-          // Use content hashes for long-term caching
-          chunkFileNames: "assets/[name]-[hash].js",
-          entryFileNames: "assets/[name]-[hash].js",
-          assetFileNames: "assets/[name]-[hash].[ext]",
-        },
-        // Safe tree-shaking — do NOT disable moduleSideEffects globally
-        // (breaks React, CSS imports, and side-effect-dependent libs)
-        treeshake: {
-          preset: "recommended",
         },
       },
-      // Increase warning limit since we've split aggressively
-      chunkSizeWarningLimit: 400,
-      // Optimize dep bundling
-      commonjsOptions: {
-        ignoreDynamicRequires: true,
-      },
-    },
-    // Optimize dev server performance
-    optimizeDeps: {
-      include: [
-        "react",
-        "react-dom",
-        "react-router-dom",
-        "@tanstack/react-query",
-        "@supabase/supabase-js",
-      ],
-      exclude: [
-        "mapbox-gl",
-        "jspdf",
-        "@tiptap/react",
-        "@dnd-kit/core",
-        "@elevenlabs/react",
-      ],
+      // Increase chunk size warning limit given vendor splitting
+      chunkSizeWarningLimit: 600,
     },
   };
 });

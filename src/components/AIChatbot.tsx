@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
-// jsPDF is lazy-imported only when user triggers PDF download (saves ~300KB from initial chunk)
+import jsPDF from "jspdf";
 
 interface Message {
   id: string;
@@ -227,9 +227,8 @@ const AIChatbot = () => {
     setVoiceMode(false);
   };
 
-  // --- PDF Export (lazy-imports jsPDF only when triggered) ---
-  const exportPDF = async () => {
-    const { default: jsPDF } = await import("jspdf");
+  // --- PDF Export ---
+  const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -246,7 +245,6 @@ const AIChatbot = () => {
     });
     doc.save("ApArt_Concierge_Transcript.pdf");
   };
-
 
   // --- Streaming Send with auto-retry for network errors ---
   const handleSend = async (overrideMessage?: string, retryCount = 0) => {

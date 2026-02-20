@@ -172,78 +172,58 @@ const Index = () => {
         {/* Below-fold: lazy loaded */}
         <Suspense fallback={null}>
           {/* Calculator - immediately after Hero for max conversion */}
-          <section id="calculator" className="cv-auto">
+          <section id="calculator">
             <ProfitCalculator />
           </section>
 
           {/* Quick Lead Capture */}
-          <div className="cv-auto-sm">
-            <QuickLeadForm />
-          </div>
+          <QuickLeadForm />
 
           {/* Main Navigation Cards - Hub Navigation */}
-          <div className="cv-auto">
-            <MainNavigationCards />
-          </div>
+          <MainNavigationCards />
           
           {/* Trust Elements */}
-          <div className="cv-auto-sm">
-            <PartnerLogos />
-            <TrustBadges />
-          </div>
+          <PartnerLogos />
+          <TrustBadges />
 
         {/* CRO: Clear distinction between Owner vs Investor paths */}
-        <div className="cv-auto">
-          <DualServicePaths />
-        </div>
+        <DualServicePaths />
 
         {/* CRO: Visual ROI Case Study - Classic vs ApArt Hotel */}
-        <div className="cv-auto">
-          <ROICaseStudy />
-        </div>
+        <ROICaseStudy />
         
         {/* Owners Teaser Section */}
-        <section id="beneficii" className="cv-auto">
+        <section id="beneficii">
           <OwnersTeaser />
         </section>
         
         {/* Guests Teaser Section with Property Preview */}
-        <section id="oaspeti-preview" className="cv-auto">
+        <section id="oaspeti-preview">
           <GuestsTeaser />
         </section>
         
         {/* Property Portfolio - Keep as showcase */}
-        <section id="portofoliu" className="cv-auto">
+        <section id="portofoliu">
           <PropertyGallery />
         </section>
         
-        {/* Social Proof */}
-        <div className="cv-auto">
+        {/* Social Proof - mutat imediat după portofoliu pentru impact maxim */}
           <Testimonials />
-        </div>
           
           {/* Booking.com Reviews Widget */}
-          <div className="cv-auto-sm">
-            <BookingReviewsWidget />
-          </div>
+          <BookingReviewsWidget />
         
         {/* External Trust Seals */}
-        <div className="cv-auto-sm">
-          <ExternalTrustSeals />
-        </div>
+        <ExternalTrustSeals />
         
         {/* About Teaser */}
-        <div className="cv-auto">
-          <AboutTeaser />
-        </div>
+        <AboutTeaser />
         
         {/* Blog Preview */}
-        <div className="cv-auto">
-          <BlogPreview />
-        </div>
+        <BlogPreview />
         
         {/* Investor Guide CTA */}
-        <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10 cv-auto-sm">
+        <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
           <div className="container mx-auto px-6 text-center">
             <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
               {language === "ro" ? "Investește Inteligent în Timișoara" : "Invest Smart in Timișoara"}
@@ -258,26 +238,20 @@ const Index = () => {
         </section>
         
         {/* Referral Banner */}
-        <section className="py-12 cv-auto-sm">
+        <section className="py-12">
           <div className="container mx-auto px-6">
             <ReferralBanner variant="hero" />
           </div>
         </section>
         
         {/* FAQ - Keep for SEO */}
-        <div className="cv-auto">
-          <FAQ />
-        </div>
+        <FAQ />
         
         {/* Contact */}
-        <div className="cv-auto">
-          <ContactSection />
-        </div>
+        <ContactSection />
         
         {/* Final CTA */}
-        <div className="cv-auto-sm">
-          <CTA />
-        </div>
+        <CTA />
         </Suspense>
       </main>
       <Suspense fallback={null}>

@@ -84,16 +84,6 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   const webpSrc = !skipVariants ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
   const avifSrc = !skipVariants ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
 
-  // Generate srcset for responsive images (only for public/ images with width hints)
-  const generateSrcSet = () => {
-    if (skipVariants || !src.match(/\.(jpg|jpeg|png|webp)$/i)) return undefined;
-    const base = src.replace(/\.(jpg|jpeg|png|webp)$/i, '');
-    // Only if explicit width is provided do we attempt srcset
-    if (!width) return undefined;
-    const ext = webpSrc ? '.webp' : src.match(/\.(jpg|jpeg|png)$/i)?.[0] || '.jpg';
-    return `${base}-400w${ext} 400w, ${base}-800w${ext} 800w, ${src} ${width}w`;
-  };
-
   const containerStyle: React.CSSProperties = {
     width,
     height,
@@ -141,8 +131,8 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
       {/* Actual image with <picture> for format negotiation */}
       {isInView && !hasError && (
         <picture>
-          {avifSrc && <source srcSet={avifSrc} type="image/avif" sizes={sizes} />}
-          {webpSrc && <source srcSet={webpSrc} type="image/webp" sizes={sizes} />}
+          {avifSrc && <source srcSet={avifSrc} type="image/avif" />}
+          {webpSrc && <source srcSet={webpSrc} type="image/webp" />}
           <img
             src={src}
             alt={alt}
@@ -168,4 +158,3 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
 OptimizedImage.displayName = "OptimizedImage";
 
 export default OptimizedImage;
-

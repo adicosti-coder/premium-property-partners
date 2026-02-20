@@ -12,24 +12,6 @@ import { Loader2 } from "lucide-react";
 import CookieConsent from "@/components/CookieConsent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-// Inject preconnect hints for Supabase Storage (images) dynamically to avoid render-blocking
-// These are not in index.html because they are not always needed immediately
-function injectStoragePreconnect() {
-  if (typeof document === "undefined") return;
-  const origins = [
-    "https://mvzssjyzbwccioqvhjpo.supabase.co",
-  ];
-  origins.forEach((origin) => {
-    if (!document.querySelector(`link[href="${origin}"][rel="preconnect"]`)) {
-      const link = document.createElement("link");
-      link.rel = "preconnect";
-      link.href = origin;
-      link.crossOrigin = "anonymous";
-      document.head.appendChild(link);
-    }
-  });
-}
-
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error) => {
   const isChunkError = error.message.includes('Failed to fetch dynamically imported module') ||
@@ -108,13 +90,7 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => {
-  // Inject storage preconnect hints on first render
-  useEffect(() => {
-    injectStoragePreconnect();
-  }, []);
-
-  return (
+const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AnimationPreferenceProvider>
@@ -168,7 +144,6 @@ const App = () => {
       </AnimationPreferenceProvider>
     </ThemeProvider>
   </QueryClientProvider>
-  );
-};
+);
 
 export default App;

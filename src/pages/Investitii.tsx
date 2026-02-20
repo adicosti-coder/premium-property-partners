@@ -28,8 +28,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ROICaseStudy from "@/components/ROICaseStudy";
-import { lazy, Suspense } from "react";
-const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
+import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
 
 interface InvestmentProperty {
   id: string;
@@ -414,11 +413,9 @@ const Investitii = () => {
             </div>
           )}
 
-          {/* Quick Calculator - lazy loaded */}
+          {/* Quick Calculator */}
           <div className="mt-16">
-            <Suspense fallback={<div className="h-64 animate-pulse bg-card rounded-2xl" />}>
-              <InvestmentEngineV34 />
-            </Suspense>
+            <InvestmentEngineV34 />
           </div>
         </div>
       </section>

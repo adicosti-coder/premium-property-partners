@@ -2,7 +2,7 @@
 // Handles caching, offline support, and push notifications
 
 // Bump this when changing SW behavior to force cache refresh on clients
-const SW_VERSION = '2026-02-20-3';
+const SW_VERSION = '2026-02-03-1';
 const CACHE_NAME = `realtrust-cache-${SW_VERSION}`;
 const STATIC_ASSETS = [
   '/',

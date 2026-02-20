@@ -23,8 +23,7 @@ import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PropertyFAQ from "@/components/PropertyFAQ";
-import { lazy, Suspense } from "react";
-const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
+import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -398,15 +397,13 @@ const PropertyDetail = () => {
               
               {/* Calculator Investiție + Card Vânzare Rapidă — ascuns pentru închirieri */}
               {!staticProperty && dbProperty?.listing_type !== 'inchiriere' && (
-                <Suspense fallback={<div className="h-64 animate-pulse bg-card rounded-2xl" />}>
-                  <InvestmentEngineV34
-                    propertyName={property.name}
-                    propertyCode={dbProperty?.property_code}
-                    defaultPrice={dbProperty?.capital_necesar || 120000}
-                    defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
-                    hideRecommendations
-                  />
-                </Suspense>
+                <InvestmentEngineV34
+                  propertyName={property.name}
+                  propertyCode={dbProperty?.property_code}
+                  defaultPrice={dbProperty?.capital_necesar || 120000}
+                  defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
+                  hideRecommendations
+                />
               )}
 
               {/* Recenzii oaspeți - doar pentru proprietăți de cazare, nu pentru vânzări/închirieri imobiliare */}
