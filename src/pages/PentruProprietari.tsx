@@ -464,7 +464,6 @@ const PentruProprietari = () => {
       </section>
 
       <Footer />
-      <FloatingReferralButton />
       <GlobalConversionWidgets />
       <BackToTop />
     </div>

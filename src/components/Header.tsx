@@ -135,6 +135,7 @@ const Header = () => {
   const navLinks = [
     { href: "/", label: t.nav.home, isHome: true },
     { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true },
+    { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true },
     { href: "/pentru-oaspeti", label: language === "ro" ? "Închiriere & Cazare Regim Hotelier" : "Rental & Hotel Accommodation", isPage: true },
     { href: "/complexe", label: language === "ro" ? "Ansambluri & Complexuri Rezidențiale" : "Residential Complexes", isPage: true },
     { href: "/imobiliare", label: t.nav.realEstate, isPage: true },

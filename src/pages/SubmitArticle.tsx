@@ -508,7 +508,7 @@ const SubmitArticle = () => {
       </main>
 
       <Footer />
-      <GlobalConversionWidgets showExitIntent={false} showSocialProof={false} />
+      <GlobalConversionWidgets showExitIntent={false} />
       <BackToTop />
     </div>
   );

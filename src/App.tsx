@@ -81,6 +81,7 @@ const PublicProfile = lazyWithRetry(() => import("./pages/PublicProfile"));
 const ReferralProgram = lazyWithRetry(() => import("./pages/ReferralProgram"));
 const Complexe = lazyWithRetry(() => import("./pages/Complexe"));
 const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
+const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -129,8 +130,9 @@ const App = () => (
                     <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/complexe" element={<Complexe />} />
-                    <Route path="/complex/:slug" element={<ComplexDetail />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                     <Route path="/complex/:slug" element={<ComplexDetail />} />
+                     <Route path="/preturi" element={<Preturi />} />
+                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
