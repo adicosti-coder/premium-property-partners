@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
@@ -5,7 +6,8 @@ import FacilitiesShowcase from "@/components/FacilitiesShowcase";
 import DigitalHouseManual from "@/components/DigitalHouseManual";
 import CleaningStandards from "@/components/CleaningStandards";
 import PropertyMap from "@/components/PropertyMap";
-import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
+// Heavy mapbox component — lazy load to avoid blocking initial render
+const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
 import QuickAvailabilitySearch from "@/components/QuickAvailabilitySearch";
 import CityGuideSection from "@/components/CityGuideSection";
 import SEOHead from "@/components/SEOHead";
@@ -581,7 +583,11 @@ const PentruOaspeti = () => {
                 </TabsContent>
 
                 <TabsContent value="poi" className="mt-0" forceMount={undefined}>
-                    {activeMapTab === 'poi' && <InteractiveMapWithPOI />}
+                    {activeMapTab === 'poi' && (
+                      <Suspense fallback={<div className="h-[500px] flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                        <InteractiveMapWithPOI />
+                      </Suspense>
+                    )}
                 </TabsContent>
               </Tabs>
 

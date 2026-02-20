@@ -19,13 +19,11 @@
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://realtrust.ro/" />
-    
     <meta property="og:locale" content="ro_RO" />
     <meta property="og:site_name" content="RealTrust" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://realtrust.ro/" />
-    
 
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -38,33 +36,28 @@
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-    <!-- Preload hero image for faster LCP (only critical above-the-fold asset) -->
+    <!-- LCP: preload critical hero image with highest priority -->
     <link rel="preload" as="image" href="/src/assets/hero-cinematic.jpg" fetchpriority="high" />
-    <!-- NOTE: Do NOT preload slider/gallery images (e.g. apt-03) – they are below the fold -->
 
-    <!-- Preconnect to critical origins -->
+    <!-- Preconnect to critical third-party origins BEFORE any requests -->
     <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
-    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
-    <link rel="dns-prefetch" href="https://api.mapbox.com" />
-    <link rel="preconnect" href="https://events.mapbox.com" crossorigin />
-    <link rel="dns-prefetch" href="https://events.mapbox.com" />
-    <link rel="preconnect" href="https://www.youtube.com" />
-    <link rel="preconnect" href="https://img.youtube.com" />
-    <link rel="dns-prefetch" href="https://www.youtube.com" />
-    <link rel="dns-prefetch" href="https://img.youtube.com" />
 
-    <!-- Google Fonts – non-render-blocking (preload + swap) -->
+    <!-- Fonts: non-blocking load via print media trick -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+    </noscript>
     
     <meta name="geo.region" content="RO-TM" />
     <meta name="geo.placename" content="Timișoara" />
     <meta name="geo.position" content="45.7489;21.2087" />
     <meta name="ICBM" content="45.7489, 21.2087" />
 
+    <!-- Structured data: LocalBusiness (static, always present) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -77,7 +70,7 @@
       "telephone": "+40723154520",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Strada Exemplu 123",
+        "streetAddress": "Timișoara",
         "addressLocality": "Timișoara",
         "addressRegion": "Timiș",
         "postalCode": "300000",
@@ -102,155 +95,20 @@
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.9",
-        "reviewCount": "150"
+        "reviewCount": "500"
       }
     }
     </script>
     
+    <!-- Theme bootstrap: inline, non-blocking, minimal -->
     <script>
-      (function () {
-        try {
-          if (typeof window === "undefined" || typeof document === "undefined") return;
-          const stored = window.localStorage?.getItem("theme");
-          const theme = stored || "light";
-          document.documentElement.classList.add(theme);
-        } catch (_) {
-          // Ignore theme bootstrap errors (e.g., storage disabled)
-        }
-      })();
+      (function(){try{var t=localStorage.getItem("theme");document.documentElement.classList.add(t||"light")}catch(e){}})();
     </script>
-
-    <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->
-
-    
-    
-    
-    
 </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-
-    <style>
-      #rt-popup-overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        z-index: 9999;
-        backdrop-filter: blur(5px);
-        font-family: 'Segoe UI', Roboto, sans-serif;
-      }
-      #rt-calculator-popup {
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        width: 90%; max-width: 550px;
-        background: #1a1a2e;
-        border: 2px solid #f39c12;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        color: white;
-      }
-      .close-rt-popup {
-        position: absolute;
-        top: 15px; right: 20px;
-        color: #fff; font-size: 30px;
-        cursor: pointer; font-weight: bold;
-        line-height: 1;
-      }
-      .close-rt-popup:hover { color: #f39c12; }
-      .rt-input-group label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
-      .rt-input-group input, .rt-input-group select {
-        width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333;
-        background: #0f0f1f; color: white; margin-bottom: 15px; box-sizing: border-box;
-      }
-    </style>
-
-    <div id="rt-popup-overlay">
-      <div id="rt-calculator-popup">
-        <span class="close-rt-popup" onclick="closeRTPopup()">&times;</span>
-        <div id="zona-print-rt">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #f39c12; margin: 0; font-size: 22px;">Analiză Investiție Imobiliară</h2>
-            <p style="color: #ccc; font-size: 14px;">Vezi randamentul pentru această proprietate:</p>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" class="rt-input-group">
-            <div>
-              <label>Preț Achiziție (€)</label>
-              <input type="number" id="pret_p" value="95000" oninput="calculeazaP()">
-              <label>Chirie Lunară (€)</label>
-              <input type="number" id="chirie_p" value="500" oninput="calculeazaP()">
-            </div>
-            <div>
-              <label>Mobilare/Renovare (€)</label>
-              <input type="number" id="renovare_p" value="7000" oninput="calculeazaP()">
-              <label>Grad Ocupare</label>
-              <select id="vacanta_p" onchange="calculeazaP()">
-                <option value="1" selected>11 luni / an</option>
-                <option value="2">10 luni / an</option>
-                <option value="0">12 luni / an</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top: 15px; padding: 20px; background: #252545; border-radius: 10px; border-left: 5px solid #f39c12; text-align: center;">
-            <span style="font-size: 13px; color: #ccc; letter-spacing: 1px;">RANDAMENT ANUAL (YIELD)</span>
-            <h2 id="yield_p" style="margin: 5px 0; color: #f39c12; font-size: 42px;">0%</h2>
-            <p style="margin: 0; font-size: 14px; color: #2ecc71; font-weight: bold;">
-              Amortizare în <span id="amortizare_p">0</span> ani
-            </p>
-          </div>
-        </div>
-        <button onclick="contactExpert()" style="width: 100%; margin-top: 25px; background: #f39c12; color: #1a1a2e; border: none; padding: 18px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s;">
-          SOLICITĂ DETALII PRIN WHATSAPP
-        </button>
-      </div>
-    </div>
-
-    <script>
-      function calculeazaP() {
-        var pret = parseFloat(document.getElementById('pret_p').value) || 0;
-        var renovare = parseFloat(document.getElementById('renovare_p').value) || 0;
-        var chirie = parseFloat(document.getElementById('chirie_p').value) || 0;
-        var vacanta = parseFloat(document.getElementById('vacanta_p').value) || 0;
-        var investitieTotala = pret + renovare;
-        var venitNetAnual = (chirie * (12 - vacanta)) * 0.95;
-        var yieldAnual = investitieTotala > 0 ? (venitNetAnual / investitieTotala) * 100 : 0;
-        var aniAmortizare = venitNetAnual > 0 ? (investitieTotala / venitNetAnual) : 0;
-        document.getElementById('yield_p').innerText = yieldAnual.toFixed(2) + "%";
-        document.getElementById('amortizare_p').innerText = aniAmortizare.toFixed(1);
-      }
-
-      setTimeout(showRTPopup, 30000);
-
-      document.addEventListener('mouseleave', function(e) {
-        if (e.clientY < 0) { showRTPopup(); }
-      });
-
-      function showRTPopup() {
-        if (!localStorage.getItem('rt_popup_shown_v2')) {
-          document.getElementById('rt-popup-overlay').style.display = 'block';
-          calculeazaP();
-        }
-      }
-
-      function closeRTPopup() {
-        document.getElementById('rt-popup-overlay').style.display = 'none';
-        localStorage.setItem('rt_popup_shown_v2', 'true');
-      }
-
-      function contactExpert() {
-        var yieldText = document.getElementById('yield_p').innerText;
-        var amortizareText = document.getElementById('amortizare_p').innerText;
-        var paginaCurenta = window.location.href;
-        var msg = 'Bună ziua! Am folosit calculatorul de investiții de pe site pentru proprietatea: ' + paginaCurenta + '%0A%0ARezultate estimate:%0A- Randament: ' + yieldText + '%0A- Amortizare: ' + amortizareText + ' ani.%0A%0ADoresc mai multe informații!';
-        window.open('https://wa.me/40723154520?text=' + msg, '_blank');
-      }
-
-      calculeazaP();
-    </script>
   </body>
 
 </html>

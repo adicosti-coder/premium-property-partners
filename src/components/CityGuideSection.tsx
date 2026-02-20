@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useQuery } from '@tanstack/react-query';
@@ -44,7 +44,8 @@ import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiImport } from '@/utils/exportPoiFavoritesPdf';
 import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
-import InteractiveMapWithPOI from './InteractiveMapWithPOI';
+// Lazy load mapbox — very heavy (~900KB), only needed when map tab active
+const InteractiveMapWithPOI = lazy(() => import('./InteractiveMapWithPOI'));
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
 import PremiumPOICarousel from './PremiumPOICarousel';
 import ImageWithFallback from './ImageWithFallback';
