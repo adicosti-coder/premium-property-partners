@@ -327,9 +327,10 @@
 }
 
 /* Animations */
+/* hero-zoom: compositor-only (transform only, no layout properties) */
 @keyframes hero-zoom {
   0% {
-    transform: scale(1);
+    transform: scale(1.05);
   }
   100% {
     transform: scale(1.15);
@@ -338,6 +339,7 @@
 
 .animate-hero-zoom {
   animation: hero-zoom 25s ease-out forwards;
+  will-change: transform;
 }
 
 @keyframes fade-up {
@@ -456,7 +458,7 @@
   animation: slide-down 0.5s ease-out forwards;
 }
 
-/* Film grain effect */
+/* Film grain effect — transform-only animation (compositor layer, no paint) */
 @keyframes grain {
   0%, 100% { transform: translate(0, 0); }
   10% { transform: translate(-5%, -10%); }
@@ -474,10 +476,12 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 200px 200px;
-  animation: grain 8s steps(10) infinite;
+  /* Reduce step count to lower paint frequency; transform is GPU-only */
+  animation: grain 8s steps(6) infinite;
+  will-change: transform;
 }
 
-/* Lens flare animations */
+/* Lens flare animations — opacity+transform only (compositor-safe, zero layout shift) */
 @keyframes lens-flare {
   0%, 100% {
     opacity: 0.8;
@@ -502,16 +506,19 @@
 
 .animate-lens-flare {
   animation: lens-flare 8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .animate-flare-orb {
   animation: flare-orb 6s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
 
+/* glow-pulse: box-shadow is paint-only — keep but mark will-change */
 @keyframes glow-pulse {
   0%, 100% {
     box-shadow: 0 0 15px hsl(var(--primary) / 0.4), 0 0 30px hsl(var(--primary) / 0.2);
@@ -523,6 +530,7 @@
 
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
 /* Shine/shimmer hover effect for buttons */
@@ -722,3 +730,76 @@
   min-height: 44px;
   min-width: 44px;
 }
+
+/* ============================================================
+   PERFORMANCE: content-visibility for below-fold sections
+   Skips rendering cost until element is near viewport.
+   Use on any heavy section that is below the fold.
+   ============================================================ */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 600px; /* estimated height prevents layout shift */
+}
+
+.cv-auto-sm {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* ============================================================
+   PERFORMANCE: GPU compositing hint for frequently animated
+   elements. Only apply when actually needed.
+   ============================================================ */
+.composited {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ============================================================
+   PREFERS-REDUCED-MOTION: kill all decorative animations
+   This is in addition to the JS-level check so pure CSS
+   animations also get suppressed.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .film-grain {
+    animation: none !important;
+  }
+
+  .animate-lens-flare,
+  .animate-flare-orb,
+  .animate-hero-zoom,
+  .animate-glow-pulse,
+  .animate-shimmer,
+  .animate-float,
+  .animate-pulse-glow,
+  .gold-gradient-shimmer {
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
+
+/* ============================================================
+   INP OPTIMIZATION: instant visual feedback on click/tap
+   Avoids waiting for paint to confirm interaction.
+   ============================================================ */
+button,
+a,
+[role="button"] {
+  /* Ensure click events don't wait for double-tap zoom on mobile */
+  touch-action: manipulation;
+}
+
+/* Reduce paint area on hover effects */
+.hover\:shadow-\[.*\]:hover {
+  /* Already GPU composited via filter — no additional hint needed */
+}
+

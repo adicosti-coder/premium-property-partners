@@ -1,45 +1,11 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-// Simple hook to check animation preference from localStorage (works without context)
-const useAnimationEnabled = () => {
-  const [enabled, setEnabled] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("animationsEnabled");
-      if (stored !== null) return stored === "true";
-      return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    const handleStorageChange = () => {
-      const stored = localStorage.getItem("animationsEnabled");
-      if (stored !== null) {
-        setEnabled(stored === "true");
-      }
-    };
-
-    // Listen for storage changes (from other tabs or same-tab updates)
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also poll for changes (for same-tab updates)
-    const interval = setInterval(() => {
-      const stored = localStorage.getItem("animationsEnabled");
-      if (stored !== null) {
-        const newValue = stored === "true";
-        setEnabled(prev => prev !== newValue ? newValue : prev);
-      }
-    }, 100);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
-
-  return enabled;
+// Read animation preference once from localStorage — no polling, no intervals
+const isAnimationEnabled = (): boolean => {
+  if (typeof window === "undefined") return true;
+  const stored = localStorage.getItem("animationsEnabled");
+  if (stored !== null) return stored === "true";
+  return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 };
 
 interface UseTypingAnimationProps {
@@ -55,10 +21,11 @@ export const useTypingAnimation = ({
 }: UseTypingAnimationProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
-  const animationsEnabled = useAnimationEnabled();
+  // Capture preference once at mount — avoids 100ms polling loop on main thread
+  const animationsEnabled = useRef(isAnimationEnabled()).current;
 
   useEffect(() => {
-    // If animations are disabled, show text immediately
+    // No animations → instantly show full text, zero main-thread cost
     if (!animationsEnabled) {
       setDisplayedText(text);
       setIsComplete(true);
@@ -67,24 +34,34 @@ export const useTypingAnimation = ({
 
     setDisplayedText('');
     setIsComplete(false);
-    
-    const startTimeout = setTimeout(() => {
-      let currentIndex = 0;
-      
-      const typeInterval = setInterval(() => {
-        if (currentIndex < text.length) {
-          setDisplayedText(text.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          clearInterval(typeInterval);
-          setIsComplete(true);
-        }
-      }, speed);
 
-      return () => clearInterval(typeInterval);
+    let rafId: number;
+    let startTimeout: ReturnType<typeof setTimeout>;
+    let charIndex = 0;
+    let lastTime = 0;
+
+    // Use rAF instead of setInterval — coalesces with browser paint, avoids long tasks
+    const tick = (timestamp: number) => {
+      if (timestamp - lastTime >= speed) {
+        lastTime = timestamp;
+        charIndex++;
+        setDisplayedText(text.slice(0, charIndex));
+        if (charIndex >= text.length) {
+          setIsComplete(true);
+          return; // done — no more rAF
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+
+    startTimeout = setTimeout(() => {
+      rafId = requestAnimationFrame(tick);
     }, delay);
 
-    return () => clearTimeout(startTimeout);
+    return () => {
+      clearTimeout(startTimeout);
+      cancelAnimationFrame(rafId);
+    };
   }, [text, speed, delay, animationsEnabled]);
 
   return { displayedText, isComplete };

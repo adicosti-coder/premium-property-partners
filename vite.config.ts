@@ -43,6 +43,10 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     define: defineEnv,
+    // Web Worker support — enables new Worker(new URL('./worker', import.meta.url))
+    worker: {
+      format: 'es',
+    },
     plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
     resolve: {
       alias: {
