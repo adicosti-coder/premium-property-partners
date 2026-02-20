@@ -38,21 +38,29 @@ const Hero = () => {
     customCtaSecondary: null,
   });
 
-  // Defer video loading for better LCP - load after initial paint
+
+  // Defer video loading for better LCP - skip on mobile entirely (video = 15-20MB payload)
   useEffect(() => {
-    // On mobile with slow connection, skip video entirely
-    if (isMobile && isSlowConnection) {
+    // Skip video on mobile devices entirely — saves ~15-20MB network payload
+    if (isMobile) {
+      setShouldLoadVideo(false);
+      return;
+    }
+
+    // Skip on slow connections (saves data for desktop too)
+    if (isSlowConnection) {
       setShouldLoadVideo(false);
       return;
     }
     
-    // Defer video loading to after initial content paint
+    // Desktop only: defer video loading until after initial content paint
     const timer = setTimeout(() => {
       setShouldLoadVideo(true);
-    }, isMobile ? 1500 : 500); // Longer delay on mobile
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
+
 
   // Fetch hero settings from database
   useEffect(() => {

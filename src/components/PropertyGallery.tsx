@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check, Map, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,14 @@ import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCompareModal from "./PropertyCompareModal";
-import PropertyMap from "./PropertyMap";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
 import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { properties, Property, getActiveProperties } from "@/data/properties";
 import { toast } from "sonner";
+
+// Lazy load PropertyMap (contains Mapbox ~900KB) — only loaded when user clicks Map tab
+const PropertyMap = lazy(() => import("./PropertyMap"));
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -49,6 +51,7 @@ const PropertyGallery = () => {
   const [selectedFeature, setSelectedFeature] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.02 });
@@ -281,8 +284,9 @@ const PropertyGallery = () => {
           </div>
         )}
 
-        {/* Interactive Map */}
-        {!isLoading && (
+
+        {/* Interactive Map - lazy loaded only when user clicks to reveal (saves ~900KB Mapbox) */}
+        {!isLoading && showMap && (
           <div className="mb-12">
             <div className="flex items-center gap-2 mb-4">
               <Map className="w-5 h-5 text-primary" />
@@ -290,9 +294,20 @@ const PropertyGallery = () => {
                 {language === 'ro' ? 'Hartă Proprietăți' : 'Properties Map'}
               </h3>
             </div>
-            <PropertyMap className="w-full h-[400px] rounded-xl" />
+            <Suspense fallback={<div className="w-full h-[400px] rounded-xl bg-muted animate-pulse" />}>
+              <PropertyMap className="w-full h-[400px] rounded-xl" />
+            </Suspense>
           </div>
         )}
+        {!isLoading && !showMap && (
+          <div className="mb-8 text-center">
+            <Button variant="outline" onClick={() => setShowMap(true)} className="gap-2">
+              <Map className="w-4 h-4" />
+              {language === 'ro' ? 'Arată Harta Proprietăților' : 'Show Properties Map'}
+            </Button>
+          </div>
+        )}
+
 
         {/* Property Grid */}
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
