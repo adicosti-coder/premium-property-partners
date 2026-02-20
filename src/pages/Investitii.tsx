@@ -5,11 +5,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageSummary from "@/components/PageSummary";
-import { generateSpeakableSchema } from "@/utils/schemaGenerators";
+import { generateSpeakableSchema, generateFAQSchema } from "@/utils/schemaGenerators";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-// Card imports removed - using custom dark theme cards
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,13 +19,15 @@ import {
   Calculator, 
   ArrowRight, 
   Phone,
-  CheckCircle2,
   BarChart3,
   Shield,
   Clock,
-  MapPin
+  MapPin,
+  CheckCircle2,
+  Star
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import ROICaseStudy from "@/components/ROICaseStudy";
 import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
 
 interface InvestmentProperty {
@@ -185,6 +186,21 @@ const Investitii = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
               {t.heroSubtitle}
             </p>
+
+            {/* Social proof stats strip */}
+            <div className="flex flex-wrap justify-center gap-6 mb-10">
+              {[
+                { value: "9.4%", label: language === "ro" ? "ROI Net Verificat" : "Verified Net ROI" },
+                { value: "98%", label: language === "ro" ? "Rată de Ocupare" : "Occupancy Rate" },
+                { value: "10k+", label: language === "ro" ? "Oaspeți Satisfăcuți" : "Happy Guests" },
+                { value: "4.9★", label: language === "ro" ? "Rating Mediu" : "Average Rating" },
+              ].map((stat, i) => (
+                <div key={i} className="text-center px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
+                  <p className="text-2xl font-bold text-primary">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                </div>
+              ))}
+            </div>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
@@ -229,6 +245,9 @@ const Investitii = () => {
           </div>
         </div>
       </section>
+
+      {/* ROI Case Study - chirie clasică vs sistem */}
+      <ROICaseStudy />
 
       {/* Investment Grid */}
       <section className="py-16 md:py-24 overflow-hidden">
@@ -397,6 +416,40 @@ const Investitii = () => {
           {/* Quick Calculator */}
           <div className="mt-16">
             <InvestmentEngineV34 />
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-primary/5">
+        <div className="container mx-auto px-6 text-center max-w-3xl">
+          <div className="flex justify-center mb-4">
+            {[1,2,3,4,5].map(i => <Star key={i} className="w-6 h-6 fill-primary text-primary" />)}
+          </div>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+            {language === "ro" ? "Gata să Investești Inteligent?" : "Ready to Invest Smart?"}
+          </h2>
+          <p className="text-muted-foreground text-lg mb-8">
+            {language === "ro"
+              ? "Echipa noastră îți răspunde în mai puțin de 2 ore. Fără costuri ascunse, fără angajamente."
+              : "Our team replies in under 2 hours. No hidden costs, no commitments."}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              variant="hero"
+              size="lg"
+              className="group px-8"
+              onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să discutăm despre o oportunitate de investiție imobiliară în Timișoara." : "Hello, I'd like to discuss a real estate investment opportunity in Timișoara.")}`, '_blank')}
+            >
+              <Phone className="w-5 h-5 mr-2" />
+              {language === "ro" ? "Discută pe WhatsApp" : "Chat on WhatsApp"}
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Link to="/preturi">
+              <Button variant="outline" size="lg" className="px-8">
+                {language === "ro" ? "Vezi Pachete & Prețuri" : "View Packages & Pricing"}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

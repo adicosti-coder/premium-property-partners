@@ -240,6 +240,47 @@ const PropertyDetail = () => {
 
   if (!property) return null;
 
+  // Generate rich schema for this property
+  const propertySchemas = [
+    ...generatePropertyPageSchemas({
+      name: property.name,
+      slug: slug || "",
+      description: language === 'ro' ? property.longDescription : (property.longDescriptionEn || property.longDescription),
+      image: galleryImages[0] || "",
+      images: galleryImages,
+      location: property.location,
+      pricePerNight: property.pricePerNight || 0,
+      capacity: property.capacity || 2,
+      bedrooms: property.bedrooms || 1,
+      bathrooms: property.bathrooms || 1,
+      size: property.size || 0,
+      rating: staticProperty?.rating || 4.9,
+      reviewCount: staticProperty?.reviews || 50,
+      amenities: property.amenities || [],
+    }),
+    // AggregateRating standalone for Google rich results
+    {
+      "@context": "https://schema.org",
+      "@type": "LodgingBusiness",
+      "name": property.name,
+      "url": `https://realtrust.ro/proprietate/${slug}`,
+      "image": galleryImages[0] || "",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": staticProperty?.rating?.toFixed(1) || "4.9",
+        "reviewCount": staticProperty?.reviews || 50,
+        "bestRating": "5",
+        "worstRating": "1",
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Timișoara",
+        "addressRegion": "Timiș",
+        "addressCountry": "RO",
+      },
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead 
@@ -252,6 +293,7 @@ const PropertyDetail = () => {
         type="product"
         productPrice={property.pricePerNight || undefined}
         productCurrency="EUR"
+        jsonLd={propertySchemas}
       />
       <Header />
       

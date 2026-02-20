@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift, ArrowRight, Sparkles } from "lucide-react";
+import { X, Gift, ArrowRight, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,15 +8,20 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
+import { useLocation } from "react-router-dom";
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasShown, setHasShown] = useState(false);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Detect if user is on owner/investment pages
+  const isOwnerPath = ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
 
   // Fetch Turnstile site key on mount
   useEffect(() => {
@@ -27,30 +32,49 @@ const ExitIntentPopup = () => {
 
   const t = {
     ro: {
-      title: "Stai! Nu pleca încă...",
-      subtitle: "Primește 10% reducere la prima rezervare",
-      description: "Lasă-ne emailul și îți trimitem codul de discount exclusiv, valabil 48 de ore.",
+      // Guest variant
+      guestTitle: "Stai! Nu pleca încă...",
+      guestSubtitle: "Primește 10% reducere la prima rezervare",
+      guestDescription: "Lasă-ne emailul și îți trimitem codul de discount exclusiv, valabil 48 de ore.",
+      guestBadge: "Ofertă Exclusivă",
+      // Owner variant
+      ownerTitle: "Ghid Gratuit pentru Proprietari",
+      ownerSubtitle: "ROI 9.4% — Cum îți maximizezi venitul?",
+      ownerDescription: "Primești analiza completă de piață + strategii dovedite pentru apartamentul tău din Timișoara.",
+      ownerBadge: "Ghid Proprietari 2026",
+      // Common
       placeholder: "email@exemplu.com",
-      cta: "Vreau reducerea!",
+      cta: isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
       noThanks: "Nu, mulțumesc",
       successTitle: "🎉 Verifică-ți emailul!",
-      successMessage: "Ți-am trimis codul de reducere. Folosește-l în următoarele 48 de ore!",
-      badge: "Ofertă Exclusivă",
+      successMessage: isOwnerPath
+        ? "Ți-am trimis ghidul gratuit. Îl găsești în inbox în câteva minute!"
+        : "Ți-am trimis codul de reducere. Folosește-l în următoarele 48 de ore!",
     },
     en: {
-      title: "Wait! Don't leave yet...",
-      subtitle: "Get 10% off your first booking",
-      description: "Leave your email and we'll send you an exclusive discount code, valid for 48 hours.",
+      guestTitle: "Wait! Don't leave yet...",
+      guestSubtitle: "Get 10% off your first booking",
+      guestDescription: "Leave your email and we'll send you an exclusive discount code, valid for 48 hours.",
+      guestBadge: "Exclusive Offer",
+      ownerTitle: "Free Guide for Property Owners",
+      ownerSubtitle: "9.4% ROI — How to maximize your income?",
+      ownerDescription: "Get the complete market analysis + proven strategies for your Timișoara apartment.",
+      ownerBadge: "Owners Guide 2026",
       placeholder: "email@example.com",
-      cta: "I want the discount!",
+      cta: isOwnerPath ? "I want the Free Guide!" : "I want the discount!",
       noThanks: "No, thanks",
       successTitle: "🎉 Check your email!",
-      successMessage: "We've sent you the discount code. Use it within the next 48 hours!",
-      badge: "Exclusive Offer",
+      successMessage: isOwnerPath
+        ? "We've sent you the free guide. You'll find it in your inbox in a few minutes!"
+        : "We've sent you the discount code. Use it within the next 48 hours!",
     },
   };
 
   const text = t[language as keyof typeof t] || t.ro;
+  const title = isOwnerPath ? text.ownerTitle : text.guestTitle;
+  const subtitle = isOwnerPath ? text.ownerSubtitle : text.guestSubtitle;
+  const description = isOwnerPath ? text.ownerDescription : text.guestDescription;
+  const badge = isOwnerPath ? text.ownerBadge : text.guestBadge;
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
     if (!isBrowser()) return;
@@ -172,28 +196,31 @@ const ExitIntentPopup = () => {
                 {/* Badge */}
                 <div className="flex justify-center mb-4">
                   <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
-                    <Gift className="w-4 h-4" />
-                    {text.badge}
+                    {isOwnerPath ? <TrendingUp className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
+                    {badge}
                   </span>
                 </div>
 
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/30">
-                    <Gift className="w-10 h-10 text-primary-foreground" />
+                    {isOwnerPath 
+                      ? <TrendingUp className="w-10 h-10 text-primary-foreground" />
+                      : <Gift className="w-10 h-10 text-primary-foreground" />
+                    }
                   </div>
                 </div>
 
                 {/* Content */}
                 <div className="text-center mb-6">
                   <h2 className="text-2xl font-serif font-bold text-foreground mb-2">
-                    {text.title}
+                    {title}
                   </h2>
-                  <p className="text-xl font-semibold text-gradient-gold mb-2">
-                    {text.subtitle}
+                  <p className="text-xl font-semibold text-primary mb-2">
+                    {subtitle}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    {text.description}
+                    {description}
                   </p>
                 </div>
 
@@ -214,7 +241,7 @@ const ExitIntentPopup = () => {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? (
+                     {isSubmitting ? (
                       <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     ) : (
                       <>
