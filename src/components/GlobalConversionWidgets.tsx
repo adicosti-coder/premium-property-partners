@@ -7,7 +7,6 @@ import DesktopStickyContactBar from "@/components/DesktopStickyContactBar";
 
 // Defer non-critical widgets to reduce initial main-thread work
 const ExitIntentPopup = lazy(() => import("@/components/ExitIntentPopup"));
-const SocialProofNotifications = lazy(() => import("@/components/SocialProofNotifications"));
 const AIChatbot = lazy(() => import("@/components/AIChatbot"));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
 const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
@@ -17,7 +16,6 @@ const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
   showExitIntent?: boolean;
-  showSocialProof?: boolean;
   showChatbot?: boolean;
   showVoiceWidget?: boolean;
 }
@@ -29,7 +27,6 @@ interface GlobalConversionWidgetsProps {
 const GlobalConversionWidgets = ({
   showMobileCTA = true,
   showExitIntent = true,
-  showSocialProof = true,
   showChatbot = true,
   showVoiceWidget = true,
 }: GlobalConversionWidgetsProps) => {
@@ -58,7 +55,6 @@ const GlobalConversionWidgets = ({
           {showChatbot && <AIChatbot />}
           {showVoiceWidget && <ElevenLabsWidgetLazy />}
           {showExitIntent && <ExitIntentPopup />}
-          {showSocialProof && <SocialProofNotifications />}
           <ReferralPopup />
         </Suspense>
       )}
