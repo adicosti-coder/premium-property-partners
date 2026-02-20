@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
+import StatsCounters from "@/components/StatsCounters";
 import { generateHomepageSchemas, generateFAQSchema, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -164,6 +165,9 @@ const Index = () => {
       <main>
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
+
+        {/* Social Proof Stats - imediat sub Hero, eager load pentru impact maxim */}
+        <StatsCounters />
         
         {/* Below-fold: lazy loaded */}
         <Suspense fallback={null}>

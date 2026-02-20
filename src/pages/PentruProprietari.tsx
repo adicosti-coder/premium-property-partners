@@ -302,8 +302,22 @@ const PentruProprietari = () => {
       {/* Quick Value Banner - Moved below Hero */}
       <QuickValueBanner onCtaClick={scrollToCalculator} />
 
-      {/* Calculator Section - Moved up for visibility */}
-      <section id="calculator">
+      {/* ========= CONVERSION FUNNEL: Beneficii → Calculator → Pachete → CTA ========= */}
+
+      {/* STEP 1: Beneficii - convinge proprietarul */}
+      <OwnerBenefits />
+
+      {/* DIY vs Professional - dovada că managementul profesionist câștigă */}
+      <DIYvsProfessional />
+
+      {/* Service Options Comparison */}
+      <ServiceOptionsComparison />
+
+      {/* Channel Logos - pe ce platforme ești listat */}
+      <ChannelLogos />
+
+      {/* STEP 2: Calculator - proprietarul vede potențialul financiar */}
+      <section id="calculator" className="scroll-mt-24">
         <ProfitCalculator />
       </section>
 
@@ -313,45 +327,56 @@ const PentruProprietari = () => {
       {/* Rental Income Calculator (Calculator Pro) */}
       <RentalIncomeCalculator />
 
+      {/* STEP 3: Pachete de prețuri — acum că știe potențialul, vede costul */}
+      <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+        <div className="container mx-auto px-6 text-center">
+          <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+            {language === "ro" ? "Pachete Transparente" : "Transparent Packages"}
+          </span>
+          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+            {language === "ro" ? "Alege Pachetul Potrivit" : "Choose the Right Package"}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+            {language === "ro"
+              ? "Comision clar, fără costuri ascunse. Plătești doar din veniturile generate."
+              : "Clear commission, no hidden fees. You only pay from generated revenue."}
+          </p>
+          <Link to="/preturi">
+            <Button variant="hero" size="lg" className="group">
+              {language === "ro" ? "Vezi Toate Pachetele & Prețurile" : "See All Packages & Pricing"}
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
       {/* Trust Badges */}
       <TrustBadges />
 
-      {/* Property Type Selector - NEW */}
+      {/* Property Type Selector */}
       <PropertyTypeSelector 
         onContinue={() => scrollToCalculator()}
       />
 
-      {/* Property Qualification - NEW */}
+      {/* Property Qualification */}
       <PropertyQualification onContact={handleWhatsApp} />
 
-      {/* The 3 Options Comparison - NEW from realtrust.ro */}
-      <ServiceOptionsComparison />
-
-      {/* DIY vs Professional - NEW */}
-      <DIYvsProfessional />
-
-      {/* Owner Benefits */}
-      <OwnerBenefits />
-
-      {/* Service Chain A-F - NEW */}
+      {/* Service Chain A-F */}
       <ServiceChainAF />
 
-      {/* Channel Logos - NEW */}
-      <ChannelLogos />
-
-      {/* Service Guarantees Grid - NEW from realtrust.ro */}
+      {/* Service Guarantees Grid */}
       <ServiceGuaranteesGrid />
 
       {/* Financial Transparency */}
       <FinancialTransparency />
 
-      {/* Process Steps Timeline - NEW from realtrust.ro */}
+      {/* Process Steps Timeline */}
       <ProcessStepsTimeline />
 
       {/* Partnership Timeline */}
       <PartnershipTimeline />
 
-      {/* Investor Guide CTA - Before Calculators */}
+      {/* Investor Guide CTA */}
       <section className="py-12 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
         <div className="container mx-auto px-6 text-center">
           <h3 className="text-2xl font-serif font-bold mb-4">

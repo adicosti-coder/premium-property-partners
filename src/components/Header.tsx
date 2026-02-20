@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-react";
+import PropertyCodeSearch from "./PropertyCodeSearch";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PromoBanner from "./PromoBanner";
@@ -380,6 +381,17 @@ const Header = () => {
             >
               <div className="flex flex-col gap-4">
                 
+                {/* Property Code Search - Mobile */}
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="pb-3 border-b border-border/50"
+                >
+                  <PropertyCodeSearch className="w-full" />
+                </motion.div>
+
                 {navLinks.map((link, index) => {
                   const isActive = activeSection === link.href;
                   const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
