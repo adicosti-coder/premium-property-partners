@@ -145,11 +145,10 @@ export default defineConfig(({ mode }) => {
           entryFileNames: "assets/[name]-[hash].js",
           assetFileNames: "assets/[name]-[hash].[ext]",
         },
-        // Tree-shake unused exports aggressively
+        // Safe tree-shaking — do NOT disable moduleSideEffects globally
+        // (breaks React, CSS imports, and side-effect-dependent libs)
         treeshake: {
-          moduleSideEffects: false,
-          propertyReadSideEffects: false,
-          unknownGlobalSideEffects: false,
+          preset: "recommended",
         },
       },
       // Increase warning limit since we've split aggressively
