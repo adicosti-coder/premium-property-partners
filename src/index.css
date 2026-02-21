@@ -1,5 +1,15 @@
 /* Google Fonts loaded via index.html preload – not imported here to avoid render-blocking */
 
+/* Fallback font matched to Playfair Display metrics to prevent CLS during font swap */
+@font-face {
+  font-family: 'Playfair Display Fallback';
+  src: local('Times New Roman');
+  size-adjust: 110%;
+  ascent-override: 95%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 /* Local NotoSans fonts with font-display: swap for instant text rendering */
 @font-face {
   font-family: 'NotoSans';
@@ -244,7 +254,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Playfair Display', 'Playfair Display Fallback', serif;
   }
 }
 
