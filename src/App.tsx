@@ -1,16 +1,15 @@
-import { Suspense, lazy, useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
-import { SharedAssistantProvider } from "@/hooks/useSharedAssistantContext";
-import { Loader2 } from "lucide-react";
-import CookieConsent from "@/components/CookieConsent";
 import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Defer heavy shell components that are not needed for first paint
+const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
+const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
+const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error) => {
@@ -83,25 +82,44 @@ const Complexe = lazyWithRetry(() => import("./pages/Complexe"));
 const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
 const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
 
-// Loading fallback component
+// Minimal CSS-only loader — no icon import needed
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
+
+// Deferred shell — wraps children with lazy providers + widgets
+const DeferredShell = ({ children }: { children: React.ReactNode }) => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    // Delay non-critical shell until after first paint
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <>
+      {children}
+      {ready && (
+        <Suspense fallback={null}>
+          <Toaster />
+          <Sonner />
+          <CookieConsent />
+        </Suspense>
+      )}
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AnimationPreferenceProvider>
         <LanguageProvider>
-          <SharedAssistantProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <CookieConsent />
-              <BrowserRouter>
-                <ErrorBoundary>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
@@ -130,16 +148,15 @@ const App = () => (
                     <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/complexe" element={<Complexe />} />
-                     <Route path="/complex/:slug" element={<ComplexDetail />} />
-                     <Route path="/preturi" element={<Preturi />} />
-                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="/complex/:slug" element={<ComplexDetail />} />
+                    <Route path="/preturi" element={<Preturi />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
-                </ErrorBoundary>
-              </BrowserRouter>
-            </TooltipProvider>
-          </SharedAssistantProvider>
+              </DeferredShell>
+            </ErrorBoundary>
+          </BrowserRouter>
         </LanguageProvider>
       </AnimationPreferenceProvider>
     </ThemeProvider>
