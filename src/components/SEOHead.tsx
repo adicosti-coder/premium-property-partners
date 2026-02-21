@@ -162,13 +162,13 @@ const SEOHead = ({
   const { language } = useLanguage();
   
   const defaultTitles = {
-    ro: "RealTrust & ApArt Hotel Timișoara | Administrare Premium în Regim Hotelier",
-    en: "RealTrust & ApArt Hotel Timișoara | Premium Short-Term Rental Management"
+    ro: "Investiții Imobiliare Timișoara | Apart-Hotel & Administrare Regim Hotelier | RealTrust",
+    en: "Real Estate Investment Timișoara | Apart-Hotel & Short-Term Rental Management | RealTrust"
   };
   
   const defaultDescriptions = {
-    ro: "Maximizează venitul din apartamentul tău în Timișoara. Administrare profesională în regim hotelier cu rată de ocupare de 98%. Evaluare gratuită!",
-    en: "Maximize your apartment income in Timișoara. Professional short-term rental management with 98% occupancy rate. Free evaluation!"
+    ro: "Apartamente în regim hotelier Timișoara — randament 9%+ ROI. Administrare profesională apart-hotel, 85% ocupare anuală, 50+ proprietăți gestionate. Evaluare gratuită în 24h!",
+    en: "Short-term rental apartments Timișoara — 9%+ ROI. Professional apart-hotel management, 85% annual occupancy, 50+ managed properties. Free evaluation within 24h!"
   };
   
   const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;

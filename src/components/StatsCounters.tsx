@@ -1,6 +1,6 @@
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Users, Calendar, TrendingUp, Star } from "lucide-react";
+import { Users, Calendar, TrendingUp, Star, Building2 } from "lucide-react";
 
 const translations = {
   ro: {
@@ -8,7 +8,8 @@ const translations = {
     title: "Cifrele Care",
     titleHighlight: "Vorbesc de la Sine",
     stats: [
-      { value: 10000, suffix: "+", label: "Oaspeți Fericiți", icon: Users },
+      { value: 50, suffix: "+", label: "Proprietăți Gestionate", icon: Building2 },
+      { value: 10000, suffix: "+", label: "Oaspeți Mulțumiți", icon: Users },
       { value: 5, suffix: "+", label: "Ani de Experiență", icon: Calendar },
       { value: 85, suffix: "%", label: "Rată Ocupare/An", icon: TrendingUp },
       { value: 4.9, suffix: "★", label: "Rating Mediu", icon: Star, decimals: 1 },
@@ -19,8 +20,9 @@ const translations = {
     title: "Numbers That",
     titleHighlight: "Speak for Themselves",
     stats: [
+      { value: 50, suffix: "+", label: "Managed Properties", icon: Building2 },
       { value: 10000, suffix: "+", label: "Happy Guests", icon: Users },
-      { value: 25, suffix: "+", label: "Years Experience", icon: Calendar },
+      { value: 5, suffix: "+", label: "Years Experience", icon: Calendar },
       { value: 85, suffix: "%", label: "Occupancy Rate/Year", icon: TrendingUp },
       { value: 4.9, suffix: "★", label: "Average Rating", icon: Star, decimals: 1 },
     ],
@@ -104,7 +106,7 @@ const StatsCounters = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
           {t.stats.map((stat, index) => (
             <StatCard
               key={stat.label}
