@@ -147,7 +147,7 @@ const Hero = () => {
               {isNegotiable && <source srcSet={imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp')} type="image/webp" />}
               <img
                 src={imgSrc}
-                alt="Apartament de lux administrat în regim hotelier Timișoara"
+                alt="Apart-hotel Timișoara — investiții imobiliare și apartamente în regim hotelier cu administrare profesională"
                 className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : ''}`}
                 width={1920}
                 height={1080}

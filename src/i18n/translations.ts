@@ -18,11 +18,11 @@ export const translations = {
     
     // Hero
     hero: {
-      badge: "Vânzare · Administrare · Cazare\n1 singur sistem",
-      title: "Transformăm apartamentele în venit lunar",
-      titleMid: "fără bătăi de cap",
-      titleHighlight: "pentru proprietari și investitori.",
-      subtitle: "Vindem și cumpărăm imobile, amenajăm, administrăm și generăm venit în regim hotelier — într-un sistem complet, orientat spre profit.",
+      badge: "Apart-Hotel Timișoara\nVânzare · Administrare · Cazare",
+      title: "Investiții imobiliare Timișoara —",
+      titleMid: "apartamente în regim hotelier",
+      titleHighlight: "cu randament garantat.",
+      subtitle: "Apart-hotel management complet în Timișoara: cumpărăm, amenajăm și administrăm apartamente în regim hotelier. ROI 9%+, ocupare 85%, self check-in 24/7.",
       cta: "Află cât poate produce apartamentul tău",
       ctaSecondary: "Vreau investiție profitabilă în Timișoara",
       ctaGuests: "Pentru Oaspeți",
@@ -1110,11 +1110,11 @@ Mulțumesc!`,
     
     // Hero
     hero: {
-      badge: "Sales · Management · Accommodation\n1 single system",
-      title: "We turn apartments into monthly income",
-      titleMid: "hassle-free",
-      titleHighlight: "for owners and investors.",
-      subtitle: "We buy, renovate, manage and generate hotel-style income — in a fully profit-oriented system.",
+      badge: "Apart-Hotel Timișoara\nSales · Management · Accommodation",
+      title: "Real estate investment Timișoara —",
+      titleMid: "short-term rental apartments",
+      titleHighlight: "with guaranteed returns.",
+      subtitle: "Complete apart-hotel management in Timișoara: we buy, renovate and manage short-term rental apartments. 9%+ ROI, 85% occupancy, 24/7 self check-in.",
       cta: "Find out how much your apartment can earn",
       ctaSecondary: "I want a profitable investment in Timișoara",
       ctaGuests: "For Guests",
