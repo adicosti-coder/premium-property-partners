@@ -42,6 +42,10 @@
     <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
 
+    <!-- Preload hero LCP image — WebP with JPG fallback -->
+    <link rel="preload" as="image" type="image/webp" href="/images/hero-cinematic.webp" />
+    <link rel="preload" as="image" href="/images/hero-cinematic.jpg" />
+
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
     <style>
       /* Hero section layout — renders before external CSS loads */
@@ -153,7 +157,10 @@
     <!-- Pre-rendered hero skeleton — shows instantly before JS loads, hidden once React mounts -->
     <div id="hero-skeleton" aria-hidden="true">
       <div class="hero-bg">
-        <img src="/properties/modern-studio.jpg" alt="" width="1920" height="1080" fetchpriority="high" decoding="async" />
+        <picture>
+          <source srcset="/images/hero-cinematic.webp" type="image/webp" />
+          <img src="/images/hero-cinematic.jpg" alt="" width="1920" height="1080" fetchpriority="high" decoding="async" />
+        </picture>
         <div class="hero-overlay"></div>
       </div>
       <div class="hero-content">

@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-cinematic.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown } from "lucide-react";
+
+// Hero image served from public/ so <picture> can negotiate WebP/AVIF
+const HERO_IMAGE_PUBLIC = "/images/hero-cinematic.jpg";
 interface HeroSettings {
   videoUrl: string;
   customFallbackImage: string | null;
@@ -135,17 +137,27 @@ const Hero = () => {
           willChange: 'transform, filter'
         }}
       >
-        {/* Static hero image — always rendered, LCP element, NO fade-in */}
-        <img
-          src={heroSettings.customFallbackImage || heroImage}
-          alt="Apartament de lux administrat în regim hotelier Timișoara"
-          className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : ''}`}
-          width={1920}
-          height={1080}
-          fetchPriority="high"
-          decoding="sync"
-          loading="eager"
-        />
+        {/* Static hero image — <picture> for WebP/AVIF format negotiation, NO fade-in */}
+        {(() => {
+          const imgSrc = heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC;
+          const isNegotiable = !imgSrc.startsWith("http") && /\.(jpg|jpeg|png)$/i.test(imgSrc);
+          return (
+            <picture>
+              {isNegotiable && <source srcSet={imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.avif')} type="image/avif" />}
+              {isNegotiable && <source srcSet={imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp')} type="image/webp" />}
+              <img
+                src={imgSrc}
+                alt="Apartament de lux administrat în regim hotelier Timișoara"
+                className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : ''}`}
+                width={1920}
+                height={1080}
+                fetchPriority="high"
+                decoding="sync"
+                loading="eager"
+              />
+            </picture>
+          );
+        })()}
         {/* Video — hidden on mobile via CSS media query, loaded only on desktop */}
         {shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
