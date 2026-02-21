@@ -135,11 +135,11 @@ const Hero = () => {
           willChange: 'transform, filter'
         }}
       >
-        {/* Static hero image — always rendered, LCP element */}
+        {/* Static hero image — always rendered, LCP element, NO fade-in */}
         <img
           src={heroSettings.customFallbackImage || heroImage}
           alt="Apartament de lux administrat în regim hotelier Timișoara"
-          className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : 'opacity-100'} transition-opacity duration-700`}
+          className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : ''}`}
           width={1920}
           height={1080}
           fetchPriority="high"

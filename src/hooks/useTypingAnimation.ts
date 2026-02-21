@@ -21,21 +21,11 @@ const useAnimationEnabled = () => {
       }
     };
 
-    // Listen for storage changes (from other tabs or same-tab updates)
+    // Listen for storage changes (cross-tab)
     window.addEventListener('storage', handleStorageChange);
-    
-    // Also poll for changes (for same-tab updates)
-    const interval = setInterval(() => {
-      const stored = localStorage.getItem("animationsEnabled");
-      if (stored !== null) {
-        const newValue = stored === "true";
-        setEnabled(prev => prev !== newValue ? newValue : prev);
-      }
-    }, 100);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
