@@ -141,26 +141,23 @@ const Hero = () => {
           decoding="async"
           loading="eager"
         />
-        {/* Video - only load when shouldLoadVideo is true and conditions are met */}
+        {/* Video - deferred, desktop-only, muted background loop */}
         {shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
             autoPlay
             muted
             loop
             playsInline
-            preload="none"
+            preload="metadata"
+            disablePictureInPicture
+            disableRemotePlayback
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onError={(e) => { console.warn('[Hero] Video failed to load/decode', (e.target as HTMLVideoElement)?.error); setVideoError(true); }}
+            onError={() => { setVideoError(true); }}
             onLoadedData={() => setVideoLoaded(true)}
             onAbort={() => setVideoError(true)}
-            onStalled={() => { /* allow browser to recover, don't treat as fatal */ }}
             poster={heroSettings.customFallbackImage || heroImage}
           >
-            <source
-              src={heroSettings.videoUrl}
-              type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
-              onError={() => { console.warn('[Hero] Source element error'); setVideoError(true); }}
-            />
+            <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
         )}
       </div>
