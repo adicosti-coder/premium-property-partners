@@ -1,13 +1,8 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useState } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
-import { generateHomepageSchemas, generateFAQSchema, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
-import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
@@ -126,134 +121,37 @@ const BottomFoldSection = ({ language }: { language: string }) => {
   );
 };
 
+// Deferred SEO — loaded after first paint to avoid blocking render
+const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
+
 const Index = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   
   // Visibility gates for heavy sections
   const [heavyRef, heavyVisible] = useLazyVisible("600px");
-  
-  // Session analytics
-  const { trackElementView } = useSessionAnalytics();
-  const { trackFunnelStep, trackFunnelComplete } = useConversionFunnel("homepage_journey");
 
-  // Track key sections viewed
+  // Defer SEO/analytics to after first paint
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const sectionId = entry.target.id;
-            if (sectionId) {
-              trackElementView(sectionId, "section");
-              
-              // Funnel steps
-              const funnelSteps: Record<string, number> = {
-                "beneficii": 1,
-                "calculator": 2,
-                "portofoliu": 3,
-              };
-              if (funnelSteps[sectionId]) {
-                trackFunnelStep(sectionId, funnelSteps[sectionId]);
-              }
-            }
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
+    const id = requestIdleCallback?.(() => setMounted(true)) ?? setTimeout(() => setMounted(true), 100);
+    return () => { if (typeof id === 'number') cancelIdleCallback?.(id) ?? clearTimeout(id); };
+  }, []);
 
-    // Observe key sections
-    ["beneficii", "calculator", "portofoliu", "oaspeti-preview"].forEach((id) => {
-      const element = document.getElementById(id);
-      if (element) observer.observe(element);
-    });
-
-    return () => observer.disconnect();
-  }, [trackElementView, trackFunnelStep]);
-  
-  // Fetch published reviews for Schema.org
-  const { data: reviews } = useQuery({
-    queryKey: ["homepage-reviews-schema"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("property_reviews")
-        .select(`
-          id,
-          guest_name,
-          rating,
-          content,
-          title,
-          created_at,
-          property_id,
-          properties:property_id (name)
-        `)
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      
-      return (data || []).map((review) => ({
-        id: review.id,
-        guest_name: review.guest_name,
-        rating: review.rating,
-        content: review.content,
-        title: review.title,
-        created_at: review.created_at,
-        property_name: (review.properties as { name: string } | null)?.name,
-      })) as DatabaseReview[];
-    },
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    placeholderData: keepPreviousData,
-  });
-  
-  // Generate FAQ schema with the updated premium questions
-  const faqSchema = generateFAQSchema([
-    { 
-      question: language === "ro" 
-        ? "Care este profitul real pe care îl pot obține din apartamentul meu?" 
-        : "What is the real profit I can get from my apartment?",
-      answer: language === "ro"
-        ? "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%. Prin strategiile noastre de optimizare, vizăm un ROI brut de 10% pentru proprietăți cu locații strategice."
-        : "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%. Through our optimization strategies, we target a gross ROI of 10% for properties with strategic locations."
-    },
-    {
-      question: language === "ro" 
-        ? "Ce servicii sunt incluse în comisionul de management?" 
-        : "What services are included in the management fee?",
-      answer: language === "ro"
-        ? "Oferim un pachet complet care include administrarea rezervărilor pe toate platformele (Airbnb, Booking), comunicarea cu oaspeții și coordonarea curățeniei. Implementăm soluții de Self Check-in digitalizat și monitorizare activă a proprietății."
-        : "We offer a complete package that includes booking management across all platforms (Airbnb, Booking), guest communication, and cleaning coordination. We implement digital Self Check-in solutions and active property monitoring."
-    },
-    {
-      question: language === "ro" 
-        ? "Cum asigurați transparența veniturilor și a costurilor?" 
-        : "How do you ensure transparency of revenues and costs?",
-      answer: language === "ro"
-        ? "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-20% comision management + 15-23% comision platforme). Modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare."
-        : "Owners receive detailed monthly reports, where commissions are clearly explained (15-20% management fee + 15-23% platform fee). Our commission-based model motivates us to maximize your occupancy rate."
-    },
-  ]);
-  
-  const speakableSchema = generateSpeakableSchema(
-    "RealTrust & ApArt Hotel Timișoara",
-    "https://realtrust.ro",
-    [".page-summary", "h1", "h2", ".faq-section"],
-  );
-
-  const homepageSchemas = [
-    ...generateHomepageSchemas(reviews),
-    faqSchema,
-    speakableSchema,
-  ];
+  // Defer session analytics to after interaction
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      import("@/hooks/useSessionAnalytics").catch(() => {});
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />
+      {mounted && (
+        <Suspense fallback={null}>
+          <DeferredHomeSEO language={language} />
+        </Suspense>
+      )}
       <Header />
       <main>
         {/* Hero - Entry Point (above-fold, eager) */}

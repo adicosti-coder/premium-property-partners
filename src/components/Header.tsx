@@ -1,17 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-react";
-import PropertyCodeSearch from "./PropertyCodeSearch";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import PromoBanner from "./PromoBanner";
 
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/lib/supabaseClient";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
-import AnimationToggle from "./AnimationToggle";
-import NotificationBell from "./NotificationBell";
+
+// Lazy-load non-critical header sub-components
+const PromoBanner = lazy(() => import("./PromoBanner"));
+const AnimationToggle = lazy(() => import("./AnimationToggle"));
+const NotificationBell = lazy(() => import("./NotificationBell"));
+const PropertyCodeSearch = lazy(() => import("./PropertyCodeSearch"));
 import {
   Tooltip,
   TooltipContent,
@@ -163,8 +165,8 @@ const Header = () => {
       />
       
       <header className="fixed top-0 left-0 right-0 z-50">
-      {/* Promo Banner - positioned at top */}
-      <PromoBanner />
+      {/* Promo Banner - positioned at top, lazy loaded */}
+      <Suspense fallback={null}><PromoBanner /></Suspense>
       
       {/* Premium Benefits Banner for Unauthenticated Users - Hidden on mobile to prevent overlap */}
       {isAuthenticated === false && showPremiumBanner && (
@@ -304,9 +306,9 @@ const Header = () => {
               </Link>
             )}
             {/* Notifications - hidden on mobile, visible md+ */}
-            <div className="hidden md:block"><NotificationBell /></div>
+            <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>
             {/* Animation toggle - hidden on mobile */}
-            <div className="hidden md:block"><AnimationToggle /></div>
+            <div className="hidden md:block"><Suspense fallback={null}><AnimationToggle /></Suspense></div>
             {/* Theme toggle - visible on all screens */}
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
@@ -349,6 +351,7 @@ const Header = () => {
           style={{ transformOrigin: 'top' }}
         >
           {mobileMenuOpen && (
+              <Suspense fallback={null}>
               <div className="flex flex-col gap-4">
                 
                 {/* Property Code Search - Mobile */}
@@ -417,6 +420,7 @@ const Header = () => {
                   <LanguageSwitcher />
                 </div>
               </div>
+              </Suspense>
           )}
         </nav>
       </div>

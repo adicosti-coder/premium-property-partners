@@ -38,8 +38,8 @@ const GlobalConversionWidgets = ({
   const [phase2Ready, setPhase2Ready] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase1Ready(true), 1500);
-    const t2 = setTimeout(() => setPhase2Ready(true), 4000);
+    const t1 = setTimeout(() => setPhase1Ready(true), 3000);
+    const t2 = setTimeout(() => setPhase2Ready(true), 8000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
