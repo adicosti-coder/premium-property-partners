@@ -23,7 +23,7 @@ const TeaserCard = ({
   return (
     <div
       className={cn(
-        "group bg-card backdrop-blur-sm rounded-2xl border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant",
+        "group bg-card backdrop-blur-sm rounded-2xl border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant hover:-translate-y-1 hover:scale-[1.02] cursor-default",
         isCompact ? "p-4" : "p-6",
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}

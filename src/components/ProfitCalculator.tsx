@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2, Crown, Users } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Tooltip as RechartsTooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Tooltip as ShadTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import LeadCaptureForm from "./LeadCaptureForm";
 import AuthGateOverlay from "./AuthGateOverlay";
 import PremiumBenefitsBadge from "./PremiumBenefitsBadge";
@@ -183,6 +184,7 @@ const ProfitCalculator = () => {
               slidersVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'
             }`}
           >
+          <TooltipProvider delayDuration={0}>
             <h3 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
               <Home className="w-5 h-5 text-primary" />
               {t.calculator.propertyParams}
@@ -194,17 +196,26 @@ const ProfitCalculator = () => {
                 <label className="text-foreground font-medium">{t.calculator.adr}</label>
                 <span className="text-primary font-bold text-xl">{adr} €</span>
               </div>
-              <Slider
-                value={[adr]}
-                onValueChange={(value) => {
-                  setAdr(value[0]);
-                  handleSliderInteraction();
-                }}
-                min={30}
-                max={200}
-                step={5}
-                className="w-full"
-              />
+              <ShadTooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Slider
+                      value={[adr]}
+                      onValueChange={(value) => {
+                        setAdr(value[0]);
+                        handleSliderInteraction();
+                      }}
+                      min={30}
+                      max={200}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {language === 'ro' ? `Preț mediu pe noapte: ${adr} €` : `Average nightly rate: ${adr} €`}
+                </TooltipContent>
+              </ShadTooltip>
               <p className="text-sm text-muted-foreground">{t.calculator.adrDescription}</p>
             </div>
 
@@ -214,17 +225,26 @@ const ProfitCalculator = () => {
                 <label className="text-foreground font-medium">{t.calculator.occupancy}</label>
                 <span className="text-primary font-bold text-xl">{occupancy}%</span>
               </div>
-              <Slider
-                value={[occupancy]}
-                onValueChange={(value) => {
-                  setOccupancy(value[0]);
-                  handleSliderInteraction();
-                }}
-                min={30}
-                max={100}
-                step={5}
-                className="w-full"
-              />
+              <ShadTooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Slider
+                      value={[occupancy]}
+                      onValueChange={(value) => {
+                        setOccupancy(value[0]);
+                        handleSliderInteraction();
+                      }}
+                      min={30}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {language === 'ro' ? `${occupancy}% = ${Math.round((occupancy / 100) * 30)} zile/lună` : `${occupancy}% = ${Math.round((occupancy / 100) * 30)} days/month`}
+                </TooltipContent>
+              </ShadTooltip>
               <p className="text-sm text-muted-foreground">{t.calculator.occupancyDescription}</p>
             </div>
 
@@ -234,17 +254,26 @@ const ProfitCalculator = () => {
                 <label className="text-foreground font-medium">{t.calculator.avgStay}</label>
                 <span className="text-primary font-bold text-xl">{avgStayDuration} {t.calculator.days}</span>
               </div>
-              <Slider
-                value={[avgStayDuration]}
-                onValueChange={(value) => {
-                  setAvgStayDuration(value[0]);
-                  handleSliderInteraction();
-                }}
-                min={1}
-                max={14}
-                step={1}
-                className="w-full"
-              />
+              <ShadTooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Slider
+                      value={[avgStayDuration]}
+                      onValueChange={(value) => {
+                        setAvgStayDuration(value[0]);
+                        handleSliderInteraction();
+                      }}
+                      min={1}
+                      max={14}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {language === 'ro' ? `Sejur mediu: ${avgStayDuration} nopți` : `Average stay: ${avgStayDuration} nights`}
+                </TooltipContent>
+              </ShadTooltip>
             </div>
 
             <div className="border-t border-border pt-6">
@@ -311,6 +340,7 @@ const ProfitCalculator = () => {
                 <p className="text-sm text-muted-foreground">{t.calculator.platformFeeDescription}</p>
               </div>
             </div>
+          </TooltipProvider>
           </div>
 
           {/* Results Section */}
@@ -521,7 +551,7 @@ const ProfitCalculator = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip 
+                          <RechartsTooltip 
                             formatter={(value: number) => [`${value} €`, '']}
                             contentStyle={{ 
                               backgroundColor: 'hsl(var(--card))', 
@@ -634,15 +664,22 @@ const ProfitCalculator = () => {
                   </div>
                 </div>
 
-                {/* Lead Capture CTA */}
-                <Button 
-                  onClick={() => setIsLeadFormOpen(true)}
-                  className="w-full py-6 text-lg"
-                  size="lg"
-                >
-                  <FileText className="w-5 h-5 mr-2" />
-                  {t.calculator.getAnalysis}
-                </Button>
+                {/* Lead Capture CTA — clarify what happens next */}
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => setIsLeadFormOpen(true)}
+                    className="w-full py-6 text-lg"
+                    size="lg"
+                  >
+                    <FileText className="w-5 h-5 mr-2" />
+                    {t.calculator.getAnalysis}
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    {language === 'ro' 
+                      ? '📋 Completezi un scurt formular → Primești analiza personalizată pe WhatsApp în 24h' 
+                      : '📋 Fill a short form → Get your personalized analysis via WhatsApp within 24h'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
