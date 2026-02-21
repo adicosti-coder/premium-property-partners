@@ -749,3 +749,27 @@
   min-height: 44px;
   min-width: 44px;
 }
+
+/* === MOBILE PERFORMANCE: disable heavy animations === */
+@media (max-width: 767px) {
+  /* Kill all framer-motion and CSS animations on mobile for TBT reduction */
+  .animate-hero-zoom,
+  .animate-lens-flare,
+  .animate-flare-orb,
+  .animate-shimmer,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-glow-pulse,
+  .film-grain,
+  .gold-gradient-shimmer,
+  .animate-cinematic-zoom {
+    animation: none !important;
+  }
+
+  /* Disable backdrop-blur on mobile (GPU-heavy) */
+  .glass,
+  .glass-light {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
