@@ -274,7 +274,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
               )}
             </AnimatePresence>
 
-            {/* Main FAB Button */}
+            {/* Main FAB Button — clear label, no misleading notification badge */}
             <motion.button
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -284,11 +284,12 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                 toggleMenu();
               }}
               className={cn(
-                "w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
+                "relative w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
                 isOpen 
-                  ? "bg-muted text-foreground rotate-0" 
+                  ? "bg-muted text-foreground" 
                   : "bg-primary text-primary-foreground"
               )}
+              aria-label={isOpen ? (language === 'ro' ? "Închide meniu" : "Close menu") : (language === 'ro' ? "Meniu rapid" : "Quick menu")}
             >
               <motion.div
                 animate={{ rotate: isOpen ? 180 : 0 }}
@@ -296,6 +297,12 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
               >
                 {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </motion.div>
+              {/* Subtle text label under FAB when closed */}
+              {!isOpen && (
+                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-foreground/60 whitespace-nowrap">
+                  {language === 'ro' ? 'Meniu' : 'Menu'}
+                </span>
+              )}
             </motion.button>
 
             {/* Backdrop */}
