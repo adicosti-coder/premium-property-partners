@@ -38,8 +38,9 @@
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-    <!-- Preload hero image for faster LCP (only critical above-the-fold asset) -->
-    <link rel="preload" as="image" href="/src/assets/hero-cinematic.jpg" fetchpriority="high" />
+    <!-- Hero image is imported in Hero.tsx and served via Vite's asset pipeline.
+         The <img> tag already uses fetchpriority="high" + loading="eager" for optimal LCP.
+         No <link rel="preload"> needed – Vite hashes the filename at build time. -->
     <!-- NOTE: Do NOT preload slider/gallery images (e.g. apt-03) – they are below the fold -->
 
     <!-- Preconnect to critical origins -->
