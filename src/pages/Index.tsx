@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
+import { useLazyVisible } from "@/hooks/useLazyVisible";
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
 import { generateHomepageSchemas, generateFAQSchema, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -14,7 +15,6 @@ const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const PartnerLogos = lazy(() => import("@/components/PartnerLogos"));
 const TrustBadges = lazy(() => import("@/components/TrustBadges"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
-const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const ContactSection = lazy(() => import("@/components/ContactSection"));
@@ -30,6 +30,10 @@ const ExternalTrustSeals = lazy(() => import("@/components/ExternalTrustSeals"))
 const DualServicePaths = lazy(() => import("@/components/DualServicePaths"));
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 
+// Heavy components: only loaded when user scrolls near them
+// PropertyGallery pulls in mapbox-gl (455KB), PropertyCompareModal pulls in jsPDF (132KB)
+const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
+
 // Hub Teaser Components
 const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
@@ -38,6 +42,9 @@ const AboutTeaser = lazy(() => import("@/components/hub/AboutTeaser"));
 
 const Index = () => {
   const { t, language } = useLanguage();
+  
+  // Visibility gates for heavy sections
+  const [heavyRef, heavyVisible] = useLazyVisible("600px");
   
   // Session analytics
   const { trackElementView } = useSessionAnalytics();
@@ -171,7 +178,7 @@ const Index = () => {
           <StatsCounters />
         </Suspense>
         
-        {/* Below-fold: lazy loaded */}
+        {/* Near-fold: lazy loaded together */}
         <Suspense fallback={null}>
           {/* Calculator - immediately after Hero for max conversion */}
           <section id="calculator">
@@ -188,72 +195,82 @@ const Index = () => {
           <PartnerLogos />
           <TrustBadges />
 
-        {/* CRO: Clear distinction between Owner vs Investor paths */}
-        <DualServicePaths />
+          {/* CRO: Clear distinction between Owner vs Investor paths */}
+          <DualServicePaths />
 
-        {/* CRO: Visual ROI Case Study - Classic vs ApArt Hotel */}
-        <ROICaseStudy />
-        
-        {/* Owners Teaser Section */}
-        <section id="beneficii">
-          <OwnersTeaser />
-        </section>
-        
-        {/* Guests Teaser Section with Property Preview */}
-        <section id="oaspeti-preview">
-          <GuestsTeaser />
-        </section>
-        
-        {/* Property Portfolio - Keep as showcase */}
-        <section id="portofoliu">
-          <PropertyGallery />
-        </section>
-        
-        {/* Social Proof - mutat imediat după portofoliu pentru impact maxim */}
-          <Testimonials />
+          {/* CRO: Visual ROI Case Study - Classic vs ApArt Hotel */}
+          <ROICaseStudy />
           
-          {/* Booking.com Reviews Widget */}
-          <BookingReviewsWidget />
+          {/* Owners Teaser Section */}
+          <section id="beneficii">
+            <OwnersTeaser />
+          </section>
+          
+          {/* Guests Teaser Section with Property Preview */}
+          <section id="oaspeti-preview">
+            <GuestsTeaser />
+          </section>
+        </Suspense>
+
+        {/* Heavy section: PropertyGallery (mapbox 455KB + jsPDF 132KB)
+            Only starts loading when user scrolls within 600px */}
+        <div ref={heavyRef}>
+          {heavyVisible && (
+            <Suspense fallback={<div className="min-h-[400px]" />}>
+              <section id="portofoliu">
+                <PropertyGallery />
+              </section>
+              
+              {/* Social Proof - after portfolio for max impact */}
+              <Testimonials />
+              
+              {/* Booking.com Reviews Widget */}
+              <BookingReviewsWidget />
+            </Suspense>
+          )}
+        </div>
         
-        {/* External Trust Seals */}
-        <ExternalTrustSeals />
-        
-        {/* About Teaser */}
-        <AboutTeaser />
-        
-        {/* Blog Preview */}
-        <BlogPreview />
-        
-        {/* Investor Guide CTA */}
-        <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
-          <div className="container mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
-              {language === "ro" ? "Investește Inteligent în Timișoara" : "Invest Smart in Timișoara"}
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-              {language === "ro" 
-                ? "Descarcă ghidul nostru gratuit cu analize de piață, randamente reale și strategii de maximizare a profitului pentru 2026."
-                : "Download our free guide with market analysis, real yields, and profit maximization strategies for 2026."}
-            </p>
-            <InvestorGuideButton size="lg" className="px-8 py-6 text-lg" />
-          </div>
-        </section>
-        
-        {/* Referral Banner */}
-        <section className="py-12">
-          <div className="container mx-auto px-6">
-            <ReferralBanner variant="hero" />
-          </div>
-        </section>
-        
-        {/* FAQ - Keep for SEO */}
-        <FAQ />
-        
-        {/* Contact */}
-        <ContactSection />
-        
-        {/* Final CTA */}
-        <CTA />
+        {/* Rest of the page - separate Suspense */}
+        <Suspense fallback={null}>
+          {/* External Trust Seals */}
+          <ExternalTrustSeals />
+          
+          {/* About Teaser */}
+          <AboutTeaser />
+          
+          {/* Blog Preview */}
+          <BlogPreview />
+          
+          {/* Investor Guide CTA */}
+          <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+            <div className="container mx-auto px-6 text-center">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+                {language === "ro" ? "Investește Inteligent în Timișoara" : "Invest Smart in Timișoara"}
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+                {language === "ro" 
+                  ? "Descarcă ghidul nostru gratuit cu analize de piață, randamente reale și strategii de maximizare a profitului pentru 2026."
+                  : "Download our free guide with market analysis, real yields, and profit maximization strategies for 2026."}
+              </p>
+              <InvestorGuideButton size="lg" className="px-8 py-6 text-lg" />
+            </div>
+          </section>
+          
+          {/* Referral Banner */}
+          <section className="py-12">
+            <div className="container mx-auto px-6">
+              <ReferralBanner variant="hero" />
+            </div>
+          </section>
+          
+          {/* FAQ - Keep for SEO */}
+          <FAQ />
+          
+          {/* Contact */}
+          <ContactSection />
+          
+          {/* Final CTA */}
+          <CTA />
         </Suspense>
       </main>
       <Suspense fallback={null}>

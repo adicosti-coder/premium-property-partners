@@ -12,6 +12,7 @@ const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
 const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
 const ReferralPopup = lazy(() => import("@/components/ReferralPopup"));
 const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
+const InlineCalculatorPopup = lazy(() => import("@/components/InlineCalculatorPopup"));
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -56,6 +57,7 @@ const GlobalConversionWidgets = ({
           {showVoiceWidget && <ElevenLabsWidgetLazy />}
           {showExitIntent && <ExitIntentPopup />}
           <ReferralPopup />
+          <InlineCalculatorPopup />
         </Suspense>
       )}
     </>
