@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-react";
 import PropertyCodeSearch from "./PropertyCodeSearch";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PromoBanner from "./PromoBanner";
 
@@ -12,7 +12,6 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import AnimationToggle from "./AnimationToggle";
 import NotificationBell from "./NotificationBell";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Tooltip,
   TooltipContent,
@@ -157,51 +156,27 @@ const Header = () => {
 
   return (
     <>
-      {/* Backdrop blur when mobile menu is open */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            className="fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 animate-overlay-pulse"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* Backdrop blur when mobile menu is open — CSS only, no framer-motion */}
+      <div
+        className={`fixed inset-0 bg-gradient-to-b from-amber-900/50 via-black/50 to-amber-900/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
       
       <header className="fixed top-0 left-0 right-0 z-50">
       {/* Promo Banner - positioned at top */}
       <PromoBanner />
       
       {/* Premium Benefits Banner for Unauthenticated Users - Hidden on mobile to prevent overlap */}
-      <AnimatePresence>
-        {isAuthenticated === false && showPremiumBanner && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="hidden md:block bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border-b border-gold/20 overflow-hidden"
+      {isAuthenticated === false && showPremiumBanner && (
+          <div
+            className="hidden md:block bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border-b border-gold/20 overflow-hidden animate-fade-up"
           >
             <div className="container mx-auto px-4 py-2">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <motion.div
-                    animate={{ 
-                      rotate: [0, 10, -10, 0],
-                      scale: [1, 1.1, 1]
-                    }}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity, 
-                      repeatDelay: 3 
-                    }}
-                    className="flex-shrink-0"
-                  >
+                  <div className="flex-shrink-0">
                     <Crown className="w-4 h-4 text-gold" />
-                  </motion.div>
+                  </div>
                   
                   <div className="flex items-center gap-2 overflow-hidden">
                     <span className="text-xs md:text-sm font-medium text-foreground truncate">
@@ -210,7 +185,6 @@ const Header = () => {
                         : "Unlock 50+ exclusive locations & simulation history"}
                     </span>
                     
-                    {/* Desktop: Show more benefits */}
                     <div className="hidden lg:flex items-center gap-2">
                       <span className="text-gold/50">•</span>
                       <TooltipProvider>
@@ -278,9 +252,8 @@ const Header = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       <div className="glass border-b border-border/50 dark:border-border shadow-sm dark:shadow-none">
         <div className="container mx-auto px-4 sm:px-6">
@@ -370,43 +343,28 @@ const Header = () => {
         </div>
         </div>
         {/* Mobile Navigation */}
-        <AnimatePresence>
+        {/* Mobile Navigation — CSS transitions only */}
+        <nav
+          className={`py-4 px-4 border-t border-border origin-top overflow-hidden bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0'}`}
+          style={{ transformOrigin: 'top' }}
+        >
           {mobileMenuOpen && (
-             <motion.nav 
-              className="py-4 px-4 border-t border-border origin-top overflow-hidden bg-background"
-              initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
-              animate={{ opacity: 1, height: "auto", scaleY: 1 }}
-              exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
               <div className="flex flex-col gap-4">
                 
                 {/* Property Code Search - Mobile */}
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="pb-3 border-b border-border/50"
-                >
+                <div className="pb-3 border-b border-border/50">
                   <PropertyCodeSearch className="w-full" />
-                </motion.div>
+                </div>
 
-                {navLinks.map((link, index) => {
+                {navLinks.map((link) => {
                   const isActive = activeSection === link.href;
                   const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
                   const activeClasses = isActive 
-                    ? "text-primary font-semibold translate-x-2 scale-105 animate-glow-pulse before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
+                    ? "text-primary font-semibold translate-x-2 scale-105 before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
                     : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
 
                   return (
-                    <motion.div
-                      key={link.href}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                    >
+                    <div key={link.href}>
                       {link.isHome ? (
                         <a
                           href={link.href}
@@ -432,17 +390,12 @@ const Header = () => {
                           {link.label}
                         </a>
                       )}
-                    </motion.div>
+                    </div>
                   );
                 })}
                 
                 {/* Admin link in mobile menu */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2, delay: navLinks.length * 0.05 }}
-                >
+                <div>
                   <Link
                     to="/auth"
                     className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
@@ -451,16 +404,10 @@ const Header = () => {
                     <Shield className="w-4 h-4" />
                     Admin
                   </Link>
-                </motion.div>
+                </div>
 
                 {/* Mobile settings row */}
-                <motion.div 
-                  className="flex items-center gap-2 pt-4 border-t border-border"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2, delay: (navLinks.length + 1) * 0.05 }}
-                >
+                <div className="flex items-center gap-2 pt-4 border-t border-border">
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
@@ -468,11 +415,10 @@ const Header = () => {
                   <AnimationToggle />
                   <ThemeToggle />
                   <LanguageSwitcher />
-                </motion.div>
+                </div>
               </div>
-            </motion.nav>
           )}
-        </AnimatePresence>
+        </nav>
       </div>
       
       </header>
