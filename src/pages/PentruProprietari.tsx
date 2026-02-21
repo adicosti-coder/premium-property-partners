@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { 
   Building2, 
@@ -16,39 +17,39 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingReferralButton from "@/components/FloatingReferralButton";
-import OwnerBenefits from "@/components/OwnerBenefits";
-import TrustBadges from "@/components/TrustBadges";
-import FinancialTransparency from "@/components/FinancialTransparency";
-import PartnershipTimeline from "@/components/PartnershipTimeline";
-import ProfitCalculator from "@/components/ProfitCalculator";
-import RentalIncomeCalculator from "@/components/RentalIncomeCalculator";
-import AdvancedRentalCalculator from "@/components/AdvancedRentalCalculator";
-import HowItWorks from "@/components/HowItWorks";
-import WhyUs from "@/components/WhyUs";
-import Testimonials from "@/components/Testimonials";
-import VideoTestimonials from "@/components/VideoTestimonials";
-import FAQ from "@/components/FAQ";
-import ReferralBanner from "@/components/ReferralBanner";
 import SEOHead from "@/components/SEOHead";
-import PageSummary from "@/components/PageSummary";
-import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import ServiceOptionsComparison from "@/components/ServiceOptionsComparison";
-import ServiceGuaranteesGrid from "@/components/ServiceGuaranteesGrid";
-import ProcessStepsTimeline from "@/components/ProcessStepsTimeline";
-// New components from realtrust.ro
-import QuickValueBanner from "@/components/QuickValueBanner";
-import PropertyTypeSelector from "@/components/PropertyTypeSelector";
-import PropertyQualification from "@/components/PropertyQualification";
-import ServiceChainAF from "@/components/ServiceChainAF";
-import DIYvsProfessional from "@/components/DIYvsProfessional";
-import ChannelLogos from "@/components/ChannelLogos";
-import LeadMagnetBanner from "@/components/LeadMagnetBanner";
-import InvestorGuideButton from "@/components/InvestorGuideButton";
-import FloatingInvestorGuide from "@/components/FloatingInvestorGuide";
 import { generatePropertyManagementServiceSchema, generateSpeakableSchema } from "@/utils/schemaGenerators";
+
+const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
+const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
+const TrustBadges = lazy(() => import("@/components/TrustBadges"));
+const FinancialTransparency = lazy(() => import("@/components/FinancialTransparency"));
+const PartnershipTimeline = lazy(() => import("@/components/PartnershipTimeline"));
+const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
+const RentalIncomeCalculator = lazy(() => import("@/components/RentalIncomeCalculator"));
+const AdvancedRentalCalculator = lazy(() => import("@/components/AdvancedRentalCalculator"));
+const HowItWorks = lazy(() => import("@/components/HowItWorks"));
+const WhyUs = lazy(() => import("@/components/WhyUs"));
+const Testimonials = lazy(() => import("@/components/Testimonials"));
+const VideoTestimonials = lazy(() => import("@/components/VideoTestimonials"));
+const FAQ = lazy(() => import("@/components/FAQ"));
+const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
+const PageSummary = lazy(() => import("@/components/PageSummary"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const ServiceOptionsComparison = lazy(() => import("@/components/ServiceOptionsComparison"));
+const ServiceGuaranteesGrid = lazy(() => import("@/components/ServiceGuaranteesGrid"));
+const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
+const QuickValueBanner = lazy(() => import("@/components/QuickValueBanner"));
+const PropertyTypeSelector = lazy(() => import("@/components/PropertyTypeSelector"));
+const PropertyQualification = lazy(() => import("@/components/PropertyQualification"));
+const ServiceChainAF = lazy(() => import("@/components/ServiceChainAF"));
+const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
+const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
+const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
+const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
+const FloatingInvestorGuide = lazy(() => import("@/components/FloatingInvestorGuide"));
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
@@ -156,6 +157,7 @@ const PentruProprietari = () => {
         ]}
       />
       <Header />
+      <Suspense fallback={null}>
       
       {/* AI-friendly page summary for extraction */}
       <div className="container mx-auto px-6 pt-24">
@@ -491,6 +493,7 @@ const PentruProprietari = () => {
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />
+      </Suspense>
     </div>
   );
 };

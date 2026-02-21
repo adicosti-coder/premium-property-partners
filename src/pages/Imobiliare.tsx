@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import RealEstateContactForm from "@/components/RealEstateContactForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,12 +29,14 @@ import {
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
-import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
-import InvestmentYieldCalculator from "@/components/InvestmentYieldCalculator";
-import PropertyGallery from "@/components/PropertyGallery";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
+
+const RealEstateContactForm = lazy(() => import("@/components/RealEstateContactForm"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const InvestmentYieldCalculator = lazy(() => import("@/components/InvestmentYieldCalculator"));
+const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
 
 interface ListingProperty {
   id: string;
@@ -178,6 +179,7 @@ const Imobiliare = () => {
         jsonLd={[realEstateAgentSchema, breadcrumbSchema]}
       />
       <Header />
+      <Suspense fallback={null}>
       
       {/* Breadcrumb */}
       <div className="container mx-auto px-6 pt-24">
@@ -667,6 +669,7 @@ const Imobiliare = () => {
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />
+      </Suspense>
     </div>
   );
 };

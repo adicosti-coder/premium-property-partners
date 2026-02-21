@@ -1,13 +1,15 @@
+import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
-import FacilitiesShowcase from "@/components/FacilitiesShowcase";
-import DigitalHouseManual from "@/components/DigitalHouseManual";
-import CleaningStandards from "@/components/CleaningStandards";
-import PropertyMap from "@/components/PropertyMap";
-import InteractiveMapWithPOI from "@/components/InteractiveMapWithPOI";
-import QuickAvailabilitySearch from "@/components/QuickAvailabilitySearch";
-import CityGuideSection from "@/components/CityGuideSection";
+
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const FacilitiesShowcase = lazy(() => import("@/components/FacilitiesShowcase"));
+const DigitalHouseManual = lazy(() => import("@/components/DigitalHouseManual"));
+const CleaningStandards = lazy(() => import("@/components/CleaningStandards"));
+const PropertyMap = lazy(() => import("@/components/PropertyMap"));
+const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
+const QuickAvailabilitySearch = lazy(() => import("@/components/QuickAvailabilitySearch"));
+const CityGuideSection = lazy(() => import("@/components/CityGuideSection"));
 import SEOHead from "@/components/SEOHead";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -283,6 +285,7 @@ const PentruOaspeti = () => {
       />
       <Header />
       
+      <Suspense fallback={null}>
       <main className="pt-20">
         {/* Hero Section */}
         <section 
@@ -830,6 +833,7 @@ const PentruOaspeti = () => {
 
       <Footer />
       <GlobalConversionWidgets />
+      </Suspense>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
@@ -9,22 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getPropertyBySlug } from "@/data/properties";
-import BookingForm from "@/components/BookingForm";
-import StayCalculator from "@/components/StayCalculator";
-import AvailabilityCalendar from "@/components/AvailabilityCalendar";
-import PriceCompareWidget from "@/components/PriceCompareWidget";
-import SmartFeaturesBadge from "@/components/SmartFeaturesBadge";
-import PropertyReviews from "@/components/PropertyReviews";
-import GuestReviewForm from "@/components/GuestReviewForm";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
-import InvestorGuideButton from "@/components/InvestorGuideButton";
-import PropertyFAQ from "@/components/PropertyFAQ";
-import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
-import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+
+const BookingForm = lazy(() => import("@/components/BookingForm"));
+const StayCalculator = lazy(() => import("@/components/StayCalculator"));
+const AvailabilityCalendar = lazy(() => import("@/components/AvailabilityCalendar"));
+const PriceCompareWidget = lazy(() => import("@/components/PriceCompareWidget"));
+const SmartFeaturesBadge = lazy(() => import("@/components/SmartFeaturesBadge"));
+const PropertyReviews = lazy(() => import("@/components/PropertyReviews"));
+const GuestReviewForm = lazy(() => import("@/components/GuestReviewForm"));
+const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
+const PropertyFAQ = lazy(() => import("@/components/PropertyFAQ"));
+const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
@@ -454,11 +455,12 @@ const PropertyDetail = () => {
           </div>
         </div>
       </main>
-
-
+      <Suspense fallback={null}>
+      
       <Footer />
       <BookingForm isOpen={bookingOpen} onClose={() => setBookingOpen(false)} propertyName={property.name} />
       <GlobalConversionWidgets showExitIntent={false} />
+      </Suspense>
     </div>
   );
 };

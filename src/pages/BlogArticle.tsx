@@ -1,23 +1,24 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useArticleViewTracking } from "@/hooks/useArticleViewTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import BlogComments from "@/components/BlogComments";
-import BlogNewsletterCTA from "@/components/BlogNewsletterCTA";
-import RelatedArticles from "@/components/RelatedArticles";
-import SocialShareButtons from "@/components/blog/SocialShareButtons";
-import BlogArticleCTA from "@/components/blog/BlogArticleCTA";
-import ArticleTableOfContents from "@/components/blog/ArticleTableOfContents";
-import ArticleTLDR from "@/components/blog/ArticleTLDR";
-import InternalLinks from "@/components/blog/InternalLinks";
-import ArticleFAQ from "@/components/blog/ArticleFAQ";
 import SEOHead from "@/components/SEOHead";
-import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
+
+const BlogComments = lazy(() => import("@/components/BlogComments"));
+const BlogNewsletterCTA = lazy(() => import("@/components/BlogNewsletterCTA"));
+const RelatedArticles = lazy(() => import("@/components/RelatedArticles"));
+const SocialShareButtons = lazy(() => import("@/components/blog/SocialShareButtons"));
+const BlogArticleCTA = lazy(() => import("@/components/blog/BlogArticleCTA"));
+const ArticleTableOfContents = lazy(() => import("@/components/blog/ArticleTableOfContents"));
+const ArticleTLDR = lazy(() => import("@/components/blog/ArticleTLDR"));
+const InternalLinks = lazy(() => import("@/components/blog/InternalLinks"));
+const ArticleFAQ = lazy(() => import("@/components/blog/ArticleFAQ"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
@@ -312,6 +313,7 @@ const BlogArticlePage = () => {
         articleCategory={article.category}
       />
       <Header />
+      <Suspense fallback={null}>
 
       <main className="pt-24 pb-16">
         <article className="container mx-auto px-6 max-w-4xl">
@@ -492,6 +494,7 @@ const BlogArticlePage = () => {
       <Footer />
       <GlobalConversionWidgets showExitIntent={false} />
       <BackToTop />
+      </Suspense>
     </div>
   );
 };

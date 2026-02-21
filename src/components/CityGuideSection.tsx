@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useQuery } from '@tanstack/react-query';
@@ -44,9 +44,9 @@ import { usePoiFavorites } from '@/hooks/usePoiFavorites';
 import { exportPoiFavoritesPdf, createShareableLink, parseSharedPois, notifyPoiImport } from '@/utils/exportPoiFavoritesPdf';
 import { toast } from 'sonner';
 import SharedLinksStats from './SharedLinksStats';
-import InteractiveMapWithPOI from './InteractiveMapWithPOI';
-import PremiumBenefitsBadge from './PremiumBenefitsBadge';
-import PremiumPOICarousel from './PremiumPOICarousel';
+const InteractiveMapWithPOI = lazy(() => import('./InteractiveMapWithPOI'));
+const PremiumBenefitsBadge = lazy(() => import('./PremiumBenefitsBadge'));
+const PremiumPOICarousel = lazy(() => import('./PremiumPOICarousel'));
 import ImageWithFallback from './ImageWithFallback';
 import POIPlaceholder from './POIPlaceholder';
 import {
