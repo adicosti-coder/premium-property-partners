@@ -37,10 +37,27 @@ const GlobalConversionWidgets = ({
   const [phase1Ready, setPhase1Ready] = useState(false);
   const [phase2Ready, setPhase2Ready] = useState(false);
 
+  // Load widgets only after first user interaction to free main thread
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase1Ready(true), 3000);
-    const t2 = setTimeout(() => setPhase2Ready(true), 8000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    let t2: ReturnType<typeof setTimeout>;
+
+    const triggerPhase1 = () => {
+      setPhase1Ready(true);
+      t2 = setTimeout(() => setPhase2Ready(true), 3000);
+      events.forEach(e => document.removeEventListener(e, triggerPhase1));
+    };
+
+    const events = ["scroll", "click", "touchstart"] as const;
+    events.forEach(e => document.addEventListener(e, triggerPhase1, { once: true, passive: true }));
+
+    // Fallback: load after 8s even without interaction
+    const fallback = setTimeout(triggerPhase1, 8000);
+
+    return () => {
+      clearTimeout(fallback);
+      clearTimeout(t2);
+      events.forEach(e => document.removeEventListener(e, triggerPhase1));
+    };
   }, []);
 
   return (

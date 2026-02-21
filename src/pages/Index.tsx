@@ -137,12 +137,16 @@ const Index = () => {
     return () => { if (typeof id === 'number') cancelIdleCallback?.(id) ?? clearTimeout(id); };
   }, []);
 
-  // Defer session analytics to after interaction
+  // Defer session analytics to first scroll (not a fixed timer)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const loadAnalytics = () => {
       import("@/hooks/useSessionAnalytics").catch(() => {});
-    }, 5000);
-    return () => clearTimeout(timer);
+      document.removeEventListener("scroll", loadAnalytics);
+    };
+    document.addEventListener("scroll", loadAnalytics, { once: true, passive: true });
+    // Fallback after 12s if no scroll
+    const t = setTimeout(loadAnalytics, 12000);
+    return () => { clearTimeout(t); document.removeEventListener("scroll", loadAnalytics); };
   }, []);
 
   return (
