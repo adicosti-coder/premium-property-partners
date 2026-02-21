@@ -10,8 +10,9 @@ import apt09 from "@/assets/apt-09.jpg";
 import apt11 from "@/assets/apt-11.jpg";
 
 // These two images are served from Supabase Storage to bypass build/CDN caching issues
-const apt02 = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/static/fullview-deluxe.jpg";
-const modernStudio = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/static/modern-studio-apt.jpg";
+// Use render/image transform endpoint for automatic compression & resize
+const apt02 = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/fullview-deluxe.jpg?width=800&quality=75";
+const modernStudio = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/modern-studio-apt.jpg?width=800&quality=75";
 import helios from "@/assets/helios.jpg";
 
 export interface Property {
