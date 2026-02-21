@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Tag, Sparkles, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
@@ -6,12 +6,33 @@ import { Link } from "react-router-dom";
 const PromoBanner = () => {
   const { t, language } = useLanguage();
   const [isVisible, setIsVisible] = useState(true);
+  const [isHidden, setIsHidden] = useState(false);
+
+  // Auto-hide after scrolling past 400px, show again when near top
+  useEffect(() => {
+    if (!isVisible) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setIsHidden(window.scrollY > 400);
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isVisible]);
 
   if (!isVisible) return null;
 
   return (
-    <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground relative z-50">
-      <div className="container mx-auto px-4 py-2 pr-12 flex items-center justify-center text-center text-xs sm:text-sm">
+    <div
+      className={`bg-gradient-to-r from-primary to-primary/80 text-primary-foreground relative z-50 transition-all duration-300 ${
+        isHidden ? "-translate-y-full opacity-0 pointer-events-none h-0 overflow-hidden" : "translate-y-0 opacity-100"
+      }`}
+    >
+      <div className="container mx-auto px-4 py-2 pr-14 flex items-center justify-center text-center text-xs sm:text-sm">
         <div className="flex items-center gap-x-1 sm:gap-x-2 flex-wrap justify-center gap-y-0.5">
           <Sparkles className="w-4 h-4 flex-shrink-0 animate-pulse" />
           <span className="font-medium min-w-0">
@@ -30,12 +51,13 @@ const PromoBanner = () => {
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
+        {/* Larger, easier-to-tap close button */}
         <button
           onClick={() => setIsVisible(false)}
-          className="absolute right-4 p-1 hover:bg-white/10 rounded-full transition-colors"
+          className="absolute right-2 sm:right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
           aria-label="Close banner"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       </div>
     </div>
