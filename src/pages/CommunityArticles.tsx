@@ -462,6 +462,9 @@ const CommunityArticles = () => {
                               <img
                                 src={submission.cover_image_url}
                                 alt={submission.title}
+                                loading="lazy"
+                                decoding="async"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                               <div className="absolute top-3 left-3 flex gap-2">

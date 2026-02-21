@@ -500,6 +500,9 @@ const PropertyGallery = () => {
             <img
               src={filteredProperties[currentImageIndex]?.images[0]}
               alt={filteredProperties[currentImageIndex]?.name}
+              loading="lazy"
+              decoding="async"
+              sizes="(max-width: 768px) 100vw, 800px"
               className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
             />
             <div className="text-center mt-4">

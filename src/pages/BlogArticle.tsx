@@ -207,6 +207,9 @@ const BlogArticlePage = () => {
                 <img
                   src={coverImage}
                   alt={displayTitle}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(max-width: 768px) 100vw, 800px"
                   className="w-full h-full object-cover blur-sm"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
@@ -371,6 +374,10 @@ const BlogArticlePage = () => {
               <img
                 src={coverImage}
                 alt={displayTitle}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                sizes="(max-width: 768px) 100vw, 800px"
                 className="w-full h-full object-cover"
               />
             </div>
