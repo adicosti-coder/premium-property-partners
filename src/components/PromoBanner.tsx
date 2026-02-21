@@ -28,6 +28,8 @@ const PromoBanner = () => {
 
   return (
     <div
+      role="banner"
+      aria-live="polite"
       className={`bg-gradient-to-r from-primary to-primary/80 text-primary-foreground relative z-50 transition-all duration-300 ${
         isHidden ? "-translate-y-full opacity-0 pointer-events-none h-0 overflow-hidden" : "translate-y-0 opacity-100"
       }`}
@@ -54,8 +56,8 @@ const PromoBanner = () => {
         {/* Larger, easier-to-tap close button */}
         <button
           onClick={() => setIsVisible(false)}
-          className="absolute right-2 sm:right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
-          aria-label="Close banner"
+          className="absolute right-2 sm:right-4 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          aria-label={language === "ro" ? "Închide banner-ul promoțional" : "Close promotional banner"}
         >
           <X className="w-5 h-5" />
         </button>

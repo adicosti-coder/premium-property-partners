@@ -151,13 +151,20 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip to content link for screen readers & keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-semibold"
+      >
+        {language === "ro" ? "Sari la conținut" : "Skip to content"}
+      </a>
       {mounted && (
         <Suspense fallback={null}>
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
       <Header />
-      <main>
+      <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
 
