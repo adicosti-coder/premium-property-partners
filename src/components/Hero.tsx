@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-cinematic.webp";
+import heroImage from "@/assets/hero-cinematic.jpg";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
