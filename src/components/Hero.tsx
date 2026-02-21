@@ -126,28 +126,28 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-28 md:pt-32">
-      {/* Background Video or Fallback Image with Parallax */}
+      {/* Background: static image (always) + video (desktop only via CSS) */}
       <div 
-        className="absolute inset-0 transition-[filter] duration-300"
-        style={{ 
-          transform: isMobile ? 'scale(1.05)' : `translateY(${parallaxOffset}px) scale(1.05)`,
+        className="absolute inset-0"
+        style={isMobile ? undefined : { 
+          transform: `translateY(${parallaxOffset}px) scale(1.05)`,
           filter: blurAmount > 0 ? `blur(${blurAmount}px)` : undefined,
-          willChange: isMobile ? 'auto' : 'transform, filter'
+          willChange: 'transform, filter'
         }}
       >
-        {/* Fallback image - always rendered for instant LCP */}
+        {/* Static hero image — always rendered, LCP element */}
         <img
           src={heroSettings.customFallbackImage || heroImage}
-          alt="Apartament de lux"
-          className={`w-full h-full object-cover transition-opacity duration-700 animate-hero-zoom ${videoLoaded && !videoError && !isSlowConnection && shouldLoadVideo ? 'opacity-0' : 'opacity-100'}`}
+          alt="Apartament de lux administrat în regim hotelier Timișoara"
+          className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : 'opacity-100'} transition-opacity duration-700`}
           width={1920}
           height={1080}
           fetchPriority="high"
-          decoding="async"
+          decoding="sync"
           loading="eager"
         />
-        {/* Video - DESKTOP ONLY, deferred, muted background loop */}
-        {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
+        {/* Video — hidden on mobile via CSS media query, loaded only on desktop */}
+        {shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
             autoPlay
             muted
@@ -156,11 +156,10 @@ const Hero = () => {
             preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover hidden md:block transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => { setVideoError(true); }}
             onLoadedData={() => setVideoLoaded(true)}
             onAbort={() => setVideoError(true)}
-            poster={heroSettings.customFallbackImage || heroImage}
           >
             <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
