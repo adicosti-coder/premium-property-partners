@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MapPin, Phone, Mail, Send, Settings } from "lucide-react";
+import { MapPin, Phone, Mail, Send, Settings, ShieldCheck, Lock, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabaseClient";
@@ -279,6 +279,28 @@ const Footer = () => {
                 : '** Personal data protection: Personal data provided through forms on this website is processed in accordance with Regulation (EU) 2016/679 (GDPR). We use it exclusively to respond to your requests, contact you regarding our services and improve the site experience. Data is kept secure and not shared with third parties without your consent, except for legal obligations. You have the right to access, rectify, delete and port your data. For questions, contact us at adicosti@gmail.com.'
               }
             </p>
+          </div>
+        </div>
+
+        {/* Security & Trust Badges */}
+        <div className="border-t border-border/50 dark:border-border pt-6 pb-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <span className="font-medium">SSL 256-bit</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              <span className="font-medium">{language === 'ro' ? 'Conform GDPR' : 'GDPR Compliant'}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CreditCard className="w-4 h-4 text-primary" />
+              <span className="font-medium">{language === 'ro' ? 'Plăți Securizate' : 'Secure Payments'}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              <span className="font-medium">{language === 'ro' ? 'Date Protejate' : 'Data Protected'}</span>
+            </div>
           </div>
         </div>
 
