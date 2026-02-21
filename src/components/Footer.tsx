@@ -18,14 +18,17 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string>("");
+  const [captchaReady, setCaptchaReady] = useState(false);
   const hcaptchaRef = useRef<HCaptcha>(null);
 
-  // Fetch hCaptcha site key on mount
-  useEffect(() => {
+  // Defer hCaptcha loading until user interacts with the newsletter form
+  const loadCaptcha = () => {
+    if (captchaReady) return;
+    setCaptchaReady(true);
     supabase.functions.invoke("get-hcaptcha-site-key").then(({ data }) => {
       if (data?.siteKey) setHcaptchaSiteKey(data.siteKey);
     });
-  }, []);
+  };
 
   const translations = {
     ro: {
@@ -207,6 +210,7 @@ const Footer = () => {
                 placeholder={tr.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={loadCaptcha}
                 className="bg-muted border-border text-foreground placeholder:text-foreground/40 dark:placeholder:text-muted-foreground text-sm"
                 required
               />
