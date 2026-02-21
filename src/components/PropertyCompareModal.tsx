@@ -244,6 +244,8 @@ const PropertyCompareModal = ({
                           <img
                             src={property.images[0]}
                             alt={property.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-24 object-cover rounded-lg mb-2"
                           />
                           <p className="font-medium text-sm pr-6">{property.name}</p>

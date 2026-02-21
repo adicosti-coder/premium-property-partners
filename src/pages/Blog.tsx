@@ -395,6 +395,8 @@ const Blog = () => {
                           src={coverImage}
                           alt={displayTitle}
                           loading="lazy"
+                          decoding="async"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isPremiumLocked ? 'blur-[2px]' : ''}`}
                         />
                       ) : (
