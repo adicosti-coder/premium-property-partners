@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check, Map, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,16 +6,17 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSharedFavorites } from "@/hooks/useSharedFavorites";
-import BookingForm from "./BookingForm";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
-import PropertyCompareModal from "./PropertyCompareModal";
-import PropertyMap from "./PropertyMap";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
 import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { properties, Property, getActiveProperties } from "@/data/properties";
 import { toast } from "sonner";
+
+const BookingForm = lazy(() => import("./BookingForm"));
+const PropertyCompareModal = lazy(() => import("./PropertyCompareModal"));
+const PropertyMap = lazy(() => import("./PropertyMap"));
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
