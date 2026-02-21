@@ -38,18 +38,23 @@ const Hero = () => {
     customCtaSecondary: null,
   });
 
-  // Defer video loading for better LCP - load after initial paint
+  // Defer video loading for better LCP - DESKTOP ONLY
+  // On mobile, video is never loaded to save ~10MB+ of payload
   useEffect(() => {
-    // On mobile with slow connection, skip video entirely
-    if (isMobile && isSlowConnection) {
+    if (isMobile) {
       setShouldLoadVideo(false);
       return;
     }
     
-    // Defer video loading to after initial content paint
+    if (isSlowConnection) {
+      setShouldLoadVideo(false);
+      return;
+    }
+    
+    // Defer video loading to after initial content paint (desktop only)
     const timer = setTimeout(() => {
       setShouldLoadVideo(true);
-    }, isMobile ? 1500 : 500); // Longer delay on mobile
+    }, 500);
     
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
@@ -141,8 +146,8 @@ const Hero = () => {
           decoding="async"
           loading="eager"
         />
-        {/* Video - deferred, desktop-only, muted background loop */}
-        {shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
+        {/* Video - DESKTOP ONLY, deferred, muted background loop */}
+        {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
             autoPlay
             muted

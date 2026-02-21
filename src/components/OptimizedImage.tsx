@@ -70,19 +70,20 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     onError?.();
   };
 
-  // Check if this is an asset that should NOT get .webp/.avif variants
-  // Skip for: bundled assets, data URIs, blob URIs, and external URLs
-  const skipVariants =
-    src.startsWith("/src/assets/") ||
+  // Determine if we can generate format variants (.webp/.avif)
+  // Bundled assets (from src/assets) are already optimized by vite-plugin-image-optimizer
+  // For public/ images, we generate WebP/AVIF <source> tags for format negotiation
+  const isBundledAsset =
     src.startsWith("data:") ||
     src.startsWith("blob:") ||
-    src.startsWith("http://") ||
-    src.startsWith("https://") ||
     (src.includes("/assets/") && /\-[a-zA-Z0-9]{8}\.\w+$/.test(src));
+  
+  const isExternalUrl = src.startsWith("http://") || src.startsWith("https://");
+  const isPublicImage = !isBundledAsset && !isExternalUrl && !src.startsWith("/src/");
 
-  // Only generate WebP/AVIF variants for static images served from /public (relative paths)
-  const webpSrc = !skipVariants ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
-  const avifSrc = !skipVariants ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
+  // For public/ images: serve WebP/AVIF variants via <picture> (browser picks best format)
+  const webpSrc = isPublicImage ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
+  const avifSrc = isPublicImage ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
 
   const containerStyle: React.CSSProperties = {
     width,
