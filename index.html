@@ -50,10 +50,24 @@
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://events.mapbox.com" />
 
-    <!-- Google Fonts – single non-blocking stylesheet, no preloads to reduce request count -->
+    <!-- Google Fonts – deferred until after first paint via JS to avoid render-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=fallback" media="print" onload="this.media='all'" />
+    <script>
+      // Load Google Fonts after first contentful paint
+      if (typeof window !== "undefined") {
+        (function() {
+          function loadFonts() {
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap';
+            document.head.appendChild(l);
+          }
+          if ('requestIdleCallback' in window) { requestIdleCallback(loadFonts); }
+          else { setTimeout(loadFonts, 50); }
+        })();
+      }
+    </script>
     
     <meta name="geo.region" content="RO-TM" />
     <meta name="geo.placename" content="Timișoara" />

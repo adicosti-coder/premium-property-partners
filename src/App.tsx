@@ -50,8 +50,8 @@ const queryClient = new QueryClient({
   },
 });
 
-// Eagerly loaded pages (critical path)
-import Index from "./pages/Index";
+// ALL pages lazy-loaded for code splitting — Index included to cut initial JS
+const Index = lazyWithRetry(() => import("./pages/Index"));
 import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages (code splitting for performance)
