@@ -1,9 +1,11 @@
 import { lazy, Suspense, useState, useEffect } from "react";
-import AccessibilityPanel from "@/components/AccessibilityPanel";
-import MobileCTABar from "@/components/MobileCTABar";
-import FloatingActionMenu from "@/components/FloatingActionMenu";
-import OfflineIndicator from "@/components/OfflineIndicator";
-import DesktopStickyContactBar from "@/components/DesktopStickyContactBar";
+
+// ALL widgets deferred — nothing loads eagerly to cut initial JS execution
+const AccessibilityPanel = lazy(() => import("@/components/AccessibilityPanel"));
+const MobileCTABar = lazy(() => import("@/components/MobileCTABar"));
+const FloatingActionMenu = lazy(() => import("@/components/FloatingActionMenu"));
+const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator"));
+const DesktopStickyContactBar = lazy(() => import("@/components/DesktopStickyContactBar"));
 
 // Defer non-critical widgets to reduce initial main-thread work
 const ExitIntentPopup = lazy(() => import("@/components/ExitIntentPopup"));
@@ -22,8 +24,9 @@ interface GlobalConversionWidgetsProps {
 }
 
 /**
- * Global conversion widgets that should appear on most pages.
- * Non-critical widgets are deferred 3s after mount for better LCP/INP.
+ * Global conversion widgets — ALL deferred via lazy + timeout.
+ * Phase 1 (1.5s): essential UI chrome (CTA bars, offline indicator)
+ * Phase 2 (4s): engagement widgets (chatbot, exit intent, referral)
  */
 const GlobalConversionWidgets = ({
   showMobileCTA = true,
@@ -31,27 +34,32 @@ const GlobalConversionWidgets = ({
   showChatbot = true,
   showVoiceWidget = true,
 }: GlobalConversionWidgetsProps) => {
-  const [deferredReady, setDeferredReady] = useState(false);
+  const [phase1Ready, setPhase1Ready] = useState(false);
+  const [phase2Ready, setPhase2Ready] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDeferredReady(true), 3000);
-    return () => clearTimeout(timer);
+    const t1 = setTimeout(() => setPhase1Ready(true), 1500);
+    const t2 = setTimeout(() => setPhase2Ready(true), 4000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
     <>
-      {/* Critical: always loaded */}
-      <OfflineIndicator />
-      {showMobileCTA && <MobileCTABar />}
-      <DesktopStickyContactBar />
-      <AccessibilityPanel />
-      <FloatingActionMenu showChatbot={showChatbot} />
+      {/* Phase 1: essential chrome after 1.5s */}
+      {phase1Ready && (
+        <Suspense fallback={null}>
+          <OfflineIndicator />
+          {showMobileCTA && <MobileCTABar />}
+          <DesktopStickyContactBar />
+          <AccessibilityPanel />
+          <FloatingActionMenu showChatbot={showChatbot} />
+        </Suspense>
+      )}
 
-      {/* Deferred: loaded after 3s */}
-      {deferredReady && (
+      {/* Phase 2: engagement widgets after 4s */}
+      {phase2Ready && (
         <Suspense fallback={null}>
           <FloatingWhatsApp />
-
           <PWAInstallPrompt />
           {showChatbot && <AIChatbot />}
           {showVoiceWidget && <ElevenLabsWidgetLazy />}

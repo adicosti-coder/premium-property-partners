@@ -3,14 +3,14 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
-const StatsCounters = lazy(() => import("@/components/StatsCounters"));
 import { generateHomepageSchemas, generateFAQSchema, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useSessionAnalytics, useConversionFunnel } from "@/hooks/useSessionAnalytics";
 
-// Lazy load below-fold components to reduce initial bundle & main thread work
+// ALL below-fold components are lazy loaded
+const StatsCounters = lazy(() => import("@/components/StatsCounters"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const PartnerLogos = lazy(() => import("@/components/PartnerLogos"));
 const TrustBadges = lazy(() => import("@/components/TrustBadges"));
@@ -21,7 +21,6 @@ const ContactSection = lazy(() => import("@/components/ContactSection"));
 const CTA = lazy(() => import("@/components/CTA"));
 const Footer = lazy(() => import("@/components/Footer"));
 const BlogPreview = lazy(() => import("@/components/BlogPreview"));
-
 const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -29,16 +28,30 @@ const BookingReviewsWidget = lazy(() => import("@/components/BookingReviewsWidge
 const ExternalTrustSeals = lazy(() => import("@/components/ExternalTrustSeals"));
 const DualServicePaths = lazy(() => import("@/components/DualServicePaths"));
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
-
-// Heavy components: only loaded when user scrolls near them
-// PropertyGallery pulls in mapbox-gl (455KB), PropertyCompareModal pulls in jsPDF (132KB)
 const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
-
-// Hub Teaser Components
 const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 const AboutTeaser = lazy(() => import("@/components/hub/AboutTeaser"));
+
+// Visibility-gated section: stats + calculator (near-fold)
+const NearFoldSection = () => {
+  const [ref, visible] = useLazyVisible("200px");
+  return (
+    <div ref={ref}>
+      {visible && (
+        <Suspense fallback={null}>
+          <StatsCounters />
+          <section id="calculator">
+            <ProfitCalculator />
+          </section>
+          <QuickLeadForm />
+          <MainNavigationCards />
+        </Suspense>
+      )}
+    </div>
+  );
+};
 
 // Visibility-gated mid-fold section
 const MidFoldSection = () => {
@@ -70,6 +83,43 @@ const TeaserSections = () => {
           <section id="oaspeti-preview">
             <GuestsTeaser />
           </section>
+        </Suspense>
+      )}
+    </div>
+  );
+};
+
+// Visibility-gated bottom fold (FAQ, contact, blog, etc.)
+const BottomFoldSection = ({ language }: { language: string }) => {
+  const [ref, visible] = useLazyVisible("600px");
+  return (
+    <div ref={ref}>
+      {visible && (
+        <Suspense fallback={null}>
+          <ExternalTrustSeals />
+          <AboutTeaser />
+          <BlogPreview />
+          <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+            <div className="container mx-auto px-6 text-center">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
+                {language === "ro" ? "Investește Inteligent în Timișoara" : "Invest Smart in Timișoara"}
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+                {language === "ro" 
+                  ? "Descarcă ghidul nostru gratuit cu analize de piață, randamente reale și strategii de maximizare a profitului pentru 2026."
+                  : "Download our free guide with market analysis, real yields, and profit maximization strategies for 2026."}
+              </p>
+              <InvestorGuideButton size="lg" className="px-8 py-6 text-lg" />
+            </div>
+          </section>
+          <section className="py-12">
+            <div className="container mx-auto px-6">
+              <ReferralBanner variant="hero" />
+            </div>
+          </section>
+          <FAQ />
+          <ContactSection />
+          <CTA />
         </Suspense>
       )}
     </div>
@@ -209,19 +259,8 @@ const Index = () => {
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
 
-        {/* Social Proof Stats - lazy loaded, below hero fold */}
-        <Suspense fallback={null}>
-          <StatsCounters />
-        </Suspense>
-        
-        {/* Calculator - near-fold, high priority lazy */}
-        <Suspense fallback={null}>
-          <section id="calculator">
-            <ProfitCalculator />
-          </section>
-          <QuickLeadForm />
-          <MainNavigationCards />
-        </Suspense>
+        {/* Near-fold: stats + calculator — visibility gated at 200px */}
+        <NearFoldSection />
 
         {/* Mid-fold: trust + service sections - gated by visibility */}
         <MidFoldSection />
@@ -229,66 +268,21 @@ const Index = () => {
         {/* Owners & Guests teasers - gated by visibility */}
         <TeaserSections />
 
-        {/* Heavy section: PropertyGallery (mapbox 455KB + jsPDF 132KB)
-            Only starts loading when user scrolls within 600px */}
+        {/* Heavy section: PropertyGallery (mapbox 455KB + jsPDF 132KB) */}
         <div ref={heavyRef}>
           {heavyVisible && (
             <Suspense fallback={<div className="min-h-[400px]" />}>
               <section id="portofoliu">
                 <PropertyGallery />
               </section>
-              
-              {/* Social Proof - after portfolio for max impact */}
               <Testimonials />
-              
-              {/* Booking.com Reviews Widget */}
               <BookingReviewsWidget />
             </Suspense>
           )}
         </div>
         
-        {/* Rest of the page - separate Suspense */}
-        <Suspense fallback={null}>
-          {/* External Trust Seals */}
-          <ExternalTrustSeals />
-          
-          {/* About Teaser */}
-          <AboutTeaser />
-          
-          {/* Blog Preview */}
-          <BlogPreview />
-          
-          {/* Investor Guide CTA */}
-          <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
-            <div className="container mx-auto px-6 text-center">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
-                {language === "ro" ? "Investește Inteligent în Timișoara" : "Invest Smart in Timișoara"}
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-                {language === "ro" 
-                  ? "Descarcă ghidul nostru gratuit cu analize de piață, randamente reale și strategii de maximizare a profitului pentru 2026."
-                  : "Download our free guide with market analysis, real yields, and profit maximization strategies for 2026."}
-              </p>
-              <InvestorGuideButton size="lg" className="px-8 py-6 text-lg" />
-            </div>
-          </section>
-          
-          {/* Referral Banner */}
-          <section className="py-12">
-            <div className="container mx-auto px-6">
-              <ReferralBanner variant="hero" />
-            </div>
-          </section>
-          
-          {/* FAQ - Keep for SEO */}
-          <FAQ />
-          
-          {/* Contact */}
-          <ContactSection />
-          
-          {/* Final CTA */}
-          <CTA />
-        </Suspense>
+        {/* Bottom-fold: deferred until scroll */}
+        <BottomFoldSection language={language} />
       </main>
       <Suspense fallback={null}>
         <Footer />
