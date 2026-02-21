@@ -81,7 +81,7 @@ const GuestsTeaser = () => {
         {/* Benefits Grid */}
         <div
           ref={benefitsRef}
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto mb-10"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 max-w-4xl mx-auto mb-10"
         >
           {t.benefits.map((benefit, index) => {
             const Icon = benefit.icon;

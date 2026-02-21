@@ -123,7 +123,7 @@ const OwnersTeaser = () => {
 
       <div
         ref={gridRef}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
+        className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto"
       >
         {t.features.map((feature, index) => (
           <TeaserCard
@@ -140,7 +140,7 @@ const OwnersTeaser = () => {
 
       {/* See More Link */}
       <div className="text-center mt-8">
-        <Button asChild variant="outline" size="lg" className="group">
+        <Button asChild variant="heroOutline" size="lg" className="group">
           <Link to="/pentru-proprietari">
             {language === "ro" ? "Vezi Toate Beneficiile" : "View All Benefits"}
             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
