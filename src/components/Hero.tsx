@@ -212,7 +212,7 @@ const Hero = () => {
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
       <div 
-        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 transition-opacity duration-100"
+        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 transition-opacity duration-100 min-h-[60vh] md:min-h-[50vh]"
         style={{ 
           opacity: contentOpacity,
           transform: `translateY(-${contentTranslate}px)`,

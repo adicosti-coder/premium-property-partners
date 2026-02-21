@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { useConversation } from "@elevenlabs/react";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
-import jsPDF from "jspdf";
+// jsPDF loaded dynamically on export to avoid 132KB from initial bundle
 
 interface Message {
   id: string;
@@ -228,7 +228,8 @@ const AIChatbot = () => {
   };
 
   // --- PDF Export ---
-  const exportPDF = () => {
+  const exportPDF = async () => {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
