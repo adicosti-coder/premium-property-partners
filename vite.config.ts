@@ -48,10 +48,12 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === "development" && componentTagger(),
       ViteImageOptimizer({
-        jpg: { quality: 80 },
-        jpeg: { quality: 80 },
-        png: { quality: 80 },
-        webp: { quality: 80 },
+        test: /\.(jpe?g|png|gif|tiff|webp|svg|avif)$/i,
+        jpg: { quality: 75, progressive: true },
+        jpeg: { quality: 75, progressive: true },
+        png: { quality: 75 },
+        webp: { quality: 75, effort: 4 },
+        avif: { quality: 60, effort: 4 },
       }),
     ].filter(Boolean),
     resolve: {

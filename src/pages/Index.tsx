@@ -40,6 +40,42 @@ const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 const AboutTeaser = lazy(() => import("@/components/hub/AboutTeaser"));
 
+// Visibility-gated mid-fold section
+const MidFoldSection = () => {
+  const [ref, visible] = useLazyVisible("400px");
+  return (
+    <div ref={ref}>
+      {visible && (
+        <Suspense fallback={null}>
+          <PartnerLogos />
+          <TrustBadges />
+          <DualServicePaths />
+          <ROICaseStudy />
+        </Suspense>
+      )}
+    </div>
+  );
+};
+
+// Visibility-gated teaser sections
+const TeaserSections = () => {
+  const [ref, visible] = useLazyVisible("400px");
+  return (
+    <div ref={ref}>
+      {visible && (
+        <Suspense fallback={null}>
+          <section id="beneficii">
+            <OwnersTeaser />
+          </section>
+          <section id="oaspeti-preview">
+            <GuestsTeaser />
+          </section>
+        </Suspense>
+      )}
+    </div>
+  );
+};
+
 const Index = () => {
   const { t, language } = useLanguage();
   
@@ -178,39 +214,20 @@ const Index = () => {
           <StatsCounters />
         </Suspense>
         
-        {/* Near-fold: lazy loaded together */}
+        {/* Calculator - near-fold, high priority lazy */}
         <Suspense fallback={null}>
-          {/* Calculator - immediately after Hero for max conversion */}
           <section id="calculator">
             <ProfitCalculator />
           </section>
-
-          {/* Quick Lead Capture */}
           <QuickLeadForm />
-
-          {/* Main Navigation Cards - Hub Navigation */}
           <MainNavigationCards />
-          
-          {/* Trust Elements */}
-          <PartnerLogos />
-          <TrustBadges />
-
-          {/* CRO: Clear distinction between Owner vs Investor paths */}
-          <DualServicePaths />
-
-          {/* CRO: Visual ROI Case Study - Classic vs ApArt Hotel */}
-          <ROICaseStudy />
-          
-          {/* Owners Teaser Section */}
-          <section id="beneficii">
-            <OwnersTeaser />
-          </section>
-          
-          {/* Guests Teaser Section with Property Preview */}
-          <section id="oaspeti-preview">
-            <GuestsTeaser />
-          </section>
         </Suspense>
+
+        {/* Mid-fold: trust + service sections - gated by visibility */}
+        <MidFoldSection />
+
+        {/* Owners & Guests teasers - gated by visibility */}
+        <TeaserSections />
 
         {/* Heavy section: PropertyGallery (mapbox 455KB + jsPDF 132KB)
             Only starts loading when user scrolls within 600px */}
