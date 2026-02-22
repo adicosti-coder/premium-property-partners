@@ -161,7 +161,7 @@ const Hero = () => {
               <img
                 src={imgSrc}
                 alt="Apart-hotel Timișoara — investiții imobiliare și apartamente în regim hotelier cu administrare profesională"
-                className={`w-full h-full object-cover ${!isMobile && videoLoaded && shouldLoadVideo ? 'opacity-0' : ''}`}
+                className="w-full h-full object-cover"
                 width={1920}
                 height={1080}
                 fetchPriority="high"
