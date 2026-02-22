@@ -160,7 +160,7 @@ const Hero = () => {
               )}
               <img
                 src={imgSrc}
-                alt="Apart-hotel Timișoara — investiții imobiliare și apartamente în regim hotelier cu administrare profesională"
+                alt="Imobiliare și Apart-hotel management complet în Timișoara: vânzări, cumpărări, amenajări și administrare de apartamente în regim hotelier. ROI 9%+, ocupare 85%, self check-in 24/7."
                 className="w-full h-full object-cover"
                 width={1920}
                 height={1080}
