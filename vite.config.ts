@@ -55,6 +55,20 @@ export default defineConfig(({ mode }) => {
         webp: { quality: 75, effort: 4 },
         avif: { quality: 60, effort: 4 },
       }),
+      // Convert render-blocking CSS <link> to async loading in production build
+      {
+        name: "async-css",
+        enforce: "post" as const,
+        transformIndexHtml(html: string) {
+          if (mode !== "production") return html;
+          return html.replace(
+            /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+            (_match: string, href: string) =>
+              `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all'" crossorigin>` +
+              `<noscript><link rel="stylesheet" href="${href}" crossorigin></noscript>`
+          );
+        },
+      },
     ].filter(Boolean),
     resolve: {
       alias: {
