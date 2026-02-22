@@ -1,11 +1,22 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// mapbox-gl is loaded dynamically to avoid 455KB in the main bundle
 import { properties } from '@/data/properties';
 import { supabase } from '@/lib/supabaseClient';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Home, Loader2, MapPin } from 'lucide-react';
 import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglSupport';
+
+type MapboxGL = typeof import('mapbox-gl');
+let _mapboxgl: MapboxGL | null = null;
+const loadMapbox = async (): Promise<MapboxGL> => {
+  if (_mapboxgl) return _mapboxgl;
+  const [mod] = await Promise.all([
+    import('mapbox-gl'),
+    import('mapbox-gl/dist/mapbox-gl.css'),
+  ]);
+  _mapboxgl = mod.default as unknown as MapboxGL;
+  return _mapboxgl;
+};
 
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
@@ -45,9 +56,10 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   className = "w-full h-[500px]" 
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const markersBySlug = useRef<Record<string, mapboxgl.Marker>>({});
+  const map = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const markersBySlug = useRef<Record<string, any>>({});
+  const mbRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -97,11 +109,17 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   // Initialize map when token is available
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
+    let cancelled = false;
+
+    const init = async () => {
+      const mb = await loadMapbox();
+      if (cancelled) return;
+      mbRef.current = mb;
 
     let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     let ro: ResizeObserver | null = null;
 
-    mapboxgl.accessToken = mapboxToken;
+    (mb as any).accessToken = mapboxToken;
 
     // Guard: only allow limited active Mapbox instances globally
     // Retry with delay to handle tab-switch race condition
@@ -115,7 +133,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     }
 
     try {
-      map.current = new mapboxgl.Map({
+      map.current = new (mb as any).Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/dark-v11',
         center: [21.2270, 45.7540],
@@ -175,7 +193,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       });
 
       map.current.addControl(
-        new mapboxgl.NavigationControl({ visualizePitch: true }),
+        new (mb as any).NavigationControl({ visualizePitch: true }),
         'top-right'
       );
     } catch (err: any) {
@@ -219,7 +237,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         markerEl.style.transform = 'scale(1)';
       });
 
-      const popup = new mapboxgl.Popup({
+      const popup = new (mb as any).Popup({
         offset: 25,
         closeButton: true,
         closeOnClick: true,
@@ -258,7 +276,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
       popup.setHTML(popupContent);
 
-      const marker = new mapboxgl.Marker(markerEl)
+      const marker = new (mb as any).Marker(markerEl)
         .setLngLat(coords)
         .setPopup(popup)
         .addTo(map.current!);
@@ -281,9 +299,12 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       markersRef.current.push(marker);
     });
 
+    }; // end init()
+
+    init();
+
     return () => {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      ro?.disconnect();
+      cancelled = true;
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
       markersBySlug.current = {};
