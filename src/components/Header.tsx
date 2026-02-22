@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield, Heart, Crown, Sparkles, ChevronRight } from "lucide-react";
+import { Menu, X, Shield, Heart } from "lucide-react";
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -10,7 +10,6 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 
 // Lazy-load non-critical header sub-components
-const PromoBanner = lazy(() => import("./PromoBanner"));
 const AnimationToggle = lazy(() => import("./AnimationToggle"));
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const PropertyCodeSearch = lazy(() => import("./PropertyCodeSearch"));
@@ -25,7 +24,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [showPremiumBanner, setShowPremiumBanner] = useState(true);
+  
   const { t, language } = useLanguage();
   const { favorites } = useFavorites();
   const location = useLocation();
@@ -165,97 +164,6 @@ const Header = () => {
       />
       
       <header className="fixed top-0 left-0 right-0 z-50">
-      {/* Promo Banner - positioned at top, lazy loaded */}
-      <Suspense fallback={null}><PromoBanner /></Suspense>
-      
-      {/* Premium Benefits Banner for Unauthenticated Users - Hidden on mobile to prevent overlap */}
-      {isAuthenticated === false && showPremiumBanner && (
-          <div
-            className="hidden md:block bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border-b border-gold/20 overflow-hidden animate-fade-up"
-          >
-            <div className="container mx-auto px-4 py-2">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    <Crown className="w-4 h-4 text-gold" />
-                  </div>
-                  
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="text-xs md:text-sm font-medium text-foreground truncate">
-                      {language === "ro" 
-                        ? "Deblochează 50+ locații exclusive & istoric simulări" 
-                        : "Unlock 50+ exclusive locations & simulation history"}
-                    </span>
-                    
-                    <div className="hidden lg:flex items-center gap-2">
-                      <span className="text-gold/50">•</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-sm font-semibold text-gold cursor-help flex items-center gap-1.5">
-                              <Sparkles className="w-4 h-4 text-gold" />
-                              {language === "ro" ? "+8 beneficii premium" : "+8 premium benefits"}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-xs p-3">
-                            <ul className="space-y-1.5 text-xs">
-                              <li className="flex items-center gap-2">
-                                <span className="text-gold">✓</span>
-                                {language === "ro" ? "City Guide cu 50+ locații" : "City Guide with 50+ spots"}
-                              </li>
-                              <li className="flex items-center gap-2">
-                                <span className="text-gold">✓</span>
-                                {language === "ro" ? "Istoric simulări salvate" : "Saved simulation history"}
-                              </li>
-                              <li className="flex items-center gap-2">
-                                <span className="text-gold">✓</span>
-                                {language === "ro" ? "Favorite sincronizate" : "Synced favorites"}
-                              </li>
-                              <li className="flex items-center gap-2">
-                                <span className="text-gold">✓</span>
-                                {language === "ro" ? "Export PDF personalizat" : "Custom PDF export"}
-                              </li>
-                            </ul>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      <Link to="/auth?mode=signup">
-                        <Button 
-                          size="sm" 
-                          className="h-7 px-3 text-xs bg-gold hover:bg-gold/90 text-gold-foreground font-medium shadow-sm"
-                        >
-                          {language === "ro" ? "Gratuit" : "Free"}
-                          <ChevronRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Link to="/auth?mode=signup" className="lg:hidden">
-                    <Button 
-                      size="sm" 
-                      className="h-7 px-3 text-xs bg-gold hover:bg-gold/90 text-gold-foreground font-medium shadow-sm"
-                    >
-                      {language === "ro" ? "Gratuit" : "Free"}
-                      <ChevronRight className="w-3 h-3 ml-1" />
-                    </Button>
-                  </Link>
-                  
-                  <button
-                    onClick={() => setShowPremiumBanner(false)}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label="Close banner"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
       <div className="glass border-b border-border/50 dark:border-border shadow-sm dark:shadow-none">
         <div className="container mx-auto px-4 sm:px-6">

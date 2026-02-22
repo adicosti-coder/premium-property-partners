@@ -8,7 +8,7 @@ import { useParallax } from '@/hooks/useParallax';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
-import AuthGateOverlay from './AuthGateOverlay';
+
 import { cn } from '@/lib/utils';
 import { User } from '@supabase/supabase-js';
 
@@ -462,15 +462,8 @@ const RentalIncomeCalculator = () => {
                     transition={{ duration: 0.5 }}
                     className="relative"
                   >
-                    {/* Auth Gate Overlay - show blur when not authenticated */}
-                    {!isAuthenticated && (
-                      <AuthGateOverlay context="calculator" />
-                    )}
-
-                    {/* All results wrapped in blur container */}
-                    <div className={cn(
-                      !isAuthenticated && "blur-lg pointer-events-none select-none"
-                    )}>
+                    {/* Results content */}
+                    <div>
                       <div className="text-center mb-8">
                         <motion.div
                           initial={{ scale: 0 }}

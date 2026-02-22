@@ -76,9 +76,9 @@ const GoogleReviewsWidget = () => {
             </div>
           </div>
 
-          {/* Reviews grid */}
+          {/* Reviews grid - only show 4+ star reviews */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.reviews.slice(0, 6).map((review, i) => (
+            {data.reviews.filter(r => r.rating >= 4).slice(0, 6).map((review, i) => (
               <div
                 key={i}
                 className="p-5 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow"

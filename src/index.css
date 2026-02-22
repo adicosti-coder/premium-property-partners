@@ -42,14 +42,14 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 45 90% 35%;
+    --primary: 45 90% 32%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 40 25% 90%;
     --secondary-foreground: 222 47% 11%;
 
     --muted: 40 20% 92%;
-    --muted-foreground: 222 30% 40%;
+    --muted-foreground: 222 30% 35%;
 
     --accent: 45 85% 38%;
     --accent-foreground: 0 0% 100%;
@@ -345,7 +345,17 @@
 
   /* Premium Typography */
   .heading-premium {
-    @apply font-serif font-semibold tracking-tight leading-tight;
+    @apply font-serif font-bold tracking-tight leading-tight;
+    letter-spacing: -0.02em;
+  }
+
+  /* Enhanced card hover effects */
+  .card-hover-premium {
+    @apply transition-all duration-300 ease-out;
+  }
+  .card-hover-premium:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -12px hsl(var(--primary) / 0.15), 0 8px 16px -8px hsl(222 40% 20% / 0.1);
   }
 
   .text-premium {
