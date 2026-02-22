@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CheckCircle2, X, MessageCircle, ArrowRight, TrendingUp, Shield, Star, Zap } from "lucide-react";
+import { CheckCircle2, X, MessageCircle, ArrowRight, TrendingUp, Shield, Star, Zap, Rocket } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -12,6 +12,28 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const packages = {
   ro: [
+    {
+      id: "starter",
+      icon: Rocket,
+      name: "Starter",
+      tagline: "Minim, eficient",
+      commission: "15%",
+      commissionNote: "din venitul brut",
+      highlight: false,
+      features: [
+        { text: "Listare pe Airbnb & Booking.com", included: true },
+        { text: "Check-in standard", included: true },
+        { text: "Suport clienți în orele de lucru", included: true },
+        { text: "Raport financiar lunar", included: true },
+        { text: "Fotografii profesionale de bază", included: false },
+        { text: "Coordonare curățenie între sejururi", included: false },
+        { text: "Prețuri dinamice automate", included: false },
+        { text: "Self check-in 24/7 cu smart lock", included: false },
+        { text: "Listare pe 10+ canale premium", included: false },
+        { text: "Manager dedicat proprietate", included: false },
+      ],
+      cta: "Solicită evaluare",
+    },
     {
       id: "essential",
       icon: Shield,
@@ -80,6 +102,28 @@ const packages = {
     },
   ],
   en: [
+    {
+      id: "starter",
+      icon: Rocket,
+      name: "Starter",
+      tagline: "Minimal, efficient",
+      commission: "15%",
+      commissionNote: "of gross revenue",
+      highlight: false,
+      features: [
+        { text: "Listing on Airbnb & Booking.com", included: true },
+        { text: "Standard check-in", included: true },
+        { text: "Business hours support", included: true },
+        { text: "Monthly financial report", included: true },
+        { text: "Basic professional photography", included: false },
+        { text: "Cleaning coordination between stays", included: false },
+        { text: "Automatic dynamic pricing", included: false },
+        { text: "24/7 self check-in with smart lock", included: false },
+        { text: "Listing on 10+ premium channels", included: false },
+        { text: "Dedicated property manager", included: false },
+      ],
+      cta: "Request evaluation",
+    },
     {
       id: "essential",
       icon: Shield,
@@ -237,7 +281,7 @@ const Preturi = () => {
       {/* Pricing Cards */}
       <section className="py-16 px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {pkgs.map((pkg) => {
               const Icon = pkg.icon;
               return (
