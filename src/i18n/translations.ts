@@ -22,7 +22,7 @@ export const translations = {
       title: "Investiții imobiliare Timișoara —",
       titleMid: "apartamente în regim hotelier",
       titleHighlight: "cu randament garantat.",
-      subtitle: "Apart-hotel management complet în Timișoara: cumpărăm, amenajăm și administrăm apartamente în regim hotelier. ROI 9%+, ocupare 85%, self check-in 24/7.",
+      subtitle: "Imobiliare și Apart-hotel management complet în Timișoara: vânzări, cumpărări, amenajări și administrare de apartamente în regim hotelier. ROI 9%+, ocupare 85%, self check-in 24/7.",
       cta: "Află cât poate produce apartamentul tău",
       ctaSecondary: "Vreau investiție profitabilă în Timișoara",
       ctaGuests: "Pentru Oaspeți",
