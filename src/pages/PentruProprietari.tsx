@@ -266,78 +266,32 @@ const PentruProprietari = () => {
               </div>
             </div>
 
-            {/* Right Column - Callout Card with Benefits */}
+            {/* Right Column - Hero Video Walkthrough */}
             <div
               className={`transition-all duration-700 ${
                 heroVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"
               }`}
               style={{ transitionDelay: "500ms" }}
             >
-              <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl shadow-black/20">
-                {/* Highlighted Callouts */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="rounded-xl bg-emerald-500/15 border border-emerald-400/30 p-4 text-center">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-                    <span className="text-emerald-300 font-bold text-sm block">
-                      {language === "ro" ? "Evaluare 100% Gratuită" : "100% Free Evaluation"}
-                    </span>
-                    <span className="text-white/60 text-xs">
-                      {language === "ro" ? "Fără obligații" : "No obligations"}
-                    </span>
-                  </div>
-                  <div className="rounded-xl bg-amber-500/15 border border-amber-400/30 p-4 text-center">
-                    <Shield className="w-6 h-6 text-amber-400 mx-auto mb-2" />
-                    <span className="text-amber-300 font-bold text-sm block">
-                      {language === "ro" ? "Venit Garantat" : "Guaranteed Income"}
-                    </span>
-                    <span className="text-white/60 text-xs">
-                      {language === "ro" ? "Plăți lunare în cont" : "Monthly payments"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Callout Header */}
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-blue-950" />
-                  </div>
-                  <h2 className="text-lg font-bold text-white">
-                    {language === "ro" ? "De ce proprietarii aleg RealTrust?" : "Why do owners choose RealTrust?"}
-                  </h2>
-                </div>
-
-                {/* Benefit List */}
-                <ul className="space-y-3">
-                  {t.trustPoints.map((point, index) => (
-                    <li
-                      key={index}
-                      className={`flex items-start gap-3 transition-all duration-500 ${
-                        heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                      }`}
-                      style={{ transitionDelay: `${600 + index * 100}ms` }}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-                      </div>
-                      <span className="text-white/90 text-sm">{point}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Micro social proof */}
-                <div className="mt-5 pt-5 border-t border-white/10 flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border-2 border-white/20 flex items-center justify-center">
-                        <Star className="w-3 h-3 text-blue-950" />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-white/70">
-                    {language === "ro"
-                      ? "Peste 50 de proprietari ne-au ales deja"
-                      : "Over 50 owners already trust us"}
-                  </p>
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/30 border border-white/20">
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="w-full aspect-video object-cover"
+                  poster="/images/hero-cinematic.webp"
+                >
+                  <source src="/videos/hero-apartment-walkthrough.mp4" type="video/mp4" />
+                </video>
+                {/* Subtle gradient overlay at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute bottom-3 left-4 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-white/80 text-xs font-medium">
+                    {language === "ro" ? "Tur Virtual Apartament Premium" : "Premium Apartment Virtual Tour"}
+                  </span>
                 </div>
               </div>
             </div>
