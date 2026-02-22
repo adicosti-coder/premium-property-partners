@@ -77,6 +77,7 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react/jsx-runtime", "mapbox-gl"],
     },
     build: {
+      sourcemap: true,
       rollupOptions: {
         output: {
           manualChunks(id) {
