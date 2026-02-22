@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown } from "lucide-react";
 
 // Hero image served from public/ so <picture> can negotiate WebP/AVIF
-const HERO_IMAGE_PUBLIC = "/images/hero-cinematic.jpg";
+const HERO_IMAGE_PUBLIC = "/images/hero-cinematic.webp";
 interface HeroSettings {
   videoUrl: string;
   customFallbackImage: string | null;
