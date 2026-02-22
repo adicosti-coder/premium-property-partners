@@ -88,9 +88,13 @@ export default defineConfig(({ mode }) => {
             if (/node_modules\/(@tanstack\/react-query|@supabase\/supabase-js|@supabase\/)/.test(id)) {
               return "vendor-data";
             }
-            // UI primitives: all radix + shadcn deps
-            if (/node_modules\/(@radix-ui\/|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner|lucide-react)/.test(id)) {
+            // UI primitives: radix + shadcn deps (exclude react-slot which is tiny & critical-path)
+            if (/node_modules\/(@radix-ui\/(?!react-slot)|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner)/.test(id)) {
               return "vendor-ui";
+            }
+            // Lucide icons — separate chunk, only loaded when components need icons
+            if (/node_modules\/lucide-react/.test(id)) {
+              return "vendor-icons";
             }
             // Heavy optional libs
             if (/node_modules\/(framer-motion|recharts|d3-|victory-)/.test(id)) {

@@ -3,7 +3,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect, useMemo } from "react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown } from "lucide-react";
+// Inline SVG to avoid pulling lucide-react into the critical path
+const ChevronDown = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
 
 // Hero image served from public/ so <picture> can negotiate WebP/AVIF
 const HERO_IMAGE_PUBLIC = "/images/hero-cinematic.webp";
