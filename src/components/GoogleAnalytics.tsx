@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 /**
  * Loads Google Analytics 4 (gtag.js) only after the user's first scroll.
