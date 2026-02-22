@@ -10,7 +10,7 @@ const translations = {
     stats: [
       { value: 50, suffix: "+", label: "Proprietăți Gestionate", icon: Building2 },
       { value: 10000, suffix: "+", label: "Oaspeți Mulțumiți", icon: Users },
-      { value: 5, suffix: "+", label: "Ani de Experiență", icon: Calendar },
+      { value: 25, suffix: "+", label: "Ani de Experiență", icon: Calendar },
       { value: 85, suffix: "%", label: "Rată Ocupare/An", icon: TrendingUp },
       { value: 4.9, suffix: "★", label: "Rating Mediu", icon: Star, decimals: 1 },
     ],
