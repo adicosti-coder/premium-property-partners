@@ -176,7 +176,18 @@ const PentruProprietari = () => {
       </div>
 
       {/* Hero Section - Investor Blue/Gold Theme */}
-      <section className="relative pt-40 md:pt-36 pb-20 bg-gradient-to-b from-blue-950/80 via-blue-900/40 to-background overflow-hidden">
+      <section className="relative pt-40 md:pt-36 pb-20 overflow-hidden">
+        {/* Hero background image */}
+        <div className="absolute inset-0">
+          <img
+            src="/images/hero-cinematic.webp"
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/80 via-blue-900/60 to-background" />
+        </div>
         {/* Background decorations - Blue/Gold investor theme */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.1),transparent_70%)]" />
         <div className="absolute top-40 left-[10%] w-32 h-32 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
