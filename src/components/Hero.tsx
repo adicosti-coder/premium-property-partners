@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown } from "lucide-react";
@@ -238,20 +238,12 @@ const Hero = () => {
         <div className="max-w-4xl">
           
           {/* Headline with typing animation - 3 lines layout */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-            {isMobile ? (
+          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6">
               <StaticTitle 
                 title={heroSettings.customTitle || t.hero.title} 
                 titleMid={t.hero.titleMid}
                 highlight={heroSettings.customHighlight || t.hero.titleHighlight} 
               />
-            ) : (
-              <TypingTitle 
-                title={heroSettings.customTitle || t.hero.title} 
-                titleMid={t.hero.titleMid}
-                highlight={heroSettings.customHighlight || t.hero.titleHighlight} 
-              />
-            )}
           </h1>
           
           {/* Subheadline + CTAs + Feature Cards */}
@@ -282,8 +274,7 @@ const Hero = () => {
       {/* Scroll Encouragement Indicator – desktop only, CSS animations to avoid framer-motion in critical path */}
       {!isMobile && (
         <div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer animate-fade-up"
-          style={{ animationDelay: '3s', animationFillMode: 'backwards' }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer"
           onClick={() => {
             const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
             nextSection?.scrollIntoView({ behavior: 'smooth' });
@@ -320,44 +311,8 @@ const StaticTitle = ({ title, titleMid, highlight }: { title: string; titleMid: 
   </span>
 );
 
-// Typing title component - 3 lines layout (desktop only)
-const TypingTitle = ({ title, titleMid, highlight }: { title: string; titleMid: string; highlight: string }) => {
-  const { displayedText: titleText, isComplete: titleComplete } = useTypingAnimation({
-    text: title,
-    speed: 30,
-    delay: 200
-  });
-  
-  const { displayedText: highlightText, isComplete: highlightComplete } = useTypingAnimation({
-    text: highlight,
-    speed: 35,
-    delay: 200 + title.length * 30 + 300
-  });
 
-  return (
-    <span className="block">
-      <span className="block">{titleText}</span>
-      {titleComplete && (
-        <span className="block text-2xl md:text-3xl lg:text-4xl font-normal italic text-foreground/90 my-2">
-          {titleMid}
-        </span>
-      )}
 
-      {titleComplete && (
-        <span className="block">
-          <span className="inline-flex items-baseline gap-1 px-2 py-1 rounded-lg bg-background/35 backdrop-blur-sm border border-border/40">
-            <span className="text-gradient-gold">{highlightText}</span>
-            <span
-              className={`inline-block w-0.5 h-[0.9em] bg-primary align-middle transition-opacity duration-300 ${
-                highlightComplete ? "opacity-0" : "animate-pulse"
-              }`}
-            />
-          </span>
-        </span>
-      )}
-    </span>
-  );
-}
 
 // HeroContent component with typing subtitle and feature cards
 const HeroContent = ({ 
@@ -377,37 +332,18 @@ const HeroContent = ({
   t: any;
   isMobile: boolean;
 }) => {
-  const titleDuration = 200 + titleLength * 30 + 300 + highlightLength * 35 + 150;
-  
-  const { displayedText: subtitleText, isComplete: subtitleComplete } = useTypingAnimation({
-    text: subtitle,
-    speed: isMobile ? 0 : 18,
-    delay: isMobile ? 0 : titleDuration
-  });
-
-  // On mobile, everything is immediately visible
-  const isReady = isMobile || subtitleComplete;
-
   return (
     <>
       <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
-        {isMobile ? subtitle : subtitleText}
-        {!isMobile && (
-          <span
-            className={`inline-block w-0.5 h-[1em] bg-foreground/60 ml-0.5 align-middle transition-opacity duration-300 ${
-              subtitleComplete ? "opacity-0" : "animate-pulse"
-            }`}
-          />
-        )}
+        {subtitle}
       </p>
       
       {/* CTAs */}
-      <div className={`flex flex-col sm:flex-row gap-3 transition-all duration-300 ${isReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button 
           variant="hero" 
           size="xl" 
-          className={`relative animate-glow-pulse btn-shine w-full sm:w-auto transition-all duration-300 ${isReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-          style={{ transitionDelay: isReady ? '50ms' : '0ms' }}
+          className="relative animate-glow-pulse btn-shine w-full sm:w-auto"
           onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
         >
           {ctaPrimary}
@@ -416,18 +352,14 @@ const HeroContent = ({
            asChild
            variant="heroOutline"
            size="xl"
-            className={`btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] w-full sm:w-auto transition-all duration-300 ${isReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-            style={{ transitionDelay: isReady ? '120ms' : '0ms' }}
+           className="btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] w-full sm:w-auto"
          >
            <a href="/investitii">{ctaSecondary}</a>
          </Button>
       </div>
       
       {/* Quick Contact Row - WhatsApp prominent */}
-      <div 
-        className={`flex items-center gap-4 mt-4 transition-all duration-300 ${isReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-        style={{ transitionDelay: isReady ? '150ms' : '0ms' }}
-      >
+      <div className="flex items-center gap-4 mt-4">
         <a
           href="https://wa.me/40723154520?text=Bună!%20Sunt%20interesat%20de%20serviciile%20RealTrust."
           target="_blank"
@@ -451,10 +383,7 @@ const HeroContent = ({
       </div>
       
       {/* Trust text */}
-      <div 
-        className={`mt-6 transition-all duration-300 ${isReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-        style={{ transitionDelay: isReady ? '180ms' : '0ms' }}
-      >
+      <div className="mt-6">
         <p className="text-foreground/90 text-sm">
           {t.hero.trustText} <span className="font-semibold text-foreground">24h</span>
         </p>
@@ -464,10 +393,7 @@ const HeroContent = ({
       </div>
       
       {/* Feature Cards */}
-      <div 
-        className={`grid grid-cols-1 gap-3 mt-8 transition-all duration-300 ${isReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-        style={{ transitionDelay: isReady ? '250ms' : '0ms' }}
-      >
+      <div className="grid grid-cols-1 gap-3 mt-8">
         <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
           <p className="text-foreground/80 text-sm">{t.hero.features?.payments || "Plăți"}</p>
           <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
