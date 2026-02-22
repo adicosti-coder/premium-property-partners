@@ -25,6 +25,7 @@ import { generatePropertyManagementServiceSchema, generateSpeakableSchema } from
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
 const OwnerHowItWorks = lazy(() => import("@/components/OwnerHowItWorks"));
+const OnboardingVideoExplainer = lazy(() => import("@/components/OnboardingVideoExplainer"));
 const TrustBadges = lazy(() => import("@/components/TrustBadges"));
 const FinancialTransparency = lazy(() => import("@/components/FinancialTransparency"));
 const PartnershipTimeline = lazy(() => import("@/components/PartnershipTimeline"));
@@ -384,6 +385,9 @@ const PentruProprietari = () => {
 
       {/* How It Works - 3 steps for owners */}
       <OwnerHowItWorks />
+
+      {/* Video Explainer - Onboarding Process Tour */}
+      <OnboardingVideoExplainer />
 
       {/* DIY vs Professional - dovada că managementul profesionist câștigă */}
       <DIYvsProfessional />
