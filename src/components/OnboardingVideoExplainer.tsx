@@ -1,18 +1,13 @@
-import { Play, ArrowRight, FileText } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
-// Replace with your actual YouTube video ID
-const YOUTUBE_VIDEO_ID = "dQw4w9WgXcQ";
+import { useRef, useState } from "react";
 
 const OnboardingVideoExplainer = () => {
   const { language } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
-  const [showEmbed, setShowEmbed] = useState(false);
-  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const content = {
     ro: {
@@ -21,26 +16,7 @@ const OnboardingVideoExplainer = () => {
       titleHighlight: "Procesul de Onboarding",
       subtitle: "De la prima evaluare la primul oaspete — un proces simplu, rapid și complet gestionat de echipa noastră.",
       playBtn: "Pornește Video",
-      ctaText: "Începe Onboarding-ul Gratuit",
-      ctaSubtext: "Evaluare gratuită • Fără obligații • Răspuns în 24h",
-      transcriptTitle: "Citește Transcriptul Video",
-      transcript: [
-        {
-          time: "0:00",
-          heading: "Pasul 1 — Evaluare Gratuită",
-          text: "Totul începe cu o evaluare gratuită a proprietății tale. Echipa noastră analizează locația, dotările și potențialul de venit al apartamentului. În mai puțin de 24 de ore primești o estimare personalizată a venitului lunar pe care îl poți obține.",
-        },
-        {
-          time: "0:15",
-          heading: "Pasul 2 — Pregătire & Listare",
-          text: "Odată ce decizi să colaborăm, ne ocupăm de tot: fotografii profesionale, descrieri optimizate, listare pe Booking.com, Airbnb și alte platforme majore. Instalăm self check-in digital și configurăm prețurile dinamice pentru a maximiza ocuparea.",
-        },
-        {
-          time: "0:30",
-          heading: "Pasul 3 — Încasezi Venituri",
-          text: "Din acest moment, echipa noastră gestionează complet proprietatea: comunicare cu oaspeții, curățenie profesională, mentenanță și rapoarte financiare transparente. Tu primești banii direct în cont, lunar, fără bătăi de cap.",
-        },
-      ],
+      pauseBtn: "Pauză",
     },
     en: {
       label: "Quick Tour",
@@ -48,43 +24,21 @@ const OnboardingVideoExplainer = () => {
       titleHighlight: "Onboarding Process Works",
       subtitle: "From the first evaluation to the first guest — a simple, fast process fully managed by our team.",
       playBtn: "Play Video",
-      ctaText: "Start Free Onboarding",
-      ctaSubtext: "Free evaluation • No obligations • Response in 24h",
-      transcriptTitle: "Read the Video Transcript",
-      transcript: [
-        {
-          time: "0:00",
-          heading: "Step 1 — Free Evaluation",
-          text: "Everything starts with a free evaluation of your property. Our team analyzes the location, amenities, and income potential. In less than 24 hours, you receive a personalized estimate of the monthly income you can generate.",
-        },
-        {
-          time: "0:15",
-          heading: "Step 2 — Setup & Listing",
-          text: "Once you decide to partner with us, we handle everything: professional photography, optimized descriptions, listing on Booking.com, Airbnb, and other major platforms. We install digital self check-in and configure dynamic pricing to maximize occupancy.",
-        },
-        {
-          time: "0:30",
-          heading: "Step 3 — Earn Income",
-          text: "From this point, our team fully manages the property: guest communication, professional cleaning, maintenance, and transparent financial reports. You receive money directly in your account, monthly, hassle-free.",
-        },
-      ],
+      pauseBtn: "Pause",
     },
   };
 
   const t = content[language as keyof typeof content] || content.ro;
 
-  const scrollToCalculator = () => {
-    const el = document.getElementById("calculator");
-    el?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleWhatsApp = () => {
-    const message = encodeURIComponent(
-      language === "ro"
-        ? "Bună ziua! Vreau să încep procesul de onboarding pentru apartamentul meu."
-        : "Hello! I'd like to start the onboarding process for my apartment."
-    );
-    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
   };
 
   return (
@@ -109,104 +63,44 @@ const OnboardingVideoExplainer = () => {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Video Embed */}
-          <div
-            className={`transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-            style={{ transitionDelay: "200ms" }}
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-elegant border border-border aspect-video">
-              {showEmbed ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
-                  title="Onboarding Process Walkthrough"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                />
-              ) : (
-                <button
-                  onClick={() => setShowEmbed(true)}
-                  className="absolute inset-0 w-full h-full group cursor-pointer"
-                  aria-label={t.playBtn}
-                >
-                  <img
-                    src={`https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`}
-                    alt="Video thumbnail"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110">
-                      <Play className="w-8 h-8 text-primary-foreground ml-1" />
-                    </div>
-                  </div>
-                </button>
-              )}
-            </div>
-          </div>
+        {/* Video Player */}
+        <div
+          className={`max-w-4xl mx-auto transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+          style={{ transitionDelay: "200ms" }}
+        >
+          <div className="relative rounded-2xl overflow-hidden shadow-elegant border border-border group">
+            <video
+              ref={videoRef}
+              src="/videos/onboarding-process.mp4"
+              className="w-full aspect-video object-cover"
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
 
-          {/* Prominent CTA */}
-          <div
-            className={`text-center transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-            style={{ transitionDelay: "400ms" }}
-          >
-            <Button
-              variant="hero"
-              size="xl"
-              onClick={handleWhatsApp}
-              className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0 shadow-lg shadow-amber-500/20"
+            {/* Play/Pause overlay */}
+            <button
+              onClick={togglePlay}
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
+                isPlaying
+                  ? "bg-black/0 hover:bg-black/20 opacity-0 hover:opacity-100"
+                  : "bg-black/30"
+              }`}
+              aria-label={isPlaying ? t.pauseBtn : t.playBtn}
             >
-              {t.ctaText}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <p className="text-muted-foreground text-sm mt-3">{t.ctaSubtext}</p>
-          </div>
-
-          {/* Transcript */}
-          <div
-            className={`transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-            style={{ transitionDelay: "500ms" }}
-          >
-            <Collapsible open={transcriptOpen} onOpenChange={setTranscriptOpen}>
-              <CollapsibleTrigger className="w-full flex items-center justify-center gap-2 py-3 text-muted-foreground hover:text-foreground transition-colors group">
-                <FileText className="w-4 h-4" />
-                <span className="text-sm font-medium">{t.transcriptTitle}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${transcriptOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="mt-4 rounded-2xl bg-card border border-border p-6 md:p-8 space-y-6">
-                  {t.transcript.map((item, index) => (
-                    <div key={index} className="flex gap-4">
-                      <div className="flex-shrink-0">
-                        <span className="inline-flex items-center justify-center w-14 h-7 rounded-full bg-primary/10 text-primary text-xs font-mono font-semibold">
-                          {item.time}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-1">{item.heading}</h4>
-                        <p className="text-muted-foreground text-sm leading-relaxed">{item.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+              <div className="w-20 h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110">
+                {isPlaying ? (
+                  <Pause className="w-8 h-8 text-primary-foreground" />
+                ) : (
+                  <Play className="w-8 h-8 text-primary-foreground ml-1" />
+                )}
+              </div>
+            </button>
           </div>
         </div>
       </div>
