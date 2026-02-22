@@ -200,83 +200,127 @@ const PentruProprietari = () => {
             heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
           }`}
         >
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Badge - Investor Blue/Gold */}
-            <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/50 border border-amber-500/30 mb-6 transition-all duration-700 ${
-                heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
-              }`}
-              style={{ transitionDelay: "200ms" }}
-            >
-              <Building2 className="w-4 h-4 text-amber-400" />
-              <span className="text-sm font-medium text-amber-300">{t.badge}</span>
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            {/* Left Column - Text & CTA */}
+            <div className="text-left">
+              {/* Badge */}
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/50 border border-amber-500/30 mb-6 transition-all duration-700 ${
+                  heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
+                }`}
+                style={{ transitionDelay: "200ms" }}
+              >
+                <Building2 className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-medium text-amber-300">{t.badge}</span>
+              </div>
+
+              {/* Title */}
+              <h1
+                className={`text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6 transition-all duration-700 ${
+                  heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: "300ms" }}
+              >
+                {t.title}{" "}
+                <span className="text-gradient-gold">{t.titleHighlight}</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p
+                className={`text-lg md:text-xl text-white/80 mb-8 transition-all duration-700 ${
+                  heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: "400ms" }}
+              >
+                {t.subtitle}
+              </p>
+
+              {/* CTAs */}
+              <div
+                className={`flex flex-col sm:flex-row gap-4 mb-8 transition-all duration-700 ${
+                  heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: "500ms" }}
+              >
+                <Button
+                  variant="hero"
+                  size="xl"
+                  onClick={scrollToCalculator}
+                  className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0"
+                >
+                  <TrendingUp className="w-5 h-5 mr-2" />
+                  {t.cta}
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button
+                  variant="heroOutline"
+                  size="xl"
+                  onClick={handleWhatsApp}
+                  className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  {t.secondaryCta}
+                </Button>
+              </div>
             </div>
 
-            {/* Title */}
-            <h1
-              className={`text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 transition-all duration-700 ${
-                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: "300ms" }}
-            >
-              {t.title}{" "}
-              <span className="text-gradient-gold">{t.titleHighlight}</span>
-            </h1>
-
-            {/* Subtitle */}
-            <p
-              className={`text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto transition-all duration-700 ${
-                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: "400ms" }}
-            >
-              {t.subtitle}
-            </p>
-
-            {/* Trust Points - Investor styled */}
+            {/* Right Column - Callout Card with Benefits */}
             <div
-              className={`flex flex-wrap justify-center gap-4 mb-10 transition-all duration-700 ${
-                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              className={`transition-all duration-700 ${
+                heroVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"
               }`}
               style={{ transitionDelay: "500ms" }}
             >
-              {t.trustPoints.map((point, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-900/30 backdrop-blur-sm rounded-full border border-blue-700/30 text-foreground"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
-                  <span className="text-sm text-foreground">{point}</span>
+              <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl shadow-black/20">
+                {/* Callout Header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-blue-950" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      {language === "ro" ? "De ce proprietarii aleg RealTrust?" : "Why do owners choose RealTrust?"}
+                    </h2>
+                    <p className="text-sm text-amber-300/80">
+                      {language === "ro" ? "Rezultate dovedite, zero bătăi de cap" : "Proven results, zero hassle"}
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
 
-            {/* CTAs - Gold primary buttons */}
-            <div
-              className={`flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 ${
-                heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: "600ms" }}
-            >
-              <Button
-                variant="hero"
-                size="xl"
-                onClick={scrollToCalculator}
-                className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0"
-              >
-                <TrendingUp className="w-5 h-5 mr-2" />
-                {t.cta}
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
-                variant="heroOutline"
-                size="xl"
-                onClick={handleWhatsApp}
-                className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                {t.secondaryCta}
-              </Button>
+                {/* Benefit List */}
+                <ul className="space-y-4">
+                  {t.trustPoints.map((point, index) => (
+                    <li
+                      key={index}
+                      className={`flex items-start gap-3 transition-all duration-500 ${
+                        heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                      }`}
+                      style={{ transitionDelay: `${600 + index * 100}ms` }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <span className="text-white/90 text-base">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Micro social proof */}
+                <div className="mt-6 pt-6 border-t border-white/10 flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border-2 border-white/20 flex items-center justify-center">
+                        <Star className="w-3.5 h-3.5 text-blue-950" />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-white/70">
+                    {language === "ro"
+                      ? "Peste 50 de proprietari ne-au ales deja"
+                      : "Over 50 owners already trust us"}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
