@@ -84,11 +84,8 @@ const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
 const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
 
 // Minimal CSS-only loader — no icon import needed
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-  </div>
-);
+// No loader — render nothing while chunks load so the HTML skeleton stays visible
+const PageLoader = () => null;
 
 // Deferred shell — wraps children with lazy providers + widgets
 const DeferredShell = ({ children }: { children: React.ReactNode }) => {
