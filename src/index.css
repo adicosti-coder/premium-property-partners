@@ -776,10 +776,22 @@
     animation: none !important;
   }
 
-  /* Disable backdrop-blur on mobile (GPU-heavy) */
+  /* Disable ALL backdrop-blur on mobile (GPU-heavy) — covers Tailwind classes too */
   .glass,
-  .glass-light {
+  .glass-light,
+  [class*="backdrop-blur"] {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+
+  /* Reduce box-shadow complexity on mobile */
+  [class*="shadow-2xl"],
+  [class*="shadow-[0"] {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Disable framer-motion transforms for perf (prefer reduced motion) */
+  * {
+    transition-duration: 0.1s !important;
   }
 }
