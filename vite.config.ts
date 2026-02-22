@@ -80,19 +80,27 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            // Core React runtime
-            if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) {
+            // IMPORTANT: Do NOT separate React from its consumers.
+            // Libraries like react-query call React.createContext at module scope,
+            // so they MUST share the same React instance (same chunk or natural imports).
+
+            // Core React runtime — includes react-query which calls createContext at init
+            if (/node_modules\/(react|react-dom|scheduler|@tanstack\/react-query)\//.test(id)) {
               return "vendor-react";
             }
-            // Data layer: react-query + supabase
-            if (/node_modules\/(@tanstack\/react-query|@supabase\/supabase-js|@supabase\/)/.test(id)) {
+            // Router
+            if (/node_modules\/(react-router|react-router-dom)\//.test(id)) {
+              return "vendor-react";
+            }
+            // Supabase SDK
+            if (/node_modules\/(@supabase\/supabase-js|@supabase\/)/.test(id)) {
               return "vendor-data";
             }
-            // UI primitives: radix + shadcn deps (exclude react-slot which is tiny & critical-path)
-            if (/node_modules\/(@radix-ui\/(?!react-slot)|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner)/.test(id)) {
+            // UI primitives: radix + shadcn deps
+            if (/node_modules\/(@radix-ui\/|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner)/.test(id)) {
               return "vendor-ui";
             }
-            // Lucide icons — separate chunk, only loaded when components need icons
+            // Lucide icons
             if (/node_modules\/lucide-react/.test(id)) {
               return "vendor-icons";
             }
