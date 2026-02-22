@@ -1,6 +1,5 @@
 import { useEffect, lazy, Suspense, useState } from "react";
 import Hero from "@/components/Hero";
-import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // Header lazy-loaded to defer vendor-ui (lucide, radix) + vendor-data (supabase) from critical path
@@ -28,83 +27,13 @@ const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCa
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 
-// Visibility-gated section: stats + calculator (near-fold)
-const NearFoldSection = () => {
-  const [ref, visible] = useLazyVisible("200px");
-  return (
-    <div ref={ref}>
-      {visible && (
-        <Suspense fallback={null}>
-          <StatsCounters />
-          <section id="calculator">
-            <ProfitCalculator />
-          </section>
-          <QuickLeadForm />
-          <MainNavigationCards />
-        </Suspense>
-      )}
-    </div>
-  );
-};
-
-// Visibility-gated mid-fold section (simplified - removed redundant trust sections)
-const MidFoldSection = () => {
-  const [ref, visible] = useLazyVisible("400px");
-  return (
-    <div ref={ref}>
-      {visible && (
-        <Suspense fallback={null}>
-          <DualServicePaths />
-        </Suspense>
-      )}
-    </div>
-  );
-};
-
-// Visibility-gated teaser sections
-const TeaserSections = () => {
-  const [ref, visible] = useLazyVisible("400px");
-  return (
-    <div ref={ref}>
-      {visible && (
-        <Suspense fallback={null}>
-          <section id="beneficii">
-            <OwnersTeaser />
-          </section>
-          <section id="oaspeti-preview">
-            <GuestsTeaser />
-          </section>
-        </Suspense>
-      )}
-    </div>
-  );
-};
-
-// Visibility-gated bottom fold (simplified - fewer sections)
-const BottomFoldSection = ({ language }: { language: string }) => {
-  const [ref, visible] = useLazyVisible("600px");
-  return (
-    <div ref={ref}>
-      {visible && (
-        <Suspense fallback={null}>
-          <BlogPreview />
-          <FAQ />
-          <ContactSection />
-          <CTA />
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// All sections render eagerly inside Suspense — lazy() handles code-splitting
 
 // Deferred SEO — loaded after first paint to avoid blocking render
 const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
 
 const Index = () => {
   const { language } = useLanguage();
-  
-  // Visibility gates for heavy sections
-  const [heavyRef, heavyVisible] = useLazyVisible("600px");
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
@@ -120,14 +49,12 @@ const Index = () => {
       document.removeEventListener("scroll", loadAnalytics);
     };
     document.addEventListener("scroll", loadAnalytics, { once: true, passive: true });
-    // Fallback after 12s if no scroll
     const t = setTimeout(loadAnalytics, 12000);
     return () => { clearTimeout(t); document.removeEventListener("scroll", loadAnalytics); };
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Skip to content link for screen readers & keyboard users */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-semibold"
@@ -143,32 +70,43 @@ const Index = () => {
         <Header />
       </Suspense>
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
-        {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
 
-        {/* Near-fold: stats + calculator — visibility gated at 200px */}
-        <NearFoldSection />
+        <Suspense fallback={null}>
+          <StatsCounters />
+          <section id="calculator">
+            <ProfitCalculator />
+          </section>
+          <QuickLeadForm />
+          <MainNavigationCards />
+        </Suspense>
 
-        {/* Mid-fold: trust + service sections - gated by visibility */}
-        <MidFoldSection />
+        <Suspense fallback={null}>
+          <DualServicePaths />
+        </Suspense>
 
-        {/* Owners & Guests teasers - gated by visibility */}
-        <TeaserSections />
+        <Suspense fallback={null}>
+          <section id="beneficii">
+            <OwnersTeaser />
+          </section>
+          <section id="oaspeti-preview">
+            <GuestsTeaser />
+          </section>
+        </Suspense>
 
-        {/* Property gallery + testimonials */}
-        <div ref={heavyRef}>
-          {heavyVisible && (
-            <Suspense fallback={<div className="min-h-[400px]" />}>
-              <section id="portofoliu">
-                <PropertyGallery />
-              </section>
-              <Testimonials />
-            </Suspense>
-          )}
-        </div>
-        
-        {/* Bottom-fold: deferred until scroll */}
-        <BottomFoldSection language={language} />
+        <Suspense fallback={null}>
+          <section id="portofoliu">
+            <PropertyGallery />
+          </section>
+          <Testimonials />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <BlogPreview />
+          <FAQ />
+          <ContactSection />
+          <CTA />
+        </Suspense>
       </main>
       <Suspense fallback={null}>
         <Footer />
