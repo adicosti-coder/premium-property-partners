@@ -10,6 +10,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const CookieConsent = lazy(() => import("@/components/CookieConsent"));
+const GoogleAnalytics = lazy(() => import("@/components/GoogleAnalytics"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error) => {
@@ -106,6 +107,7 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
           <Toaster />
           <Sonner />
           <CookieConsent />
+          <GoogleAnalytics />
         </Suspense>
       )}
     </>
