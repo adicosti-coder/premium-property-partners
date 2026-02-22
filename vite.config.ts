@@ -85,21 +85,9 @@ export default defineConfig(({ mode }) => {
             // Libraries like react-query call React.createContext at module scope,
             // so they MUST share the same React instance (same chunk or natural imports).
 
-            // Core React runtime — includes react-query which calls createContext at init
-            if (/node_modules\/(react|react-dom|scheduler|@tanstack\/react-query)\//.test(id)) {
+            // Core React runtime + UI primitives that call forwardRef/createContext at init
+            if (/node_modules\/(react|react-dom|scheduler|@tanstack\/react-query|react-router|react-router-dom|@radix-ui\/|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner)/.test(id)) {
               return "vendor-react";
-            }
-            // Router
-            if (/node_modules\/(react-router|react-router-dom)\//.test(id)) {
-              return "vendor-react";
-            }
-            // Supabase SDK
-            if (/node_modules\/(@supabase\/supabase-js|@supabase\/)/.test(id)) {
-              return "vendor-data";
-            }
-            // UI primitives: radix + shadcn deps
-            if (/node_modules\/(@radix-ui\/|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner)/.test(id)) {
-              return "vendor-ui";
             }
             // Lucide icons
             if (/node_modules\/lucide-react/.test(id)) {
