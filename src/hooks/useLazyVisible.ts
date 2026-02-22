@@ -7,16 +7,19 @@ import { useState, useEffect, useRef } from "react";
  */
 export function useLazyVisible(rootMargin = "400px") {
   const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  // On mobile, skip lazy-loading entirely to avoid cascading delays
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const [isVisible, setIsVisible] = useState(isMobile);
 
   useEffect(() => {
+    if (isVisible) return;
     const el = ref.current;
-    if (!el || isVisible) return;
+    if (!el) return;
 
-    // Fallback: if IntersectionObserver doesn't fire within 3s, force visible
+    // Short fallback so content always appears
     const fallbackTimer = setTimeout(() => {
       setIsVisible(true);
-    }, 3000);
+    }, 1500);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
