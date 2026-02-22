@@ -1,17 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
-import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2, Crown, Users } from "lucide-react";
+import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Tooltip as RechartsTooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Tooltip as ShadTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import LeadCaptureForm from "./LeadCaptureForm";
-import AuthGateOverlay from "./AuthGateOverlay";
-import PremiumBenefitsBadge from "./PremiumBenefitsBadge";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
 import { useSimulations } from "@/hooks/useSimulations";
-import { useRecentSignupsCounter } from "@/hooks/useRecentSignupsCounter";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,8 +29,6 @@ const ProfitCalculator = () => {
 
   const { user, isAuthenticated, simulations, saveSimulation, deleteSimulation } = useSimulations();
   
-  // Social proof counter for premium banner
-  const { count: signupsCount, isIncrementing } = useRecentSignupsCounter({ baseCount: 127 });
 
   // Scroll animations
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
@@ -351,76 +347,9 @@ const ProfitCalculator = () => {
               resultsVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
             )}
           >
-            {/* Premium Benefits Badge for unauthenticated users */}
-            <AnimatePresence>
-              {!isAuthenticated && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mb-4"
-                >
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/25">
-                    <div className="flex items-center gap-3">
-                      <motion.div
-                        animate={{ 
-                          rotate: [0, 8, -8, 0],
-                          scale: [1, 1.1, 1]
-                        }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          repeatDelay: 3 
-                        }}
-                      >
-                        <Crown className="w-5 h-5 text-gold" />
-                      </motion.div>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                        <span className="text-sm font-medium text-foreground">
-                          {language === 'ro' 
-                            ? 'Salvează și compară simulările tale' 
-                            : 'Save and compare your simulations'}
-                        </span>
-                        {/* Social proof counter */}
-                        <motion.div 
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                          animate={isIncrementing ? { scale: [1, 1.15, 1] } : {}}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Users className="w-3.5 h-3.5 text-gold" />
-                          <motion.span
-                            key={signupsCount}
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={cn(
-                              "font-semibold tabular-nums",
-                              isIncrementing && "text-gold"
-                            )}
-                          >
-                            {signupsCount}
-                          </motion.span>
-                          <span>{language === 'ro' ? 'înregistrați recent' : 'signed up recently'}</span>
-                        </motion.div>
-                      </div>
-                    </div>
-                    <PremiumBenefitsBadge variant="compact" />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Results content wrapper with blur overlay */}
+            {/* Results content */}
             <div className="relative">
-              {/* Auth Gate Overlay - show blur when not authenticated */}
-              {!isAuthenticated && (
-                <AuthGateOverlay context="calculator" />
-              )}
-
-              {/* Blurred content container */}
-              <div className={cn(
-                "space-y-6",
-                !isAuthenticated && "blur-lg pointer-events-none select-none"
-              )}>
+              <div className="space-y-6">
                 {/* History toggle button for authenticated users */}
                 {isAuthenticated && simulations.length > 0 && (
                   <Button

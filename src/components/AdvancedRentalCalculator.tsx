@@ -26,8 +26,6 @@ import {
   GitCompare,
   Crown
 } from 'lucide-react';
-import PremiumBenefitsBadge from './PremiumBenefitsBadge';
-import { useRecentSignupsCounter } from '@/hooks/useRecentSignupsCounter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,7 +40,6 @@ import { format } from 'date-fns';
 import { ro, enUS } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import SimulationCompareModal from './SimulationCompareModal';
-import AuthGateOverlay from './AuthGateOverlay';
 import { cn } from '@/lib/utils';
 
 type Scenario = 'conservator' | 'piata' | 'optimist';
@@ -220,8 +217,6 @@ const AdvancedRentalCalculator = () => {
     loading: simulationsLoading 
   } = useAdvancedSimulations();
   
-  // Social proof counter for premium banner
-  const { count: signupsCount, isIncrementing } = useRecentSignupsCounter({ baseCount: 127 });
   
   const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs);
   const [scenario, setScenario] = useState<Scenario>('piata');
@@ -649,72 +644,10 @@ const AdvancedRentalCalculator = () => {
             </div>
 
             {/* Premium Banner for unauthenticated users */}
-            <AnimatePresence>
-              {!isAuthenticated && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="px-6 md:px-8 pt-6"
-                >
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-gold/10 via-gold/5 to-gold/10 border border-gold/25">
-                    <div className="flex items-center gap-3">
-                      <motion.div
-                        animate={{ 
-                          rotate: [0, 10, -10, 0],
-                          scale: [1, 1.1, 1]
-                        }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          repeatDelay: 3 
-                        }}
-                      >
-                        <Crown className="w-5 h-5 text-gold" />
-                      </motion.div>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                        <span className="text-sm font-medium text-foreground">
-                          {language === 'ro' ? 'Salvează și compară simulările tale' : 'Save and compare your simulations'}
-                        </span>
-                        {/* Social proof counter */}
-                        <motion.div 
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                          animate={isIncrementing ? { scale: [1, 1.15, 1] } : {}}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Users className="w-3.5 h-3.5 text-gold" />
-                          <motion.span
-                            key={signupsCount}
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={cn(
-                              "font-semibold tabular-nums",
-                              isIncrementing && "text-gold"
-                            )}
-                          >
-                            {signupsCount}
-                          </motion.span>
-                          <span>{language === 'ro' ? 'înregistrați recent' : 'signed up recently'}</span>
-                        </motion.div>
-                      </div>
-                    </div>
-                    <PremiumBenefitsBadge variant="compact" />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Results Section */}
             <div className="bg-muted/30 border-t border-border p-6 md:p-8 relative">
-              {/* Auth Gate Overlay - show blur when not authenticated */}
-              {!isAuthenticated && (
-                <AuthGateOverlay context="calculator" />
-              )}
-
-              {/* All results wrapped in blur container */}
-              <div className={cn(
-                !isAuthenticated && "blur-lg pointer-events-none select-none"
-              )}>
+              <div>
                 <div className="mb-4">
                   <h3 className="text-xl font-bold text-foreground">{t.results}</h3>
                   <p className="text-sm text-muted-foreground">{t.resultsHelp}</p>
