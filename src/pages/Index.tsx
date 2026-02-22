@@ -20,6 +20,7 @@ const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const BookingReviewsWidget = lazy(() => import("@/components/BookingReviewsWidget"));
+const GoogleReviewsWidget = lazy(() => import("@/components/GoogleReviewsWidget"));
 const ExternalTrustSeals = lazy(() => import("@/components/ExternalTrustSeals"));
 const DualServicePaths = lazy(() => import("@/components/DualServicePaths"));
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
@@ -186,6 +187,7 @@ const Index = () => {
               </section>
               <Testimonials />
               <BookingReviewsWidget />
+              <GoogleReviewsWidget />
             </Suspense>
           )}
         </div>
