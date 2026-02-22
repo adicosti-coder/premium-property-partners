@@ -138,17 +138,30 @@ const Hero = () => {
         }}
       >
         {/* Static hero image — <picture> for WebP/AVIF format negotiation, NO fade-in */}
+        {/* Mobile: serve compressed 800w JPG; Desktop: full-size with video crossfade */}
         {(() => {
           const imgSrc = heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC;
           const isNegotiable = !imgSrc.startsWith("http") && /\.(jpg|jpeg|png)$/i.test(imgSrc);
           return (
             <picture>
-              {isNegotiable && <source srcSet={imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.avif')} type="image/avif" />}
-              {isNegotiable && <source srcSet={imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp')} type="image/webp" />}
+              {isNegotiable && (
+                <source
+                  srcSet={`${imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.avif')} 1920w`}
+                  type="image/avif"
+                  sizes="100vw"
+                />
+              )}
+              {isNegotiable && (
+                <source
+                  srcSet={`${imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp')} 1920w`}
+                  type="image/webp"
+                  sizes="100vw"
+                />
+              )}
               <img
                 src={imgSrc}
                 alt="Apart-hotel Timișoara — investiții imobiliare și apartamente în regim hotelier cu administrare profesională"
-                className={`w-full h-full object-cover ${videoLoaded && shouldLoadVideo ? 'md:opacity-0' : ''}`}
+                className={`w-full h-full object-cover ${!isMobile && videoLoaded && shouldLoadVideo ? 'opacity-0' : ''}`}
                 width={1920}
                 height={1080}
                 fetchPriority="high"
@@ -158,8 +171,8 @@ const Hero = () => {
             </picture>
           );
         })()}
-        {/* Video — hidden on mobile via CSS media query, loaded only on desktop */}
-        {shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
+        {/* Video — completely excluded from DOM on mobile to prevent any download */}
+        {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
             autoPlay
             muted
@@ -168,7 +181,7 @@ const Hero = () => {
             preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
-            className={`absolute inset-0 w-full h-full object-cover hidden md:block transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => { setVideoError(true); }}
             onLoadedData={() => setVideoLoaded(true)}
             onAbort={() => setVideoError(true)}
