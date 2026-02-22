@@ -6,7 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const ContactSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { trackWhatsApp, trackEmail, trackCall } = useCtaAnalytics();
   const [copied, setCopied] = useState(false);
 
@@ -181,10 +181,25 @@ const ContactSection = () => {
               </Button>
               <Button variant="whatsapp" className="flex-1" onClick={handleWhatsApp}>
                 <MessageCircle className="w-4 h-4 mr-2" />
-                {t.contactSection.sendByWhatsapp}
-              </Button>
+              {t.contactSection.sendByWhatsapp}
+            </Button>
             </div>
           </div>
+        </div>
+
+        {/* Embedded Google Map */}
+        <div className="mt-12 rounded-2xl overflow-hidden border border-border shadow-lg">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2783.8!2d21.2087!3d45.7489!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDXCsDQ0JzU2LjAiTiAyMcKwMTInMzEuMyJF!5e0!3m2!1sro!2sro!4v1"
+            width="100%"
+            height="350"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title={language === "ro" ? "Locația ApArt Hotel Timișoara pe Google Maps" : "ApArt Hotel Timișoara location on Google Maps"}
+            className="w-full"
+          />
         </div>
       </div>
     </section>
