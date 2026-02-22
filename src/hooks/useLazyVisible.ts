@@ -13,10 +13,16 @@ export function useLazyVisible(rootMargin = "400px") {
     const el = ref.current;
     if (!el || isVisible) return;
 
+    // Fallback: if IntersectionObserver doesn't fire within 3s, force visible
+    const fallbackTimer = setTimeout(() => {
+      setIsVisible(true);
+    }, 3000);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
+          clearTimeout(fallbackTimer);
           observer.disconnect();
         }
       },
@@ -24,7 +30,10 @@ export function useLazyVisible(rootMargin = "400px") {
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(fallbackTimer);
+      observer.disconnect();
+    };
   }, [isVisible, rootMargin]);
 
   return [ref, isVisible] as const;
