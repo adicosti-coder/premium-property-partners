@@ -77,6 +77,15 @@ export default {
           DEFAULT: "hsl(var(--slate))",
           light: "hsl(var(--slate-light))",
         },
+        whatsapp: {
+          DEFAULT: "hsl(var(--whatsapp))",
+          hover: "hsl(var(--whatsapp-hover))",
+          foreground: "hsl(var(--whatsapp-foreground))",
+        },
+        "booking-blue": {
+          DEFAULT: "hsl(var(--booking-blue))",
+          hover: "hsl(var(--booking-blue-hover))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

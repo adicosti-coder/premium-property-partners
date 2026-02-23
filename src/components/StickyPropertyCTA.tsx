@@ -121,7 +121,7 @@ const StickyPropertyCTA = ({ propertyName, propertyId, price, onBookClick }: Sti
                   variant="outline"
                   size="default"
                   onClick={handleWhatsApp}
-                  className="gap-1.5 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
+                  className="gap-1.5 border-whatsapp/30 text-whatsapp hover:bg-whatsapp/10"
                 >
                   <MessageCircle className="w-4 h-4" />
                   {text.whatsapp}

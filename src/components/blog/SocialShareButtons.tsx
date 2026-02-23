@@ -81,7 +81,7 @@ const SocialShareButtons = ({ url, title, description }: SocialShareButtonsProps
         variant="outline"
         size="icon"
         onClick={() => handleShare("whatsapp")}
-        className="h-9 w-9 rounded-full hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-colors"
+        className="h-9 w-9 rounded-full hover:bg-whatsapp hover:text-whatsapp-foreground hover:border-whatsapp transition-colors"
         aria-label="Share on WhatsApp"
       >
         <svg

@@ -92,6 +92,13 @@
     --shadow-glow: 0 0 40px hsl(45 90% 35% / 0.25);
     --shadow-gold: 0 10px 40px -10px hsl(45 90% 35% / 0.35);
 
+    /* Brand colors – WCAG AA on white */
+    --whatsapp: 168 39% 35%;
+    --whatsapp-hover: 170 44% 27%;
+    --whatsapp-foreground: 0 0% 100%;
+    --booking-blue: 216 100% 17%;
+    --booking-blue-hover: 216 100% 12%;
+
     /* Sidebar tokens */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
@@ -160,6 +167,12 @@
     --shadow-glow: 0 0 40px hsl(45 90% 35% / 0.25);
     --shadow-gold: 0 10px 40px -10px hsl(45 90% 35% / 0.35);
 
+    --whatsapp: 168 39% 35%;
+    --whatsapp-hover: 170 44% 27%;
+    --whatsapp-foreground: 0 0% 100%;
+    --booking-blue: 216 100% 17%;
+    --booking-blue-hover: 216 100% 12%;
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 45 90% 35%;
@@ -227,6 +240,12 @@
     --shadow-card: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
     --shadow-glow: 0 0 60px hsl(45 93% 58% / 0.2);
     --shadow-gold: 0 10px 40px -10px hsl(45 93% 58% / 0.3);
+
+    --whatsapp: 168 39% 35%;
+    --whatsapp-hover: 170 44% 27%;
+    --whatsapp-foreground: 0 0% 100%;
+    --booking-blue: 216 100% 17%;
+    --booking-blue-hover: 216 100% 12%;
 
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 45 100% 96%;

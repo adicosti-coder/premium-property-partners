@@ -143,8 +143,8 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       icon: MessageCircle,
       label: "WhatsApp",
       onClick: handleWhatsAppClick,
-      bgColor: "bg-[#25D366]",
-      textColor: "text-white",
+      bgColor: "bg-whatsapp",
+      textColor: "text-whatsapp-foreground",
     },
     {
       id: "scroll-top",
