@@ -220,13 +220,13 @@ const WhyBookDirect = () => {
         description={language === 'ro' 
           ? 'Economisește până la 15% rezervând direct. Beneficiază de prețuri mai bune, comunicare directă și flexibilitate maximă.'
           : 'Save up to 15% by booking direct. Get better prices, direct communication and maximum flexibility.'}
-        url="https://realtrust.ro/rezerva-direct"
+        url="https://www.realtrust.ro/rezerva-direct"
         jsonLd={faqJsonLd}
         faqItems={faqItems}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-          { name: language === "ro" ? "Oaspeți" : "Guests", url: "https://realtrust.ro/oaspeti" },
-          { name: language === "ro" ? "Rezervă Direct" : "Book Direct", url: "https://realtrust.ro/rezerva-direct" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+          { name: language === "ro" ? "Oaspeți" : "Guests", url: "https://www.realtrust.ro/oaspeti" },
+          { name: language === "ro" ? "Rezervă Direct" : "Book Direct", url: "https://www.realtrust.ro/rezerva-direct" },
         ]}
       />
       <Header />

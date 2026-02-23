@@ -281,7 +281,7 @@ const PentruOaspeti = () => {
         description={language === "ro" 
           ? "Cazare premium în Timișoara cu facilități hoteliere, check-in automat și suport 24/7. Rezervă direct pentru cel mai bun preț!"
           : "Premium accommodation in Timișoara with hotel-style amenities, self check-in and 24/7 support. Book direct for the best price!"}
-        url="https://realtrust.ro/pentru-oaspeti"
+        url="https://www.realtrust.ro/pentru-oaspeti"
       />
       <Header />
       

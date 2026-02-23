@@ -264,7 +264,7 @@ const PropertyDetail = () => {
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
       "name": property.name,
-      "url": `https://realtrust.ro/proprietate/${slug}`,
+      "url": `https://www.realtrust.ro/proprietate/${slug}`,
       "image": galleryImages[0] || "",
       "aggregateRating": {
         "@type": "AggregateRating",
@@ -289,7 +289,7 @@ const PropertyDetail = () => {
         description={language === 'ro' 
           ? `${property.name} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
           : `${property.name} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`}
-        url={`https://realtrust.ro/proprietate/${slug}`}
+        url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
         type="product"
         productPrice={property.pricePerNight || undefined}

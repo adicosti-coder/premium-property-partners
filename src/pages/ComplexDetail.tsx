@@ -212,7 +212,7 @@ const ComplexDetail = () => {
       "@type": "LocalBusiness",
       "name": `RealTrust - Management ${complex.name}`,
       "description": description,
-      "image": images[0]?.image_path || "https://realtrust.ro/og-image.jpg",
+      "image": images[0]?.image_path || "https://www.realtrust.ro/og-image.jpg",
       "url": pageUrl,
       "telephone": "+40723154520",
       "address": {
@@ -255,8 +255,8 @@ const ComplexDetail = () => {
 
   // Breadcrumb for SEO
   const breadcrumbItems = [
-    { name: "Acasă", url: "https://realtrust.ro" },
-    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/complexe" },
+    { name: "Acasă", url: "https://www.realtrust.ro" },
+    { name: "Complexe Rezidențiale", url: "https://www.realtrust.ro/complexe" },
     { name: complex.name, url: pageUrl },
   ];
 

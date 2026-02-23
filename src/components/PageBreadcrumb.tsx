@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const BASE_URL = "https://realtrust.ro";
+const BASE_URL = "https://www.realtrust.ro";
 
 interface BreadcrumbItemType {
   label: string;

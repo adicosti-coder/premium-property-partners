@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const BASE_URL = "https://realtrust.ro";
+const BASE_URL = "https://www.realtrust.ro";
 
 interface SEOHeadProps {
   title?: string;

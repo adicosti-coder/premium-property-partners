@@ -269,8 +269,8 @@ const BlogArticlePage = () => {
   });
 
   const breadcrumbSchemaData = generateBreadcrumbSchema([
-    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-    { name: "Blog", url: "https://realtrust.ro/blog" },
+    { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+    { name: "Blog", url: "https://www.realtrust.ro/blog" },
     { name: displayTitle, url: articleUrl },
   ]);
 

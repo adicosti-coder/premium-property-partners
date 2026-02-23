@@ -19,7 +19,7 @@ Disallow: /portal-proprietar
 Disallow: /auth
 
 # Sitemaps
-Sitemap: https://realtrust.ro/sitemap.xml
+Sitemap: https://www.realtrust.ro/sitemap.xml
 
 # Host
-Host: https://realtrust.ro
+Host: https://www.realtrust.ro
