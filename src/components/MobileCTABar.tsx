@@ -79,9 +79,9 @@ const MobileCTABar = () => {
         <button
           onClick={handleWhatsApp}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-[#25D366]",
+            "flex flex-col items-center justify-center py-2.5 px-1 bg-[#128C7E]",
             "active:scale-95 transition-all duration-150",
-            "hover:bg-[#20BD5A]"
+            "hover:bg-[#0e7a6e]"
           )}
         >
           <MessageCircle className="w-4 h-4 text-white mb-0.5" />

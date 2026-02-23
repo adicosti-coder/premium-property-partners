@@ -18,6 +18,36 @@ const BookingForm = lazy(() => import("./BookingForm"));
 const PropertyCompareModal = lazy(() => import("./PropertyCompareModal"));
 const PropertyMap = lazy(() => import("./PropertyMap"));
 
+// Click-to-load map wrapper — prevents 455KB Mapbox from loading until user requests it
+const MapToggleSection = ({ language }: { language: string }) => {
+  const [showMap, setShowMap] = useState(false);
+  return (
+    <div className="mb-12">
+      <div className="flex items-center gap-2 mb-4">
+        <Map className="w-5 h-5 text-primary" />
+        <h3 className="text-lg font-serif font-semibold text-foreground">
+          {language === 'ro' ? 'Hartă Proprietăți' : 'Properties Map'}
+        </h3>
+      </div>
+      {showMap ? (
+        <Suspense fallback={<div className="w-full h-[400px] rounded-xl bg-muted animate-pulse" />}>
+          <PropertyMap className="w-full h-[400px] rounded-xl" />
+        </Suspense>
+      ) : (
+        <button
+          onClick={() => setShowMap(true)}
+          className="w-full h-[400px] rounded-xl bg-muted/50 border border-border flex flex-col items-center justify-center gap-3 hover:bg-muted transition-colors cursor-pointer"
+        >
+          <Map className="w-10 h-10 text-primary" />
+          <span className="text-sm font-medium text-foreground">
+            {language === 'ro' ? 'Apasă pentru a vedea harta' : 'Click to load map'}
+          </span>
+        </button>
+      )}
+    </div>
+  );
+};
+
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
     case "wifi":
@@ -282,17 +312,9 @@ const PropertyGallery = () => {
           </div>
         )}
 
-        {/* Interactive Map */}
+        {/* Interactive Map - click-to-load to avoid loading 455KB Mapbox on initial render */}
         {!isLoading && (
-          <div className="mb-12">
-            <div className="flex items-center gap-2 mb-4">
-              <Map className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-serif font-semibold text-foreground">
-                {language === 'ro' ? 'Hartă Proprietăți' : 'Properties Map'}
-              </h3>
-            </div>
-            <PropertyMap className="w-full h-[400px] rounded-xl" />
-          </div>
+          <MapToggleSection language={language} />
         )}
 
         {/* Property Grid */}
