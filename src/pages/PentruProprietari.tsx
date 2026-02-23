@@ -157,12 +157,12 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Pentru Proprietari | Administrare Apartamente Timișoara | RealTrust",
-      description: "Transformă-ți apartamentul într-o sursă de venit pasiv. Comision 15-25%, rată ocupare 85%+, transparență totală. Evaluare gratuită!"
+      title: "Administrare Apartamente Timișoara | RealTrust",
+      description: "Transformă-ți apartamentul într-o sursă de venit pasiv cu administrare profesională. Comision 15-25%, rată ocupare 85%+, transparență totală și rapoarte lunare. Evaluare gratuită!"
     },
     en: {
-      title: "For Property Owners | Apartment Management Timișoara | RealTrust",
-      description: "Transform your apartment into a passive income source. 15-25% commission, 85%+ occupancy rate, full transparency. Free evaluation!"
+      title: "Apartment Management Timișoara | RealTrust",
+      description: "Transform your apartment into a passive income source with professional management. 15-25% commission, 85%+ occupancy, full transparency and monthly reports. Free evaluation!"
     }
   };
 
@@ -229,7 +229,7 @@ const PentruProprietari = () => {
             />
             <img
               src="/images/hero-cinematic.webp"
-              alt=""
+              alt={language === "ro" ? "Apartament premium administrat în regim hotelier Timișoara" : "Premium managed short-term rental apartment Timișoara"}
               className="w-full h-full object-cover"
               width={1920}
               height={1080}

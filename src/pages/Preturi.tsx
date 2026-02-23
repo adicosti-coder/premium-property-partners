@@ -227,12 +227,12 @@ const Preturi = () => {
 
   const seo = {
     ro: {
-      title: "Prețuri & Pachete | Administrare Apartamente Timișoara | RealTrust",
-      description: "Prețuri transparente pentru administrare apartamente în regim hotelier. Comision de la 15%. Fără costuri ascunse. Evaluare gratuită!",
+      title: "Prețuri Administrare Apartamente Timișoara | RealTrust",
+      description: "Prețuri transparente pentru administrare apartamente în regim hotelier Timișoara. Comision de la 15% fără costuri ascunse, contract flexibil și evaluare gratuită a proprietății tale!",
     },
     en: {
-      title: "Pricing & Packages | Apartment Management Timișoara | RealTrust",
-      description: "Transparent pricing for short-term rental management. Commission from 15%. No hidden fees. Free evaluation!",
+      title: "Apartment Management Pricing Timișoara | RealTrust",
+      description: "Transparent pricing for short-term rental management in Timișoara. Commission from 15% with no hidden fees, flexible contract and free property evaluation!",
     },
   };
 
@@ -431,7 +431,7 @@ const Preturi = () => {
             </Button>
             <Button asChild variant="heroOutline" size="xl">
               <Link to="/pentru-proprietari">
-                {lang === "ro" ? "Află mai multe" : "Learn more"}
+                {lang === "ro" ? "Vezi serviciile pentru proprietari" : "View owner services"}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
             </Button>
