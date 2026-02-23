@@ -222,7 +222,6 @@ const WhyBookDirect = () => {
           : 'Save up to 15% by booking direct on ApArt Hotel site. Get better prices than Booking or Airbnb, direct communication with our team and maximum flexibility.'}
         url="https://www.realtrust.ro/rezerva-direct"
         jsonLd={faqJsonLd}
-        faqItems={faqItems}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
           { name: language === "ro" ? "Oaspeți" : "Guests", url: "https://www.realtrust.ro/oaspeti" },
