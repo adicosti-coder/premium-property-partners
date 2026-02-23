@@ -49,11 +49,11 @@ export default defineConfig(({ mode }) => {
       mode === "development" && componentTagger(),
       ViteImageOptimizer({
         test: /\.(jpe?g|png|gif|tiff|webp|svg|avif)$/i,
-        jpg: { quality: 70, progressive: true },
-        jpeg: { quality: 70, progressive: true },
-        png: { quality: 70 },
-        webp: { quality: 70, effort: 4 },
-        avif: { quality: 55, effort: 4 },
+        jpg: { quality: 55, progressive: true },
+        jpeg: { quality: 55, progressive: true },
+        png: { quality: 55 },
+        webp: { quality: 50, effort: 6 },
+        avif: { quality: 40, effort: 6 },
       }),
     ].filter(Boolean),
     resolve: {

@@ -33,7 +33,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     { question: language === "ro" ? "Cum asigurați transparența veniturilor și a costurilor?" : "How do you ensure transparency of revenues and costs?",
       answer: language === "ro" ? "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-25% comision management + 15-23% comision platforme)." : "Owners receive detailed monthly reports, where commissions are clearly explained (15-25% management fee + 15-23% platform fee)." },
   ]);
-  const speakableSchema = generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
+  const speakableSchema = generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://www.realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), faqSchema, speakableSchema];
 
   return <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />;

@@ -12,8 +12,8 @@ const BookingReviewsWidget = () => {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
     "name": "ApArt Hotel Timișoara by RealTrust",
-    "image": "https://realtrust.ro/og-image.jpg",
-    "url": "https://realtrust.ro",
+    "image": "https://www.realtrust.ro/og-image.jpg",
+    "url": "https://www.realtrust.ro",
     "telephone": "+40723154520",
     "address": {
       "@type": "PostalAddress",

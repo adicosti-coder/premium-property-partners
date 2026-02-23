@@ -135,7 +135,7 @@ const Investitii = () => {
 
   const speakableSchema = generateSpeakableSchema(
     t.title,
-    "https://realtrust.ro/investitii",
+    "https://www.realtrust.ro/investitii",
     [".page-summary", "h1", "h2"],
   );
 
@@ -144,11 +144,11 @@ const Investitii = () => {
       <SEOHead 
         title={t.title + " | RealTrust"}
         description={t.metaDescription}
-        url="https://realtrust.ro/investitii"
+        url="https://www.realtrust.ro/investitii"
         jsonLd={speakableSchema}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-          { name: t.title, url: "https://realtrust.ro/investitii" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+          { name: t.title, url: "https://www.realtrust.ro/investitii" },
         ]}
       />
       <Header />

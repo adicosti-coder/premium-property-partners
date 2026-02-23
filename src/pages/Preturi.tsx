@@ -244,7 +244,7 @@ const Preturi = () => {
       <SEOHead
         title={s.title}
         description={s.description}
-        url="https://realtrust.ro/preturi"
+        url="https://www.realtrust.ro/preturi"
       />
       <Header />
 

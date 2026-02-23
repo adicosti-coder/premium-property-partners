@@ -136,8 +136,8 @@ const Complexe = () => {
   }, []);
 
   const breadcrumbItems = [
-    { name: "Acasă", url: "https://realtrust.ro" },
-    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/complexe" },
+    { name: "Acasă", url: "https://www.realtrust.ro" },
+    { name: "Complexe Rezidențiale", url: "https://www.realtrust.ro/complexe" },
   ];
 
   const jsonLd = {
@@ -151,7 +151,7 @@ const Complexe = () => {
       "item": {
         "@type": "ApartmentComplex",
         "name": complex.name,
-        "url": `https://realtrust.ro/complex/${complex.slug}`,
+        "url": `https://www.realtrust.ro/complex/${complex.slug}`,
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Timișoara",
@@ -167,7 +167,7 @@ const Complexe = () => {
       <SEOHead
         title={t.title}
         description={t.metaDescription}
-        url="https://realtrust.ro/complexe"
+        url="https://www.realtrust.ro/complexe"
         jsonLd={jsonLd}
         breadcrumbItems={breadcrumbItems}
       />

@@ -221,8 +221,8 @@ const Blog = () => {
   const blogSchemas = useMemo(() => {
     const schemas: Record<string, unknown>[] = [
       generateBreadcrumbSchema([
-        { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-        { name: "Blog", url: "https://realtrust.ro/blog" },
+        { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+        { name: "Blog", url: "https://www.realtrust.ro/blog" },
       ]),
     ];
     if (articles && articles.length > 0) {
@@ -236,7 +236,7 @@ const Blog = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrust.ro/blog"
+        url="https://www.realtrust.ro/blog"
         jsonLd={blogSchemas}
       />
       <Header />

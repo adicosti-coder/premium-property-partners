@@ -3,7 +3,7 @@
  * Centralized utilities for generating structured data
  */
 
-const BASE_URL = "https://realtrust.ro";
+const BASE_URL = "https://www.realtrust.ro";
 const ORGANIZATION = {
   "@type": "Organization",
   "name": "RealTrust & ApArt Hotel Timișoara",

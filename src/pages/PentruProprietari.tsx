@@ -173,7 +173,7 @@ const PentruProprietari = () => {
   useEffect(() => {
     import("@/utils/schemaGenerators").then(({ generatePropertyManagementServiceSchema, generateSpeakableSchema }) => {
       const serviceSchema = generatePropertyManagementServiceSchema();
-      const speakable = generateSpeakableSchema(seo.title, "https://realtrust.ro/pentru-proprietari");
+      const speakable = generateSpeakableSchema(seo.title, "https://www.realtrust.ro/pentru-proprietari");
       setSchemas([serviceSchema, speakable]);
     });
   }, [seo.title]);
@@ -187,11 +187,11 @@ const PentruProprietari = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrust.ro/pentru-proprietari"
+        url="https://www.realtrust.ro/pentru-proprietari"
         jsonLd={schemas}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://realtrust.ro/pentru-proprietari" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://www.realtrust.ro/pentru-proprietari" },
         ]}
       />
       <Header />

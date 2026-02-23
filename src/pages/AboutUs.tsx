@@ -308,8 +308,8 @@ const AboutUs = () => {
     "@type": "Organization",
     "name": "RealTrust & ApArt Hotel",
     "legalName": "Imo Business Centrum SRL",
-    "url": "https://realtrust.ro",
-    "logo": "https://realtrust.ro/favicon.ico",
+    "url": "https://www.realtrust.ro",
+    "logo": "https://www.realtrust.ro/favicon.ico",
     "description": seo.description,
     "foundingDate": "1999",
     "address": {
@@ -340,11 +340,11 @@ const AboutUs = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://realtrust.ro/despre-noi"
+        url="https://www.realtrust.ro/despre-noi"
         jsonLd={organizationSchema}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-          { name: language === "ro" ? "Despre Noi" : "About Us", url: "https://realtrust.ro/despre-noi" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+          { name: language === "ro" ? "Despre Noi" : "About Us", url: "https://www.realtrust.ro/despre-noi" },
         ]}
       />
       <Header />

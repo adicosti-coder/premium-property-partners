@@ -15,7 +15,7 @@ const escapeXml = (str: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
-const BASE_URL = "https://realtrust.ro";
+const BASE_URL = "https://www.realtrust.ro";
 
 interface BlogArticle {
   slug: string;
