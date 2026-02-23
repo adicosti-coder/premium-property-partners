@@ -28,9 +28,7 @@ const OnboardingVideoExplainer = lazy(() => import("@/components/OnboardingVideo
 const TrustBadges = lazy(() => import("@/components/TrustBadges"));
 const FinancialTransparency = lazy(() => import("@/components/FinancialTransparency"));
 const PartnershipTimeline = lazy(() => import("@/components/PartnershipTimeline"));
-const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
-const RentalIncomeCalculator = lazy(() => import("@/components/RentalIncomeCalculator"));
-const AdvancedRentalCalculator = lazy(() => import("@/components/AdvancedRentalCalculator"));
+const UnifiedCalculators = lazy(() => import("@/components/UnifiedCalculators"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const WhyUs = lazy(() => import("@/components/WhyUs"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -375,17 +373,13 @@ const PentruProprietari = () => {
       {/* Channel Logos - pe ce platforme ești listat */}
       <ChannelLogos />
 
-      {/* STEP 2: Calculator - deferred via IntersectionObserver */}
+      {/* STEP 2: Calculatoare unificate - deferred via IntersectionObserver */}
       <div ref={calcSentinel} />
-      <section id="calculator" className="scroll-mt-24">
-        {calcReady && <ProfitCalculator />}
-      </section>
-
-      {/* Advanced Rental Calculator (Estimator AI) */}
-      <AdvancedRentalCalculator />
-
-      {/* Rental Income Calculator (Calculator Pro) */}
-      <RentalIncomeCalculator />
+      {calcReady && (
+        <Suspense fallback={<div className="min-h-[600px] animate-pulse bg-muted/20 rounded-2xl mx-6" />}>
+          <UnifiedCalculators />
+        </Suspense>
+      )}
 
       {/* STEP 3: Pachete de prețuri — acum că știe potențialul, vede costul */}
       <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-primary/10">
