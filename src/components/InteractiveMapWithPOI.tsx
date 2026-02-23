@@ -1,17 +1,6 @@
 import React, { useEffect, useRef, useState, memo, useCallback } from 'react';
-// mapbox-gl is loaded dynamically to avoid 455KB in the main bundle
-
-type MapboxGL = typeof import('mapbox-gl');
-let _mapboxgl: MapboxGL | null = null;
-const loadMapbox = async (): Promise<MapboxGL> => {
-  if (_mapboxgl) return _mapboxgl;
-  const [mod] = await Promise.all([
-    import('mapbox-gl'),
-    import('mapbox-gl/dist/mapbox-gl.css'),
-  ]);
-  _mapboxgl = mod.default as unknown as MapboxGL;
-  return _mapboxgl;
-};
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
@@ -150,10 +139,9 @@ const InteractiveMapWithPOI = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const map = useRef<any>(null);
-  const markersRef = useRef<Record<string, any>>({});
-  const popupsRef = useRef<Record<string, any>>({});
-  const mbRef = useRef<any>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<Record<string, mapboxgl.Marker>>({});
+  const popupsRef = useRef<Record<string, mapboxgl.Popup>>({});
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(true);
@@ -316,20 +304,14 @@ const InteractiveMapWithPOI = () => {
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken || !webglSupported) return;
-    let cancelled = false;
 
-    const init = async () => {
-      const mb = await loadMapbox();
-      if (cancelled) return;
-      mbRef.current = mb;
-
-    (mb as any).accessToken = mapboxToken;
+    mapboxgl.accessToken = mapboxToken;
 
     let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     let ro: ResizeObserver | null = null;
 
     try {
-      map.current = new (mb as any).Map({
+      map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
         center: MAP_CENTER,
@@ -390,7 +372,7 @@ const InteractiveMapWithPOI = () => {
     }
 
     map.current.addControl(
-      new (mb as any).NavigationControl({ visualizePitch: true }),
+      new mapboxgl.NavigationControl({ visualizePitch: true }),
       'top-right'
     );
 
@@ -417,7 +399,7 @@ const InteractiveMapWithPOI = () => {
       apartmentEl.addEventListener('mouseenter', () => { apartmentEl.style.transform = 'scale(1.15)'; });
       apartmentEl.addEventListener('mouseleave', () => { apartmentEl.style.transform = 'scale(1)'; });
 
-      const popup = new (mbRef.current as any).Popup({ offset: 25, closeButton: true }).setHTML(`
+      const popup = new mapboxgl.Popup({ offset: 25, closeButton: true }).setHTML(`
         <div style="padding: 8px; text-align: center; min-width: 160px;">
           <strong style="color: #c9a962; font-size: 13px;">${apt.name}</strong>
           <br/>
@@ -427,7 +409,7 @@ const InteractiveMapWithPOI = () => {
         </div>
       `);
 
-      new (mbRef.current as any).Marker(apartmentEl)
+      new mapboxgl.Marker(apartmentEl)
         .setLngLat(apt.coords)
         .setPopup(popup)
         .addTo(map.current!);
@@ -441,17 +423,15 @@ const InteractiveMapWithPOI = () => {
     `;
     document.head.appendChild(style);
 
-    }; // end init()
-
-    init();
-
     return () => {
-      cancelled = true;
+      if (resizeTimer) clearTimeout(resizeTimer);
+      ro?.disconnect();
       map.current?.remove();
       map.current = null;
       markersRef.current = {};
       popupsRef.current = {};
       setMapReady(false);
+      style.remove();
     };
   }, [mapboxToken, language]);
 
@@ -530,7 +510,7 @@ const InteractiveMapWithPOI = () => {
       const description = language === 'ro' ? poi.description : poi.description_en;
       const premiumLabel = 'Premium';
 
-      const poiPopup = new (mbRef.current as any).Popup({
+      const poiPopup = new mapboxgl.Popup({
         offset: 25,
         closeButton: true,
         maxWidth: '300px',
@@ -570,7 +550,7 @@ const InteractiveMapWithPOI = () => {
         scrollToCard(poi.id);
       });
 
-      const marker = new (mbRef.current as any).Marker(poiEl)
+      const marker = new mapboxgl.Marker(poiEl)
         .setLngLat([poi.longitude, poi.latitude])
         .setPopup(poiPopup)
         .addTo(map.current!);

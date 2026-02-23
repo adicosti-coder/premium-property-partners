@@ -1,18 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
+import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
-// Inline SVG to avoid pulling lucide-react into the critical path
-const ChevronDown = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-    <path d="m6 9 6 6 6-6" />
-  </svg>
-);
+import { ChevronDown } from "lucide-react";
 
 // Hero image served from public/ so <picture> can negotiate WebP/AVIF
 const HERO_IMAGE_PUBLIC = "/images/hero-cinematic.webp";
-const HERO_VIDEO_URL = "/hero-video.mp4";
+interface HeroSettings {
+  videoUrl: string;
+  customFallbackImage: string | null;
+  customTitle: string | null;
+  customHighlight: string | null;
+  customSubtitle: string | null;
+  customBadge: string | null;
+  customTags: string[] | null;
+  customCtaPrimary: string | null;
+  customCtaSecondary: string | null;
+}
 
 const Hero = () => {
   const { t, language } = useLanguage();
@@ -22,6 +28,17 @@ const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [heroSettings, setHeroSettings] = useState<HeroSettings>({
+    videoUrl: "/hero-video.mp4",
+    customFallbackImage: null,
+    customTitle: null,
+    customHighlight: null,
+    customSubtitle: null,
+    customBadge: null,
+    customTags: null,
+    customCtaPrimary: null,
+    customCtaSecondary: null,
+  });
 
   // Defer video loading for better LCP - DESKTOP ONLY
   // On mobile, video is never loaded to save ~10MB+ of payload
@@ -44,7 +61,36 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
-  // Hero content renders instantly from translations — no DB fetch to block LCP
+  // Fetch hero settings from database
+  useEffect(() => {
+    const fetchHeroSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
+          .eq("id", "default")
+          .single();
+        
+        if (!error && data) {
+          setHeroSettings({
+            videoUrl: data.hero_video_url || "/hero-video.mp4",
+            customFallbackImage: data.hero_image_url,
+            customTitle: language === "ro" ? data.hero_title_ro : data.hero_title_en,
+            customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
+            customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
+            customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
+            customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
+            customCtaPrimary: language === "ro" ? data.hero_cta_primary_ro : data.hero_cta_primary_en,
+            customCtaSecondary: language === "ro" ? data.hero_cta_secondary_ro : data.hero_cta_secondary_en,
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching hero settings:", err);
+      }
+    };
+    
+    fetchHeroSettings();
+  }, [language]);
 
   // Check connection speed for lazy loading
   useEffect(() => {
@@ -94,7 +140,7 @@ const Hero = () => {
         {/* Static hero image — <picture> for WebP/AVIF format negotiation, NO fade-in */}
         {/* Mobile: serve compressed 800w JPG; Desktop: full-size with video crossfade */}
         {(() => {
-          const imgSrc = HERO_IMAGE_PUBLIC;
+          const imgSrc = heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC;
           const isNegotiable = !imgSrc.startsWith("http") && /\.(jpg|jpeg|png)$/i.test(imgSrc);
           return (
             <picture>
@@ -126,7 +172,7 @@ const Hero = () => {
           );
         })()}
         {/* Video — completely excluded from DOM on mobile to prevent any download */}
-        {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && (
+        {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
             autoPlay
             muted
@@ -140,7 +186,7 @@ const Hero = () => {
             onLoadedData={() => setVideoLoaded(true)}
             onAbort={() => setVideoError(true)}
           >
-            <source src={HERO_VIDEO_URL} type="video/mp4" />
+            <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
         )}
       </div>
@@ -207,19 +253,19 @@ const Hero = () => {
           {/* Headline with typing animation - 3 lines layout */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6">
               <StaticTitle 
-                title={t.hero.title} 
+                title={heroSettings.customTitle || t.hero.title} 
                 titleMid={t.hero.titleMid}
-                highlight={t.hero.titleHighlight} 
+                highlight={heroSettings.customHighlight || t.hero.titleHighlight} 
               />
           </h1>
           
           {/* Subheadline + CTAs + Feature Cards */}
           <HeroContent 
-            subtitle={t.hero.subtitle}
-            titleLength={t.hero.title.length}
-            highlightLength={t.hero.titleHighlight.length}
-            ctaPrimary={t.hero.cta}
-            ctaSecondary={t.hero.ctaSecondary}
+            subtitle={heroSettings.customSubtitle || t.hero.subtitle}
+            titleLength={(heroSettings.customTitle || t.hero.title).length}
+            highlightLength={(heroSettings.customHighlight || t.hero.titleHighlight).length}
+            ctaPrimary={heroSettings.customCtaPrimary || t.hero.cta}
+            ctaSecondary={heroSettings.customCtaSecondary || t.hero.ctaSecondary}
             t={t}
             isMobile={isMobile}
           />

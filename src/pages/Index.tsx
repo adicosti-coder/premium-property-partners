@@ -1,15 +1,8 @@
 import { useEffect, lazy, Suspense, useState } from "react";
+import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-// Header lazy-loaded to defer vendor-ui (lucide, radix) + vendor-data (supabase) from critical path
-const Header = lazy(() => import("@/components/Header"));
-
-// Lightweight static header placeholder — pure CSS, zero JS dependencies
-const HeaderPlaceholder = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 h-16 md:h-20 bg-background/80 border-b border-border/30" aria-hidden="true" />
-);
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
@@ -139,9 +132,7 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Suspense fallback={<HeaderPlaceholder />}>
-        <Header />
-      </Suspense>
+      <Header />
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />

@@ -1,15 +1,13 @@
 // Property image imports — v7 (fresh-assets 2026-02-15)
-import apt03 from "@/assets/apt-03.webp";
-import apt04 from "@/assets/apt-04.webp";
-import apt05 from "@/assets/apt-05.webp";
-import apt06 from "@/assets/apt-06.webp";
-import apt07 from "@/assets/apt-07.webp";
-import apt08 from "@/assets/apt-08.webp";
-import apt09 from "@/assets/apt-09.webp";
+import apt01 from "@/assets/apt-01.jpg";
+import apt03 from "@/assets/apt-03.jpg";
+import apt04 from "@/assets/apt-04.jpg";
+import apt05 from "@/assets/apt-05.jpg";
+import apt06 from "@/assets/apt-06.jpg";
+import apt07 from "@/assets/apt-07.jpg";
+import apt08 from "@/assets/apt-08.jpg";
+import apt09 from "@/assets/apt-09.jpg";
 import apt11 from "@/assets/apt-11.jpg";
-
-// apt-01 served from Supabase Storage (local file removed)
-const apt01 = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/apt-01.jpg?width=800&quality=75";
 
 // These two images are served from Supabase Storage to bypass build/CDN caching issues
 // Use render/image transform endpoint for automatic compression & resize

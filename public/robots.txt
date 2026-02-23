@@ -23,22 +23,3 @@ Sitemap: https://realtrust.ro/sitemap.xml
 
 # Host
 Host: https://realtrust.ro
-
-# AI crawlers – block training, allow search features
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: ClaudeBot
-Disallow: /

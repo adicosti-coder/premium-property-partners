@@ -55,20 +55,6 @@ export default defineConfig(({ mode }) => {
         webp: { quality: 75, effort: 4 },
         avif: { quality: 60, effort: 4 },
       }),
-      // Convert render-blocking CSS <link> to async loading in production build
-      {
-        name: "async-css",
-        enforce: "post" as const,
-        transformIndexHtml(html: string) {
-          if (mode !== "production") return html;
-          return html.replace(
-            /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
-            (_match: string, href: string) =>
-              `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all'" crossorigin>` +
-              `<noscript><link rel="stylesheet" href="${href}" crossorigin></noscript>`
-          );
-        },
-      },
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -77,30 +63,15 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react/jsx-runtime", "mapbox-gl"],
     },
     build: {
-      sourcemap: true,
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            // IMPORTANT: Do NOT separate React from its consumers.
-            // Libraries like react-query call React.createContext at module scope,
-            // so they MUST share the same React instance (same chunk or natural imports).
-
-            // Core React runtime + UI primitives that call forwardRef/createContext at init
-            if (/node_modules\/(react|react-dom|scheduler|@tanstack\/react-query|react-router|react-router-dom|@radix-ui\/|class-variance-authority|clsx|tailwind-merge|cmdk|vaul|input-otp|embla-carousel|sonner)/.test(id)) {
-              return "vendor-react";
-            }
-            // Lucide icons
-            if (/node_modules\/lucide-react/.test(id)) {
-              return "vendor-icons";
-            }
-            // Heavy optional libs
-            if (/node_modules\/(framer-motion|recharts|d3-|victory-)/.test(id)) {
-              return "vendor-heavy";
-            }
-            // Forms + validation
-            if (/node_modules\/(react-hook-form|@hookform|zod|react-day-picker|date-fns)/.test(id)) {
-              return "vendor-forms";
-            }
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-query": ["@tanstack/react-query"],
+            "vendor-ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-popover", "@radix-ui/react-tooltip", "@radix-ui/react-tabs"],
+            "vendor-motion": ["framer-motion"],
+            "vendor-charts": ["recharts"],
+            "vendor-supabase": ["@supabase/supabase-js"],
           },
         },
       },
