@@ -13,18 +13,40 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 const packages = {
   ro: [
     {
+      id: "starter",
+      icon: Zap,
+      name: "Starter",
+      tagline: "Început accesibil",
+      commission: "15%",
+      commissionNote: "din venitul brut",
+      highlight: false,
+      features: [
+        { text: "Listare pe Airbnb & Booking.com", included: true },
+        { text: "Check-in standard", included: true },
+        { text: "Suport clienți în orele de lucru", included: true },
+        { text: "Raport financiar lunar", included: true },
+        { text: "Fotografii profesionale", included: false },
+        { text: "Coordonare curățenie între sejururi", included: false },
+        { text: "Prețuri dinamice automate", included: false },
+        { text: "Self check-in 24/7 cu smart lock", included: false },
+        { text: "Listare pe 10+ canale premium", included: false },
+        { text: "Manager dedicat proprietate", included: false },
+      ],
+      cta: "Solicită evaluare",
+    },
+    {
       id: "essential",
       icon: Shield,
       name: "Esențial",
       tagline: "Start fără stres",
-      commission: "25%",
+      commission: "18%",
       commissionNote: "din venitul brut",
       highlight: false,
       features: [
         { text: "Listare pe Airbnb & Booking.com", included: true },
         { text: "Fotografii profesionale de bază", included: true },
         { text: "Check-in standard", included: true },
-        { text: "Curățenie între sejururi", included: true },
+        { text: "Coordonare curățenie între sejururi", included: true },
         { text: "Suport clienți în orele de lucru", included: true },
         { text: "Raport financiar lunar", included: true },
         { text: "Prețuri dinamice automate", included: false },
@@ -46,7 +68,7 @@ const packages = {
         { text: "Listare pe Airbnb & Booking.com", included: true },
         { text: "Fotografii profesionale HD", included: true },
         { text: "Self check-in 24/7 cu smart lock", included: true },
-        { text: "Curățenie profesională între sejururi", included: true },
+        { text: "Coordonare curățenie profesională între sejururi", included: true },
         { text: "Suport clienți 24/7", included: true },
         { text: "Rapoarte financiare în timp real", included: true },
         { text: "Prețuri dinamice automate", included: true },
@@ -61,14 +83,14 @@ const packages = {
       icon: Star,
       name: "Premium",
       tagline: "Randament maxim",
-      commission: "18%",
+      commission: "25%",
       commissionNote: "din venitul brut",
       highlight: false,
       features: [
         { text: "Listare pe Airbnb & Booking.com", included: true },
         { text: "Fotografii & video profesionale", included: true },
         { text: "Self check-in 24/7 cu smart lock", included: true },
-        { text: "Curățenie profesională & inspecție calitate", included: true },
+        { text: "Coordonare curățenie profesională & inspecție calitate", included: true },
         { text: "Suport clienți 24/7 dedicat", included: true },
         { text: "Rapoarte financiare în timp real", included: true },
         { text: "Prețuri dinamice + revenue management", included: true },
@@ -81,18 +103,40 @@ const packages = {
   ],
   en: [
     {
+      id: "starter",
+      icon: Zap,
+      name: "Starter",
+      tagline: "Affordable start",
+      commission: "15%",
+      commissionNote: "of gross revenue",
+      highlight: false,
+      features: [
+        { text: "Listing on Airbnb & Booking.com", included: true },
+        { text: "Standard check-in", included: true },
+        { text: "Business hours support", included: true },
+        { text: "Monthly financial report", included: true },
+        { text: "Professional photography", included: false },
+        { text: "Cleaning coordination between stays", included: false },
+        { text: "Automatic dynamic pricing", included: false },
+        { text: "24/7 self check-in with smart lock", included: false },
+        { text: "Listing on 10+ premium channels", included: false },
+        { text: "Dedicated property manager", included: false },
+      ],
+      cta: "Request evaluation",
+    },
+    {
       id: "essential",
       icon: Shield,
       name: "Essential",
       tagline: "Stress-free start",
-      commission: "25%",
+      commission: "18%",
       commissionNote: "of gross revenue",
       highlight: false,
       features: [
         { text: "Listing on Airbnb & Booking.com", included: true },
         { text: "Basic professional photography", included: true },
         { text: "Standard check-in", included: true },
-        { text: "Cleaning between stays", included: true },
+        { text: "Cleaning coordination between stays", included: true },
         { text: "Business hours support", included: true },
         { text: "Monthly financial report", included: true },
         { text: "Automatic dynamic pricing", included: false },
@@ -114,7 +158,7 @@ const packages = {
         { text: "Listing on Airbnb & Booking.com", included: true },
         { text: "HD professional photography", included: true },
         { text: "24/7 self check-in with smart lock", included: true },
-        { text: "Professional cleaning between stays", included: true },
+        { text: "Professional cleaning coordination between stays", included: true },
         { text: "24/7 guest support", included: true },
         { text: "Real-time financial reports", included: true },
         { text: "Automatic dynamic pricing", included: true },
@@ -129,14 +173,14 @@ const packages = {
       icon: Star,
       name: "Premium",
       tagline: "Maximum yield",
-      commission: "18%",
+      commission: "25%",
       commissionNote: "of gross revenue",
       highlight: false,
       features: [
         { text: "Listing on Airbnb & Booking.com", included: true },
         { text: "Professional photos & video", included: true },
         { text: "24/7 self check-in with smart lock", included: true },
-        { text: "Professional cleaning & quality inspection", included: true },
+        { text: "Professional cleaning coordination & quality inspection", included: true },
         { text: "Dedicated 24/7 guest support", included: true },
         { text: "Real-time financial reports", included: true },
         { text: "Dynamic pricing + revenue management", included: true },
@@ -184,11 +228,11 @@ const Preturi = () => {
   const seo = {
     ro: {
       title: "Prețuri & Pachete | Administrare Apartamente Timișoara | RealTrust",
-      description: "Prețuri transparente pentru administrare apartamente în regim hotelier. Comision de la 18%. Fără costuri ascunse. Evaluare gratuită!",
+      description: "Prețuri transparente pentru administrare apartamente în regim hotelier. Comision de la 15%. Fără costuri ascunse. Evaluare gratuită!",
     },
     en: {
       title: "Pricing & Packages | Apartment Management Timișoara | RealTrust",
-      description: "Transparent pricing for short-term rental management. Commission from 18%. No hidden fees. Free evaluation!",
+      description: "Transparent pricing for short-term rental management. Commission from 15%. No hidden fees. Free evaluation!",
     },
   };
 
@@ -237,13 +281,13 @@ const Preturi = () => {
       {/* Pricing Cards */}
       <section className="py-16 px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {pkgs.map((pkg) => {
               const Icon = pkg.icon;
               return (
                 <div
                   key={pkg.id}
-                  className={`relative rounded-2xl border p-8 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                  className={`relative rounded-2xl border p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
                     pkg.highlight
                       ? "border-amber-500/60 bg-gradient-to-b from-blue-950/40 to-card shadow-lg shadow-amber-500/10"
                       : "border-border bg-card"
