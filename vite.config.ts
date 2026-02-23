@@ -52,8 +52,8 @@ export default defineConfig(({ mode }) => {
         jpg: { quality: 70, progressive: true },
         jpeg: { quality: 70, progressive: true },
         png: { quality: 70 },
-        webp: { quality: 65, effort: 6 },
-        avif: { quality: 50, effort: 6 },
+        webp: { quality: 70, effort: 4 },
+        avif: { quality: 55, effort: 4 },
       }),
     ].filter(Boolean),
     resolve: {
