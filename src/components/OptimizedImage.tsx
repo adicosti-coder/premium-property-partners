@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, memo } from "react";
+import { cloudinaryUrl, cloudinarySrcSet } from "@/utils/cloudinaryUrl";
 
 interface OptimizedImageProps {
   src: string;
@@ -70,20 +71,15 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     onError?.();
   };
 
-  // Determine if we can generate format variants (.webp/.avif)
-  // Bundled assets (from src/assets) are already optimized by vite-plugin-image-optimizer
-  // For public/ images, we generate WebP/AVIF <source> tags for format negotiation
-  const isBundledAsset =
+  // Determine if we should route through Cloudinary CDN
+  const isSkipCdn =
     src.startsWith("data:") ||
     src.startsWith("blob:") ||
-    (src.includes("/assets/") && /\-[a-zA-Z0-9]{8}\.\w+$/.test(src));
-  
-  const isExternalUrl = src.startsWith("http://") || src.startsWith("https://");
-  const isPublicImage = !isBundledAsset && !isExternalUrl && !src.startsWith("/src/");
+    src.includes("res.cloudinary.com");
 
-  // For public/ images: serve WebP/AVIF variants via <picture> (browser picks best format)
-  const webpSrc = isPublicImage ? src.replace(/\.(jpg|jpeg|png)$/i, '.webp') : undefined;
-  const avifSrc = isPublicImage ? src.replace(/\.(jpg|jpeg|png)$/i, '.avif') : undefined;
+  // Build Cloudinary-optimised src (f_auto, q_auto, responsive width)
+  const cdnSrc = isSkipCdn ? src : cloudinaryUrl(src, { width });
+  const cdnSrcSet = isSkipCdn ? undefined : cloudinarySrcSet(src);
 
   const containerStyle: React.CSSProperties = {
     width,
@@ -131,26 +127,23 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
 
       {/* Actual image with <picture> for format negotiation */}
       {isInView && !hasError && (
-        <picture>
-          {avifSrc && <source srcSet={avifSrc} type="image/avif" />}
-          {webpSrc && <source srcSet={webpSrc} type="image/webp" />}
-          <img
-            src={src}
-            alt={alt}
-            width={width}
-            height={height}
-            loading={priority ? "eager" : "lazy"}
-            decoding={priority ? "sync" : "async"}
-            fetchPriority={priority ? "high" : "auto"}
-            sizes={sizes}
-            referrerPolicy="no-referrer"
-            onLoad={handleLoad}
-            onError={handleError}
-            className={`w-full h-full object-cover transition-all duration-500 ${
-              isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
-            }`}
-          />
-        </picture>
+        <img
+          src={cdnSrc}
+          srcSet={cdnSrcSet}
+          alt={alt}
+          width={width}
+          height={height}
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "auto"}
+          sizes={sizes}
+          referrerPolicy="no-referrer"
+          onLoad={handleLoad}
+          onError={handleError}
+          className={`w-full h-full object-cover transition-all duration-500 ${
+            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+          }`}
+        />
       )}
     </div>
   );
