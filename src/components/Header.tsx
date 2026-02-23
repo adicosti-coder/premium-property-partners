@@ -221,7 +221,7 @@ const Header = () => {
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
-            <Link to="/auth">
+            <Link to="/auth" aria-label="Admin">
               <Button 
                 variant="ghost" 
                 size="sm"

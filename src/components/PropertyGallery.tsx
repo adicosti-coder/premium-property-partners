@@ -468,7 +468,7 @@ const PropertyGallery = () => {
                       <Calendar className="w-4 h-4 mr-1" />
                       {t.portfolio.bookDirect}
                     </Button>
-                    <Link to={`/proprietate/${property.slug}`}>
+                    <Link to={`/proprietate/${property.slug}`} aria-label={language === 'ro' ? `Vezi detalii ${property.name}` : `View details ${property.name}`}>
                       <Button variant="booking" size="sm" aria-label={language === 'ro' ? `Vezi detalii ${property.name}` : `View details ${property.name}`}>
                         <Eye className="w-4 h-4" />
                       </Button>
