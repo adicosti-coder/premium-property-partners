@@ -47,8 +47,8 @@ const DesktopStickyContactBar = () => {
               onClick={handleWhatsApp}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full",
-                "bg-[#25D366] text-white",
-                "hover:bg-[#20bd5a] transition-all duration-200",
+                "bg-whatsapp text-whatsapp-foreground",
+                "hover:bg-whatsapp-hover transition-all duration-200",
                 "hover:scale-105 active:scale-95"
               )}
             >

@@ -523,7 +523,7 @@ const RentalIncomeCalculator = () => {
                         <Button
                           onClick={handleWhatsAppClick}
                           disabled={isSavingLead}
-                          className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-70"
+                          className="w-full bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground py-6 text-lg font-semibold rounded-xl disabled:opacity-70"
                         >
                           {isSavingLead ? (
                             <>
