@@ -122,7 +122,7 @@ const ContactSection = () => {
 
             {/* Working Hours */}
             <div className="bg-secondary/30 p-6 rounded-xl border border-border">
-              <h3 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h3>
+              <h4 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.mondayFriday}</span>
