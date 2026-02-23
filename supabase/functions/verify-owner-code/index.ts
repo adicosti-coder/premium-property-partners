@@ -16,7 +16,7 @@ serve(async (req) => {
     // Rate limiting: 10 requests per minute per IP
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
                      req.headers.get("cf-connecting-ip") || "unknown";
-    const rateLimitResult = checkRateLimit(`verify-owner-code:${clientIP}`, 10, 60000);
+    const rateLimitResult = checkRateLimit(`verify-owner-code:${clientIP}`, { maxRequests: 10, windowMs: 60000 });
     if (!rateLimitResult.allowed) {
       return new Response(
         JSON.stringify({ valid: false, error: "Too many requests. Please try again later." }),
