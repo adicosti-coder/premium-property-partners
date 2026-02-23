@@ -142,7 +142,7 @@ const TeamSection = () => {
               <div className="relative overflow-hidden">
                 <img
                   src={member.image}
-                  alt={member.name}
+                  alt={`${member.name}, ${member.role} — echipa RealTrust Timișoara`}
                   loading="lazy"
                   decoding="async"
                   width={400}

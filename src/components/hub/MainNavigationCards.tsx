@@ -40,7 +40,7 @@ const MainNavigationCards = () => {
           icon: Building2,
           title: "Administrare Proprietăți",
           description: "Management complet în regim hotelier.\nMaximizează veniturile fără efort.",
-          cta: "Află Mai Multe",
+          cta: "Descoperă administrarea proprietăților",
           link: "/pentru-proprietari",
           accent: "from-amber-500/20 to-amber-600/5",
         },

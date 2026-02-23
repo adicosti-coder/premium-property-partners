@@ -308,7 +308,7 @@ const PropertyDetail = () => {
         {/* Galerie - Rămâne neschimbată */}
         <div className="container mx-auto px-4 sm:px-6 mb-8">
            <div className="relative aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer" onClick={() => setLightboxOpen(true)}>
-             <OptimizedImage src={galleryImages[0]} alt={property.name} className="w-full h-full object-cover" priority={true} />
+             <OptimizedImage src={galleryImages[0]} alt={`${property.name} — cazare apartament regim hotelier ${property.location}, Timișoara`} className="w-full h-full object-cover" priority={true} />
              <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
            </div>
         </div>
