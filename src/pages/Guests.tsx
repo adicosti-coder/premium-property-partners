@@ -190,12 +190,12 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
 
   const seoContent = {
     ro: {
-      title: "Apartamente Timișoara | Cazare Regim Hotelier | ApArt Hotel",
-      description: "Cazare premium în Timișoara. Apartamente complet mobilate, check-in automat, WiFi gratuit. Rezervă direct și economisește 5%!"
+      title: "Apartamente Timișoara | Cazare Regim Hotelier",
+      description: "Cazare premium în regim hotelier Timișoara. Apartamente complet mobilate cu check-in automat, WiFi gratuit și curățenie profesională. Rezervă direct pe site și economisește 5%!"
     },
     en: {
-      title: "Apartments Timișoara | Short-Term Accommodation | ApArt Hotel",
-      description: "Premium accommodation in Timișoara. Fully furnished apartments, self check-in, free WiFi. Book direct and save 5%!"
+      title: "Apartments Timișoara | Short-Term Accommodation",
+      description: "Premium short-term accommodation in Timișoara. Fully furnished apartments with self check-in, free WiFi and professional cleaning. Book direct on our site and save 5%!"
     }
   };
 

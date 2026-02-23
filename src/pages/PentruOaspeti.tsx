@@ -277,10 +277,10 @@ const PentruOaspeti = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Pentru Oaspeți | Cazare Premium Timișoara | ApArt Hotel" : "For Guests | Premium Accommodation Timișoara | ApArt Hotel"}
+        title={language === "ro" ? "Cazare Premium Timișoara | ApArt Hotel" : "Premium Accommodation Timișoara | ApArt Hotel"}
         description={language === "ro" 
-          ? "Cazare premium în Timișoara cu facilități hoteliere, check-in automat și suport 24/7. Rezervă direct pentru cel mai bun preț!"
-          : "Premium accommodation in Timișoara with hotel-style amenities, self check-in and 24/7 support. Book direct for the best price!"}
+          ? "Cazare premium în Timișoara cu facilități hoteliere complete: check-in automat, curățenie profesională și suport 24/7. Rezervă direct pe site-ul nostru și economisește 5%!"
+          : "Premium accommodation in Timișoara with full hotel amenities: self check-in, professional cleaning and 24/7 support. Book direct on our site and save 5%!"}
         url="https://www.realtrust.ro/pentru-oaspeti"
       />
       <Header />

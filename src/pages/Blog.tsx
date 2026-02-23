@@ -162,7 +162,7 @@ const Blog = () => {
       communityBtn: "Participă la concurs",
       promoTitle: "Rezervă direct și economisește 5%!",
       promoDescription: "Folosește codul DIRECT5 pentru 5% reducere la orice rezervare directă.",
-      promoButton: "Află mai multe",
+      promoButton: "Află mai multe despre rezervarea directă",
       premiumBadge: "Premium",
       trendingBadge: "Trending",
       loginToRead: "Autentifică-te pentru a citi",
@@ -189,7 +189,7 @@ const Blog = () => {
       communityBtn: "Join the contest",
       promoTitle: "Book direct and save 5%!",
       promoDescription: "Use code DIRECT5 for 5% off any direct booking.",
-      promoButton: "Learn more",
+      promoButton: "Learn more about direct booking",
       premiumBadge: "Premium",
       trendingBadge: "Trending",
       loginToRead: "Login to read",
@@ -203,12 +203,12 @@ const Blog = () => {
 
   const seoContent = {
     ro: {
-      title: "Blog | Sfaturi Proprietari & Oaspeți | RealTrust & ApArt Hotel",
-      description: "Articole, ghiduri și sfaturi pentru proprietari și oaspeți. Maximizează randamentul proprietății tale. Citește acum!"
+      title: "Blog Imobiliar Timișoara | Sfaturi Proprietari",
+      description: "Articole, ghiduri și sfaturi practice pentru proprietari și oaspeți. Află cum să maximizezi randamentul proprietății tale în regim hotelier. Citește ghidurile noastre acum!"
     },
     en: {
-      title: "Blog | Tips for Owners & Guests | RealTrust & ApArt Hotel",
-      description: "Articles, guides and tips for property owners and guests. Maximize your property returns. Read now!"
+      title: "Real Estate Blog Timișoara | Owner Tips",
+      description: "Articles, guides and practical tips for property owners and guests. Learn how to maximize your property returns in short-term rentals. Read our guides now!"
     }
   };
 

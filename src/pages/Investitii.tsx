@@ -67,7 +67,7 @@ const Investitii = () => {
   const texts = {
     ro: {
       title: "Investiții Imobiliare",
-      metaDescription: "Oportunități de investiții imobiliare în Timișoara cu randament verificat. Noi le găsim, noi le administrăm, tu încasezi profitul.",
+      metaDescription: "Oportunități de investiții imobiliare în Timișoara cu randament net 9%+ verificat. Due diligence complet, administrare profesională inclusă. Noi le găsim, noi le administrăm, tu încasezi!",
       heroTitle: "Proprietăți cu Randament",
       heroTitleHighlight: "Verificat",
       heroSubtitle: "Noi le găsim, noi le administrăm, tu încasezi profitul.",
@@ -92,7 +92,7 @@ const Investitii = () => {
     },
     en: {
       title: "Real Estate Investments",
-      metaDescription: "Real estate investment opportunities in Timișoara with verified returns. We find them, we manage them, you collect the profit.",
+      metaDescription: "Real estate investment opportunities in Timișoara with verified 9%+ net yield. Complete due diligence, professional management included. We find, manage, you collect!",
       heroTitle: "Properties with Verified",
       heroTitleHighlight: "Returns",
       heroSubtitle: "We find them, we manage them, you collect the profit.",
@@ -142,7 +142,7 @@ const Investitii = () => {
   return (
     <div className="dark min-h-screen bg-background">
       <SEOHead 
-        title={t.title + " | RealTrust"}
+        title={language === "ro" ? "Investiții Imobiliare Timișoara | RealTrust" : "Real Estate Investments Timișoara | RealTrust"}
         description={t.metaDescription}
         url="https://www.realtrust.ro/investitii"
         jsonLd={speakableSchema}
@@ -291,7 +291,7 @@ const Investitii = () => {
                     {property.image_path ? (
                       <img 
                         src={property.image_path.startsWith("http") ? property.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${property.image_path}`}
-                        alt={property.name}
+                        alt={`${property.name} — ${language === "ro" ? "apartament investiție" : "investment apartment"} ${property.location}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (

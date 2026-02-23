@@ -114,7 +114,7 @@ const MainNavigationCards = () => {
           icon: Building2,
           title: "Property Management",
           description: "Complete short-term rental management.\nMaximize revenue effortlessly.",
-          cta: "Learn More",
+          cta: "Explore Management Services",
           link: "/pentru-proprietari",
           accent: "from-amber-500/20 to-amber-600/5",
         },

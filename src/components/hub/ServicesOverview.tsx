@@ -83,7 +83,7 @@ const ServicesOverview = () => {
           title: "Real Estate Services",
           description: "Consulting and brokerage for real estate transactions",
           link: "/imobiliare",
-          cta: "Learn More",
+          cta: "Explore Real Estate Services",
           color: "from-green-500/20 to-green-600/10",
         },
         {

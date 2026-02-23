@@ -216,10 +216,10 @@ const WhyBookDirect = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={language === 'ro' ? 'De Ce Să Rezervi Direct | ApArt Hotel Timișoara' : 'Why Book Direct | ApArt Hotel Timișoara'}
+        title={language === 'ro' ? 'Rezervă Direct | ApArt Hotel Timișoara' : 'Book Direct | ApArt Hotel Timișoara'}
         description={language === 'ro' 
-          ? 'Economisește până la 15% rezervând direct. Beneficiază de prețuri mai bune, comunicare directă și flexibilitate maximă.'
-          : 'Save up to 15% by booking direct. Get better prices, direct communication and maximum flexibility.'}
+          ? 'Economisește până la 15% rezervând direct pe site-ul ApArt Hotel. Beneficiază de prețuri mai bune decât pe Booking sau Airbnb, comunicare directă cu echipa noastră și flexibilitate maximă.'
+          : 'Save up to 15% by booking direct on ApArt Hotel site. Get better prices than Booking or Airbnb, direct communication with our team and maximum flexibility.'}
         url="https://www.realtrust.ro/rezerva-direct"
         jsonLd={faqJsonLd}
         faqItems={faqItems}

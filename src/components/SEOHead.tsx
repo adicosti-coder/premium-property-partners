@@ -162,8 +162,8 @@ const SEOHead = ({
   const { language } = useLanguage();
   
   const defaultTitles = {
-    ro: "Investiții Imobiliare Timișoara | Apart-Hotel & Administrare Regim Hotelier | RealTrust",
-    en: "Real Estate Investment Timișoara | Apart-Hotel & Short-Term Rental Management | RealTrust"
+    ro: "Apartamente Regim Hotelier Timișoara | RealTrust",
+    en: "Short-Term Rental Apartments Timișoara | RealTrust"
   };
   
   const defaultDescriptions = {

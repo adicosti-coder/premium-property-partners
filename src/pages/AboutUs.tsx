@@ -292,11 +292,11 @@ const AboutUs = () => {
   const seoContent = {
     ro: {
       title: "Despre Noi | RealTrust & ApArt Hotel Timișoara",
-      description: "Două branduri, o viziune. 25+ ani experiență în imobiliare. Servicii complete de vânzări, achiziții și administrare în regim hotelier."
+      description: "Două branduri, o singură viziune. Peste 25 de ani experiență în imobiliare Timișoara. Servicii complete de vânzări, achiziții și administrare profesională în regim hotelier."
     },
     en: {
       title: "About Us | RealTrust & ApArt Hotel Timișoara",
-      description: "Two brands, one vision. 25+ years real estate experience. Complete sales, acquisitions and short-term rental management services."
+      description: "Two brands, one vision. Over 25 years of real estate experience in Timișoara. Complete sales, acquisitions and professional short-term rental management services."
     }
   };
 
