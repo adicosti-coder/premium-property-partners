@@ -34,6 +34,10 @@
     <meta name="application-name" content="RealTrust" />
     <meta name="msapplication-TileColor" content="#1a1a2e" />
     <meta name="theme-color" content="#1a1a2e" />
+    <!-- Force mobile browsers to never cache HTML -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link rel="manifest" href="/manifest.json" />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -132,7 +136,7 @@
         // This ensures new deployments are always served fresh
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(regs) {
-            var sw_ver = '2026-02-23-2';
+            var sw_ver = '2026-02-23-3';
             var last = localStorage.getItem('sw_ver');
             if (last !== sw_ver) {
               localStorage.setItem('sw_ver', sw_ver);
