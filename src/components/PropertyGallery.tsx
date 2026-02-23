@@ -337,7 +337,7 @@ const PropertyGallery = () => {
                   <div className="relative h-48 overflow-hidden cursor-pointer">
                     <OptimizedImage
                       src={property.images[0]}
-                      alt={property.name}
+                      alt={`${property.name} — apartament regim hotelier ${property.location}, Timișoara`}
                       className="w-full h-full"
                       aspectRatio="4/3"
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -501,7 +501,7 @@ const PropertyGallery = () => {
           <div className="max-w-4xl w-full">
             <img
               src={filteredProperties[currentImageIndex]?.images[0]}
-              alt={filteredProperties[currentImageIndex]?.name}
+              alt={`${filteredProperties[currentImageIndex]?.name} — apartament regim hotelier Timișoara`}
               loading="lazy"
               decoding="async"
               sizes="(max-width: 768px) 100vw, 800px"

@@ -108,7 +108,7 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
               )}
               <OptimizedImage
                 src={image}
-                alt={`${propertyName} - ${index + 1}`}
+                alt={`${propertyName} — fotografie ${index + 1}, cazare regim hotelier Timișoara`}
                 className="w-full h-56"
                 aspectRatio="16/9"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"

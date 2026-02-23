@@ -804,7 +804,7 @@ Mulțumesc!`,
     
     // Common
     common: {
-      learnMore: "Află mai mult",
+      learnMore: "Detalii servicii",
       viewAll: "Vezi tot",
       loading: "Se încarcă...",
     },
@@ -921,7 +921,7 @@ Mulțumesc!`,
         title: "Pregătit să Faci Pasul Următor?",
         subtitle: "Contactează-ne pentru o consultare gratuită și descoperă cum te putem ajuta.",
         contact: "Contactează-ne",
-        learnMore: "Află Mai Multe",
+        learnMore: "Consultanță imobiliară Timișoara",
         whatsappMessage: "Bună! Sunt interesat de serviciile imobiliare RealTrust.",
       },
     },

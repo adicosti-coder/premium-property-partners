@@ -43,7 +43,7 @@ const ServicesOverview = () => {
           title: "Servicii Imobiliare",
           description: "Consultanță și intermediere pentru tranzacții imobiliare",
           link: "/imobiliare",
-          cta: "Află Mai Multe",
+          cta: "Explorează servicii imobiliare",
           color: "from-green-500/20 to-green-600/10",
         },
         {

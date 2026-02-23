@@ -243,7 +243,7 @@ const PropertyCompareModal = ({
                           </button>
                           <img
                             src={property.images[0]}
-                            alt={property.name}
+                            alt={`${property.name} — comparare apartamente regim hotelier Timișoara`}
                             loading="lazy"
                             decoding="async"
                             className="w-full h-24 object-cover rounded-lg mb-2"
