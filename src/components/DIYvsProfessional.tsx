@@ -41,7 +41,7 @@ const DIYvsProfessional = () => {
         ],
         footer: "+40% venituri, 0 stres",
       },
-      highlight: "20% comision din încasările nete — restul e al tău",
+      highlight: "15-25% comision din încasările nete — restul e al tău",
     },
     en: {
       title: "DIY vs. With Us",
@@ -76,7 +76,7 @@ const DIYvsProfessional = () => {
         ],
         footer: "+40% revenue, 0 stress",
       },
-      highlight: "20% commission on net income — the rest is yours",
+      highlight: "15-25% commission on net income — the rest is yours",
     },
   };
 

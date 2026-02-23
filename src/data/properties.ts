@@ -1,5 +1,5 @@
 // Property image imports — v8 (webp 2026-02-23)
-import apt01 from "@/assets/apt-01.webp";
+import apt01 from "@/assets/apt-02.webp";
 import apt03 from "@/assets/apt-03.webp";
 import apt04 from "@/assets/apt-04.webp";
 import apt05 from "@/assets/apt-05.webp";

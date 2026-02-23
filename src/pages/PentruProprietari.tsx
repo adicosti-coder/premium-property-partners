@@ -98,7 +98,7 @@ const PentruProprietari = () => {
       secondaryCta: "Contactează-ne",
       stats: [
         { value: "+40%", label: "Randament Superior", description: "Față de chiria pe termen lung" },
-        { value: "20%", label: "Comision Transparent", description: "Fără costuri ascunse" },
+        { value: "15-25%", label: "Comision Transparent", description: "Fără costuri ascunse" },
         { value: "+80%", label: "Rată Ocupare", description: "Media portofoliului nostru" },
         { value: "24/7", label: "Suport Complet", description: "Pentru tine și oaspeți" },
       ],
@@ -122,7 +122,7 @@ const PentruProprietari = () => {
       secondaryCta: "Contact Us",
       stats: [
         { value: "+40%", label: "Higher Returns", description: "Compared to long-term rent" },
-        { value: "20%", label: "Transparent Commission", description: "No hidden fees" },
+        { value: "15-25%", label: "Transparent Commission", description: "No hidden fees" },
         { value: "98%", label: "Occupancy Rate", description: "Our portfolio average" },
         { value: "24/7", label: "Full Support", description: "For you and guests" },
       ],
@@ -158,11 +158,11 @@ const PentruProprietari = () => {
   const seoContent = {
     ro: {
       title: "Pentru Proprietari | Administrare Apartamente Timișoara | RealTrust",
-      description: "Transformă-ți apartamentul într-o sursă de venit pasiv. Comision 20%, rată ocupare 98%, transparență totală. Evaluare gratuită!"
+      description: "Transformă-ți apartamentul într-o sursă de venit pasiv. Comision 15-25%, rată ocupare 85%+, transparență totală. Evaluare gratuită!"
     },
     en: {
       title: "For Property Owners | Apartment Management Timișoara | RealTrust",
-      description: "Transform your apartment into a passive income source. 20% commission, 98% occupancy rate, full transparency. Free evaluation!"
+      description: "Transform your apartment into a passive income source. 15-25% commission, 85%+ occupancy rate, full transparency. Free evaluation!"
     }
   };
 
@@ -200,8 +200,8 @@ const PentruProprietari = () => {
       {/* AI-friendly page summary for extraction */}
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="RealTrust oferă administrare profesională a apartamentelor în regim hotelier în Timișoara, cu comision de 20%, rată de ocupare de peste 85%, self check-in digital, și transparență financiară completă prin rapoarte lunare. Fără perioadă minimă de contract."
-          summaryEn="RealTrust provides professional short-term rental management in Timișoara, with a 20% commission, over 85% occupancy rate, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
+          summaryRo="RealTrust oferă administrare profesională a apartamentelor în regim hotelier în Timișoara, cu comision de 15-25%, rată de ocupare de peste 85%, self check-in digital, și transparență financiară completă prin rapoarte lunare. Fără perioadă minimă de contract."
+          summaryEn="RealTrust provides professional short-term rental management in Timișoara, with a 15-25% commission, over 85% occupancy rate, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
         />
       </div>
 

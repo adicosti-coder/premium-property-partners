@@ -20,12 +20,12 @@ interface ArticleFAQProps {
 const faqData: Record<string, { ro: { q: string; a: string }[]; en: { q: string; a: string }[] }> = {
   "Management": {
     ro: [
-      { q: "Cât costă administrarea unui apartament în regim hotelier?", a: "Comisionul standard este de 15-20% din veniturile generate, fără costuri ascunse. Modelul bazat pe comision ne motivează să maximizăm gradul de ocupare." },
+      { q: "Cât costă administrarea unui apartament în regim hotelier?", a: "Comisionul standard este de 15-25% din veniturile generate, fără costuri ascunse. Modelul bazat pe comision ne motivează să maximizăm gradul de ocupare." },
       { q: "Ce platforme de rezervare folosiți?", a: "Listăm proprietățile pe Airbnb, Booking.com, Expedia și pe site-ul propriu. Multi-channel distribution maximizează vizibilitatea și ocuparea." },
       { q: "Cum funcționează check-in-ul pentru oaspeți?", a: "Folosim self check-in cu smart lock — oaspeții primesc codul automat pe WhatsApp. Nu este nevoie de prezență fizică." },
     ],
     en: [
-      { q: "How much does short-term rental management cost?", a: "The standard fee is 15-20% of generated revenue, with no hidden costs. Our commission-based model motivates us to maximize occupancy." },
+      { q: "How much does short-term rental management cost?", a: "The standard fee is 15-25% of generated revenue, with no hidden costs. Our commission-based model motivates us to maximize occupancy." },
       { q: "What booking platforms do you use?", a: "We list properties on Airbnb, Booking.com, Expedia, and our own website. Multi-channel distribution maximizes visibility and occupancy." },
       { q: "How does guest check-in work?", a: "We use self check-in with smart locks — guests receive the code automatically via WhatsApp. No physical presence needed." },
     ],
@@ -34,12 +34,12 @@ const faqData: Record<string, { ro: { q: string; a: string }[]; en: { q: string;
     ro: [
       { q: "Ce randament pot obține dintr-un apartament în Timișoara?", a: "Randamentul net mediu este de 9.2-9.4% pe an pentru proprietățile administrate profesional, cu o rată de ocupare de peste 85%." },
       { q: "Merită să investesc în regim hotelier vs. chirie pe termen lung?", a: "Da, regimul hotelier generează în medie cu 40-60% mai mult venit decât chiria pe termen lung, deși implică management activ — pe care noi îl oferim." },
-      { q: "Care sunt costurile ascunse ale investiției?", a: "Transparența este cheia: comision management 15-20%, comisioane platforme 15-23%, utilități, mentenanță periodică. Toate sunt detaliate în rapoartele lunare." },
+      { q: "Care sunt costurile ascunse ale investiției?", a: "Transparența este cheia: comision management 15-25%, comisioane platforme 15-23%, utilități, mentenanță periodică. Toate sunt detaliate în rapoartele lunare." },
     ],
     en: [
       { q: "What return can I expect from an apartment in Timișoara?", a: "Average net yield is 9.2-9.4% per year for professionally managed properties, with an occupancy rate above 85%." },
       { q: "Is short-term rental worth it vs. long-term lease?", a: "Yes, short-term rentals generate 40-60% more revenue on average than long-term leases, though they require active management — which we provide." },
-      { q: "What are the hidden costs of investing?", a: "Transparency is key: 15-20% management fee, 15-23% platform commissions, utilities, periodic maintenance. All detailed in monthly reports." },
+      { q: "What are the hidden costs of investing?", a: "Transparency is key: 15-25% management fee, 15-23% platform commissions, utilities, periodic maintenance. All detailed in monthly reports." },
     ],
   },
   "Financiar": {

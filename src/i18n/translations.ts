@@ -90,7 +90,7 @@ export const translations = {
       titleHighlight: "pentru Investitori",
       subtitle: "Oferim soluții complete de asset management pentru proprietari care urmăresc randamente superioare și protecția activelor imobiliare.",
       commission: "Comision de administrare",
-      commissionValue: "15-20%",
+      commissionValue: "15-25%",
       commissionSuffix: "din încasările nete",
       items: [
         { title: "Audit & Fotografiere", description: "• Evaluare proprietate\n• Fotografii pro\n• Optimizare listare" },
@@ -270,7 +270,7 @@ export const translations = {
         // Transparență financiară
         { 
           question: "Cum asigurați transparența veniturilor și a costurilor?", 
-          answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-20% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
+          answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-25% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
         },
         // Verificare oaspeți
         { 
@@ -434,7 +434,7 @@ Mulțumesc!`,
       revenueDescription: "Randament suplimentar vs. închiriere pe termen lung",
       listingTime: "72h",
       listingTimeLabel: "Timp mediu onboarding",
-      commission: "15-20%",
+      commission: "15-25%",
       commissionLabel: "Fee de management",
     },
     
@@ -1182,7 +1182,7 @@ Mulțumesc!`,
       titleHighlight: "for Investors",
       subtitle: "We offer comprehensive asset management solutions for property owners seeking superior returns and real estate asset protection.",
       commission: "Management fee",
-      commissionValue: "15-20%",
+      commissionValue: "15-25%",
       commissionSuffix: "of net income",
       items: [
         { title: "Audit & Photography", description: "• Property evaluation\n• Pro photos\n• Listing optimization" },
@@ -1362,7 +1362,7 @@ Mulțumesc!`,
         // Financial transparency
         { 
           question: "How do you ensure transparency of revenues and costs?", 
-          answer: "Owners receive detailed monthly reports, where commissions are clearly explained (15-20% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
+          answer: "Owners receive detailed monthly reports, where commissions are clearly explained (15-25% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
         },
         // Guest vetting
         { 
@@ -1526,7 +1526,7 @@ Thank you!`,
       revenueDescription: "Additional yield vs. long-term rental",
       listingTime: "72h",
       listingTimeLabel: "Average onboarding time",
-      commission: "15-20%",
+      commission: "15-25%",
       commissionLabel: "Management fee",
     },
     
