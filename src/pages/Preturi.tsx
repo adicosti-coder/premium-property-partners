@@ -269,7 +269,7 @@ const Preturi = () => {
               {lang === "ro" ? "Pachete & " : "Packages & "}
               <span className="text-gradient-gold">{lang === "ro" ? "Prețuri" : "Pricing"}</span>
             </h1>
-            <p className="text-sm font-medium text-amber-300/80 mb-2">
+            <p className="text-base font-semibold text-amber-400 mb-2 tracking-wide">
               {lang === "ro" ? "— Administrare în regim hotelier —" : "— Short-term rental management —"}
             </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
