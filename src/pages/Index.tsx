@@ -27,14 +27,14 @@ const NearFoldSection = () => {
   return (
     <div ref={ref}>
       {visible && (
-        <Suspense fallback={null}>
-          <StatsCounters />
-          <section id="calculator">
-            <ProfitCalculator />
-          </section>
-          <QuickLeadForm />
-          <MainNavigationCards />
-        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px]" />}>
+           <StatsCounters />
+           <section id="calculator">
+             <ProfitCalculator />
+           </section>
+           <QuickLeadForm />
+           <MainNavigationCards />
+         </Suspense>
       )}
     </div>
   );
@@ -46,7 +46,7 @@ const MidFoldSection = () => {
   return (
     <div ref={ref}>
       {visible && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[300px]" />}>
           <DualServicePaths />
         </Suspense>
       )}
@@ -60,7 +60,7 @@ const TeaserSections = () => {
   return (
     <div ref={ref}>
       {visible && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[400px]" />}>
           <section id="beneficii">
             <OwnersTeaser />
           </section>
@@ -79,7 +79,7 @@ const BottomFoldSection = ({ language }: { language: string }) => {
   return (
     <div ref={ref}>
       {visible && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[300px]" />}>
           <BlogPreview />
           <FAQ />
           <ContactSection />
@@ -128,7 +128,7 @@ const Index = () => {
         {language === "ro" ? "Sari la conținut" : "Skip to content"}
       </a>
       {mounted && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div className="min-h-[50px]" />}>
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
@@ -161,7 +161,7 @@ const Index = () => {
         {/* Bottom-fold: deferred until scroll */}
         <BottomFoldSection language={language} />
       </main>
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="min-h-[200px]" />}>
         <Footer />
         <GlobalConversionWidgets />
       </Suspense>
