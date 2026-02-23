@@ -219,6 +219,7 @@ const Footer = () => {
                 size="icon"
                 disabled={isLoading}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
+                aria-label={language === 'ro' ? 'Abonează-te la newsletter' : 'Subscribe to newsletter'}
               >
                 <Send className="w-4 h-4" />
               </Button>

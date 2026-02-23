@@ -117,7 +117,7 @@ const PropertyFilters = ({
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <Select value={selectedLocation} onValueChange={onLocationChange}>
-            <SelectTrigger className="w-[160px] bg-card border-border">
+            <SelectTrigger className="w-[160px] bg-card border-border" aria-label={t.portfolio.filters.location}>
               <SelectValue placeholder={t.portfolio.filters.location} />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
@@ -135,7 +135,7 @@ const PropertyFilters = ({
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-muted-foreground" />
           <Select value={selectedCapacity} onValueChange={onCapacityChange}>
-            <SelectTrigger className="w-[140px] bg-card border-border">
+            <SelectTrigger className="w-[140px] bg-card border-border" aria-label={t.portfolio.filters.capacity}>
               <SelectValue placeholder={t.portfolio.filters.capacity} />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
@@ -153,7 +153,7 @@ const PropertyFilters = ({
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-muted-foreground" />
           <Select value={selectedFeature} onValueChange={onFeatureChange}>
-            <SelectTrigger className="w-[160px] bg-card border-border">
+            <SelectTrigger className="w-[160px] bg-card border-border" aria-label={t.portfolio.filters.features}>
               <SelectValue placeholder={t.portfolio.filters.features} />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
@@ -171,7 +171,7 @@ const PropertyFilters = ({
         <div className="flex items-center gap-2">
           <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
           <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortOption)}>
-            <SelectTrigger className="w-[180px] bg-card border-border">
+            <SelectTrigger className="w-[180px] bg-card border-border" aria-label={t.portfolio.filters.sortBy}>
               <SelectValue placeholder={t.portfolio.filters.sortBy} />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
