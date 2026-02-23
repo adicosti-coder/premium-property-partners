@@ -146,7 +146,7 @@ const Footer = () => {
 
           {/* Contact */}
           <div className="md:col-span-1">
-            <h3 className="text-foreground font-semibold mb-4">{t.nav.contact}</h3>
+            <h4 className="text-foreground font-semibold mb-4">{t.nav.contact}</h4>
             <div className="space-y-3 text-sm">
               <a href="tel:+40723154520" className="flex items-center gap-2 text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 <Phone className="w-4 h-4" />
@@ -161,7 +161,7 @@ const Footer = () => {
 
           {/* Company Info */}
           <div className="md:col-span-1">
-            <h3 className="text-foreground font-semibold mb-4">{tr.company}</h3>
+            <h4 className="text-foreground font-semibold mb-4">{tr.company}</h4>
             <div className="space-y-2 text-sm text-foreground/60 dark:text-muted-foreground">
               <p>{tr.companyName}</p>
               <p>{tr.cui}</p>
@@ -174,7 +174,7 @@ const Footer = () => {
 
           {/* Links */}
           <div className="md:col-span-1">
-            <h3 className="text-foreground font-semibold mb-4">Links</h3>
+            <h4 className="text-foreground font-semibold mb-4">Links</h4>
             <nav className="flex flex-col gap-2 text-sm">
               <a href="#beneficii" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 {t.nav.benefits}
@@ -202,7 +202,7 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div className="md:col-span-1">
-            <h3 className="text-foreground font-semibold mb-4">{tr.newsletter}</h3>
+            <h4 className="text-foreground font-semibold mb-4">{tr.newsletter}</h4>
             <p className="text-foreground/60 dark:text-muted-foreground text-sm mb-4">{tr.newsletterDesc}</p>
             <form onSubmit={handleSubscribe} className="flex gap-2">
               <Input
@@ -240,10 +240,10 @@ const Footer = () => {
 
           {/* Accessibility Settings */}
           <div className="md:col-span-1">
-            <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
+            <h4 className="text-foreground font-semibold mb-4 flex items-center gap-2">
               <Settings className="w-4 h-4" />
               {tr.accessibility}
-            </h3>
+            </h4>
             <p className="text-foreground/60 dark:text-muted-foreground text-sm mb-4">{tr.accessibilityDesc}</p>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
