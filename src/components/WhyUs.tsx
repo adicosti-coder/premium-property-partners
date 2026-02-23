@@ -30,7 +30,7 @@ const WhyUs = () => {
       revenueDescription: "creștere venituri vs. chirie clasică",
       listingTime: "24h",
       listingTimeLabel: "timp de listare",
-      commission: "15-20%",
+      commission: "15-25%",
       commissionLabel: "comision management"
     },
     en: {
@@ -53,7 +53,7 @@ const WhyUs = () => {
       revenueDescription: "revenue increase vs. classic rent",
       listingTime: "24h",
       listingTimeLabel: "listing time",
-      commission: "15-20%",
+      commission: "15-25%",
       commissionLabel: "management fee"
     }
   };
