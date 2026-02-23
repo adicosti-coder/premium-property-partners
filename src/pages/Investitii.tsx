@@ -27,8 +27,10 @@ import {
   Star
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import ROICaseStudy from "@/components/ROICaseStudy";
-import InvestmentEngineV34 from "@/components/InvestmentEngineV34";
+import { lazy, Suspense } from "react";
+
+const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
+const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 
 interface InvestmentProperty {
   id: string;
@@ -247,7 +249,9 @@ const Investitii = () => {
       </section>
 
       {/* ROI Case Study - chirie clasică vs sistem */}
-      <ROICaseStudy />
+      <Suspense fallback={<div className="min-h-[300px]" />}>
+        <ROICaseStudy />
+      </Suspense>
 
       {/* Investment Grid */}
       <section className="py-16 md:py-24 overflow-hidden">
@@ -415,7 +419,9 @@ const Investitii = () => {
 
           {/* Quick Calculator */}
           <div className="mt-16">
-            <InvestmentEngineV34 />
+            <Suspense fallback={<div className="min-h-[400px]" />}>
+              <InvestmentEngineV34 />
+            </Suspense>
           </div>
         </div>
       </section>

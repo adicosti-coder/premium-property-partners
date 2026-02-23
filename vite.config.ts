@@ -63,12 +63,16 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react/jsx-runtime", "mapbox-gl"],
     },
     build: {
+      // Disable modulepreload polyfill — lazy chunks should NOT be eagerly preloaded
+      modulePreload: { polyfill: false },
       rollupOptions: {
         output: {
           manualChunks: {
             "vendor-react": ["react", "react-dom", "react-router-dom"],
             "vendor-query": ["@tanstack/react-query"],
-            "vendor-ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-popover", "@radix-ui/react-tooltip", "@radix-ui/react-tabs"],
+            // Split UI into core (always needed) and deferred (popover/dropdown loaded on interaction)
+            "vendor-ui-core": ["@radix-ui/react-dialog", "@radix-ui/react-tooltip"],
+            "vendor-ui-menu": ["@radix-ui/react-dropdown-menu", "@radix-ui/react-popover", "@radix-ui/react-tabs"],
             "vendor-motion": ["framer-motion"],
             "vendor-charts": ["recharts"],
             "vendor-supabase": ["@supabase/supabase-js"],
