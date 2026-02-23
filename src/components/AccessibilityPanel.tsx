@@ -449,6 +449,7 @@ const AccessibilityPanel = () => {
                   max={50}
                   step={5}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Volum sunete UI' : 'UI sound volume'}
                 />
               </div>
             )}
