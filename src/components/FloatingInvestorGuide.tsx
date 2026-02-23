@@ -106,7 +106,7 @@ const FloatingInvestorGuide = () => {
   return (
     <>
       {/* Floating Banner - Investor Blue/Gold Theme */}
-      <div className="fixed top-20 inset-x-4 z-40 animate-slide-down">
+      <div className="fixed bottom-24 inset-x-4 z-40 animate-slide-down">
         <div className="relative bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-xl shadow-2xl border border-amber-500/30 overflow-hidden max-w-full">
           {/* Gold shimmer effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent animate-shimmer" />
