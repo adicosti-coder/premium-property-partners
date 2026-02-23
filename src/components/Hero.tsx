@@ -127,7 +127,7 @@ const Hero = () => {
   const contentTranslate = isMobile ? 0 : scrollY * 0.3;
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-28 md:pt-32">
+    <section className="relative min-h-screen flex items-center overflow-hidden pt-28 md:pt-32" style={{ containIntrinsicSize: '0 100vh', contentVisibility: 'visible' }}>
       {/* Background: static image (always) + video (desktop only via CSS) */}
       <div 
         className="absolute inset-0"
@@ -192,7 +192,7 @@ const Hero = () => {
       </div>
       
       {/* Content gradient overlay - theme-aware for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-transparent dark:from-background/70 dark:via-background/30 z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-transparent dark:from-background/70 dark:via-background/30 z-[1]" style={{ contain: 'strict', width: '100%', height: '100%' }} />
       
       {/* Dramatic cinematic vignette – desktop only */}
       {!isMobile && (
@@ -250,8 +250,8 @@ const Hero = () => {
       >
         <div className="max-w-4xl">
           
-          {/* Headline with typing animation - 3 lines layout */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6">
+          {/* Headline - stable height to prevent CLS */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-semibold text-foreground leading-tight mb-6" style={{ minHeight: '1em' }}>
               <StaticTitle 
                 title={heroSettings.customTitle || t.hero.title} 
                 titleMid={t.hero.titleMid}
