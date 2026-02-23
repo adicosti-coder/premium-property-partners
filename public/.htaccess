@@ -2,10 +2,13 @@
   RewriteEngine On
   RewriteBase /
 
-  # 301 redirects for legacy HTML pages (Google Search Console 404s)
+  # 301 redirects for legacy HTML pages (Google Search Console issues)
   RewriteRule ^index-en\.html$ / [R=301,L]
+  RewriteRule ^index_EN\.html$ / [R=301,L]
   RewriteRule ^imobiliare-realtrust-en\.html$ / [R=301,L]
+  RewriteRule ^imobiliare-realtrust\.html$ / [R=301,L]
   RewriteRule ^real-estate-en\.html$ / [R=301,L]
+  RewriteRule ^index\.html$ / [R=301,L]
 
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
