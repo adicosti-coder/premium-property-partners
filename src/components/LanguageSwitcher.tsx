@@ -27,7 +27,7 @@ const LanguageSwitcher = () => {
         {language === 'ro' ? '🇷🇴' : '🇬🇧'}
       </span>
       <span
-        className={`uppercase font-semibold text-xs sm:text-sm text-primary group-hover:text-primary/80 transition-all duration-300 ${
+        className={`uppercase font-semibold text-xs sm:text-sm text-foreground group-hover:text-foreground/80 transition-all duration-300 ${
           isAnimating ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
         }`}
       >
