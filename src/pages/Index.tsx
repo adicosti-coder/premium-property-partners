@@ -75,7 +75,7 @@ const TeaserSections = () => {
 
 // Visibility-gated bottom fold (simplified - fewer sections)
 const BottomFoldSection = ({ language }: { language: string }) => {
-  const [ref, visible] = useLazyVisible("600px");
+  const [ref, visible] = useLazyVisible("200px");
   return (
     <div ref={ref}>
       {visible && (
@@ -97,7 +97,7 @@ const Index = () => {
   const { language } = useLanguage();
   
   // Visibility gates for heavy sections
-  const [heavyRef, heavyVisible] = useLazyVisible("600px");
+  const [heavyRef, heavyVisible] = useLazyVisible("100px");
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
