@@ -10,24 +10,24 @@ const HeaderPlaceholder = () => (
   <header className="fixed top-0 left-0 right-0 z-50 h-16 md:h-20 bg-background/80 border-b border-border/30" aria-hidden="true" />
 );
 
-// ALL below-fold components are lazy loaded
-const StatsCounters = lazy(() => import("@/components/StatsCounters"));
-const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
-const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
-const Testimonials = lazy(() => import("@/components/Testimonials"));
-const FAQ = lazy(() => import("@/components/FAQ"));
-const ContactSection = lazy(() => import("@/components/ContactSection"));
-const CTA = lazy(() => import("@/components/CTA"));
-const Footer = lazy(() => import("@/components/Footer"));
-const BlogPreview = lazy(() => import("@/components/BlogPreview"));
-const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
-const DualServicePaths = lazy(() => import("@/components/DualServicePaths"));
-const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
-const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
-const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
-const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
+// Critical below-fold components — direct imports to guarantee rendering on production
+import StatsCounters from "@/components/StatsCounters";
+import QuickLeadForm from "@/components/QuickLeadForm";
+import ProfitCalculator from "@/components/ProfitCalculator";
+import Testimonials from "@/components/Testimonials";
+import FAQ from "@/components/FAQ";
+import ContactSection from "@/components/ContactSection";
+import CTA from "@/components/CTA";
+import Footer from "@/components/Footer";
+import BlogPreview from "@/components/BlogPreview";
+import DualServicePaths from "@/components/DualServicePaths";
+import PropertyGallery from "@/components/PropertyGallery";
+import MainNavigationCards from "@/components/hub/MainNavigationCards";
+import OwnersTeaser from "@/components/hub/OwnersTeaser";
+import GuestsTeaser from "@/components/hub/GuestsTeaser";
 
-// All sections render eagerly inside Suspense — lazy() handles code-splitting
+// Non-critical widgets still lazy
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 // Deferred SEO — loaded after first paint to avoid blocking render
 const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
@@ -72,44 +72,34 @@ const Index = () => {
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
         <Hero />
 
-        <Suspense fallback={null}>
-          <StatsCounters />
-          <section id="calculator">
-            <ProfitCalculator />
-          </section>
-          <QuickLeadForm />
-          <MainNavigationCards />
-        </Suspense>
+        <StatsCounters />
+        <section id="calculator">
+          <ProfitCalculator />
+        </section>
+        <QuickLeadForm />
+        <MainNavigationCards />
 
-        <Suspense fallback={null}>
-          <DualServicePaths />
-        </Suspense>
+        <DualServicePaths />
 
-        <Suspense fallback={null}>
-          <section id="beneficii">
-            <OwnersTeaser />
-          </section>
-          <section id="oaspeti-preview">
-            <GuestsTeaser />
-          </section>
-        </Suspense>
+        <section id="beneficii">
+          <OwnersTeaser />
+        </section>
+        <section id="oaspeti-preview">
+          <GuestsTeaser />
+        </section>
 
-        <Suspense fallback={null}>
-          <section id="portofoliu">
-            <PropertyGallery />
-          </section>
-          <Testimonials />
-        </Suspense>
+        <section id="portofoliu">
+          <PropertyGallery />
+        </section>
+        <Testimonials />
 
-        <Suspense fallback={null}>
-          <BlogPreview />
-          <FAQ />
-          <ContactSection />
-          <CTA />
-        </Suspense>
+        <BlogPreview />
+        <FAQ />
+        <ContactSection />
+        <CTA />
       </main>
+      <Footer />
       <Suspense fallback={null}>
-        <Footer />
         <GlobalConversionWidgets />
       </Suspense>
     </div>
