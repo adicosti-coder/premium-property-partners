@@ -18,7 +18,7 @@ const buttonVariants = cva(
         hero: "bg-primary text-primary-foreground font-semibold shadow-lg hover:shadow-xl hover:scale-105 hover:brightness-110",
         heroOutline: "border-2 border-foreground/40 bg-transparent text-foreground hover:bg-foreground/10 hover:border-foreground/60 font-semibold",
         premium: "bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold shadow-lg hover:shadow-xl hover:scale-105 hover:brightness-110",
-        whatsapp: "bg-[#25D366] text-white font-semibold hover:bg-[#128C7E] shadow-lg hover:shadow-xl hover:scale-105",
+        whatsapp: "bg-[#128C7E] text-white font-semibold hover:bg-[#0e7a6e] shadow-lg hover:shadow-xl hover:scale-105",
         call: "bg-primary text-primary-foreground font-semibold hover:bg-primary/90",
         booking: "bg-[#003580] text-white font-semibold hover:bg-[#00254d] shadow-md hover:shadow-lg",
       },
