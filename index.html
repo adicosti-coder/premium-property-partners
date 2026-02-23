@@ -42,8 +42,9 @@
     <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
 
-    <!-- Preload hero LCP image — WebP only (smaller, faster) -->
-    <link rel="preload" as="image" type="image/webp" href="/images/hero-cinematic.webp" fetchpriority="high" />
+    <!-- Preload hero LCP image — WebP with JPG fallback -->
+    <link rel="preload" as="image" type="image/webp" href="/images/hero-cinematic.webp" />
+    <link rel="preload" as="image" href="/images/hero-cinematic.jpg" />
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
     <style>

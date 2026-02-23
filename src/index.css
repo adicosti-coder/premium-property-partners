@@ -4,22 +4,10 @@
 @font-face {
   font-family: 'Playfair Display Fallback';
   src: local('Times New Roman');
-  size-adjust: 112%;
-  ascent-override: 97%;
-  descent-override: 24%;
-  line-gap-override: 0%;
-  font-display: swap;
-}
-
-/* Fallback font matched to Inter metrics to prevent CLS during font swap */
-@font-face {
-  font-family: 'Inter Fallback';
-  src: local('Arial');
-  size-adjust: 107%;
-  ascent-override: 90%;
+  size-adjust: 110%;
+  ascent-override: 95%;
   descent-override: 22%;
   line-gap-override: 0%;
-  font-display: swap;
 }
 
 /* Local NotoSans fonts with font-display: swap for instant text rendering */
