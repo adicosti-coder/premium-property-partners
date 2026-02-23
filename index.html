@@ -34,10 +34,6 @@
     <meta name="application-name" content="RealTrust" />
     <meta name="msapplication-TileColor" content="#1a1a2e" />
     <meta name="theme-color" content="#1a1a2e" />
-    <!-- Force mobile browsers to never cache HTML -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <link rel="manifest" href="/manifest.json" />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -127,28 +123,11 @@
       (function () {
         try {
           if (typeof window === "undefined" || typeof document === "undefined") return;
-          var stored = window.localStorage?.getItem("theme");
-          var theme = stored || "light";
+          const stored = window.localStorage?.getItem("theme");
+          const theme = stored || "light";
           document.documentElement.classList.add(theme);
-        } catch (_) {}
-
-        // Force unregister stale service workers and clear old caches
-        // This ensures new deployments are always served fresh
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            var sw_ver = '2026-02-23-3';
-            var last = localStorage.getItem('sw_ver');
-            if (last !== sw_ver) {
-              localStorage.setItem('sw_ver', sw_ver);
-              regs.forEach(function(r) { r.unregister(); });
-              if ('caches' in window) {
-                caches.keys().then(function(names) {
-                  names.forEach(function(n) { caches.delete(n); });
-                });
-              }
-              if (last) { location.reload(); }
-            }
-          });
+        } catch (_) {
+          // Ignore theme bootstrap errors (e.g., storage disabled)
         }
       })();
     </script>

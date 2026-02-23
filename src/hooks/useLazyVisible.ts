@@ -7,25 +7,16 @@ import { useState, useEffect, useRef } from "react";
  */
 export function useLazyVisible(rootMargin = "400px") {
   const ref = useRef<HTMLDivElement>(null);
-  // On mobile, skip lazy-loading entirely to avoid cascading delays
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const [isVisible, setIsVisible] = useState(isMobile);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (isVisible) return;
     const el = ref.current;
-    if (!el) return;
-
-    // Short fallback so content always appears
-    const fallbackTimer = setTimeout(() => {
-      setIsVisible(true);
-    }, 1500);
+    if (!el || isVisible) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          clearTimeout(fallbackTimer);
           observer.disconnect();
         }
       },
@@ -33,10 +24,7 @@ export function useLazyVisible(rootMargin = "400px") {
     );
 
     observer.observe(el);
-    return () => {
-      clearTimeout(fallbackTimer);
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [isVisible, rootMargin]);
 
   return [ref, isVisible] as const;
