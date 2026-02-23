@@ -1,6 +1,12 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # 301 redirects for legacy HTML pages (Google Search Console 404s)
+  RewriteRule ^index-en\.html$ / [R=301,L]
+  RewriteRule ^imobiliare-realtrust-en\.html$ / [R=301,L]
+  RewriteRule ^real-estate-en\.html$ / [R=301,L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
