@@ -146,7 +146,7 @@ const Footer = () => {
 
           {/* Contact */}
           <div className="md:col-span-1">
-            <h4 className="text-foreground font-semibold mb-4">{t.nav.contact}</h4>
+            <h3 className="text-foreground font-semibold mb-4 text-base">{t.nav.contact}</h3>
             <div className="space-y-3 text-sm">
               <a href="tel:+40723154520" className="flex items-center gap-2 text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 <Phone className="w-4 h-4" />
@@ -161,7 +161,7 @@ const Footer = () => {
 
           {/* Company Info */}
           <div className="md:col-span-1">
-            <h4 className="text-foreground font-semibold mb-4">{tr.company}</h4>
+            <h3 className="text-foreground font-semibold mb-4 text-base">{tr.company}</h3>
             <div className="space-y-2 text-sm text-foreground/60 dark:text-muted-foreground">
               <p>{tr.companyName}</p>
               <p>{tr.cui}</p>
@@ -174,7 +174,7 @@ const Footer = () => {
 
           {/* Links */}
           <div className="md:col-span-1">
-            <h4 className="text-foreground font-semibold mb-4">Links</h4>
+            <h3 className="text-foreground font-semibold mb-4 text-base">Links</h3>
             <nav className="flex flex-col gap-2 text-sm">
               <a href="#beneficii" className="text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 {t.nav.benefits}
@@ -202,7 +202,7 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div className="md:col-span-1">
-            <h4 className="text-foreground font-semibold mb-4">{tr.newsletter}</h4>
+            <h3 className="text-foreground font-semibold mb-4 text-base">{tr.newsletter}</h3>
             <p className="text-foreground/60 dark:text-muted-foreground text-sm mb-4">{tr.newsletterDesc}</p>
             <form onSubmit={handleSubscribe} className="flex gap-2">
               <Input
@@ -240,10 +240,10 @@ const Footer = () => {
 
           {/* Accessibility Settings */}
           <div className="md:col-span-1">
-            <h4 className="text-foreground font-semibold mb-4 flex items-center gap-2">
+            <h3 className="text-foreground font-semibold mb-4 text-base flex items-center gap-2">
               <Settings className="w-4 h-4" />
               {tr.accessibility}
-            </h4>
+            </h3>
             <p className="text-foreground/60 dark:text-muted-foreground text-sm mb-4">{tr.accessibilityDesc}</p>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -264,10 +264,10 @@ const Footer = () => {
 
         {/* Legal Disclaimers */}
         <div className="border-t border-border/50 dark:border-border pt-8 mb-8">
-          <h4 className="text-foreground font-semibold mb-4">
+          <h3 className="text-foreground font-semibold mb-4 text-base">
             {language === 'ro' ? 'Termeni și Condiții' : 'Terms and Conditions'}
-          </h4>
-          <div className="space-y-4 text-xs text-foreground/50 dark:text-muted-foreground/70">
+          </h3>
+          <div className="space-y-4 text-xs text-foreground/70 dark:text-muted-foreground">
             <p>
               {language === 'ro' 
                 ? '* Toate cifrele, procentele și estimările de venit prezentate pe acest site sunt orientative și se bazează pe date istorice și previziuni de piață. Acestea nu constituie garanții ale rezultatelor viitoare. Veniturile reale pot varia în funcție de locație, sezonalitate, starea proprietății și alți factori. Vă recomandăm să discutați cu echipa noastră pentru o evaluare personalizată.'
