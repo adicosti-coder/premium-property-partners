@@ -69,6 +69,7 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
           max={30}
           step={1}
           className="w-full"
+          aria-label={language === 'ro' ? 'Număr nopți' : 'Number of nights'}
         />
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>1</span>
@@ -94,6 +95,7 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
           max={property.capacity}
           step={1}
           className="w-full"
+          aria-label={language === 'ro' ? 'Număr oaspeți' : 'Number of guests'}
         />
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>1</span>
