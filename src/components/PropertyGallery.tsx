@@ -376,6 +376,7 @@ const PropertyGallery = () => {
                           ? "bg-red-500 text-white"
                           : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
                       }`}
+                      aria-label={isFavorite(String(property.id)) ? (language === 'ro' ? `Elimină ${property.name} din favorite` : `Remove ${property.name} from favorites`) : (language === 'ro' ? `Adaugă ${property.name} la favorite` : `Add ${property.name} to favorites`)}
                     >
                       <Heart className={`w-4 h-4 ${isFavorite(String(property.id)) ? "fill-current" : ""}`} />
                     </button>
@@ -468,7 +469,7 @@ const PropertyGallery = () => {
                       {t.portfolio.bookDirect}
                     </Button>
                     <Link to={`/proprietate/${property.slug}`}>
-                      <Button variant="booking" size="sm">
+                      <Button variant="booking" size="sm" aria-label={language === 'ro' ? `Vezi detalii ${property.name}` : `View details ${property.name}`}>
                         <Eye className="w-4 h-4" />
                       </Button>
                     </Link>
