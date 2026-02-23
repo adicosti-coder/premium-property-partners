@@ -46,7 +46,7 @@ const ContactSection = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <p className="text-primary uppercase tracking-widest text-sm font-semibold mb-4">{t.contactSection.sectionLabel}</p>
+          <p className="text-foreground uppercase tracking-widest text-sm font-semibold mb-4">{t.contactSection.sectionLabel}</p>
           <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
             {t.contactSection.title} <span className="text-gradient-gold">{t.contactSection.titleHighlight}</span>
           </h2>
@@ -122,7 +122,7 @@ const ContactSection = () => {
 
             {/* Working Hours */}
             <div className="bg-secondary/30 p-6 rounded-xl border border-border">
-              <h4 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h4>
+              <h3 className="font-semibold text-foreground mb-4">{t.contactSection.schedule}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.mondayFriday}</span>
@@ -134,7 +134,7 @@ const ContactSection = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground/60 dark:text-muted-foreground">{t.contactSection.guestSupport}</span>
-                  <span className="text-primary font-medium">24/7</span>
+                  <span className="text-foreground font-medium">24/7</span>
                 </div>
               </div>
             </div>
