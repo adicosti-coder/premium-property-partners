@@ -123,11 +123,28 @@
       (function () {
         try {
           if (typeof window === "undefined" || typeof document === "undefined") return;
-          const stored = window.localStorage?.getItem("theme");
-          const theme = stored || "light";
+          var stored = window.localStorage?.getItem("theme");
+          var theme = stored || "light";
           document.documentElement.classList.add(theme);
-        } catch (_) {
-          // Ignore theme bootstrap errors (e.g., storage disabled)
+        } catch (_) {}
+
+        // Force unregister stale service workers and clear old caches
+        // This ensures new deployments are always served fresh
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            var sw_ver = '2026-02-23-2';
+            var last = localStorage.getItem('sw_ver');
+            if (last !== sw_ver) {
+              localStorage.setItem('sw_ver', sw_ver);
+              regs.forEach(function(r) { r.unregister(); });
+              if ('caches' in window) {
+                caches.keys().then(function(names) {
+                  names.forEach(function(n) { caches.delete(n); });
+                });
+              }
+              if (last) { location.reload(); }
+            }
+          });
         }
       })();
     </script>
