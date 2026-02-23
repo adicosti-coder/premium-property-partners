@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { 
   Building2, 
@@ -20,7 +20,6 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import { generatePropertyManagementServiceSchema, generateSpeakableSchema } from "@/utils/schemaGenerators";
 
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
@@ -53,10 +52,41 @@ const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const FloatingInvestorGuide = lazy(() => import("@/components/FloatingInvestorGuide"));
 
+/**
+ * Hook: loads a lazy component only after IntersectionObserver fires.
+ * Returns [sentinelRef, shouldRender].
+ */
+function useDeferredLoad(rootMargin = "500px") {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || shouldRender) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shouldRender, rootMargin]);
+
+  return [ref, shouldRender] as const;
+}
+
 const PentruProprietari = () => {
   const { language } = useLanguage();
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  // Deferred loading for heavy components - only loads after user scrolls ~500px
+  const [calcSentinel, calcReady] = useDeferredLoad("500px");
+  const [faqSentinel, faqReady] = useDeferredLoad("500px");
 
   const content = {
     ro: {
@@ -138,9 +168,15 @@ const PentruProprietari = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
-  // Service JSON-LD schema - folosim generatorul centralizat
-  const serviceSchema = generatePropertyManagementServiceSchema();
-  const speakableSchema = generateSpeakableSchema(seo.title, "https://realtrust.ro/pentru-proprietari");
+  // Service JSON-LD schema - deferred import to reduce TBT
+  const [schemas, setSchemas] = useState<any[]>([]);
+  useEffect(() => {
+    import("@/utils/schemaGenerators").then(({ generatePropertyManagementServiceSchema, generateSpeakableSchema }) => {
+      const serviceSchema = generatePropertyManagementServiceSchema();
+      const speakable = generateSpeakableSchema(seo.title, "https://realtrust.ro/pentru-proprietari");
+      setSchemas([serviceSchema, speakable]);
+    });
+  }, [seo.title]);
 
   const breadcrumbItems = [
     { label: language === "ro" ? "Pentru Proprietari" : "For Owners" }
@@ -152,7 +188,7 @@ const PentruProprietari = () => {
         title={seo.title}
         description={seo.description}
         url="https://realtrust.ro/pentru-proprietari"
-        jsonLd={[serviceSchema, speakableSchema]}
+        jsonLd={schemas}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
           { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://realtrust.ro/pentru-proprietari" },
@@ -179,71 +215,62 @@ const PentruProprietari = () => {
 
       {/* Hero Section - Investor Blue/Gold Theme */}
       <section className="relative pt-40 md:pt-36 pb-20 overflow-hidden">
-        {/* Hero background image */}
+        {/* Solid navy overlay - renders instantly before image loads */}
+        <div className="absolute inset-0 bg-[#0a1628]" />
+        
+        {/* Hero background image with fixed dimensions & picture for mobile */}
         <div className="absolute inset-0">
-          <img
-            src="/images/hero-cinematic.webp"
-            alt=""
-            className="w-full h-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-          />
+          <picture>
+            <source
+              media="(max-width: 768px)"
+              srcSet="/images/hero-cinematic.webp"
+              width="800"
+              height="450"
+            />
+            <img
+              src="/images/hero-cinematic.webp"
+              alt=""
+              className="w-full h-full object-cover"
+              width={1920}
+              height={1080}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
           <div className="absolute inset-0 bg-gradient-to-b from-blue-950/80 via-blue-900/60 to-background" />
         </div>
-        {/* Background decorations - Blue/Gold investor theme */}
+        {/* Background decorations - CSS only, no framer-motion */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.1),transparent_70%)]" />
-        <div className="absolute top-40 left-[10%] w-32 h-32 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-60 right-[10%] w-48 h-48 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
 
         <div
           ref={heroRef}
-          className={`container mx-auto px-6 relative z-10 transition-all duration-1000 ${
-            heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+          className={`container mx-auto px-6 relative z-10 transition-opacity duration-700 ${
+            heroVisible ? "opacity-100" : "opacity-0"
           }`}
         >
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             {/* Left Column - Text & CTA */}
             <div className="text-left">
               {/* Badge */}
-              <div
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/50 border border-amber-500/30 mb-6 transition-all duration-700 ${
-                  heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
-                }`}
-                style={{ transitionDelay: "200ms" }}
-              >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/50 border border-amber-500/30 mb-6">
                 <Building2 className="w-4 h-4 text-amber-400" />
                 <span className="text-sm font-medium text-amber-300">{t.badge}</span>
               </div>
 
               {/* Title */}
-              <h1
-                className={`text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6 transition-all duration-700 ${
-                  heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: "300ms" }}
-              >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6">
                 {t.title}{" "}
                 <span className="text-gradient-gold">{t.titleHighlight}</span>
               </h1>
 
               {/* Subtitle */}
-              <p
-                className={`text-lg md:text-xl text-white/80 mb-8 transition-all duration-700 ${
-                  heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: "400ms" }}
-              >
+              <p className="text-lg md:text-xl text-white/80 mb-8">
                 {t.subtitle}
               </p>
 
-              {/* CTAs */}
-              <div
-                className={`flex flex-col sm:flex-row gap-4 mb-8 transition-all duration-700 ${
-                  heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: "500ms" }}
-              >
+              {/* CTAs - CSS transitions only */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Button
                   variant="hero"
                   size="xl"
@@ -266,13 +293,8 @@ const PentruProprietari = () => {
               </div>
             </div>
 
-            {/* Right Column - Hero Video Walkthrough */}
-            <div
-              className={`transition-all duration-700 ${
-                heroVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"
-              }`}
-              style={{ transitionDelay: "500ms" }}
-            >
+            {/* Right Column - Hero Video Walkthrough - simplified CSS transition */}
+            <div className={`transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0"}`}>
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/30 border border-white/20">
                 <video
                   autoPlay
@@ -281,11 +303,12 @@ const PentruProprietari = () => {
                   playsInline
                   preload="metadata"
                   className="w-full aspect-video object-cover"
+                  width={640}
+                  height={360}
                   poster="/images/hero-cinematic.webp"
                 >
                   <source src="/videos/hero-apartment-walkthrough.mp4" type="video/mp4" />
                 </video>
-                {/* Subtle gradient overlay at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute bottom-3 left-4 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -352,9 +375,10 @@ const PentruProprietari = () => {
       {/* Channel Logos - pe ce platforme ești listat */}
       <ChannelLogos />
 
-      {/* STEP 2: Calculator - proprietarul vede potențialul financiar */}
+      {/* STEP 2: Calculator - deferred via IntersectionObserver */}
+      <div ref={calcSentinel} />
       <section id="calculator" className="scroll-mt-24">
-        <ProfitCalculator />
+        {calcReady && <ProfitCalculator />}
       </section>
 
       {/* Advanced Rental Calculator (Estimator AI) */}
@@ -490,8 +514,9 @@ const PentruProprietari = () => {
         </div>
       </section>
 
-      {/* FAQ */}
-      <FAQ />
+      {/* FAQ - deferred via IntersectionObserver */}
+      <div ref={faqSentinel} />
+      {faqReady && <FAQ />}
 
       {/* Final CTA */}
       <section className="py-20 bg-card">
