@@ -269,6 +269,9 @@ const Preturi = () => {
               {lang === "ro" ? "Pachete & " : "Packages & "}
               <span className="text-gradient-gold">{lang === "ro" ? "Prețuri" : "Pricing"}</span>
             </h1>
+            <p className="text-sm font-medium text-amber-300/80 mb-2">
+              {lang === "ro" ? "— Administrare în regim hotelier —" : "— Short-term rental management —"}
+            </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {lang === "ro"
                 ? "Alege pachetul potrivit proprietății tale. Comisionul include tot — nu există taxe ascunse."
@@ -346,6 +349,49 @@ const Preturi = () => {
               ? "* Toate prețurile sunt fără TVA. Comisionul se aplică doar pe veniturile generate — dacă nu se generează venituri, nu se percepe comision."
               : "* All prices exclude VAT. The commission only applies to generated revenue — if no revenue is generated, no commission is charged."}
           </p>
+        </div>
+      </section>
+
+      {/* Other Services */}
+      <section className="py-16 bg-muted/20">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-4">
+            {lang === "ro" ? "Alte servicii" : "Other services"}
+          </h2>
+          <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+            {lang === "ro"
+              ? "Pe lângă administrarea în regim hotelier, oferim și următoarele servicii:"
+              : "In addition to short-term rental management, we also offer:"}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                emoji: "🏠",
+                title: lang === "ro" ? "Intermediere tranzacții imobiliare" : "Real estate brokerage",
+                commission: "2–4%",
+                note: lang === "ro" ? "din valoarea tranzacției" : "of transaction value",
+              },
+              {
+                emoji: "🔑",
+                title: lang === "ro" ? "Administrare imobile (termen mediu & lung)" : "Property management (mid & long-term)",
+                commission: "10%",
+                note: lang === "ro" ? "pe lună, din chiria încasată" : "per month, of collected rent",
+              },
+              {
+                emoji: "📋",
+                title: lang === "ro" ? "Serviciu de închiriere" : "Leasing service",
+                commission: "50–100%",
+                note: lang === "ro" ? "din valoarea unei chirii lunare" : "of one month's rent value",
+              },
+            ].map((svc, i) => (
+              <div key={i} className="bg-card border border-border rounded-xl p-6 text-center hover:border-primary/30 transition-colors">
+                <div className="text-3xl mb-3">{svc.emoji}</div>
+                <h3 className="font-semibold text-foreground mb-2">{svc.title}</h3>
+                <span className="text-2xl font-serif font-bold text-gradient-gold">{svc.commission}</span>
+                <p className="text-sm text-muted-foreground mt-1">{svc.note}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
