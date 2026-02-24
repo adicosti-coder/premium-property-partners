@@ -114,7 +114,7 @@ const GoogleReviewsWidget = () => {
           {/* CTA */}
           <div className="text-center mt-8">
             <a
-              href="https://www.google.com/maps/place/?q=place_id:ChIJnfbKUqRZRUcRyGWCTcaFJ_U"
+              href="https://share.google/oNmn1ltr7L0OEiHet"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
