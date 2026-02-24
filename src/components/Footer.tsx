@@ -127,6 +127,7 @@ const Footer = () => {
   return (
     <footer className="bg-card py-12 border-t border-border/50 dark:border-border">
       <div className="container mx-auto px-6">
+        <h2 className="sr-only">{language === 'ro' ? 'Informații site' : 'Site information'}</h2>
         <div className="grid md:grid-cols-6 gap-8 mb-8">
           {/* Logo & Description */}
           <div className="md:col-span-1">
