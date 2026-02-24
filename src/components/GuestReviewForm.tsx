@@ -374,6 +374,14 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
             <CheckCircle className="w-16 h-16 text-primary mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">{t.successTitle}</h3>
             <p className="text-muted-foreground">{t.successMessage}</p>
+            <a
+              href="https://share.google/oNmn1ltr7L0OEiHet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              {language === "ro" ? "Lasă-ne și un review pe Google ⭐" : "Leave us a Google review too ⭐"}
+            </a>
           </div>
         </CardContent>
       </Card>
