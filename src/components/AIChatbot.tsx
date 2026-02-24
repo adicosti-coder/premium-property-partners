@@ -487,8 +487,8 @@ const AIChatbot = () => {
     } catch {}
     if (rating >= 4) {
       const thankMsg = language === "ro"
-        ? "🙏 Mulțumim pentru evaluare! Dacă doriți, ne-ar face plăcere să ne lăsați un [review pe Google](https://g.page/realtrust-timisoara/review)."
-        : "🙏 Thank you for your rating! If you would like, we would love a [Google review](https://g.page/realtrust-timisoara/review).";
+        ? "🙏 Mulțumim pentru evaluare! Dacă doriți, ne-ar face plăcere să ne lăsați un [review pe Google](https://share.google/oNmn1ltr7L0OEiHet)."
+        : "🙏 Thank you for your rating! If you would like, we would love a [Google review](https://share.google/oNmn1ltr7L0OEiHet).";
       addMessage("assistant", thankMsg);
     } else {
       const supportMsg = language === "ro"
