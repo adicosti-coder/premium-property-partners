@@ -2,6 +2,14 @@
   RewriteEngine On
   RewriteBase /
 
+  # Force non-www to www (canonical domain)
+  RewriteCond %{HTTP_HOST} ^realtrust\.ro$ [NC]
+  RewriteRule ^(.*)$ https://www.realtrust.ro/$1 [R=301,L]
+
+  # Force HTTP to HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
   # 301 redirects for legacy HTML pages (Google Search Console issues)
   RewriteRule ^index-en\.html$ / [R=301,L]
   RewriteRule ^index_EN\.html$ / [R=301,L]
