@@ -287,6 +287,7 @@ const Profile = () => {
       <SEOHead 
         title={text.title}
         description={text.subtitle}
+        noIndex={true}
       />
       <Header />
       

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
@@ -177,6 +178,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <SEOHead title="Reset Password" noIndex={true} />
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-8">
           <Button

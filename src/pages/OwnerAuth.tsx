@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
@@ -357,6 +358,7 @@ const OwnerAuth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-background to-amber-50/30 dark:from-amber-950/20 dark:via-background dark:to-amber-950/10 flex items-center justify-center px-6">
+      <SEOHead title="Portal Proprietari" noIndex={true} />
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-8">
           <Button
