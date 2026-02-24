@@ -75,7 +75,7 @@ const ArticleFAQ = ({ category, articleTitle }: ArticleFAQProps) => {
   const items = faqData[category]?.[lang] || defaultFaq[lang];
 
   return (
-    <section className="my-10 p-6 rounded-xl border border-border bg-muted/20" itemScope itemType="https://schema.org/FAQPage">
+    <section className="my-10 p-6 rounded-xl border border-border bg-muted/20">
       <div className="flex items-center gap-2 mb-4">
         <HelpCircle className="w-5 h-5 text-primary" />
         <h2 className="text-xl font-serif font-semibold">
@@ -87,19 +87,12 @@ const ArticleFAQ = ({ category, articleTitle }: ArticleFAQProps) => {
           <AccordionItem
             key={i}
             value={`article-faq-${i}`}
-            itemScope
-            itemProp="mainEntity"
-            itemType="https://schema.org/Question"
           >
-            <AccordionTrigger className="text-left text-sm" itemProp="name">
+            <AccordionTrigger className="text-left text-sm">
               {item.q}
             </AccordionTrigger>
-            <AccordionContent
-              itemScope
-              itemProp="acceptedAnswer"
-              itemType="https://schema.org/Answer"
-            >
-              <p itemProp="text" className="text-sm text-muted-foreground">{item.a}</p>
+            <AccordionContent>
+              <p className="text-sm text-muted-foreground">{item.a}</p>
             </AccordionContent>
           </AccordionItem>
         ))}
