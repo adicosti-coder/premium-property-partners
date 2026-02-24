@@ -190,7 +190,7 @@ const ContactSection = () => {
         {/* Embedded Google Map */}
         <div className="mt-12 rounded-2xl overflow-hidden border border-border shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2783.5!2d21.22596!3d45.75648!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x474539a252ca76f5%3A0xf527c6864d826548!2sApArt%20Hotel%20Timi%C8%99oara!5e0!3m2!1sro!2sro!4v1708900000000"
+            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1500!2d21.25131!3d45.76478!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s!2s45%C2%B045'53.2%22N%2021%C2%B015'04.7%22E!5e0!3m2!1sro!2sro"
             width="100%"
             height="350"
             style={{ border: 0 }}
