@@ -101,7 +101,7 @@ const PropertyFAQ = ({
       ];
 
   return (
-    <section className="mt-8" itemScope itemType="https://schema.org/FAQPage">
+    <section className="mt-8">
       <div className="flex items-center gap-2 mb-4">
         <HelpCircle className="w-5 h-5 text-primary" />
         <h2 className="text-2xl font-serif font-semibold">
@@ -113,19 +113,12 @@ const PropertyFAQ = ({
           <AccordionItem
             key={i}
             value={`faq-${i}`}
-            itemScope
-            itemProp="mainEntity"
-            itemType="https://schema.org/Question"
           >
-            <AccordionTrigger className="text-left" itemProp="name">
+            <AccordionTrigger className="text-left">
               {item.q}
             </AccordionTrigger>
-            <AccordionContent
-              itemScope
-              itemProp="acceptedAnswer"
-              itemType="https://schema.org/Answer"
-            >
-              <p itemProp="text">{item.a}</p>
+            <AccordionContent>
+              <p>{item.a}</p>
             </AccordionContent>
           </AccordionItem>
         ))}
