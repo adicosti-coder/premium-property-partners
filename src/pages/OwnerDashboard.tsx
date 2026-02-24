@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -155,6 +156,7 @@ const OwnerDashboard = () => {
 
   return (
     <div className="dark min-h-screen bg-background">
+      <SEOHead title="Portal Proprietar" noIndex={true} />
       <Header />
       
       <main className="pt-24 pb-16">
