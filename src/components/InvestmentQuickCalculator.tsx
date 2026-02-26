@@ -6,10 +6,22 @@ import { Label } from "@/components/ui/label";
 
 const InvestmentQuickCalculator = () => {
   const { language } = useLanguage();
-  const [pret, setPret] = useState(95000);
-  const [chirie, setChirie] = useState(500);
-  const [expenses, setExpenses] = useState(50);
+  const presets = {
+    clasic: { pret: 95000, chirie: 450, expenses: 30 },
+    hotel: { pret: 95000, chirie: 750, expenses: 120 },
+  };
+
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("clasic");
+  const [pret, setPret] = useState(presets.clasic.pret);
+  const [chirie, setChirie] = useState(presets.clasic.chirie);
+  const [expenses, setExpenses] = useState(presets.clasic.expenses);
+
+  const switchStrategy = (s: "clasic" | "hotel") => {
+    setStrategy(s);
+    setPret(presets[s].pret);
+    setChirie(presets[s].chirie);
+    setExpenses(presets[s].expenses);
+  };
 
   const calc = useMemo(() => {
     if (!pret || !chirie) return null;
@@ -134,7 +146,7 @@ const InvestmentQuickCalculator = () => {
       {/* Strategy Toggle */}
       <div className="flex justify-center gap-3 mb-6">
         <button
-          onClick={() => setStrategy("clasic")}
+          onClick={() => switchStrategy("clasic")}
           className={`px-5 py-3 rounded-full font-bold text-sm transition-all duration-300 border-none cursor-pointer ${
             strategy === "clasic" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-lg" : "bg-muted text-muted-foreground"
           }`}
@@ -142,7 +154,7 @@ const InvestmentQuickCalculator = () => {
           {t.clasic}
         </button>
         <button
-          onClick={() => setStrategy("hotel")}
+          onClick={() => switchStrategy("hotel")}
           className={`px-5 py-3 rounded-full font-bold text-sm transition-all duration-300 border-none cursor-pointer ${
             strategy === "hotel" ? "bg-amber-500 text-white shadow-lg" : "bg-muted text-muted-foreground"
           }`}
