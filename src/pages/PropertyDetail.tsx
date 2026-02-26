@@ -433,6 +433,7 @@ const PropertyDetail = () => {
                 bedrooms={staticProperty ? property.bedrooms : undefined}
                 pricePerNight={staticProperty ? property.pricePerNight : undefined}
                 isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
+                listingType={dbProperty?.listing_type}
               />
             </div>
 
