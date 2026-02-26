@@ -5,9 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { useParallax } from "@/hooks/useParallax";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+
 import {
   Building2, 
   Home, 
@@ -36,37 +34,7 @@ const RealEstateListings = lazy(() => import("@/components/RealEstateListings"))
 const Imobiliare = () => {
   const { t, language } = useLanguage();
   const realEstate = t.realEstatePage;
-  
 
-  // Scroll animation hooks for each section
-  const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
-  const { ref: servicesHeaderRef, isVisible: servicesHeaderVisible } = useScrollAnimation();
-  const { ref: servicesGridRef, isVisible: servicesGridVisible } = useScrollAnimation({ threshold: 0.05 });
-  const { ref: benefitsHeaderRef, isVisible: benefitsHeaderVisible } = useScrollAnimation();
-  const { ref: benefitsGridRef, isVisible: benefitsGridVisible } = useScrollAnimation({ threshold: 0.05 });
-  const { ref: processHeaderRef, isVisible: processHeaderVisible } = useScrollAnimation();
-  const { ref: processGridRef, isVisible: processGridVisible } = useScrollAnimation({ threshold: 0.05 });
-  const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
-
-  // Parallax effects for decorative elements
-  const { offset: parallaxSlow } = useParallax({ speed: 0.15, direction: 'up' });
-  const { offset: parallaxMedium } = useParallax({ speed: 0.25, direction: 'up' });
-  const { offset: parallaxFast } = useParallax({ speed: 0.35, direction: 'down' });
-
-  // Typing animation for Hero title - optimized for mobile
-  const { displayedText: typedTitle, isComplete: titleComplete } = useTypingAnimation({
-    text: realEstate.hero.title,
-    speed: 40, // Faster typing (was 60)
-    delay: 200 // Shorter delay (was 300)
-  });
-
-  // Typing animation for Hero subtitle (starts after title completes) - optimized
-  const titleDuration = realEstate.hero.title.length * 40 + 200 + 250; // Reduced buffer (was 500)
-  const { displayedText: typedSubtitle, isComplete: subtitleComplete } = useTypingAnimation({
-    text: realEstate.hero.subtitle,
-    speed: 20, // Faster typing (was 30)
-    delay: titleDuration
-  });
 
   const services = [
     {
@@ -154,54 +122,34 @@ const Imobiliare = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
         
-        {/* Parallax decorative elements - Hero - offset to prevent visible edge overflow */}
-        <div 
-          className="absolute top-20 left-[10%] w-32 h-32 rounded-full bg-primary/5 blur-3xl"
-          style={{ transform: `translateY(${parallaxSlow}px)` }}
-        />
-        <div 
-          className="absolute top-40 right-[10%] w-48 h-48 rounded-full bg-primary/8 blur-3xl"
-          style={{ transform: `translateY(${parallaxMedium}px)` }}
-        />
-        <div 
-          className="absolute bottom-10 left-1/4 w-24 h-24 rounded-full bg-primary/10 blur-2xl"
-          style={{ transform: `translateY(${parallaxFast}px)` }}
-        />
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-[10%] w-32 h-32 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute top-40 right-[10%] w-48 h-48 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute bottom-10 left-1/4 w-24 h-24 rounded-full bg-primary/10 blur-2xl" />
         
         <div className="container mx-auto px-6 relative z-10">
           <div 
-            ref={heroRef}
-            className={`max-w-4xl mx-auto text-center transition-all duration-700 ${
-              heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="max-w-4xl mx-auto text-center"
           >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-6">
               {realEstate.hero.badge}
             </span>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-6 leading-tight">
-              {typedTitle}
-              <span className={`inline-block w-0.5 h-[1em] bg-primary ml-1 align-middle transition-opacity duration-300 ${titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
-              {titleComplete && (
-                <>
-                  {" "}
-                  <span className="text-primary animate-fade-in">{realEstate.hero.titleHighlight}</span>
-                </>
-              )}
+              {realEstate.hero.title}{" "}
+              <span className="text-primary">{realEstate.hero.titleHighlight}</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              {typedSubtitle}
-              <span className={`inline-block w-0.5 h-[1em] bg-muted-foreground/50 ml-0.5 align-middle transition-opacity duration-300 ${subtitleComplete || !titleComplete ? 'opacity-0' : 'animate-pulse'}`} />
+              {realEstate.hero.subtitle}
             </p>
             
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 variant="hero" 
                 size="lg"
                 onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank')}
-                className={`group transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-                style={{ transitionDelay: subtitleComplete ? '50ms' : '0ms' }}
+                className="group"
               >
                 <Phone className="w-5 h-5 mr-2" />
                 {realEstate.cta.contact}
@@ -211,8 +159,6 @@ const Imobiliare = () => {
                 variant="outline" 
                 size="lg"
                 onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
-                className={`transition-all duration-300 ${subtitleComplete ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}
-                style={{ transitionDelay: subtitleComplete ? '120ms' : '0ms' }}
               >
                 {realEstate.cta.learnMore}
               </Button>
@@ -227,21 +173,12 @@ const Imobiliare = () => {
       {/* Services Section */}
       <section id="services" className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
         {/* Parallax decorative elements - Services - offset to prevent edge overflow */}
-        <div 
-          className="absolute top-32 right-[10%] w-40 h-40 rounded-full bg-primary/5 blur-3xl"
-          style={{ transform: `translateY(${parallaxMedium}px)` }}
-        />
-        <div 
-          className="absolute bottom-20 left-[10%] w-28 h-28 rounded-full bg-primary/8 blur-2xl"
-          style={{ transform: `translateY(${parallaxSlow}px)` }}
-        />
+        <div className="absolute top-32 right-[10%] w-40 h-40 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute bottom-20 left-[10%] w-28 h-28 rounded-full bg-primary/8 blur-2xl" />
         
         <div className="container mx-auto px-6 relative z-10">
           <div 
-            ref={servicesHeaderRef}
-            className={`text-center mb-16 transition-all duration-700 ${
-              servicesHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="text-center mb-16"
           >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
               {realEstate.services.label}
@@ -256,10 +193,7 @@ const Imobiliare = () => {
           </div>
 
           <div 
-            ref={servicesGridRef}
-            className={`grid md:grid-cols-2 gap-8 transition-all duration-700 delay-200 ${
-              servicesGridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="grid md:grid-cols-2 gap-8"
           >
             {services.map((service, index) => (
               <Card 
@@ -299,21 +233,12 @@ const Imobiliare = () => {
       {/* Benefits Section */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         {/* Parallax decorative elements - Benefits - offset to prevent edge overflow */}
-        <div 
-          className="absolute top-16 left-[10%] w-36 h-36 rounded-full bg-primary/5 blur-3xl"
-          style={{ transform: `translateY(${parallaxFast}px)` }}
-        />
-        <div 
-          className="absolute bottom-24 right-[10%] w-44 h-44 rounded-full bg-primary/6 blur-3xl"
-          style={{ transform: `translateY(${parallaxMedium}px)` }}
-        />
+        <div className="absolute top-16 left-[10%] w-36 h-36 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute bottom-24 right-[10%] w-44 h-44 rounded-full bg-primary/6 blur-3xl" />
         
         <div className="container mx-auto px-6 relative z-10">
           <div 
-            ref={benefitsHeaderRef}
-            className={`text-center mb-16 transition-all duration-700 ${
-              benefitsHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="text-center mb-16"
           >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
               {realEstate.benefits.label}
@@ -328,10 +253,7 @@ const Imobiliare = () => {
           </div>
 
           <div 
-            ref={benefitsGridRef}
-            className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-700 delay-200 ${
-              benefitsGridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {benefits.map((benefit, index) => (
               <div 
@@ -352,21 +274,12 @@ const Imobiliare = () => {
       {/* Process Section */}
       <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
         {/* Parallax decorative elements - Process - offset to prevent edge overflow */}
-        <div 
-          className="absolute top-24 right-[15%] w-32 h-32 rounded-full bg-primary/5 blur-3xl"
-          style={{ transform: `translateY(${parallaxSlow}px)` }}
-        />
-        <div 
-          className="absolute bottom-16 left-1/3 w-40 h-40 rounded-full bg-primary/8 blur-3xl"
-          style={{ transform: `translateY(${parallaxMedium}px)` }}
-        />
+        <div className="absolute top-24 right-[15%] w-32 h-32 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute bottom-16 left-1/3 w-40 h-40 rounded-full bg-primary/8 blur-3xl" />
         
         <div className="container mx-auto px-6 relative z-10">
           <div 
-            ref={processHeaderRef}
-            className={`text-center mb-16 transition-all duration-700 ${
-              processHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="text-center mb-16"
           >
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
               {realEstate.process.label}
@@ -380,10 +293,7 @@ const Imobiliare = () => {
           </div>
 
           <div 
-            ref={processGridRef}
-            className={`grid md:grid-cols-2 lg:grid-cols-4 gap-8 transition-all duration-700 delay-200 ${
-              processGridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {steps.map((step, index) => (
               <div 
@@ -418,21 +328,12 @@ const Imobiliare = () => {
       {/* CTA Section */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         {/* Parallax decorative elements - CTA */}
-        <div 
-          className="absolute top-10 left-1/4 w-24 h-24 rounded-full bg-primary/6 blur-2xl"
-          style={{ transform: `translateY(${parallaxFast}px)` }}
-        />
-        <div 
-          className="absolute bottom-20 right-1/4 w-36 h-36 rounded-full bg-primary/5 blur-3xl"
-          style={{ transform: `translateY(${parallaxSlow}px)` }}
-        />
+        <div className="absolute top-10 left-1/4 w-24 h-24 rounded-full bg-primary/6 blur-2xl" />
+        <div className="absolute bottom-20 right-1/4 w-36 h-36 rounded-full bg-primary/5 blur-3xl" />
         
         <div className="container mx-auto px-6 relative z-10">
           <div 
-            ref={ctaRef}
-            className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-8 md:p-16 text-center transition-all duration-700 ${
-              ctaVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-8 md:p-16 text-center"
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,hsl(var(--primary)/0.2),transparent_50%)]" />
             
