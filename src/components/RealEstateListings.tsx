@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +24,6 @@ const RealEstateListings = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<ListingProperty[]>([]);
   const [loading, setLoading] = useState(true);
-  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
-  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -66,12 +63,7 @@ const RealEstateListings = () => {
   return (
     <section id="listings" className="py-20 md:py-28 bg-muted/30">
       <div className="container mx-auto px-6">
-        <div
-          ref={headerRef}
-          className={`text-center mb-16 transition-all duration-700 ${
-            headerVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
+        <div className="text-center mb-16">
           <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
             {language === "ro" ? "Anunțuri Active" : "Active Listings"}
           </span>
@@ -92,12 +84,7 @@ const RealEstateListings = () => {
             ))}
           </div>
         ) : (
-          <div
-            ref={gridRef}
-            className={`grid md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 delay-200 ${
-              gridVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {listings.map((listing, index) => {
               const badge = getListingBadge(listing.listing_type);
               const price = formatPrice(listing.capital_necesar, listing.listing_type);
