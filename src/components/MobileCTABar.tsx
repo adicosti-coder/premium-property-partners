@@ -92,13 +92,13 @@ const MobileCTABar = () => {
         <button
           onClick={scrollToGuests}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-accent",
+            "flex flex-col items-center justify-center py-2.5 px-1 bg-booking-blue",
             "active:scale-95 transition-all duration-150",
-            "hover:bg-accent/80 border-l border-border"
+            "hover:bg-booking-blue-hover border-l border-border"
           )}
         >
-          <Users className="w-4 h-4 text-accent-foreground mb-0.5" />
-          <span className="text-[10px] font-bold text-accent-foreground">{t.guests}</span>
+          <Users className="w-4 h-4 text-white mb-0.5" />
+          <span className="text-[10px] font-bold text-white">{t.guests}</span>
         </button>
         
         {/* Owners Button */}
