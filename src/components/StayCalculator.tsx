@@ -11,7 +11,7 @@ interface StayCalculatorProps {
   onBook?: () => void;
 }
 
-const DISCOUNT_PERCENT = 8;
+const DISCOUNT_PERCENT = 5;
 
 const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
   const { t, language } = useLanguage();
