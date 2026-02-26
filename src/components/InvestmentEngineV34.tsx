@@ -54,7 +54,7 @@ const InvestmentEngineV34 = ({
   const [advanceStr, setAdvanceStr] = useState("25");
   const [interestStr, setInterestStr] = useState("6.5");
   const [occupancy, setOccupancy] = useState("12");
-  const [taxRate, setTaxRate] = useState("0.07");
+  const [taxRate, setTaxRate] = useState("0.08");
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("clasic");
   const [clientName, setClientName] = useState("");
   const [showPopup, setShowPopup] = useState(false);
@@ -425,15 +425,9 @@ const InvestmentEngineV34 = ({
             </div>
             <div>
               <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.taxRate}</Label>
-              <Select value={taxRate} onValueChange={setTaxRate}>
-                <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0.07">{t.tax7}</SelectItem>
-                  <SelectItem value="0.08">{t.tax10}</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="mt-1 px-3 py-2 text-base font-bold text-foreground bg-background/80 border border-border/60 rounded-md">
+                {strategy === "clasic" ? "8% (Forfetar)" : "7% (Forfetar)"}
+              </div>
             </div>
           </div>
 
@@ -447,7 +441,7 @@ const InvestmentEngineV34 = ({
                 setOccupancy("12");
                 setAdvanceStr("25");
                 setInterestStr("6.5");
-                setTaxRate("0.07");
+                setTaxRate("0.08");
               }}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "clasic"
@@ -465,7 +459,7 @@ const InvestmentEngineV34 = ({
                 setOccupancy("12");
                 setAdvanceStr("25");
                 setInterestStr("6.5");
-                setTaxRate("0.08");
+                setTaxRate("0.07");
               }}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "hotel"
