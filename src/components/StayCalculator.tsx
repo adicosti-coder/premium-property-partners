@@ -18,17 +18,11 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
 
   const calculation = useMemo(() => {
     const basePrice = property.pricePerNight * nights;
-    const cleaningFee = 50; // Fixed cleaning fee
-    const serviceFee = Math.round(basePrice * 0.12); // 12% service fee
-    const total = basePrice + cleaningFee + serviceFee;
-    const pricePerNightWithFees = Math.round(total / nights);
+    const total = basePrice;
 
     return {
       basePrice,
-      cleaningFee,
-      serviceFee,
       total,
-      pricePerNightWithFees,
     };
   }, [property.pricePerNight, nights]);
 
@@ -111,27 +105,12 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
           </span>
           <span className="text-foreground">€{calculation.basePrice}</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">
-            {language === 'ro' ? 'Taxă curățenie' : 'Cleaning fee'}
-          </span>
-          <span className="text-foreground">€{calculation.cleaningFee}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">
-            {language === 'ro' ? 'Taxă servicii' : 'Service fee'}
-          </span>
-          <span className="text-foreground">€{calculation.serviceFee}</span>
-        </div>
         <div className="flex justify-between pt-3 border-t border-border">
           <span className="font-semibold text-foreground">
             {language === 'ro' ? 'Total' : 'Total'}
           </span>
           <span className="text-xl font-bold text-primary">€{calculation.total}</span>
         </div>
-        <p className="text-xs text-muted-foreground text-center">
-          ≈ €{calculation.pricePerNightWithFees} / {language === 'ro' ? 'noapte cu taxe' : 'night with fees'}
-        </p>
       </div>
 
       {/* Book button */}
