@@ -95,7 +95,7 @@ const RealEstateListings = () => {
                   key={listing.id}
                   className="group overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 cursor-pointer"
                   style={{ transitionDelay: `${index * 100}ms` }}
-                  onClick={() => navigate(`/proprietati/${listing.id}`)}
+                  onClick={() => navigate(`/proprietate/${listing.id}`)}
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img
