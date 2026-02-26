@@ -453,8 +453,8 @@ const PropertyDetail = () => {
                   </h3>
                   <p className="text-muted-foreground text-sm">
                     {language === 'ro' 
-                      ? 'Contactează-ne pentru mai multe detalii despre această oportunitate de investiție.'
-                      : 'Contact us for more details about this investment opportunity.'}
+                      ? 'Contactează-ne pentru mai multe detalii despre această oportunitate.'
+                      : 'Contact us for more details about this opportunity.'}
                   </p>
                   <Button 
                     variant="hero" 
