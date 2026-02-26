@@ -325,7 +325,20 @@ const PropertyDetail = () => {
                   </Badge>
                 )}
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
-                <p className="text-muted-foreground flex items-center gap-1 min-w-0"><MapPin className="w-4 h-4 shrink-0" /> <span className="break-all truncate">{property.location}</span></p>
+                <p className="text-muted-foreground flex items-center gap-1 min-w-0 flex-wrap">
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span className="break-all truncate">{property.location}</span>
+                  <span className="text-muted-foreground/50">·</span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.name + ', ' + property.location + ', Timișoara')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium whitespace-nowrap"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    {language === 'ro' ? 'Poziția pe hartă' : 'View on map'}
+                  </a>
+                </p>
               </div>
 
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
