@@ -348,7 +348,7 @@ const InvestmentEngineV34 = ({
 
         {/* Client Name Card */}
         <div className="bg-card border border-border rounded-3xl p-6 text-center shadow-xl print:hidden">
-          <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+          <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">
             {t.nameLabel}
           </Label>
           <input
@@ -356,7 +356,7 @@ const InvestmentEngineV34 = ({
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             placeholder={t.namePlaceholder}
-            className="mt-2 px-4 py-3 w-full max-w-[400px] bg-background border border-border rounded-xl text-center text-sm text-foreground outline-none focus:ring-2 focus:ring-amber-500 mx-auto block transition-all"
+            className="mt-2 px-4 py-3 w-full max-w-[400px] bg-background/80 border border-border/60 rounded-xl text-center text-sm text-foreground outline-none focus:ring-2 focus:ring-amber-500 mx-auto block transition-all placeholder:text-muted-foreground/60"
           />
         </div>
 
@@ -364,31 +364,31 @@ const InvestmentEngineV34 = ({
         <div className="bg-card border border-border rounded-3xl p-5 sm:p-7 shadow-xl print:hidden">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{t.budget}</Label>
+              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.budget}</Label>
               <Input
                 type="number"
                 value={budgetStr}
                 onChange={(e) => setBudgetStr(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 placeholder={t.budgetPlaceholder}
-                className="mt-1 text-base font-bold"
+                className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
               />
             </div>
             <div>
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{t.rent}</Label>
+              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.rent}</Label>
               <Input
                 type="number"
                 value={chirieStr}
                 onChange={(e) => setChirieStr(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 placeholder={t.rentPlaceholder}
-                className="mt-1 text-base font-bold"
+                className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
               />
             </div>
             <div>
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{t.occupancy}</Label>
+              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancy}</Label>
               <Select value={occupancy} onValueChange={setOccupancy}>
-                <SelectTrigger className="mt-1 text-base font-bold">
+                <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -402,31 +402,31 @@ const InvestmentEngineV34 = ({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{t.advance}</Label>
+              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.advance}</Label>
               <Input
                 type="number"
                 value={advanceStr}
                 onChange={(e) => setAdvanceStr(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 placeholder={t.advancePlaceholder}
-                className="mt-1 text-base font-bold"
+                className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
               />
             </div>
             <div>
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{t.interest}</Label>
+              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.interest}</Label>
               <Input
                 type="number"
                 value={interestStr}
                 onChange={(e) => setInterestStr(e.target.value)}
                 onFocus={(e) => e.target.select()}
                 placeholder={t.interestPlaceholder}
-                className="mt-1 text-base font-bold"
+                className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
               />
             </div>
             <div>
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{t.taxRate}</Label>
+              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.taxRate}</Label>
               <Select value={taxRate} onValueChange={setTaxRate}>
-                <SelectTrigger className="mt-1 text-base font-bold">
+                <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
