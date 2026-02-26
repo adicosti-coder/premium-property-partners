@@ -365,7 +365,7 @@ const PropertyDetail = () => {
                       {dbProperty.capital_necesar && (
                         <div>
                           <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
-                            {language === 'ro' ? 'Capital Necesar' : 'Required Capital'}
+                            {language === 'ro' ? 'Preț Vânzare' : 'Sale Price'}
                           </p>
                           <p className="text-3xl font-bold">€{dbProperty.capital_necesar.toLocaleString('ro-RO')}</p>
                         </div>
