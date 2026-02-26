@@ -420,7 +420,7 @@ const Investitii = () => {
           {/* Quick Calculator */}
           <div className="mt-16">
             <Suspense fallback={<div className="min-h-[400px]" />}>
-              <InvestmentEngineV34 />
+              <InvestmentEngineV34 defaultPrice={95000} defaultRent={450} />
             </Suspense>
           </div>
         </div>
