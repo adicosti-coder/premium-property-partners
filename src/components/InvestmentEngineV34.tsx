@@ -237,7 +237,7 @@ const InvestmentEngineV34 = ({
     occ10: "10 Luni",
     occ9: "9 Luni",
     tax7: "7% (Forfetar)",
-    tax10: "10% (Real)",
+    tax10: "8% (Real)",
     clasic: "Închiriere Clasică",
     hotel: "Regim Hotelier (ApArt Hotel)",
     strategy: "Strategie",
@@ -292,7 +292,7 @@ const InvestmentEngineV34 = ({
     occ10: "10 Months",
     occ9: "9 Months",
     tax7: "7% (Flat Rate)",
-    tax10: "10% (Standard)",
+    tax10: "8% (Standard)",
     clasic: "Classic Rental",
     hotel: "Hotel Strategy (ApArt Hotel)",
     strategy: "Strategy",
@@ -431,7 +431,7 @@ const InvestmentEngineV34 = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0.07">{t.tax7}</SelectItem>
-                  <SelectItem value="0.10">{t.tax10}</SelectItem>
+                  <SelectItem value="0.08">{t.tax10}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -465,7 +465,7 @@ const InvestmentEngineV34 = ({
                 setOccupancy("12");
                 setAdvanceStr("25");
                 setInterestStr("6.5");
-                setTaxRate("0.10");
+                setTaxRate("0.08");
               }}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "hotel"
