@@ -12,6 +12,7 @@ const QuickAvailabilitySearch = lazy(() => import("@/components/QuickAvailabilit
 const CityGuideSection = lazy(() => import("@/components/CityGuideSection"));
 import SEOHead from "@/components/SEOHead";
 import { useLanguage } from "@/i18n/LanguageContext";
+import PageSummary from "@/components/PageSummary";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -284,6 +285,10 @@ const PentruOaspeti = () => {
         url="https://www.realtrust.ro/pentru-oaspeti"
       />
       <Header />
+      <PageSummary
+        summaryRo="Descoperă apartamentele RealTrust în Timișoara — cazare premium cu self check-in 24/7, curățenie profesională, Wi-Fi de mare viteză și smart home. Rezervă direct pentru cel mai bun preț garantat."
+        summaryEn="Discover RealTrust apartments in Timișoara — premium accommodation with 24/7 self check-in, professional cleaning, high-speed Wi-Fi and smart home features. Book direct for the best price guaranteed."
+      />
       
       <main className="pt-20">
         {/* Hero Section */}

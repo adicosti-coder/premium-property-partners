@@ -24,6 +24,7 @@ import SEOHead from "@/components/SEOHead";
 
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import PageSummary from "@/components/PageSummary";
 import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
 
 const RealEstateContactForm = lazy(() => import("@/components/RealEstateContactForm"));
@@ -112,6 +113,10 @@ const Imobiliare = () => {
         jsonLd={[realEstateAgentSchema, breadcrumbSchema]}
       />
       <Header />
+      <PageSummary
+        summaryRo="Servicii imobiliare complete în Timișoara: vânzări, cumpărări, închirieri clasice. Consultanță profesională, evaluări de piață, suport juridic complet și acces la anunțuri exclusive."
+        summaryEn="Complete real estate services in Timișoara: sales, purchases, classic rentals. Professional consulting, market evaluations, full legal support and access to exclusive listings."
+      />
       <Suspense fallback={null}>
       
       {/* Breadcrumb */}

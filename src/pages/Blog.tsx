@@ -24,6 +24,7 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+import PageSummary from "@/components/PageSummary";
 
 interface BlogArticle {
   id: string;
@@ -240,6 +241,10 @@ const Blog = () => {
         jsonLd={blogSchemas}
       />
       <Header />
+      <PageSummary
+        summaryRo="Blog RealTrust — articole despre investiții imobiliare, administrare în regim hotelier, fiscalitate, prețuri dinamice și ghiduri turistice Timișoara. Sfaturi practice pentru proprietari și investitori."
+        summaryEn="RealTrust Blog — articles about real estate investment, short-term rental management, taxation, dynamic pricing and Timișoara tourist guides. Practical tips for owners and investors."
+      />
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-6">

@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ConfettiEffect from "@/components/ConfettiEffect";
 import UserReferralsList from "@/components/UserReferralsList";
+import PageSummary from "@/components/PageSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -275,6 +276,10 @@ const ReferralProgram = () => {
         url="https://www.realtrust.ro/recomanda-proprietar"
       />
       <Header />
+      <PageSummary
+        summaryRo="Programul de recomandare RealTrust — recomandă un proprietar și primești o noapte gratuită de cazare. Urmărește statusul recomandărilor tale și câștigă recompense."
+        summaryEn="RealTrust Referral Program — recommend a property owner and get a free night stay. Track your referral status and earn rewards."
+      />
       <ConfettiEffect isActive={showConfetti} duration={4000} particleCount={80} />
       
       {/* Breadcrumb */}
