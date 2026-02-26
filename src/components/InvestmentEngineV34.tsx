@@ -440,7 +440,15 @@ const InvestmentEngineV34 = ({
           {/* Strategy Buttons */}
           <div className="flex gap-3 mt-2">
             <button
-              onClick={() => setStrategy("clasic")}
+              onClick={() => {
+                setStrategy("clasic");
+                setBudgetStr("95000");
+                setChirieStr("450");
+                setOccupancy("12");
+                setAdvanceStr("25");
+                setInterestStr("6.5");
+                setTaxRate("0.07");
+              }}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "clasic"
                   ? "bg-foreground text-background border-foreground shadow-lg"
@@ -450,7 +458,15 @@ const InvestmentEngineV34 = ({
               {t.clasic}
             </button>
             <button
-              onClick={() => setStrategy("hotel")}
+              onClick={() => {
+                setStrategy("hotel");
+                setBudgetStr("95000");
+                setChirieStr("750");
+                setOccupancy("10");
+                setAdvanceStr("25");
+                setInterestStr("6.5");
+                setTaxRate("0.07");
+              }}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "hotel"
                   ? "bg-amber-500 text-slate-900 border-amber-500 shadow-lg"
