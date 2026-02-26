@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
@@ -87,6 +87,15 @@ const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
+// Scroll to top on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 // Deferred shell — wraps children with lazy providers + widgets
 const DeferredShell = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
@@ -118,6 +127,7 @@ const App = () => (
         <LanguageProvider>
           <BrowserRouter>
             <ErrorBoundary>
+              <ScrollToTop />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
