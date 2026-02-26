@@ -375,7 +375,7 @@ const Investitii = () => {
                           {language === "ro" ? "Profit Anual Estimat" : "Est. Annual Profit"}
                         </span>
                         <span className="text-amber-500 font-bold text-xl">
-                          €{(parseFloat(property.estimated_revenue) * 12).toLocaleString("ro-RO")}
+                          €{(parseFloat(property.estimated_revenue.replace(/\./g, '').replace(',', '.')) * 12).toLocaleString("ro-RO")}
                         </span>
                       </div>
                     )}
