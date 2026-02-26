@@ -19,6 +19,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import PageSummary from "@/components/PageSummary";
 
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
@@ -249,6 +250,10 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
         ]}
       />
       <Header />
+      <PageSummary
+        summaryRo="Toate apartamentele RealTrust disponibile pentru închiriere pe termen scurt în Timișoara. Filtrează după preț, locație și dotări. Rezervare directă cu cel mai bun preț."
+        summaryEn="All RealTrust apartments available for short-term rental in Timișoara. Filter by price, location and amenities. Direct booking with the best price."
+      />
       
       {/* Breadcrumb */}
       <div className="container mx-auto px-6 pt-24">

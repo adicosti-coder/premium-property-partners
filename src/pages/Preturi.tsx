@@ -9,6 +9,7 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import PageSummary from "@/components/PageSummary";
 
 const packages = {
   ro: [
@@ -247,6 +248,10 @@ const Preturi = () => {
         url="https://www.realtrust.ro/preturi"
       />
       <Header />
+      <PageSummary
+        summaryRo="Pachete de administrare RealTrust: Starter (15%), Esențial (20%), Premium (25%). Fiecare include listare pe platforme, suport clienți și raportare financiară. Fără perioadă minimă de contract."
+        summaryEn="RealTrust management packages: Starter (15%), Essential (20%), Premium (25%). Each includes platform listing, guest support and financial reporting. No minimum contract period."
+      />
 
       {/* Hero */}
       <section className="relative pt-40 pb-16 bg-gradient-to-b from-blue-950/60 via-blue-900/20 to-background overflow-hidden">

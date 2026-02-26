@@ -28,6 +28,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import PageSummary from "@/components/PageSummary";
 
 const AboutUs = () => {
   const { language } = useLanguage();
@@ -348,6 +349,10 @@ const AboutUs = () => {
         ]}
       />
       <Header />
+      <PageSummary
+        summaryRo="Despre RealTrust — echipă profesionistă din Timișoara specializată în administrarea apartamentelor în regim hotelier și servicii imobiliare complete. Misiunea, valorile și povestea companiei."
+        summaryEn="About RealTrust — professional team from Timișoara specialized in short-term rental management and complete real estate services. Company mission, values and story."
+      />
       
       <main className="pt-20">
         {/* Breadcrumb */}

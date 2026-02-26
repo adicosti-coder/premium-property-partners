@@ -6,6 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import PageSummary from "@/components/PageSummary";
 import { Badge } from "@/components/ui/badge";
 import {
   Building2,
@@ -173,6 +174,10 @@ const Complexe = () => {
       />
 
       <Header />
+      <PageSummary
+        summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament verificat."
+        summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and verified yields."
+      />
 
       <main className="min-h-screen bg-background">
         {/* Hero Section */}

@@ -7,6 +7,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import PageSummary from "@/components/PageSummary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -229,6 +230,10 @@ const WhyBookDirect = () => {
         ]}
       />
       <Header />
+      <PageSummary
+        summaryRo="De ce să rezervi direct la RealTrust? Cel mai bun preț garantat, fără comisioane ascunse, comunicare directă cu echipa, check-in flexibil și beneficii exclusive pentru oaspeții direcți."
+        summaryEn="Why book direct with RealTrust? Best price guaranteed, no hidden fees, direct communication with the team, flexible check-in and exclusive benefits for direct guests."
+      />
       
       <main className="pt-20 md:pt-24">
         {/* Hero Section */}

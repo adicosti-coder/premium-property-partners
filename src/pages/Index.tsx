@@ -20,6 +20,7 @@ const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
 const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
+const PageSummary = lazy(() => import("@/components/PageSummary"));
 
 // Visibility-gated section: stats + calculator (near-fold)
 const NearFoldSection = () => {
@@ -133,6 +134,10 @@ const Index = () => {
         </Suspense>
       )}
       <Header />
+      <PageSummary
+        summaryRo="RealTrust — platformă completă de imobiliare și apart-hotel management în Timișoara. Administrare profesională în regim hotelier cu ROI 9%+, rată de ocupare 85%, self check-in digital 24/7. Servicii de vânzare, cumpărare, închiriere și amenajare apartamente."
+        summaryEn="RealTrust — complete real estate and apart-hotel management platform in Timișoara. Professional short-term rental management with 9%+ ROI, 85% occupancy rate, 24/7 digital self check-in. Property sales, purchases, rentals and interior design services."
+      />
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
