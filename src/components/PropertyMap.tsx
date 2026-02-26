@@ -9,22 +9,22 @@ import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglS
 
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
-  // Strada Loichița Vasile - zona Circumvalațiunii/City of Mara
-  'ring-apart-hotel-spacious-deluxe': [21.2175, 45.7510],
-  // Denya Forest - Strada Constructorilor 52, lângă Amazonia (nord-vest)
-  'green-forest-apart-hotel': [21.1950, 45.7750],
-  // Fructus Plaza - ultracentral Timișoara
-  'fructus-plaza-ultracentral-apart-hotel': [21.2260, 45.7565],
-  // City of Mara M9 - zona Circumvalațiunii
-  'fullview-studio-deluxe': [21.2170, 45.7505],
-  // City of Mara M8 - Calea Circumvalațiunii nr.1
-  'avenue-of-mara-apart-hotel': [21.2165, 45.7500],
-  // Strada Argeș 4 - aproape de centru
-  'helios-apart-hotel': [21.2280, 45.7490],
+  // Strada Loichița Vasile 1-3, sc.B, Ansamblul RING
+  'ring-apart-hotel-spacious-deluxe': [21.2362, 45.7378],
+  // Strada Constructorilor 52, Denya-Adora Forest, Denya 5
+  'green-forest-apart-hotel': [21.1870, 45.7830],
+  // Str. Gheorghe Lazăr nr.24, clădirea Fructus Plaza
+  'fructus-plaza-ultracentral-apart-hotel': [21.2282, 45.7535],
+  // Calea Circumvalațiunii nr.1, City of Mara, M9
+  'fullview-studio-deluxe': [21.2148, 45.7487],
+  // Calea Circumvalațiunii nr.1, City of Mara, M8
+  'avenue-of-mara-apart-hotel': [21.2140, 45.7483],
+  // Strada Argeș nr.4
+  'helios-apart-hotel': [21.2310, 45.7520],
   // Calea Torontalului 104K - nord Timișoara
   'ateneo-trevi-2-apart-hotel': [21.2050, 45.7780],
   // Circumvalațiunii M11 - zona City of Mara
-  'sunset-da-ra-studio-deluxe': [21.2180, 45.7495],
+  'sunset-da-ra-studio-deluxe': [21.2155, 45.7490],
   // Strada Sinaia nr.2B - ultracentral
   'mara-luxury-golden-apart-hotel': [21.2240, 45.7555],
   // Calea Torontalului 104K, Trevi 2 - nord Timișoara
