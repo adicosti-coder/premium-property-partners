@@ -21,16 +21,16 @@ const propertyCoordinates: Record<string, [number, number]> = {
   'avenue-of-mara-apart-hotel': [21.2140, 45.7483],
   // Strada Argeș nr.4
   'helios-apart-hotel': [21.2310, 45.7520],
-  // Calea Torontalului 104K - nord Timișoara
+  // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
   'ateneo-trevi-2-apart-hotel': [21.2050, 45.7780],
-  // Circumvalațiunii M11 - zona City of Mara
-  'sunset-da-ra-studio-deluxe': [21.2155, 45.7490],
+  // Calea Circumvalațiunii nr.1, City of Mara, M11
+  'sunset-da-ra-studio-deluxe': [21.2145, 45.7485],
   // Strada Sinaia nr.2B - ultracentral
   'mara-luxury-golden-apart-hotel': [21.2240, 45.7555],
-  // Calea Torontalului 104K, Trevi 2 - nord Timișoara
-  'ateneo-apart-hotel-studio-deluxe': [21.2055, 45.7785],
-  // Complex Maurer Residence - sud-vest
-  'modern-studio-apart-hotel': [21.2100, 45.7350],
+  // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
+  'ateneo-apart-hotel-studio-deluxe': [21.2055, 45.7783],
+  // Bd. Simion Bărnuțiu nr.79
+  'modern-studio-apart-hotel': [21.2020, 45.7560],
 };
 
 interface PropertyMapProps {
