@@ -14,8 +14,8 @@ const MobileCTABar = () => {
   
   
   const translations = {
-    ro: { call: "Sună", whatsapp: "WhatsApp", guests: "Rezervă Cazare", owners: "Proprietari" },
-    en: { call: "Call", whatsapp: "WhatsApp", guests: "Book Stay", owners: "Owners" }
+    ro: { call: "Sună", whatsapp: "WhatsApp", guests: "Rezervă Cazare", owners: "Câștigă" },
+    en: { call: "Call", whatsapp: "WhatsApp", guests: "Book Stay", owners: "Earn" }
   };
   
   const t = translations[language as keyof typeof translations] || translations.ro;
