@@ -462,10 +462,10 @@ const InvestmentEngineV34 = ({
                 setStrategy("hotel");
                 setBudgetStr("95000");
                 setChirieStr("750");
-                setOccupancy("10");
+                setOccupancy("12");
                 setAdvanceStr("25");
                 setInterestStr("6.5");
-                setTaxRate("0.07");
+                setTaxRate("0.10");
               }}
               className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
                 strategy === "hotel"
