@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Calendar, Calculator, Moon, Users, Euro } from "lucide-react";
+import { Calendar, Calculator, Moon, Users, Check, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -11,18 +11,24 @@ interface StayCalculatorProps {
   onBook?: () => void;
 }
 
+const DISCOUNT_PERCENT = 8;
+
 const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
   const { t, language } = useLanguage();
   const [nights, setNights] = useState(3);
   const [guests, setGuests] = useState(2);
 
   const calculation = useMemo(() => {
-    const basePrice = property.pricePerNight * nights;
-    const total = basePrice;
+    const bookingTotal = property.pricePerNight * nights;
+    const directPricePerNight = Math.round(property.pricePerNight * (1 - DISCOUNT_PERCENT / 100));
+    const directTotal = directPricePerNight * nights;
+    const savings = bookingTotal - directTotal;
 
     return {
-      basePrice,
-      total,
+      bookingTotal,
+      directPricePerNight,
+      directTotal,
+      savings,
     };
   }, [property.pricePerNight, nights]);
 
@@ -35,14 +41,25 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
         </h3>
       </div>
 
-      {/* Price display */}
-      <div className="flex items-baseline gap-2 mb-6">
-        <span className="text-3xl font-bold text-foreground">
-          €{property.pricePerNight}
-        </span>
-        <span className="text-muted-foreground">
-          / {language === 'ro' ? 'noapte' : 'night'}
-        </span>
+      {/* Price display with comparison */}
+      <div className="mb-6 space-y-1">
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm text-muted-foreground line-through">
+            €{property.pricePerNight}
+          </span>
+          <span className="text-xs text-muted-foreground">Booking.com</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-bold text-primary">
+            €{calculation.directPricePerNight}
+          </span>
+          <span className="text-muted-foreground">
+            / {language === 'ro' ? 'noapte' : 'night'}
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-semibold">
+            -{DISCOUNT_PERCENT}%
+          </span>
+        </div>
       </div>
 
       {/* Nights slider */}
@@ -100,17 +117,43 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
       {/* Price breakdown */}
       <div className="border-t border-border pt-4 space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">
+          <span className="text-muted-foreground line-through">
             €{property.pricePerNight} × {nights} {language === 'ro' ? 'nopți' : 'nights'}
           </span>
-          <span className="text-foreground">€{calculation.basePrice}</span>
+          <span className="text-muted-foreground line-through">€{calculation.bookingTotal}</span>
         </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-foreground font-medium">
+            €{calculation.directPricePerNight} × {nights} {language === 'ro' ? 'nopți' : 'nights'}
+          </span>
+          <span className="text-foreground font-medium">€{calculation.directTotal}</span>
+        </div>
+
+        {/* Savings highlight */}
+        <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-green-500/10">
+          <span className="text-sm font-medium text-green-600 dark:text-green-400">
+            {language === 'ro' ? 'Economisești' : 'You save'}
+          </span>
+          <span className="text-sm font-bold text-green-600 dark:text-green-400">
+            -€{calculation.savings} ({DISCOUNT_PERCENT}%)
+          </span>
+        </div>
+
         <div className="flex justify-between pt-3 border-t border-border">
           <span className="font-semibold text-foreground">
             {language === 'ro' ? 'Total' : 'Total'}
           </span>
-          <span className="text-xl font-bold text-primary">€{calculation.total}</span>
+          <span className="text-xl font-bold text-primary">€{calculation.directTotal}</span>
         </div>
+      </div>
+
+      {/* Discount code reminder */}
+      <div className="mt-4 text-center px-3 py-2 rounded-lg border border-dashed border-primary/30 bg-primary/5">
+        <p className="text-xs text-muted-foreground">
+          <Tag className="w-3 h-3 inline mr-1" />
+          {language === 'ro' ? 'Folosește codul' : 'Use code'}{' '}
+          <span className="font-bold text-primary">DIRECT5</span>
+        </p>
       </div>
 
       {/* Book button */}
