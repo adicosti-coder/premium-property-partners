@@ -477,7 +477,7 @@ const PentruOaspeti = () => {
                       }
                     `}</style>
 
-                    {activeMapTab === 'properties' && (
+                    {activeMapTab === 'properties' && (<div id="property-map-container">
                       <Suspense fallback={null}>
                       <PropertyMap 
                         onPropertySelect={(slug) => {
@@ -496,7 +496,7 @@ const PentruOaspeti = () => {
                         className="w-full h-[500px] md:h-[600px] rounded-2xl shadow-xl border border-border"
                       />
                       </Suspense>
-                    )}
+                    </div>)}
                   
                   {/* Property Cards - synced with map */}
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -513,12 +513,11 @@ const PentruOaspeti = () => {
                           }`}
                           onClick={() => {
                             setSelectedProperty(property.slug);
-                            // scroll map into view and fly to property
-                            const mapEl = document.querySelector('.mapboxgl-canvas');
-                            if (mapEl) {
-                              const mapSection = mapEl.closest('section') || mapEl.closest('[class*="rounded"]');
-                              mapSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
+                            setActiveMapTab('properties');
+                            setTimeout(() => {
+                              const mapEl = document.getElementById('property-map-container') || document.querySelector('.mapboxgl-canvas-container');
+                              mapEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 100);
                           }}
                         >
                           {/* Image */}
@@ -559,8 +558,11 @@ const PentruOaspeti = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedProperty(property.slug);
-                                    const mapEl = document.querySelector('.mapboxgl-canvas-container');
-                                    mapEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setActiveMapTab('properties');
+                                    setTimeout(() => {
+                                      const mapEl = document.getElementById('property-map-container') || document.querySelector('.mapboxgl-canvas-container');
+                                      mapEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }, 100);
                                   }}
                                   className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                                 >
