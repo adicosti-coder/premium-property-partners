@@ -126,13 +126,21 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
       // Handle WebGL context loss and restoration
       const canvas = map.current.getCanvas();
+      let contextLostTimeout: ReturnType<typeof setTimeout> | null = null;
       const handleContextLost = (e: Event) => {
         e.preventDefault();
-        console.warn('[PropertyMap] WebGL context lost');
-        setError(language === 'ro' ? 'Context grafic pierdut – reîncărcați pagina' : 'Graphics context lost – please reload');
+        console.warn('[PropertyMap] WebGL context lost – will attempt recovery');
+        // Don't show error immediately, wait for potential auto-restore
+        contextLostTimeout = setTimeout(() => {
+          setError(language === 'ro' ? 'Context grafic pierdut – reîncărcați pagina' : 'Graphics context lost – please reload');
+        }, 3000);
       };
       const handleContextRestored = () => {
         console.log('[PropertyMap] WebGL context restored');
+        if (contextLostTimeout) {
+          clearTimeout(contextLostTimeout);
+          contextLostTimeout = null;
+        }
         setError(null);
         try { map.current?.triggerRepaint(); } catch (_) {}
       };
@@ -348,6 +356,12 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         <div className="flex flex-col items-center gap-3 text-center px-4">
           <MapPin className="w-8 h-8 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">{error}</span>
+          <button
+            onClick={() => { setError(null); setSlotRetry(prev => prev + 1); }}
+            className="mt-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {language === 'ro' ? 'Reîncearcă' : 'Retry'}
+          </button>
         </div>
       </div>
     );
