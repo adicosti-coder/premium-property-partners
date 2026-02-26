@@ -285,7 +285,6 @@ const PentruOaspeti = () => {
       />
       <Header />
       
-      <Suspense fallback={null}>
       <main className="pt-20">
         {/* Hero Section */}
         <section 
@@ -367,7 +366,7 @@ const PentruOaspeti = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="mt-12 max-w-4xl mx-auto"
             >
-              <QuickAvailabilitySearch />
+              <Suspense fallback={null}><QuickAvailabilitySearch /></Suspense>
             </motion.div>
           </div>
         </section>
@@ -479,6 +478,7 @@ const PentruOaspeti = () => {
                     `}</style>
 
                     {activeMapTab === 'properties' && (
+                      <Suspense fallback={null}>
                       <PropertyMap 
                         onPropertySelect={(slug) => {
                           setSelectedProperty(slug);
@@ -495,6 +495,7 @@ const PentruOaspeti = () => {
                         selectedProperty={selectedProperty}
                         className="w-full h-[500px] md:h-[600px] rounded-2xl shadow-xl border border-border"
                       />
+                      </Suspense>
                     )}
                   
                   {/* Property Cards - synced with map */}
@@ -584,7 +585,7 @@ const PentruOaspeti = () => {
                 </TabsContent>
 
                 <TabsContent value="poi" className="mt-0" forceMount={undefined}>
-                    {activeMapTab === 'poi' && <InteractiveMapWithPOI />}
+                    {activeMapTab === 'poi' && <Suspense fallback={null}><InteractiveMapWithPOI /></Suspense>}
                 </TabsContent>
               </Tabs>
 
@@ -608,10 +609,10 @@ const PentruOaspeti = () => {
         </section>
 
         {/* City Guide Section */}
-        <CityGuideSection />
+        <Suspense fallback={null}><CityGuideSection /></Suspense>
 
         {/* Facilities Showcase */}
-        <FacilitiesShowcase />
+        <Suspense fallback={null}><FacilitiesShowcase /></Suspense>
 
         {/* Booking Process */}
         <section 
@@ -664,10 +665,10 @@ const PentruOaspeti = () => {
         </section>
 
         {/* Digital House Manual */}
-        <DigitalHouseManual />
+        <Suspense fallback={null}><DigitalHouseManual /></Suspense>
 
         {/* Cleaning Standards */}
-        <CleaningStandards />
+        <Suspense fallback={null}><CleaningStandards /></Suspense>
 
         {/* Properties Preview */}
         <section 
@@ -832,7 +833,8 @@ const PentruOaspeti = () => {
       </main>
 
       <Footer />
-      <GlobalConversionWidgets />
+      <Suspense fallback={null}>
+        <GlobalConversionWidgets />
       </Suspense>
     </div>
   );
