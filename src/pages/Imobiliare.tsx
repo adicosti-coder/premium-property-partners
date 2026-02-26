@@ -31,6 +31,7 @@ import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils
 const RealEstateContactForm = lazy(() => import("@/components/RealEstateContactForm"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const InvestmentYieldCalculator = lazy(() => import("@/components/InvestmentYieldCalculator"));
+const RealEstateListings = lazy(() => import("@/components/RealEstateListings"));
 
 const Imobiliare = () => {
   const { t, language } = useLanguage();
@@ -407,6 +408,9 @@ const Imobiliare = () => {
           </div>
         </div>
       </section>
+
+      {/* Real Estate Listings - Vânzări & Închirieri */}
+      <RealEstateListings />
 
       {/* Contact Form Section */}
       <RealEstateContactForm />
