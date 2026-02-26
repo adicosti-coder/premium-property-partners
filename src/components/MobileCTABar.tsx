@@ -66,13 +66,13 @@ const MobileCTABar = () => {
         <button
           onClick={handleCall}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-primary",
+            "flex flex-col items-center justify-center py-2.5 px-1 bg-card border-r border-border",
             "active:scale-95 transition-all duration-150",
-            "hover:bg-primary/90"
+            "hover:bg-muted"
           )}
         >
-          <Phone className="w-4 h-4 text-primary-foreground mb-0.5" />
-          <span className="text-[10px] font-semibold text-primary-foreground">{t.call}</span>
+          <Phone className="w-4 h-4 text-foreground mb-0.5" />
+          <span className="text-[10px] font-semibold text-foreground">{t.call}</span>
         </button>
         
         {/* WhatsApp Button - Key conversion CTA */}
@@ -105,13 +105,13 @@ const MobileCTABar = () => {
         <button
           onClick={scrollToOwners}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-card border-l border-border",
+            "flex flex-col items-center justify-center py-2.5 px-1 bg-primary",
             "active:scale-95 transition-all duration-150",
-            "hover:bg-muted"
+            "hover:bg-primary/90 border-l border-border"
           )}
         >
-          <Building className="w-4 h-4 text-foreground mb-0.5" />
-          <span className="text-[10px] font-semibold text-foreground">{t.owners}</span>
+          <Building className="w-4 h-4 text-primary-foreground mb-0.5" />
+          <span className="text-[10px] font-semibold text-primary-foreground">{t.owners}</span>
         </button>
       </div>
     </div>
