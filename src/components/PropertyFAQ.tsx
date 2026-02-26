@@ -26,11 +26,23 @@ const PropertyFAQ = ({
 }: PropertyFAQProps) => {
   const { language } = useLanguage();
 
+  const isLocationUrl = location?.startsWith("http");
+
+  const locationAnswer = (lang: "ro" | "en") => {
+    if (isLocationUrl) {
+      return lang === "ro"
+        ? { before: `${propertyName} este situat în: Timișoara, `, linkText: "vezi pe hartă", after: ", într-o zonă cu acces facil la transport public, restaurante și atracții turistice.", url: location }
+        : { before: `${propertyName} is located in: Timișoara, `, linkText: "view on map", after: ", in an area with easy access to public transport, restaurants, and tourist attractions.", url: location };
+    }
+    return null;
+  };
+
   const faqItems = language === "ro"
     ? [
         {
           q: `Unde este situat ${propertyName}?`,
-          a: `${propertyName} este situat în ${location}, Timișoara, într-o zonă cu acces facil la transport public, restaurante și atracții turistice.`,
+          a: isLocationUrl ? null : `${propertyName} este situat în ${location}, Timișoara, într-o zonă cu acces facil la transport public, restaurante și atracții turistice.`,
+          richAnswer: locationAnswer("ro"),
         },
         ...(capacity
           ? [{
@@ -66,7 +78,8 @@ const PropertyFAQ = ({
     : [
         {
           q: `Where is ${propertyName} located?`,
-          a: `${propertyName} is located in ${location}, Timișoara, in an area with easy access to public transport, restaurants, and tourist attractions.`,
+          a: isLocationUrl ? null : `${propertyName} is located in ${location}, Timișoara, in an area with easy access to public transport, restaurants, and tourist attractions.`,
+          richAnswer: locationAnswer("en"),
         },
         ...(capacity
           ? [{
@@ -118,7 +131,22 @@ const PropertyFAQ = ({
               {item.q}
             </AccordionTrigger>
             <AccordionContent>
-              <p>{item.a}</p>
+              {item.richAnswer ? (
+                <p>
+                  {item.richAnswer.before}
+                  <a 
+                    href={item.richAnswer.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary underline hover:text-primary/80 font-medium"
+                  >
+                    {item.richAnswer.linkText}
+                  </a>
+                  {item.richAnswer.after}
+                </p>
+              ) : (
+                <p>{item.a}</p>
+              )}
             </AccordionContent>
           </AccordionItem>
         ))}
