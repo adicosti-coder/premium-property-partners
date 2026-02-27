@@ -174,14 +174,16 @@ const Complexe = () => {
       />
 
       <Header />
-      <PageSummary
-        summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament verificat."
-        summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and verified yields."
-      />
 
       <main className="min-h-screen bg-background">
+        <div className="container mx-auto px-6 pt-24">
+          <PageSummary
+            summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament verificat."
+            summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and verified yields."
+          />
+        </div>
         {/* Hero Section */}
-        <section className="pt-32 pb-16 bg-gradient-to-br from-primary/5 via-background to-muted/30">
+        <section className="pt-12 pb-16 bg-gradient-to-br from-primary/5 via-background to-muted/30">
           <div className="container mx-auto px-6 text-center">
             <Badge variant="outline" className="mb-4">
               <Building2 className="w-3 h-3 mr-1" />
