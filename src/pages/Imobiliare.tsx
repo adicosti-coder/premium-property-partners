@@ -113,14 +113,14 @@ const Imobiliare = () => {
         jsonLd={[realEstateAgentSchema, breadcrumbSchema]}
       />
       <Header />
-      <PageSummary
-        summaryRo="Servicii imobiliare complete în Timișoara: vânzări, cumpărări, închirieri clasice. Consultanță profesională, evaluări de piață, suport juridic complet și acces la anunțuri exclusive."
-        summaryEn="Complete real estate services in Timișoara: sales, purchases, classic rentals. Professional consulting, market evaluations, full legal support and access to exclusive listings."
-      />
       <Suspense fallback={null}>
       
-      {/* Breadcrumb */}
+      {/* Breadcrumb + Summary */}
       <div className="container mx-auto px-6 pt-24">
+        <PageSummary
+          summaryRo="Servicii imobiliare complete în Timișoara: vânzări, cumpărări, închirieri clasice. Consultanță profesională, evaluări de piață, suport juridic complet și acces la anunțuri exclusive."
+          summaryEn="Complete real estate services in Timișoara: sales, purchases, classic rentals. Professional consulting, market evaluations, full legal support and access to exclusive listings."
+        />
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">

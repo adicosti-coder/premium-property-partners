@@ -18,7 +18,7 @@ const PageSummary = ({ summaryRo, summaryEn }: PageSummaryProps) => {
 
   return (
     <aside
-      className="page-summary mt-20 mb-6 rounded-xl border border-primary/20 bg-primary/5 p-5"
+      className="page-summary mb-6 rounded-xl border border-primary/20 bg-primary/5 p-5"
       role="note"
       aria-label={label}
     >
