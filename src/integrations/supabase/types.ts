@@ -1596,75 +1596,117 @@ export type Database = {
       }
       properties: {
         Row: {
+          amenities: string[] | null
+          amenities_en: string[] | null
           base_price_per_night: number | null
+          bathrooms: number | null
+          bedrooms: number | null
           booking_rating: number | null
           booking_review_count: number | null
           booking_url: string
+          capacity: number | null
           capital_necesar: number | null
+          check_in_time: string | null
+          check_out_time: string | null
           created_at: string
           description_en: string
           description_ro: string
           display_order: number
           estimated_revenue: string | null
           features: string[]
+          house_rules: string[] | null
+          house_rules_en: string[] | null
           id: string
           image_path: string | null
+          images: string[] | null
           is_active: boolean
           listing_type: string | null
           location: string
+          long_description_en: string | null
+          long_description_ro: string | null
           name: string
           property_code: string | null
           roi_percentage: string | null
+          size: number | null
+          slug: string | null
           status_operativ: string | null
           tag: string
           updated_at: string
           weekend_price_per_night: number | null
         }
         Insert: {
+          amenities?: string[] | null
+          amenities_en?: string[] | null
           base_price_per_night?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           booking_rating?: number | null
           booking_review_count?: number | null
           booking_url: string
+          capacity?: number | null
           capital_necesar?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           created_at?: string
           description_en: string
           description_ro: string
           display_order?: number
           estimated_revenue?: string | null
           features?: string[]
+          house_rules?: string[] | null
+          house_rules_en?: string[] | null
           id?: string
           image_path?: string | null
+          images?: string[] | null
           is_active?: boolean
           listing_type?: string | null
           location: string
+          long_description_en?: string | null
+          long_description_ro?: string | null
           name: string
           property_code?: string | null
           roi_percentage?: string | null
+          size?: number | null
+          slug?: string | null
           status_operativ?: string | null
           tag: string
           updated_at?: string
           weekend_price_per_night?: number | null
         }
         Update: {
+          amenities?: string[] | null
+          amenities_en?: string[] | null
           base_price_per_night?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           booking_rating?: number | null
           booking_review_count?: number | null
           booking_url?: string
+          capacity?: number | null
           capital_necesar?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           created_at?: string
           description_en?: string
           description_ro?: string
           display_order?: number
           estimated_revenue?: string | null
           features?: string[]
+          house_rules?: string[] | null
+          house_rules_en?: string[] | null
           id?: string
           image_path?: string | null
+          images?: string[] | null
           is_active?: boolean
           listing_type?: string | null
           location?: string
+          long_description_en?: string | null
+          long_description_ro?: string | null
           name?: string
           property_code?: string | null
           roi_percentage?: string | null
+          size?: number | null
+          slug?: string | null
           status_operativ?: string | null
           tag?: string
           updated_at?: string
