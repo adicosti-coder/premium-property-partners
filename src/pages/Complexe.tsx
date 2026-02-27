@@ -284,12 +284,6 @@ const Complexe = () => {
                             {complex.neighborhood}
                           </Badge>
                         </div>
-                        <div className="absolute top-4 right-4">
-                          <Badge className="bg-primary text-primary-foreground">
-                            <Home className="w-3 h-3 mr-1" />
-                            {complex.property_count} {t.properties}
-                          </Badge>
-                        </div>
                       </div>
 
                       {/* Content */}

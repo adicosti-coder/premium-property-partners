@@ -193,13 +193,6 @@ const ResidentialComplexes = () => {
                           <span className="text-xs font-medium text-foreground">{complex.location}</span>
                         </div>
 
-                        {/* Property count badge */}
-                        <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm flex items-center gap-1.5">
-                          <Home className="w-3.5 h-3.5 text-primary-foreground" />
-                          <span className="text-xs font-bold text-primary-foreground">
-                            {complex.property_count} {text.properties}
-                          </span>
-                        </div>
                       </div>
 
                       {/* Content */}
