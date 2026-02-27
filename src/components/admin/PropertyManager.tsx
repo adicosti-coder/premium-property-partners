@@ -49,6 +49,8 @@ import {
   TrendingUp
 } from "lucide-react";
 import PropertyImageGallery from "./PropertyImageGallery";
+import PropertyPricingManager from "./PropertyPricingManager";
+import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
 
 interface Property {
   id: string;
@@ -69,6 +71,10 @@ interface Property {
   roi_percentage: string | null;
   capital_necesar: number | null;
   listing_type: string | null;
+  booking_rating: number | null;
+  booking_review_count: number | null;
+  base_price_per_night: number | null;
+  weekend_price_per_night: number | null;
 }
 
 interface PropertyImage {
@@ -95,6 +101,10 @@ interface PropertyFormData {
   roi_percentage: string;
   capital_necesar: string;
   listing_type: string;
+  booking_rating: string;
+  booking_review_count: string;
+  base_price_per_night: string;
+  weekend_price_per_night: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -112,6 +122,10 @@ const initialFormData: PropertyFormData = {
   roi_percentage: "",
   capital_necesar: "",
   listing_type: "cazare",
+  booking_rating: "",
+  booking_review_count: "",
+  base_price_per_night: "",
+  weekend_price_per_night: "",
 };
 
 export default function PropertyManager() {
@@ -201,6 +215,10 @@ export default function PropertyManager() {
         roi_percentage: formData.roi_percentage || null,
         capital_necesar: formData.capital_necesar ? parseFloat(formData.capital_necesar) : null,
         listing_type: formData.listing_type,
+        booking_rating: formData.booking_rating ? parseFloat(formData.booking_rating) : null,
+        booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
+        base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
+        weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
       });
 
       if (error) throw error;
@@ -255,6 +273,10 @@ export default function PropertyManager() {
           roi_percentage: formData.roi_percentage || null,
           capital_necesar: formData.capital_necesar ? parseFloat(formData.capital_necesar) : null,
           listing_type: formData.listing_type,
+          booking_rating: formData.booking_rating ? parseFloat(formData.booking_rating) : null,
+          booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
+          base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
+          weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
         })
         .eq("id", editingProperty.id);
 
@@ -343,6 +365,10 @@ export default function PropertyManager() {
       roi_percentage: property.roi_percentage || "",
       capital_necesar: property.capital_necesar?.toString() || "",
       listing_type: property.listing_type || "cazare",
+      booking_rating: property.booking_rating?.toString() || "",
+      booking_review_count: property.booking_review_count?.toString() || "",
+      base_price_per_night: property.base_price_per_night?.toString() || "",
+      weekend_price_per_night: property.weekend_price_per_night?.toString() || "",
     });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
@@ -507,6 +533,56 @@ export default function PropertyManager() {
           </div>
         </div>
       </div>
+
+      {/* Booking Rating */}
+      <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">⭐</span>
+          <h4 className="font-semibold text-foreground">Rating Booking.com</h4>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Notă (ex: 9.4)</Label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0"
+              max="10"
+              value={formData.booking_rating}
+              onChange={(e) => setFormData({ ...formData, booking_rating: e.target.value })}
+              placeholder="9.4"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Nr. recenzii</Label>
+            <Input
+              type="number"
+              value={formData.booking_review_count}
+              onChange={(e) => setFormData({ ...formData, booking_review_count: e.target.value })}
+              placeholder="127"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing - only for existing properties */}
+      {showGallery && editingProperty && (
+        <PropertyPricingManager
+          propertyId={editingProperty.id}
+          basePricePerNight={formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null}
+          weekendPricePerNight={formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null}
+          onBasePriceChange={(val) => setFormData({ ...formData, base_price_per_night: val })}
+          onWeekendPriceChange={(val) => setFormData({ ...formData, weekend_price_per_night: val })}
+        />
+      )}
+
+      {/* Calendar - only for existing properties */}
+      {showGallery && editingProperty && (
+        <PropertyBookingsCalendar
+          propertyId={editingProperty.id}
+          propertyName={editingProperty.name}
+        />
+      )}
 
       {/* Image Gallery - only show for editing existing properties */}
       {showGallery && editingProperty && (

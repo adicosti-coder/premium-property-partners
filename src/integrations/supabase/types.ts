@@ -1596,6 +1596,9 @@ export type Database = {
       }
       properties: {
         Row: {
+          base_price_per_night: number | null
+          booking_rating: number | null
+          booking_review_count: number | null
           booking_url: string
           capital_necesar: number | null
           created_at: string
@@ -1615,8 +1618,12 @@ export type Database = {
           status_operativ: string | null
           tag: string
           updated_at: string
+          weekend_price_per_night: number | null
         }
         Insert: {
+          base_price_per_night?: number | null
+          booking_rating?: number | null
+          booking_review_count?: number | null
           booking_url: string
           capital_necesar?: number | null
           created_at?: string
@@ -1636,8 +1643,12 @@ export type Database = {
           status_operativ?: string | null
           tag: string
           updated_at?: string
+          weekend_price_per_night?: number | null
         }
         Update: {
+          base_price_per_night?: number | null
+          booking_rating?: number | null
+          booking_review_count?: number | null
           booking_url?: string
           capital_necesar?: number | null
           created_at?: string
@@ -1657,6 +1668,7 @@ export type Database = {
           status_operativ?: string | null
           tag?: string
           updated_at?: string
+          weekend_price_per_night?: number | null
         }
         Relationships: []
       }
@@ -1688,6 +1700,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_pricing: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          label: string
+          price_per_night: number
+          property_id: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          label: string
+          price_per_night: number
+          property_id: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          price_per_night?: number
+          property_id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_pricing_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
