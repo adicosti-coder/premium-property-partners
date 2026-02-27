@@ -202,7 +202,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
   ];
 
   return (
-    <div className="floating-action-menu fixed bottom-6 right-4 z-50 md:hidden">
+    <div className="floating-action-menu fixed bottom-20 right-4 z-50 md:bottom-6 md:hidden">
       <AnimatePresence>
         {isVisible && (
           <>
