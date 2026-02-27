@@ -36,6 +36,7 @@ import {
   Home,
   Euro,
   Building2,
+  Hotel,
   Calendar,
   CalendarDays,
   ShieldAlert,
@@ -89,6 +90,7 @@ import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
 import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
 import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
 import PropertyViewsManager from "@/components/admin/PropertyViewsManager";
+import CazareManager from "@/components/admin/CazareManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -281,6 +283,10 @@ const Admin = () => {
               <CalendarDays className="w-4 h-4" />
               {t.admin.tabs?.bookings || "Bookings"}
             </TabsTrigger>
+            <TabsTrigger value="cazare" className="flex items-center gap-2">
+              <Hotel className="w-4 h-4" />
+              Cazare
+            </TabsTrigger>
             <TabsTrigger value="properties" className="flex items-center gap-2">
               <Building className="w-4 h-4" />
               {t.admin.tabs?.properties || "Properties"}
@@ -382,7 +388,11 @@ const Admin = () => {
             <BookingManager />
           </TabsContent>
 
-          {/* Properties Tab */}
+          {/* Cazare Tab */}
+          <TabsContent value="cazare">
+            <CazareManager />
+          </TabsContent>
+
           <TabsContent value="properties">
             <PropertyManager />
           </TabsContent>
