@@ -86,6 +86,7 @@ import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
 import CommunityManager from "@/components/admin/CommunityManager";
 import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
 import SecurityChecklist from "@/components/admin/SecurityChecklist";
+import AdminMFAGuard from "@/components/admin/AdminMFAGuard";
 import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
 import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
 import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
@@ -230,6 +231,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead title="Admin Dashboard" noIndex={true} />
+      <AdminMFAGuard>
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -501,6 +503,7 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
+      </AdminMFAGuard>
     </div>
   );
 };
