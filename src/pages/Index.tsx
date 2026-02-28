@@ -26,13 +26,11 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 const NearFoldSection = () => {
   const [ref, visible] = useLazyVisible("200px");
   return (
-    <div ref={ref}>
+    <div ref={ref} id="calculator">
       {visible && (
         <Suspense fallback={null}>
           <StatsCounters />
-          <section id="calculator">
-            <ProfitCalculator />
-          </section>
+          <ProfitCalculator />
           <QuickLeadForm />
           <MainNavigationCards />
         </Suspense>
