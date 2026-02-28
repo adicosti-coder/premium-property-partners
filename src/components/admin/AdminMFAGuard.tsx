@@ -176,8 +176,8 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
         <CardContent className="space-y-6">
           {step === "enroll" && qrUri && (
             <div className="space-y-4">
-              <div className="flex justify-center bg-white p-4 rounded-lg">
-                <img src={qrUri} alt="QR Code" className="w-48 h-48" />
+              <div className="flex justify-center bg-white p-6 rounded-lg">
+                <img src={qrUri} alt="QR Code" className="w-64 h-64" style={{ imageRendering: 'pixelated' }} />
               </div>
               <div className="text-center">
                 <button
