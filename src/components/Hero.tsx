@@ -357,15 +357,14 @@ const HeroContent = ({
           variant="hero" 
           size="xl" 
           className="relative animate-glow-pulse btn-shine w-full sm:w-auto"
-          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
         >
           {ctaPrimary}
         </Button>
          <Button
            asChild
-           variant="heroOutline"
            size="xl"
-           className="btn-shine hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)] w-full sm:w-auto"
+           className="btn-shine w-full sm:w-auto bg-[hsl(222,47%,11%)] text-white border-[hsl(222,47%,11%)] hover:bg-[hsl(222,47%,15%)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
          >
            <a href="/investitii">{ctaSecondary}</a>
          </Button>
