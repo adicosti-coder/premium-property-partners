@@ -361,13 +361,13 @@ const HeroContent = ({
         >
           {ctaPrimary}
         </Button>
-         <Button
-           asChild
-           size="xl"
-           className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 bg-[hsl(222,47%,11%)] text-white border border-[hsl(222,47%,11%)] hover:bg-[hsl(222,47%,15%)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+         <a
+           href="/investitii"
+           className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 px-10 text-base rounded-xl inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
+           style={{ backgroundColor: 'hsl(222,47%,11%)', color: '#fff', border: '1px solid hsl(222,47%,11%)' }}
          >
-           <a href="/investitii">{ctaSecondary}</a>
-         </Button>
+           {ctaSecondary}
+         </a>
       </div>
       
       {/* Quick Contact Row - WhatsApp prominent */}
