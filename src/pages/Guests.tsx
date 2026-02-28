@@ -635,11 +635,11 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5 z-20 hover:bg-primary/10 hover:border-primary/40 transition-colors cursor-pointer"
+                    className="absolute top-4 left-4 max-w-[60%] px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5 z-20 hover:bg-primary/10 hover:border-primary/40 transition-colors cursor-pointer"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <MapPin className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-medium text-foreground">{property.location}</span>
+                    <span className="text-xs font-medium text-foreground truncate">{property.location}</span>
                   </a>
 
                   {/* Rating badge */}
