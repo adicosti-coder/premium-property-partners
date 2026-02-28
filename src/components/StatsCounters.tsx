@@ -22,7 +22,7 @@ const translations = {
     stats: [
       { value: 50, suffix: "+", label: "Managed Properties", icon: Building2 },
       { value: 10000, suffix: "+", label: "Happy Guests", icon: Users },
-      { value: 5, suffix: "+", label: "Years Experience", icon: Calendar },
+      { value: 25, suffix: "+", label: "Years Experience", icon: Calendar },
       { value: 85, suffix: "%", label: "Occupancy Rate/Year", icon: TrendingUp },
       { value: 4.9, suffix: "★", label: "Average Rating", icon: Star, decimals: 1 },
     ],
