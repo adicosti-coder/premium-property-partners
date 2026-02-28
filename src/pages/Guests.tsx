@@ -13,7 +13,8 @@ import { PrefetchLink } from "@/components/PrefetchLink";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { properties } from "@/data/properties";
+import { properties as staticProperties } from "@/data/properties";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
@@ -38,7 +39,49 @@ const Guests = () => {
   const { t, language } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+  const [dbOverrides, setDbOverrides] = useState<Record<string, { rating?: number; reviews?: number; images?: string[] }>>({});
+
+  // Fetch live ratings & images from DB
+  useEffect(() => {
+    const fetchDbData = async () => {
+      const { data } = await supabase
+        .from("properties")
+        .select("slug, booking_rating, booking_review_count, images, image_path")
+        .eq("listing_type", "cazare")
+        .eq("is_active", true);
+      if (data) {
+        const overrides: Record<string, { rating?: number; reviews?: number; images?: string[] }> = {};
+        data.forEach((row: any) => {
+          if (row.slug) {
+            overrides[row.slug] = {
+              rating: row.booking_rating ?? undefined,
+              reviews: row.booking_review_count ?? undefined,
+              images: row.images?.length > 0 ? row.images : undefined,
+            };
+          }
+        });
+        setDbOverrides(overrides);
+      }
+    };
+    fetchDbData();
+  }, []);
+
+  // Merge static data with DB overrides (ratings, reviews, images)
+  const properties = useMemo(() => {
+    return staticProperties.map(p => {
+      const override = dbOverrides[p.slug];
+      if (!override) return p;
+      return {
+        ...p,
+        rating: override.rating ?? p.rating,
+        reviews: override.reviews ?? p.reviews,
+        // Only override images if DB has non-empty array with http URLs
+        images: override.images && override.images.some((img: string) => img.startsWith("http"))
+          ? override.images
+          : p.images,
+      };
+    });
+  }, [dbOverrides]);
   // Initialize state from URL params
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
   const [selectedLocation, setSelectedLocation] = useState(() => searchParams.get("location") || "all");
