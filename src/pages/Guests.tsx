@@ -49,13 +49,22 @@ const Guests = () => {
   // Fetch live data from DB to overlay on static properties
   useEffect(() => {
     const fetchDbData = async () => {
-      const { data } = await supabase
-        .from("properties")
-        .select("slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
-        .eq("listing_type", "cazare");
-      if (data) {
-        const overrides: typeof dbOverrides = {};
-        data.forEach((row: any) => {
+      // Fetch from properties table (admin overrides)
+      const [{ data: propData }, { data: liveData }] = await Promise.all([
+        supabase
+          .from("properties")
+          .select("slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
+          .eq("listing_type", "cazare"),
+        supabase
+          .from("property_live_data")
+          .select("property_slug, price_per_night, rating, reviews_count"),
+      ]);
+
+      const overrides: typeof dbOverrides = {};
+
+      // Apply admin property overrides first
+      if (propData) {
+        propData.forEach((row: any) => {
           if (row.slug) {
             overrides[row.slug] = {
               rating: row.booking_rating ?? undefined,
@@ -74,8 +83,25 @@ const Guests = () => {
             };
           }
         });
-        setDbOverrides(overrides);
       }
+
+      // Apply scraped live data (prices & ratings from Pynbooking/Booking.com)
+      if (liveData) {
+        liveData.forEach((row: any) => {
+          if (row.property_slug) {
+            const existing = overrides[row.property_slug] || {};
+            overrides[row.property_slug] = {
+              ...existing,
+              // Live scraped data takes priority over static, but admin overrides win
+              pricePerNight: existing.pricePerNight ?? row.price_per_night ?? undefined,
+              rating: existing.rating ?? row.rating ?? undefined,
+              reviews: existing.reviews ?? row.reviews_count ?? undefined,
+            };
+          }
+        });
+      }
+
+      setDbOverrides(overrides);
     };
     fetchDbData();
   }, []);
