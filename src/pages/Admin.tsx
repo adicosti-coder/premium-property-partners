@@ -58,7 +58,7 @@ import {
   ShieldCheck,
   PenLine,
   MousePointerClick,
-  Target,
+  Target, TrendingUp,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -92,6 +92,7 @@ import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
 import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
 import PropertyViewsManager from "@/components/admin/PropertyViewsManager";
 import CazareManager from "@/components/admin/CazareManager";
+import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -293,6 +294,10 @@ const Admin = () => {
               <Building className="w-4 h-4" />
               {t.admin.tabs?.properties || "Properties"}
             </TabsTrigger>
+            <TabsTrigger value="investitii-premium" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Investiții Premium
+            </TabsTrigger>
             <TabsTrigger value="blog" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Blog
@@ -397,6 +402,11 @@ const Admin = () => {
 
           <TabsContent value="properties">
             <PropertyManager />
+          </TabsContent>
+
+          {/* Investiții Premium Tab */}
+          <TabsContent value="investitii-premium">
+            <InvestitiiPremiumManager />
           </TabsContent>
 
           {/* Blog Tab */}
