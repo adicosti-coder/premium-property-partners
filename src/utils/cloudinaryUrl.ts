@@ -47,6 +47,9 @@ export function cloudinaryUrl(
   // Skip if already a Cloudinary URL
   if (src.includes("res.cloudinary.com")) return src;
 
+  // Skip Vite-bundled local assets — Cloudinary can't fetch these from preview/dev domains
+  if (src.startsWith("/assets/") || src.startsWith("/src/")) return src;
+
   // Build transformation string
   const parts: string[] = ["f_auto", `q_${opts.quality ?? "auto"}`];
   if (opts.width) parts.push(`w_${Math.round(opts.width)}`);
