@@ -147,6 +147,7 @@ export default function PropertyManager() {
       const { data, error } = await supabase
         .from("properties")
         .select("*")
+        .neq("listing_type", "cazare")
         .order("display_order", { ascending: true });
 
       if (error) throw error;
