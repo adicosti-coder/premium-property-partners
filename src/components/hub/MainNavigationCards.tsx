@@ -81,7 +81,7 @@ const MainNavigationCards = () => {
         {
           icon: BookOpen,
           title: "Blog & Ghiduri",
-          description: "Sfaturi practice pentru proprietari",
+          description: "Sfaturi practice și ghiduri pentru turiști, proprietari, vânzători și cumpărători",
           cta: "Citește Articole",
           link: "/blog",
           accent: "from-orange-500/20 to-orange-600/5",
@@ -155,7 +155,7 @@ const MainNavigationCards = () => {
         {
           icon: BookOpen,
           title: "Blog & Guides",
-          description: "Practical tips for owners",
+          description: "Practical tips and guides for tourists, owners, sellers and buyers",
           cta: "Read Articles",
           link: "/blog",
           accent: "from-orange-500/20 to-orange-600/5",
