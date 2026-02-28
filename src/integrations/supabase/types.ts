@@ -1776,6 +1776,51 @@ export type Database = {
           },
         ]
       }
+      property_live_data: {
+        Row: {
+          booking_com_url: string | null
+          booking_url: string | null
+          created_at: string
+          id: string
+          last_price_update: string | null
+          last_rating_update: string | null
+          price_per_night: number | null
+          property_slug: string
+          rating: number | null
+          reviews_count: number | null
+          scrape_error: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_com_url?: string | null
+          booking_url?: string | null
+          created_at?: string
+          id?: string
+          last_price_update?: string | null
+          last_rating_update?: string | null
+          price_per_night?: number | null
+          property_slug: string
+          rating?: number | null
+          reviews_count?: number | null
+          scrape_error?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_com_url?: string | null
+          booking_url?: string | null
+          created_at?: string
+          id?: string
+          last_price_update?: string | null
+          last_rating_update?: string | null
+          price_per_night?: number | null
+          property_slug?: string
+          rating?: number | null
+          reviews_count?: number | null
+          scrape_error?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       property_pricing: {
         Row: {
           created_at: string
