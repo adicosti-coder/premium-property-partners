@@ -99,9 +99,11 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
 
   const handleEnroll = async () => {
     try {
+      // Use unique friendly name to avoid mfa_factor_name_conflict
+      const uniqueName = `RealTrust Admin ${Date.now()}`;
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: "RealTrust Admin",
+        friendlyName: uniqueName,
       });
       if (error) throw error;
 
