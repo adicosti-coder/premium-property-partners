@@ -16,7 +16,7 @@ import {
   Hotel, Edit, Star, Euro, Users, Bed, Maximize2, ExternalLink,
   Eye, EyeOff, Calendar, MapPin, Plus, Save, Loader2, Trash2, Bath,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
 
 interface CazareProperty {
