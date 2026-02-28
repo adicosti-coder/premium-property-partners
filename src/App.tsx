@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigationType } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
@@ -90,9 +90,13 @@ const PageLoader = () => null;
 // Scroll to top on route change
 const ScrollToTop = () => {
   const { pathname } = useLocation();
+  const navType = useNavigationType();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    // Only scroll to top on PUSH navigation (new page), not on POP (back/forward)
+    if (navType === "PUSH") {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, navType]);
   return null;
 };
 
