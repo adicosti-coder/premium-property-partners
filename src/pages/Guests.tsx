@@ -631,10 +631,16 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                   <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent pointer-events-none" />
                   
                   {/* Location badge */}
-                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5 z-20">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1.5 z-20 hover:bg-primary/10 hover:border-primary/40 transition-colors cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <MapPin className="w-3.5 h-3.5 text-primary" />
                     <span className="text-xs font-medium text-foreground">{property.location}</span>
-                  </div>
+                  </a>
 
                   {/* Rating badge */}
                   <div className="absolute top-4 right-14 px-2.5 py-1.5 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1 z-20">
