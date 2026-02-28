@@ -54,7 +54,7 @@ const MainNavigationCards = () => {
         },
         {
           icon: Home,
-          title: "Imobiliare — Vânzări",
+          title: "Imobiliare — Vânzări & Închirieri",
           description: "Consultanță și intermediere profesională.\nTranzacții sigure, transparente.",
           cta: "Explorează Oferte",
           link: "/imobiliare",
