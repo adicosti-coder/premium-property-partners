@@ -9,28 +9,28 @@ import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglS
 
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
-  // Strada Loichița Vasile 1-3, sc.B, Ansamblul RING
-  'ring-apart-hotel-spacious-deluxe': [21.2362, 45.7378],
-  // Strada Constructorilor 52, Denya-Adora Forest, Denya 5
-  'green-forest-apart-hotel': [21.1870, 45.7830],
+  // Strada Loichița Vasile 1-3, sc.B, Ansamblul RING (zona Aradului Vest)
+  'ring-apart-hotel-spacious-deluxe': [21.2110, 45.7805],
+  // Strada Constructorilor 52, Denya Forest 5 (zona Lipovei)
+  'green-forest-apart-hotel': [21.2490, 45.7785],
   // Str. Gheorghe Lazăr nr.24, clădirea Fructus Plaza
-  'fructus-plaza-ultracentral-apart-hotel': [21.2282, 45.7535],
+  'fructus-plaza-ultracentral-apart-hotel': [21.2209, 45.7595],
   // Calea Circumvalațiunii nr.1, City of Mara, M9
-  'fullview-studio-deluxe': [21.2148, 45.7487],
+  'fullview-studio-deluxe': [21.2150, 45.7529],
   // Calea Circumvalațiunii nr.1, City of Mara, M8
-  'avenue-of-mara-apart-hotel': [21.2140, 45.7483],
-  // Strada Argeș nr.4
-  'helios-apart-hotel': [21.2310, 45.7520],
+  'avenue-of-mara-apart-hotel': [21.2148, 45.7527],
+  // Strada Argeș nr.4 (zona Elisabetin)
+  'helios-apart-hotel': [21.2345, 45.7433],
   // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
-  'ateneo-trevi-2-apart-hotel': [21.2050, 45.7780],
+  'ateneo-trevi-2-apart-hotel': [21.2113, 45.7786],
   // Calea Circumvalațiunii nr.1, City of Mara, M11
-  'sunset-da-ra-studio-deluxe': [21.2145, 45.7485],
-  // Strada Sinaia nr.2B - ultracentral
-  'mara-luxury-golden-apart-hotel': [21.2240, 45.7555],
+  'sunset-da-ra-studio-deluxe': [21.2145, 45.7530],
+  // Strada Sinaia nr.2B - City of Mara M2-M7
+  'mara-luxury-golden-apart-hotel': [21.2134, 45.7535],
   // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
-  'ateneo-apart-hotel-studio-deluxe': [21.2055, 45.7783],
-  // Bd. Simion Bărnuțiu nr.79
-  'modern-studio-apart-hotel': [21.2020, 45.7560],
+  'ateneo-apart-hotel-studio-deluxe': [21.2115, 45.7788],
+  // Bd. Simion Bărnuțiu nr.79 (zona Dorobanților)
+  'modern-studio-apart-hotel': [21.2603, 45.7656],
 };
 
 interface PropertyMapProps {
