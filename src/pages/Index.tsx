@@ -25,22 +25,25 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 // Visibility-gated section: stats + calculator (near-fold)
 const NearFoldSection = () => {
   const [ref, visible] = useLazyVisible("200px");
+  const [forceShow, setForceShow] = useState(false);
+  const show = visible || forceShow;
 
-  // Allow programmatic reveal from Hero CTA scroll
+  // Listen for "force-show-calculator" so the Hero CTA can reveal & scroll
   useEffect(() => {
-    const el = document.getElementById("calculator");
-    if (!el) return;
     const handler = () => {
-      // Force section into view so IntersectionObserver fires
-      el.scrollIntoView({ behavior: "smooth" });
+      setForceShow(true);
+      // Wait a tick for React to render, then scroll
+      requestAnimationFrame(() => {
+        document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
+      });
     };
-    el.addEventListener("reveal", handler);
-    return () => el.removeEventListener("reveal", handler);
+    window.addEventListener("force-show-calculator", handler);
+    return () => window.removeEventListener("force-show-calculator", handler);
   }, []);
 
   return (
-    <div ref={ref} id="calculator" className={visible ? undefined : "min-h-[200px]"}>
-      {visible && (
+    <div ref={ref} id="calculator">
+      {show && (
         <Suspense fallback={null}>
           <StatsCounters />
           <ProfitCalculator />
