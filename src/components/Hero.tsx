@@ -356,16 +356,15 @@ const HeroContent = ({
         <Button 
           variant="hero" 
           size="xl" 
-          className="relative animate-glow-pulse btn-shine w-full sm:w-auto"
-          onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
+          className="relative animate-glow-pulse btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3"
+          onClick={() => window.dispatchEvent(new Event("force-show-calculator"))}
         >
           {ctaPrimary}
         </Button>
          <Button
            asChild
-           variant="ghost"
            size="xl"
-           className="btn-shine w-full sm:w-auto !bg-[hsl(222,47%,11%)] !text-white border border-[hsl(222,47%,11%)] hover:!bg-[hsl(222,47%,15%)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+           className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 bg-[hsl(222,47%,11%)] text-white border border-[hsl(222,47%,11%)] hover:bg-[hsl(222,47%,15%)] hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
          >
            <a href="/investitii">{ctaSecondary}</a>
          </Button>
