@@ -39,24 +39,38 @@ const Guests = () => {
   const { t, language } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [dbOverrides, setDbOverrides] = useState<Record<string, { rating?: number; reviews?: number; images?: string[] }>>({});
+  const [dbOverrides, setDbOverrides] = useState<Record<string, Partial<{
+    rating: number; reviews: number; images: string[];
+    pricePerNight: number; capacity: number; bedrooms: number; bathrooms: number; size: number;
+    description: string; descriptionEn: string; features: string[];
+    bookingUrl: string; isActive: boolean;
+  }>>>({});
 
-  // Fetch live ratings & images from DB
+  // Fetch live data from DB to overlay on static properties
   useEffect(() => {
     const fetchDbData = async () => {
       const { data } = await supabase
         .from("properties")
-        .select("slug, booking_rating, booking_review_count, images, image_path")
-        .eq("listing_type", "cazare")
-        .eq("is_active", true);
+        .select("slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
+        .eq("listing_type", "cazare");
       if (data) {
-        const overrides: Record<string, { rating?: number; reviews?: number; images?: string[] }> = {};
+        const overrides: typeof dbOverrides = {};
         data.forEach((row: any) => {
           if (row.slug) {
             overrides[row.slug] = {
               rating: row.booking_rating ?? undefined,
               reviews: row.booking_review_count ?? undefined,
               images: row.images?.length > 0 ? row.images : undefined,
+              pricePerNight: row.base_price_per_night ?? undefined,
+              capacity: row.capacity ?? undefined,
+              bedrooms: row.bedrooms ?? undefined,
+              bathrooms: row.bathrooms ?? undefined,
+              size: row.size ?? undefined,
+              description: row.description_ro ?? undefined,
+              descriptionEn: row.description_en ?? undefined,
+              features: row.features?.length > 0 ? row.features : undefined,
+              bookingUrl: row.booking_url ?? undefined,
+              isActive: row.is_active,
             };
           }
         });
@@ -66,18 +80,28 @@ const Guests = () => {
     fetchDbData();
   }, []);
 
-  // Merge static data with DB overrides (ratings, reviews, images)
+  // Merge static data with DB overrides
   const properties = useMemo(() => {
     return staticProperties.map(p => {
-      const override = dbOverrides[p.slug];
-      if (!override) return p;
+      const o = dbOverrides[p.slug];
+      if (!o) return p;
       return {
         ...p,
-        rating: override.rating ?? p.rating,
-        reviews: override.reviews ?? p.reviews,
+        rating: o.rating ?? p.rating,
+        reviews: o.reviews ?? p.reviews,
+        pricePerNight: o.pricePerNight ?? p.pricePerNight,
+        capacity: o.capacity ?? p.capacity,
+        bedrooms: o.bedrooms ?? p.bedrooms,
+        bathrooms: o.bathrooms ?? p.bathrooms,
+        size: o.size ?? p.size,
+        description: o.description ?? p.description,
+        descriptionEn: o.descriptionEn ?? p.descriptionEn,
+        features: o.features ?? p.features,
+        bookingUrl: o.bookingUrl ?? p.bookingUrl,
+        isActive: o.isActive ?? p.isActive,
         // Only override images if DB has non-empty array with http URLs
-        images: override.images && override.images.some((img: string) => img.startsWith("http"))
-          ? override.images
+        images: o.images && o.images.some((img: string) => img.startsWith("http"))
+          ? o.images
           : p.images,
       };
     });
