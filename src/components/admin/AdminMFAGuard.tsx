@@ -80,7 +80,11 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
         setFactorId(verifiedFactor.id);
         setStep("verify");
       } else {
-        // No factor, needs to enroll
+        // Remove any unverified factors before enrolling fresh
+        const unverifiedFactors = totpFactors.filter(f => (f.status as string) !== "verified");
+        for (const uf of unverifiedFactors) {
+          await supabase.auth.mfa.unenroll({ factorId: uf.id });
+        }
         setStep("enroll");
       }
     } catch (err) {
