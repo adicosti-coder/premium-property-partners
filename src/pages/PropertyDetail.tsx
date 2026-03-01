@@ -420,9 +420,9 @@ const PropertyDetail = () => {
                 />
               )}
 
-              {/* Recenzii oaspeți - doar pentru proprietăți de cazare, nu pentru vânzări/închirieri imobiliare */}
-              {staticProperty && (
-                <PropertyReviews propertyId={dbProperty?.id || ""} propertyName={property.name} />
+              {/* Recenzii oaspeți - pentru toate proprietățile cu ID */}
+              {dbProperty?.id && (
+                <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
               )}
 
               {/* FAQ Section with Schema.org markup */}

@@ -1868,14 +1868,18 @@ export type Database = {
           admin_reply_at: string | null
           admin_reply_by: string | null
           booking_id: string | null
+          booking_review_id: string | null
           content: string | null
           created_at: string
+          guest_country: string | null
           guest_email: string | null
           guest_name: string
           id: string
           is_published: boolean
           property_id: string
           rating: number
+          review_date: string | null
+          source: string
           title: string | null
           updated_at: string
         }
@@ -1884,14 +1888,18 @@ export type Database = {
           admin_reply_at?: string | null
           admin_reply_by?: string | null
           booking_id?: string | null
+          booking_review_id?: string | null
           content?: string | null
           created_at?: string
+          guest_country?: string | null
           guest_email?: string | null
           guest_name: string
           id?: string
           is_published?: boolean
           property_id: string
           rating: number
+          review_date?: string | null
+          source?: string
           title?: string | null
           updated_at?: string
         }
@@ -1900,14 +1908,18 @@ export type Database = {
           admin_reply_at?: string | null
           admin_reply_by?: string | null
           booking_id?: string | null
+          booking_review_id?: string | null
           content?: string | null
           created_at?: string
+          guest_country?: string | null
           guest_email?: string | null
           guest_name?: string
           id?: string
           is_published?: boolean
           property_id?: string
           rating?: number
+          review_date?: string | null
+          source?: string
           title?: string | null
           updated_at?: string
         }
