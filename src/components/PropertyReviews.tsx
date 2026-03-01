@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, MessageSquare, User, Quote } from "lucide-react";
+import { Star, MessageSquare, User, Quote, Reply, Globe } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 
@@ -20,43 +20,47 @@ interface Review {
   title: string | null;
   content: string | null;
   created_at: string;
+  source: string | null;
+  guest_country: string | null;
+  review_date: string | null;
+  admin_reply: string | null;
+  admin_reply_at: string | null;
 }
 
 const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => {
   const { language } = useLanguage();
   const dateLocale = language === "ro" ? ro : enUS;
 
-  const translations = {
-    ro: {
-      title: "Recenzii oaspeți",
-      noReviews: "Încă nu există recenzii",
-      noReviewsDesc: "Fii primul care lasă o recenzie pentru această proprietate!",
-      basedOn: "pe baza a",
-      reviews: "recenzii",
-      verifiedGuest: "Oaspete verificat",
-    },
-    en: {
-      title: "Guest Reviews",
-      noReviews: "No reviews yet",
-      noReviewsDesc: "Be the first to leave a review for this property!",
-      basedOn: "based on",
-      reviews: "reviews",
-      verifiedGuest: "Verified guest",
-    },
+  const t = language === "ro" ? {
+    title: "Recenzii oaspeți",
+    noReviews: "Încă nu există recenzii",
+    noReviewsDesc: "Fii primul care lasă o recenzie pentru această proprietate!",
+    basedOn: "pe baza a",
+    reviews: "recenzii",
+    verifiedGuest: "Oaspete verificat",
+    hostReply: "Răspunsul gazdei",
+    fromBooking: "Booking.com",
+  } : {
+    title: "Guest Reviews",
+    noReviews: "No reviews yet",
+    noReviewsDesc: "Be the first to leave a review for this property!",
+    basedOn: "based on",
+    reviews: "reviews",
+    verifiedGuest: "Verified guest",
+    hostReply: "Host reply",
+    fromBooking: "Booking.com",
   };
-
-  const t = translations[language] || translations.ro;
 
   const { data: reviews, isLoading } = useQuery({
     queryKey: ["property-reviews", propertyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("property_reviews")
-        .select("*")
+        .select("id, guest_name, rating, title, content, created_at, source, guest_country, review_date, admin_reply, admin_reply_at")
         .eq("property_id", propertyId)
         .eq("is_published", true)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
       return data as Review[];
@@ -67,22 +71,20 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${
-              star <= rating
-                ? "text-amber-500 fill-amber-500"
-                : "text-muted-foreground/30"
-            }`}
-          />
-        ))}
-      </div>
-    );
-  };
+  const renderStars = (rating: number) => (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`w-4 h-4 ${
+            star <= rating
+              ? "text-amber-500 fill-amber-500"
+              : "text-muted-foreground/30"
+          }`}
+        />
+      ))}
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -97,7 +99,6 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     );
   }
 
-  // Generate Review + AggregateRating JSON-LD
   const reviewSchema = reviews && reviews.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
@@ -113,7 +114,7 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     "review": reviews.slice(0, 5).map((r) => ({
       "@type": "Review",
       "author": { "@type": "Person", "name": r.guest_name },
-      "datePublished": r.created_at.split("T")[0],
+      "datePublished": (r.review_date || r.created_at.split("T")[0]),
       "reviewBody": r.content || r.title || "",
       "reviewRating": {
         "@type": "Rating",
@@ -130,8 +131,9 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
           <script type="application/ld+json">{JSON.stringify(reviewSchema)}</script>
         </Helmet>
       )}
-      {/* Header with average rating */}
-      <div className="flex items-center justify-between">
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" />
           {t.title}
@@ -173,35 +175,54 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
                     {/* Header */}
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div>
-                        <p className="font-semibold text-foreground">
-                          {review.guest_name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-foreground">{review.guest_name}</p>
+                          {review.guest_country && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Globe className="w-3 h-3" />{review.guest_country}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           {renderStars(review.rating)}
                           <span className="text-xs text-muted-foreground">
-                            {format(parseISO(review.created_at), "d MMM yyyy", { locale: dateLocale })}
+                            {format(parseISO(review.review_date || review.created_at), "d MMM yyyy", { locale: dateLocale })}
                           </span>
                         </div>
                       </div>
-                      <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-full flex-shrink-0">
-                        ✓ {t.verifiedGuest}
-                      </span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {review.source === 'booking.com' && (
+                          <span className="text-xs bg-[#003580]/10 text-[#003580] dark:bg-[#4a8fe7]/10 dark:text-[#4a8fe7] px-2 py-1 rounded-full font-medium">
+                            {t.fromBooking}
+                          </span>
+                        )}
+                        <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-full">
+                          ✓ {t.verifiedGuest}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Title */}
                     {review.title && (
-                      <p className="font-medium text-foreground mb-2">
-                        {review.title}
-                      </p>
+                      <p className="font-medium text-foreground mb-2">{review.title}</p>
                     )}
 
                     {/* Content */}
                     {review.content && (
                       <div className="relative">
                         <Quote className="absolute -left-1 -top-1 w-4 h-4 text-primary/30" />
-                        <p className="text-muted-foreground pl-4 italic">
-                          "{review.content}"
-                        </p>
+                        <p className="text-muted-foreground pl-4 italic">"{review.content}"</p>
+                      </div>
+                    )}
+
+                    {/* Host Reply */}
+                    {review.admin_reply && (
+                      <div className="mt-4 ml-4 pl-4 border-l-2 border-primary/30 bg-primary/5 rounded-r-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Reply className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-semibold text-foreground">{t.hostReply}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{review.admin_reply}</p>
                       </div>
                     )}
                   </div>
