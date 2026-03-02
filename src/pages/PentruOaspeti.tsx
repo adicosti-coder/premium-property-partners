@@ -38,6 +38,7 @@ import {
   Navigation
 } from "lucide-react";
 import { getActiveProperties } from "@/data/properties";
+import PropertyCard from "@/components/PropertyCard";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -710,41 +711,7 @@ const PentruOaspeti = () => {
                   animate={propertiesAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <Link 
-                    to={`/proprietate/${property.slug}`}
-                    className="group block rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300"
-                  >
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img 
-                        src={property.images[0]} 
-                        alt={property.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-sm font-medium flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        {property.rating}
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">
-                        {property.name}
-                      </h3>
-                      <div className="flex items-center gap-1 text-muted-foreground text-sm mb-3">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {property.location}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-2xl font-bold text-primary">€{property.pricePerNight}</span>
-                          <span className="text-muted-foreground text-sm">{t.perNight}</span>
-                        </div>
-                        <Button variant="ghost" size="sm" className="group-hover:bg-primary/10">
-                          {t.viewDetails}
-                          <ArrowRight className="ml-1 w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Link>
+                  <PropertyCard property={property} index={index} minimal />
                 </motion.div>
               ))}
             </div>

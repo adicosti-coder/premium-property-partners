@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Key, X, ChevronLeft, ChevronRight, Star, Users, BedDouble, Calendar, Eye, SearchX, Heart, Check, Map, Euro } from "lucide-react";
+import { MapPin, X, ChevronLeft, ChevronRight, SearchX, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,28 +8,11 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useSharedFavorites } from "@/hooks/useSharedFavorites";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
-import SmartFeaturesBadge from "./SmartFeaturesBadge";
-import OptimizedImage from "./OptimizedImage";
-import { PrefetchLink } from "@/components/PrefetchLink";
+import PropertyCard from "./PropertyCard";
 import { properties, Property, getActiveProperties } from "@/data/properties";
 import { toast } from "sonner";
-
-const BookingForm = lazy(() => import("./BookingForm"));
 const PropertyCompareModal = lazy(() => import("./PropertyCompareModal"));
 const PropertyMap = lazy(() => import("./PropertyMap"));
-
-const getFeatureIcon = (feature: string) => {
-  switch (feature.toLowerCase()) {
-    case "wifi":
-      return <Wifi className="w-3 h-3" />;
-    case "parcare":
-      return <Car className="w-3 h-3" />;
-    case "auto check-in":
-      return <Key className="w-3 h-3" />;
-    default:
-      return null;
-  }
-};
 
 const PropertyGallery = () => {
   const { t, language } = useLanguage();
@@ -325,157 +308,16 @@ const PropertyGallery = () => {
           ) : (
             // Actual property cards
             filteredProperties.map((property, index) => (
-              <div
+              <PropertyCard
                 key={property.id}
-                className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant ${
-                  gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                }`}
-                style={{ transitionDelay: gridVisible ? `${index * 75}ms` : '0ms' }}
-              >
-                {/* Image */}
-                <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
-                  <div className="relative h-48 overflow-hidden cursor-pointer">
-                    <OptimizedImage
-                      src={property.images[0]}
-                      alt={`${property.name} — apartament regim hotelier ${property.location}, Timișoara`}
-                      className="w-full h-full"
-                      aspectRatio="4/3"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      priority={false}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    {/* Location badge */}
-                    <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-primary" />
-                      <span className="text-xs font-medium text-foreground">{property.location}</span>
-                    </div>
-
-                    {/* Smart Features Badge - Casai style */}
-                    <SmartFeaturesBadge 
-                      features={[...property.features, ...property.amenities]} 
-                      className="absolute bottom-4 left-4"
-                      variant="compact"
-                    />
-
-                    {/* Rating badge */}
-                    <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-                      <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
-                    </div>
-
-                    {/* Favorite button */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleToggleFavorite(String(property.id), property.name);
-                      }}
-                      className={`absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
-                        isFavorite(String(property.id))
-                          ? "bg-red-500 text-white"
-                          : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
-                      }`}
-                      aria-label={isFavorite(String(property.id)) ? (language === 'ro' ? `Elimină ${property.name} din favorite` : `Remove ${property.name} from favorites`) : (language === 'ro' ? `Adaugă ${property.name} la favorite` : `Add ${property.name} to favorites`)}
-                    >
-                      <Heart className={`w-4 h-4 ${isFavorite(String(property.id)) ? "fill-current" : ""}`} />
-                    </button>
-
-                    {/* Compare checkbox - only show if property is favorite */}
-                    {isFavorite(String(property.id)) && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleToggleCompare(property.id);
-                        }}
-                        className={`absolute bottom-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
-                          selectedForCompare.includes(property.id)
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:border-primary hover:text-primary"
-                        }`}
-                        title={t.portfolio.compare.button}
-                      >
-                        <Check className={`w-4 h-4 ${selectedForCompare.includes(property.id) ? "" : "opacity-50"}`} />
-                      </button>
-                    )}
-
-                    {/* View details overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-2">
-                        <Eye className="w-4 h-4" />
-                        {t.portfolio.viewDetails}
-                      </span>
-                    </div>
-                  </div>
-                </PrefetchLink>
-
-                {/* Content */}
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-1">
-                    <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
-                      <h3 className="text-lg font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {property.name}
-                      </h3>
-                    </PrefetchLink>
-                    <div className="flex items-baseline gap-1 ml-2 flex-shrink-0">
-                      <span className="text-lg font-bold text-primary">€{property.pricePerNight}</span>
-                      <span className="text-xs text-muted-foreground">/{language === 'ro' ? 'noapte' : 'night'}</span>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {language === 'en' ? property.descriptionEn : property.description}
-                  </p>
-
-                  {/* Capacity info */}
-                  <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {property.capacity} {t.portfolio.guests}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <BedDouble className="w-4 h-4" />
-                      {property.bedrooms} {property.bedrooms === 1 ? t.portfolio.bedroom : t.portfolio.bedrooms}
-                    </span>
-                    <span className="text-xs text-muted-foreground/70">
-                      ({property.reviews} {t.portfolio.reviews})
-                    </span>
-                  </div>
-
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {property.features.slice(0, 3).map((feature, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"
-                      >
-                        {getFeatureIcon(feature)}
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* CTAs */}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => openBookingForm(property.name)}
-                    >
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {t.portfolio.bookDirect}
-                    </Button>
-                    <Link to={`/proprietate/${property.slug}`} aria-label={language === 'ro' ? `Vezi detalii ${property.name}` : `View details ${property.name}`}>
-                      <Button variant="booking" size="sm" aria-label={language === 'ro' ? `Vezi detalii ${property.name}` : `View details ${property.name}`}>
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                property={property}
+                index={index}
+                isVisible={gridVisible}
+                isFavorite={isFavorite(String(property.id))}
+                isSelectedForCompare={selectedForCompare.includes(property.id)}
+                onToggleFavorite={handleToggleFavorite}
+                onToggleCompare={handleToggleCompare}
+              />
             ))
           )}
         </div>
@@ -526,13 +368,6 @@ const PropertyGallery = () => {
           </button>
         </div>
       )}
-
-      {/* Booking Form Modal */}
-      <BookingForm 
-        isOpen={bookingOpen} 
-        onClose={() => setBookingOpen(false)} 
-        propertyName={selectedProperty}
-      />
 
       {/* Compare Modal */}
       <PropertyCompareModal
