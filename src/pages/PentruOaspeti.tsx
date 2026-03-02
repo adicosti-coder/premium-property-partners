@@ -39,11 +39,13 @@ import {
 } from "lucide-react";
 import { getActiveProperties } from "@/data/properties";
 import PropertyCard from "@/components/PropertyCard";
+import { useFavorites } from "@/hooks/useFavorites";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PentruOaspeti = () => {
   const { language } = useLanguage();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [activeMapTab, setActiveMapTab] = useState<string>("properties");
   const heroAnimation = useScrollAnimation({ threshold: 0.1 });
@@ -509,7 +511,7 @@ const PentruOaspeti = () => {
                   {/* Property Cards - synced with map */}
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {getActiveProperties().map((property, index) => (
-                      <PropertyCard key={property.id} property={property} index={index} />
+                      <PropertyCard key={property.id} property={property} index={index} isFavorite={isFavorite(String(property.id))} onToggleFavorite={(id) => toggleFavorite(id)} />
                     ))}
                   </div>
                 </TabsContent>
@@ -631,7 +633,7 @@ const PentruOaspeti = () => {
                   animate={propertiesAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <PropertyCard property={property} index={index} />
+                  <PropertyCard property={property} index={index} isFavorite={isFavorite(String(property.id))} onToggleFavorite={(id) => toggleFavorite(id)} />
                 </motion.div>
               ))}
             </div>
