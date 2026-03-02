@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import {
@@ -46,7 +48,9 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [syncingPrices, setSyncingPrices] = useState(false);
+  const [syncingReviews, setSyncingReviews] = useState(false);
+  const [syncingDetails, setSyncingDetails] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -258,8 +262,68 @@ const AdminDashboard = () => {
 
   const tr = translations[language] || translations.en;
 
+
+  const handleSync = async (fnName: string, setter: (v: boolean) => void, label: string) => {
+    setter(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(fnName);
+      if (error) throw error;
+      toast({ title: `✅ ${label}`, description: JSON.stringify(data).substring(0, 120) });
+    } catch (err: any) {
+      toast({ title: `❌ Eroare ${label}`, description: err.message, variant: "destructive" });
+    } finally {
+      setter(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Sync Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <RefreshCw className="w-5 h-5 text-primary" />
+            {language === 'ro' ? 'Sincronizare Date' : 'Data Sync'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            {language === 'ro'
+              ? 'Declanșează manual sincronizarea datelor fără a aștepta cron-ul automat.'
+              : 'Manually trigger data sync without waiting for the automatic cron.'}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={syncingPrices}
+              onClick={() => handleSync('scrape-property-data', setSyncingPrices, 'Prețuri & Rating')}
+            >
+              {syncingPrices ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Star className="w-4 h-4 mr-2" />}
+              {language === 'ro' ? 'Sync Prețuri & Rating' : 'Sync Prices & Rating'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={syncingReviews}
+              onClick={() => handleSync('scrape-booking-reviews', setSyncingReviews, 'Recenzii')}
+            >
+              {syncingReviews ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageSquare className="w-4 h-4 mr-2" />}
+              {language === 'ro' ? 'Sync Recenzii' : 'Sync Reviews'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={syncingDetails}
+              onClick={() => handleSync('scrape-property-details', setSyncingDetails, 'Detalii Proprietăți')}
+            >
+              {syncingDetails ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSearch className="w-4 h-4 mr-2" />}
+              {language === 'ro' ? 'Sync Detalii' : 'Sync Details'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
