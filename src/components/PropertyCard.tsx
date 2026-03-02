@@ -6,6 +6,7 @@ import SmartFeaturesBadge from "./SmartFeaturesBadge";
 import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { Property } from "@/data/properties";
+import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
 import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
@@ -31,6 +32,10 @@ const PropertyCard = ({
   minimal = false,
 }: PropertyCardProps) => {
   const { language } = useLanguage();
+  const { data: liveDataMap } = usePropertyLiveData();
+  const liveData = liveDataMap?.[property.slug];
+  const displayRating = liveData?.rating ?? property.rating;
+  const displayReviews = liveData?.reviews_count ?? property.reviews;
 
   const t = {
     guests: language === "ro" ? "oaspeți" : "guests",
@@ -91,7 +96,7 @@ const PropertyCard = ({
           {/* Rating badge */}
           <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
             <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-            <span className="text-xs font-bold text-primary-foreground">{property.rating}</span>
+            <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
           </div>
 
           {/* Favorite button */}
@@ -177,7 +182,7 @@ const PropertyCard = ({
             {property.bedrooms} {property.bedrooms === 1 ? t.bedroom : t.bedrooms}
           </span>
           <span className="text-xs text-muted-foreground/70">
-            ({property.reviews} {t.reviews})
+            ({displayReviews} {t.reviews})
           </span>
         </div>
 
