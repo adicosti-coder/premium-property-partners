@@ -67,9 +67,35 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     },
   });
 
-  const averageRating = reviews && reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
+  // Fetch official Booking.com rating & review count from live data
+  const { data: officialStats } = useQuery({
+    queryKey: ["property-official-stats", propertyId],
+    queryFn: async () => {
+      // Get slug from properties table
+      const { data: prop } = await supabase
+        .from("properties")
+        .select("slug, booking_rating, booking_review_count")
+        .eq("id", propertyId)
+        .maybeSingle();
+
+      if (!prop?.slug) return null;
+
+      const { data: live } = await supabase
+        .from("property_live_data")
+        .select("rating, reviews_count")
+        .eq("property_slug", prop.slug)
+        .maybeSingle();
+
+      return {
+        rating: live?.rating ?? prop.booking_rating ?? null,
+        reviewCount: live?.reviews_count ?? prop.booking_review_count ?? null,
+      };
+    },
+  });
+
+  // Use official Booking.com stats instead of calculating from imported reviews
+  const averageRating = officialStats?.rating?.toFixed(1) ?? null;
+  const totalReviewCount = officialStats?.reviewCount ?? reviews?.length ?? 0;
 
   const renderRatingBadge = (rating: number) => (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-sm font-bold">
@@ -99,6 +125,7 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": averageRating,
+      "reviewCount": totalReviewCount,
       "bestRating": 10,
       "worstRating": 1,
     },
@@ -129,13 +156,13 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
           <MessageSquare className="w-5 h-5 text-primary" />
           {t.title}
         </h2>
-        {averageRating && reviews && reviews.length > 0 && (
+        {averageRating && totalReviewCount > 0 && (
           <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
             <Star className="w-5 h-5 text-primary fill-primary" />
             <span className="font-bold text-foreground">{averageRating}</span>
             <span className="text-xs text-muted-foreground">/ 10</span>
             <span className="text-sm text-muted-foreground">
-              {t.basedOn} {reviews.length} {t.reviews}
+              {t.basedOn} {totalReviewCount} {t.reviews}
             </span>
           </div>
         )}

@@ -50,17 +50,21 @@ async function scrapeReviews(url: string, firecrawlKey: string): Promise<Scraped
         url: reviewsUrl,
         formats: ['json'],
         jsonOptions: {
-        prompt: `Extract ALL guest reviews from this Booking.com property page EXACTLY as they appear — do NOT rephrase, summarize, or translate any text. For each review, extract:
+        prompt: `Extract ALL guest reviews from this Booking.com property page EXACTLY as they appear — do NOT rephrase, summarize, translate, or generate any text. For each review, extract:
 - "guest_name": the reviewer's name exactly as displayed
 - "guest_country": the reviewer's country/nationality exactly as shown
 - "rating": numeric score (out of 10) — keep original scale, do NOT convert
-- "title": review title/headline if any, VERBATIM
+- "title": review title/headline if any, VERBATIM — copy character by character
 - "positive": the positive/liked comment text VERBATIM (often after a "+" or "Liked" label)
 - "negative": the negative/disliked comment text VERBATIM (often after a "-" or "Disliked" label)
 - "date": review date in YYYY-MM-DD format
-- "host_reply": the property owner/host/manager response text VERBATIM — copy it character by character. Look for text labeled "Response from the property", "Răspunsul proprietății", "Host reply", or similar. It usually appears below each review. Extract the COMPLETE original reply text without any modification. If there is no reply, set to null.
+- "host_reply": CRITICAL INSTRUCTIONS FOR THIS FIELD: Look for text labeled "Response from the property", "Răspunsul proprietății", "Host reply", or similar — it usually appears indented or in a separate box below each review. Copy the ENTIRE text EXACTLY as it appears, character by character. Do NOT generate, fabricate, summarize, or paraphrase a reply. If there is NO reply visible on the page for this review, you MUST set host_reply to null. NEVER invent a reply.
 
-CRITICAL: All text fields must be copied EXACTLY as they appear on the page. Do NOT paraphrase, translate, or summarize. Return as JSON array under key "reviews". Include ALL visible reviews, up to 25.`
+CRITICAL RULES:
+1. All text fields must be copied EXACTLY as they appear on the page
+2. Do NOT paraphrase, translate, summarize, or generate any content
+3. If a host_reply is not clearly visible on the page, set it to null — NEVER make one up
+4. Return as JSON array under key "reviews". Include ALL visible reviews, up to 25.`
         },
         waitFor: 5000,
       }),
