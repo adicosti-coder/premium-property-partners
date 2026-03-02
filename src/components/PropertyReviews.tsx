@@ -71,19 +71,11 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
-  const renderStars = (rating: number) => (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`w-4 h-4 ${
-            star <= rating
-              ? "text-amber-500 fill-amber-500"
-              : "text-muted-foreground/30"
-          }`}
-        />
-      ))}
-    </div>
+  const renderRatingBadge = (rating: number) => (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-sm font-bold">
+      <Star className="w-3.5 h-3.5 fill-primary text-primary" />
+      {rating.toFixed(1)}
+    </span>
   );
 
   if (isLoading) {
@@ -107,8 +99,7 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": averageRating,
-      "reviewCount": reviews.length,
-      "bestRating": 5,
+      "bestRating": 10,
       "worstRating": 1,
     },
     "review": reviews.slice(0, 5).map((r) => ({
@@ -119,7 +110,7 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
       "reviewRating": {
         "@type": "Rating",
         "ratingValue": r.rating,
-        "bestRating": 5,
+        "bestRating": 10,
       },
     })),
   } : null;
@@ -142,6 +133,7 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
           <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
             <Star className="w-5 h-5 text-primary fill-primary" />
             <span className="font-bold text-foreground">{averageRating}</span>
+            <span className="text-xs text-muted-foreground">/ 10</span>
             <span className="text-sm text-muted-foreground">
               {t.basedOn} {reviews.length} {t.reviews}
             </span>
@@ -184,7 +176,7 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          {renderStars(review.rating)}
+                          {renderRatingBadge(review.rating)}
                           <span className="text-xs text-muted-foreground">
                             {format(parseISO(review.review_date || review.created_at), "d MMM yyyy", { locale: dateLocale })}
                           </span>
