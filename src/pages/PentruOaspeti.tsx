@@ -507,90 +507,10 @@ const PentruOaspeti = () => {
                     </div>)}
                   
                   {/* Property Cards - synced with map */}
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {getActiveProperties().map((property) => {
-                      const isSelected = selectedProperty === property.slug;
-                      return (
-                        <div
-                          key={property.slug}
-                          id={`property-card-${property.slug}`}
-                          className={`group rounded-xl border overflow-hidden bg-card transition-all duration-300 cursor-pointer ${
-                            isSelected
-                              ? 'border-primary shadow-lg shadow-primary/10 ring-2 ring-primary ring-offset-2'
-                              : 'border-border hover:border-primary/30 hover:shadow-md'
-                          }`}
-                          onClick={() => {
-                            setSelectedProperty(property.slug);
-                            setActiveMapTab('properties');
-                            setTimeout(() => {
-                              const mapEl = document.getElementById('property-map-container') || document.querySelector('.mapboxgl-canvas-container');
-                              mapEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }, 100);
-                          }}
-                        >
-                          {/* Image */}
-                          <div className="relative h-36 overflow-hidden">
-                            <img
-                              src={property.images[0]}
-                              alt={property.name}
-                              loading="lazy"
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 text-white text-xs font-medium flex items-center gap-1">
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                              {property.rating}
-                            </div>
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                                <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                  <Navigation className="w-3 h-3" />
-                                  {language === 'ro' ? 'Pe hartă' : 'On map'}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Content */}
-                          <div className="p-3">
-                            <h4 className="font-semibold text-sm line-clamp-1 mb-1 group-hover:text-primary transition-colors">
-                              {property.name}
-                            </h4>
-                            <div className="flex items-center gap-1 text-muted-foreground text-xs mb-2">
-                              <MapPin className="w-3 h-3 flex-shrink-0" />
-                              <span className="line-clamp-1">{property.location}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-bold text-primary">€{property.pricePerNight}<span className="text-muted-foreground font-normal text-xs">/noapte</span></span>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedProperty(property.slug);
-                                    setActiveMapTab('properties');
-                                    setTimeout(() => {
-                                      const mapEl = document.getElementById('property-map-container') || document.querySelector('.mapboxgl-canvas-container');
-                                      mapEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    }, 100);
-                                  }}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                >
-                                  <Navigation className="w-3 h-3" />
-                                  {language === 'ro' ? 'Hartă' : 'Map'}
-                                </button>
-                                <Link
-                                  to={`/proprietate/${property.slug}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-muted text-muted-foreground hover:bg-muted/70 transition-colors"
-                                >
-                                  <ArrowRight className="w-3 h-3" />
-                                  {language === 'ro' ? 'Detalii' : 'Details'}
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {getActiveProperties().map((property, index) => (
+                      <PropertyCard key={property.id} property={property} index={index} />
+                    ))}
                   </div>
                 </TabsContent>
 
@@ -711,7 +631,7 @@ const PentruOaspeti = () => {
                   animate={propertiesAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <PropertyCard property={property} index={index} minimal />
+                  <PropertyCard property={property} index={index} />
                 </motion.div>
               ))}
             </div>
