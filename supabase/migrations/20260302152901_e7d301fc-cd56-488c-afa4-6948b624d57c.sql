@@ -1,0 +1,1 @@
+DELETE FROM property_reviews WHERE source = 'booking.com';
