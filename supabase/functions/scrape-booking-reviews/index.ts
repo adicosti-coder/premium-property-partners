@@ -48,10 +48,9 @@ async function scrapeReviews(url: string, firecrawlKey: string): Promise<Scraped
       },
       body: JSON.stringify({
         url: reviewsUrl,
-        formats: [
-          {
-            type: 'json',
-            prompt: `Extract ALL guest reviews from this Booking.com property page. For each review, extract:
+        formats: ['json'],
+        jsonOptions: {
+          prompt: `Extract ALL guest reviews from this Booking.com property page. For each review, extract:
 - "guest_name": the reviewer's first name
 - "guest_country": the reviewer's country/nationality
 - "rating": numeric score (out of 10)
@@ -62,16 +61,18 @@ async function scrapeReviews(url: string, firecrawlKey: string): Promise<Scraped
 - "host_reply": the property owner/host response text if present
 
 Return as JSON array under key "reviews". Include ALL visible reviews, up to 20.`
-          }
-        ],
-        waitFor: 5000,
+        },
+        waitFor: 3000,
       }),
     });
 
     const data = await response.json();
-    console.log(`Scrape response length: ${JSON.stringify(data).length}`);
+    console.log(`Scrape raw response:`, JSON.stringify(data).substring(0, 600));
+    console.log(`Response keys:`, Object.keys(data || {}));
+    console.log(`Data keys:`, Object.keys(data?.data || {}));
 
     const jsonData = data?.data?.json || data?.json;
+    console.log(`JSON data preview:`, JSON.stringify(jsonData || null).substring(0, 500));
     const reviews: ScrapedReview[] = [];
 
     if (jsonData?.reviews && Array.isArray(jsonData.reviews)) {
