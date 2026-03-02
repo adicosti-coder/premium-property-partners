@@ -11,6 +11,76 @@ interface PropertyLiveData {
   booking_com_url: string | null;
 }
 
+/**
+ * Resolve Booking.com /Share- short-links to their final URL.
+ */
+async function resolveShareUrl(url: string): Promise<string> {
+  if (!url.includes('/Share-')) return url;
+  try {
+    const res = await fetch(url, { method: 'HEAD', redirect: 'follow' });
+    return res.url || url;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Extract rating (X.Y / 10) and review count from Booking.com markdown.
+ * Booking.com pages consistently render patterns like:
+ *   "Scored 9.7"  /  "9.7 out of 10"  /  "Rating: 9.7"
+ *   "28 reviews"  /  "See 28 guest reviews"  /  "· 28 reviews"
+ */
+function parseRatingFromMarkdown(md: string): { rating: number | null; reviews: number | null } {
+  let rating: number | null = null;
+  let reviews: number | null = null;
+
+  // --- RATING ---
+  // Pattern priority: more specific first
+  const ratingPatterns = [
+    /(?:Scored|Rating|Score|Nota|Punctaj)[:\s]*(\d{1,2}(?:\.\d{1,2})?)\s*(?:\/\s*10|out of 10)?/i,
+    /(\d{1,2}\.\d{1,2})\s*(?:\/\s*10|out of 10)/i,
+    /(?:review score|guest review)[^\d]*(\d{1,2}\.\d{1,2})/i,
+    // Booking.com badge format: a standalone decimal like "9.7" near review keywords
+    /(?:reviews?|evaluări|recenzii)[^\d]{0,30}(\d\.\d)/i,
+    /(\d\.\d)[^\d]{0,30}(?:reviews?|evaluări|recenzii)/i,
+  ];
+
+  for (const pat of ratingPatterns) {
+    const m = md.match(pat);
+    if (m) {
+      const val = parseFloat(m[1]);
+      if (val > 0 && val <= 10) {
+        rating = Math.round(val * 10) / 10; // keep 1 decimal
+        break;
+      }
+    }
+  }
+
+  // --- REVIEWS COUNT ---
+  const reviewPatterns = [
+    /(\d[\d,.']*)\s*(?:reviews?|recenzii|evaluări|guest reviews)/i,
+    /(?:reviews?|recenzii|evaluări|See|Vezi)\s*[:\-–]?\s*(\d[\d,.']*)/i,
+    /(?:Pe baza a|Based on)\s*(\d[\d,.']*)/i,
+  ];
+
+  for (const pat of reviewPatterns) {
+    const m = md.match(pat);
+    if (m) {
+      const cleaned = m[1].replace(/[,.']/g, '');
+      const val = parseInt(cleaned, 10);
+      if (val > 0 && val < 100000) {
+        reviews = val;
+        break;
+      }
+    }
+  }
+
+  return { rating, reviews };
+}
+
+/**
+ * Scrape price from Pynbooking page using markdown + regex.
+ */
 async function scrapePrice(url: string, firecrawlKey: string): Promise<number | null> {
   try {
     console.log(`Scraping price from: ${url}`);
@@ -22,28 +92,21 @@ async function scrapePrice(url: string, firecrawlKey: string): Promise<number | 
       },
       body: JSON.stringify({
         url,
-        formats: [{ type: 'json', prompt: 'Extract the nightly price or starting price for accommodation. Return as a JSON object with field "price" as a number (just the numeric value, no currency symbol). If multiple prices, return the lowest one.' }],
+        formats: ['markdown'],
         waitFor: 3000,
       }),
     });
 
     const data = await response.json();
-    console.log(`Scrape response for ${url}:`, JSON.stringify(data).substring(0, 500));
-
-    const jsonData = data?.data?.json || data?.json;
-    if (jsonData?.price) {
-      return Number(jsonData.price);
-    }
-
-    // Fallback: try to find price in markdown
     const markdown = data?.data?.markdown || data?.markdown || '';
-    const priceMatch = markdown.match(/(\d{2,4})\s*(?:€|EUR|lei|RON)/i) 
+
+    // Look for price patterns (RON or EUR)
+    const priceMatch = markdown.match(/(\d{2,4})\s*(?:€|EUR|lei|RON)/i)
                     || markdown.match(/(?:€|EUR)\s*(\d{2,4})/i)
-                    || markdown.match(/(?:price|preț|tarif)[^\d]*(\d{2,4})/i);
+                    || markdown.match(/(?:price|preț|tarif|pret)[^\d]*(\d{2,4})/i);
     if (priceMatch) {
       return Number(priceMatch[1]);
     }
-
     return null;
   } catch (error) {
     console.error(`Error scraping price from ${url}:`, error);
@@ -51,11 +114,17 @@ async function scrapePrice(url: string, firecrawlKey: string): Promise<number | 
   }
 }
 
+/**
+ * Scrape rating & review count from a Booking.com URL using markdown + regex.
+ * Much more reliable than LLM JSON extraction for simple numeric values.
+ */
 async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{ rating: number | null; reviews: number | null }> {
   try {
     if (!url) return { rating: null, reviews: null };
-    
-    console.log(`Scraping rating from: ${url}`);
+
+    const resolvedUrl = await resolveShareUrl(url);
+    console.log(`Scraping rating from: ${resolvedUrl}`);
+
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -63,20 +132,53 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        url,
-        formats: [{ type: 'json', prompt: 'Extract the review score/rating (a number like 9.5 out of 10) and total number of reviews. Return as JSON with fields "rating" (number) and "reviews_count" (number).' }],
+        url: resolvedUrl,
+        formats: ['markdown'],
         waitFor: 5000,
       }),
     });
 
     const data = await response.json();
-    console.log(`Rating scrape response:`, JSON.stringify(data).substring(0, 500));
+    const markdown = data?.data?.markdown || data?.markdown || '';
+    console.log(`Markdown length: ${markdown.length}, first 800 chars:`, markdown.substring(0, 800));
 
-    const jsonData = data?.data?.json || data?.json;
-    return {
-      rating: jsonData?.rating ? Number(jsonData.rating) : null,
-      reviews: jsonData?.reviews_count ? Number(jsonData.reviews_count) : null,
-    };
+    const result = parseRatingFromMarkdown(markdown);
+    console.log(`Parsed rating: ${result.rating}, reviews: ${result.reviews}`);
+
+    // Fallback: also try JSON extraction if markdown parsing failed
+    if (!result.rating || !result.reviews) {
+      console.log('Markdown parsing incomplete, trying JSON fallback...');
+      const jsonResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: resolvedUrl,
+          formats: ['json'],
+          jsonOptions: {
+            prompt: 'Extract ONLY these two values from this Booking.com page: 1) The overall guest review score (a number like 9.7 out of 10) 2) The total number of guest reviews. Return as JSON: {"rating": <number>, "reviews_count": <number>}. Be precise and extract the EXACT numbers shown on the page.'
+          },
+          waitFor: 5000,
+        }),
+      });
+
+      const jsonData = await jsonResponse.json();
+      const extracted = jsonData?.data?.json || jsonData?.json;
+      console.log('JSON fallback result:', JSON.stringify(extracted));
+
+      if (!result.rating && extracted?.rating) {
+        const r = Number(extracted.rating);
+        if (r > 0 && r <= 10) result.rating = Math.round(r * 10) / 10;
+      }
+      if (!result.reviews && extracted?.reviews_count) {
+        const rc = Number(extracted.reviews_count);
+        if (rc > 0) result.reviews = rc;
+      }
+    }
+
+    return result;
   } catch (error) {
     console.error(`Error scraping rating from ${url}:`, error);
     return { rating: null, reviews: null };
@@ -98,11 +200,20 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Optional: scrape only specific property
+    let targetSlug: string | null = null;
+    try {
+      const body = await req.json();
+      targetSlug = body?.property_slug || null;
+    } catch { /* no body */ }
+
     // Fetch all properties to scrape
-    const { data: properties, error: fetchError } = await supabase
+    let query = supabase
       .from('property_live_data')
       .select('property_slug, booking_url, booking_com_url');
+    if (targetSlug) query = query.eq('property_slug', targetSlug);
 
+    const { data: properties, error: fetchError } = await query;
     if (fetchError) throw fetchError;
 
     const results: Record<string, any> = {};
@@ -127,12 +238,14 @@ Deno.serve(async (req) => {
         const { rating, reviews } = await scrapeBookingRating(prop.booking_com_url, firecrawlKey);
         if (rating && rating > 0 && rating <= 10) {
           updates.rating = rating;
-          updates.reviews_count = reviews;
           updates.last_rating_update = new Date().toISOString();
+        }
+        if (reviews && reviews > 0) {
+          updates.reviews_count = reviews;
         }
       }
 
-      // Also try to get rating from Pynbooking page
+      // Fallback: try to get rating from Pynbooking page if no Booking.com URL
       if (!prop.booking_com_url && prop.booking_url) {
         const { rating, reviews } = await scrapeBookingRating(prop.booking_url, firecrawlKey);
         if (rating && rating > 0 && rating <= 10) {
@@ -154,8 +267,20 @@ Deno.serve(async (req) => {
         results[prop.property_slug] = updates;
       }
 
+      // Also sync to properties table
+      if (updates.rating || updates.reviews_count) {
+        const propUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
+        if (updates.rating) propUpdates.booking_rating = updates.rating;
+        if (updates.reviews_count) propUpdates.booking_review_count = updates.reviews_count;
+        
+        await supabase
+          .from('properties')
+          .update(propUpdates)
+          .eq('slug', prop.property_slug);
+      }
+
       // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
     return new Response(JSON.stringify({ success: true, results }), {
