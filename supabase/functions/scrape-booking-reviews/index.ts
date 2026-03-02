@@ -50,17 +50,17 @@ async function scrapeReviews(url: string, firecrawlKey: string): Promise<Scraped
         url: reviewsUrl,
         formats: ['json'],
         jsonOptions: {
-        prompt: `Extract ALL guest reviews from this Booking.com property page. For each review, extract:
-- "guest_name": the reviewer's first name or surname as shown
-- "guest_country": the reviewer's country/nationality flag or text
-- "rating": numeric score (out of 10)
-- "title": review title/headline if any
-- "positive": the positive/liked comment text (often after a "+" or "Liked" label)
-- "negative": the negative/disliked comment text (often after a "-" or "Disliked" label)
+        prompt: `Extract ALL guest reviews from this Booking.com property page EXACTLY as they appear — do NOT rephrase, summarize, or translate any text. For each review, extract:
+- "guest_name": the reviewer's name exactly as displayed
+- "guest_country": the reviewer's country/nationality exactly as shown
+- "rating": numeric score (out of 10) — keep original scale, do NOT convert
+- "title": review title/headline if any, VERBATIM
+- "positive": the positive/liked comment text VERBATIM (often after a "+" or "Liked" label)
+- "negative": the negative/disliked comment text VERBATIM (often after a "-" or "Disliked" label)
 - "date": review date in YYYY-MM-DD format
-- "host_reply": the property owner/host/manager response text. This is VERY IMPORTANT - look for text labeled "Response from the property", "Răspunsul proprietății", "Host reply", or similar. It usually appears below each review in a slightly indented or differently styled block. Extract the FULL reply text. If there is no reply, set to null.
+- "host_reply": the property owner/host/manager response text VERBATIM — copy it character by character. Look for text labeled "Response from the property", "Răspunsul proprietății", "Host reply", or similar. It usually appears below each review. Extract the COMPLETE original reply text without any modification. If there is no reply, set to null.
 
-Return as JSON array under key "reviews". Include ALL visible reviews, up to 25. Make sure to capture host/property replies - they are critical.`
+CRITICAL: All text fields must be copied EXACTLY as they appear on the page. Do NOT paraphrase, translate, or summarize. Return as JSON array under key "reviews". Include ALL visible reviews, up to 25.`
         },
         waitFor: 5000,
       }),
@@ -88,7 +88,7 @@ Return as JSON array under key "reviews". Include ALL visible reviews, up to 25.
         reviews.push({
           guest_name: r.guest_name,
           guest_country: r.guest_country || null,
-          rating: Math.round(rating / 2), // Convert 10-scale to 5-scale
+          rating: rating, // Keep original 10-scale from Booking.com
           title: r.title || null,
           content: content || null,
           date: r.date || null,
