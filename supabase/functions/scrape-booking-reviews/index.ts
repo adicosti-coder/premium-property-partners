@@ -50,19 +50,19 @@ async function scrapeReviews(url: string, firecrawlKey: string): Promise<Scraped
         url: reviewsUrl,
         formats: ['json'],
         jsonOptions: {
-          prompt: `Extract ALL guest reviews from this Booking.com property page. For each review, extract:
-- "guest_name": the reviewer's first name
-- "guest_country": the reviewer's country/nationality
+        prompt: `Extract ALL guest reviews from this Booking.com property page. For each review, extract:
+- "guest_name": the reviewer's first name or surname as shown
+- "guest_country": the reviewer's country/nationality flag or text
 - "rating": numeric score (out of 10)
 - "title": review title/headline if any
-- "positive": positive comment text
-- "negative": negative comment text  
+- "positive": the positive/liked comment text (often after a "+" or "Liked" label)
+- "negative": the negative/disliked comment text (often after a "-" or "Disliked" label)
 - "date": review date in YYYY-MM-DD format
-- "host_reply": the property owner/host response text if present
+- "host_reply": the property owner/host/manager response text. This is VERY IMPORTANT - look for text labeled "Response from the property", "Răspunsul proprietății", "Host reply", or similar. It usually appears below each review in a slightly indented or differently styled block. Extract the FULL reply text. If there is no reply, set to null.
 
-Return as JSON array under key "reviews". Include ALL visible reviews, up to 20.`
+Return as JSON array under key "reviews". Include ALL visible reviews, up to 25. Make sure to capture host/property replies - they are critical.`
         },
-        waitFor: 3000,
+        waitFor: 5000,
       }),
     });
 
@@ -170,8 +170,10 @@ Deno.serve(async (req) => {
       let skipped = 0;
 
       for (const review of reviews) {
-        // Create a deterministic booking_review_id from guest + date + rating
-        const reviewId = `${review.guest_name}-${review.date || 'nodate'}-${review.rating}`;
+        // Create a deterministic booking_review_id from guest + country + date + rating + content snippet
+        const contentSnippet = (review.content || review.title || '').substring(0, 30).replace(/[^a-zA-Z0-9]/g, '');
+        const country = (review.guest_country || 'unknown').replace(/[^a-zA-Z]/g, '').substring(0, 10);
+        const reviewId = `${review.guest_name}-${country}-${review.date || 'nodate'}-${review.rating}-${contentSnippet}`;
 
         const { error: upsertError } = await supabase
           .from('property_reviews')
