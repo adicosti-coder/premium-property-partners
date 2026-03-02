@@ -183,7 +183,7 @@ const PropertyCard = ({
 
         {/* Features */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {property.features.slice(0, 3).map((feature, idx) => (
+          {(language === "en" && property.featuresEn ? property.featuresEn : property.features).slice(0, 3).map((feature, idx) => (
             <span
               key={idx}
               className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground"

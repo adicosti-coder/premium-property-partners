@@ -22,6 +22,7 @@ export interface Property {
   location: string;
   images: string[];
   features: string[];
+  featuresEn: string[];
   bookingUrl: string;
   description: string;
   descriptionEn: string;
@@ -51,6 +52,7 @@ export const properties: Property[] = [
     location: "Str. Loichița Vasile 1-3, Timișoara",
     images: [apt09],
     features: ["Terasă Mare", "Parcare Subterană", "WiFi"],
+    featuresEn: ["Large Terrace", "Underground Parking", "WiFi"],
     bookingUrl: "https://ring.pynbooking.direct/",
     description: "Apartament spațios cu terasă mare și parcare subterană gratuită",
     descriptionEn: "Spacious apartment with big terrace and free underground parking",
@@ -77,6 +79,7 @@ export const properties: Property[] = [
     location: "Str. Constructorilor 52, Timișoara",
     images: [apt06],
     features: ["Balcon", "Parcare Gratuită", "WiFi"],
+    featuresEn: ["Balcony", "Free Parking", "WiFi"],
     bookingUrl: "https://denya-forest-5.pynbooking.direct/",
     description: "Apartament DeLuxe cu balcon, parcare gratuită, lângă Amazonia",
     descriptionEn: "DeLuxe apartment with balcony, free parking, near Amazonia",
@@ -103,6 +106,7 @@ export const properties: Property[] = [
     location: "Str. Gheorghe Lazăr 24, Timișoara",
     images: [apt04],
     features: ["Parcare Gratuită", "Balcon Mare", "WiFi"],
+    featuresEn: ["Free Parking", "Large Balcony", "WiFi"],
     bookingUrl: "https://fructus-plaza.pynbooking.direct/",
     description: "Apartament DeLuxe ultracentral cu parcare gratuită și balcon mare",
     descriptionEn: "Ultracentral DeLuxe apartment with free parking and big balcony",
@@ -129,6 +133,7 @@ export const properties: Property[] = [
     location: "Calea Circumvalațiunii 1, Timișoara",
     images: [apt02],
     features: ["Parcare Subterană", "WiFi", "Premium"],
+    featuresEn: ["Underground Parking", "WiFi", "Premium"],
     bookingUrl: "https://m9.pynbooking.direct/",
     description: "Studio DeLuxe cu parcare subterană gratuită",
     descriptionEn: "DeLuxe studio with free underground parking",
@@ -155,6 +160,7 @@ export const properties: Property[] = [
     location: "Calea Circumvalațiunii 1, Timișoara",
     images: [apt03],
     features: ["Ultracentral", "Parcare Subterană", "WiFi"],
+    featuresEn: ["City Center", "Underground Parking", "WiFi"],
     bookingUrl: "https://apart-hotel.pynbooking.direct/",
     description: "Studio DeLuxe ultracentral cu parcare subterană gratuită",
     descriptionEn: "Ultracentral DeLuxe studio with free underground parking",
@@ -181,6 +187,7 @@ export const properties: Property[] = [
     location: "Str. Argeș 4, Timișoara",
     images: [helios],
     features: ["Central", "Parcare", "WiFi"],
+    featuresEn: ["Central", "Parking", "WiFi"],
     bookingUrl: "https://helios.pynbooking.direct/",
     description: "Reședință DeLuxe aproape de centrul orașului",
     descriptionEn: "DeLuxe residence close to the city center",
@@ -207,6 +214,7 @@ export const properties: Property[] = [
     location: "Calea Torontalului 104K, Timișoara",
     images: [apt05],
     features: ["Terasă Mare", "Parcare Gratuită", "WiFi"],
+    featuresEn: ["Large Terrace", "Free Parking", "WiFi"],
     bookingUrl: "https://ateneo-2.pynbooking.direct/",
     description: "Apartament modern DeLuxe cu terasă mare și parcare gratuită",
     descriptionEn: "Modern DeLuxe apartment with big terrace and free parking",
@@ -233,6 +241,7 @@ export const properties: Property[] = [
     location: "Calea Circumvalațiunii 1, Timișoara",
     images: [apt11],
     features: ["Parcare Subterană", "WiFi", "Modern"],
+    featuresEn: ["Underground Parking", "WiFi", "Modern"],
     bookingUrl: "https://m11.pynbooking.direct/",
     description: "Studio DeLuxe cu parcare subterană gratuită - by FullViewTour",
     descriptionEn: "DeLuxe studio with free underground parking - by FullViewTour",
@@ -259,6 +268,7 @@ export const properties: Property[] = [
     location: "Str. Sinaia 2B, Timișoara",
     images: [apt01],
     features: ["Ultracentral", "Parcare Gratuită", "WiFi"],
+    featuresEn: ["City Center", "Free Parking", "WiFi"],
     bookingUrl: "https://www.booking.com/hotel/ro/mara-gold-accent-deluxe-residence.html",
     description: "Apartament ultracentral de lux cu parcare gratuită",
     descriptionEn: "Ultracentral luxury apartment with free parking",
@@ -286,6 +296,7 @@ export const properties: Property[] = [
     location: "Calea Torontalului 104K, Timișoara",
     images: [apt07],
     features: ["Balcon Mare", "Parcare Gratuită", "WiFi"],
+    featuresEn: ["Large Balcony", "Free Parking", "WiFi"],
     bookingUrl: "https://ateneo-1.pynbooking.direct/",
     description: "Apartament modern cu balcon mare și parcare gratuită",
     descriptionEn: "Modern apartment with big balcony and free parking",
@@ -312,6 +323,7 @@ export const properties: Property[] = [
     location: "Bd. Simion Bărnuțiu 79, Timișoara",
     images: [modernStudio],
     features: ["Parcare", "WiFi", "Lângă Amazonia"],
+    featuresEn: ["Parking", "WiFi", "Near Amazonia"],
     bookingUrl: "https://modern.pynbooking.direct/",
     description: "Studio modern lângă AquaPark Amazonia și Spitalele Babeș și Cardiologie",
     descriptionEn: "Modern studio near AquaPark Amazonia and Babes and Cardiology Hospitals",
