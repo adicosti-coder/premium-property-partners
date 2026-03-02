@@ -83,20 +83,29 @@ CRITICAL RULES:
       for (const r of jsonData.reviews) {
         const content = [r.positive, r.negative]
           .filter(Boolean)
+          .map((s: string) => s.replace(/\bNone\.?\b/gi, '').trim())
+          .filter((s: string) => s.length > 0)
           .join('\n\n')
           .trim();
 
         const rating = Number(r.rating);
         if (!r.guest_name || isNaN(rating)) continue;
 
+        // Clean host reply: remove "Response from the property:" prefix and "None"
+        let hostReply = r.host_reply || null;
+        if (hostReply) {
+          hostReply = hostReply.replace(/^(Response from the property|Răspunsul proprietății)\s*:\s*/i, '').trim();
+          if (!hostReply || hostReply.toLowerCase() === 'none') hostReply = null;
+        }
+
         reviews.push({
           guest_name: r.guest_name,
           guest_country: r.guest_country || null,
-          rating: rating, // Keep original 10-scale from Booking.com
+          rating: rating,
           title: r.title || null,
           content: content || null,
           date: r.date || null,
-          host_reply: r.host_reply || null,
+          host_reply: hostReply,
         });
       }
     }
