@@ -119,3 +119,12 @@ verify_jwt = false
 
 [functions.verify-owner-code]
 verify_jwt = false
+
+[functions.scrape-booking-reviews]
+verify_jwt = false
+
+[functions.scrape-property-data]
+verify_jwt = false
+
+[functions.scrape-property-details]
+verify_jwt = false
