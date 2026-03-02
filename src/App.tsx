@@ -83,9 +83,16 @@ const Complexe = lazyWithRetry(() => import("./pages/Complexe"));
 const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
 const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
 
-// Minimal CSS-only loader — no icon import needed
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
+
+// Redirect /contact → /#contact (avoid 404 noindex for Google)
+const ContactRedirect = () => {
+  useEffect(() => {
+    window.location.replace('/#contact');
+  }, []);
+  return null;
+};
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -163,6 +170,7 @@ const App = () => (
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/preturi" element={<Preturi />} />
+                    <Route path="/contact" element={<ContactRedirect />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
