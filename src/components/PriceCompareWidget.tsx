@@ -9,7 +9,7 @@ interface PriceCompareWidgetProps {
 
 const PriceCompareWidget = ({ 
   basePrice, 
-  discountPercent = 8,
+  discountPercent = 5,
   className = ""
 }: PriceCompareWidgetProps) => {
   const { t } = useLanguage();
