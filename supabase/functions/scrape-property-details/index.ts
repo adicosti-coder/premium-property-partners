@@ -22,20 +22,26 @@ async function scrapeWithFirecrawl(url: string, prompt: string, firecrawlKey: st
       },
       body: JSON.stringify({
         url,
-        formats: [{ type: 'json', prompt }],
+        formats: ['json'],
+        jsonOptions: { prompt },
         waitFor: 5000,
       }),
     });
 
     const data = await response.json();
+    console.log(`Raw response keys:`, Object.keys(data || {}));
+    console.log(`Data keys:`, Object.keys(data?.data || {}));
+    
     const jsonData = data?.data?.json || data?.json;
-    console.log(`Result for ${url}:`, JSON.stringify(jsonData).substring(0, 800));
+    console.log(`Extracted JSON for ${url}:`, JSON.stringify(jsonData || null).substring(0, 800));
     return jsonData || null;
   } catch (error) {
     console.error(`Error scraping ${url}:`, error);
     return null;
   }
 }
+
+
 
 const pynbookingPrompt = `Extract ALL available property details from this accommodation booking page. Return as JSON with these fields:
 - "price_weekday": numeric nightly price for weekdays (just the number, no currency)
@@ -77,11 +83,13 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Optional: target specific property
+    // Optional: target specific property and source
     let targetSlug: string | null = null;
+    let sourceOnly: string | null = null; // 'pynbooking' or 'booking'
     try {
       const body = await req.json();
       targetSlug = body?.property_slug || null;
+      sourceOnly = body?.source || null;
     } catch { /* no body */ }
 
     // Get live data with URLs
@@ -114,21 +122,24 @@ Deno.serve(async (req) => {
       const updates: Record<string, any> = { updated_at: new Date().toISOString() };
       const liveUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
 
-      // 1. Scrape Pynbooking
-      if (ld.booking_url && ld.booking_url.includes('pynbooking.direct')) {
+      // 1. Scrape Pynbooking (prices in RON on Pynbooking, convert to EUR ~5:1)
+      if ((!sourceOnly || sourceOnly === 'pynbooking') && ld.booking_url && ld.booking_url.includes('pynbooking.direct')) {
         const pynData = await scrapeWithFirecrawl(ld.booking_url, pynbookingPrompt, firecrawlKey);
         if (pynData) {
-          // Fill missing weekday price
-          if (pynData.price_weekday && Number(pynData.price_weekday) > 0 && Number(pynData.price_weekday) < 500) {
-            liveUpdates.price_per_night = Number(pynData.price_weekday);
-            liveUpdates.last_price_update = new Date().toISOString();
-            if (!prop.base_price_per_night) {
-              updates.base_price_per_night = Number(pynData.price_weekday);
+          // Pynbooking prices are in RON - convert to EUR (approx 5:1)
+          const ronToEur = (ron: number) => Math.round(ron / 5);
+          
+          if (pynData.price_weekday && Number(pynData.price_weekday) > 0) {
+            const priceEur = ronToEur(Number(pynData.price_weekday));
+            if (priceEur > 0 && priceEur < 500) {
+              liveUpdates.price_per_night = priceEur;
+              liveUpdates.last_price_update = new Date().toISOString();
             }
           }
           // Fill missing weekend price
           if (pynData.price_weekend && Number(pynData.price_weekend) > 0 && !prop.weekend_price_per_night) {
-            updates.weekend_price_per_night = Number(pynData.price_weekend);
+            const weekendEur = ronToEur(Number(pynData.price_weekend));
+            if (weekendEur > 0) updates.weekend_price_per_night = weekendEur;
           }
           // Fill missing capacity
           if (pynData.capacity && Number(pynData.capacity) > 0 && (!prop.capacity || prop.capacity === 2)) {
@@ -164,7 +175,7 @@ Deno.serve(async (req) => {
       }
 
       // 2. Scrape Booking.com
-      if (ld.booking_com_url) {
+      if ((!sourceOnly || sourceOnly === 'booking') && ld.booking_com_url) {
         // Resolve share URLs
         let resolvedUrl = ld.booking_com_url;
         if (resolvedUrl.includes('/Share-')) {
