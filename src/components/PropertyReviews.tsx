@@ -59,8 +59,8 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
         .select("id, guest_name, rating, title, content, created_at, source, guest_country, review_date, admin_reply, admin_reply_at")
         .eq("property_id", propertyId)
         .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(20);
+        .order("review_date", { ascending: false })
+        .limit(50);
 
       if (error) throw error;
       return data as Review[];
@@ -227,21 +227,25 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
                     )}
 
                     {/* Content */}
-                    {review.content && (
+                    {review.content && review.content.replace(/\s*None\.?\s*$/gi, '').trim() && (
                       <div className="relative">
                         <Quote className="absolute -left-1 -top-1 w-4 h-4 text-primary/30" />
-                        <p className="text-muted-foreground pl-4 italic">"{review.content}"</p>
+                        <p className="text-muted-foreground pl-4 italic">
+                          "{review.content.replace(/\s*None\.?\s*$/gi, '').trim()}"
+                        </p>
                       </div>
                     )}
 
                     {/* Host Reply */}
-                    {review.admin_reply && (
+                    {review.admin_reply && review.admin_reply.replace(/^(Response from the property|Răspunsul proprietății)\s*:\s*/i, '').trim() && (
                       <div className="mt-4 ml-4 pl-4 border-l-2 border-primary/30 bg-primary/5 rounded-r-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Reply className="w-4 h-4 text-primary" />
                           <span className="text-sm font-semibold text-foreground">{t.hostReply}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground">{review.admin_reply}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {review.admin_reply.replace(/^(Response from the property|Răspunsul proprietății)\s*:\s*/i, '').trim()}
+                        </p>
                       </div>
                     )}
                   </div>
