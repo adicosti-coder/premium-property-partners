@@ -36,6 +36,7 @@ const PropertyCard = ({
   const liveData = liveDataMap?.[property.slug];
   const displayRating = liveData?.rating ?? property.rating;
   const displayReviews = liveData?.reviews_count ?? property.reviews;
+  const displayPrice = liveData?.price_per_night ?? property.pricePerNight;
 
   const t = {
     guests: language === "ro" ? "oaspeți" : "guests",
@@ -161,7 +162,7 @@ const PropertyCard = ({
             </h3>
           </PrefetchLink>
           <div className="flex items-baseline gap-1 ml-2 flex-shrink-0">
-            <span className="text-lg font-bold text-primary">€{property.pricePerNight}</span>
+            <span className="text-lg font-bold text-primary">€{displayPrice}</span>
             <span className="text-xs text-muted-foreground">{t.perNight}</span>
           </div>
         </div>
