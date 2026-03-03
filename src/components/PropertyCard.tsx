@@ -36,8 +36,7 @@ const PropertyCard = ({
   const liveData = liveDataMap?.[property.slug];
   const displayRating = liveData?.rating ?? property.rating;
   const displayReviews = liveData?.reviews_count ?? property.reviews;
-  // Always use the curated static price — live-scraped prices are unreliable
-  const displayPrice = property.pricePerNight;
+  const displayPrice = liveData?.price_per_night ?? property.pricePerNight;
 
   const t = {
     guests: language === "ro" ? "oaspeți" : "guests",

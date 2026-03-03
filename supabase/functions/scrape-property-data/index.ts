@@ -78,8 +78,12 @@ function parseRatingFromMarkdown(md: string): { rating: number | null; reviews: 
   return { rating, reviews };
 }
 
+/** RON to EUR conversion rate */
+const RON_TO_EUR = 0.2; // ~5 RON = 1 EUR
+
 /**
  * Scrape price from Pynbooking page using markdown + regex.
+ * Detects currency (RON/lei vs EUR) and converts to EUR if needed.
  */
 async function scrapePrice(url: string, firecrawlKey: string): Promise<number | null> {
   try {
@@ -100,13 +104,40 @@ async function scrapePrice(url: string, firecrawlKey: string): Promise<number | 
     const data = await response.json();
     const markdown = data?.data?.markdown || data?.markdown || '';
 
-    // Look for price patterns (RON or EUR)
-    const priceMatch = markdown.match(/(\d{2,4})\s*(?:€|EUR|lei|RON)/i)
-                    || markdown.match(/(?:€|EUR)\s*(\d{2,4})/i)
-                    || markdown.match(/(?:price|preț|tarif|pret)[^\d]*(\d{2,4})/i);
-    if (priceMatch) {
-      return Number(priceMatch[1]);
+    // Try to match price WITH currency indicator
+    // Pattern 1: number followed by currency symbol/name
+    const ronMatch = markdown.match(/(\d{2,5})\s*(?:lei|RON|ron)/i);
+    const eurMatch = markdown.match(/(\d{2,4})\s*(?:€|EUR|eur)/i)
+                  || markdown.match(/(?:€|EUR)\s*(\d{2,4})/i);
+
+    if (eurMatch) {
+      const price = Number(eurMatch[1]);
+      console.log(`Found EUR price: ${price}`);
+      return price > 0 && price < 1000 ? price : null;
     }
+
+    if (ronMatch) {
+      const ronPrice = Number(ronMatch[1]);
+      const eurPrice = Math.round(ronPrice * RON_TO_EUR);
+      console.log(`Found RON price: ${ronPrice}, converted to EUR: ${eurPrice}`);
+      return eurPrice > 0 && eurPrice < 1000 ? eurPrice : null;
+    }
+
+    // Fallback: generic price pattern — assume RON if value > 100 (likely RON), EUR if <= 100
+    const genericMatch = markdown.match(/(?:price|preț|tarif|pret)[^\d]*(\d{2,5})/i);
+    if (genericMatch) {
+      const val = Number(genericMatch[1]);
+      if (val > 100) {
+        // Likely RON
+        const eurPrice = Math.round(val * RON_TO_EUR);
+        console.log(`Generic price ${val} assumed RON, converted to EUR: ${eurPrice}`);
+        return eurPrice > 0 && eurPrice < 1000 ? eurPrice : null;
+      } else {
+        console.log(`Generic price ${val} assumed EUR`);
+        return val > 0 ? val : null;
+      }
+    }
+
     return null;
   } catch (error) {
     console.error(`Error scraping price from ${url}:`, error);

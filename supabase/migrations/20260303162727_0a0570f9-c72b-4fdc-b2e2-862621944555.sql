@@ -1,0 +1,10 @@
+UPDATE property_live_data SET price_per_night = ROUND(261 * 0.2) WHERE property_slug = 'ateneo-apart-hotel-studio-deluxe';
+UPDATE property_live_data SET price_per_night = ROUND(380 * 0.2) WHERE property_slug = 'ateneo-trevi-2-apart-hotel';
+UPDATE property_live_data SET price_per_night = ROUND(313 * 0.2) WHERE property_slug = 'avenue-of-mara-apart-hotel';
+UPDATE property_live_data SET price_per_night = ROUND(427 * 0.2) WHERE property_slug = 'fructus-plaza-ultracentral-apart-hotel';
+UPDATE property_live_data SET price_per_night = ROUND(332 * 0.2) WHERE property_slug = 'green-forest-apart-hotel';
+UPDATE property_live_data SET price_per_night = ROUND(285 * 0.2) WHERE property_slug = 'helios-apart-hotel';
+UPDATE property_live_data SET price_per_night = ROUND(213 * 0.2) WHERE property_slug = 'modern-studio-apart-hotel';
+UPDATE property_live_data SET price_per_night = ROUND(349 * 0.2) WHERE property_slug = 'ring-apart-hotel-spacious-deluxe';
+UPDATE property_live_data SET price_per_night = ROUND(266 * 0.2) WHERE property_slug = 'sunset-da-ra-studio-deluxe';
+UPDATE property_live_data SET price_per_night = 65 WHERE property_slug = 'fullview-studio-deluxe';
