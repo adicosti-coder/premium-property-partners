@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface LiveData {
@@ -104,41 +104,9 @@ async function scrapeWithFirecrawl(url: string, prompt: string, firecrawlKey: st
  */
 async function scrapeBookingFull(url: string, firecrawlKey: string) {
   const resolvedUrl = await resolveShareUrl(url);
-  console.log(`Full scrape Booking.com: ${resolvedUrl}`);
+  console.log(`Scrape Booking.com JSON: ${resolvedUrl}`);
 
-  // Step 1: Markdown scrape for reliable rating/reviews
-  let rating: number | null = null;
-  let reviewsCount: number | null = null;
-
-  try {
-    const mdResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: resolvedUrl,
-        formats: ['markdown'],
-        waitFor: 5000,
-      }),
-    });
-
-    const mdData = await mdResponse.json();
-    const markdown = mdData?.data?.markdown || mdData?.markdown || '';
-    console.log(`Booking markdown length: ${markdown.length}`);
-
-    const parsed = parseRatingFromMarkdown(markdown);
-    rating = parsed.rating;
-    reviewsCount = parsed.reviews;
-    console.log(`Markdown parsed — rating: ${rating}, reviews: ${reviewsCount}`);
-  } catch (err) {
-    console.error('Markdown scrape failed:', err);
-  }
-
-  await new Promise(r => setTimeout(r, 1000));
-
-  // Step 2: JSON scrape for detailed metadata
+  // Single JSON scrape for all metadata (skip separate markdown step to avoid timeout)
   const bookingPrompt = `Extract ALL available property details from this Booking.com page. Return as JSON with these fields:
 - "rating": overall review score (number out of 10, e.g. 9.5)
 - "reviews_count": total number of reviews (number)
@@ -154,12 +122,14 @@ Return only the fields you can find. Use null for missing values.`;
 
   const jsonData = await scrapeWithFirecrawl(resolvedUrl, bookingPrompt, firecrawlKey);
 
-  // Use markdown-parsed values as primary (more reliable), JSON as fallback
-  if (!rating && jsonData?.rating) {
+  let rating: number | null = null;
+  let reviewsCount: number | null = null;
+
+  if (jsonData?.rating) {
     const r = Number(jsonData.rating);
     if (r > 0 && r <= 10) rating = Math.round(r * 10) / 10;
   }
-  if (!reviewsCount && jsonData?.reviews_count) {
+  if (jsonData?.reviews_count) {
     const rc = Number(jsonData.reviews_count);
     if (rc > 0) reviewsCount = rc;
   }
@@ -278,7 +248,7 @@ Deno.serve(async (req) => {
             updates.description_ro = pynData.description_ro;
           }
         }
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 500));
       }
 
       // 2. Scrape Booking.com with improved method (markdown+regex first, JSON fallback)
@@ -309,7 +279,7 @@ Deno.serve(async (req) => {
           updates.size = bookingResult.size_sqm;
         }
 
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 500));
       }
 
       // Apply updates

@@ -266,9 +266,35 @@ const AdminDashboard = () => {
   const handleSync = async (fnName: string, setter: (v: boolean) => void, label: string) => {
     setter(true);
     try {
-      const { data, error } = await supabase.functions.invoke(fnName);
-      if (error) throw error;
-      toast({ title: `✅ ${label}`, description: JSON.stringify(data).substring(0, 120) });
+      // Fetch all property slugs to process one-by-one (avoids Edge Function timeout)
+      const { data: liveData, error: fetchErr } = await supabase
+        .from('property_live_data')
+        .select('property_slug');
+      if (fetchErr) throw fetchErr;
+
+      const slugs = (liveData || []).map((d: any) => d.property_slug).filter(Boolean);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const slug of slugs) {
+        try {
+          toast({ title: `⏳ ${label}`, description: `Sincronizare ${slug}...` });
+          const { data, error } = await supabase.functions.invoke(fnName, {
+            body: { property_slug: slug },
+          });
+          if (error) throw error;
+          successCount++;
+        } catch (err: any) {
+          console.error(`Sync ${fnName} failed for ${slug}:`, err);
+          errorCount++;
+        }
+      }
+
+      if (errorCount === 0) {
+        toast({ title: `✅ ${label}`, description: `${successCount} proprietăți sincronizate cu succes.` });
+      } else {
+        toast({ title: `⚠️ ${label}`, description: `${successCount} OK, ${errorCount} erori.`, variant: "destructive" });
+      }
     } catch (err: any) {
       toast({ title: `❌ Eroare ${label}`, description: err.message, variant: "destructive" });
     } finally {
