@@ -325,6 +325,7 @@ const PropertyDetail = () => {
           : `${property.name} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
+        imageAlt={staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : undefined}
         type="product"
         productPrice={property.pricePerNight || undefined}
         productCurrency="EUR"
