@@ -5,7 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
 import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { Property } from "@/data/properties";
+import { Property, getImageAlt } from "@/data/properties";
 import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +75,7 @@ const PropertyCard = ({
         <div className="relative h-48 overflow-hidden cursor-pointer">
           <OptimizedImage
             src={property.images[0]}
-            alt={`${property.name} — apartament regim hotelier ${property.location}, Timișoara`}
+            alt={getImageAlt(property, 0, language as 'ro' | 'en')}
             className="w-full h-full"
             aspectRatio="4/3"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

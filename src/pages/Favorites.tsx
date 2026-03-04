@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSharedFavorites } from "@/hooks/useSharedFavorites";
-import { properties, Property } from "@/data/properties";
+import { properties, Property, getImageAlt } from "@/data/properties";
 import { toast } from "sonner";
 import { exportFavoritesPdf } from "@/utils/exportFavoritesPdf";
 import PropertyCompareModal from "@/components/PropertyCompareModal";
@@ -212,7 +212,7 @@ const Favorites = () => {
                     <Link to={`/proprietate/${property.slug}`}>
                       <img
                         src={property.images[0]}
-                        alt={property.name}
+                        alt={getImageAlt(property, 0, language as 'ro' | 'en')}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     </Link>

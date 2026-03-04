@@ -9,7 +9,7 @@ import { useSharedFavorites } from "@/hooks/useSharedFavorites";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCard from "./PropertyCard";
-import { properties, Property, getActiveProperties } from "@/data/properties";
+import { properties, Property, getActiveProperties, getImageAlt } from "@/data/properties";
 import { toast } from "sonner";
 const PropertyCompareModal = lazy(() => import("./PropertyCompareModal"));
 const PropertyMap = lazy(() => import("./PropertyMap"));
@@ -343,7 +343,7 @@ const PropertyGallery = () => {
           <div className="max-w-4xl w-full">
             <img
               src={filteredProperties[currentImageIndex]?.images[0]}
-              alt={`${filteredProperties[currentImageIndex]?.name} — cazare regim hotelier Timișoara, lângă Iulius Mall și Amazonia Aquapark`}
+              alt={filteredProperties[currentImageIndex] ? getImageAlt(filteredProperties[currentImageIndex], 0, language as 'ro' | 'en') : ''}
               loading="lazy"
               decoding="async"
               sizes="(max-width: 768px) 100vw, 800px"

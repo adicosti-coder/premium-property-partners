@@ -3,10 +3,13 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 import { useImagePreload } from "@/hooks/useImagePreload";
+import { Property, getImageAlt } from "@/data/properties";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface PropertyImageCarouselProps {
   images: string[];
   propertyName: string;
+  property?: Property;
   className?: string;
 }
 
@@ -36,7 +39,8 @@ const CarouselSkeleton = () => (
   </div>
 );
 
-const PropertyImageCarousel = ({ images, propertyName, className = "" }: PropertyImageCarouselProps) => {
+const PropertyImageCarousel = ({ images, propertyName, property, className = "" }: PropertyImageCarouselProps) => {
+  const { language } = useLanguage();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -108,7 +112,7 @@ const PropertyImageCarousel = ({ images, propertyName, className = "" }: Propert
               )}
               <OptimizedImage
                 src={image}
-                alt={`${propertyName} — fotografie ${index + 1}, cazare regim hotelier Timișoara`}
+                alt={property ? getImageAlt(property, index, language as 'ro' | 'en') : `${propertyName} — fotografie ${index + 1}, cazare regim hotelier Timișoara`}
                 className="w-full h-56"
                 aspectRatio="16/9"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
