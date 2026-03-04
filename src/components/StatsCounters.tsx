@@ -12,7 +12,7 @@ const translations = {
       { value: 10000, suffix: "+", label: "Oaspeți Mulțumiți", icon: Users },
       { value: 25, suffix: "+", label: "Ani de Experiență", icon: Calendar },
       { value: 85, suffix: "%", label: "Rată Ocupare/An", icon: TrendingUp },
-      { value: 4.9, suffix: "★", label: "Rating Mediu", icon: Star, decimals: 1 },
+      { value: 9.4, suffix: "/10", label: "Scor Booking.com", icon: Star, decimals: 1 },
     ],
   },
   en: {
@@ -24,7 +24,7 @@ const translations = {
       { value: 10000, suffix: "+", label: "Happy Guests", icon: Users },
       { value: 25, suffix: "+", label: "Years Experience", icon: Calendar },
       { value: 85, suffix: "%", label: "Occupancy Rate/Year", icon: TrendingUp },
-      { value: 4.9, suffix: "★", label: "Average Rating", icon: Star, decimals: 1 },
+      { value: 9.4, suffix: "/10", label: "Booking.com Score", icon: Star, decimals: 1 },
     ],
   },
 };
