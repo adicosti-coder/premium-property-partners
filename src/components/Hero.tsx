@@ -61,9 +61,10 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
-  // Fetch hero settings from database
+  // Fetch hero settings from database — deferred to avoid blocking LCP
   useEffect(() => {
-    const fetchHeroSettings = async () => {
+    // Delay the fetch so it doesn't compete with LCP image loading
+    const timer = setTimeout(async () => {
       try {
         const { data, error } = await supabase
           .from("site_settings")
@@ -87,9 +88,9 @@ const Hero = () => {
       } catch (err) {
         console.error("Error fetching hero settings:", err);
       }
-    };
+    }, 200);
     
-    fetchHeroSettings();
+    return () => clearTimeout(timer);
   }, [language]);
 
   // Check connection speed for lazy loading
