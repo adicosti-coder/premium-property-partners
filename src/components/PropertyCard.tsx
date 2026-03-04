@@ -37,6 +37,8 @@ const PropertyCard = ({
   const displayRating = liveData?.rating ?? property.rating;
   const displayReviews = liveData?.reviews_count ?? property.reviews;
   const displayPrice = liveData?.price_per_night ?? property.pricePerNight;
+  const displayCapacity = liveData?.capacity ?? property.capacity;
+  const displayBedrooms = liveData?.bedrooms ?? property.bedrooms;
 
   const t = {
     guests: language === "ro" ? "oaspeți" : "guests",
@@ -176,11 +178,11 @@ const PropertyCard = ({
         <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="w-4 h-4" />
-            {property.capacity} {t.guests}
+            {displayCapacity} {t.guests}
           </span>
           <span className="flex items-center gap-1">
             <BedDouble className="w-4 h-4" />
-            {property.bedrooms} {property.bedrooms === 1 ? t.bedroom : t.bedrooms}
+            {displayBedrooms} {displayBedrooms === 1 ? t.bedroom : t.bedrooms}
           </span>
           <span className="text-xs text-muted-foreground/70">
             ({displayReviews} {t.reviews})
