@@ -62,7 +62,7 @@ const PentruOaspeti = () => {
       badge: "Experiența ApArt Hotel",
       title: "Cazare Premium",
       titleHighlight: "în Timișoara",
-      subtitle: "Apartamente complet echipate, curățenie profesională și servicii de hotel 5 stele într-un mediu intim și confortabil.",
+      subtitle: "Apartamente ATENEO, GREEN FOREST, FullView Studio și HELIOS — complet echipate, lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Curățenie profesională, parcare subterană gratuită și self check-in 24/7.",
       stats: [
         { value: "9.7", label: "Rating Booking.com", icon: Star },
         { value: "500+", label: "Recenzii 5 stele", icon: Award },
@@ -91,8 +91,8 @@ const PentruOaspeti = () => {
         },
         {
           icon: MapPin,
-          title: "Locații Centrale",
-          description: "Toate apartamentele în zone premium, la câțiva pași de atracțiile principale"
+          title: "Lângă Iulius Mall & Amazonia",
+          description: "La 2 min de Lidl, 5 min de Gara de Nord, 8 min de Centrul Vechi și Piața Unirii"
         },
         {
           icon: Shield,
@@ -132,7 +132,7 @@ const PentruOaspeti = () => {
       ],
       propertiesTitle: "Apartamente",
       propertiesTitleHighlight: "Premium",
-      propertiesSubtitle: "Fiecare spațiu este atent pregătit pentru confortul tău",
+      propertiesSubtitle: "ATENEO, GREEN FOREST, FullView Studio, HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie completă",
       viewAll: "Vezi Toate Apartamentele",
       viewDetails: "Vezi Detalii",
       perNight: "/noapte",
@@ -170,7 +170,7 @@ const PentruOaspeti = () => {
       badge: "The ApArt Hotel Experience",
       title: "Premium Accommodation",
       titleHighlight: "in Timișoara",
-      subtitle: "Fully equipped apartments, professional cleaning and 5-star hotel services in an intimate and comfortable environment.",
+      subtitle: "ATENEO, GREEN FOREST, FullView Studio & HELIOS apartments — fully equipped, near Iulius Mall, Amazonia Aquapark & the Old Town. Professional cleaning, free underground parking and 24/7 self check-in.",
       stats: [
         { value: "9.7", label: "Booking.com Rating", icon: Star },
         { value: "500+", label: "5-Star Reviews", icon: Award },
@@ -199,8 +199,8 @@ const PentruOaspeti = () => {
         },
         {
           icon: MapPin,
-          title: "Central Locations",
-          description: "All apartments in premium areas, steps away from main attractions"
+          title: "Near Iulius Mall & Amazonia",
+          description: "2 min from Lidl, 5 min from North Station, 8 min from Old Town & Piața Unirii"
         },
         {
           icon: Shield,
@@ -240,7 +240,7 @@ const PentruOaspeti = () => {
       ],
       propertiesTitle: "Premium",
       propertiesTitleHighlight: "Apartments",
-      propertiesSubtitle: "Each space is carefully prepared for your comfort",
+      propertiesSubtitle: "ATENEO, GREEN FOREST, FullView Studio, HELIOS — each prepared for your comfort, with underground parking & fully equipped kitchen",
       viewAll: "View All Apartments",
       viewDetails: "View Details",
       perNight: "/night",
@@ -282,10 +282,10 @@ const PentruOaspeti = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Cazare Premium Timișoara | ApArt Hotel" : "Premium Accommodation Timișoara | ApArt Hotel"}
+        title={language === "ro" ? "Cazare Regim Hotelier Timișoara | ATENEO, GREEN FOREST, FullView, HELIOS" : "Short-Term Rental Timișoara | ATENEO, GREEN FOREST, FullView, HELIOS"}
         description={language === "ro" 
-          ? "Cazare premium în Timișoara cu facilități hoteliere complete: check-in automat, curățenie profesională și suport 24/7. Rezervă direct pe site-ul nostru și economisește 5%!"
-          : "Premium accommodation in Timișoara with full hotel amenities: self check-in, professional cleaning and 24/7 support. Book direct on our site and save 5%!"}
+          ? "Apartamente regim hotelier Timișoara lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Parcare subterană gratuită, self check-in 24/7, bucătărie completă. Rezervă direct și economisești 5%!"
+          : "Apartments in Timișoara near Iulius Mall, Amazonia Aquapark, Old Town. Free underground parking, 24/7 self check-in, fully equipped kitchen. Book direct and save 5%!"}
         url="https://www.realtrust.ro/pentru-oaspeti"
       />
       <Header />
@@ -293,8 +293,8 @@ const PentruOaspeti = () => {
       <main className="pt-20">
         <div className="container mx-auto px-6">
           <PageSummary
-            summaryRo="Descoperă apartamentele RealTrust în Timișoara — cazare premium cu self check-in 24/7, curățenie profesională, Wi-Fi de mare viteză și smart home. Rezervă direct pentru cel mai bun preț garantat."
-            summaryEn="Discover RealTrust apartments in Timișoara — premium accommodation with 24/7 self check-in, professional cleaning, high-speed Wi-Fi and smart home features. Book direct for the best price guaranteed."
+            summaryRo="Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Lidl, Gara de Nord. Parcare subterană gratuită, self check-in 24/7, bucătărie completă cu cafea și condimente."
+            summaryEn="Short-term rental apartments Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — near Iulius Mall, Amazonia Aquapark, Lidl, North Station. Free underground parking, 24/7 self check-in, fully equipped kitchen with coffee & spices."
           />
         </div>
         {/* Hero Section */}

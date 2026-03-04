@@ -343,7 +343,7 @@ const PropertyGallery = () => {
           <div className="max-w-4xl w-full">
             <img
               src={filteredProperties[currentImageIndex]?.images[0]}
-              alt={`${filteredProperties[currentImageIndex]?.name} — apartament regim hotelier Timișoara`}
+              alt={`${filteredProperties[currentImageIndex]?.name} — cazare regim hotelier Timișoara, lângă Iulius Mall și Amazonia Aquapark`}
               loading="lazy"
               decoding="async"
               sizes="(max-width: 768px) 100vw, 800px"
