@@ -167,8 +167,8 @@ const SEOHead = ({
   };
   
   const defaultDescriptions = {
-    ro: "Agenție imobiliară și administrare ApArt Hotel în Timișoara. Investiții, vânzări și închirieri cu randament 9%+. Cazare în regim hotelier la standarde înalte.",
-    en: "Real estate agency and ApArt Hotel management in Timișoara. Investments, sales and rentals with 9%+ yield. Short-term rental accommodation at high standards."
+    ro: "Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Parcare subterană gratuită, self check-in 24/7. ROI 9%+.",
+    en: "Short-term rental apartments Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — near Iulius Mall, Amazonia Aquapark, Old Town. Free underground parking, 24/7 self check-in. 9%+ ROI."
   };
   
   const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;

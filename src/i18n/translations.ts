@@ -22,7 +22,7 @@ export const translations = {
       title: "RealTrust & ApArt Hotel Timișoara —",
       titleMid: "imobiliare & regim hotelier",
       titleHighlight: "cu randament garantat.",
-      subtitle: "Agenție imobiliară și administrare ApArt Hotel în Timișoara: investiții, vânzări, închirieri și cazare în regim hotelier. ROI 9%+, ocupare 85%, self check-in 24/7.",
+      subtitle: "Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, ROI 9%+.",
       cta: "Află cât poate produce apartamentul tău",
       ctaSecondary: "Vreau investiție profitabilă în Timișoara",
       ctaGuests: "Pentru Oaspeți",
@@ -253,39 +253,44 @@ export const translations = {
       badge: "RealTrust Property Management",
       title: "Întrebări",
       titleHighlight: "Frecvente",
-      subtitle: "Răspunsuri clare la cele mai frecvente întrebări despre administrarea proprietăților în regim hotelier.",
+      subtitle: "Răspunsuri clare despre apartamentele ATENEO, GREEN FOREST, FullView Studio, HELIOS și cazarea în regim hotelier în Timișoara.",
       notFound: "Nu ai găsit răspunsul căutat?",
       contactUs: "Contactează-ne direct",
       items: [
         // Profit & ROI
         { 
-          question: "Care este profitul real pe care îl pot obține din apartamentul meu?", 
-          answer: "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%. Prin strategiile noastre de optimizare, vizăm un ROI brut de 10% pentru proprietăți cu locații strategice." 
+          question: "Care este profitul real pe care îl pot obține din apartamentul meu în Timișoara?", 
+          answer: "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%. Apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) din zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi ating un ROI brut de 10%." 
         },
         // Servicii incluse
         { 
           question: "Ce servicii sunt incluse în comisionul de management?", 
-          answer: "Oferim un pachet complet care include administrarea rezervărilor pe toate platformele (Airbnb, Booking), comunicarea cu oaspeții și coordonarea curățeniei. Implementăm soluții de Self Check-in digitalizat și monitorizare activă a proprietății pentru a asigura siguranța investiției tale." 
+          answer: "Oferim un pachet complet care include administrarea rezervărilor pe toate platformele (Airbnb, Booking), comunicarea cu oaspeții și coordonarea curățeniei. Implementăm Self Check-in digitalizat, parcare subterană gratuită și bucătărie complet utilată în fiecare apartament." 
         },
         // Transparență financiară
         { 
           question: "Cum asigurați transparența veniturilor și a costurilor?", 
           answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-25% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
         },
+        // Locație & proximitate
+        { 
+          question: "Ce este în apropiere de apartamentele ApArt Hotel?", 
+          answer: "Apartamentele noastre sunt situate strategic: la 2 minute de Lidl, 5 minute de Gara de Nord, 8 minute de Centrul Vechi și Piața Unirii, 10 minute de Iulius Mall și Amazonia Aquapark. Fiecare proprietate oferă parcare subterană gratuită și acces facil la transport public." 
+        },
         // Verificare oaspeți
         { 
           question: "Cum sunt selectați oaspeții care se cazează în apartament?", 
-          answer: "Efectuăm un proces riguros de verificare a oaspeților (due diligence), prioritizând clienții business și familiile, pentru a preveni deteriorarea proprietății. În plus, colaborăm cu societăți de Asigurare care oferă protecție împotriva daunelor, oferindu-ți liniște deplină." 
+          answer: "Efectuăm un proces riguros de verificare a oaspeților (due diligence), prioritizând clienții business și familiile, pentru a preveni deteriorarea proprietății. Colaborăm cu societăți de Asigurare pentru protecție împotriva daunelor." 
         },
-        // Uz personal
+        // Self check-in & facilități
         { 
-          question: "Pot folosi apartamentul pentru uz personal în anumite perioade?", 
-          answer: "Da, sistemul nostru de management flexibil îți permite să blochezi calendarul pentru uz personal oricând ai nevoie, fără costuri suplimentare de penalizare." 
+          question: "Cum funcționează Self Check-in-ul și ce facilități sunt incluse?", 
+          answer: "Primești un cod digital de acces cu instrucțiuni video detaliate pe WhatsApp. Fiecare apartament include: parcare subterană gratuită, bucătărie complet utilată (cafea, sare, ulei incluse), Smart TV cu Netflix, WiFi de mare viteză, încălzire în pardoseală și climatizare modernă." 
         },
         // Program referral
         { 
           question: "Oferiți recompense pentru recomandări?", 
-          answer: "Avem un program activ de Referral: dacă ne recomanzi un nou proprietar care semnează cu noi, poți beneficia de bonusuri de până la 100€, o cazare gratuită într-unul dintre apartamentele noastre la alegerea ta, sau reduceri la comisionul de management." 
+          answer: "Avem un program activ de Referral: dacă ne recomanzi un nou proprietar care semnează cu noi, poți beneficia de bonusuri de până la 100€, o cazare gratuită într-unul dintre apartamentele noastre (ATENEO, GREEN FOREST, FullView, HELIOS), sau reduceri la comisionul de management." 
         },
       ],
     },
@@ -1345,39 +1350,44 @@ Mulțumesc!`,
       badge: "RealTrust Property Management",
       title: "Frequently Asked",
       titleHighlight: "Questions",
-      subtitle: "Clear answers to the most common questions about short-term rental property management.",
+      subtitle: "Clear answers about ATENEO, GREEN FOREST, FullView Studio, HELIOS apartments and short-term rental accommodation in Timișoara.",
       notFound: "Didn't find the answer you were looking for?",
       contactUs: "Contact us directly",
       items: [
         // Profit & ROI
         { 
-          question: "What is the real profit I can get from my apartment?", 
-          answer: "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%. Through our optimization strategies, we target a gross ROI of 10% for properties with strategic locations." 
+          question: "What is the real profit I can get from my apartment in Timișoara?", 
+          answer: "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%. Our apartments (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town achieve a gross ROI of 10%." 
         },
         // Services included
         { 
           question: "What services are included in the management fee?", 
-          answer: "We offer a complete package that includes booking management across all platforms (Airbnb, Booking), guest communication, and cleaning coordination. We implement digital Self Check-in solutions and active property monitoring to ensure the safety of your investment." 
+          answer: "We offer a complete package that includes booking management across all platforms (Airbnb, Booking), guest communication, and cleaning coordination. We implement digital Self Check-in, free underground parking and fully equipped kitchen in every apartment." 
         },
         // Financial transparency
         { 
           question: "How do you ensure transparency of revenues and costs?", 
           answer: "Owners receive detailed monthly reports, where commissions are clearly explained (15-25% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
         },
+        // Location & proximity
+        { 
+          question: "What is near the ApArt Hotel apartments?", 
+          answer: "Our apartments are strategically located: 2 minutes from Lidl, 5 minutes from the North Train Station (Gara de Nord), 8 minutes from the Old Town and Piața Unirii, 10 minutes from Iulius Mall and Amazonia Aquapark. Each property offers free underground parking and easy access to public transport." 
+        },
         // Guest vetting
         { 
           question: "How are guests who stay in the apartment selected?", 
-          answer: "We perform a rigorous guest vetting process (due diligence), prioritizing business clients and families, to prevent property deterioration. Additionally, we partner with Insurance companies that offer damage protection, giving you complete peace of mind." 
+          answer: "We perform a rigorous guest vetting process (due diligence), prioritizing business clients and families, to prevent property deterioration. We partner with Insurance companies for damage protection." 
         },
-        // Personal use
+        // Self check-in & amenities
         { 
-          question: "Can I use the apartment for personal use during certain periods?", 
-          answer: "Yes, our flexible management system allows you to block the calendar for personal use whenever you need, without additional penalty costs." 
+          question: "How does Self Check-in work and what amenities are included?", 
+          answer: "You receive a digital access code with detailed video instructions via WhatsApp. Each apartment includes: free underground parking, fully equipped kitchen (coffee, salt, oil included), Smart TV with Netflix, high-speed WiFi, underfloor heating and modern air conditioning." 
         },
         // Referral program
         { 
           question: "Do you offer rewards for referrals?", 
-          answer: "We have an active Referral program: if you recommend a new property owner who signs with us, you can benefit from bonuses up to €100, a free stay in one of our apartments of your choice, or discounts on the management fee." 
+          answer: "We have an active Referral program: if you recommend a new property owner who signs with us, you can benefit from bonuses up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, FullView, HELIOS), or discounts on the management fee." 
         },
       ],
     },

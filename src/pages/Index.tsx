@@ -152,8 +152,8 @@ const Index = () => {
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
         <PageSummary
-          summaryRo="RealTrust — platformă completă de imobiliare și apart-hotel management în Timișoara. Administrare profesională în regim hotelier cu ROI 9%+, rată de ocupare 85%, self check-in digital 24/7. Servicii de vânzare, cumpărare, închiriere și amenajare apartamente."
-          summaryEn="RealTrust — complete real estate and apart-hotel management platform in Timișoara. Professional short-term rental management with 9%+ ROI, 85% occupancy rate, 24/7 digital self check-in. Property sales, purchases, rentals and interior design services."
+          summaryRo="RealTrust & ApArt Hotel Timișoara — apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, HELIOS. Lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi, Gara de Nord, Lidl. Parcare subterană gratuită, self check-in 24/7, bucătărie completă. ROI 9%+."
+          summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments ATENEO, GREEN FOREST, FullView Studio, HELIOS. Near Iulius Mall, Amazonia Aquapark, Old Town, North Station, Lidl. Free underground parking, 24/7 self check-in, fully equipped kitchen. 9%+ ROI."
         />
 
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
