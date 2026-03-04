@@ -11,7 +11,7 @@ const ExternalTrustSeals = () => {
   const seals = [
     {
       name: "Booking.com",
-      score: "9.4 / 10",
+      score: "9.7 / 10",
       subtitle: language === "ro" ? "Scor Verificat" : "Verified Score",
       url: "https://www.booking.com/hotel/ro/apart-hotel-timisoara.html",
       logo: null, // Booking.com external SVG was returning 404; use icon fallback instead
