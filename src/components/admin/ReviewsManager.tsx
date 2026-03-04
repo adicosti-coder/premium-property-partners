@@ -214,11 +214,20 @@ const ReviewsManager = () => {
 
   // Fetch properties for filter
   const { data: properties } = useQuery({
-    queryKey: ["admin-properties"],
+    queryKey: ["admin-properties-with-reviews"],
     queryFn: async () => {
+      // Only show properties that actually have reviews
+      const { data: reviewProps, error: rpErr } = await supabase
+        .from("property_reviews")
+        .select("property_id");
+      if (rpErr) throw rpErr;
+      const uniqueIds = [...new Set((reviewProps || []).map(r => r.property_id))];
+      if (uniqueIds.length === 0) return [] as Property[];
+      
       const { data, error } = await supabase
         .from("properties")
         .select("id, name")
+        .in("id", uniqueIds)
         .order("name");
       if (error) throw error;
       return data as Property[];
