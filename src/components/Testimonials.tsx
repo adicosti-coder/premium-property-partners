@@ -20,57 +20,39 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     id: 1,
-    name: "Oaspete",
+    name: "Mirabela",
     role: "Recenzie verificată · Booking.com",
-    content: "Apartament complet nou, spațios și foarte confortabil. Totul este impecabil, iar gazda a fost extrem de promptă și atentă la detalii.",
+    content: "Dacă sunteți în căutarea unui loc care să combine luxul cu funcționalitatea, nu mai stați pe gânduri! Totul este gândit să fie confortabil și primitor. O oază de liniște.",
     rating: 5,
     source: "Booking.com",
     sourceIcon: "B",
   },
   {
     id: 2,
-    name: "Maria T.",
-    role: "Recenzie verificată · Airbnb",
-    content: "Locație perfectă în centrul orașului! Apartamentul arată exact ca în poze, foarte curat și bine dotat. Gazda a fost foarte amabilă și ne-a oferit recomandări excelente.",
+    name: "Lucian",
+    role: "Recenzie verificată · Booking.com",
+    content: "Locația nu putea fi mai bună, la doar câțiva pași de supermarket-uri și Aquaparc Amazonia. M-a făcut să mă simt cu adevărat binevenit și ca acasă.",
     rating: 5,
-    source: "Airbnb",
-    sourceIcon: "A",
+    source: "Booking.com",
+    sourceIcon: "B",
   },
   {
     id: 3,
-    name: "Oaspete",
+    name: "Alex",
     role: "Recenzie verificată · Booking.com",
-    content: "Check-in self-check-in foarte ușor și comod, apartament foarte curat, iar comunicarea a fost rapidă și prietenoasă. Recomand!",
+    content: "Ne-a plăcut absolut totul: curățenie, confort, dotări. Ai tot ce ai nevoie în bucătărie, exact ca acasă. Ne reîntoarcem cu drag!",
     rating: 5,
     source: "Booking.com",
     sourceIcon: "B",
   },
   {
     id: 4,
-    name: "Stefan & Ana",
-    role: "Recenzie verificată · Airbnb",
-    content: "Am stat 5 nopți și a fost perfect! Vederea de la balcon este superbă, patul foarte confortabil, și bucătăria complet echipată. Vom reveni cu siguranță!",
+    name: "Stefania",
+    role: "Recenzie verificată · Booking.com",
+    content: "Totul este nou, de calitate și atât de curat că ne-am gândit că suntem primii care vin. Masa este aranjată exact ca în poze!",
     rating: 5,
-    source: "Airbnb",
-    sourceIcon: "A",
-  },
-  {
-    id: 5,
-    name: "Laura M.",
-    role: "Recenzie verificată · Google",
-    content: "Apartament superb, exact ca în poze! Curățenia impecabilă și comunicarea excelentă. Check-in-ul a fost foarte simplu, iar locația perfectă pentru a explora orașul.",
-    rating: 5,
-    source: "Google Reviews",
-    sourceIcon: "G",
-  },
-  {
-    id: 6,
-    name: "Andrei P.",
-    role: "Recenzie verificată · Airbnb",
-    content: "Experiență de 5 stele! Apartament modern și spațios, parfect pentru o familie. Curățenia impecabilă și comunicarea excelentă cu gazda.",
-    rating: 5,
-    source: "Airbnb",
-    sourceIcon: "A",
+    source: "Booking.com",
+    sourceIcon: "B",
   },
 ];
 
@@ -297,7 +279,7 @@ const Testimonials = () => {
                 <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg">B</div>
                 <div className="text-left">
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-foreground">9.7</span>
+              <span className="font-semibold text-foreground">9.4</span>
                     <span className="text-xs text-muted-foreground">/10</span>
                   </div>
                   <p className="text-xs text-muted-foreground">Booking.com</p>
@@ -341,11 +323,11 @@ const Testimonials = () => {
           {/* Trust stats row */}
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">4.9/5</p>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">9.4/10</p>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '100ms' }}>
-              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">500+</p>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">180+</p>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '200ms' }}>
