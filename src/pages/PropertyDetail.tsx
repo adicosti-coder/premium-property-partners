@@ -458,6 +458,24 @@ const PropertyDetail = () => {
               {/* Proximity List — walking/driving distances */}
               <PropertyProximity propertySlug={slug || ""} />
 
+              {/* Neighborhood Discovery — Google Maps embed */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
+                  <MapPin className="w-6 h-6 text-primary" />
+                  {language === 'ro' ? 'Descoperă Vecinătatea' : 'Neighborhood Discovery'}
+                </h2>
+                <div className="rounded-2xl overflow-hidden border border-border shadow-sm" style={{ height: '480px' }}>
+                  <iframe
+                    src="https://storage.googleapis.com/maps-solutions-b1w25ppmon/neighborhood-discovery/1b03/neighborhood-discovery.html"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    title={language === 'ro' ? 'Hartă vecinătate' : 'Neighborhood map'}
+                  />
+                </div>
+              </div>
+
               {/* Comparație Prețuri, Calculator Sejur, Disponibilitate — inline după Proximitate */}
               {staticProperty && (
                 <div className="space-y-6">
