@@ -653,6 +653,7 @@ const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCa
                   <PropertyImageCarousel 
                     images={property.images} 
                     propertyName={property.name}
+                    property={property}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent pointer-events-none" />
                   

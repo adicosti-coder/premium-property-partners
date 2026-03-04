@@ -25,6 +25,8 @@ export interface Property {
   name: string;
   location: string;
   images: string[];
+  imageAlts: string[];
+  imageAltsEn: string[];
   features: string[];
   featuresEn: string[];
   bookingUrl: string;
@@ -48,6 +50,15 @@ export interface Property {
   isActive?: boolean; // Default true, set false to hide property
 }
 
+/** Get the SEO alt text for a property image (fallback to generic) */
+export const getImageAlt = (property: Property, index: number, lang: 'ro' | 'en' = 'ro'): string => {
+  const alts = lang === 'en' ? property.imageAltsEn : property.imageAlts;
+  if (alts[index]) return alts[index];
+  return lang === 'en'
+    ? `${property.name} – short-term rental apartment in ${property.location}, Timișoara`
+    : `${property.name} – apartament regim hotelier în ${property.location}, Timișoara`;
+};
+
 export const properties: Property[] = [
   {
     id: 1,
@@ -55,6 +66,16 @@ export const properties: Property[] = [
     name: "RING ApArt Hotel - Spacious DeLuxe Apartment",
     location: "Str. Loichița Vasile 1-3, Timișoara",
     images: [apt09, pyn(19,7392,63400), pyn(19,7392,63461)],
+    imageAlts: [
+      "Living spațios RING ApArt Hotel cu canapea extensibilă, Timișoara",
+      "Dormitor modern dublu RING ApArt Hotel Timișoara",
+      "Terasă mare cu mobilier de exterior RING ApArt Hotel",
+    ],
+    imageAltsEn: [
+      "Spacious living room RING ApArt Hotel with sofa bed, Timișoara",
+      "Modern double bedroom RING ApArt Hotel Timișoara",
+      "Large terrace with outdoor furniture RING ApArt Hotel",
+    ],
     features: ["Terasă Mare", "Parcare Subterană", "WiFi"],
     featuresEn: ["Large Terrace", "Underground Parking", "WiFi"],
     bookingUrl: "https://ring.pynbooking.direct/",
@@ -82,6 +103,16 @@ export const properties: Property[] = [
     name: "GREEN FOREST ApArt Hotel",
     location: "Str. Constructorilor 52, Timișoara",
     images: [apt06, pyn(22,7395,63580), pyn(22,7395,63569)],
+    imageAlts: [
+      "Living cu bucătărie open-space GREEN FOREST, lângă Amazonia Aquapark",
+      "Dormitor confortabil GREEN FOREST ApArt Hotel Timișoara",
+      "Vedere panoramică de la etajul 7 GREEN FOREST, aproape de Lidl",
+    ],
+    imageAltsEn: [
+      "Open-plan living room GREEN FOREST near Amazonia Aquapark",
+      "Comfortable bedroom GREEN FOREST ApArt Hotel Timișoara",
+      "Panoramic view from floor 7 GREEN FOREST near Lidl",
+    ],
     features: ["Balcon", "Parcare Gratuită", "WiFi"],
     featuresEn: ["Balcony", "Free Parking", "WiFi"],
     bookingUrl: "https://denya-forest-5.pynbooking.direct/",
@@ -109,6 +140,16 @@ export const properties: Property[] = [
     name: "Fructus Plaza ULTRACENTRAL ApArt Hotel",
     location: "Str. Gheorghe Lazăr 24, Timișoara",
     images: [apt04, pyn(17,7390,63324), pyn(17,7390,63301)],
+    imageAlts: [
+      "Apartament DeLuxe ultracentral Fructus Plaza, lângă Piața Victoriei Timișoara",
+      "Bucătărie complet utilată Fructus Plaza Timișoara",
+      "Balcon mare cu vedere spre centrul Timișoarei, Fructus Plaza",
+    ],
+    imageAltsEn: [
+      "Ultracentral DeLuxe apartment Fructus Plaza near Victory Square Timișoara",
+      "Fully equipped kitchen Fructus Plaza Timișoara",
+      "Large balcony with downtown Timișoara view, Fructus Plaza",
+    ],
     features: ["Parcare Gratuită", "Balcon Mare", "WiFi"],
     featuresEn: ["Free Parking", "Large Balcony", "WiFi"],
     bookingUrl: "https://fructus-plaza.pynbooking.direct/",
@@ -136,6 +177,16 @@ export const properties: Property[] = [
     name: "FullView Studio DeLuxe",
     location: "Calea Circumvalațiunii 1, Timișoara",
     images: [apt02, pyn(14,7387,63100), pyn(14,7387,63101)],
+    imageAlts: [
+      "Studio DeLuxe FullView cu design modern, City of Mara Timișoara",
+      "Zonă de dormit FullView Studio DeLuxe cu pat dublu confortabil",
+      "Baie modernă cu duș FullView Studio, complex City of Mara",
+    ],
+    imageAltsEn: [
+      "Modern design FullView Studio DeLuxe, City of Mara Timișoara",
+      "Sleeping area FullView Studio DeLuxe with comfortable double bed",
+      "Modern bathroom with shower FullView Studio, City of Mara complex",
+    ],
     features: ["Parcare Subterană", "WiFi", "Premium"],
     featuresEn: ["Underground Parking", "WiFi", "Premium"],
     bookingUrl: "https://m9.pynbooking.direct/",
@@ -163,6 +214,16 @@ export const properties: Property[] = [
     name: "AVENUE of MARA ApArt Hotel",
     location: "Calea Circumvalațiunii 1, Timișoara",
     images: [apt03, pyn(0,7373,63051), pyn(0,7373,63033)],
+    imageAlts: [
+      "Studio ultracentral AVENUE of MARA lângă Iulius Mall Timișoara",
+      "Living modern AVENUE of MARA ApArt Hotel, parcare subterană",
+      "Bucătărie utilată AVENUE of MARA, aproape de centrul vechi Timișoara",
+    ],
+    imageAltsEn: [
+      "City center studio AVENUE of MARA near Iulius Mall Timișoara",
+      "Modern living room AVENUE of MARA ApArt Hotel, underground parking",
+      "Equipped kitchen AVENUE of MARA near Old Town Timișoara",
+    ],
     features: ["Ultracentral", "Parcare Subterană", "WiFi"],
     featuresEn: ["City Center", "Underground Parking", "WiFi"],
     bookingUrl: "https://apart-hotel.pynbooking.direct/",
@@ -190,6 +251,16 @@ export const properties: Property[] = [
     name: "HELIOS ApArt Hotel - DeLuxe Residence",
     location: "Str. Argeș 4, Timișoara",
     images: [helios, pyn(18,7391,63721), pyn(18,7391,63722)],
+    imageAlts: [
+      "Reședință DeLuxe HELIOS, aproape de centrul Timișoarei",
+      "Dormitor elegant HELIOS ApArt Hotel cu Smart TV",
+      "Living confortabil HELIOS cu aer condiționat, Str. Argeș Timișoara",
+    ],
+    imageAltsEn: [
+      "DeLuxe residence HELIOS near downtown Timișoara",
+      "Elegant bedroom HELIOS ApArt Hotel with Smart TV",
+      "Comfortable living room HELIOS with AC, Argeș Street Timișoara",
+    ],
     features: ["Central", "Parcare", "WiFi"],
     featuresEn: ["Central", "Parking", "WiFi"],
     bookingUrl: "https://helios.pynbooking.direct/",
@@ -217,6 +288,16 @@ export const properties: Property[] = [
     name: "ATENEO - TREVI 2 ApArt Hotel",
     location: "Calea Torontalului 104K, Timișoara",
     images: [apt05, pyn(21,7394,63532), pyn(21,7394,63528)],
+    imageAlts: [
+      "Apartament modern ATENEO TREVI 2 cu terasă mare, Calea Torontalului",
+      "Dormitor spațios ATENEO TREVI 2 ApArt Hotel Timișoara",
+      "Terasă generoasă ATENEO TREVI 2 cu parcare gratuită",
+    ],
+    imageAltsEn: [
+      "Modern apartment ATENEO TREVI 2 with large terrace, Torontalului Road",
+      "Spacious bedroom ATENEO TREVI 2 ApArt Hotel Timișoara",
+      "Generous terrace ATENEO TREVI 2 with free parking",
+    ],
     features: ["Terasă Mare", "Parcare Gratuită", "WiFi"],
     featuresEn: ["Large Terrace", "Free Parking", "WiFi"],
     bookingUrl: "https://ateneo-2.pynbooking.direct/",
@@ -244,6 +325,16 @@ export const properties: Property[] = [
     name: "Sunset Da-Ra - Studio DeLuxe",
     location: "Calea Circumvalațiunii 1, Timișoara",
     images: [apt11, pyn(15,7388,63154), pyn(15,7388,63155)],
+    imageAlts: [
+      "Studio elegant Sunset Da-Ra în complexul City of Mara M11 Timișoara",
+      "Zonă de living modernă Sunset Da-Ra cu Smart TV",
+      "Bucătărie utilată Sunset Da-Ra Studio DeLuxe, parcare subterană",
+    ],
+    imageAltsEn: [
+      "Elegant studio Sunset Da-Ra in City of Mara M11 complex Timișoara",
+      "Modern living area Sunset Da-Ra with Smart TV",
+      "Equipped kitchen Sunset Da-Ra Studio DeLuxe, underground parking",
+    ],
     features: ["Parcare Subterană", "WiFi", "Modern"],
     featuresEn: ["Underground Parking", "WiFi", "Modern"],
     bookingUrl: "https://m11.pynbooking.direct/",
@@ -271,6 +362,12 @@ export const properties: Property[] = [
     name: "MARA Luxury Golden ApArt Hotel",
     location: "Str. Sinaia 2B, Timișoara",
     images: [apt01],
+    imageAlts: [
+      "Apartament de lux MARA Luxury Golden cu finisaje premium, Str. Sinaia Timișoara",
+    ],
+    imageAltsEn: [
+      "Luxury apartment MARA Luxury Golden with premium finishes, Sinaia Street Timișoara",
+    ],
     features: ["Ultracentral", "Parcare Gratuită", "WiFi"],
     featuresEn: ["City Center", "Free Parking", "WiFi"],
     bookingUrl: "https://www.booking.com/hotel/ro/mara-gold-accent-deluxe-residence.html",
@@ -299,6 +396,16 @@ export const properties: Property[] = [
     name: "ATENEO ApArt Hotel - Studio DeLuxe",
     location: "Calea Torontalului 104K, Timișoara",
     images: [apt07, pyn(20,7393,63474), pyn(20,7393,63475)],
+    imageAlts: [
+      "Studio DeLuxe ATENEO cu balcon mare, ansamblu rezidențial Ateneo Timișoara",
+      "Living modern ATENEO Studio DeLuxe cu mobilier elegant",
+      "Balcon generos ATENEO ApArt Hotel, Calea Torontalului Timișoara",
+    ],
+    imageAltsEn: [
+      "DeLuxe studio ATENEO with large balcony, Ateneo complex Timișoara",
+      "Modern living room ATENEO Studio DeLuxe with elegant furniture",
+      "Generous balcony ATENEO ApArt Hotel, Torontalului Road Timișoara",
+    ],
     features: ["Balcon Mare", "Parcare Gratuită", "WiFi"],
     featuresEn: ["Large Balcony", "Free Parking", "WiFi"],
     bookingUrl: "https://ateneo-1.pynbooking.direct/",
@@ -326,6 +433,12 @@ export const properties: Property[] = [
     name: "MODERN Studio ApArt Hotel",
     location: "Bd. Simion Bărnuțiu 79, Timișoara",
     images: [modernStudio],
+    imageAlts: [
+      "Studio modern MODERN Studio lângă AquaPark Amazonia și Lidl Timișoara",
+    ],
+    imageAltsEn: [
+      "Modern studio MODERN Studio near AquaPark Amazonia and Lidl Timișoara",
+    ],
     features: ["Parcare", "WiFi", "Lângă Amazonia"],
     featuresEn: ["Parking", "WiFi", "Near Amazonia"],
     bookingUrl: "https://modern.pynbooking.direct/",
