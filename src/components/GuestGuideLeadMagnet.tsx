@@ -104,6 +104,11 @@ const GuestGuideLeadMagnet = () => {
         toast.success(text.successTitle);
       }
 
+      // Send guide email (fire-and-forget)
+      supabase.functions.invoke("send-guest-guide-email", {
+        body: { email: result.data, language },
+      }).catch((emailErr) => console.error("Guide email error:", emailErr));
+
       setIsSuccess(true);
       setSessionStorage("guestGuideAccessed", "true");
 
