@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const GuestGuideLeadMagnet = lazy(() => import("@/components/GuestGuideLeadMagnet"));
 const FacilitiesShowcase = lazy(() => import("@/components/FacilitiesShowcase"));
 const DigitalHouseManual = lazy(() => import("@/components/DigitalHouseManual"));
 const CleaningStandards = lazy(() => import("@/components/CleaningStandards"));
@@ -733,6 +734,9 @@ const PentruOaspeti = () => {
       <Footer />
       <Suspense fallback={null}>
         <GlobalConversionWidgets />
+      </Suspense>
+      <Suspense fallback={null}>
+        <GuestGuideLeadMagnet />
       </Suspense>
     </div>
   );
