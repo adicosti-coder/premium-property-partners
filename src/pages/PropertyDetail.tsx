@@ -457,6 +457,15 @@ const PropertyDetail = () => {
               {/* Proximity List — walking/driving distances */}
               <PropertyProximity propertySlug={slug || ""} />
 
+              {/* Comparație Prețuri, Calculator Sejur, Disponibilitate — inline după Proximitate */}
+              {staticProperty && (
+                <div className="space-y-6">
+                  <PriceCompareWidget basePrice={property.pricePerNight} />
+                  <StayCalculator property={property as any} onBook={() => setBookingOpen(true)} />
+                  <AvailabilityCalendar propertyId={property.id} />
+                </div>
+              )}
+
               {/* Recenzii oaspeți - pentru toate proprietățile cu ID */}
               {dbProperty?.id && (
                 <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
@@ -474,17 +483,38 @@ const PropertyDetail = () => {
               />
             </div>
 
-            {/* Bara Laterală - Rezervări - doar pentru proprietăți cu date complete */}
-            {staticProperty ? (
-              <div className="lg:col-span-1 space-y-6">
-                <PriceCompareWidget basePrice={property.pricePerNight} />
-                <StayCalculator property={property as any} onBook={() => setBookingOpen(true)} />
-                <AvailabilityCalendar propertyId={property.id} />
-              </div>
-            ) : (
-              <div className="lg:col-span-1 space-y-6">
-                {/* CTA pentru proprietăți de investiție */}
-                <div className="bg-card rounded-2xl border p-6 space-y-4">
+            {/* Bara Laterală — CTA & Contact */}
+            <div className="lg:col-span-1 space-y-6">
+              {staticProperty ? (
+                <div className="bg-card rounded-2xl border p-6 space-y-4 sticky top-24">
+                  <h3 className="text-xl font-semibold">
+                    {language === 'ro' ? 'Rezervă Direct & Economisește' : 'Book Direct & Save'}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    {language === 'ro' 
+                      ? `Rezervă direct pe site-ul nostru și beneficiezi de cel mai bun preț garantat pentru ${property.name}.`
+                      : `Book directly on our website and get the best guaranteed price for ${property.name}.`}
+                  </p>
+                  <Button 
+                    variant="hero" 
+                    className="w-full"
+                    onClick={() => setBookingOpen(true)}
+                  >
+                    {language === 'ro' ? 'Rezervă Acum' : 'Book Now'}
+                  </Button>
+                  {property.bookingUrl && (
+                    <a
+                      href={property.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-center text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {language === 'ro' ? 'Vezi și pe Pynbooking →' : 'Also on Pynbooking →'}
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-card rounded-2xl border p-6 space-y-4 sticky top-24">
                   <h3 className="text-xl font-semibold">
                     {language === 'ro' ? 'Interesat?' : 'Interested?'}
                   </h3>
@@ -501,8 +531,8 @@ const PropertyDetail = () => {
                     {language === 'ro' ? 'Contactează-ne' : 'Contact Us'}
                   </Button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </main>
