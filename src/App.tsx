@@ -153,6 +153,17 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
+                    {/* SEO landing pages — each property has its own top-level route */}
+                    <Route path="/ring-apart-hotel-spacious-deluxe" element={<PropertyDetail />} />
+                    <Route path="/green-forest-apart-hotel" element={<PropertyDetail />} />
+                    <Route path="/fructus-plaza-ultracentral-apart-hotel" element={<PropertyDetail />} />
+                    <Route path="/fullview-studio-deluxe" element={<PropertyDetail />} />
+                    <Route path="/avenue-of-mara-apart-hotel" element={<PropertyDetail />} />
+                    <Route path="/helios-apart-hotel" element={<PropertyDetail />} />
+                    <Route path="/ateneo-trevi-2-apart-hotel" element={<PropertyDetail />} />
+                    <Route path="/sunset-da-ra-studio-deluxe" element={<PropertyDetail />} />
+                    <Route path="/ateneo-apart-hotel-studio-deluxe" element={<PropertyDetail />} />
+                    <Route path="/modern-studio-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/investitii" element={<Investitii />} />
                     <Route path="/rezerva-direct" element={<WhyBookDirect />} />
                     <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
@@ -172,6 +183,7 @@ const App = () => (
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>

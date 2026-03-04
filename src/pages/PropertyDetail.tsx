@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, lazy, Suspense } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
   Wifi, Car, Key, Calendar, Clock, Check, X, ChevronLeft, ChevronRight,
@@ -24,6 +24,7 @@ const PropertyReviews = lazy(() => import("@/components/PropertyReviews"));
 const GuestReviewForm = lazy(() => import("@/components/GuestReviewForm"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const PropertyFAQ = lazy(() => import("@/components/PropertyFAQ"));
+const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +62,10 @@ const isUUID = (str: string): boolean => {
 };
 
 const PropertyDetail = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: paramSlug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  // Support both /proprietate/:slug and top-level /:slug routes
+  const slug = paramSlug || location.pathname.replace(/^\//, '');
   const isDbProperty = isUUID(slug || "");
   const staticProperty = !isDbProperty ? getPropertyBySlug(slug || "") : undefined;
   const { toast } = useToast();
@@ -75,6 +79,7 @@ const PropertyDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [dbImages, setDbImages] = useState<any[]>([]);
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
@@ -118,14 +123,24 @@ const PropertyDetail = () => {
           }
         }
 
-        // Fetch images if we have a property ID
+        // Fetch images and reviews if we have a property ID
         if (propertyId) {
-          const { data: images } = await supabase
-            .from("property_images")
-            .select("*")
-            .eq("property_id", propertyId)
-            .order("display_order", { ascending: true });
-          if (images) setDbImages(images);
+          const [imagesRes, reviewsRes] = await Promise.all([
+            supabase
+              .from("property_images")
+              .select("*")
+              .eq("property_id", propertyId)
+              .order("display_order", { ascending: true }),
+            supabase
+              .from("property_reviews")
+              .select("id, guest_name, rating, content, title, created_at")
+              .eq("property_id", propertyId)
+              .eq("is_published", true)
+              .order("created_at", { ascending: false })
+              .limit(10),
+          ]);
+          if (imagesRes.data) setDbImages(imagesRes.data);
+          if (reviewsRes.data) setDbReviews(reviewsRes.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -241,7 +256,25 @@ const PropertyDetail = () => {
 
   if (!property) return null;
 
-  // Generate rich schema for this property
+  // Generate rich schema for this property (with real reviews for Google rich snippets)
+  const reviewSchemaItems = dbReviews.length > 0 ? dbReviews.slice(0, 5).map((r: any) => ({
+    "@type": "Review" as const,
+    "author": { "@type": "Person" as const, "name": r.guest_name },
+    "datePublished": r.created_at?.split("T")[0],
+    "reviewBody": r.content || r.title || "Experiență excelentă!",
+    "reviewRating": {
+      "@type": "Rating" as const,
+      "ratingValue": Math.min(r.rating / 2, 5), // Convert 1-10 to 1-5 scale
+      "bestRating": 5,
+      "worstRating": 1,
+    },
+  })) : undefined;
+
+  const avgRating = dbReviews.length > 0
+    ? (dbReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / dbReviews.length / 2).toFixed(1)
+    : staticProperty?.rating ? (staticProperty.rating / 2).toFixed(1) : "4.9";
+  const reviewCount = dbReviews.length > 0 ? dbReviews.length : (staticProperty?.reviews || 50);
+
   const propertySchemas = [
     ...generatePropertyPageSchemas({
       name: property.name,
@@ -255,11 +288,11 @@ const PropertyDetail = () => {
       bedrooms: property.bedrooms || 1,
       bathrooms: property.bathrooms || 1,
       size: property.size || 0,
-      rating: staticProperty?.rating || 4.9,
-      reviewCount: staticProperty?.reviews || 50,
+      rating: parseFloat(avgRating),
+      reviewCount,
       amenities: property.amenities || [],
     }),
-    // AggregateRating standalone for Google rich results
+    // LodgingBusiness with AggregateRating + real reviews for Google rich snippets
     {
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
@@ -268,11 +301,12 @@ const PropertyDetail = () => {
       "image": galleryImages[0] || "",
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": staticProperty?.rating?.toFixed(1) || "4.9",
-        "reviewCount": staticProperty?.reviews || 50,
+        "ratingValue": avgRating,
+        "reviewCount": reviewCount,
         "bestRating": "5",
         "worstRating": "1",
       },
+      ...(reviewSchemaItems && { "review": reviewSchemaItems }),
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Timișoara",
@@ -419,6 +453,9 @@ const PropertyDetail = () => {
                   hideRecommendations
                 />
               )}
+
+              {/* Proximity List — walking/driving distances */}
+              <PropertyProximity propertySlug={slug || ""} />
 
               {/* Recenzii oaspeți - pentru toate proprietățile cu ID */}
               {dbProperty?.id && (
