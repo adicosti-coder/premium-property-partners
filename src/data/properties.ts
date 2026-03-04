@@ -15,6 +15,10 @@ const apt02 = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/
 const modernStudio = "https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/modern-studio-apt.jpg?width=800&quality=75";
 import helios from "@/assets/helios.webp";
 
+// Pynbooking CDN base for property gallery images
+const pyn = (folder: number, hotelId: number, imageId: number) =>
+  `https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/${folder}/${hotelId}/${imageId}-m.jpg`;
+
 export interface Property {
   id: number;
   slug: string;
@@ -50,7 +54,7 @@ export const properties: Property[] = [
     slug: "ring-apart-hotel-spacious-deluxe",
     name: "RING ApArt Hotel - Spacious DeLuxe Apartment",
     location: "Str. Loichița Vasile 1-3, Timișoara",
-    images: [apt09],
+    images: [apt09, pyn(19,7392,63400), pyn(19,7392,63461)],
     features: ["Terasă Mare", "Parcare Subterană", "WiFi"],
     featuresEn: ["Large Terrace", "Underground Parking", "WiFi"],
     bookingUrl: "https://ring.pynbooking.direct/",
@@ -77,7 +81,7 @@ export const properties: Property[] = [
     slug: "green-forest-apart-hotel",
     name: "GREEN FOREST ApArt Hotel",
     location: "Str. Constructorilor 52, Timișoara",
-    images: [apt06],
+    images: [apt06, pyn(22,7395,63580), pyn(22,7395,63569)],
     features: ["Balcon", "Parcare Gratuită", "WiFi"],
     featuresEn: ["Balcony", "Free Parking", "WiFi"],
     bookingUrl: "https://denya-forest-5.pynbooking.direct/",
@@ -104,7 +108,7 @@ export const properties: Property[] = [
     slug: "fructus-plaza-ultracentral-apart-hotel",
     name: "Fructus Plaza ULTRACENTRAL ApArt Hotel",
     location: "Str. Gheorghe Lazăr 24, Timișoara",
-    images: [apt04],
+    images: [apt04, pyn(17,7390,63324), pyn(17,7390,63301)],
     features: ["Parcare Gratuită", "Balcon Mare", "WiFi"],
     featuresEn: ["Free Parking", "Large Balcony", "WiFi"],
     bookingUrl: "https://fructus-plaza.pynbooking.direct/",
@@ -131,7 +135,7 @@ export const properties: Property[] = [
     slug: "fullview-studio-deluxe",
     name: "FullView Studio DeLuxe",
     location: "Calea Circumvalațiunii 1, Timișoara",
-    images: [apt02],
+    images: [apt02, pyn(14,7387,63100), pyn(14,7387,63101)],
     features: ["Parcare Subterană", "WiFi", "Premium"],
     featuresEn: ["Underground Parking", "WiFi", "Premium"],
     bookingUrl: "https://m9.pynbooking.direct/",
@@ -158,7 +162,7 @@ export const properties: Property[] = [
     slug: "avenue-of-mara-apart-hotel",
     name: "AVENUE of MARA ApArt Hotel",
     location: "Calea Circumvalațiunii 1, Timișoara",
-    images: [apt03],
+    images: [apt03, pyn(0,7373,63051), pyn(0,7373,63033)],
     features: ["Ultracentral", "Parcare Subterană", "WiFi"],
     featuresEn: ["City Center", "Underground Parking", "WiFi"],
     bookingUrl: "https://apart-hotel.pynbooking.direct/",
@@ -185,7 +189,7 @@ export const properties: Property[] = [
     slug: "helios-apart-hotel",
     name: "HELIOS ApArt Hotel - DeLuxe Residence",
     location: "Str. Argeș 4, Timișoara",
-    images: [helios],
+    images: [helios, pyn(18,7391,63721), pyn(18,7391,63722)],
     features: ["Central", "Parcare", "WiFi"],
     featuresEn: ["Central", "Parking", "WiFi"],
     bookingUrl: "https://helios.pynbooking.direct/",
@@ -212,7 +216,7 @@ export const properties: Property[] = [
     slug: "ateneo-trevi-2-apart-hotel",
     name: "ATENEO - TREVI 2 ApArt Hotel",
     location: "Calea Torontalului 104K, Timișoara",
-    images: [apt05],
+    images: [apt05, pyn(21,7394,63532), pyn(21,7394,63528)],
     features: ["Terasă Mare", "Parcare Gratuită", "WiFi"],
     featuresEn: ["Large Terrace", "Free Parking", "WiFi"],
     bookingUrl: "https://ateneo-2.pynbooking.direct/",
@@ -239,7 +243,7 @@ export const properties: Property[] = [
     slug: "sunset-da-ra-studio-deluxe",
     name: "Sunset Da-Ra - Studio DeLuxe",
     location: "Calea Circumvalațiunii 1, Timișoara",
-    images: [apt11],
+    images: [apt11, pyn(15,7388,63154), pyn(15,7388,63155)],
     features: ["Parcare Subterană", "WiFi", "Modern"],
     featuresEn: ["Underground Parking", "WiFi", "Modern"],
     bookingUrl: "https://m11.pynbooking.direct/",
@@ -294,7 +298,7 @@ export const properties: Property[] = [
     slug: "ateneo-apart-hotel-studio-deluxe",
     name: "ATENEO ApArt Hotel - Studio DeLuxe",
     location: "Calea Torontalului 104K, Timișoara",
-    images: [apt07],
+    images: [apt07, pyn(20,7393,63474), pyn(20,7393,63475)],
     features: ["Balcon Mare", "Parcare Gratuită", "WiFi"],
     featuresEn: ["Large Balcony", "Free Parking", "WiFi"],
     bookingUrl: "https://ateneo-1.pynbooking.direct/",
