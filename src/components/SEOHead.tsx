@@ -7,6 +7,7 @@ interface SEOHeadProps {
   title?: string;
   description?: string;
   image?: string;
+  imageAlt?: string;
   url?: string;
   type?: "website" | "article" | "product";
   publishedTime?: string;
@@ -144,6 +145,7 @@ const SEOHead = ({
   title,
   description,
   image = `${BASE_URL}/og-image.jpg`,
+  imageAlt,
   url,
   type = "website",
   publishedTime,
@@ -289,6 +291,7 @@ const SEOHead = ({
       <meta property="og:title" content={finalTitle} />
       <meta property="og:description" content={finalDescription} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:alt" content={imageAlt || finalDescription} />
       <meta property="og:locale" content={language === "ro" ? "ro_RO" : "en_US"} />
       <meta property="og:site_name" content="RealTrust & ApArt Hotel" />
       
@@ -298,6 +301,7 @@ const SEOHead = ({
       <meta name="twitter:title" content={finalTitle} />
       <meta name="twitter:description" content={finalDescription} />
       <meta name="twitter:image" content={image} />
+      <meta name="twitter:image:alt" content={imageAlt || finalDescription} />
       
       {/* Article specific */}
       {type === "article" && publishedTime && (
