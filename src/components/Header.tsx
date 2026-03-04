@@ -13,12 +13,7 @@ import ThemeToggle from "./ThemeToggle";
 const AnimationToggle = lazy(() => import("./AnimationToggle"));
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const PropertyCodeSearch = lazy(() => import("./PropertyCodeSearch"));
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+// Tooltip removed — not used in Header, avoids loading vendor-ui-core eagerly
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
