@@ -74,14 +74,18 @@ const generateProductJsonLd = (
   availability: string = "InStock"
 ) => ({
   "@context": "https://schema.org",
-  "@type": "Product",
+  "@type": "LodgingBusiness",
   "name": name,
   "description": description,
   "image": image,
   "url": url,
-  "brand": {
-    "@type": "Brand",
-    "name": "ApArt Hotel Timișoara",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Strada Circumvalațiunii 8",
+    "addressLocality": "Timișoara",
+    "addressRegion": "Timiș",
+    "postalCode": "300429",
+    "addressCountry": "RO",
   },
   "offers": {
     "@type": "Offer",
@@ -93,7 +97,7 @@ const generateProductJsonLd = (
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": "4.9",
-    "reviewCount": "150",
+    "reviewCount": "500",
     "bestRating": "5",
     "worstRating": "1",
   },
@@ -198,11 +202,13 @@ const SEOHead = ({
     "@id": BASE_URL,
     "url": BASE_URL,
     "telephone": "+40723154520",
-    "email": "adicosti@gmail.com",
+    "email": "contact@realtrust.ro",
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": "Strada Circumvalațiunii 8",
       "addressLocality": "Timișoara",
       "addressRegion": "Timiș",
+      "postalCode": "300429",
       "addressCountry": "RO"
     },
     "geo": {
@@ -214,7 +220,9 @@ const SEOHead = ({
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.9",
-      "reviewCount": "150"
+      "reviewCount": "500",
+      "bestRating": "5",
+      "worstRating": "1"
     }
   };
   
