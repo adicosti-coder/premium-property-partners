@@ -25,6 +25,7 @@ const GuestReviewForm = lazy(() => import("@/components/GuestReviewForm"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const PropertyFAQ = lazy(() => import("@/components/PropertyFAQ"));
 const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
+const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighborhoodMap"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import { useToast } from "@/hooks/use-toast";
@@ -458,7 +459,7 @@ const PropertyDetail = () => {
               {/* Proximity List — walking/driving distances */}
               <PropertyProximity propertySlug={slug || ""} />
 
-              {/* Neighborhood Discovery — Google Maps embed */}
+              {/* Neighborhood Map — Mapbox centered on property coordinates */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
                   <MapPin className="w-6 h-6 text-primary" />
@@ -469,16 +470,7 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
-                <div className="rounded-2xl overflow-hidden border border-border shadow-sm" style={{ minHeight: '600px', height: '600px' }}>
-                  <iframe
-                    src="https://storage.googleapis.com/maps-solutions-b1w25ppmon/neighborhood-discovery/1b03/neighborhood-discovery.html"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                    title={language === 'ro' ? 'Hartă explorare zonă' : 'Neighborhood exploration map'}
-                  />
-                </div>
+                <PropertyNeighborhoodMap propertySlug={slug || ''} propertyName={property.name} />
               </div>
 
               {/* Comparație Prețuri, Calculator Sejur, Disponibilitate — inline după Proximitate */}
