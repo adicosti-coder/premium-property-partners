@@ -457,11 +457,7 @@ const PentruOaspeti = () => {
             </motion.div>
 
             {/* Map Tabs */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={mapAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
+            <div>
               <Tabs value={activeMapTab} onValueChange={setActiveMapTab} className="w-full">
                 <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
                   <TabsTrigger value="properties" className="flex items-center gap-2">
@@ -537,7 +533,7 @@ const PentruOaspeti = () => {
                   </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -628,14 +624,9 @@ const PentruOaspeti = () => {
 
             <div className="grid md:grid-cols-3 gap-6 mb-10">
               {topProperties.map((property, index) => (
-                <motion.div
-                  key={property.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={propertiesAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
+                <div key={property.id}>
                   <PropertyCard property={property} index={index} isFavorite={isFavorite(String(property.id))} onToggleFavorite={(id) => toggleFavorite(id)} />
-                </motion.div>
+                </div>
               ))}
             </div>
 
