@@ -202,7 +202,7 @@ const SEOHead = ({
     "@id": BASE_URL,
     "url": BASE_URL,
     "telephone": "+40723154520",
-    "email": "contact@realtrust.ro",
+    "email": "adicosti@gmail.com",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Strada Circumvalațiunii 8",

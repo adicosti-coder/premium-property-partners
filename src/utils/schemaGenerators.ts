@@ -34,7 +34,7 @@ export const generateLocalBusinessSchema = () => ({
   "description": "Administrare profesională de apartamente în regim hotelier în Timișoara. Maximizează venitul proprietății tale cu 98% rată de ocupare și randament net 9.2-9.4% ROI.",
   "url": BASE_URL,
   "telephone": "+40723154520",
-  "email": "contact@realtrust.ro",
+  "email": "adicosti@gmail.com",
   "image": `${BASE_URL}/og-image.jpg`,
   "logo": `${BASE_URL}/favicon.ico`,
   "address": {
