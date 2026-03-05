@@ -462,16 +462,21 @@ const PropertyDetail = () => {
               <div className="space-y-4">
                 <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
                   <MapPin className="w-6 h-6 text-primary" />
-                  {language === 'ro' ? 'Descoperă Vecinătatea' : 'Neighborhood Discovery'}
+                  {language === 'ro' ? 'Explorează Zona' : 'Explore the Area'}
                 </h2>
-                <div className="rounded-2xl overflow-hidden border border-border shadow-sm" style={{ height: '480px' }}>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ro'
+                    ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
+                    : 'Discover restaurants, shops, parks and attractions near the apartment.'}
+                </p>
+                <div className="rounded-2xl overflow-hidden border border-border shadow-sm" style={{ minHeight: '600px', height: '600px' }}>
                   <iframe
                     src="https://storage.googleapis.com/maps-solutions-b1w25ppmon/neighborhood-discovery/1b03/neighborhood-discovery.html"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     loading="lazy"
-                    title={language === 'ro' ? 'Hartă vecinătate' : 'Neighborhood map'}
+                    title={language === 'ro' ? 'Hartă explorare zonă' : 'Neighborhood exploration map'}
                   />
                 </div>
               </div>
