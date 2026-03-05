@@ -154,6 +154,26 @@ interface Props {
   propertyName?: string;
 }
 
+/** Default center: Timișoara center (Piața Victoriei) */
+const defaultCoordinates: [number, number] = [21.2246, 45.7537];
+
+/** Default POIs for properties without specific data */
+const defaultPois: POI[] = [
+  { name: 'Piața Unirii', nameEn: 'Union Square', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️' },
+  { name: 'Piața Victoriei', nameEn: 'Victory Square', lng: 21.2246, lat: 45.7537, category: 'tourist', emoji: '🏛️' },
+  { name: 'Catedrala Mitropolitană', nameEn: 'Metropolitan Cathedral', lng: 21.2253, lat: 45.7530, category: 'tourist', emoji: '⛪' },
+  { name: 'Opera Națională', nameEn: 'National Opera', lng: 21.2245, lat: 45.7545, category: 'tourist', emoji: '🎭' },
+  { name: 'Castelul Huniade', nameEn: 'Hunyadi Castle', lng: 21.2255, lat: 45.7570, category: 'tourist', emoji: '🏰' },
+  { name: 'Iulius Town Mall', nameEn: 'Iulius Town Mall', lng: 21.2270, lat: 45.7695, category: 'mall', emoji: '🛍️' },
+  { name: 'Lidl Centru', nameEn: 'Lidl Center', lng: 21.2200, lat: 45.7580, category: 'supermarket', emoji: '🛒' },
+  { name: 'Farmacia Dr. Max', nameEn: 'Dr. Max Pharmacy', lng: 21.2215, lat: 45.7590, category: 'pharmacy', emoji: '💊' },
+  { name: 'Restaurant La Capite', nameEn: 'La Capite Restaurant', lng: 21.2274, lat: 45.7560, category: 'restaurant', emoji: '🍽️' },
+  { name: 'Cafenea de Specialitate', nameEn: 'Specialty Coffee', lng: 21.2230, lat: 45.7560, category: 'cafe', emoji: '☕' },
+  { name: 'Parcul Rozelor', nameEn: 'Rose Park', lng: 21.2290, lat: 45.7620, category: 'park', emoji: '🌳' },
+  { name: 'Gara de Nord', nameEn: 'North Railway Station', lng: 21.2070, lat: 45.7490, category: 'transport', emoji: '🚂' },
+  { name: 'Cocktail Bar Centru', nameEn: 'Downtown Cocktail Bar', lng: 21.2240, lat: 45.7555, category: 'bar', emoji: '🍸' },
+];
+
 const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -162,8 +182,8 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
-  const coords = propertyCoordinates[propertySlug];
-  const pois = poiData[propertySlug] || [];
+  const coords = propertyCoordinates[propertySlug] || defaultCoordinates;
+  const pois = poiData[propertySlug] || defaultPois;
 
   // Fetch token
   useEffect(() => {
@@ -266,7 +286,7 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
     };
   }, [mapboxToken, coords, propertySlug, language, propertyName, pois]);
 
-  if (!coords) return null;
+  // coords always available via fallback
 
   if (isLoading) {
     return (

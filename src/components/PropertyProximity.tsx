@@ -122,11 +122,19 @@ interface PropertyProximityProps {
   propertySlug: string;
 }
 
+/** Default proximity for properties without specific data (Timișoara center) */
+const defaultProximity: ProximityItem[] = [
+  { icon: Landmark,       labelRo: "Centrul Vechi (Piața Unirii)", labelEn: "Old Town (Union Square)", minutes: 8,  mode: "drive" },
+  { icon: ShoppingCart,   labelRo: "Supermarket",                  labelEn: "Supermarket",             minutes: 5,  mode: "walk" },
+  { icon: Building2,      labelRo: "Iulius Town Mall",             labelEn: "Iulius Town Mall",        minutes: 8,  mode: "drive" },
+  { icon: Train,          labelRo: "Gara de Nord",                 labelEn: "North Railway Station",   minutes: 10, mode: "drive" },
+  { icon: Waves,          labelRo: "Aquapark Amazonia",            labelEn: "Amazonia Aquapark",       minutes: 12, mode: "drive" },
+  { icon: Utensils,       labelRo: "Restaurante & Cafenele",       labelEn: "Restaurants & Cafés",     minutes: 5,  mode: "walk" },
+];
+
 const PropertyProximity = ({ propertySlug }: PropertyProximityProps) => {
   const { language } = useLanguage();
-  const items = proximityData[propertySlug];
-
-  if (!items || items.length === 0) return null;
+  const items = proximityData[propertySlug] || defaultProximity;
 
   return (
     <div className="space-y-4">
