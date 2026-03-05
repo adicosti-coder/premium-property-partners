@@ -39,10 +39,10 @@ export const generateLocalBusinessSchema = () => ({
   "logo": `${BASE_URL}/favicon.ico`,
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Timișoara",
+    "streetAddress": "Strada Circumvalațiunii 8",
     "addressLocality": "Timișoara",
     "addressRegion": "Timiș",
-    "postalCode": "300000",
+    "postalCode": "300429",
     "addressCountry": "RO",
   },
   "geo": {
@@ -411,10 +411,10 @@ export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
     "priceRange": "€€-€€€",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Timișoara",
+      "streetAddress": "Strada Circumvalațiunii 8",
       "addressLocality": "Timișoara",
       "addressRegion": "Timiș",
-      "postalCode": "300000",
+      "postalCode": "300429",
       "addressCountry": "RO",
     },
     "geo": {
@@ -520,22 +520,19 @@ const clampRating = (value: number): number => Math.max(1, Math.min(5, value));
 
 export const generateReviewsFromDatabase = (
   reviews: DatabaseReview[],
-  itemName: string,
-  itemUrl: string
-): Record<string, unknown> => {
+  _itemName: string,
+  _itemUrl: string
+): Record<string, unknown> | null => {
   // Filter out reviews with invalid ratings (0 or negative)
   const validReviews = reviews.filter((r) => r.rating >= 1 && r.rating <= 5);
-  if (validReviews.length === 0) return { "@context": "https://schema.org", "@type": "Product", "name": itemName, "url": itemUrl };
+  if (validReviews.length === 0) return null;
 
   const avgRating = clampRating(
     validReviews.reduce((sum, r) => sum + r.rating, 0) / validReviews.length
   );
 
+  // Return only the review + aggregateRating data to be merged into LodgingBusiness
   return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": itemName,
-    "url": itemUrl,
     "review": validReviews.slice(0, 10).map((review) => ({
       "@type": "Review",
       "author": {
@@ -606,20 +603,25 @@ export const generatePropertyPageSchemas = (
 
 // Homepage combined schema with reviews from database
 export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
+  const lodgingBusiness = generateLocalBusinessSchema();
+
+  // Merge reviews directly into LodgingBusiness to avoid a separate Product schema
+  if (reviews && reviews.length > 0) {
+    const reviewData = generateReviewsFromDatabase(
+      reviews,
+      "RealTrust & ApArt Hotel Timișoara",
+      BASE_URL
+    );
+    if (reviewData) {
+      // Override aggregateRating with real data and add individual reviews
+      Object.assign(lodgingBusiness, reviewData);
+    }
+  }
+
   const schemas: Record<string, unknown>[] = [
-    generateLocalBusinessSchema(),
+    lodgingBusiness,
     generateWebSiteSchema(),
   ];
-
-  if (reviews && reviews.length > 0) {
-    schemas.push(
-      generateReviewsFromDatabase(
-        reviews,
-        "RealTrust & ApArt Hotel Timișoara",
-        BASE_URL
-      )
-    );
-  }
 
   return schemas;
 };
