@@ -47,7 +47,7 @@ const PropertyImageCarousel = ({ images, propertyName, property, className = "" 
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
-  const displayImages = images.slice(0, 5); // Limit to 5 images
+  const displayImages = images; // Show all images
 
   // Use the reusable preload hook
   const { preloadAround } = useImagePreload(displayImages, {

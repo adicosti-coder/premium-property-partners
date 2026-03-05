@@ -341,12 +341,35 @@ const PropertyDetail = () => {
           </Link>
         </div>
 
-        {/* Galerie - Rămâne neschimbată */}
+        {/* Galerie cu toate imaginile */}
         <div className="container mx-auto px-4 sm:px-6 mb-8">
-           <div className="relative aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer" onClick={() => setLightboxOpen(true)}>
-             <OptimizedImage src={galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${property.name} — cazare apartament regim hotelier ${property.location}, Timișoara`} className="w-full h-full object-cover" priority={true} />
-             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
-           </div>
+          {/* Hero image */}
+          <div className="relative aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer mb-3" onClick={() => { setCurrentImageIndex(0); setLightboxOpen(true); }}>
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : `${property.name} — cazare apartament regim hotelier ${property.location}, Timișoara`} className="w-full h-full object-cover" priority={true} />
+            <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
+            {/* Navigation arrows on hero */}
+            {galleryImages.length > 1 && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition-all z-10" aria-label="Previous"><ChevronLeft className="w-5 h-5" /></button>
+                <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition-all z-10" aria-label="Next"><ChevronRight className="w-5 h-5" /></button>
+              </>
+            )}
+          </div>
+          {/* Thumbnail strip */}
+          {galleryImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {galleryImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`flex-shrink-0 w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
+                  aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
+                >
+                  <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} foto ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 pb-24 overflow-hidden">
