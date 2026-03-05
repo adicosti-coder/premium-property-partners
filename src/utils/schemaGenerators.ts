@@ -243,10 +243,10 @@ export const generateAggregateRatingSchema = (
   "url": itemUrl,
   "aggregateRating": {
     "@type": "AggregateRating",
-    "ratingValue": rating.ratingValue.toFixed(1),
-    "reviewCount": rating.reviewCount,
-    "bestRating": rating.bestRating || 5,
-    "worstRating": rating.worstRating || 1,
+    "ratingValue": Math.max(1, Math.min(5, rating.ratingValue)).toFixed(1),
+    "reviewCount": String(rating.reviewCount),
+    "bestRating": "5",
+    "worstRating": "1",
   },
 });
 
@@ -262,27 +262,30 @@ export const generateReviewSchema = (
   itemName: string,
   itemUrl: string,
   reviews: ReviewData[]
-) => ({
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": itemName,
-  "url": itemUrl,
-  "review": reviews.map((review) => ({
-    "@type": "Review",
-    "author": {
-      "@type": "Person",
-      "name": review.author,
-    },
-    "datePublished": review.datePublished,
-    "reviewBody": review.reviewBody,
-    "reviewRating": {
-      "@type": "Rating",
-      "ratingValue": review.ratingValue,
-      "bestRating": 5,
-      "worstRating": 1,
-    },
-  })),
-});
+) => {
+  const validReviews = reviews.filter((r) => r.ratingValue >= 1 && r.ratingValue <= 5);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": itemName,
+    "url": itemUrl,
+    "review": validReviews.map((review) => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": review.author,
+      },
+      "datePublished": review.datePublished,
+      "reviewBody": review.reviewBody,
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": String(Math.max(1, Math.min(5, review.ratingValue))),
+        "bestRating": "5",
+        "worstRating": "1",
+      },
+    })),
+  };
+};
 
 // Blog Article Schema
 export interface ArticleSchemaData {
@@ -488,13 +491,13 @@ export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
   };
 
   // Add aggregate rating if available
-  if (rating && rating.reviewCount > 0) {
+  if (rating && rating.reviewCount > 0 && rating.ratingValue >= 1) {
     baseSchema["aggregateRating"] = {
       "@type": "AggregateRating",
-      "ratingValue": rating.ratingValue.toFixed(1),
-      "reviewCount": rating.reviewCount,
-      "bestRating": rating.bestRating || 5,
-      "worstRating": rating.worstRating || 1,
+      "ratingValue": Math.max(1, Math.min(5, rating.ratingValue)).toFixed(1),
+      "reviewCount": String(rating.reviewCount),
+      "bestRating": "5",
+      "worstRating": "1",
     };
   }
 
@@ -512,45 +515,58 @@ export interface DatabaseReview {
   property_name?: string;
 }
 
+// Clamp a rating value to the valid 1-5 range for schema.org
+const clampRating = (value: number): number => Math.max(1, Math.min(5, value));
+
 export const generateReviewsFromDatabase = (
   reviews: DatabaseReview[],
   itemName: string,
   itemUrl: string
-): Record<string, unknown> => ({
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": itemName,
-  "url": itemUrl,
-  "review": reviews.slice(0, 10).map((review) => ({
-    "@type": "Review",
-    "author": {
-      "@type": "Person",
-      "name": review.guest_name,
-    },
-    "datePublished": review.created_at.split("T")[0],
-    "reviewBody": review.content || review.title || "Experiență excelentă!",
-    "name": review.title || undefined,
-    "reviewRating": {
-      "@type": "Rating",
-      "ratingValue": review.rating,
-      "bestRating": 5,
-      "worstRating": 1,
-    },
-    ...(review.property_name && {
-      "itemReviewed": {
-        "@type": "Apartment",
-        "name": review.property_name,
+): Record<string, unknown> => {
+  // Filter out reviews with invalid ratings (0 or negative)
+  const validReviews = reviews.filter((r) => r.rating >= 1 && r.rating <= 5);
+  if (validReviews.length === 0) return { "@context": "https://schema.org", "@type": "Product", "name": itemName, "url": itemUrl };
+
+  const avgRating = clampRating(
+    validReviews.reduce((sum, r) => sum + r.rating, 0) / validReviews.length
+  );
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": itemName,
+    "url": itemUrl,
+    "review": validReviews.slice(0, 10).map((review) => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": review.guest_name,
       },
-    }),
-  })),
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1),
-    "reviewCount": reviews.length,
-    "bestRating": 5,
-    "worstRating": 1,
-  },
-});
+      "datePublished": review.created_at.split("T")[0],
+      "reviewBody": review.content || review.title || "Experiență excelentă!",
+      "name": review.title || undefined,
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": String(clampRating(review.rating)),
+        "bestRating": "5",
+        "worstRating": "1",
+      },
+      ...(review.property_name && {
+        "itemReviewed": {
+          "@type": "Apartment",
+          "name": review.property_name,
+        },
+      }),
+    })),
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": avgRating.toFixed(1),
+      "reviewCount": String(validReviews.length),
+      "bestRating": "5",
+      "worstRating": "1",
+    },
+  };
+};
 
 // Combined schema for property pages
 export const generatePropertyPageSchemas = (
