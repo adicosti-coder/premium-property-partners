@@ -841,9 +841,13 @@ export default function PropertyManager() {
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               {t.admin.cancel}
             </Button>
-            <Button onClick={handleEditProperty} disabled={isSaving}>
+            <Button 
+              onClick={handleEditProperty} 
+              disabled={isSaving || saveSuccess}
+              className={saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}
+            >
               {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {t.admin.properties?.save || "Save"}
+              {saveSuccess ? "✅ Salvat!" : (isSaving ? "Se salvează..." : (t.admin.properties?.save || "Salvează"))}
             </Button>
           </DialogFooter>
         </DialogContent>
