@@ -17,6 +17,8 @@ import {
   Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import PropertyImageGallery from "./PropertyImageGallery";
+import { Image as ImageIcon } from "lucide-react";
 
 interface InvestProperty {
   id: string;
