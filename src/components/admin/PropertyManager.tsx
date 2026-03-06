@@ -642,7 +642,7 @@ export default function PropertyManager() {
                 {t.admin.properties?.addDescription || "Add a new property to the portfolio"}
               </DialogDescription>
             </DialogHeader>
-            <PropertyFormFields showGallery={false} />
+            {renderFormFields(false)}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddOpen(false)}>
                 {t.admin.cancel}
