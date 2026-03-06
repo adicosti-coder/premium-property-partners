@@ -95,6 +95,7 @@ export default function InvestitiiPremiumManager() {
   const [editingProperty, setEditingProperty] = useState<InvestProperty | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [propertyImages, setPropertyImages] = useState<any[]>([]);
 
   const fetchProperties = async () => {
     setLoading(true);
