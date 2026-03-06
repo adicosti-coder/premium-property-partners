@@ -148,6 +148,7 @@ export default function InvestitiiPremiumManager() {
   const openNew = () => {
     setEditingProperty({ ...emptyProperty, id: "" } as InvestProperty);
     setIsNew(true);
+    setPropertyImages([]);
     setIsEditOpen(true);
   };
 
