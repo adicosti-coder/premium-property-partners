@@ -826,7 +826,7 @@ export default function PropertyManager() {
               {t.admin.properties?.editDescription || "Update the property details"}
             </DialogDescription>
           </DialogHeader>
-          <PropertyFormFields showGallery={true} />
+          {renderFormFields(true)}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               {t.admin.cancel}
