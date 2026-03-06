@@ -510,6 +510,22 @@ export default function InvestitiiPremiumManager() {
                   placeholder="O facilitate pe linie"
                 />
               </div>
+
+              {/* Image Gallery */}
+              {!isNew && editingProperty.id ? (
+                <PropertyImageGallery
+                  propertyId={editingProperty.id}
+                  images={propertyImages}
+                  onImagesChange={setPropertyImages}
+                />
+              ) : (
+                <div className="p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <ImageIcon className="w-5 h-5" />
+                    <p className="text-sm">Galeria de imagini va fi disponibilă după salvarea proprietății</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
