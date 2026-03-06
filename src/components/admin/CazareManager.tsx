@@ -533,9 +533,13 @@ export default function CazareManager() {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>Anulează</Button>
-            <Button onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isNew ? "Adaugă" : "Salvează"}
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || saveSuccess} 
+              className={`gap-2 ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveSuccess ? null : <Save className="w-4 h-4" />}
+              {saveSuccess ? "✅ Salvat!" : saving ? "Se salvează..." : (isNew ? "Adaugă" : "Salvează")}
             </Button>
           </DialogFooter>
         </DialogContent>
