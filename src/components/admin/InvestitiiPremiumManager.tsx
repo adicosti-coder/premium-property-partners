@@ -89,6 +89,7 @@ export default function InvestitiiPremiumManager() {
   const [properties, setProperties] = useState<InvestProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [editingProperty, setEditingProperty] = useState<InvestProperty | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
