@@ -189,9 +189,13 @@ export default function InvestitiiPremiumManager() {
     if (error) {
       toast({ title: "Eroare la salvare", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: isNew ? "Proprietate adăugată" : "Proprietate actualizată" });
-      setIsEditOpen(false);
-      fetchProperties();
+      setSaveSuccess(true);
+      toast({ title: isNew ? "✅ Proprietate adăugată cu succes!" : "✅ Proprietate actualizată cu succes!" });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditOpen(false);
+        fetchProperties();
+      }, 1200);
     }
     setSaving(false);
   };
