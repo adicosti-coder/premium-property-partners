@@ -17,6 +17,8 @@ import {
   Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import PropertyImageGallery from "./PropertyImageGallery";
+import { Image as ImageIcon } from "lucide-react";
 
 interface InvestProperty {
   id: string;
@@ -93,6 +95,7 @@ export default function InvestitiiPremiumManager() {
   const [editingProperty, setEditingProperty] = useState<InvestProperty | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [propertyImages, setPropertyImages] = useState<any[]>([]);
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -126,15 +129,26 @@ export default function InvestitiiPremiumManager() {
 
   useEffect(() => { fetchProperties(); }, []);
 
+  const fetchPropertyImages = async (propertyId: string) => {
+    const { data } = await supabase
+      .from("property_images")
+      .select("*")
+      .eq("property_id", propertyId)
+      .order("display_order", { ascending: true });
+    setPropertyImages(data || []);
+  };
+
   const openEdit = (property: InvestProperty) => {
     setEditingProperty({ ...property });
     setIsNew(false);
     setIsEditOpen(true);
+    fetchPropertyImages(property.id);
   };
 
   const openNew = () => {
     setEditingProperty({ ...emptyProperty, id: "" } as InvestProperty);
     setIsNew(true);
+    setPropertyImages([]);
     setIsEditOpen(true);
   };
 
@@ -496,6 +510,22 @@ export default function InvestitiiPremiumManager() {
                   placeholder="O facilitate pe linie"
                 />
               </div>
+
+              {/* Image Gallery */}
+              {!isNew && editingProperty.id ? (
+                <PropertyImageGallery
+                  propertyId={editingProperty.id}
+                  images={propertyImages}
+                  onImagesChange={setPropertyImages}
+                />
+              ) : (
+                <div className="p-4 bg-muted/50 rounded-lg border border-dashed border-border">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <ImageIcon className="w-5 h-5" />
+                    <p className="text-sm">Galeria de imagini va fi disponibilă după salvarea proprietății</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
