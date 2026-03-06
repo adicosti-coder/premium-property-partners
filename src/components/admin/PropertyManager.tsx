@@ -380,7 +380,7 @@ export default function PropertyManager() {
     setPropertyImages([]);
   };
 
-  const PropertyFormFields = ({ showGallery = false }: { showGallery?: boolean }) => (
+  const renderFormFields = (showGallery = false) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
