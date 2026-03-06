@@ -380,7 +380,7 @@ export default function PropertyManager() {
     setPropertyImages([]);
   };
 
-  const PropertyFormFields = ({ showGallery = false }: { showGallery?: boolean }) => (
+  const renderFormFields = (showGallery = false) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -642,7 +642,7 @@ export default function PropertyManager() {
                 {t.admin.properties?.addDescription || "Add a new property to the portfolio"}
               </DialogDescription>
             </DialogHeader>
-            <PropertyFormFields showGallery={false} />
+            {renderFormFields(false)}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddOpen(false)}>
                 {t.admin.cancel}
@@ -826,7 +826,7 @@ export default function PropertyManager() {
               {t.admin.properties?.editDescription || "Update the property details"}
             </DialogDescription>
           </DialogHeader>
-          <PropertyFormFields showGallery={true} />
+          {renderFormFields(true)}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               {t.admin.cancel}
