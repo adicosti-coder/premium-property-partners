@@ -225,10 +225,14 @@ export default function PropertyManager() {
 
       if (error) throw error;
 
-      toast({ title: t.admin.properties?.addSuccess || "Property added!" });
-      setIsAddOpen(false);
-      resetForm();
-      fetchProperties();
+      setSaveSuccess(true);
+      toast({ title: "✅ Proprietate adăugată cu succes!" });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsAddOpen(false);
+        resetForm();
+        fetchProperties();
+      }, 1200);
     } catch (error) {
       console.error("Error adding property:", error);
       toast({
