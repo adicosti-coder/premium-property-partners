@@ -289,11 +289,15 @@ export default function PropertyManager() {
 
       if (error) throw error;
 
-      toast({ title: t.admin.properties?.editSuccess || "Property updated!" });
-      setIsEditOpen(false);
-      setEditingProperty(null);
-      resetForm();
-      fetchProperties();
+      setSaveSuccess(true);
+      toast({ title: "✅ Proprietate actualizată cu succes!" });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditOpen(false);
+        setEditingProperty(null);
+        resetForm();
+        fetchProperties();
+      }, 1200);
     } catch (error) {
       console.error("Error updating property:", error);
       toast({
