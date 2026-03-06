@@ -299,18 +299,26 @@ const Investitii = () => {
                 >
                   {/* Property Image */}
                   <div className="relative h-48 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
-                    {property.image_path ? (
-                      <img 
-                        src={property.image_path.startsWith("http") ? property.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${property.image_path}`}
-                        alt={`${property.name} — ${language === "ro" ? "apartament investiție" : "investment apartment"} ${property.location}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                        <Building2 className="w-16 h-16 text-slate-600" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                    {(() => {
+                      const imgPath = property.image_path || 
+                        (property.property_images?.find(i => i.is_primary)?.image_path) ||
+                        (property.property_images?.[0]?.image_path);
+                      if (imgPath) {
+                        const src = imgPath.startsWith("http") ? imgPath : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${imgPath}`;
+                        return (
+                          <img 
+                            src={src}
+                            alt={`${property.name} — ${language === "ro" ? "apartament investiție" : "investment apartment"} ${property.location}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        );
+                      }
+                      return (
+                        <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                          <Building2 className="w-16 h-16 text-slate-600" />
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Property Code & ROI Badge */}
