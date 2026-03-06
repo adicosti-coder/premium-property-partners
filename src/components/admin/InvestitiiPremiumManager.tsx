@@ -129,10 +129,20 @@ export default function InvestitiiPremiumManager() {
 
   useEffect(() => { fetchProperties(); }, []);
 
+  const fetchPropertyImages = async (propertyId: string) => {
+    const { data } = await supabase
+      .from("property_images")
+      .select("*")
+      .eq("property_id", propertyId)
+      .order("display_order", { ascending: true });
+    setPropertyImages(data || []);
+  };
+
   const openEdit = (property: InvestProperty) => {
     setEditingProperty({ ...property });
     setIsNew(false);
     setIsEditOpen(true);
+    fetchPropertyImages(property.id);
   };
 
   const openNew = () => {
