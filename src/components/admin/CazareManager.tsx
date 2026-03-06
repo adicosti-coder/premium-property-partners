@@ -182,9 +182,13 @@ export default function CazareManager() {
     if (error) {
       toast({ title: "Eroare la salvare", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: isNew ? "Apartament adăugat" : "Apartament actualizat" });
-      setIsEditOpen(false);
-      fetchProperties();
+      setSaveSuccess(true);
+      toast({ title: isNew ? "✅ Apartament adăugat cu succes!" : "✅ Apartament actualizat cu succes!" });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditOpen(false);
+        fetchProperties();
+      }, 1200);
     }
     setSaving(false);
   };
