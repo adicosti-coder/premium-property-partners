@@ -138,6 +138,7 @@ export default function PropertyManager() {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
 
