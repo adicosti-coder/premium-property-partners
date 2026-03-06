@@ -84,6 +84,7 @@ export default function CazareManager() {
   const [properties, setProperties] = useState<CazareProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [editingProperty, setEditingProperty] = useState<CazareProperty | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
