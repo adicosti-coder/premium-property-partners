@@ -89,6 +89,7 @@ export default function InvestitiiPremiumManager() {
   const [properties, setProperties] = useState<InvestProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [editingProperty, setEditingProperty] = useState<InvestProperty | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
@@ -188,9 +189,13 @@ export default function InvestitiiPremiumManager() {
     if (error) {
       toast({ title: "Eroare la salvare", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: isNew ? "Proprietate adăugată" : "Proprietate actualizată" });
-      setIsEditOpen(false);
-      fetchProperties();
+      setSaveSuccess(true);
+      toast({ title: isNew ? "✅ Proprietate adăugată cu succes!" : "✅ Proprietate actualizată cu succes!" });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditOpen(false);
+        fetchProperties();
+      }, 1200);
     }
     setSaving(false);
   };
@@ -496,9 +501,13 @@ export default function InvestitiiPremiumManager() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>Anulează</Button>
-            <Button onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Salvează
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || saveSuccess}
+              className={`gap-2 ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveSuccess ? null : <Save className="w-4 h-4" />}
+              {saveSuccess ? "✅ Salvat!" : saving ? "Se salvează..." : "Salvează"}
             </Button>
           </DialogFooter>
         </DialogContent>

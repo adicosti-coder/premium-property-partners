@@ -84,6 +84,7 @@ export default function CazareManager() {
   const [properties, setProperties] = useState<CazareProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [editingProperty, setEditingProperty] = useState<CazareProperty | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
@@ -181,9 +182,13 @@ export default function CazareManager() {
     if (error) {
       toast({ title: "Eroare la salvare", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: isNew ? "Apartament adăugat" : "Apartament actualizat" });
-      setIsEditOpen(false);
-      fetchProperties();
+      setSaveSuccess(true);
+      toast({ title: isNew ? "✅ Apartament adăugat cu succes!" : "✅ Apartament actualizat cu succes!" });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditOpen(false);
+        fetchProperties();
+      }, 1200);
     }
     setSaving(false);
   };
@@ -528,9 +533,13 @@ export default function CazareManager() {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>Anulează</Button>
-            <Button onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isNew ? "Adaugă" : "Salvează"}
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || saveSuccess} 
+              className={`gap-2 ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveSuccess ? null : <Save className="w-4 h-4" />}
+              {saveSuccess ? "✅ Salvat!" : saving ? "Se salvează..." : (isNew ? "Adaugă" : "Salvează")}
             </Button>
           </DialogFooter>
         </DialogContent>
