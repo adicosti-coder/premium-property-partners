@@ -243,6 +243,11 @@ export default function PropertyManager() {
 
   const handleEditProperty = async () => {
     if (!editingProperty || !formData.name || !formData.location || !formData.booking_url) {
+      toast({
+        title: "Completează câmpurile obligatorii",
+        description: "Nume, Locație și Booking URL sunt obligatorii.",
+        variant: "destructive",
+      });
       return;
     }
 
