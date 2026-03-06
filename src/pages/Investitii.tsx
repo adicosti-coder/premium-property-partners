@@ -32,6 +32,12 @@ import { lazy, Suspense } from "react";
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 
+interface PropertyImage {
+  image_path: string;
+  is_primary: boolean;
+  display_order: number;
+}
+
 interface InvestmentProperty {
   id: string;
   name: string;
@@ -44,6 +50,7 @@ interface InvestmentProperty {
   description_ro: string;
   description_en: string;
   property_code: string | null;
+  property_images: PropertyImage[];
 }
 
 const Investitii = () => {
