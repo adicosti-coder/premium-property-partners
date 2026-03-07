@@ -190,6 +190,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       const { data, error } = await supabase.functions.invoke("submit-lead", {
         body: {
           name: name.trim(),
+          email: email.trim() || null,
           whatsapp_number: whatsappNumber.trim(),
           property_area: parseInt(propertyArea),
           property_type: propertyType,
