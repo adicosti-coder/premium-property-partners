@@ -94,6 +94,14 @@ const ContactRedirect = () => {
   return null;
 };
 
+// Client-side redirects for legacy .html URLs (server .htaccess not processed)
+const LegacyRedirect = ({ to }: { to: string }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return null;
+};
+
 // Scroll to top on route change
 const ScrollToTop = () => {
   const { pathname } = useLocation();
