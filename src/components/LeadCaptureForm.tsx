@@ -215,6 +215,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
       setTimeout(() => {
         setName("");
+        setEmail("");
         setWhatsappNumber("");
         setPropertyArea("");
         setPropertyType("");
