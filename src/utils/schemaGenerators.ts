@@ -411,10 +411,10 @@ export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
     "priceRange": "€€-€€€",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Strada Circumvalațiunii 8",
+      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
       "addressLocality": "Timișoara",
       "addressRegion": "Timiș",
-      "postalCode": "300429",
+      "postalCode": "300125",
       "addressCountry": "RO",
     },
     "geo": {
