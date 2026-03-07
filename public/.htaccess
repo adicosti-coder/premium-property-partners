@@ -18,6 +18,11 @@
   RewriteRule ^real-estate-en\.html$ /imobiliare [R=301,L]
   RewriteRule ^real-estate\.html$ /imobiliare [R=301,L]
   RewriteRule ^contact$ /#contact [R=301,NE,L]
+
+  # Redirect private/utility pages to homepage if accessed directly (avoid Google indexing)
+  RewriteRule ^profil$ / [R=301,L]
+  RewriteRule ^setari$ / [R=301,L]
+
   RewriteCond %{ENV:REDIRECT_STATUS} ^$
   RewriteRule ^index\.html$ / [R=301,L]
 
