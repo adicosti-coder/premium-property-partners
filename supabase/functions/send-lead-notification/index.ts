@@ -827,7 +827,78 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, emailData, slackResult }), {
+    // Send Make.com webhook for WhatsApp notification
+    let makeResult = null;
+    if (MAKE_WEBHOOK_URL) {
+      try {
+        let makePayload: Record<string, unknown>;
+        
+        if (leadData.source === 'rental-calculator') {
+          const { simulationData } = leadData;
+          makePayload = {
+            type: 'rental-calculator',
+            city: simulationData.cityName,
+            rooms: simulationData.roomName,
+            location: simulationData.locationName,
+            estimatedMin: simulationData.estimatedMin,
+            estimatedMax: simulationData.estimatedMax,
+            percentageIncrease: simulationData.percentageIncrease,
+            message: `📊 Lead Calculator Venituri\n📍 ${simulationData.cityName} - ${simulationData.locationName}\n🛏️ ${simulationData.roomName}\n💰 ${simulationData.estimatedMin}€-${simulationData.estimatedMax}€/lună\n📈 +${simulationData.percentageIncrease}% vs chirie clasică`,
+          };
+        } else if (leadData.source === 'quick_form') {
+          const q = leadData as QuickFormLead;
+          const ptLabel = propertyTypeLabels[q.propertyType] || q.propertyType;
+          makePayload = {
+            type: 'quick_form',
+            name: q.name,
+            whatsapp: q.whatsappNumber,
+            propertyType: ptLabel,
+            listingUrl: q.listingUrl || '',
+            message: `⚡ Lead Rapid\n👤 ${q.name}\n📱 ${q.whatsappNumber}\n🏠 ${ptLabel}${q.listingUrl ? '\n🔗 ' + q.listingUrl : ''}`,
+          };
+        } else if (leadData.source === 'real_estate_contact') {
+          const r = leadData as RealEstateContactLead;
+          const stLabel = serviceTypeLabels[r.serviceType] || r.serviceType;
+          makePayload = {
+            type: 'real_estate_contact',
+            name: r.name,
+            phone: r.phone,
+            email: r.email,
+            serviceType: stLabel,
+            message: `🏡 Lead Imobiliare - ${stLabel}\n👤 ${r.name}\n📱 ${r.phone}\n📧 ${r.email}${r.message ? '\n💬 ' + r.message : ''}`,
+          };
+        } else {
+          const p = leadData as ProfitCalculatorLead;
+          const ptLabel = propertyTypeLabels[p.propertyType] || p.propertyType;
+          const listUrl = p.listingUrl || p.simulationData?.listingUrl;
+          makePayload = {
+            type: 'profit-calculator',
+            name: p.name,
+            whatsapp: p.whatsappNumber,
+            propertyType: ptLabel,
+            propertyArea: p.propertyArea,
+            netProfit: p.calculatedNetProfit,
+            yearlyProfit: p.calculatedYearlyProfit,
+            listingUrl: listUrl || '',
+            message: `🏠 Lead Profit Calculator\n👤 ${p.name}\n📱 ${p.whatsappNumber}\n🏢 ${ptLabel}, ${p.propertyArea}m²\n💰 ${p.calculatedNetProfit.toLocaleString('ro-RO')}€/lună | ${p.calculatedYearlyProfit.toLocaleString('ro-RO')}€/an${listUrl ? '\n🔗 ' + listUrl : ''}`,
+          };
+        }
+
+        const makeResponse = await fetch(MAKE_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(makePayload),
+        });
+
+        makeResult = makeResponse.ok ? "sent" : "failed";
+        console.log("Make.com webhook result:", makeResult);
+      } catch (makeError) {
+        console.error("Error sending Make.com webhook:", makeError);
+        makeResult = "error";
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, emailData, slackResult, makeResult }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
