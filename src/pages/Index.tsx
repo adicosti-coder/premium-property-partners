@@ -152,8 +152,8 @@ const Index = () => {
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
         <PageSummary
-          summaryRo="RealTrust & ApArt Hotel Timișoara — apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, HELIOS. Lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi, Gara de Nord, Lidl. Parcare subterană gratuită, self check-in 24/7, bucătărie completă. ROI 9%+."
-          summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments ATENEO, GREEN FOREST, FullView Studio, HELIOS. Near Iulius Mall, Amazonia Aquapark, Old Town, North Station, Lidl. Free underground parking, 24/7 self check-in, fully equipped kitchen. 9%+ ROI."
+          summaryRo="RealTrust & ApArt Hotel Timișoara — Apartamente în regim hotelier aproape de Centrul istoric, de obiectivele turistice și comerciale importante din Timișoara, de Amazonia Aquapark, la Fructus Plaza, City of Mara, Ring, X-City, Ateneo și Denya Forest, etc."
+          summaryEn="RealTrust & ApArt Hotel Timișoara — Short-term rental apartments near the Old Town, major tourist and commercial landmarks in Timișoara, Amazonia Aquapark, at Fructus Plaza, City of Mara, Ring, X-City, Ateneo and Denya Forest, etc."
         />
 
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
