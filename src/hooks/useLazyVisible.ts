@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 /**
  * Returns [ref, isVisible] — isVisible becomes true once the sentinel
@@ -6,12 +6,19 @@ import { useState, useEffect, useRef } from "react";
  * loading before the user scrolls to them). Once true it never reverts.
  */
 export function useLazyVisible(rootMargin = "400px") {
-  const ref = useRef<HTMLDivElement>(null);
+  // Guard against partial React load on slow networks (Android/Chrome Mobile)
+  const refFn = useRef ?? React.useRef;
+  const ref = refFn<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el || isVisible) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
