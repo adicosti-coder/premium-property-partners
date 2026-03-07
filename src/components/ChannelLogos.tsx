@@ -105,17 +105,13 @@ const ChannelLogos = () => {
             >
               {channel.isInternal ? (
                 <div className="flex items-center gap-2">
-                  <div className={cn("w-3 h-3 rounded-full", channel.color)} />
+                  <div className="w-3 h-3 rounded-full bg-primary" />
                   <span className="font-semibold text-foreground">
                     {language === "ro" ? "Site Direct" : "Direct Site"}
                   </span>
                 </div>
               ) : (
-                <img
-                  src={channel.logo!}
-                  alt={channel.name}
-                  className="max-h-8 md:max-h-10 w-auto object-contain filter dark:brightness-0 dark:invert"
-                />
+                <ChannelSVG name={channel.name} color={channel.color} />
               )}
             </div>
           ))}
