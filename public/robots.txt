@@ -16,7 +16,14 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /portal-proprietar
+Disallow: /autentificare-proprietar
 Disallow: /auth
+Disallow: /reset-password
+Disallow: /profil
+Disallow: /setari
+Disallow: /favorite
+Disallow: /comunitate/trimite
+Disallow: /comunitate/editeaza/
 
 # Sitemaps
 Sitemap: https://www.realtrust.ro/sitemap.xml

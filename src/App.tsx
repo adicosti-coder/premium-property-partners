@@ -184,7 +184,6 @@ const App = () => (
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
-                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
               </DeferredShell>
