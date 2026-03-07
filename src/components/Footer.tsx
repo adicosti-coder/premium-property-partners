@@ -35,7 +35,7 @@ const Footer = () => {
       company: "Firmă",
       companyName: "Imo Business Centrum SRL",
       cui: "CUI: RO14380627",
-      address: "Timișoara, str. Samuil Micu, nr. 14, ap. 5",
+      address: "Strada Samuel Clain Micu Nr.14, ap.4, 300125 Timișoara",
       newsletter: "Newsletter",
       newsletterDesc: "Abonează-te pentru a primi noutăți și oferte speciale.",
       emailPlaceholder: "Adresa ta de email",
