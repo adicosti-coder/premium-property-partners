@@ -190,6 +190,15 @@ const App = () => (
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/contact" element={<ContactRedirect />} />
+                    {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
+                    <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />
+                    <Route path="/index_EN.html" element={<LegacyRedirect to="/" />} />
+                    <Route path="/imobiliare-realtrust-en.html" element={<LegacyRedirect to="/" />} />
+                    <Route path="/imobiliare-realtrust.html" element={<LegacyRedirect to="/" />} />
+                    <Route path="/real-estate-en.html" element={<LegacyRedirect to="/imobiliare" />} />
+                    <Route path="/real-estate.html" element={<LegacyRedirect to="/imobiliare" />} />
+                    {/* Sitemap redirect to dynamic edge function */}
+                    <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
