@@ -283,6 +283,18 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="email">{t.leadForm.email || "Email"}</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder={t.leadForm.emailPlaceholder || "exemplu@email.com"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={255}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="whatsapp">{t.leadForm.whatsapp}</Label>
               <PhoneInputWithCountry
                 id="whatsapp"
