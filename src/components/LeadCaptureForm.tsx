@@ -43,6 +43,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 }, ref) => {
   const { t, language } = useLanguage();
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -189,6 +190,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       const { data, error } = await supabase.functions.invoke("submit-lead", {
         body: {
           name: name.trim(),
+          email: email.trim() || null,
           whatsapp_number: whatsappNumber.trim(),
           property_area: parseInt(propertyArea),
           property_type: propertyType,
@@ -213,6 +215,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
       setTimeout(() => {
         setName("");
+        setEmail("");
         setWhatsappNumber("");
         setPropertyArea("");
         setPropertyType("");
@@ -278,6 +281,18 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
                 onChange={(e) => setName(e.target.value)}
                 required
                 maxLength={100}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">{t.leadForm.email || "Email"}</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder={t.leadForm.emailPlaceholder || "exemplu@email.com"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={255}
               />
             </div>
 
