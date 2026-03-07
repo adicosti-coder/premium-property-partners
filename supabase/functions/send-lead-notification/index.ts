@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL");
+const MAKE_WEBHOOK_URL = Deno.env.get("MAKE_WEBHOOK_URL");
 
 // Rate limiting configuration
 const RATE_LIMIT_MAX = 10; // Max 10 requests per window
