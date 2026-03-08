@@ -235,6 +235,7 @@ const ProfitCalculator = () => {
                       max={100}
                       step={5}
                       className="w-full"
+                      aria-label={language === 'ro' ? 'Grad de ocupare' : 'Occupancy rate'}
                     />
                   </div>
                 </TooltipTrigger>
