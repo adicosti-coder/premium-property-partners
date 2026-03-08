@@ -379,6 +379,10 @@ const Admin = () => {
               <BarChart3 className="w-4 h-4" />
               Vizualizări
             </TabsTrigger>
+            <TabsTrigger value="ical-sync" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              iCal Sync
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
