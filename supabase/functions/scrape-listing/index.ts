@@ -5,20 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-interface ScrapedListing {
-  title: string | null;
-  description: string | null;
-  price: number | null;
-  currency: string | null;
-  location: string | null;
-  size: number | null;
-  rooms: number | null;
-  bathrooms: number | null;
-  features: string[];
-  images: string[];
-  source_url: string;
-}
-
 /** Download an image from URL and upload to Supabase Storage */
 async function downloadAndUploadImage(
   imageUrl: string,
@@ -42,10 +28,7 @@ async function downloadAndUploadImage(
 
     const { error } = await supabase.storage
       .from('property-images')
-      .upload(filePath, uint8, {
-        contentType,
-        upsert: true,
-      });
+      .upload(filePath, uint8, { contentType, upsert: true });
 
     if (error) {
       console.error(`Upload error for image ${index}:`, error.message);
@@ -63,13 +46,49 @@ async function downloadAndUploadImage(
   }
 }
 
+/** Detect platform from URL */
+function detectPlatform(url: string): string {
+  if (url.includes('olx.ro')) return 'OLX';
+  if (url.includes('imobiliare.ro')) return 'Imobiliare.ro';
+  if (url.includes('storia.ro')) return 'Storia';
+  if (url.includes('publi24.ro')) return 'Publi24';
+  if (url.includes('anuntul.ro')) return 'Anuntul.ro';
+  if (url.includes('booking.com')) return 'Booking.com';
+  if (url.includes('airbnb.')) return 'Airbnb';
+  return 'Altă sursă';
+}
+
+const EXTRACTION_PROMPT = `Extract ALL property listing details from this real estate page. Return JSON with these exact fields:
+- title: property name/title (string)
+- description_short: a 1-2 sentence summary (string)
+- description_full: the complete detailed description text (string)
+- price: numeric price value only, no currency symbol (number)
+- currency: "EUR" or "RON" (string)
+- location: full address or neighborhood + city (string)
+- size: property size in sqm, number only (number)
+- rooms: number of rooms/bedrooms, number only (number)
+- bathrooms: number of bathrooms, number only (number)
+- floor: floor number or "parter"/"mansarda"/"demisol" (string or null)
+- year_built: construction year (number or null)
+- parking: parking info like "garaj", "loc parcare", "nu" (string or null)
+- heating_type: heating type like "centrala proprie", "termoficare", "pardoseala" (string or null)
+- energy_class: energy efficiency class like "A", "B", "C" (string or null)
+- furnished: "mobilat", "partial mobilat", "nemobilat" (string or null)
+- construction_type: "bloc", "casa", "vila", "duplex", "penthouse" (string or null)
+- compartimentare: "decomandat", "semidecomandat", "nedecomandat", "circular" (string or null)
+- features: array of ALL amenities/features mentioned (e.g. "aer conditionat", "balcon", "centrala", "parcare", "lift") (string[])
+- images: array of ALL property photo URLs found on the page - use full-resolution URLs, not thumbnails (string[])
+- listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental (string)
+
+Be thorough - extract every detail you can find. For missing fields, return null.`;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { url, listing_type } = await req.json();
+    const { url, listing_type, mode } = await req.json();
 
     if (!url) {
       return new Response(
@@ -90,9 +109,10 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log(`Scraping listing from: ${url}`);
+    const platform = detectPlatform(url);
+    console.log(`Scraping listing from ${platform}: ${url}`);
 
-    // Step 1: Scrape the page with Firecrawl - get markdown + images
+    // Step 1: Scrape with Firecrawl
     const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -101,108 +121,109 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url,
-        formats: ['markdown', 'links', { type: 'json', prompt: `Extract property listing details from this real estate page. Return JSON with these fields:
-- title: property name/title
-- description: full description text
-- price: numeric price (just the number, no currency)
-- currency: "EUR" or "RON" 
-- location: full address or area
-- size: property size in sqm (just number)
-- rooms: number of rooms/bedrooms (just number)
-- bathrooms: number of bathrooms (just number)
-- features: array of amenities/features as strings
-- images: array of ALL property photo URLs found on the page (full URLs, not thumbnails - look for the largest resolution available)
-- listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental` }],
+        formats: ['markdown', 'links', { type: 'json', prompt: EXTRACTION_PROMPT }],
         waitFor: 5000,
       }),
     });
 
     const scrapeData = await scrapeResponse.json();
-    console.log('Scrape response status:', scrapeResponse.status);
-
     const jsonData = scrapeData?.data?.json || scrapeData?.json || {};
     const markdown = scrapeData?.data?.markdown || scrapeData?.markdown || '';
     const pageLinks = scrapeData?.data?.links || scrapeData?.links || [];
 
-    // Collect images from JSON extraction + page links
+    // Collect images
     let imageUrls: string[] = [];
+    if (Array.isArray(jsonData.images)) imageUrls.push(...jsonData.images);
 
-    // From JSON extraction
-    if (Array.isArray(jsonData.images)) {
-      imageUrls.push(...jsonData.images);
-    }
-
-    // From page links - filter for image URLs
     const imageExtensions = /\.(jpg|jpeg|png|webp|avif)(\?|$)/i;
     const imageFromLinks = pageLinks.filter((link: string) =>
       imageExtensions.test(link) &&
-      !link.includes('logo') &&
-      !link.includes('icon') &&
-      !link.includes('avatar') &&
-      !link.includes('thumb') &&
+      !link.includes('logo') && !link.includes('icon') &&
+      !link.includes('avatar') && !link.includes('thumb') &&
       link.length > 20
     );
     imageUrls.push(...imageFromLinks);
 
-    // Also extract image URLs from markdown
     const mdImageRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
     let mdMatch;
     while ((mdMatch = mdImageRegex.exec(markdown)) !== null) {
       imageUrls.push(mdMatch[1]);
     }
+    imageUrls = [...new Set(imageUrls)].slice(0, 30);
 
-    // Deduplicate images
-    imageUrls = [...new Set(imageUrls)].slice(0, 30); // Max 30 images
-
-    console.log(`Found ${imageUrls.length} images`);
-
-    // Build the listing data
-    const listing: ScrapedListing = {
+    // Build extracted data
+    const extracted = {
       title: jsonData.title || null,
-      description: jsonData.description || null,
+      description_short: jsonData.description_short || null,
+      description_full: jsonData.description_full || jsonData.description || null,
       price: jsonData.price ? Number(jsonData.price) : null,
       currency: jsonData.currency || null,
       location: jsonData.location || null,
       size: jsonData.size ? Number(jsonData.size) : null,
       rooms: jsonData.rooms ? Number(jsonData.rooms) : null,
       bathrooms: jsonData.bathrooms ? Number(jsonData.bathrooms) : null,
+      floor: jsonData.floor || null,
+      year_built: jsonData.year_built ? Number(jsonData.year_built) : null,
+      parking: jsonData.parking || null,
+      heating_type: jsonData.heating_type || null,
+      energy_class: jsonData.energy_class || null,
+      furnished: jsonData.furnished || null,
+      construction_type: jsonData.construction_type || null,
+      compartimentare: jsonData.compartimentare || null,
       features: Array.isArray(jsonData.features) ? jsonData.features : [],
       images: imageUrls,
+      listing_type_hint: jsonData.listing_type_hint || null,
       source_url: url,
+      source_platform: platform,
     };
 
-    // Determine listing type
-    const finalListingType = listing_type || jsonData.listing_type_hint || 'vanzare';
+    // If mode is "preview", return extracted data without saving
+    if (mode === 'preview') {
+      return new Response(
+        JSON.stringify({ success: true, extracted }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Generate slug from title
-    const slug = listing.title
-      ? listing.title
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '')
+    // Mode: "save" - create property in DB
+    const finalListingType = listing_type || extracted.listing_type_hint || 'vanzare';
+
+    const slug = extracted.title
+      ? extracted.title.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
           .substring(0, 80)
       : `import-${Date.now()}`;
 
-    // Step 2: Create property in database
     const propertyData: Record<string, any> = {
-      name: listing.title || 'Imported Listing',
-      location: listing.location || 'Timișoara',
-      description_ro: listing.description || '',
+      name: extracted.title || 'Anunț Importat',
+      location: extracted.location || 'Timișoara',
+      description_ro: extracted.description_short || extracted.description_full || '',
       description_en: '',
-      features: listing.features,
+      long_description_ro: extracted.description_full || '',
+      long_description_en: '',
+      features: extracted.features,
       booking_url: url,
       tag: finalListingType === 'vanzare' ? 'De Vânzare' : finalListingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
       listing_type: finalListingType,
       slug,
-      is_active: false, // Start inactive until admin reviews
-      capacity: listing.rooms ? listing.rooms * 2 : 2,
-      bedrooms: listing.rooms || 1,
-      bathrooms: listing.bathrooms || 1,
-      size: listing.size || 40,
-      base_price_per_night: listing.price || null,
-      capital_necesar: finalListingType === 'vanzare' || finalListingType === 'investitie' ? listing.price : null,
+      is_active: false,
+      capacity: extracted.rooms ? extracted.rooms * 2 : 2,
+      bedrooms: extracted.rooms || 1,
+      bathrooms: extracted.bathrooms || 1,
+      size: extracted.size || 40,
+      base_price_per_night: extracted.price || null,
+      capital_necesar: (finalListingType === 'vanzare' || finalListingType === 'investitie') ? extracted.price : null,
+      floor: extracted.floor,
+      year_built: extracted.year_built,
+      parking: extracted.parking,
+      heating_type: extracted.heating_type,
+      energy_class: extracted.energy_class,
+      furnished: extracted.furnished,
+      construction_type: extracted.construction_type,
+      compartimentare: extracted.compartimentare,
+      source_url: url,
+      source_platform: platform,
     };
 
     const { data: newProperty, error: insertError } = await supabase
@@ -212,71 +233,41 @@ Deno.serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error('Insert error:', insertError);
       return new Response(
-        JSON.stringify({ success: false, error: `Failed to create property: ${insertError.message}` }),
+        JSON.stringify({ success: false, error: `Failed to create: ${insertError.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Created property: ${newProperty.id}`);
-
-    // Step 3: Download and upload images
+    // Upload images
     const uploadedImages: string[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const uploaded = await downloadAndUploadImage(imageUrls[i], supabase, newProperty.id, i);
-      if (uploaded) {
-        uploadedImages.push(uploaded);
-      }
-      // Small delay between downloads
-      if (i < imageUrls.length - 1) {
-        await new Promise(r => setTimeout(r, 300));
-      }
+      if (uploaded) uploadedImages.push(uploaded);
+      if (i < imageUrls.length - 1) await new Promise(r => setTimeout(r, 300));
     }
 
-    console.log(`Uploaded ${uploadedImages.length}/${imageUrls.length} images`);
-
-    // Step 4: Update property with uploaded image paths
     if (uploadedImages.length > 0) {
-      // Set first image as main image_path, rest in images array
-      await supabase
-        .from('properties')
-        .update({
-          image_path: uploadedImages[0],
-          images: uploadedImages,
-        })
-        .eq('id', newProperty.id);
+      await supabase.from('properties').update({
+        image_path: uploadedImages[0],
+        images: uploadedImages,
+      }).eq('id', newProperty.id);
 
-      // Also create property_images entries
       const imageEntries = uploadedImages.map((imgPath, idx) => ({
         property_id: newProperty.id,
         image_path: imgPath,
         display_order: idx,
         is_primary: idx === 0,
       }));
-
       await supabase.from('property_images').insert(imageEntries);
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        property: {
-          id: newProperty.id,
-          slug: newProperty.slug,
-          name: newProperty.name,
-        },
-        scraped: {
-          title: listing.title,
-          location: listing.location,
-          price: listing.price,
-          currency: listing.currency,
-          size: listing.size,
-          rooms: listing.rooms,
-          features_count: listing.features.length,
-          images_found: imageUrls.length,
-          images_uploaded: uploadedImages.length,
-        },
+        property: newProperty,
+        extracted,
+        images_uploaded: uploadedImages.length,
         listing_type: finalListingType,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
