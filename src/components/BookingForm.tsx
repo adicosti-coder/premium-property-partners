@@ -121,6 +121,34 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     }
   };
 
+  const validateDiscountCode = async () => {
+    if (!discountCode.trim()) return;
+    setIsValidatingCode(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-discount-code', {
+        body: { code: discountCode.trim().toUpperCase() }
+      });
+      if (error || !data?.valid) {
+        setDiscountInfo(null);
+        toast({
+          title: language === 'en' ? "Invalid code" : "Cod invalid",
+          description: language === 'en' ? "This discount code is not valid or has expired." : "Acest cod de discount nu este valid sau a expirat.",
+          variant: "destructive",
+        });
+      } else {
+        setDiscountInfo(data);
+        toast({
+          title: language === 'en' ? "Code applied!" : "Cod aplicat!",
+          description: `${data.discount_value}${data.discount_type === 'percentage' ? '%' : '€'} ${language === 'en' ? 'discount' : 'reducere'}`,
+        });
+      }
+    } catch {
+      setDiscountInfo(null);
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
   const validateForm = () => {
     try {
       bookingSchema.parse(formData);
