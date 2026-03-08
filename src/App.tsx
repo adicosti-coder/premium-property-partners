@@ -189,6 +189,7 @@ const App = () => (
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/preturi" element={<Preturi />} />
+                    <Route path="/zona/:zone" element={<ZoneLanding />} />
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
                     <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />

@@ -100,6 +100,11 @@ const PropertyCard = ({
             variant="compact"
           />
 
+          {/* Real-time viewers badge */}
+          {viewerCount >= 2 && (
+            <ViewersBadge count={viewerCount} className="absolute bottom-4 right-4" />
+          )}
+
           {/* Rating badge */}
           <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
             <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
