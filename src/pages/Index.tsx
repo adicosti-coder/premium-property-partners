@@ -24,7 +24,7 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 
 // Visibility-gated section: stats + calculator (near-fold)
 const NearFoldSection = () => {
-  const [ref, visible] = useLazyVisible("50px");
+  const [ref, visible] = useLazyVisible("200px");
   const [forceShow, setForceShow] = useState(false);
   const show = visible || forceShow;
 
