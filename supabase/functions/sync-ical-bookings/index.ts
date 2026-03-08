@@ -7,10 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * Parse an iCal (.ics) string and extract VEVENT blocks.
- * Returns an array of { uid, summary, dtstart, dtend, description }.
- */
 function parseIcal(icsText: string) {
   const events: {
     uid: string;
@@ -20,24 +16,17 @@ function parseIcal(icsText: string) {
     description: string;
   }[] = [];
 
-  // Split into VEVENT blocks
   const blocks = icsText.split("BEGIN:VEVENT");
   for (let i = 1; i < blocks.length; i++) {
     const block = blocks[i].split("END:VEVENT")[0];
 
     const getValue = (key: string): string => {
-      // Handle folded lines (lines starting with space/tab are continuations)
       const unfoldedBlock = block.replace(/\r?\n[ \t]/g, "");
       const regex = new RegExp(`^${key}[;:](.*)$`, "m");
       const match = unfoldedBlock.match(regex);
       if (!match) return "";
-      // For properties with parameters like DTSTART;VALUE=DATE:20260101
       const val = match[1];
-      const colonIdx = val.indexOf(":");
-      // If the regex captured after the first colon already, just return
-      // But if there are parameters (;), the value is after the last colon
       if (key === "DTSTART" || key === "DTEND") {
-        // Could be DTSTART;VALUE=DATE:20260308 or DTSTART:20260308T150000Z
         return val.includes(":") ? val.split(":").pop()! : val;
       }
       return val.trim();
@@ -62,10 +51,6 @@ function parseIcal(icsText: string) {
   return events;
 }
 
-/**
- * Convert iCal date string to ISO date (YYYY-MM-DD).
- * Handles: 20260308, 20260308T150000, 20260308T150000Z
- */
 function icalDateToISO(dateStr: string): string {
   if (!dateStr || dateStr.length < 8) return "";
   const y = dateStr.substring(0, 4);
@@ -84,16 +69,16 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Optional: sync only a specific source
     let sourceFilter: string | null = null;
+    let syncType = "auto";
     try {
       const body = await req.json();
       sourceFilter = body?.source_id || null;
+      syncType = body?.sync_type || "manual";
     } catch {
-      // No body — sync all
+      // No body — sync all (cron)
     }
 
-    // Fetch active iCal sources
     let query = supabase
       .from("ical_sources")
       .select("id, property_id, ical_url, label, pynbooking_room")
@@ -116,6 +101,7 @@ serve(async (req) => {
     const results: { source_id: string; label: string; events: number; new: number; updated: number; error?: string }[] = [];
 
     for (const source of sources) {
+      const startTime = Date.now();
       try {
         console.log(`Fetching iCal: ${source.ical_url}`);
         const res = await fetch(source.ical_url, {
@@ -132,9 +118,6 @@ serve(async (req) => {
         let newCount = 0;
         let updatedCount = 0;
 
-        // We need the property's integer ID for the bookings table
-        // The bookings table uses property_id as integer, but properties uses uuid
-        // We need to find the mapping
         const { data: prop } = await supabase
           .from("properties")
           .select("id, name, property_code")
@@ -145,7 +128,6 @@ serve(async (req) => {
           throw new Error(`Property ${source.property_id} not found`);
         }
 
-        // Get existing bookings for this source to detect updates
         const { data: existingBookings } = await supabase
           .from("bookings")
           .select("id, ical_event_uid, check_in, check_out, guest_name")
@@ -161,13 +143,10 @@ serve(async (req) => {
 
           if (!checkIn) continue;
 
-          // Extract guest name from SUMMARY (PynBooking usually puts guest name there)
           const guestName = event.summary || "iCal Guest";
-
           const existing = existingMap.get(event.uid);
 
           if (existing) {
-            // Check if dates changed → update
             if (existing.check_in !== checkIn || existing.check_out !== (checkOut || checkIn) || existing.guest_name !== guestName) {
               const { error: updErr } = await supabase
                 .from("bookings")
@@ -183,9 +162,6 @@ serve(async (req) => {
             }
             existingMap.delete(event.uid);
           } else {
-            // New booking — insert
-            // property_id in bookings is integer type, we need a numeric identifier
-            // Use a hash or the display_order. For now, use a deterministic number from UUID
             const propertyIdNum = parseInt(prop.id.replace(/-/g, "").substring(0, 8), 16) % 1000000;
 
             const { error: insErr } = await supabase.from("bookings").insert({
@@ -215,6 +191,39 @@ serve(async (req) => {
           })
           .eq("id", source.id);
 
+        // Log sync result
+        await supabase.from("ical_sync_logs").insert({
+          source_id: source.id,
+          property_id: source.property_id,
+          events_found: events.length,
+          new_bookings: newCount,
+          updated_bookings: updatedCount,
+          deleted_bookings: 0,
+          sync_type: syncType,
+          duration_ms: Date.now() - startTime,
+        });
+
+        // Notify owners about new bookings
+        if (newCount > 0) {
+          const { data: owners } = await supabase
+            .from("owner_properties")
+            .select("user_id")
+            .eq("property_id", source.property_id);
+
+          if (owners && owners.length > 0) {
+            const notifications = owners.map((o) => ({
+              user_id: o.user_id,
+              title: `📅 ${newCount} rezervări noi sincronizate`,
+              message: `Au fost importate ${newCount} rezervări noi din PynBooking pentru ${prop.name}${updatedCount > 0 ? ` și actualizate ${updatedCount} existente` : ""}.`,
+              type: "success",
+              action_url: "/portal-proprietar",
+              action_label: "Vezi Calendar",
+            }));
+
+            await supabase.from("user_notifications").insert(notifications);
+          }
+        }
+
         results.push({
           source_id: source.id,
           label: source.label || source.pynbooking_room || "unknown",
@@ -225,7 +234,6 @@ serve(async (req) => {
       } catch (err: any) {
         console.error(`Error syncing source ${source.id}:`, err.message);
 
-        // Update source with error
         await supabase
           .from("ical_sources")
           .update({
@@ -234,6 +242,19 @@ serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq("id", source.id);
+
+        // Log error
+        await supabase.from("ical_sync_logs").insert({
+          source_id: source.id,
+          property_id: source.property_id,
+          events_found: 0,
+          new_bookings: 0,
+          updated_bookings: 0,
+          deleted_bookings: 0,
+          error_message: err.message,
+          sync_type: syncType,
+          duration_ms: Date.now() - startTime,
+        });
 
         results.push({
           source_id: source.id,
