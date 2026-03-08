@@ -473,6 +473,44 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             />
           </div>
 
+          {/* Discount Code */}
+          <div className="space-y-2">
+            <Label htmlFor="discountCode" className="text-foreground flex items-center gap-2">
+              <Tag className="w-4 h-4 text-primary" />
+              {language === 'en' ? 'Discount Code' : 'Cod de Reducere'}
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="discountCode"
+                value={discountCode}
+                onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountInfo(null); }}
+                placeholder={language === 'en' ? "e.g. DIRECT5" : "ex. DIRECT5"}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={validateDiscountCode}
+                disabled={!discountCode.trim() || isValidatingCode}
+                className="shrink-0"
+              >
+                {isValidatingCode ? "..." : language === 'en' ? 'Apply' : 'Aplică'}
+              </Button>
+            </div>
+            {discountInfo && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckIcon className="w-4 h-4" />
+                <span>
+                  {discountInfo.discount_value}{discountInfo.discount_type === 'percentage' ? '%' : '€'} {language === 'en' ? 'discount applied' : 'reducere aplicată'}
+                </span>
+                <button type="button" onClick={() => { setDiscountCode(""); setDiscountInfo(null); }} className="ml-auto">
+                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Turnstile widget */}
           <div className="flex flex-col items-center gap-2 pt-2">
             {turnstileSiteKey ? (
