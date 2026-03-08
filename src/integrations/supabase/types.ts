@@ -329,6 +329,8 @@ export type Database = {
           check_out: string
           created_at: string
           guest_name: string | null
+          ical_event_uid: string | null
+          ical_source_id: string | null
           id: string
           property_id: number
           source: string | null
@@ -340,6 +342,8 @@ export type Database = {
           check_out: string
           created_at?: string
           guest_name?: string | null
+          ical_event_uid?: string | null
+          ical_source_id?: string | null
           id?: string
           property_id: number
           source?: string | null
@@ -351,13 +355,23 @@ export type Database = {
           check_out?: string
           created_at?: string
           guest_name?: string | null
+          ical_event_uid?: string | null
+          ical_source_id?: string | null
           id?: string
           property_id?: number
           source?: string | null
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bookings_ical_source_id_fkey"
+            columns: ["ical_source_id"]
+            isOneToOne: false
+            referencedRelation: "ical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       captcha_logs: {
         Row: {
@@ -1156,6 +1170,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "financial_records_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ical_sources: {
+        Row: {
+          created_at: string
+          events_count: number | null
+          ical_url: string
+          id: string
+          is_active: boolean
+          label: string
+          last_sync_error: string | null
+          last_synced_at: string | null
+          property_id: string
+          pynbooking_room: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          events_count?: number | null
+          ical_url: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_sync_error?: string | null
+          last_synced_at?: string | null
+          property_id: string
+          pynbooking_room?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          events_count?: number | null
+          ical_url?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_sync_error?: string | null
+          last_synced_at?: string | null
+          property_id?: string
+          pynbooking_room?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ical_sources_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"

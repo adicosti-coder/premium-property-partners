@@ -128,3 +128,6 @@ verify_jwt = false
 
 [functions.scrape-property-details]
 verify_jwt = false
+
+[functions.sync-ical-bookings]
+verify_jwt = false

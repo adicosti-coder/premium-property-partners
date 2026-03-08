@@ -93,6 +93,7 @@ import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
 import PropertyViewsManager from "@/components/admin/PropertyViewsManager";
 import CazareManager from "@/components/admin/CazareManager";
 import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManager";
+import ICalManager from "@/components/admin/ICalManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -378,6 +379,10 @@ const Admin = () => {
               <BarChart3 className="w-4 h-4" />
               Vizualizări
             </TabsTrigger>
+            <TabsTrigger value="ical-sync" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              iCal Sync
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -510,6 +515,11 @@ const Admin = () => {
           {/* Property Views Tab */}
           <TabsContent value="property-views">
             <PropertyViewsManager />
+          </TabsContent>
+
+          {/* iCal Sync Tab */}
+          <TabsContent value="ical-sync">
+            <ICalManager />
           </TabsContent>
         </Tabs>
       </div>
