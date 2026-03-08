@@ -532,6 +532,11 @@ const Admin = () => {
             <ICalManager />
           </TabsContent>
 
+          {/* Prospect Bot Tab */}
+          <TabsContent value="prospects">
+            <ProspectManager />
+          </TabsContent>
+
           {/* Listing Import Tab */}
           <TabsContent value="listing-import">
             <ListingImporter />
