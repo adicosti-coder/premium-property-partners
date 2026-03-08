@@ -162,7 +162,7 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = await buildSystemPrompt(language);
+    const systemPrompt = await buildSystemPrompt(language, pageContext);
 
     const messages = [
       { role: "system", content: systemPrompt },
