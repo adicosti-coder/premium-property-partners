@@ -1756,12 +1756,18 @@ export type Database = {
           capital_necesar: number | null
           check_in_time: string | null
           check_out_time: string | null
+          compartimentare: string | null
+          construction_type: string | null
           created_at: string
           description_en: string
           description_ro: string
           display_order: number
+          energy_class: string | null
           estimated_revenue: string | null
           features: string[]
+          floor: string | null
+          furnished: string | null
+          heating_type: string | null
           house_rules: string[] | null
           house_rules_en: string[] | null
           id: string
@@ -1773,14 +1779,18 @@ export type Database = {
           long_description_en: string | null
           long_description_ro: string | null
           name: string
+          parking: string | null
           property_code: string | null
           roi_percentage: string | null
           size: number | null
           slug: string | null
+          source_platform: string | null
+          source_url: string | null
           status_operativ: string | null
           tag: string
           updated_at: string
           weekend_price_per_night: number | null
+          year_built: number | null
         }
         Insert: {
           amenities?: string[] | null
@@ -1795,12 +1805,18 @@ export type Database = {
           capital_necesar?: number | null
           check_in_time?: string | null
           check_out_time?: string | null
+          compartimentare?: string | null
+          construction_type?: string | null
           created_at?: string
           description_en: string
           description_ro: string
           display_order?: number
+          energy_class?: string | null
           estimated_revenue?: string | null
           features?: string[]
+          floor?: string | null
+          furnished?: string | null
+          heating_type?: string | null
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
@@ -1812,14 +1828,18 @@ export type Database = {
           long_description_en?: string | null
           long_description_ro?: string | null
           name: string
+          parking?: string | null
           property_code?: string | null
           roi_percentage?: string | null
           size?: number | null
           slug?: string | null
+          source_platform?: string | null
+          source_url?: string | null
           status_operativ?: string | null
           tag: string
           updated_at?: string
           weekend_price_per_night?: number | null
+          year_built?: number | null
         }
         Update: {
           amenities?: string[] | null
@@ -1834,12 +1854,18 @@ export type Database = {
           capital_necesar?: number | null
           check_in_time?: string | null
           check_out_time?: string | null
+          compartimentare?: string | null
+          construction_type?: string | null
           created_at?: string
           description_en?: string
           description_ro?: string
           display_order?: number
+          energy_class?: string | null
           estimated_revenue?: string | null
           features?: string[]
+          floor?: string | null
+          furnished?: string | null
+          heating_type?: string | null
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
@@ -1851,14 +1877,18 @@ export type Database = {
           long_description_en?: string | null
           long_description_ro?: string | null
           name?: string
+          parking?: string | null
           property_code?: string | null
           roi_percentage?: string | null
           size?: number | null
           slug?: string | null
+          source_platform?: string | null
+          source_url?: string | null
           status_operativ?: string | null
           tag?: string
           updated_at?: string
           weekend_price_per_night?: number | null
+          year_built?: number | null
         }
         Relationships: []
       }
