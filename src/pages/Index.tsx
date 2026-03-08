@@ -73,7 +73,7 @@ const MidFoldSection = () => {
 const TeaserSections = () => {
   const [ref, visible] = useLazyVisible("400px");
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <section id="beneficii">
