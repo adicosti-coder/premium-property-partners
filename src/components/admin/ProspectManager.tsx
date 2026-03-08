@@ -391,7 +391,14 @@ const ProspectManager = () => {
       onClick={() => { setSelectedListing(listing); setEditNotes(listing.admin_notes || ''); }}
     >
       <div className="flex items-start justify-between gap-2">
-        <h4 className="font-medium text-sm line-clamp-2 flex-1">{listing.title || 'Fără titlu'}</h4>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-sm line-clamp-2">{listing.title || 'Fără titlu'}</h4>
+          {listing.prospect_type !== 'proprietar' && (
+            <span className="text-[10px] text-muted-foreground">
+              {PROSPECT_TYPES.find(p => p.value === listing.prospect_type)?.icon} {PROSPECT_TYPES.find(p => p.value === listing.prospect_type)?.label.replace(/^[^\s]+ /, '')}
+            </span>
+          )}
+        </div>
         <Badge variant={getScoreBadgeVariant(listing.score)} className="shrink-0 text-xs">
           {listing.score}
         </Badge>
