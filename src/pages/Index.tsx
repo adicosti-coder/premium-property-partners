@@ -90,9 +90,9 @@ const TeaserSections = () => {
 
 // Visibility-gated bottom fold (simplified - fewer sections)
 const BottomFoldSection = ({ language }: { language: string }) => {
-  const [ref, visible] = useLazyVisible("100px");
+  const [ref, visible] = useLazyVisible("200px");
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <BlogPreview />
