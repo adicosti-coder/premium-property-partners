@@ -330,6 +330,18 @@ const ProspectManager = () => {
           <span className="text-xs text-green-600 font-medium">{listing.contact_phone}</span>
         </div>
       )}
+      {(listing.tags?.length > 0) && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {listing.tags.map(tag => {
+            const label = CONVERSATION_LABELS.find(l => l.value === tag);
+            return label ? (
+              <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${label.color}`}>
+                {label.label}
+              </span>
+            ) : null;
+          })}
+        </div>
+      )}
     </div>
   );
 
