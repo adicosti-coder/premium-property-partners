@@ -289,7 +289,6 @@ const ProspectManager = () => {
     }
   };
 
-  const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
 
   const uniqueZones = [...new Set(allListings.map(l => l.zone).filter(Boolean))] as string[];
 
