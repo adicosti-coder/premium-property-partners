@@ -32,7 +32,7 @@ function getClientIP(req: Request): string {
 
 // ─── System Prompt Builder ──────────────────────────────────
 
-async function buildSystemPrompt(language: string): Promise<string> {
+async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const { data: properties } = await sb

@@ -519,6 +519,8 @@ const PropertyDetail = () => {
                 pricePerNight={staticProperty ? property.pricePerNight : undefined}
                 isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
                 listingType={dbProperty?.listing_type}
+                amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
+                houseRules={dbProperty?.house_rules || []}
               />
             </div>
 
