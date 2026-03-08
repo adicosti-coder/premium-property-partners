@@ -205,6 +205,7 @@ const ProfitCalculator = () => {
                       max={200}
                       step={5}
                       className="w-full"
+                      aria-label={language === 'ro' ? 'Preț mediu pe noapte' : 'Average nightly rate'}
                     />
                   </div>
                 </TooltipTrigger>
