@@ -163,6 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
         await supabase.functions.invoke("send-lead-notification", {
           body: {
             name,
+            email: email || undefined,
             whatsappNumber: whatsappNumber,
             propertyArea,
             propertyType,

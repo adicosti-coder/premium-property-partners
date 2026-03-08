@@ -850,22 +850,23 @@ const handler = async (req: Request): Promise<Response> => {
           const ptLabel = propertyTypeLabels[q.propertyType] || q.propertyType;
           makePayload = {
             type: 'quick_form',
-            name: q.name,
-            whatsapp: q.whatsappNumber,
-            propertyType: ptLabel,
-            listingUrl: q.listingUrl || '',
-            message: `⚡ Lead Rapid\n👤 ${q.name}\n📱 ${q.whatsappNumber}\n🏠 ${ptLabel}${q.listingUrl ? '\n🔗 ' + q.listingUrl : ''}`,
+            full_name: q.name,
+            email: (rawData as any).email || '',
+            whatsapp_number: q.whatsappNumber,
+            property_type: ptLabel,
+            listing_url: q.listingUrl || '',
           };
         } else if (leadData.source === 'real_estate_contact') {
           const r = leadData as RealEstateContactLead;
           const stLabel = serviceTypeLabels[r.serviceType] || r.serviceType;
           makePayload = {
             type: 'real_estate_contact',
-            name: r.name,
-            phone: r.phone,
+            full_name: r.name,
             email: r.email,
-            serviceType: stLabel,
-            message: `🏡 Lead Imobiliare - ${stLabel}\n👤 ${r.name}\n📱 ${r.phone}\n📧 ${r.email}${r.message ? '\n💬 ' + r.message : ''}`,
+            whatsapp_number: r.phone,
+            property_type: r.propertyType ? (propertyTypeLabels[r.propertyType] || r.propertyType) : '',
+            service_type: stLabel,
+            listing_url: r.listingUrl || '',
           };
         } else {
           const p = leadData as ProfitCalculatorLead;
@@ -873,14 +874,14 @@ const handler = async (req: Request): Promise<Response> => {
           const listUrl = p.listingUrl || p.simulationData?.listingUrl;
           makePayload = {
             type: 'profit-calculator',
-            name: p.name,
-            whatsapp: p.whatsappNumber,
-            propertyType: ptLabel,
-            propertyArea: p.propertyArea,
-            netProfit: p.calculatedNetProfit,
-            yearlyProfit: p.calculatedYearlyProfit,
-            listingUrl: listUrl || '',
-            message: `🏠 Lead Profit Calculator\n👤 ${p.name}\n📱 ${p.whatsappNumber}\n🏢 ${ptLabel}, ${p.propertyArea}m²\n💰 ${p.calculatedNetProfit.toLocaleString('ro-RO')}€/lună | ${p.calculatedYearlyProfit.toLocaleString('ro-RO')}€/an${listUrl ? '\n🔗 ' + listUrl : ''}`,
+            full_name: p.name,
+            email: (rawData as any).email || '',
+            whatsapp_number: p.whatsappNumber,
+            property_type: ptLabel,
+            property_area: p.propertyArea,
+            estimated_net_profit: p.calculatedNetProfit,
+            estimated_yearly_profit: p.calculatedYearlyProfit,
+            listing_url: listUrl || '',
           };
         }
 
