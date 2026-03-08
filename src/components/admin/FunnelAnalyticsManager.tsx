@@ -102,7 +102,7 @@ const FunnelAnalyticsManager = () => {
       return acc;
     }, {} as Record<number, number>);
 
-    // Funnel analysis
+    // Funnel analysis (legacy)
     const funnelEvents = analytics.filter(a => a.cta_type === "funnel_step" || a.cta_type === "funnel_complete");
     const funnelsByName = funnelEvents.reduce((acc, event) => {
       const name = (event.metadata?.funnelName as string) || "default";
@@ -110,6 +110,37 @@ const FunnelAnalyticsManager = () => {
       acc[name].push(event);
       return acc;
     }, {} as Record<string, AnalyticsRecord[]>);
+
+    // Conversion funnel from useFunnelTracking
+    const FUNNEL_STEP_ORDER = [
+      "funnel_page_view", "funnel_property_click", "funnel_gallery_view",
+      "funnel_calculator_open", "funnel_calculator_complete",
+      "funnel_booking_form_open", "funnel_booking_form_submit",
+      "funnel_lead_form_open", "funnel_lead_form_submit",
+      "funnel_whatsapp_click", "funnel_phone_click", "funnel_discount_code_applied",
+    ];
+    const FUNNEL_STEP_LABELS: Record<string, string> = {
+      funnel_page_view: "Page View",
+      funnel_property_click: "Property Click",
+      funnel_gallery_view: "Gallery View",
+      funnel_calculator_open: "Calculator Open",
+      funnel_calculator_complete: "Calculator Done",
+      funnel_booking_form_open: "Booking Form Open",
+      funnel_booking_form_submit: "Booking Submit",
+      funnel_lead_form_open: "Lead Form Open",
+      funnel_lead_form_submit: "Lead Submit",
+      funnel_whatsapp_click: "WhatsApp Click",
+      funnel_phone_click: "Phone Click",
+      funnel_discount_code_applied: "Discount Applied",
+    };
+    const conversionFunnel = FUNNEL_STEP_ORDER
+      .map(step => {
+        const uniqueSessions = new Set(
+          analytics.filter(a => a.cta_type === step).map(a => a.session_id)
+        ).size;
+        return { step, label: FUNNEL_STEP_LABELS[step] || step, sessions: uniqueSessions };
+      })
+      .filter(s => s.sessions > 0);
 
     // A/B test results
     const abAssignments = analytics.filter(a => a.cta_type === "ab_assignment");
