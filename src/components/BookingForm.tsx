@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Calendar, Users, Phone, Mail, MessageSquare, Globe, Send, ShieldCheck } from "lucide-react";
+import { Calendar, Users, Phone, Mail, MessageSquare, Globe, Send, ShieldCheck, Tag, Check as CheckIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
