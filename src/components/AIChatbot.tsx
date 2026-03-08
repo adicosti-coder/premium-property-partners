@@ -141,7 +141,7 @@ const AIChatbot = () => {
       greeting: "Bună ziua! Sunt Concierge-ul dumneavoastră Digital de la RealTrust & ApArt Hotel Timișoara. 🏠\n\n**Am acces la date în timp real** și vă pot ajuta cu:\n\n📅 **Disponibilitate live** — verifice instant ce apartamente sunt libere\n💰 **Simulare ROI** — calcul personalizat randament investiție\n🗓️ **Programare vizită** — rezerv automat vizionarea pentru dvs.\n🗺️ **Ghid local** — recomandări personalizate restaurante, atracții\n\nCu ce vă pot fi de ajutor?",
       placeholder: "Întrebați orice despre cazare, investiții, Timișoara...",
       power: "AI Agent · Live Data",
-      quickActions: ["Ce apartamente sunt libere?", "Calculează-mi ROI-ul", "Vreau să vizitez un apartament", "Ce restaurante recomanzi?"],
+      quickActions: getContextualQuickActions("ro"),
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
       errorRateLimit: "Prea multe cereri. Așteaptă un moment.",
