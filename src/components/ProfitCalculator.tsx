@@ -205,6 +205,7 @@ const ProfitCalculator = () => {
                       max={200}
                       step={5}
                       className="w-full"
+                      aria-label={language === 'ro' ? 'Preț mediu pe noapte' : 'Average nightly rate'}
                     />
                   </div>
                 </TooltipTrigger>
@@ -234,6 +235,7 @@ const ProfitCalculator = () => {
                       max={100}
                       step={5}
                       className="w-full"
+                      aria-label={language === 'ro' ? 'Grad de ocupare' : 'Occupancy rate'}
                     />
                   </div>
                 </TooltipTrigger>
@@ -263,6 +265,7 @@ const ProfitCalculator = () => {
                       max={14}
                       step={1}
                       className="w-full"
+                      aria-label={language === 'ro' ? 'Durată medie sejur' : 'Average stay duration'}
                     />
                   </div>
                 </TooltipTrigger>
@@ -294,6 +297,7 @@ const ProfitCalculator = () => {
                   max={60}
                   step={5}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Cost curățenie' : 'Cleaning cost'}
                 />
               </div>
 
@@ -313,6 +317,7 @@ const ProfitCalculator = () => {
                   max={30}
                   step={1}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Comision administrare' : 'Management fee'}
                 />
               </div>
 
@@ -332,6 +337,7 @@ const ProfitCalculator = () => {
                   max={25}
                   step={1}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Comision platformă' : 'Platform fee'}
                 />
                 <p className="text-sm text-muted-foreground">{t.calculator.platformFeeDescription}</p>
               </div>
