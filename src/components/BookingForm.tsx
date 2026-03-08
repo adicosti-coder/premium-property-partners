@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { z } from "zod";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { useFunnelTracking } from "@/hooks/useFunnelTracking";
 
 interface BookingFormProps {
   isOpen: boolean;
