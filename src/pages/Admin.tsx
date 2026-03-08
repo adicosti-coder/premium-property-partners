@@ -58,7 +58,7 @@ import {
   ShieldCheck,
   PenLine,
   MousePointerClick,
-  Target, TrendingUp,
+  Target, TrendingUp, LinkIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
