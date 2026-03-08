@@ -34,6 +34,7 @@ const countriesEn = [
 const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  const { trackStep } = useFunnelTracking();
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot field for bot detection
   const [honeypot, setHoneypot] = useState("");
