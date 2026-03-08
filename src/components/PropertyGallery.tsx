@@ -324,50 +324,16 @@ const PropertyGallery = () => {
         </div>
       </div>
 
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal with swipe support */}
       {lightboxOpen && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
-          <button
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 text-foreground hover:text-primary transition-colors"
-          >
-            <X className="w-8 h-8" />
-          </button>
-
-          <button
-            onClick={prevImage}
-            className="absolute left-4 md:left-8 text-foreground hover:text-primary transition-colors"
-          >
-            <ChevronLeft className="w-10 h-10" />
-          </button>
-
-          <div className="max-w-4xl w-full">
-            <img
-              src={filteredProperties[currentImageIndex]?.images[0]}
-              alt={filteredProperties[currentImageIndex] ? getImageAlt(filteredProperties[currentImageIndex], 0, language as 'ro' | 'en') : ''}
-              loading="lazy"
-              decoding="async"
-              sizes="(max-width: 768px) 100vw, 800px"
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-            />
-            <div className="text-center mt-4">
-              <h3 className="text-xl font-serif font-semibold text-foreground">
-                {filteredProperties[currentImageIndex]?.name}
-              </h3>
-              <p className="text-muted-foreground flex items-center justify-center gap-1 mt-1">
-                <MapPin className="w-4 h-4" />
-                {filteredProperties[currentImageIndex]?.location}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={nextImage}
-            className="absolute right-4 md:right-8 text-foreground hover:text-primary transition-colors"
-          >
-            <ChevronRight className="w-10 h-10" />
-          </button>
-        </div>
+        <LightboxOverlay
+          filteredProperties={filteredProperties}
+          currentImageIndex={currentImageIndex}
+          language={language}
+          onClose={closeLightbox}
+          onNext={nextImage}
+          onPrev={prevImage}
+        />
       )}
 
       {/* Compare Modal */}
