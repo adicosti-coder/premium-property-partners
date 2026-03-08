@@ -297,6 +297,7 @@ const ProfitCalculator = () => {
                   max={60}
                   step={5}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Cost curățenie' : 'Cleaning cost'}
                 />
               </div>
 
