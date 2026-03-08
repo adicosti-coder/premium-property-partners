@@ -72,6 +72,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     };
     if (isOpen) {
       fetchSiteKey();
+      trackStep("booking_form_open", { propertyName });
     }
   }, [isOpen]);
 
