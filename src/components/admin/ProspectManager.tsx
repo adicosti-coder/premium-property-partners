@@ -14,6 +14,7 @@ import {
   Loader2, Search, RefreshCw, ExternalLink, MapPin, Ruler, DoorOpen,
   Euro, Star, Phone, Eye, CheckCircle, MessageSquare, TrendingUp,
   Filter, Copy, Calendar, UserCheck, XCircle, Handshake, LayoutList, Columns3,
+  Tag, Zap, Clock, ThumbsUp, CalendarCheck, HelpCircle, X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
