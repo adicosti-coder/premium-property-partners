@@ -96,13 +96,36 @@
       (function () {
         try {
           if (typeof window === "undefined" || typeof document === "undefined") return;
-          const stored = window.localStorage?.getItem("theme");
-          const theme = stored || "light";
+          var stored = window.localStorage && window.localStorage.getItem("theme");
+          var theme = stored || "light";
           document.documentElement.classList.add(theme);
-        } catch (_) {
-          // Ignore theme bootstrap errors (e.g., storage disabled)
-        }
+        } catch (_) {}
       })();
+      // Global error diagnostic — shows JS errors visually on the page
+      window.__RT_ERRORS = [];
+      window.onerror = function(msg, src, line, col, err) {
+        window.__RT_ERRORS.push(msg + ' @ ' + src + ':' + line);
+        var el = document.getElementById('rt-error-log');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'rt-error-log';
+          el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:red;color:white;font:12px monospace;padding:8px;max-height:40vh;overflow:auto;';
+          document.body.appendChild(el);
+        }
+        el.innerHTML += '<div>' + msg + '<br><small>' + src + ':' + line + '</small></div>';
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        var msg = e.reason ? (e.reason.message || String(e.reason)) : 'Unknown rejection';
+        window.__RT_ERRORS.push(msg);
+        var el = document.getElementById('rt-error-log');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'rt-error-log';
+          el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:red;color:white;font:12px monospace;padding:8px;max-height:40vh;overflow:auto;';
+          document.body.appendChild(el);
+        }
+        el.innerHTML += '<div>Promise: ' + msg + '</div>';
+      });
     </script>
 
     <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->
