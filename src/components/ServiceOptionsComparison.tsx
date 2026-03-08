@@ -186,7 +186,7 @@ const ServiceOptionsComparison = () => {
                   <Button
                     variant="hero"
                     className="w-full mt-6"
-                    onClick={scrollToContact}
+                    onClick={scrollToCalculator}
                   >
                     {language === 'ro' ? 'Vreau analiza gratuită' : 'Get free analysis'}
                     <ArrowRight className="w-4 h-4 ml-2" />
