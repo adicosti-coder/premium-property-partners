@@ -1,0 +1,1 @@
+ALTER TABLE public.prospect_listings ADD COLUMN IF NOT EXISTS tags text[] NOT NULL DEFAULT '{}'::text[];

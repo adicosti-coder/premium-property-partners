@@ -2165,6 +2165,7 @@ export type Database = {
           source_platform: string
           source_url: string
           status: string | null
+          tags: string[]
           title: string | null
           updated_at: string | null
           year_built: number | null
@@ -2195,6 +2196,7 @@ export type Database = {
           source_platform: string
           source_url: string
           status?: string | null
+          tags?: string[]
           title?: string | null
           updated_at?: string | null
           year_built?: number | null
@@ -2225,6 +2227,7 @@ export type Database = {
           source_platform?: string
           source_url?: string
           status?: string | null
+          tags?: string[]
           title?: string | null
           updated_at?: string | null
           year_built?: number | null
