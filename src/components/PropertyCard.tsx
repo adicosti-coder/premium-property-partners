@@ -7,6 +7,8 @@ import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { Property, getImageAlt } from "@/data/properties";
 import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
+import { useRealtimeViewers } from "@/hooks/useRealtimeViewers";
+import ViewersBadge from "@/components/ViewersBadge";
 import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
@@ -33,7 +35,9 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const { language } = useLanguage();
   const { data: liveDataMap } = usePropertyLiveData();
+  const { data: viewersMap } = useRealtimeViewers();
   const liveData = liveDataMap?.[property.slug];
+  const viewerCount = viewersMap?.[String(property.id)] || 0;
   const displayRating = liveData?.rating ?? property.rating;
   const displayReviews = liveData?.reviews_count ?? property.reviews;
   const displayPrice = liveData?.price_per_night ?? property.pricePerNight;
@@ -95,6 +99,11 @@ const PropertyCard = ({
             className="absolute bottom-4 left-4"
             variant="compact"
           />
+
+          {/* Real-time viewers badge */}
+          {viewerCount >= 2 && (
+            <ViewersBadge count={viewerCount} className="absolute bottom-4 right-4" />
+          )}
 
           {/* Rating badge */}
           <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">

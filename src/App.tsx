@@ -81,6 +81,7 @@ const ReferralProgram = lazyWithRetry(() => import("./pages/ReferralProgram"));
 const Complexe = lazyWithRetry(() => import("./pages/Complexe"));
 const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
 const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
+const ZoneLanding = lazyWithRetry(() => import("./pages/ZoneLanding"));
 
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
@@ -188,6 +189,7 @@ const App = () => (
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/preturi" element={<Preturi />} />
+                    <Route path="/zona/:zone" element={<ZoneLanding />} />
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
                     <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />
