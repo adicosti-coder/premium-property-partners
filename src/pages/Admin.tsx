@@ -384,6 +384,10 @@ const Admin = () => {
               <Calendar className="w-4 h-4" />
               iCal Sync
             </TabsTrigger>
+            <TabsTrigger value="listing-import" className="flex items-center gap-2">
+              <LinkIcon className="w-4 h-4" />
+              Import Anunț
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
