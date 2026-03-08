@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Loader2, LinkIcon, CheckCircle2, ImageIcon, MapPin, Ruler,
   BedDouble, BadgeEuro, AlertCircle, ExternalLink, Eye, Save,
-  Bath, Building2, Thermometer, Zap, Sofa, Car, Layers, CalendarDays, PenLine
+  Bath, Building2, Thermometer, Zap, Sofa, Car, Layers, CalendarDays, PenLine,
+  Sparkles, RefreshCw, Copy, Check
 } from "lucide-react";
 
 interface ExtractedData {
@@ -38,11 +39,23 @@ interface ExtractedData {
   source_platform: string;
 }
 
+interface RewrittenData {
+  title: string;
+  description_short: string;
+  description_full: string;
+}
+
 const LISTING_TYPES = [
   { value: "vanzare", label: "Vânzare" },
   { value: "inchiriere", label: "Închiriere" },
   { value: "cazare", label: "Cazare (regim hotelier)" },
   { value: "investitie", label: "Investiție Premium" },
+];
+
+const TONE_OPTIONS = [
+  { value: "premium", label: "🏆 Premium", desc: "Sofisticat, exclusivist" },
+  { value: "persuasiv", label: "🎯 Persuasiv", desc: "Orientat spre acțiune" },
+  { value: "informativ", label: "📊 Informativ", desc: "Factual, analitic" },
 ];
 
 const ListingImporter = () => {
@@ -55,6 +68,12 @@ const ListingImporter = () => {
   const [saveResult, setSaveResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Rewrite state
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [rewriteTone, setRewriteTone] = useState("premium");
+  const [rewritten, setRewritten] = useState<RewrittenData | null>(null);
+  const [appliedRewrite, setAppliedRewrite] = useState(false);
+
   // Step 1: Preview / extract
   const handlePreview = async () => {
     if (!url.trim()) {
@@ -66,6 +85,8 @@ const ListingImporter = () => {
     setEditData(null);
     setSaveResult(null);
     setError(null);
+    setRewritten(null);
+    setAppliedRewrite(false);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
@@ -86,6 +107,65 @@ const ListingImporter = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // AI Rewrite
+  const handleRewrite = async () => {
+    if (!editData) return;
+    setIsRewriting(true);
+    setRewritten(null);
+    setAppliedRewrite(false);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("rewrite-listing-description", {
+        body: {
+          propertyData: {
+            title: editData.title,
+            description_short: editData.description_short,
+            description_full: editData.description_full,
+            price: editData.price,
+            currency: editData.currency,
+            location: editData.location,
+            size: editData.size,
+            rooms: editData.rooms,
+            bathrooms: editData.bathrooms,
+            floor: editData.floor,
+            year_built: editData.year_built,
+            parking: editData.parking,
+            heating_type: editData.heating_type,
+            energy_class: editData.energy_class,
+            furnished: editData.furnished,
+            construction_type: editData.construction_type,
+            compartimentare: editData.compartimentare,
+            features: editData.features,
+          },
+          listingType,
+          tone: rewriteTone,
+        },
+      });
+
+      if (fnError) throw new Error(fnError.message);
+      if (!data?.success) throw new Error(data?.error || "Rescriere eșuată");
+
+      setRewritten(data.rewritten);
+      toast({ title: "✨ Text premium generat!", description: "Previzualizează și aplică dacă ești mulțumit." });
+    } catch (err: any) {
+      toast({ title: "Eroare la rescriere", description: err.message, variant: "destructive" });
+    } finally {
+      setIsRewriting(false);
+    }
+  };
+
+  const applyRewrite = () => {
+    if (!rewritten || !editData) return;
+    setEditData({
+      ...editData,
+      title: rewritten.title || editData.title,
+      description_short: rewritten.description_short || editData.description_short,
+      description_full: rewritten.description_full || editData.description_full,
+    });
+    setAppliedRewrite(true);
+    toast({ title: "✅ Text aplicat!", description: "Textul premium a fost aplicat în câmpurile de editare." });
   };
 
   // Step 2: Save
@@ -161,7 +241,7 @@ const ListingImporter = () => {
             Import Anunț din URL
           </CardTitle>
           <CardDescription>
-            Lipește un link de pe OLX, Imobiliare.ro, Storia sau orice site. 
+            Lipește un link de pe OLX, Imobiliare.ro, Storia sau orice site.
             Datele vor fi extrase automat — le poți verifica și edita înainte de salvare.
           </CardDescription>
         </CardHeader>
@@ -171,7 +251,7 @@ const ListingImporter = () => {
             <Input
               type="url"
               value={url}
-              onChange={(e) => { setUrl(e.target.value); setExtracted(null); setEditData(null); setSaveResult(null); }}
+              onChange={(e) => { setUrl(e.target.value); setExtracted(null); setEditData(null); setSaveResult(null); setRewritten(null); }}
               placeholder="https://www.olx.ro/d/oferta/..."
               className="mt-1"
               disabled={isLoading || isSaving}
@@ -247,7 +327,7 @@ const ListingImporter = () => {
             {/* Main fields */}
             {renderFieldRow(<Building2 className="w-4 h-4" />, "Titlu / Nume", "title", "text", "Apartament 2 camere...")}
             {renderFieldRow(<MapPin className="w-4 h-4" />, "Locație", "location", "text", "Timișoara, Zona Centrală")}
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {renderFieldRow(<BadgeEuro className="w-4 h-4" />, "Preț", "price", "number", "75000")}
               {renderFieldRow(<Ruler className="w-4 h-4" />, "Suprafață (m²)", "size", "number", "65")}
@@ -274,6 +354,105 @@ const ListingImporter = () => {
             <div className="border-t pt-4 mt-2">
               {renderFieldRow(<PenLine className="w-4 h-4" />, "Descriere scurtă", "description_short", "textarea", "Rezumat scurt al anunțului...")}
               {renderFieldRow(<PenLine className="w-4 h-4" />, "Descriere completă", "description_full", "textarea", "Descrierea detaliată a proprietății...")}
+            </div>
+
+            {/* ========== AI REWRITE SECTION ========== */}
+            <div className="border-t pt-4 mt-2">
+              <Card className="bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 border-primary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Generator Text Premium AI
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Rescrie automat titlul și descrierile cu limbaj profesionist de marketing imobiliar,
+                    adaptat tipului de listing. Include termeni economici, analiză ROI, și call-to-action RealTrust.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Tone selector */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">Tonul textului</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {TONE_OPTIONS.map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setRewriteTone(t.value)}
+                          disabled={isRewriting}
+                          className={`px-3 py-2 rounded-lg border-2 text-sm transition-all text-left ${
+                            rewriteTone === t.value
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <span className="font-medium block">{t.label}</span>
+                          <span className="text-[10px] text-muted-foreground">{t.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleRewrite}
+                      disabled={isRewriting}
+                      className="flex-1 bg-gradient-to-r from-primary to-primary/80"
+                    >
+                      {isRewriting ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează textul premium...</>
+                      ) : (
+                        <><Sparkles className="w-4 h-4 mr-2" />Generează Text Premium</>
+                      )}
+                    </Button>
+                    {rewritten && (
+                      <Button
+                        variant="outline"
+                        onClick={handleRewrite}
+                        disabled={isRewriting}
+                        title="Regenerează cu alt rezultat"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Rewrite preview */}
+                  {rewritten && (
+                    <div className="space-y-3 mt-2">
+                      <div className="rounded-lg border bg-background p-4 space-y-3">
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-primary font-semibold">Titlu Optimizat</Label>
+                          <p className="font-semibold text-sm mt-1">{rewritten.title}</p>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-primary font-semibold">Descriere Scurtă (SEO)</Label>
+                          <p className="text-sm text-muted-foreground mt-1">{rewritten.description_short}</p>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-primary font-semibold">Descriere Completă</Label>
+                          <div className="text-sm mt-1 whitespace-pre-wrap max-h-64 overflow-y-auto border rounded-md p-3 bg-muted/30">
+                            {rewritten.description_full}
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={applyRewrite}
+                        disabled={appliedRewrite}
+                        className="w-full"
+                        variant={appliedRewrite ? "outline" : "default"}
+                      >
+                        {appliedRewrite ? (
+                          <><Check className="w-4 h-4 mr-2 text-green-600" />Text Aplicat în Câmpuri ✓</>
+                        ) : (
+                          <><Copy className="w-4 h-4 mr-2" />Aplică Textul Premium în Câmpuri</>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Features */}
@@ -322,7 +501,7 @@ const ListingImporter = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => { setExtracted(null); setEditData(null); setError(null); }}
+                onClick={() => { setExtracted(null); setEditData(null); setError(null); setRewritten(null); }}
               >
                 Anulează
               </Button>
@@ -373,7 +552,7 @@ const ListingImporter = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { setUrl(""); setExtracted(null); setEditData(null); setSaveResult(null); setError(null); }}
+                onClick={() => { setUrl(""); setExtracted(null); setEditData(null); setSaveResult(null); setError(null); setRewritten(null); }}
               >
                 Import Nou
               </Button>
