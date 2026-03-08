@@ -36,6 +36,10 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot field for bot detection
   const [honeypot, setHoneypot] = useState("");
+  // Discount code
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountInfo, setDiscountInfo] = useState<{ valid: boolean; discount_type: string; discount_value: number; description: string } | null>(null);
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
