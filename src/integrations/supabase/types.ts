@@ -2139,6 +2139,99 @@ export type Database = {
           },
         ]
       }
+      prospect_listings: {
+        Row: {
+          admin_notes: string | null
+          assigned_to: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          features: string[] | null
+          floor: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          last_seen_at: string | null
+          location: string | null
+          price: number | null
+          price_per_sqm: number | null
+          rooms: number | null
+          score: number | null
+          score_breakdown: Json | null
+          scraped_at: string | null
+          size: number | null
+          source_platform: string
+          source_url: string
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          year_built: number | null
+          zone: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          features?: string[] | null
+          floor?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          last_seen_at?: string | null
+          location?: string | null
+          price?: number | null
+          price_per_sqm?: number | null
+          rooms?: number | null
+          score?: number | null
+          score_breakdown?: Json | null
+          scraped_at?: string | null
+          size?: number | null
+          source_platform: string
+          source_url: string
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          year_built?: number | null
+          zone?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          features?: string[] | null
+          floor?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          last_seen_at?: string | null
+          location?: string | null
+          price?: number | null
+          price_per_sqm?: number | null
+          rooms?: number | null
+          score?: number | null
+          score_breakdown?: Json | null
+          scraped_at?: string | null
+          size?: number | null
+          source_platform?: string
+          source_url?: string
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          year_built?: number | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
