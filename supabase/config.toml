@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.sync-ical-bookings]
 verify_jwt = false
+
+[functions.rewrite-listing-description]
+verify_jwt = false
