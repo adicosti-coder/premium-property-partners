@@ -245,10 +245,16 @@ const OwnerFinancials = ({ propertyId }: OwnerFinancialsProps) => {
           </SelectContent>
         </Select>
 
-        <Button variant="outline" onClick={handleDownloadReport}>
-          <Download className="w-4 h-4 mr-2" />
-          {t.downloadReport}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleDownloadReport} size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            CSV
+          </Button>
+          <Button variant="default" onClick={handleDownloadPDF} size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
