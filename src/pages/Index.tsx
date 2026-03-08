@@ -112,7 +112,7 @@ const Index = () => {
   const { language } = useLanguage();
   
   // Visibility gates for heavy sections
-  const [heavyRef, heavyVisible] = useLazyVisible("100px");
+  const [heavyRef, heavyVisible] = useLazyVisible("200px");
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
