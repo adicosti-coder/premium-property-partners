@@ -144,7 +144,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [] } = await req.json();
+    const { message, language = "ro", conversationHistory = [], pageContext = "/" } = await req.json();
 
     if (!message || message.length > 2000) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
