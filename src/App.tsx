@@ -81,6 +81,7 @@ const ReferralProgram = lazyWithRetry(() => import("./pages/ReferralProgram"));
 const Complexe = lazyWithRetry(() => import("./pages/Complexe"));
 const ComplexDetail = lazyWithRetry(() => import("./pages/ComplexDetail"));
 const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
+const ZoneLanding = lazyWithRetry(() => import("./pages/ZoneLanding"));
 
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
