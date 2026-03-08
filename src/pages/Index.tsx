@@ -42,9 +42,9 @@ const NearFoldSection = () => {
   }, []);
 
   return (
-    <div ref={ref} id="calculator">
+    <div ref={ref} id="calculator" style={{ minHeight: show ? undefined : '200px' }}>
       {show && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
           <StatsCounters />
           <ProfitCalculator />
           <QuickLeadForm />
