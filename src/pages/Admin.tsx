@@ -526,6 +526,11 @@ const Admin = () => {
           <TabsContent value="ical-sync">
             <ICalManager />
           </TabsContent>
+
+          {/* Listing Import Tab */}
+          <TabsContent value="listing-import">
+            <ListingImporter />
+          </TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
