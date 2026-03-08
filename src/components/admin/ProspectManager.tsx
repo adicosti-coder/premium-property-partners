@@ -167,6 +167,7 @@ const ProspectManager = () => {
   const [editNotes, setEditNotes] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'pipeline'>('pipeline');
   const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, interested: 0, converted: 0, avgScore: 0 });
+  const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
