@@ -107,6 +107,7 @@ MarkdownContent.displayName = "MarkdownContent";
 
 const AIChatbot = () => {
   const { language } = useLanguage();
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
