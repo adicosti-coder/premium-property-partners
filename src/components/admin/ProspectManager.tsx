@@ -43,10 +43,17 @@ interface ProspectListing {
   status: string;
   admin_notes: string | null;
   tags: string[];
+  prospect_type: string;
   scraped_at: string;
   last_seen_at: string;
   is_active: boolean;
 }
+
+const PROSPECT_TYPES = [
+  { value: 'proprietar', label: '🏠 Proprietari', icon: '🏠' },
+  { value: 'agentie', label: '🏢 Agenții', icon: '🏢' },
+  { value: 'dezvoltator', label: '🏗️ Dezvoltatori', icon: '🏗️' },
+] as const;
 
 // ── Conversation Labels ──────────────────────────────
 const CONVERSATION_LABELS = [
@@ -237,6 +244,7 @@ const ProspectManager = () => {
   const [viewMode, setViewMode] = useState<'list' | 'pipeline'>('pipeline');
   const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, interested: 0, converted: 0, avgScore: 0 });
   const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<string>('all');
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
@@ -272,6 +280,7 @@ const ProspectManager = () => {
   // Apply filters
   useEffect(() => {
     let filtered = allListings;
+    if (filterType !== 'all') filtered = filtered.filter(l => l.prospect_type === filterType);
     if (filterStatus !== 'all') filtered = filtered.filter(l => l.status === filterStatus);
     if (filterZone !== 'all') filtered = filtered.filter(l => l.zone === filterZone);
     if (searchQuery) {
@@ -281,7 +290,7 @@ const ProspectManager = () => {
       );
     }
     setListings(filtered);
-  }, [allListings, filterStatus, filterZone, searchQuery]);
+  }, [allListings, filterStatus, filterZone, searchQuery, filterType]);
 
   const handleScrape = async () => {
     setIsScraping(true);
@@ -382,7 +391,14 @@ const ProspectManager = () => {
       onClick={() => { setSelectedListing(listing); setEditNotes(listing.admin_notes || ''); }}
     >
       <div className="flex items-start justify-between gap-2">
-        <h4 className="font-medium text-sm line-clamp-2 flex-1">{listing.title || 'Fără titlu'}</h4>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-sm line-clamp-2">{listing.title || 'Fără titlu'}</h4>
+          {listing.prospect_type !== 'proprietar' && (
+            <span className="text-[10px] text-muted-foreground">
+              {PROSPECT_TYPES.find(p => p.value === listing.prospect_type)?.icon} {PROSPECT_TYPES.find(p => p.value === listing.prospect_type)?.label.replace(/^[^\s]+ /, '')}
+            </span>
+          )}
+        </div>
         <Badge variant={getScoreBadgeVariant(listing.score)} className="shrink-0 text-xs">
           {listing.score}
         </Badge>
@@ -470,7 +486,7 @@ const ProspectManager = () => {
     return (
       <div className="flex gap-3 overflow-x-auto pb-4">
         {activeStages.map(stage => {
-          const stageListings = allListings
+          const stageListings = (filterType === 'all' ? allListings : allListings.filter(l => l.prospect_type === filterType))
             .filter(l => l.status === stage.value)
             .sort((a, b) => b.score - a.score);
 
@@ -532,6 +548,30 @@ const ProspectManager = () => {
             {isScraping ? 'Se scanează...' : 'Scanează acum'}
           </Button>
         </div>
+      </div>
+
+      {/* Category tabs */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button
+          size="sm"
+          variant={filterType === 'all' ? 'default' : 'outline'}
+          onClick={() => setFilterType('all')}
+        >
+          📋 Toate ({allListings.length})
+        </Button>
+        {PROSPECT_TYPES.map(pt => {
+          const count = allListings.filter(l => l.prospect_type === pt.value).length;
+          return (
+            <Button
+              key={pt.value}
+              size="sm"
+              variant={filterType === pt.value ? 'default' : 'outline'}
+              onClick={() => setFilterType(pt.value)}
+            >
+              {pt.label} ({count})
+            </Button>
+          );
+        })}
       </div>
 
       {/* Stats */}
@@ -608,6 +648,36 @@ const ProspectManager = () => {
               </DialogHeader>
 
               <div className="space-y-4">
+                {/* Prospect type selector */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Categorie prospect</p>
+                  <div className="flex gap-2">
+                    {PROSPECT_TYPES.map(pt => (
+                      <Button
+                        key={pt.value}
+                        size="sm"
+                        variant={selectedListing.prospect_type === pt.value ? 'default' : 'outline'}
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from('prospect_listings')
+                            .update({ prospect_type: pt.value } as any)
+                            .eq('id', selectedListing.id);
+                          if (error) {
+                            toast({ title: "Eroare", description: error.message, variant: "destructive" });
+                          } else {
+                            setAllListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, prospect_type: pt.value } : l));
+                            setSelectedListing(prev => prev ? { ...prev, prospect_type: pt.value } : null);
+                            toast({ title: `Categorie: ${pt.label}` });
+                          }
+                        }}
+                        className="text-xs"
+                      >
+                        {pt.icon} {pt.label.replace(pt.icon + ' ', '')}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Score breakdown */}
                 <Card>
                   <CardHeader className="pb-2">
