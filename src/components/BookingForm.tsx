@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { z } from "zod";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { useFunnelTracking } from "@/hooks/useFunnelTracking";
 
 interface BookingFormProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const countriesEn = [
 const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  const { trackStep } = useFunnelTracking();
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot field for bot detection
   const [honeypot, setHoneypot] = useState("");
@@ -70,6 +72,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     };
     if (isOpen) {
       fetchSiteKey();
+      trackStep("booking_form_open", { propertyName });
     }
   }, [isOpen]);
 
@@ -275,6 +278,8 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
 
     // Open WhatsApp
     window.open(whatsappUrl, "_blank");
+
+    trackStep("booking_form_submit", { propertyName, discountCode: discountInfo ? discountCode : undefined });
 
     toast({
       title: t.booking.success,
