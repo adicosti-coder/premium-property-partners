@@ -2158,6 +2158,8 @@ export type Database = {
           price: number | null
           price_per_sqm: number | null
           prospect_type: string
+          rating: number | null
+          review_count: number | null
           rooms: number | null
           score: number | null
           score_breakdown: Json | null
@@ -2190,6 +2192,8 @@ export type Database = {
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
+          rating?: number | null
+          review_count?: number | null
           rooms?: number | null
           score?: number | null
           score_breakdown?: Json | null
@@ -2222,6 +2226,8 @@ export type Database = {
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
+          rating?: number | null
+          review_count?: number | null
           rooms?: number | null
           score?: number | null
           score_breakdown?: Json | null

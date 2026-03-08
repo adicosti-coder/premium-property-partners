@@ -114,6 +114,11 @@ function scoreListing(data: {
 const SEARCH_QUERIES = [
   { platform: 'imobiliare.ro', query: 'apartament vanzare timisoara site:imobiliare.ro' },
   { platform: 'OLX', query: 'apartament vanzare timisoara site:olx.ro' },
+  { platform: 'Storia.ro', query: 'apartament vanzare timisoara site:storia.ro' },
+  { platform: 'Publi24', query: 'apartament vanzare timisoara site:publi24.ro' },
+  { platform: 'Facebook Marketplace', query: 'apartament vanzare timisoara site:facebook.com/marketplace' },
+  { platform: 'Grupuri Facebook', query: 'apartament vanzare timisoara "facebook.com/groups"' },
+  { platform: 'BursaImobiliara.ro', query: 'apartament vanzare timisoara site:bursaimobiliara.ro' },
 ];
 
 const EXTRACTION_PROMPT = `Extract property listing details from this real estate page. Return JSON:
