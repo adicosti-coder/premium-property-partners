@@ -1,0 +1,14 @@
+
+ALTER TABLE public.properties
+  ADD COLUMN IF NOT EXISTS floor text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS year_built integer DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS parking text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS heating_type text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS energy_class text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS furnished text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS construction_type text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS source_url text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS source_platform text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS compartimentare text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS long_description_ro text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS long_description_en text DEFAULT NULL;
