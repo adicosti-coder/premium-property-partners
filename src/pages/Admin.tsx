@@ -389,6 +389,10 @@ const Admin = () => {
               <LinkIcon className="w-4 h-4" />
               Import Anunț
             </TabsTrigger>
+            <TabsTrigger value="prospects" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Bot Prospectare
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
