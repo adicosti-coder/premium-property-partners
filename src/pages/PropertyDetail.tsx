@@ -54,6 +54,8 @@ interface DbPropertyData {
   listing_type?: string | null;
   status_operativ?: string;
   property_code?: string | null;
+  amenities?: string[];
+  house_rules?: string[];
 }
 
 // Helper to check if a string is a UUID
