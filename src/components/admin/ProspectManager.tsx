@@ -60,59 +60,128 @@ const CONVERSATION_LABELS = [
   { value: 'urgent', label: '🚨 Urgent', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-400' },
 ];
 
-// ── Quick Reply Templates ────────────────────────────
-const QUICK_REPLIES = [
+// ── Quick Reply Templates by Category ────────────────────────────
+const QUICK_REPLY_CATEGORIES = [
   {
-    id: 'first-contact',
-    label: '👋 Primul contact',
-    icon: MessageSquare,
-    getMessage: (l: ProspectListing) => {
-      const zone = l.zone || 'Timișoara';
-      return `Bună ziua! 👋\n\nAm văzut apartamentul dvs.${l.rooms ? ` cu ${l.rooms} camere` : ''} din ${zone} pe ${l.source_platform}.\n\nȘtiați că proprietarii din zona dvs. câștigă cu 40-60% mai mult decât dintr-o chirie normală? Noi ne ocupăm de tot — de la curățenie la oaspeți.\n\nDacă vă interesează o estimare gratuită, scrieți-mi „DA" și vă trimit calculul în 5 minute. Fără nicio obligație! 😊`;
-    },
+    id: 'proprietari',
+    label: '🏠 Proprietari',
+    replies: [
+      {
+        id: 'prop-first-contact',
+        label: '👋 Primul contact',
+        icon: MessageSquare,
+        getMessage: (l: ProspectListing) => {
+          const zone = l.zone || 'Timișoara';
+          return `Bună ziua! 👋\n\nAm văzut apartamentul dvs.${l.rooms ? ` cu ${l.rooms} camere` : ''} din ${zone} pe ${l.source_platform}.\n\nȘtiați că proprietarii din zona dvs. câștigă cu 40-60% mai mult decât dintr-o chirie normală? Noi ne ocupăm de tot — de la curățenie la oaspeți.\n\nDacă vă interesează o estimare gratuită, scrieți-mi „DA" și vă trimit calculul în 5 minute. Fără nicio obligație! 😊`;
+        },
+      },
+      {
+        id: 'prop-follow-up-1',
+        label: '🔄 Follow-up #1',
+        icon: Clock,
+        getMessage: (l: ProspectListing) => {
+          const zone = l.zone || 'Timișoara';
+          return `Bună ziua! 😊\n\nV-am scris zilele trecute referitor la apartamentul din ${zone}. Înțeleg că sunteți ocupat(ă), dar voiam să vă spun că tocmai am finalizat o analiză pentru zona dvs.\n\nProprietarii de acolo câștigă în medie 1.200€/lună net din regim hotelier. Vă pot trimite estimarea personalizată — durează 2 minute.\n\nScrieți-mi „DA" dacă vă interesează! 🏠`;
+        },
+      },
+      {
+        id: 'prop-follow-up-2',
+        label: '⏰ Follow-up #2 (ultim)',
+        icon: Clock,
+        getMessage: (l: ProspectListing) => {
+          return `Bună ziua!\n\nÎncerc ultima oară — nu vreau să deranjez. 😊\n\nDacă v-ați gândit vreodată să câștigați mai mult din apartamentul dvs. fără bătăi de cap, noi facem asta pentru proprietari din ${l.zone || 'Timișoara'} de peste 2 ani.\n\nDacă nu e momentul potrivit, nicio problemă! Vă urez o zi frumoasă! 🙏`;
+        },
+      },
+      {
+        id: 'prop-meeting',
+        label: '📅 Propunere întâlnire',
+        icon: CalendarCheck,
+        getMessage: () => {
+          return `Super, mă bucur că sunteți interesat(ă)! 🎉\n\nCel mai bine ar fi să ne vedem 15-20 minute la apartament — vă explic exact cum funcționează și fac câteva poze pentru estimarea finală.\n\nCând v-ar conveni? Sunt flexibil:\n• Luni-Vineri: 10:00-18:00\n• Sâmbătă: 10:00-14:00\n\nSpuneți-mi o zi și o oră și confirm imediat! 📅`;
+        },
+      },
+      {
+        id: 'prop-after-meeting',
+        label: '✅ După întâlnire',
+        icon: ThumbsUp,
+        getMessage: () => {
+          return `Bună ziua! 😊\n\nMultumesc pentru întâlnirea de azi! A fost o plăcere să văd apartamentul — arată foarte bine și are potențial excelent.\n\nConform estimării noastre, venitul net lunar ar fi între 800€ și 1.400€, în funcție de sezon.\n\nVă trimit contractul și toate detaliile pe email. Dacă aveți întrebări, sunt la dispoziție! 🙏`;
+        },
+      },
+      {
+        id: 'prop-objection',
+        label: '🤔 Răspuns obiecții',
+        icon: HelpCircle,
+        getMessage: () => {
+          return `Înțeleg perfect îngrijorarea! 😊\n\nCâteva lucruri care v-ar putea liniști:\n\n✅ Contractul e pe minim 1 an, cu ieșire în 30 zile\n✅ Garantăm chiria minimă lunară\n✅ Noi plătim toate utilitățile și reparațiile\n✅ Apartamentul e asigurat integral\n✅ Primiți raport lunar detaliat cu venituri + cheltuieli\n\nCe ziceți, programăm o discuție de 15 min să clarificăm totul? 🤝`;
+        },
+      },
+    ],
   },
   {
-    id: 'follow-up-1',
-    label: '🔄 Follow-up #1',
-    icon: Clock,
-    getMessage: (l: ProspectListing) => {
-      const zone = l.zone || 'Timișoara';
-      return `Bună ziua! 😊\n\nV-am scris zilele trecute referitor la apartamentul din ${zone}. Înțeleg că sunteți ocupat(ă), dar voiam să vă spun că tocmai am finalizat o analiză pentru zona dvs.\n\nProprietarii de acolo câștigă în medie 1.200€/lună net din regim hotelier. Vă pot trimite estimarea personalizată — durează 2 minute.\n\nScrieți-mi „DA" dacă vă interesează! 🏠`;
-    },
+    id: 'agentii',
+    label: '🏢 Agenții',
+    replies: [
+      {
+        id: 'agent-intro',
+        label: '👋 Prezentare parteneriat',
+        icon: MessageSquare,
+        getMessage: (l: ProspectListing) => {
+          return `Bună ziua! 👋\n\nSunt de la RealTrust ApartHotel și am văzut anunțul dvs. din ${l.zone || 'Timișoara'} pe ${l.source_platform}.\n\nLucrăm cu agenții imobiliare pentru a oferi proprietarilor o alternativă la chiria clasică: regim hotelier administrat complet de noi.\n\n📈 Proprietarii câștigă 40-60% mai mult\n🤝 Agenția primește comision de referral\n🔄 Parteneriat pe termen lung\n\nV-ar interesa o discuție de 10 minute despre cum putem colabora? 😊`;
+        },
+      },
+      {
+        id: 'agent-follow-up',
+        label: '🔄 Follow-up agenție',
+        icon: Clock,
+        getMessage: (l: ProspectListing) => {
+          return `Bună ziua! 😊\n\nV-am contactat recent cu o propunere de parteneriat pentru administrare în regim hotelier.\n\nÎn ultimele 3 luni, am convertit peste 15 proprietăți din ${l.zone || 'Timișoara'} cu agenții partenere. Comisionul de referral e 5% din venitul lunar, pe toată durata contractului.\n\nAveți 5 minute pentru o discuție telefonică? Pot suna oricând între 9-18. 📞`;
+        },
+      },
+      {
+        id: 'agent-proposal',
+        label: '📋 Propunere formală',
+        icon: CalendarCheck,
+        getMessage: () => {
+          return `Bună ziua! 🎉\n\nMă bucur de interes! Iată ce oferim în parteneriat:\n\n📌 Model de colaborare:\n• Comision referral: 5% din venitul net lunar\n• Plată lunară, pe toată durata contractului\n• Fără costuri pentru agenție\n\n📌 Ce facem noi:\n• Administrare completă (oaspeți, curățenie, mentenanță)\n• Raportare transparentă proprietar + agenție\n• Garanție chirie minimă\n\nVă pot trimite contractul cadru pe email? Care e adresa? 📧`;
+        },
+      },
+    ],
   },
   {
-    id: 'follow-up-2',
-    label: '⏰ Follow-up #2 (ultim)',
-    icon: Clock,
-    getMessage: (l: ProspectListing) => {
-      return `Bună ziua!\n\nÎncerc ultima oară — nu vreau să deranjez. 😊\n\nDacă v-ați gândit vreodată să câștigați mai mult din apartamentul dvs. fără bătăi de cap, noi facem asta pentru proprietari din ${l.zone || 'Timișoara'} de peste 2 ani.\n\nDacă nu e momentul potrivit, nicio problemă! Vă urez o zi frumoasă! 🙏`;
-    },
-  },
-  {
-    id: 'meeting-request',
-    label: '📅 Propunere întâlnire',
-    icon: CalendarCheck,
-    getMessage: (l: ProspectListing) => {
-      return `Super, mă bucur că sunteți interesat(ă)! 🎉\n\nCel mai bine ar fi să ne vedem 15-20 minute la apartament — vă explic exact cum funcționează și fac câteva poze pentru estimarea finală.\n\nCând v-ar conveni? Sunt flexibil:\n• Luni-Vineri: 10:00-18:00\n• Sâmbătă: 10:00-14:00\n\nSpuneți-mi o zi și o oră și confirm imediat! 📅`;
-    },
-  },
-  {
-    id: 'after-meeting',
-    label: '✅ După întâlnire',
-    icon: ThumbsUp,
-    getMessage: (l: ProspectListing) => {
-      return `Bună ziua! 😊\n\nMultumesc pentru întâlnirea de azi! A fost o plăcere să văd apartamentul — arată foarte bine și are potențial excelent.\n\nConform estimării noastre, venitul net lunar ar fi între 800€ și 1.400€, în funcție de sezon.\n\nVă trimit contractul și toate detaliile pe email. Dacă aveți întrebări, sunt la dispoziție! 🙏`;
-    },
-  },
-  {
-    id: 'objection-handler',
-    label: '🤔 Răspuns obiecții',
-    icon: HelpCircle,
-    getMessage: () => {
-      return `Înțeleg perfect îngrijorarea! 😊\n\nCâteva lucruri care v-ar putea liniști:\n\n✅ Contractul e pe minim 1 an, cu ieșire în 30 zile\n✅ Garantăm chiria minimă lunară\n✅ Noi plătim toate utilitățile și reparațiile\n✅ Apartamentul e asigurat integral\n✅ Primiți raport lunar detaliat cu venituri + cheltuieli\n\nCe ziceți, programăm o discuție de 15 min să clarificăm totul? 🤝`;
-    },
+    id: 'dezvoltatori',
+    label: '🏗️ Dezvoltatori',
+    replies: [
+      {
+        id: 'dev-intro',
+        label: '👋 Prim contact dezvoltator',
+        icon: MessageSquare,
+        getMessage: (l: ProspectListing) => {
+          return `Bună ziua! 👋\n\nSunt de la RealTrust ApartHotel — administrăm apartamente în regim hotelier în Timișoara.\n\nAm văzut proiectul dvs. din ${l.zone || 'Timișoara'} și cred că apartamentele ar avea un randament excelent în regim hotelier.\n\n🏠 Putem prelua blocuri întregi sau apartamente individuale\n📈 ROI 8-12% anual pentru investitori\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis(ă) la o întâlnire de 30 min pentru a discuta posibilitățile? 🏗️`;
+        },
+      },
+      {
+        id: 'dev-follow-up',
+        label: '🔄 Follow-up dezvoltator',
+        icon: Clock,
+        getMessage: (l: ProspectListing) => {
+          return `Bună ziua! 😊\n\nRevenim cu propunerea pentru complexul din ${l.zone || 'Timișoara'}.\n\nAm pregătit o analiză de randament pentru apartamentele tip studio și 2 camere. Rezultatele arată:\n\n📊 Studio: 900-1.300€/lună net\n📊 2 camere: 1.200-1.800€/lună net\n📊 ROI: 9-12% anual\n\nPutem organiza o prezentare la sediul dvs.? Durează max 30 minute. 📅`;
+        },
+      },
+      {
+        id: 'dev-bulk',
+        label: '📦 Ofertă bloc / complex',
+        icon: CalendarCheck,
+        getMessage: (l: ProspectListing) => {
+          return `Bună ziua! 🎉\n\nPentru complexuri noi, oferim pachet special:\n\n🏢 Pachet Dezvoltator:\n• Preluăm minim 10 unități\n• Comision de administrare redus cu 15%\n• Design & staging inclus\n• Mobilare la preț de furnizor (acces la rețeaua noastră)\n• Marketing dedicat pe Booking, Airbnb + direct\n\n📈 Avantaje pentru cumpărători:\n• Randament garantat din ziua 1\n• Zero bătăi de cap — administrare completă\n• Raportare lunară transparentă\n\nCând ne-am putea vedea pentru o prezentare detaliată? 🤝`;
+        },
+      },
+    ],
   },
 ];
+
+// Flatten for backward compat
+const QUICK_REPLIES = QUICK_REPLY_CATEGORIES.flatMap(cat => cat.replies);
 
 
 const PIPELINE_STAGES = [
