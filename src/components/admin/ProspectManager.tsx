@@ -43,10 +43,17 @@ interface ProspectListing {
   status: string;
   admin_notes: string | null;
   tags: string[];
+  prospect_type: string;
   scraped_at: string;
   last_seen_at: string;
   is_active: boolean;
 }
+
+const PROSPECT_TYPES = [
+  { value: 'proprietar', label: '🏠 Proprietari', icon: '🏠' },
+  { value: 'agentie', label: '🏢 Agenții', icon: '🏢' },
+  { value: 'dezvoltator', label: '🏗️ Dezvoltatori', icon: '🏗️' },
+] as const;
 
 // ── Conversation Labels ──────────────────────────────
 const CONVERSATION_LABELS = [
