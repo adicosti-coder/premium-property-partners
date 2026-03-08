@@ -2761,6 +2761,31 @@ export type Database = {
         }
         Relationships: []
       }
+      public_site_settings: {
+        Row: {
+          hero_badge_en: string | null
+          hero_badge_ro: string | null
+          hero_cta_primary_en: string | null
+          hero_cta_primary_ro: string | null
+          hero_cta_secondary_en: string | null
+          hero_cta_secondary_ro: string | null
+          hero_highlight_en: string | null
+          hero_highlight_ro: string | null
+          hero_image_filename: string | null
+          hero_image_url: string | null
+          hero_subtitle_en: string | null
+          hero_subtitle_ro: string | null
+          hero_tags_en: string[] | null
+          hero_tags_ro: string[] | null
+          hero_title_en: string | null
+          hero_title_ro: string | null
+          hero_video_filename: string | null
+          hero_video_url: string | null
+          id: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
@@ -2778,6 +2803,26 @@ export type Database = {
           full_name: string
           id: string
         }[]
+      }
+      get_shared_poi_link: {
+        Args: { p_share_code: string }
+        Returns: {
+          created_at: string
+          description: string | null
+          id: string
+          import_count: number
+          last_imported_at: string | null
+          name: string | null
+          poi_ids: string[]
+          share_code: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "shared_poi_links"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       has_role: {
         Args: {

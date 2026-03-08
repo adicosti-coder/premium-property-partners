@@ -102,7 +102,7 @@ const FunnelAnalyticsManager = () => {
       return acc;
     }, {} as Record<number, number>);
 
-    // Funnel analysis
+    // Funnel analysis (legacy)
     const funnelEvents = analytics.filter(a => a.cta_type === "funnel_step" || a.cta_type === "funnel_complete");
     const funnelsByName = funnelEvents.reduce((acc, event) => {
       const name = (event.metadata?.funnelName as string) || "default";
@@ -110,6 +110,37 @@ const FunnelAnalyticsManager = () => {
       acc[name].push(event);
       return acc;
     }, {} as Record<string, AnalyticsRecord[]>);
+
+    // Conversion funnel from useFunnelTracking
+    const FUNNEL_STEP_ORDER = [
+      "funnel_page_view", "funnel_property_click", "funnel_gallery_view",
+      "funnel_calculator_open", "funnel_calculator_complete",
+      "funnel_booking_form_open", "funnel_booking_form_submit",
+      "funnel_lead_form_open", "funnel_lead_form_submit",
+      "funnel_whatsapp_click", "funnel_phone_click", "funnel_discount_code_applied",
+    ];
+    const FUNNEL_STEP_LABELS: Record<string, string> = {
+      funnel_page_view: "Page View",
+      funnel_property_click: "Property Click",
+      funnel_gallery_view: "Gallery View",
+      funnel_calculator_open: "Calculator Open",
+      funnel_calculator_complete: "Calculator Done",
+      funnel_booking_form_open: "Booking Form Open",
+      funnel_booking_form_submit: "Booking Submit",
+      funnel_lead_form_open: "Lead Form Open",
+      funnel_lead_form_submit: "Lead Submit",
+      funnel_whatsapp_click: "WhatsApp Click",
+      funnel_phone_click: "Phone Click",
+      funnel_discount_code_applied: "Discount Applied",
+    };
+    const conversionFunnel = FUNNEL_STEP_ORDER
+      .map(step => {
+        const uniqueSessions = new Set(
+          analytics.filter(a => a.cta_type === step).map(a => a.session_id)
+        ).size;
+        return { step, label: FUNNEL_STEP_LABELS[step] || step, sessions: uniqueSessions };
+      })
+      .filter(s => s.sessions > 0);
 
     // A/B test results
     const abAssignments = analytics.filter(a => a.cta_type === "ab_assignment");
@@ -189,6 +220,7 @@ const FunnelAnalyticsManager = () => {
       abTests,
       pageAnalytics,
       dailyEngagement,
+      conversionFunnel,
     };
   }, [analytics]);
 
@@ -372,6 +404,10 @@ const FunnelAnalyticsManager = () => {
           <TabsTrigger value="abtests" className="gap-2">
             <BarChart3 className="w-4 h-4" />
             A/B Tests
+          </TabsTrigger>
+          <TabsTrigger value="conversion" className="gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Conversion Funnel
           </TabsTrigger>
         </TabsList>
 
@@ -625,6 +661,84 @@ const FunnelAnalyticsManager = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Conversion Funnel Tab */}
+        <TabsContent value="conversion" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                User Journey Conversion Funnel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!processedData?.conversionFunnel || processedData.conversionFunnel.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No conversion funnel data yet</p>
+                  <p className="text-sm mt-2">Events are tracked via useFunnelTracking hook</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Bar chart visualization */}
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={processedData.conversionFunnel} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis type="number" className="text-xs" />
+                      <YAxis type="category" dataKey="label" className="text-xs" width={130} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                        formatter={(value: number) => [`${value} unique sessions`, "Sessions"]}
+                      />
+                      <Bar dataKey="sessions" radius={[0, 4, 4, 0]}>
+                        {processedData.conversionFunnel.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[index % FUNNEL_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  {/* Drop-off analysis */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold">Step-by-Step Drop-off</h4>
+                    {processedData.conversionFunnel.map((item, index) => {
+                      const prevSessions = index > 0 ? processedData.conversionFunnel[index - 1].sessions : item.sessions;
+                      const dropOff = prevSessions > 0 && index > 0
+                        ? Math.round(((prevSessions - item.sessions) / prevSessions) * 100)
+                        : 0;
+                      const convRate = processedData.conversionFunnel[0].sessions > 0
+                        ? ((item.sessions / processedData.conversionFunnel[0].sessions) * 100).toFixed(1)
+                        : "0";
+                      
+                      return (
+                        <div key={item.step} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: FUNNEL_COLORS[index % FUNNEL_COLORS.length] }}
+                            />
+                            <span className="font-medium">{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Badge variant="secondary">{item.sessions} sessions</Badge>
+                            <span className="text-sm text-muted-foreground">{convRate}% total</span>
+                            {index > 0 && dropOff > 0 && (
+                              <span className="text-sm text-destructive">-{dropOff}%</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </CardContent>

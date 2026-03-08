@@ -100,9 +100,7 @@ const CityGuideSection: React.FC = () => {
         // Fetch shared link details if we have a share code
         if (shareCode) {
           const { data } = await supabase
-            .from('shared_poi_links')
-            .select('name, description')
-            .eq('share_code', shareCode)
+            .rpc('get_shared_poi_link', { p_share_code: shareCode })
             .single();
           
           if (data) {
