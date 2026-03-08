@@ -337,6 +337,7 @@ const ProfitCalculator = () => {
                   max={25}
                   step={1}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Comision platformă' : 'Platform fee'}
                 />
                 <p className="text-sm text-muted-foreground">{t.calculator.platformFeeDescription}</p>
               </div>

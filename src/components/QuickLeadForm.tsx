@@ -289,7 +289,7 @@ const QuickLeadForm = () => {
               {/* Property Type Select */}
               <div className="flex-1 md:max-w-[180px]">
                 <Select value={propertyType} onValueChange={setPropertyType}>
-                  <SelectTrigger className="h-12 bg-background/50 border-0 focus:ring-1 focus:ring-primary">
+                  <SelectTrigger className="h-12 bg-background/50 border-0 focus:ring-1 focus:ring-primary" aria-label={language === 'ro' ? 'Tip proprietate' : 'Property type'}>
                     <Home className="w-4 h-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder={t.quickLeadForm?.typePlaceholder || "Tip proprietate"} />
                   </SelectTrigger>
