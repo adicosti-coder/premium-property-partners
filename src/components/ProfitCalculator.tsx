@@ -317,6 +317,7 @@ const ProfitCalculator = () => {
                   max={30}
                   step={1}
                   className="w-full"
+                  aria-label={language === 'ro' ? 'Comision administrare' : 'Management fee'}
                 />
               </div>
 
