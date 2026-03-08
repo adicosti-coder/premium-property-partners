@@ -1,7 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { TrendingUp, Home, ArrowRight, BarChart3 } from "lucide-react";
-import AnimatedStatValue from "./AnimatedStatValue";
+import { TrendingUp, Home, BarChart3 } from "lucide-react";
 
 interface CaseStudy {
   type: string;
@@ -45,7 +44,7 @@ const caseStudies: CaseStudy[] = [
 
 const ROICaseStudySection = () => {
   const { language } = useLanguage();
-  const [ref, isVisible] = useScrollAnimation();
+  const { ref, isVisible } = useScrollAnimation();
 
   const t = {
     ro: {
@@ -76,7 +75,7 @@ const ROICaseStudySection = () => {
 
   return (
     <section
-      ref={ref as React.RefObject<HTMLElement>}
+      ref={ref}
       className={`py-20 bg-secondary/30 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
     >
       <div className="container mx-auto px-4">
@@ -130,9 +129,9 @@ const ROICaseStudySection = () => {
                     </span>
                   </div>
 
-                  {/* Arrow */}
+                  {/* Increase badge */}
                   <div className="flex items-center justify-center">
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-bold">
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">
                       <TrendingUp className="w-4 h-4" />
                       +{increase}% {text.increase}
                     </div>
@@ -142,7 +141,7 @@ const ROICaseStudySection = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-primary">{text.realtrust}</span>
                     <span className="text-2xl font-bold text-primary">
-                      €{isVisible ? <AnimatedStatValue end={cs.realtrustIncome} duration={1500} /> : cs.realtrustIncome}{text.perMonth}
+                      €{cs.realtrustIncome}{text.perMonth}
                     </span>
                   </div>
 
@@ -156,8 +155,12 @@ const ROICaseStudySection = () => {
                     </div>
                     <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-1500"
-                        style={{ width: isVisible ? "100%" : "0%", transitionDelay: "200ms" }}
+                        className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
+                        style={{ 
+                          width: isVisible ? "100%" : "0%", 
+                          transitionDuration: "1500ms",
+                          transitionDelay: "200ms" 
+                        }}
                       />
                     </div>
                   </div>

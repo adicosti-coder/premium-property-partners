@@ -35,6 +35,8 @@ interface ZoneData {
   seoTitleEn: string;
   seoDescription: string;
   seoDescriptionEn: string;
+  summaryRo: string;
+  summaryEn: string;
 }
 
 const zones: Record<string, ZoneData> = {
@@ -69,6 +71,8 @@ const zones: Record<string, ZoneData> = {
     seoTitleEn: "Old Town Timișoara Accommodation | ApArt Hotel Premium",
     seoDescription: "Apartamente premium în Centrul Istoric Timișoara, gestionate profesional de RealTrust. Check-in inteligent, rating 4.9/5, la 2 min de Piața Victoriei.",
     seoDescriptionEn: "Premium apartments in Timișoara Old Town, professionally managed by RealTrust. Smart check-in, 4.9/5 rating, 2 min from Victory Square.",
+    summaryRo: "Cazare premium în Centrul Istoric Timișoara: apartamente gestionate profesional cu check-in inteligent, rating 4.9/5, ocupare 95%, la 2 minute de Piața Victoriei. Ideal pentru turiști și investitori.",
+    summaryEn: "Premium accommodation in Timișoara Old Town: professionally managed apartments with smart check-in, 4.9/5 rating, 95% occupancy, 2 minutes from Victory Square. Ideal for tourists and investors.",
   },
   "iulius-town": {
     slug: "iulius-town",
@@ -101,6 +105,8 @@ const zones: Record<string, ZoneData> = {
     seoTitleEn: "Iulius Town Timișoara Accommodation | ApArt Hotel Modern",
     seoDescription: "Apartamente moderne lângă Iulius Town Timișoara, gestionate profesional. Complexe noi, smart lock, rating 4.8/5. Ideal business & familii.",
     seoDescriptionEn: "Modern apartments near Iulius Town Timișoara, professionally managed. New complexes, smart lock, 4.8/5 rating. Ideal for business & families.",
+    summaryRo: "Cazare modernă lângă Iulius Town Timișoara: apartamente noi în complexe rezidențiale premium, gestionate profesional cu smart lock, rating 4.8/5, ocupare 88%. Ideal pentru business și familii.",
+    summaryEn: "Modern accommodation near Iulius Town Timișoara: new apartments in premium residential complexes, professionally managed with smart lock, 4.8/5 rating, 88% occupancy. Ideal for business and families.",
   },
   fabric: {
     slug: "fabric",
@@ -133,6 +139,8 @@ const zones: Record<string, ZoneData> = {
     seoTitleEn: "Fabric Timișoara Accommodation | ApArt Hotel Authentic",
     seoDescription: "Apartamente renovate în Fabric Timișoara, gestionate profesional. ROI 10%+, prețuri accesibile, potențial maxim de creștere.",
     seoDescriptionEn: "Renovated apartments in Fabric Timișoara, professionally managed. ROI 10%+, affordable prices, maximum growth potential.",
+    summaryRo: "Cazare autentică în Fabric Timișoara: apartamente renovate, gestionate profesional cu ROI 10%+, prețuri cu 20-30% sub centru. Cartierul cu cel mai mare potențial de creștere din Timișoara.",
+    summaryEn: "Authentic accommodation in Fabric Timișoara: renovated apartments, professionally managed with 10%+ ROI, prices 20-30% below downtown. Timișoara's highest growth potential neighborhood.",
   },
 };
 
@@ -150,8 +158,6 @@ const ZoneLanding = () => {
       ctaOwner: "Vreau să Listez Proprietatea",
       whyZone: "De ce",
       investHere: "pentru investiția ta?",
-      whyZoneEn: "Why",
-      investHereEn: "for your investment?",
     },
     en: {
       avgPrice: "Avg price/night",
@@ -199,7 +205,7 @@ const ZoneLanding = () => {
       <SEOHead
         title={language === "en" ? data.seoTitleEn : data.seoTitle}
         description={language === "en" ? data.seoDescriptionEn : data.seoDescription}
-        canonicalUrl={`https://realtrust.ro/zona/${data.slug}`}
+        url={`https://realtrust.ro/zona/${data.slug}`}
         jsonLd={jsonLd}
       />
       <Header />
@@ -290,7 +296,7 @@ const ZoneLanding = () => {
           </div>
         </section>
 
-        {/* Properties from this zone */}
+        {/* Properties */}
         <Suspense fallback={null}>
           <PropertyGallery />
         </Suspense>
@@ -334,8 +340,8 @@ const ZoneLanding = () => {
 
         <Suspense fallback={null}>
           <PageSummary
-            title={language === "en" ? data.seoTitleEn : data.seoTitle}
-            description={language === "en" ? data.seoDescriptionEn : data.seoDescription}
+            summaryRo={data.summaryRo}
+            summaryEn={data.summaryEn}
           />
         </Suspense>
       </main>
