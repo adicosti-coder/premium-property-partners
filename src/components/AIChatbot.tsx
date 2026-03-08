@@ -284,6 +284,7 @@ const AIChatbot = () => {
           message: content,
           language,
           conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          pageContext: currentPath,
         }),
         signal: abortControllerRef.current.signal,
       });
