@@ -1,0 +1,323 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+};
+
+// Timișoara zones with scoring weights
+const PREMIUM_ZONES = ['Centru', 'Iosefin', 'Fabric', 'Elisabetin', 'Circumvalațiunii'];
+const GOOD_ZONES = ['Iulius Town', 'Complex Studențesc', 'Dâmbovița', 'Lipovei', 'Soarelui', 'Torontalului'];
+const ZONE_KEYWORDS: Record<string, string[]> = {
+  'Centru': ['centru', 'piata victoriei', 'piata unirii', 'opera', 'lloyd'],
+  'Iosefin': ['iosefin', 'josefin'],
+  'Fabric': ['fabric'],
+  'Elisabetin': ['elisabetin'],
+  'Circumvalațiunii': ['circumvalatiunii', 'circumvalațiunii', 'take ionescu'],
+  'Iulius Town': ['iulius', 'openville'],
+  'Complex Studențesc': ['complex studentesc', 'studențesc', 'studenti'],
+  'Dâmbovița': ['dambovita', 'dâmbovița'],
+  'Lipovei': ['lipovei'],
+  'Soarelui': ['soarelui'],
+  'Torontalului': ['torontalului'],
+  'Giroc': ['giroc'],
+  'Dumbrăvița': ['dumbravita', 'dumbrăvița'],
+  'Ghiroda': ['ghiroda'],
+  'Moșnița': ['mosnita', 'moșnița'],
+};
+
+function detectZone(text: string): string | null {
+  const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (const [zone, keywords] of Object.entries(ZONE_KEYWORDS)) {
+    for (const kw of keywords) {
+      const normalKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (lower.includes(normalKw)) return zone;
+    }
+  }
+  return null;
+}
+
+/** Score a listing 0-100 based on potential for short-term rental */
+function scoreListing(data: {
+  zone: string | null;
+  size: number | null;
+  rooms: number | null;
+  price: number | null;
+  pricePerSqm: number | null;
+  floor: string | null;
+  yearBuilt: number | null;
+  features: string[];
+}): { score: number; breakdown: Record<string, number> } {
+  const breakdown: Record<string, number> = {};
+  let score = 0;
+
+  // Zone score (0-30)
+  if (data.zone) {
+    if (PREMIUM_ZONES.includes(data.zone)) {
+      breakdown.zone = 30;
+    } else if (GOOD_ZONES.includes(data.zone)) {
+      breakdown.zone = 20;
+    } else {
+      breakdown.zone = 10;
+    }
+  } else {
+    breakdown.zone = 5;
+  }
+  score += breakdown.zone;
+
+  // Price/sqm score (0-25) — lower is better for investment
+  if (data.pricePerSqm) {
+    if (data.pricePerSqm < 1200) breakdown.price = 25;
+    else if (data.pricePerSqm < 1500) breakdown.price = 20;
+    else if (data.pricePerSqm < 1800) breakdown.price = 15;
+    else if (data.pricePerSqm < 2200) breakdown.price = 10;
+    else breakdown.price = 5;
+  } else {
+    breakdown.price = 0;
+  }
+  score += breakdown.price;
+
+  // Size score (0-15) — studios and 2-room are best for STR
+  if (data.rooms) {
+    if (data.rooms === 1 || data.rooms === 2) breakdown.rooms = 15;
+    else if (data.rooms === 3) breakdown.rooms = 10;
+    else breakdown.rooms = 5;
+  } else {
+    breakdown.rooms = 5;
+  }
+  score += breakdown.rooms;
+
+  // Year built score (0-15) — newer is better
+  if (data.yearBuilt) {
+    if (data.yearBuilt >= 2018) breakdown.year = 15;
+    else if (data.yearBuilt >= 2010) breakdown.year = 12;
+    else if (data.yearBuilt >= 2000) breakdown.year = 8;
+    else breakdown.year = 4;
+  } else {
+    breakdown.year = 5;
+  }
+  score += breakdown.year;
+
+  // Features bonus (0-15)
+  const desirableFeatures = ['centrala', 'aer conditionat', 'parcare', 'balcon', 'lift', 'mobilat', 'utilat'];
+  const featureLower = data.features.map(f => f.toLowerCase());
+  let featureScore = 0;
+  for (const df of desirableFeatures) {
+    if (featureLower.some(f => f.includes(df))) featureScore += 2;
+  }
+  breakdown.features = Math.min(featureScore, 15);
+  score += breakdown.features;
+
+  return { score: Math.min(score, 100), breakdown };
+}
+
+const SEARCH_QUERIES = [
+  { platform: 'imobiliare.ro', query: 'apartament vanzare timisoara site:imobiliare.ro' },
+  { platform: 'OLX', query: 'apartament vanzare timisoara site:olx.ro' },
+];
+
+const EXTRACTION_PROMPT = `Extract property listing details from this real estate page. Return JSON:
+- title: listing title (string)
+- price: numeric price, no currency (number or null)
+- currency: "EUR" or "RON" (string)
+- location: address or neighborhood (string or null)  
+- size: sqm number only (number or null)
+- rooms: number of rooms (number or null)
+- floor: floor text (string or null)
+- year_built: construction year (number or null)
+- features: array of amenities (string[])
+- contact_phone: phone number if visible (string or null)
+- contact_name: contact name if visible (string or null)
+- images: array of property photo URLs (string[])
+For missing fields return null.`;
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!firecrawlKey) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'FIRECRAWL_API_KEY not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Parse optional params
+    let maxResults = 10;
+    let customQuery: string | null = null;
+    try {
+      const body = await req.json();
+      if (body?.max_results) maxResults = Math.min(body.max_results, 30);
+      if (body?.custom_query) customQuery = body.custom_query;
+    } catch { /* no body */ }
+
+    const results: any[] = [];
+    const errors: string[] = [];
+    const queries = customQuery 
+      ? [{ platform: 'Custom', query: customQuery }]
+      : SEARCH_QUERIES;
+
+    for (const { platform, query } of queries) {
+      console.log(`Searching ${platform}: ${query}`);
+
+      try {
+        // Step 1: Search for listings
+        const searchResp = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query,
+            limit: maxResults,
+            lang: 'ro',
+            country: 'ro',
+            scrapeOptions: { formats: ['markdown'] },
+          }),
+        });
+
+        const searchData = await searchResp.json();
+        const searchResults = searchData?.data || [];
+        console.log(`Found ${searchResults.length} results from ${platform}`);
+
+        // Step 2: Process each result
+        for (const result of searchResults) {
+          const url = result.url;
+          if (!url) continue;
+
+          // Skip if already in DB
+          const { data: existing } = await supabase
+            .from('prospect_listings')
+            .select('id')
+            .eq('source_url', url)
+            .maybeSingle();
+
+          if (existing) {
+            // Update last_seen_at
+            await supabase.from('prospect_listings')
+              .update({ last_seen_at: new Date().toISOString() })
+              .eq('id', existing.id);
+            continue;
+          }
+
+          // Step 3: Extract structured data from the page
+          let extracted: any = {};
+          try {
+            const scrapeResp = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${firecrawlKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                url,
+                formats: [{ type: 'json', prompt: EXTRACTION_PROMPT }, 'links'],
+                waitFor: 3000,
+              }),
+            });
+
+            const scrapeData = await scrapeResp.json();
+            extracted = scrapeData?.data?.json || scrapeData?.json || {};
+          } catch (e) {
+            console.error(`Failed to scrape ${url}:`, e);
+            // Use basic info from search result
+            extracted = { title: result.title, description: result.description };
+          }
+
+          // Normalize price to EUR
+          let price = extracted.price ? Number(extracted.price) : null;
+          const currency = extracted.currency || 'EUR';
+          if (price && currency === 'RON') {
+            price = Math.round(price * 0.2); // RON -> EUR
+          }
+
+          const size = extracted.size ? Number(extracted.size) : null;
+          const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
+
+          const locationText = extracted.location || result.title || '';
+          const zone = detectZone(locationText + ' ' + (result.title || ''));
+          const features = Array.isArray(extracted.features) ? extracted.features : [];
+
+          // Score the listing
+          const { score, breakdown } = scoreListing({
+            zone,
+            size,
+            rooms: extracted.rooms ? Number(extracted.rooms) : null,
+            price,
+            pricePerSqm,
+            floor: extracted.floor || null,
+            yearBuilt: extracted.year_built ? Number(extracted.year_built) : null,
+            features,
+          });
+
+          // Insert into DB
+          const { data: inserted, error: insertErr } = await supabase
+            .from('prospect_listings')
+            .insert({
+              source_platform: platform,
+              source_url: url,
+              title: extracted.title || result.title || 'Anunț fără titlu',
+              description: extracted.description || result.description || null,
+              price,
+              currency: 'EUR',
+              price_per_sqm: pricePerSqm,
+              location: extracted.location || null,
+              zone,
+              size,
+              rooms: extracted.rooms ? Number(extracted.rooms) : null,
+              floor: extracted.floor || null,
+              year_built: extracted.year_built ? Number(extracted.year_built) : null,
+              features,
+              images: Array.isArray(extracted.images) ? extracted.images.slice(0, 10) : [],
+              contact_phone: extracted.contact_phone || null,
+              contact_name: extracted.contact_name || null,
+              score,
+              score_breakdown: breakdown,
+            })
+            .select('id, title, score, zone')
+            .single();
+
+          if (insertErr) {
+            console.error(`Insert error for ${url}:`, insertErr.message);
+            errors.push(`${url}: ${insertErr.message}`);
+          } else {
+            results.push(inserted);
+          }
+
+          // Rate limit pause
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      } catch (err: any) {
+        console.error(`Platform ${platform} error:`, err);
+        errors.push(`${platform}: ${err.message}`);
+      }
+
+      // Pause between platforms
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        new_listings: results.length,
+        listings: results,
+        errors: errors.length > 0 ? errors : undefined,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    console.error('Scrape prospects error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
