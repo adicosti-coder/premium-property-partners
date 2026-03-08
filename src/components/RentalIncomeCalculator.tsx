@@ -523,12 +523,12 @@ const RentalIncomeCalculator = () => {
                         <Button
                           onClick={handleWhatsAppClick}
                           disabled={isSavingLead}
-                          className="w-full bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground py-6 text-lg font-semibold rounded-xl disabled:opacity-70"
+                          className="w-full bg-whatsapp hover:bg-whatsapp-hover text-whatsapp-foreground py-6 text-sm sm:text-lg font-semibold rounded-xl disabled:opacity-70"
                         >
                           {isSavingLead ? (
                             <>
                               <motion.div
-                                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+                                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2 flex-shrink-0"
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                               />
@@ -536,8 +536,8 @@ const RentalIncomeCalculator = () => {
                             </>
                           ) : (
                             <>
-                              <MessageCircle className="w-5 h-5 mr-2" />
-                              Obțineți Raportul Complet pe WhatsApp
+                              <MessageCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+                              <span>Raport Complet pe WhatsApp</span>
                             </>
                           )}
                         </Button>
