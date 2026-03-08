@@ -105,8 +105,39 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
 ));
 MarkdownContent.displayName = "MarkdownContent";
 
+// Context-aware quick actions based on current page
+const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  
+  if (path.startsWith("/pentru-proprietari") || path.startsWith("/investitii")) {
+    return lang === "ro"
+      ? ["Calculează-mi ROI-ul", "Cum funcționează comisionul?", "Vreau să listez proprietatea", "Ghid Investitor 2026"]
+      : ["Calculate my ROI", "How does the commission work?", "I want to list my property", "Investor Guide 2026"];
+  }
+  if (path.startsWith("/proprietate/")) {
+    return lang === "ro"
+      ? ["Este disponibil weekendul viitor?", "Care e prețul pentru 3 nopți?", "Ce facilități are?", "Vreau să rezerv direct"]
+      : ["Is it available next weekend?", "What's the price for 3 nights?", "What amenities does it have?", "I want to book directly"];
+  }
+  if (path.startsWith("/oaspeti") || path.startsWith("/pentru-oaspeti")) {
+    return lang === "ro"
+      ? ["Ce apartamente sunt libere?", "Recomandă-mi un apartament", "Ce restaurante recomanzi?", "Cum ajung de la aeroport?"]
+      : ["Which apartments are available?", "Recommend an apartment", "Restaurant recommendations?", "How to get from the airport?"];
+  }
+  if (path.startsWith("/zona/")) {
+    return lang === "ro"
+      ? ["Ce apartamente sunt în această zonă?", "Care e randamentul aici?", "Vreau să vizitez", "Comparație cu alte zone"]
+      : ["What apartments are in this area?", "What's the yield here?", "I want to visit", "Compare with other areas"];
+  }
+  // Default
+  return lang === "ro"
+    ? ["Ce apartamente sunt libere?", "Calculează-mi ROI-ul", "Vreau să vizitez un apartament", "Ce restaurante recomanzi?"]
+    : ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"];
+};
+
 const AIChatbot = () => {
   const { language } = useLanguage();
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
@@ -140,7 +171,7 @@ const AIChatbot = () => {
       greeting: "Bună ziua! Sunt Concierge-ul dumneavoastră Digital de la RealTrust & ApArt Hotel Timișoara. 🏠\n\n**Am acces la date în timp real** și vă pot ajuta cu:\n\n📅 **Disponibilitate live** — verifice instant ce apartamente sunt libere\n💰 **Simulare ROI** — calcul personalizat randament investiție\n🗓️ **Programare vizită** — rezerv automat vizionarea pentru dvs.\n🗺️ **Ghid local** — recomandări personalizate restaurante, atracții\n\nCu ce vă pot fi de ajutor?",
       placeholder: "Întrebați orice despre cazare, investiții, Timișoara...",
       power: "AI Agent · Live Data",
-      quickActions: ["Ce apartamente sunt libere?", "Calculează-mi ROI-ul", "Vreau să vizitez un apartament", "Ce restaurante recomanzi?"],
+      quickActions: getContextualQuickActions("ro"),
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
       errorRateLimit: "Prea multe cereri. Așteaptă un moment.",
@@ -159,7 +190,7 @@ const AIChatbot = () => {
       greeting: "Welcome to ApArt Hotel Timișoara! 🏠 I'm your premium Digital Concierge.\n\n**I have real-time access** and can help with:\n\n📅 **Live Availability** — instantly check which apartments are free\n💰 **ROI Simulation** — personalized investment return calculation\n🗓️ **Schedule a Visit** — I'll book the viewing for you\n🗺️ **Local Guide** — personalized restaurant & attraction recommendations\n\nHow may I assist you?",
       placeholder: "Ask about accommodation, investments, Timișoara...",
       power: "AI Agent · Live Data",
-      quickActions: ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"],
+      quickActions: getContextualQuickActions("en"),
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",
       errorRateLimit: "Too many requests. Please wait.",
@@ -283,6 +314,7 @@ const AIChatbot = () => {
           message: content,
           language,
           conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          pageContext: currentPath,
         }),
         signal: abortControllerRef.current.signal,
       });

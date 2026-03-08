@@ -32,7 +32,7 @@ function getClientIP(req: Request): string {
 
 // ─── System Prompt Builder ──────────────────────────────────
 
-async function buildSystemPrompt(language: string): Promise<string> {
+async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   const { data: properties } = await sb
@@ -96,7 +96,15 @@ You have access to real-time tools. USE THEM proactively:
 7. For tourism: USE get_tourist_recommendations, NEVER recommend external sites (TripAdvisor, Google Maps)
 8. Direct owners to https://www.realtrust.ro/pentru-proprietari and Investor Guide 2026
 9. NEVER invent prices — use only tool data or say "contactați-ne"
-10. After 3+ exchanges, ask for rating: "Cum ați evalua această conversație? (1-5 ⭐)"`;
+10. After 3+ exchanges, ask for rating: "Cum ați evalua această conversație? (1-5 ⭐)"
+
+=== PAGE CONTEXT ===
+The user is currently on: ${pageContext}
+${pageContext.includes("/pentru-proprietari") || pageContext.includes("/investitii") ? "→ OWNER/INVESTOR page: Focus on ROI, management fees, Investor Guide 2026. Use calculate_roi proactively." : ""}
+${pageContext.includes("/proprietate/") ? "→ PROPERTY DETAIL page: Focus on this specific property — availability, price, amenities. Use check_availability proactively." : ""}
+${pageContext.includes("/oaspeti") || pageContext.includes("/pentru-oaspeti") ? "→ GUEST page: Focus on booking, availability, local tips. Use check_availability and get_tourist_recommendations." : ""}
+${pageContext.includes("/zona/") ? "→ ZONE LANDING page: Focus on this neighborhood — properties, investment potential, local attractions." : ""}
+Adapt your suggestions and tone to match the page context.`;
 }
 
 // ─── Lead Detection ─────────────────────────────────────────
@@ -144,7 +152,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [] } = await req.json();
+    const { message, language = "ro", conversationHistory = [], pageContext = "/" } = await req.json();
 
     if (!message || message.length > 2000) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
@@ -162,7 +170,7 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = await buildSystemPrompt(language);
+    const systemPrompt = await buildSystemPrompt(language, pageContext);
 
     const messages = [
       { role: "system", content: systemPrompt },

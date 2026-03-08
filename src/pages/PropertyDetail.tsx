@@ -54,6 +54,8 @@ interface DbPropertyData {
   listing_type?: string | null;
   status_operativ?: string;
   property_code?: string | null;
+  amenities?: string[];
+  house_rules?: string[];
 }
 
 // Helper to check if a string is a UUID
@@ -519,6 +521,8 @@ const PropertyDetail = () => {
                 pricePerNight={staticProperty ? property.pricePerNight : undefined}
                 isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
                 listingType={dbProperty?.listing_type}
+                amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
+                houseRules={dbProperty?.house_rules || []}
               />
             </div>
 
