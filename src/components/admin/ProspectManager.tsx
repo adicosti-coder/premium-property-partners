@@ -607,37 +607,95 @@ const ProspectManager = () => {
                   </div>
                 )}
 
-                {/* ── Outreach Section ──────────────────── */}
+                {/* ── Quick Replies ──────────────────────── */}
                 <Card className="border-green-200 dark:border-green-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-green-600" />
-                      Mesaj de contactare
+                      <Zap className="w-4 h-4 text-green-600" />
+                      Mesaje rapide (Quick Replies)
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="bg-muted rounded-lg p-3 text-sm whitespace-pre-line">
-                      {generateOutreachMessage(selectedListing)}
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      <Button size="sm" variant="outline" onClick={() => copyMessage(selectedListing)}>
-                        <Copy className="w-4 h-4 mr-2" /> Copiază mesajul
-                      </Button>
-                      {selectedListing.contact_phone && (
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
-                          <a
-                            href={`https://wa.me/${selectedListing.contact_phone.replace(/\D/g, '')}?text=${encodeURIComponent(generateOutreachMessage(selectedListing))}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    {/* Quick reply buttons */}
+                    <div className="flex flex-wrap gap-2">
+                      {QUICK_REPLIES.map(qr => {
+                        const Icon = qr.icon;
+                        return (
+                          <Button
+                            key={qr.id}
+                            size="sm"
+                            variant={activeQuickReply === qr.id ? 'default' : 'outline'}
+                            onClick={() => setActiveQuickReply(activeQuickReply === qr.id ? null : qr.id)}
+                            className="text-xs"
                           >
-                            <Phone className="w-4 h-4 mr-2" /> Trimite pe WhatsApp
-                          </a>
-                        </Button>
-                      )}
+                            <Icon className="w-3 h-3 mr-1" /> {qr.label}
+                          </Button>
+                        );
+                      })}
                     </div>
+
+                    {/* Selected message preview */}
+                    {(() => {
+                      const qr = QUICK_REPLIES.find(q => q.id === activeQuickReply);
+                      const msg = qr ? qr.getMessage(selectedListing) : generateOutreachMessage(selectedListing);
+                      return (
+                        <>
+                          <div className="bg-muted rounded-lg p-3 text-sm whitespace-pre-line max-h-48 overflow-y-auto">
+                            {msg}
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            <Button size="sm" variant="outline" onClick={() => copyMessage(selectedListing, msg)}>
+                              <Copy className="w-4 h-4 mr-2" /> Copiază mesajul
+                            </Button>
+                            {selectedListing.contact_phone && (
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
+                                <a
+                                  href={`https://wa.me/${selectedListing.contact_phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Phone className="w-4 h-4 mr-2" /> Trimite pe WhatsApp
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                     {!selectedListing.contact_phone && (
                       <p className="text-xs text-muted-foreground">⚠️ Fără telefon extras — copiază mesajul și trimite-l manual din anunțul original.</p>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* ── Conversation Labels ──────────────────── */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-primary" />
+                      Etichete conversație
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {CONVERSATION_LABELS.map(label => {
+                        const isActive = (selectedListing.tags || []).includes(label.value);
+                        return (
+                          <button
+                            key={label.value}
+                            onClick={() => toggleTag(selectedListing.id, label.value)}
+                            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                              isActive
+                                ? `${label.color} font-semibold ring-2 ring-offset-1 ring-primary/30`
+                                : 'border-border text-muted-foreground hover:bg-muted'
+                            }`}
+                          >
+                            {label.label}
+                            {isActive && <X className="w-3 h-3 ml-1 inline" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </CardContent>
                 </Card>
 
