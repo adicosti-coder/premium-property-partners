@@ -405,6 +405,10 @@ const FunnelAnalyticsManager = () => {
             <BarChart3 className="w-4 h-4" />
             A/B Tests
           </TabsTrigger>
+          <TabsTrigger value="conversion" className="gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Conversion Funnel
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
