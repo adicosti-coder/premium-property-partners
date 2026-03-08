@@ -479,7 +479,7 @@ const ProspectManager = () => {
     return (
       <div className="flex gap-3 overflow-x-auto pb-4">
         {activeStages.map(stage => {
-          const stageListings = allListings
+          const stageListings = (filterType === 'all' ? allListings : allListings.filter(l => l.prospect_type === filterType))
             .filter(l => l.status === stage.value)
             .sort((a, b) => b.score - a.score);
 
