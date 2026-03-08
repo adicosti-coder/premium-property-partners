@@ -455,6 +455,9 @@ const PentruProprietari = () => {
       {/* How It Works */}
       <HowItWorks />
 
+      {/* ROI Case Studies - Before/After */}
+      <ROICaseStudySection />
+
       {/* Why Us */}
       <WhyUs />
 
