@@ -42,10 +42,78 @@ interface ProspectListing {
   score_breakdown: Record<string, number>;
   status: string;
   admin_notes: string | null;
+  tags: string[];
   scraped_at: string;
   last_seen_at: string;
   is_active: boolean;
 }
+
+// ── Conversation Labels ──────────────────────────────
+const CONVERSATION_LABELS = [
+  { value: 'interesat', label: '🟢 Interesat', color: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-300' },
+  { value: 'de-urmarit', label: '🔵 De urmărit', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border-blue-300' },
+  { value: 'cald', label: '🔥 Cald', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300 border-orange-300' },
+  { value: 'rece', label: '❄️ Rece', color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/40 dark:text-slate-300 border-slate-300' },
+  { value: 'nu-raspunde', label: '📵 Nu răspunde', color: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-300' },
+  { value: 'revine', label: '🔄 Revine el', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-purple-300' },
+  { value: 'potential-mare', label: '⭐ Potențial mare', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300' },
+  { value: 'urgent', label: '🚨 Urgent', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-400' },
+];
+
+// ── Quick Reply Templates ────────────────────────────
+const QUICK_REPLIES = [
+  {
+    id: 'first-contact',
+    label: '👋 Primul contact',
+    icon: MessageSquare,
+    getMessage: (l: ProspectListing) => {
+      const zone = l.zone || 'Timișoara';
+      return `Bună ziua! 👋\n\nAm văzut apartamentul dvs.${l.rooms ? ` cu ${l.rooms} camere` : ''} din ${zone} pe ${l.source_platform}.\n\nȘtiați că proprietarii din zona dvs. câștigă cu 40-60% mai mult decât dintr-o chirie normală? Noi ne ocupăm de tot — de la curățenie la oaspeți.\n\nDacă vă interesează o estimare gratuită, scrieți-mi „DA" și vă trimit calculul în 5 minute. Fără nicio obligație! 😊`;
+    },
+  },
+  {
+    id: 'follow-up-1',
+    label: '🔄 Follow-up #1',
+    icon: Clock,
+    getMessage: (l: ProspectListing) => {
+      const zone = l.zone || 'Timișoara';
+      return `Bună ziua! 😊\n\nV-am scris zilele trecute referitor la apartamentul din ${zone}. Înțeleg că sunteți ocupat(ă), dar voiam să vă spun că tocmai am finalizat o analiză pentru zona dvs.\n\nProprietarii de acolo câștigă în medie 1.200€/lună net din regim hotelier. Vă pot trimite estimarea personalizată — durează 2 minute.\n\nScrieți-mi „DA" dacă vă interesează! 🏠`;
+    },
+  },
+  {
+    id: 'follow-up-2',
+    label: '⏰ Follow-up #2 (ultim)',
+    icon: Clock,
+    getMessage: (l: ProspectListing) => {
+      return `Bună ziua!\n\nÎncerc ultima oară — nu vreau să deranjez. 😊\n\nDacă v-ați gândit vreodată să câștigați mai mult din apartamentul dvs. fără bătăi de cap, noi facem asta pentru proprietari din ${l.zone || 'Timișoara'} de peste 2 ani.\n\nDacă nu e momentul potrivit, nicio problemă! Vă urez o zi frumoasă! 🙏`;
+    },
+  },
+  {
+    id: 'meeting-request',
+    label: '📅 Propunere întâlnire',
+    icon: CalendarCheck,
+    getMessage: (l: ProspectListing) => {
+      return `Super, mă bucur că sunteți interesat(ă)! 🎉\n\nCel mai bine ar fi să ne vedem 15-20 minute la apartament — vă explic exact cum funcționează și fac câteva poze pentru estimarea finală.\n\nCând v-ar conveni? Sunt flexibil:\n• Luni-Vineri: 10:00-18:00\n• Sâmbătă: 10:00-14:00\n\nSpuneți-mi o zi și o oră și confirm imediat! 📅`;
+    },
+  },
+  {
+    id: 'after-meeting',
+    label: '✅ După întâlnire',
+    icon: ThumbsUp,
+    getMessage: (l: ProspectListing) => {
+      return `Bună ziua! 😊\n\nMultumesc pentru întâlnirea de azi! A fost o plăcere să văd apartamentul — arată foarte bine și are potențial excelent.\n\nConform estimării noastre, venitul net lunar ar fi între 800€ și 1.400€, în funcție de sezon.\n\nVă trimit contractul și toate detaliile pe email. Dacă aveți întrebări, sunt la dispoziție! 🙏`;
+    },
+  },
+  {
+    id: 'objection-handler',
+    label: '🤔 Răspuns obiecții',
+    icon: HelpCircle,
+    getMessage: () => {
+      return `Înțeleg perfect îngrijorarea! 😊\n\nCâteva lucruri care v-ar putea liniști:\n\n✅ Contractul e pe minim 1 an, cu ieșire în 30 zile\n✅ Garantăm chiria minimă lunară\n✅ Noi plătim toate utilitățile și reparațiile\n✅ Apartamentul e asigurat integral\n✅ Primiți raport lunar detaliat cu venituri + cheltuieli\n\nCe ziceți, programăm o discuție de 15 min să clarificăm totul? 🤝`;
+    },
+  },
+];
+
 
 const PIPELINE_STAGES = [
   { value: 'new', label: '🆕 Nou', emoji: '🆕', color: 'border-blue-400 bg-blue-50 dark:bg-blue-950/30' },
