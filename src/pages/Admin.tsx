@@ -58,7 +58,7 @@ import {
   ShieldCheck,
   PenLine,
   MousePointerClick,
-  Target, TrendingUp, LinkIcon,
+  Target, TrendingUp, LinkIcon, Search,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -95,6 +95,7 @@ import CazareManager from "@/components/admin/CazareManager";
 import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManager";
 import ICalManager from "@/components/admin/ICalManager";
 import ListingImporter from "@/components/admin/ListingImporter";
+import ProspectManager from "@/components/admin/ProspectManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -388,6 +389,10 @@ const Admin = () => {
               <LinkIcon className="w-4 h-4" />
               Import Anunț
             </TabsTrigger>
+            <TabsTrigger value="prospects" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Bot Prospectare
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -525,6 +530,11 @@ const Admin = () => {
           {/* iCal Sync Tab */}
           <TabsContent value="ical-sync">
             <ICalManager />
+          </TabsContent>
+
+          {/* Prospect Bot Tab */}
+          <TabsContent value="prospects">
+            <ProspectManager />
           </TabsContent>
 
           {/* Listing Import Tab */}
