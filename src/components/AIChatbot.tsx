@@ -105,6 +105,36 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
 ));
 MarkdownContent.displayName = "MarkdownContent";
 
+// Context-aware quick actions based on current page
+const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  
+  if (path.startsWith("/pentru-proprietari") || path.startsWith("/investitii")) {
+    return lang === "ro"
+      ? ["Calculează-mi ROI-ul", "Cum funcționează comisionul?", "Vreau să listez proprietatea", "Ghid Investitor 2026"]
+      : ["Calculate my ROI", "How does the commission work?", "I want to list my property", "Investor Guide 2026"];
+  }
+  if (path.startsWith("/proprietate/")) {
+    return lang === "ro"
+      ? ["Este disponibil weekendul viitor?", "Care e prețul pentru 3 nopți?", "Ce facilități are?", "Vreau să rezerv direct"]
+      : ["Is it available next weekend?", "What's the price for 3 nights?", "What amenities does it have?", "I want to book directly"];
+  }
+  if (path.startsWith("/oaspeti") || path.startsWith("/pentru-oaspeti")) {
+    return lang === "ro"
+      ? ["Ce apartamente sunt libere?", "Recomandă-mi un apartament", "Ce restaurante recomanzi?", "Cum ajung de la aeroport?"]
+      : ["Which apartments are available?", "Recommend an apartment", "Restaurant recommendations?", "How to get from the airport?"];
+  }
+  if (path.startsWith("/zona/")) {
+    return lang === "ro"
+      ? ["Ce apartamente sunt în această zonă?", "Care e randamentul aici?", "Vreau să vizitez", "Comparație cu alte zone"]
+      : ["What apartments are in this area?", "What's the yield here?", "I want to visit", "Compare with other areas"];
+  }
+  // Default
+  return lang === "ro"
+    ? ["Ce apartamente sunt libere?", "Calculează-mi ROI-ul", "Vreau să vizitez un apartament", "Ce restaurante recomanzi?"]
+    : ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"];
+};
+
 const AIChatbot = () => {
   const { language } = useLanguage();
   const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
