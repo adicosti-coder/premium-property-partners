@@ -162,9 +162,7 @@ export const parseSharedPois = async (searchParams: URLSearchParams): Promise<{ 
   const shareCode = searchParams.get('share');
   if (shareCode) {
     const { data, error } = await supabase
-      .from('shared_poi_links')
-      .select('poi_ids')
-      .eq('share_code', shareCode)
+      .rpc('get_shared_poi_link', { p_share_code: shareCode })
       .single();
     
     if (!error && data?.poi_ids) {

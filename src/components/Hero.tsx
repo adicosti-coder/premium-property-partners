@@ -67,9 +67,8 @@ const Hero = () => {
     const timer = setTimeout(async () => {
       try {
         const { data, error } = await supabase
-          .from("site_settings")
+          .from("public_site_settings" as any)
           .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
-          .eq("id", "default")
           .single();
         
         if (!error && data) {
