@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Calendar, Users, Phone, Mail, MessageSquare, Globe, Send, ShieldCheck } from "lucide-react";
+import { Calendar, Users, Phone, Mail, MessageSquare, Globe, Send, ShieldCheck, Tag, Check as CheckIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +36,10 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot field for bot detection
   const [honeypot, setHoneypot] = useState("");
+  // Discount code
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountInfo, setDiscountInfo] = useState<{ valid: boolean; discount_type: string; discount_value: number; description: string } | null>(null);
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -114,6 +118,34 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const validateDiscountCode = async () => {
+    if (!discountCode.trim()) return;
+    setIsValidatingCode(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-discount-code', {
+        body: { code: discountCode.trim().toUpperCase() }
+      });
+      if (error || !data?.valid) {
+        setDiscountInfo(null);
+        toast({
+          title: language === 'en' ? "Invalid code" : "Cod invalid",
+          description: language === 'en' ? "This discount code is not valid or has expired." : "Acest cod de discount nu este valid sau a expirat.",
+          variant: "destructive",
+        });
+      } else {
+        setDiscountInfo(data);
+        toast({
+          title: language === 'en' ? "Code applied!" : "Cod aplicat!",
+          description: `${data.discount_value}${data.discount_type === 'percentage' ? '%' : '€'} ${language === 'en' ? 'discount' : 'reducere'}`,
+        });
+      }
+    } catch {
+      setDiscountInfo(null);
+    } finally {
+      setIsValidatingCode(false);
     }
   };
 
@@ -439,6 +471,44 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
               rows={3}
               className="resize-none"
             />
+          </div>
+
+          {/* Discount Code */}
+          <div className="space-y-2">
+            <Label htmlFor="discountCode" className="text-foreground flex items-center gap-2">
+              <Tag className="w-4 h-4 text-primary" />
+              {language === 'en' ? 'Discount Code' : 'Cod de Reducere'}
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="discountCode"
+                value={discountCode}
+                onChange={(e) => { setDiscountCode(e.target.value.toUpperCase()); setDiscountInfo(null); }}
+                placeholder={language === 'en' ? "e.g. DIRECT5" : "ex. DIRECT5"}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={validateDiscountCode}
+                disabled={!discountCode.trim() || isValidatingCode}
+                className="shrink-0"
+              >
+                {isValidatingCode ? "..." : language === 'en' ? 'Apply' : 'Aplică'}
+              </Button>
+            </div>
+            {discountInfo && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckIcon className="w-4 h-4" />
+                <span>
+                  {discountInfo.discount_value}{discountInfo.discount_type === 'percentage' ? '%' : '€'} {language === 'en' ? 'discount applied' : 'reducere aplicată'}
+                </span>
+                <button type="button" onClick={() => { setDiscountCode(""); setDiscountInfo(null); }} className="ml-auto">
+                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Turnstile widget */}

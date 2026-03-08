@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useRef, useCallback } from "react";
 import { MapPin, Star, Users, BedDouble, Calendar, Eye, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,6 +9,7 @@ import { PrefetchLink } from "@/components/PrefetchLink";
 import { Property, getImageAlt } from "@/data/properties";
 import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
 import { useRealtimeViewers } from "@/hooks/useRealtimeViewers";
+import { usePrefetch } from "@/hooks/usePrefetch";
 import ViewersBadge from "@/components/ViewersBadge";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +68,16 @@ const PropertyCard = ({
     return null;
   };
 
+  const { prefetchPropertyImage } = usePrefetch();
+  const hoverPrefetched = useRef(false);
+
+  const handleCardHover = useCallback(() => {
+    if (!hoverPrefetched.current && property.images[1]) {
+      prefetchPropertyImage(property.images[1]);
+      hoverPrefetched.current = true;
+    }
+  }, [property.images, prefetchPropertyImage]);
+
   return (
     <div
       className={cn(
@@ -73,6 +85,7 @@ const PropertyCard = ({
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}
       style={{ transitionDelay: isVisible ? `${index * 75}ms` : "0ms" }}
+      onMouseEnter={handleCardHover}
     >
       {/* Image */}
       <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>

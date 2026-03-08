@@ -2,11 +2,21 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 
+/** Preload an image into browser cache */
+const preloadImage = (src: string) => {
+  if (!src || typeof window === 'undefined') return;
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'image';
+  link.href = src;
+  document.head.appendChild(link);
+};
+
 export const usePrefetch = () => {
   const queryClient = useQueryClient();
 
   const prefetchProperty = useCallback((propertyId: string) => {
-    // Prefetch property images
+    // Prefetch property data
     queryClient.prefetchQuery({
       queryKey: ['property-images', propertyId],
       queryFn: async () => {
@@ -17,7 +27,7 @@ export const usePrefetch = () => {
           .order('display_order');
         return data;
       },
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     });
 
     // Prefetch bookings for availability
@@ -31,7 +41,21 @@ export const usePrefetch = () => {
           .gte('check_out', new Date().toISOString().split('T')[0]);
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutes
+      staleTime: 2 * 60 * 1000,
+    });
+
+    // Prefetch pricing
+    queryClient.prefetchQuery({
+      queryKey: ['property-pricing', propertyId],
+      queryFn: async () => {
+        const { data } = await supabase
+          .from('property_pricing')
+          .select('*')
+          .eq('property_id', propertyId)
+          .eq('is_active', true);
+        return data;
+      },
+      staleTime: 5 * 60 * 1000,
     });
   }, [queryClient]);
 
@@ -47,9 +71,14 @@ export const usePrefetch = () => {
           .single();
         return data;
       },
-      staleTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 10 * 60 * 1000,
     });
   }, [queryClient]);
 
-  return { prefetchProperty, prefetchBlogArticle };
+  /** Prefetch hero image of a property on hover */
+  const prefetchPropertyImage = useCallback((imageSrc: string) => {
+    preloadImage(imageSrc);
+  }, []);
+
+  return { prefetchProperty, prefetchBlogArticle, prefetchPropertyImage };
 };
