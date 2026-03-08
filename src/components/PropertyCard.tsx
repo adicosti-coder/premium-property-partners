@@ -7,6 +7,8 @@ import OptimizedImage from "./OptimizedImage";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { Property, getImageAlt } from "@/data/properties";
 import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
+import { useRealtimeViewers } from "@/hooks/useRealtimeViewers";
+import ViewersBadge from "@/components/ViewersBadge";
 import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
