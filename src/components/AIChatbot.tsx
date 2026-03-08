@@ -160,7 +160,7 @@ const AIChatbot = () => {
       greeting: "Welcome to ApArt Hotel Timișoara! 🏠 I'm your premium Digital Concierge.\n\n**I have real-time access** and can help with:\n\n📅 **Live Availability** — instantly check which apartments are free\n💰 **ROI Simulation** — personalized investment return calculation\n🗓️ **Schedule a Visit** — I'll book the viewing for you\n🗺️ **Local Guide** — personalized restaurant & attraction recommendations\n\nHow may I assist you?",
       placeholder: "Ask about accommodation, investments, Timișoara...",
       power: "AI Agent · Live Data",
-      quickActions: ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"],
+      quickActions: getContextualQuickActions("en"),
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",
       errorRateLimit: "Too many requests. Please wait.",
