@@ -280,6 +280,7 @@ const ProspectManager = () => {
   // Apply filters
   useEffect(() => {
     let filtered = allListings;
+    if (filterType !== 'all') filtered = filtered.filter(l => l.prospect_type === filterType);
     if (filterStatus !== 'all') filtered = filtered.filter(l => l.status === filterStatus);
     if (filterZone !== 'all') filtered = filtered.filter(l => l.zone === filterZone);
     if (searchQuery) {
@@ -289,7 +290,7 @@ const ProspectManager = () => {
       );
     }
     setListings(filtered);
-  }, [allListings, filterStatus, filterZone, searchQuery]);
+  }, [allListings, filterStatus, filterZone, searchQuery, filterType]);
 
   const handleScrape = async () => {
     setIsScraping(true);
