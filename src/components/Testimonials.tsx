@@ -323,11 +323,11 @@ const Testimonials = () => {
           {/* Trust stats row */}
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">9.4/10</p>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">9.7/10</p>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.avgRating}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '100ms' }}>
-              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">180+</p>
+              <p className="text-3xl md:text-4xl font-serif font-semibold text-foreground">500+</p>
               <p className="text-foreground/60 dark:text-muted-foreground text-sm">{t.testimonials.verifiedReviews}</p>
             </div>
             <div className="text-center" style={{ transitionDelay: '200ms' }}>
