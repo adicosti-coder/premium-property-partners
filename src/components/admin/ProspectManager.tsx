@@ -7,8 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Search, RefreshCw, ExternalLink, MapPin, Ruler, DoorOpen, Euro, Star, Phone, Eye, CheckCircle, X, MessageSquare, TrendingUp, Filter } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Loader2, Search, RefreshCw, ExternalLink, MapPin, Ruler, DoorOpen,
+  Euro, Star, Phone, Eye, CheckCircle, MessageSquare, TrendingUp,
+  Filter, Copy, Calendar, UserCheck, XCircle, Handshake, LayoutList, Columns3,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
@@ -40,13 +46,33 @@ interface ProspectListing {
   is_active: boolean;
 }
 
-const STATUS_OPTIONS = [
-  { value: 'new', label: 'Nou', color: 'bg-blue-500' },
-  { value: 'reviewed', label: 'Revizuit', color: 'bg-yellow-500' },
-  { value: 'contacted', label: 'Contactat', color: 'bg-green-500' },
-  { value: 'rejected', label: 'Respins', color: 'bg-red-500' },
-  { value: 'converted', label: 'Convertit', color: 'bg-purple-500' },
+const PIPELINE_STAGES = [
+  { value: 'new', label: '🆕 Nou', emoji: '🆕', color: 'border-blue-400 bg-blue-50 dark:bg-blue-950/30' },
+  { value: 'reviewed', label: '👁️ Revizuit', emoji: '👁️', color: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30' },
+  { value: 'contacted', label: '📱 Contactat', emoji: '📱', color: 'border-orange-400 bg-orange-50 dark:bg-orange-950/30' },
+  { value: 'interested', label: '🤝 Interesat', emoji: '🤝', color: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30' },
+  { value: 'meeting', label: '📅 Programat', emoji: '📅', color: 'border-violet-400 bg-violet-50 dark:bg-violet-950/30' },
+  { value: 'converted', label: '✅ Client', emoji: '✅', color: 'border-green-500 bg-green-50 dark:bg-green-950/30' },
+  { value: 'rejected', label: '❌ Respins', emoji: '❌', color: 'border-red-400 bg-red-50 dark:bg-red-950/30' },
 ];
+
+/** Generate a warm, simple, curiosity-driven WhatsApp message */
+function generateOutreachMessage(listing: ProspectListing): string {
+  const zone = listing.zone || 'Timișoara';
+  const platform = listing.source_platform;
+  const rooms = listing.rooms;
+  
+  // Different message variants for A/B testing — pick based on listing id hash
+  const variant = listing.id.charCodeAt(0) % 3;
+
+  if (variant === 0) {
+    return `Bună ziua! 👋\n\nAm văzut apartamentul dvs.${rooms ? ` cu ${rooms} camere` : ''} din ${zone} pe ${platform}.\n\nȘtiați că proprietarii din zona dvs. câștigă cu 40-60% mai mult decât dintr-o chirie normală? Noi ne ocupăm de tot — de la curățenie la oaspeți.\n\nDacă vă interesează o estimare gratuită, scrieți-mi „DA" și vă trimit calculul în 5 minute. Fără nicio obligație! 😊`;
+  } else if (variant === 1) {
+    return `Bună ziua! 👋\n\nV-am găsit apartamentul din ${zone} pe ${platform} și m-am gândit că v-ar interesa asta:\n\nProprietarii cu care lucrăm câștigă între 800€ și 2.000€/lună doar din închiriere pe termen scurt, fără să se ocupe de nimic.\n\nVreți să vă arăt cât ar putea produce apartamentul dvs.? Răspundeți cu „VREAU" și vă trimit o estimare personalizată. E gratis! 🏠`;
+  } else {
+    return `Bună ziua! 👋\n\nAm o întrebare rapidă: ați luat în calcul vreodată să vă închiriați apartamentul din ${zone} pe nopți, ca un hotel?\n\nMulti proprietari din ${zone} câștigă dublu față de o chirie clasică, iar noi ne ocupăm de absolut tot (oaspeți, curățenie, administrare).\n\nScrieți-mi „CURIOS" și vă fac o estimare gratuită în 5 minute! 😊`;
+  }
+}
 
 function getScoreColor(score: number): string {
   if (score >= 70) return 'text-green-600 dark:text-green-400';
@@ -62,6 +88,7 @@ function getScoreBadgeVariant(score: number): "default" | "secondary" | "destruc
 
 const ProspectManager = () => {
   const [listings, setListings] = useState<ProspectListing[]>([]);
+  const [allListings, setAllListings] = useState<ProspectListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isScraping, setIsScraping] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -69,41 +96,53 @@ const ProspectManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedListing, setSelectedListing] = useState<ProspectListing | null>(null);
   const [editNotes, setEditNotes] = useState('');
-  const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, converted: 0, avgScore: 0 });
+  const [viewMode, setViewMode] = useState<'list' | 'pipeline'>('pipeline');
+  const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, interested: 0, converted: 0, avgScore: 0 });
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('prospect_listings')
         .select('*')
         .order('score', { ascending: false })
-        .order('scraped_at', { ascending: false });
+        .order('scraped_at', { ascending: false })
+        .limit(500);
 
-      if (filterStatus !== 'all') query = query.eq('status', filterStatus);
-      if (filterZone !== 'all') query = query.eq('zone', filterZone);
-
-      const { data, error } = await query.limit(200);
       if (error) throw error;
-      
       const typedData = (data || []) as unknown as ProspectListing[];
-      setListings(typedData);
+      setAllListings(typedData);
 
-      // Compute stats
+      // Compute stats from all data
       const total = typedData.length;
       const newCount = typedData.filter(l => l.status === 'new').length;
       const contactedCount = typedData.filter(l => l.status === 'contacted').length;
+      const interestedCount = typedData.filter(l => l.status === 'interested' || l.status === 'meeting').length;
       const convertedCount = typedData.filter(l => l.status === 'converted').length;
       const avgScore = total > 0 ? Math.round(typedData.reduce((s, l) => s + l.score, 0) / total) : 0;
-      setStats({ total, new: newCount, contacted: contactedCount, converted: convertedCount, avgScore });
+      setStats({ total, new: newCount, contacted: contactedCount, interested: interestedCount, converted: convertedCount, avgScore });
     } catch (err: any) {
       toast({ title: "Eroare", description: err.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, [filterStatus, filterZone]);
+  }, []);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = allListings;
+    if (filterStatus !== 'all') filtered = filtered.filter(l => l.status === filterStatus);
+    if (filterZone !== 'all') filtered = filtered.filter(l => l.zone === filterZone);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(l =>
+        l.title?.toLowerCase().includes(q) || l.location?.toLowerCase().includes(q) || l.zone?.toLowerCase().includes(q)
+      );
+    }
+    setListings(filtered);
+  }, [allListings, filterStatus, filterZone, searchQuery]);
 
   const handleScrape = async () => {
     setIsScraping(true);
@@ -112,7 +151,6 @@ const ProspectManager = () => {
         body: { max_results: 10 },
       });
       if (error) throw error;
-      
       toast({
         title: "Scanare completă!",
         description: `${data?.new_listings || 0} anunțuri noi găsite.${data?.errors?.length ? ` ${data.errors.length} erori.` : ''}`,
@@ -133,7 +171,7 @@ const ProspectManager = () => {
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
     } else {
-      setListings(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+      setAllListings(prev => prev.map(l => l.id === id ? { ...l, status } : l));
       if (selectedListing?.id === id) setSelectedListing(prev => prev ? { ...prev, status } : null);
       toast({ title: "Status actualizat" });
     }
@@ -148,19 +186,21 @@ const ProspectManager = () => {
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
     } else {
-      setListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, admin_notes: editNotes } : l));
+      setAllListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, admin_notes: editNotes } : l));
       setSelectedListing(prev => prev ? { ...prev, admin_notes: editNotes } : null);
       toast({ title: "Note salvate" });
     }
   };
 
-  const filteredListings = listings.filter(l => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (l.title?.toLowerCase().includes(q) || l.location?.toLowerCase().includes(q) || l.zone?.toLowerCase().includes(q));
-  });
+  const copyMessage = (listing: ProspectListing) => {
+    const msg = generateOutreachMessage(listing);
+    navigator.clipboard.writeText(msg);
+    toast({ title: "Mesaj copiat!", description: "Lipește-l în WhatsApp" });
+  };
 
-  const uniqueZones = [...new Set(listings.map(l => l.zone).filter(Boolean))] as string[];
+  const uniqueZones = [...new Set(allListings.map(l => l.zone).filter(Boolean))] as string[];
+
+  // ── Render helpers ──────────────────────────────────
 
   const renderStatCard = (label: string, value: string | number, icon: React.ReactNode, color: string) => (
     <Card>
@@ -174,8 +214,35 @@ const ProspectManager = () => {
     </Card>
   );
 
-  const renderListingRow = (listing: ProspectListing) => {
-    const statusOpt = STATUS_OPTIONS.find(s => s.value === listing.status);
+  const renderCompactCard = (listing: ProspectListing) => (
+    <div
+      key={listing.id}
+      className="border border-border rounded-lg p-3 hover:bg-muted/50 transition-colors cursor-pointer bg-card"
+      onClick={() => { setSelectedListing(listing); setEditNotes(listing.admin_notes || ''); }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="font-medium text-sm line-clamp-2 flex-1">{listing.title || 'Fără titlu'}</h4>
+        <Badge variant={getScoreBadgeVariant(listing.score)} className="shrink-0 text-xs">
+          {listing.score}
+        </Badge>
+      </div>
+      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+        {listing.zone && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{listing.zone}</span>}
+        {listing.price && <span>{listing.price.toLocaleString()}€</span>}
+        {listing.rooms && <span>{listing.rooms}cam</span>}
+        {listing.size && <span>{listing.size}mp</span>}
+      </div>
+      {listing.contact_phone && (
+        <div className="flex items-center gap-1 mt-2">
+          <Phone className="w-3 h-3 text-green-600" />
+          <span className="text-xs text-green-600 font-medium">{listing.contact_phone}</span>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderListRow = (listing: ProspectListing) => {
+    const stage = PIPELINE_STAGES.find(s => s.value === listing.status);
     return (
       <div
         key={listing.id}
@@ -187,36 +254,26 @@ const ProspectManager = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold truncate">{listing.title || 'Fără titlu'}</h3>
               <Badge variant={getScoreBadgeVariant(listing.score)} className="shrink-0">
-                <Star className="w-3 h-3 mr-1" />
-                {listing.score}/100
+                <Star className="w-3 h-3 mr-1" />{listing.score}/100
               </Badge>
               <Badge variant="outline" className="shrink-0">{listing.source_platform}</Badge>
-              {statusOpt && (
-                <Badge className={`${statusOpt.color} text-white shrink-0`}>{statusOpt.label}</Badge>
-              )}
+              {stage && <Badge variant="secondary" className="shrink-0">{stage.emoji} {stage.label.replace(stage.emoji + ' ', '')}</Badge>}
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
-              {listing.zone && (
-                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{listing.zone}</span>
-              )}
-              {listing.price && (
-                <span className="flex items-center gap-1"><Euro className="w-3 h-3" />{listing.price.toLocaleString()}€</span>
-              )}
-              {listing.size && (
-                <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{listing.size} mp</span>
-              )}
-              {listing.rooms && (
-                <span className="flex items-center gap-1"><DoorOpen className="w-3 h-3" />{listing.rooms} cam</span>
-              )}
-              {listing.price_per_sqm && (
-                <span className="flex items-center gap-1">€{listing.price_per_sqm}/mp</span>
-              )}
-              {listing.contact_phone && (
-                <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{listing.contact_phone}</span>
-              )}
+              {listing.zone && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{listing.zone}</span>}
+              {listing.price && <span className="flex items-center gap-1"><Euro className="w-3 h-3" />{listing.price.toLocaleString()}€</span>}
+              {listing.size && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{listing.size}mp</span>}
+              {listing.rooms && <span className="flex items-center gap-1"><DoorOpen className="w-3 h-3" />{listing.rooms}cam</span>}
+              {listing.price_per_sqm && <span>€{listing.price_per_sqm}/mp</span>}
+              {listing.contact_phone && <span className="flex items-center gap-1 text-green-600"><Phone className="w-3 h-3" />{listing.contact_phone}</span>}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            {listing.contact_phone && (
+              <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); copyMessage(listing); }} title="Copiază mesaj WhatsApp">
+                <Copy className="w-4 h-4" />
+              </Button>
+            )}
             <Button size="sm" variant="ghost" asChild>
               <a href={listing.source_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
                 <ExternalLink className="w-4 h-4" />
@@ -228,103 +285,160 @@ const ProspectManager = () => {
     );
   };
 
+  // ── Pipeline Kanban View ────────────────────────────
+
+  const renderPipelineView = () => {
+    const activeStages = PIPELINE_STAGES.filter(stage => {
+      // Always show core stages, hide empty non-essential ones
+      if (['new', 'contacted', 'interested', 'converted'].includes(stage.value)) return true;
+      return allListings.some(l => l.status === stage.value);
+    });
+
+    return (
+      <div className="flex gap-3 overflow-x-auto pb-4">
+        {activeStages.map(stage => {
+          const stageListings = allListings
+            .filter(l => l.status === stage.value)
+            .sort((a, b) => b.score - a.score);
+
+          return (
+            <div key={stage.value} className={`min-w-[260px] max-w-[300px] flex-shrink-0 border-t-4 rounded-lg ${stage.color}`}>
+              <div className="p-3 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">{stage.label}</h3>
+                  <Badge variant="secondary" className="text-xs">{stageListings.length}</Badge>
+                </div>
+              </div>
+              <ScrollArea className="h-[500px]">
+                <div className="p-2 space-y-2">
+                  {stageListings.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-8">Gol</p>
+                  ) : (
+                    stageListings.map(renderCompactCard)
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ── Main Render ─────────────────────────────────────
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold">🔍 Bot Prospectare Proprietăți</h2>
-          <p className="text-muted-foreground">Scanare automată OLX + Imobiliare.ro pentru anunțuri cu potențial STR</p>
+          <p className="text-muted-foreground">Scanare automată + pipeline de contactare proprietari</p>
         </div>
-        <Button onClick={handleScrape} disabled={isScraping}>
-          {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
-          {isScraping ? 'Se scanează...' : 'Scanează acum'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex border border-border rounded-lg overflow-hidden">
+            <Button
+              size="sm"
+              variant={viewMode === 'pipeline' ? 'default' : 'ghost'}
+              onClick={() => setViewMode('pipeline')}
+              className="rounded-none"
+            >
+              <Columns3 className="w-4 h-4 mr-1" /> Pipeline
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              onClick={() => setViewMode('list')}
+              className="rounded-none"
+            >
+              <LayoutList className="w-4 h-4 mr-1" /> Listă
+            </Button>
+          </div>
+          <Button onClick={handleScrape} disabled={isScraping}>
+            {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+            {isScraping ? 'Se scanează...' : 'Scanează acum'}
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {renderStatCard('Total anunțuri', stats.total, <TrendingUp className="w-4 h-4 text-white" />, 'bg-primary')}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        {renderStatCard('Total', stats.total, <TrendingUp className="w-4 h-4 text-white" />, 'bg-primary')}
         {renderStatCard('Noi', stats.new, <Eye className="w-4 h-4 text-white" />, 'bg-blue-500')}
-        {renderStatCard('Contactate', stats.contacted, <MessageSquare className="w-4 h-4 text-white" />, 'bg-green-500')}
-        {renderStatCard('Convertite', stats.converted, <CheckCircle className="w-4 h-4 text-white" />, 'bg-purple-500')}
+        {renderStatCard('Contactați', stats.contacted, <MessageSquare className="w-4 h-4 text-white" />, 'bg-orange-500')}
+        {renderStatCard('Interesați', stats.interested, <Handshake className="w-4 h-4 text-white" />, 'bg-emerald-500')}
+        {renderStatCard('Clienți', stats.converted, <CheckCircle className="w-4 h-4 text-white" />, 'bg-green-600')}
         {renderStatCard('Scor mediu', stats.avgScore, <Star className="w-4 h-4 text-white" />, 'bg-yellow-500')}
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Caută după titlu, locație, zonă..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+      {/* Filters (for list view) */}
+      {viewMode === 'list' && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Caută după titlu, locație, zonă..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
+          </div>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[160px]" aria-label="Filtrează după status">
+              <Filter className="w-4 h-4 mr-2" /><SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toate</SelectItem>
+              {PIPELINE_STAGES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterZone} onValueChange={setFilterZone}>
+            <SelectTrigger className="w-[150px]" aria-label="Filtrează după zonă">
+              <MapPin className="w-4 h-4 mr-2" /><SelectValue placeholder="Zonă" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toate zonele</SelectItem>
+              {uniqueZones.sort().map(z => <SelectItem key={z} value={z}>{z}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={fetchListings}><RefreshCw className="w-4 h-4" /></Button>
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[150px]" aria-label="Filtrează după status">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toate</SelectItem>
-            {STATUS_OPTIONS.map(s => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterZone} onValueChange={setFilterZone}>
-          <SelectTrigger className="w-[150px]" aria-label="Filtrează după zonă">
-            <MapPin className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Zonă" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toate zonele</SelectItem>
-            {uniqueZones.sort().map(z => (
-              <SelectItem key={z} value={z}>{z}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="sm" onClick={fetchListings}>
-          <RefreshCw className="w-4 h-4" />
-        </Button>
-      </div>
+      )}
 
-      {/* Listings */}
+      {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
-      ) : filteredListings.length === 0 ? (
+      ) : allListings.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">Niciun anunț găsit</h3>
-            <p className="text-muted-foreground mb-4">Apasă „Scanează acum" pentru a căuta anunțuri noi</p>
+            <h3 className="text-lg font-semibold mb-2">Niciun anunț încă</h3>
+            <p className="text-muted-foreground mb-4">Apasă „Scanează acum" pentru a porni botul</p>
             <Button onClick={handleScrape} disabled={isScraping}>Scanează acum</Button>
           </CardContent>
         </Card>
+      ) : viewMode === 'pipeline' ? (
+        renderPipelineView()
       ) : (
         <div className="space-y-3">
-          {filteredListings.map(renderListingRow)}
+          {listings.map(renderListRow)}
+          {listings.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">Niciun rezultat cu filtrele selectate</p>
+          )}
         </div>
       )}
 
-      {/* Detail Dialog */}
+      {/* ── Detail Dialog ────────────────────────────── */}
       <Dialog open={!!selectedListing} onOpenChange={open => { if (!open) setSelectedListing(null); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           {selectedListing && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl">{selectedListing.title}</DialogTitle>
+                <DialogTitle className="text-xl pr-8">{selectedListing.title}</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
                 {/* Score breakdown */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Scor detaliat</CardTitle>
+                    <CardTitle className="text-sm">Scor potențial</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-3 mb-3">
@@ -343,7 +457,7 @@ const ProspectManager = () => {
                   </CardContent>
                 </Card>
 
-                {/* Details */}
+                {/* Details grid */}
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   {selectedListing.price && <div><span className="text-muted-foreground">Preț:</span> <strong>{selectedListing.price.toLocaleString()}€</strong></div>}
                   {selectedListing.price_per_sqm && <div><span className="text-muted-foreground">Preț/mp:</span> <strong>€{selectedListing.price_per_sqm}</strong></div>}
@@ -351,8 +465,7 @@ const ProspectManager = () => {
                   {selectedListing.rooms && <div><span className="text-muted-foreground">Camere:</span> <strong>{selectedListing.rooms}</strong></div>}
                   {selectedListing.zone && <div><span className="text-muted-foreground">Zonă:</span> <strong>{selectedListing.zone}</strong></div>}
                   {selectedListing.floor && <div><span className="text-muted-foreground">Etaj:</span> <strong>{selectedListing.floor}</strong></div>}
-                  {selectedListing.year_built && <div><span className="text-muted-foreground">An construcție:</span> <strong>{selectedListing.year_built}</strong></div>}
-                  {selectedListing.contact_phone && <div><span className="text-muted-foreground">Telefon:</span> <strong>{selectedListing.contact_phone}</strong></div>}
+                  {selectedListing.year_built && <div><span className="text-muted-foreground">An:</span> <strong>{selectedListing.year_built}</strong></div>}
                   {selectedListing.contact_name && <div><span className="text-muted-foreground">Contact:</span> <strong>{selectedListing.contact_name}</strong></div>}
                   <div><span className="text-muted-foreground">Platformă:</span> <strong>{selectedListing.source_platform}</strong></div>
                   <div><span className="text-muted-foreground">Scanat:</span> <strong>{format(new Date(selectedListing.scraped_at), 'dd MMM yyyy HH:mm', { locale: ro })}</strong></div>
@@ -390,18 +503,52 @@ const ProspectManager = () => {
                   </div>
                 )}
 
-                {/* Status actions */}
+                {/* ── Outreach Section ──────────────────── */}
+                <Card className="border-green-200 dark:border-green-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-green-600" />
+                      Mesaj de contactare
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="bg-muted rounded-lg p-3 text-sm whitespace-pre-line">
+                      {generateOutreachMessage(selectedListing)}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button size="sm" variant="outline" onClick={() => copyMessage(selectedListing)}>
+                        <Copy className="w-4 h-4 mr-2" /> Copiază mesajul
+                      </Button>
+                      {selectedListing.contact_phone && (
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
+                          <a
+                            href={`https://wa.me/${selectedListing.contact_phone.replace(/\D/g, '')}?text=${encodeURIComponent(generateOutreachMessage(selectedListing))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Phone className="w-4 h-4 mr-2" /> Trimite pe WhatsApp
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                    {!selectedListing.contact_phone && (
+                      <p className="text-xs text-muted-foreground">⚠️ Fără telefon extras — copiază mesajul și trimite-l manual din anunțul original.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Pipeline status */}
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Schimbă status:</p>
+                  <p className="text-sm text-muted-foreground mb-2">Pipeline status:</p>
                   <div className="flex flex-wrap gap-2">
-                    {STATUS_OPTIONS.map(s => (
+                    {PIPELINE_STAGES.map(s => (
                       <Button
                         key={s.value}
                         size="sm"
                         variant={selectedListing.status === s.value ? 'default' : 'outline'}
                         onClick={() => updateStatus(selectedListing.id, s.value)}
                       >
-                        {s.label}
+                        {s.emoji} {s.label.replace(s.emoji + ' ', '')}
                       </Button>
                     ))}
                   </div>
@@ -413,7 +560,7 @@ const ProspectManager = () => {
                   <Textarea
                     value={editNotes}
                     onChange={e => setEditNotes(e.target.value)}
-                    placeholder="Adaugă note despre acest anunț..."
+                    placeholder="Ex: proprietarul pare interesat, sună luni..."
                     rows={3}
                   />
                   <Button size="sm" className="mt-2" onClick={saveNotes}>Salvează note</Button>
@@ -422,24 +569,9 @@ const ProspectManager = () => {
                 {/* Link to original */}
                 <Button variant="outline" className="w-full" asChild>
                   <a href={selectedListing.source_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Deschide anunțul original
+                    <ExternalLink className="w-4 h-4 mr-2" /> Deschide anunțul original
                   </a>
                 </Button>
-
-                {/* WhatsApp contact */}
-                {selectedListing.contact_phone && (
-                  <Button className="w-full bg-green-600 hover:bg-green-700" asChild>
-                    <a
-                      href={`https://wa.me/${selectedListing.contact_phone.replace(/\D/g, '')}?text=${encodeURIComponent('Bună ziua! Am văzut anunțul dumneavoastră pe ' + selectedListing.source_platform + ' și suntem interesați de proprietatea din ' + (selectedListing.zone || 'Timișoara') + '. Suntem RealTrust, companie de management hotelier. Putem discuta?')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Contactează pe WhatsApp
-                    </a>
-                  </Button>
-                )}
               </div>
             </>
           )}
