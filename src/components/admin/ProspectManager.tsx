@@ -641,6 +641,36 @@ const ProspectManager = () => {
               </DialogHeader>
 
               <div className="space-y-4">
+                {/* Prospect type selector */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Categorie prospect</p>
+                  <div className="flex gap-2">
+                    {PROSPECT_TYPES.map(pt => (
+                      <Button
+                        key={pt.value}
+                        size="sm"
+                        variant={selectedListing.prospect_type === pt.value ? 'default' : 'outline'}
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from('prospect_listings')
+                            .update({ prospect_type: pt.value } as any)
+                            .eq('id', selectedListing.id);
+                          if (error) {
+                            toast({ title: "Eroare", description: error.message, variant: "destructive" });
+                          } else {
+                            setAllListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, prospect_type: pt.value } : l));
+                            setSelectedListing(prev => prev ? { ...prev, prospect_type: pt.value } : null);
+                            toast({ title: `Categorie: ${pt.label}` });
+                          }
+                        }}
+                        className="text-xs"
+                      >
+                        {pt.icon} {pt.label.replace(pt.icon + ' ', '')}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Score breakdown */}
                 <Card>
                   <CardHeader className="pb-2">
