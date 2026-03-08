@@ -157,7 +157,15 @@ const PropertyQualification = ({ onContact }: PropertyQualificationProps) => {
           )}
           style={{ transitionDelay: "400ms" }}
         >
-          <Button onClick={onContact} variant="hero" size="xl" className="group">
+          <Button
+            onClick={() => {
+              const message = encodeURIComponent("Bună ziua! Sunt interesat de o evaluare gratuită pentru apartamentul meu.");
+              window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+            }}
+            variant="hero"
+            size="xl"
+            className="group"
+          >
             {t.cta}
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
