@@ -516,6 +516,11 @@ const Admin = () => {
           <TabsContent value="property-views">
             <PropertyViewsManager />
           </TabsContent>
+
+          {/* iCal Sync Tab */}
+          <TabsContent value="ical-sync">
+            <ICalManager />
+          </TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
