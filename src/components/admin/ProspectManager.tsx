@@ -261,11 +261,34 @@ const ProspectManager = () => {
     }
   };
 
-  const copyMessage = (listing: ProspectListing) => {
-    const msg = generateOutreachMessage(listing);
+  const copyMessage = (listing: ProspectListing, message?: string) => {
+    const msg = message || generateOutreachMessage(listing);
     navigator.clipboard.writeText(msg);
     toast({ title: "Mesaj copiat!", description: "Lipește-l în WhatsApp" });
   };
+
+  const toggleTag = async (id: string, tag: string) => {
+    const listing = allListings.find(l => l.id === id);
+    if (!listing) return;
+    const currentTags = listing.tags || [];
+    const newTags = currentTags.includes(tag)
+      ? currentTags.filter(t => t !== tag)
+      : [...currentTags, tag];
+    
+    const { error } = await supabase
+      .from('prospect_listings')
+      .update({ tags: newTags } as any)
+      .eq('id', id);
+    
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+    } else {
+      setAllListings(prev => prev.map(l => l.id === id ? { ...l, tags: newTags } : l));
+      if (selectedListing?.id === id) setSelectedListing(prev => prev ? { ...prev, tags: newTags } : null);
+    }
+  };
+
+  const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
 
   const uniqueZones = [...new Set(allListings.map(l => l.zone).filter(Boolean))] as string[];
 
