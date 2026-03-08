@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useRef, useCallback } from "react";
 import { MapPin, Star, Users, BedDouble, Calendar, Eye, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,6 +9,7 @@ import { PrefetchLink } from "@/components/PrefetchLink";
 import { Property, getImageAlt } from "@/data/properties";
 import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
 import { useRealtimeViewers } from "@/hooks/useRealtimeViewers";
+import { usePrefetch } from "@/hooks/usePrefetch";
 import ViewersBadge from "@/components/ViewersBadge";
 import { cn } from "@/lib/utils";
 
