@@ -850,22 +850,23 @@ const handler = async (req: Request): Promise<Response> => {
           const ptLabel = propertyTypeLabels[q.propertyType] || q.propertyType;
           makePayload = {
             type: 'quick_form',
-            name: q.name,
-            whatsapp: q.whatsappNumber,
-            propertyType: ptLabel,
-            listingUrl: q.listingUrl || '',
-            message: `⚡ Lead Rapid\n👤 ${q.name}\n📱 ${q.whatsappNumber}\n🏠 ${ptLabel}${q.listingUrl ? '\n🔗 ' + q.listingUrl : ''}`,
+            full_name: q.name,
+            email: (rawData as any).email || '',
+            whatsapp_number: q.whatsappNumber,
+            property_type: ptLabel,
+            listing_url: q.listingUrl || '',
           };
         } else if (leadData.source === 'real_estate_contact') {
           const r = leadData as RealEstateContactLead;
           const stLabel = serviceTypeLabels[r.serviceType] || r.serviceType;
           makePayload = {
             type: 'real_estate_contact',
-            name: r.name,
-            phone: r.phone,
+            full_name: r.name,
             email: r.email,
-            serviceType: stLabel,
-            message: `🏡 Lead Imobiliare - ${stLabel}\n👤 ${r.name}\n📱 ${r.phone}\n📧 ${r.email}${r.message ? '\n💬 ' + r.message : ''}`,
+            whatsapp_number: r.phone,
+            property_type: r.propertyType ? (propertyTypeLabels[r.propertyType] || r.propertyType) : '',
+            service_type: stLabel,
+            listing_url: r.listingUrl || '',
           };
         } else {
           const p = leadData as ProfitCalculatorLead;
