@@ -70,9 +70,6 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             "vendor-react": ["react", "react-dom", "react-router-dom"],
             "vendor-query": ["@tanstack/react-query"],
-            // Split UI into core (always needed) and deferred (popover/dropdown loaded on interaction)
-            "vendor-ui-core": ["@radix-ui/react-dialog", "@radix-ui/react-tooltip"],
-            "vendor-ui-menu": ["@radix-ui/react-dropdown-menu", "@radix-ui/react-popover", "@radix-ui/react-tabs"],
             "vendor-motion": ["framer-motion"],
             "vendor-charts": ["recharts"],
             "vendor-supabase": ["@supabase/supabase-js"],
