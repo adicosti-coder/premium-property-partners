@@ -543,6 +543,30 @@ const ProspectManager = () => {
         </div>
       </div>
 
+      {/* Category tabs */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button
+          size="sm"
+          variant={filterType === 'all' ? 'default' : 'outline'}
+          onClick={() => setFilterType('all')}
+        >
+          📋 Toate ({allListings.length})
+        </Button>
+        {PROSPECT_TYPES.map(pt => {
+          const count = allListings.filter(l => l.prospect_type === pt.value).length;
+          return (
+            <Button
+              key={pt.value}
+              size="sm"
+              variant={filterType === pt.value ? 'default' : 'outline'}
+              onClick={() => setFilterType(pt.value)}
+            >
+              {pt.label} ({count})
+            </Button>
+          );
+        })}
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         {renderStatCard('Total', stats.total, <TrendingUp className="w-4 h-4 text-white" />, 'bg-primary')}
