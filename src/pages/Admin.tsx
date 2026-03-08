@@ -95,6 +95,7 @@ import CazareManager from "@/components/admin/CazareManager";
 import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManager";
 import ICalManager from "@/components/admin/ICalManager";
 import ListingImporter from "@/components/admin/ListingImporter";
+import ProspectManager from "@/components/admin/ProspectManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
