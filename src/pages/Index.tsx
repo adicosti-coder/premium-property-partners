@@ -22,17 +22,11 @@ const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
 
-// Visibility-gated section: stats + calculator (near-fold)
+// Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
+// to prevent mobile deadlock where Hero fills 100vh and observer never fires
 const NearFoldSection = () => {
-  const [ref, visible] = useLazyVisible("200px");
-  const [forceShow, setForceShow] = useState(false);
-  const show = visible || forceShow;
-
-  // Listen for "force-show-calculator" so the Hero CTA can reveal & scroll
   useEffect(() => {
     const handler = () => {
-      setForceShow(true);
-      // Wait a tick for React to render, then scroll
       requestAnimationFrame(() => {
         document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
       });
@@ -42,15 +36,13 @@ const NearFoldSection = () => {
   }, []);
 
   return (
-    <div ref={ref} id="calculator" style={{ minHeight: show ? undefined : '200px' }}>
-      {show && (
-        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-          <StatsCounters />
-          <ProfitCalculator />
-          <QuickLeadForm />
-          <MainNavigationCards />
-        </Suspense>
-      )}
+    <div id="calculator">
+      <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+        <StatsCounters />
+        <ProfitCalculator />
+        <QuickLeadForm />
+        <MainNavigationCards />
+      </Suspense>
     </div>
   );
 };
