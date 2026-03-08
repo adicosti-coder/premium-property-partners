@@ -666,6 +666,84 @@ const FunnelAnalyticsManager = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Conversion Funnel Tab */}
+        <TabsContent value="conversion" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                User Journey Conversion Funnel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!processedData?.conversionFunnel || processedData.conversionFunnel.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No conversion funnel data yet</p>
+                  <p className="text-sm mt-2">Events are tracked via useFunnelTracking hook</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Bar chart visualization */}
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={processedData.conversionFunnel} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis type="number" className="text-xs" />
+                      <YAxis type="category" dataKey="label" className="text-xs" width={130} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                        formatter={(value: number) => [`${value} unique sessions`, "Sessions"]}
+                      />
+                      <Bar dataKey="sessions" radius={[0, 4, 4, 0]}>
+                        {processedData.conversionFunnel.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[index % FUNNEL_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  {/* Drop-off analysis */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold">Step-by-Step Drop-off</h4>
+                    {processedData.conversionFunnel.map((item, index) => {
+                      const prevSessions = index > 0 ? processedData.conversionFunnel[index - 1].sessions : item.sessions;
+                      const dropOff = prevSessions > 0 && index > 0
+                        ? Math.round(((prevSessions - item.sessions) / prevSessions) * 100)
+                        : 0;
+                      const convRate = processedData.conversionFunnel[0].sessions > 0
+                        ? ((item.sessions / processedData.conversionFunnel[0].sessions) * 100).toFixed(1)
+                        : "0";
+                      
+                      return (
+                        <div key={item.step} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: FUNNEL_COLORS[index % FUNNEL_COLORS.length] }}
+                            />
+                            <span className="font-medium">{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Badge variant="secondary">{item.sessions} sessions</Badge>
+                            <span className="text-sm text-muted-foreground">{convRate}% total</span>
+                            {index > 0 && dropOff > 0 && (
+                              <span className="text-sm text-destructive">-{dropOff}%</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
