@@ -265,6 +265,7 @@ const ProfitCalculator = () => {
                       max={14}
                       step={1}
                       className="w-full"
+                      aria-label={language === 'ro' ? 'Durată medie sejur' : 'Average stay duration'}
                     />
                   </div>
                 </TooltipTrigger>
