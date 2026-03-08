@@ -66,6 +66,16 @@ const PropertyCard = ({
     return null;
   };
 
+  const { prefetchPropertyImage } = usePrefetch();
+  const hoverPrefetched = useRef(false);
+
+  const handleCardHover = useCallback(() => {
+    if (!hoverPrefetched.current && property.images[1]) {
+      prefetchPropertyImage(property.images[1]);
+      hoverPrefetched.current = true;
+    }
+  }, [property.images, prefetchPropertyImage]);
+
   return (
     <div
       className={cn(
@@ -73,6 +83,7 @@ const PropertyCard = ({
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}
       style={{ transitionDelay: isVisible ? `${index * 75}ms` : "0ms" }}
+      onMouseEnter={handleCardHover}
     >
       {/* Image */}
       <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
