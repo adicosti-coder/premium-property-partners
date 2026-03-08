@@ -13,7 +13,7 @@ const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 const GoogleAnalytics = lazy(() => import("@/components/GoogleAnalytics"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
-const handleDynamicImportError = (error: Error) => {
+const handleDynamicImportError = (error: Error): never => {
   const isChunkError = error.message.includes('Failed to fetch dynamically imported module') ||
                        error.message.includes('Loading chunk') ||
                        error.message.includes('Loading CSS chunk');
@@ -25,11 +25,10 @@ const handleDynamicImportError = (error: Error) => {
         names.forEach(name => caches.delete(name));
       });
     }
-    // Reload the page to get fresh chunks
     window.location.reload();
-    return;
   }
   
+  // Always re-throw so the lazy() promise never resolves to undefined
   throw error;
 };
 
