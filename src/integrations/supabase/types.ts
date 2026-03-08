@@ -1227,6 +1227,63 @@ export type Database = {
           },
         ]
       }
+      ical_sync_logs: {
+        Row: {
+          created_at: string
+          deleted_bookings: number
+          duration_ms: number | null
+          error_message: string | null
+          events_found: number
+          id: string
+          new_bookings: number
+          property_id: string | null
+          source_id: string | null
+          sync_type: string
+          updated_bookings: number
+        }
+        Insert: {
+          created_at?: string
+          deleted_bookings?: number
+          duration_ms?: number | null
+          error_message?: string | null
+          events_found?: number
+          id?: string
+          new_bookings?: number
+          property_id?: string | null
+          source_id?: string | null
+          sync_type?: string
+          updated_bookings?: number
+        }
+        Update: {
+          created_at?: string
+          deleted_bookings?: number
+          duration_ms?: number | null
+          error_message?: string | null
+          events_found?: number
+          id?: string
+          new_bookings?: number
+          property_id?: string | null
+          source_id?: string | null
+          sync_type?: string
+          updated_bookings?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ical_sync_logs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ical_sync_logs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "ical_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_notes: {
         Row: {
           content: string
