@@ -24,7 +24,7 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 
 // Visibility-gated section: stats + calculator (near-fold)
 const NearFoldSection = () => {
-  const [ref, visible] = useLazyVisible("50px");
+  const [ref, visible] = useLazyVisible("200px");
   const [forceShow, setForceShow] = useState(false);
   const show = visible || forceShow;
 
@@ -42,9 +42,9 @@ const NearFoldSection = () => {
   }, []);
 
   return (
-    <div ref={ref} id="calculator">
+    <div ref={ref} id="calculator" style={{ minHeight: show ? undefined : '200px' }}>
       {show && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
           <StatsCounters />
           <ProfitCalculator />
           <QuickLeadForm />
@@ -59,7 +59,7 @@ const NearFoldSection = () => {
 const MidFoldSection = () => {
   const [ref, visible] = useLazyVisible("400px");
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <DualServicePaths />
@@ -73,7 +73,7 @@ const MidFoldSection = () => {
 const TeaserSections = () => {
   const [ref, visible] = useLazyVisible("400px");
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <section id="beneficii">
@@ -90,9 +90,9 @@ const TeaserSections = () => {
 
 // Visibility-gated bottom fold (simplified - fewer sections)
 const BottomFoldSection = ({ language }: { language: string }) => {
-  const [ref, visible] = useLazyVisible("100px");
+  const [ref, visible] = useLazyVisible("200px");
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <BlogPreview />
@@ -112,7 +112,7 @@ const Index = () => {
   const { language } = useLanguage();
   
   // Visibility gates for heavy sections
-  const [heavyRef, heavyVisible] = useLazyVisible("100px");
+  const [heavyRef, heavyVisible] = useLazyVisible("200px");
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
@@ -166,7 +166,7 @@ const Index = () => {
         <TeaserSections />
 
         {/* Property gallery + testimonials */}
-        <div ref={heavyRef}>
+        <div ref={heavyRef} style={{ minHeight: heavyVisible ? undefined : '100px' }}>
           {heavyVisible && (
             <Suspense fallback={<div className="min-h-[400px]" />}>
               <section id="portofoliu">
