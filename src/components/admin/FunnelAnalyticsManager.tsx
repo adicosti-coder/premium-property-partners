@@ -220,6 +220,7 @@ const FunnelAnalyticsManager = () => {
       abTests,
       pageAnalytics,
       dailyEngagement,
+      conversionFunnel,
     };
   }, [analytics]);
 
