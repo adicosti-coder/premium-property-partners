@@ -685,22 +685,29 @@ const ProspectManager = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {/* Quick reply buttons */}
-                    <div className="flex flex-wrap gap-2">
-                      {QUICK_REPLIES.map(qr => {
-                        const Icon = qr.icon;
-                        return (
-                          <Button
-                            key={qr.id}
-                            size="sm"
-                            variant={activeQuickReply === qr.id ? 'default' : 'outline'}
-                            onClick={() => setActiveQuickReply(activeQuickReply === qr.id ? null : qr.id)}
-                            className="text-xs"
-                          >
-                            <Icon className="w-3 h-3 mr-1" /> {qr.label}
-                          </Button>
-                        );
-                      })}
+                    {/* Category tabs */}
+                    <div className="space-y-3">
+                      {QUICK_REPLY_CATEGORIES.map(cat => (
+                        <div key={cat.id}>
+                          <p className="text-xs font-semibold text-muted-foreground mb-1.5">{cat.label}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {cat.replies.map(qr => {
+                              const Icon = qr.icon;
+                              return (
+                                <Button
+                                  key={qr.id}
+                                  size="sm"
+                                  variant={activeQuickReply === qr.id ? 'default' : 'outline'}
+                                  onClick={() => setActiveQuickReply(activeQuickReply === qr.id ? null : qr.id)}
+                                  className="text-xs h-7"
+                                >
+                                  <Icon className="w-3 h-3 mr-1" /> {qr.label}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Selected message preview */}
