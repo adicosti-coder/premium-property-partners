@@ -279,6 +279,8 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     // Open WhatsApp
     window.open(whatsappUrl, "_blank");
 
+    trackStep("booking_form_submit", { propertyName, discountCode: discountInfo ? discountCode : undefined });
+
     toast({
       title: t.booking.success,
       description: t.booking.successMessage,
