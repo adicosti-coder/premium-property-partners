@@ -873,14 +873,14 @@ const handler = async (req: Request): Promise<Response> => {
           const listUrl = p.listingUrl || p.simulationData?.listingUrl;
           makePayload = {
             type: 'profit-calculator',
-            name: p.name,
-            whatsapp: p.whatsappNumber,
-            propertyType: ptLabel,
-            propertyArea: p.propertyArea,
-            netProfit: p.calculatedNetProfit,
-            yearlyProfit: p.calculatedYearlyProfit,
-            listingUrl: listUrl || '',
-            message: `🏠 Lead Profit Calculator\n👤 ${p.name}\n📱 ${p.whatsappNumber}\n🏢 ${ptLabel}, ${p.propertyArea}m²\n💰 ${p.calculatedNetProfit.toLocaleString('ro-RO')}€/lună | ${p.calculatedYearlyProfit.toLocaleString('ro-RO')}€/an${listUrl ? '\n🔗 ' + listUrl : ''}`,
+            full_name: p.name,
+            email: (rawData as any).email || '',
+            whatsapp_number: p.whatsappNumber,
+            property_type: ptLabel,
+            property_area: p.propertyArea,
+            estimated_net_profit: p.calculatedNetProfit,
+            estimated_yearly_profit: p.calculatedYearlyProfit,
+            listing_url: listUrl || '',
           };
         }
 
