@@ -6,6 +6,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSharedFavorites } from "@/hooks/useSharedFavorites";
+import { useTouchSwipe } from "@/hooks/useTouchSwipe";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import PropertyFilters, { SortOption } from "./PropertyFilters";
 import PropertyCard from "./PropertyCard";
