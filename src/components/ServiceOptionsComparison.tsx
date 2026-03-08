@@ -86,9 +86,9 @@ const ServiceOptionsComparison = () => {
     },
   ];
 
-  const scrollToContact = () => {
-    const contactSection = document.getElementById('contact');
-    contactSection?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToCalculator = () => {
+    const calcSection = document.getElementById('calculator');
+    calcSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
