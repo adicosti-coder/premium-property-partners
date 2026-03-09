@@ -399,9 +399,21 @@ const ProspectManager = () => {
             </span>
           )}
         </div>
-        <Badge variant={getScoreBadgeVariant(listing.score)} className="shrink-0 text-xs">
-          {listing.score}
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant={getScoreBadgeVariant(listing.score)} className="shrink-0 text-xs">
+            {listing.score}
+          </Badge>
+          <a
+            href={listing.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors bg-muted/50 px-1.5 py-0.5 rounded"
+            title="Deschide anunțul"
+          >
+            <ExternalLink className="w-3 h-3" /> Link
+          </a>
+        </div>
       </div>
       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
         {listing.zone && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{listing.zone}</span>}
