@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useInRouterContext } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browserStorage";
 
