@@ -137,25 +137,17 @@ const Hero = () => {
           willChange: 'transform, filter'
         }}
       >
-        {/* Static hero image — <picture> for WebP/AVIF format negotiation, NO fade-in */}
-        {/* Mobile: serve compressed 800w JPG; Desktop: full-size with video crossfade */}
+        {/* Static hero image — responsive srcSet for mobile LCP optimization */}
         {(() => {
           const imgSrc = heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC;
-          const isNegotiable = !imgSrc.startsWith("http") && /\.(jpg|jpeg|png)$/i.test(imgSrc);
+          const isCustom = imgSrc !== HERO_IMAGE_PUBLIC;
           return (
             <picture>
-              {isNegotiable && (
+              {!isCustom && (
                 <source
-                  srcSet={`${imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.avif')} 1920w`}
-                  type="image/avif"
+                  srcSet="/images/hero-cinematic-800w.webp 800w, /images/hero-cinematic.webp 1920w"
                   sizes="100vw"
-                />
-              )}
-              {isNegotiable && (
-                <source
-                  srcSet={`${imgSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp')} 1920w`}
                   type="image/webp"
-                  sizes="100vw"
                 />
               )}
               <img
