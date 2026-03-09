@@ -25,7 +25,8 @@ const getSessionId = (): string => {
 };
 
 export const useCtaAnalytics = () => {
-  const location = useLocation();
+  const inRouter = useInRouterContext();
+  const location = inRouter ? useLocation() : { pathname: typeof window !== "undefined" ? window.location.pathname : "/" };
 
   const trackCta = useCallback(
     async (options: TrackCtaOptions) => {
