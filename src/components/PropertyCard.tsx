@@ -231,26 +231,26 @@ const PropertyCard = ({
 
         {/* CTAs */}
         <div className="flex gap-2">
-          <a
-            href={property.bookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button variant="default" size="sm" className="w-full">
+          <Button variant="default" size="sm" className="flex-1" asChild>
+            <a
+              href={property.bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`${t.bookDirect} — ${property.name}`}
+            >
               <Calendar className="w-4 h-4 mr-1" />
               {t.bookDirect}
-            </Button>
-          </a>
-          <Link
-            to={`/proprietate/${property.slug}`}
-            aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
-          >
-            <Button variant="booking" size="sm">
+            </a>
+          </Button>
+          <Button variant="booking" size="sm" asChild>
+            <Link
+              to={`/proprietate/${property.slug}`}
+              aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
+            >
               <Eye className="w-4 h-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </div>
