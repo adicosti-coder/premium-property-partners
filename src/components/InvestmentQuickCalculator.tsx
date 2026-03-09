@@ -155,14 +155,29 @@ const InvestmentQuickCalculator = () => {
           <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.propValue}</Label>
           <Input type="number" value={pret} onChange={(e) => setPret(Number(e.target.value))} className="mt-1 text-base font-bold" />
         </div>
-        <div>
-          <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.rent}</Label>
-          <Input type="number" value={chirie} onChange={(e) => setChirie(Number(e.target.value))} className="mt-1 text-base font-bold" />
-        </div>
-        <div>
-          <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.adminExp}</Label>
-          <Input type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} className="mt-1 text-base font-bold" />
-        </div>
+        {strategy === "hotel" ? (
+          <>
+            <div>
+              <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.nightlyRate}</Label>
+              <Input type="number" value={nightlyRate} onChange={(e) => setNightlyRate(Number(e.target.value))} className="mt-1 text-base font-bold" />
+            </div>
+            <div>
+              <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.occupancyPct}</Label>
+              <Input type="number" value={occupancyPct} onChange={(e) => setOccupancyPct(Number(e.target.value))} className="mt-1 text-base font-bold" min={0} max={100} />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.rent}</Label>
+              <Input type="number" value={chirie} onChange={(e) => setChirie(Number(e.target.value))} className="mt-1 text-base font-bold" />
+            </div>
+            <div>
+              <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.adminExp}</Label>
+              <Input type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} className="mt-1 text-base font-bold" />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Strategy Toggle */}
