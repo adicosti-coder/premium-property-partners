@@ -236,15 +236,13 @@ export function collectImages(jsonData: any, pageLinks: string[], markdown: stri
   const mdImageRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
   let mdMatch;
   while ((mdMatch = mdImageRegex.exec(markdown)) !== null) {
-    imageUrls.push(mdMatch[1]);
+    if (isPropertyImage(mdMatch[1])) imageUrls.push(mdMatch[1]);
   }
 
   // Also raw URLs in markdown
   const rawImgRegex = /(https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)(?:\?[^\s"'<>]*)?)/gi;
   while ((mdMatch = rawImgRegex.exec(markdown)) !== null) {
-    if (!mdMatch[1].includes('logo') && !mdMatch[1].includes('icon')) {
-      imageUrls.push(mdMatch[1]);
-    }
+    if (isPropertyImage(mdMatch[1])) imageUrls.push(mdMatch[1]);
   }
 
   return [...new Set(imageUrls)].slice(0, 30);
