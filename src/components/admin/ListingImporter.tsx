@@ -174,7 +174,7 @@ const ListingImporter = () => {
     setIsSaving(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
-        body: { url: url.trim(), listing_type: listingType, mode: "save" },
+        body: { url: url.trim(), listing_type: listingType, mode: "save", editedData: editData },
       });
       if (fnError) throw new Error(fnError.message);
       if (!data?.success) throw new Error(data?.error || "Salvare eșuată");

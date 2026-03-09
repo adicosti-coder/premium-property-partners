@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, listing_type, mode } = await req.json();
+    const { url, listing_type, mode, editedData } = await req.json();
 
     if (!url) {
       return new Response(
@@ -97,6 +97,107 @@ Deno.serve(async (req) => {
       );
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const platform = detectPlatform(url);
+
+    // ── MODE: SAVE with pre-edited data ──
+    // When editedData is provided, skip re-scraping and use the user-edited data directly
+    if (mode === 'save' && editedData) {
+      console.log(`Saving edited listing from ${platform}: ${url}`);
+
+      const finalListingType = listing_type || editedData.listing_type_hint || 'vanzare';
+
+      const slug = editedData.title
+        ? editedData.title.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+            .substring(0, 80)
+        : `import-${Date.now()}`;
+
+      const propertyData: Record<string, any> = {
+        name: editedData.title || 'Anunț Importat',
+        location: editedData.location || 'Timișoara',
+        description_ro: editedData.description_short || editedData.description_full || '',
+        description_en: '',
+        long_description_ro: editedData.description_full || '',
+        long_description_en: '',
+        features: editedData.features || [],
+        booking_url: url,
+        tag: finalListingType === 'vanzare' ? 'De Vânzare' : finalListingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
+        listing_type: finalListingType,
+        slug,
+        is_active: false,
+        capacity: editedData.rooms ? Number(editedData.rooms) * 2 : 2,
+        bedrooms: editedData.rooms ? Number(editedData.rooms) : 1,
+        bathrooms: editedData.bathrooms ? Number(editedData.bathrooms) : 1,
+        size: editedData.size ? Number(editedData.size) : 40,
+        base_price_per_night: editedData.price ? Number(editedData.price) : null,
+        capital_necesar: (finalListingType === 'vanzare' || finalListingType === 'investitie') ? (editedData.price ? Number(editedData.price) : null) : null,
+        floor: editedData.floor || null,
+        year_built: editedData.year_built ? Number(editedData.year_built) : null,
+        parking: editedData.parking || null,
+        heating_type: editedData.heating_type || null,
+        energy_class: editedData.energy_class || null,
+        furnished: editedData.furnished || null,
+        construction_type: editedData.construction_type || null,
+        compartimentare: editedData.compartimentare || null,
+        source_url: url,
+        source_platform: platform,
+      };
+
+      const { data: newProperty, error: insertError } = await supabase
+        .from('properties')
+        .insert(propertyData)
+        .select('id, slug, name')
+        .single();
+
+      if (insertError) {
+        return new Response(
+          JSON.stringify({ success: false, error: `Failed to create: ${insertError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Upload images from editedData.images
+      const imageUrls = Array.isArray(editedData.images) ? editedData.images : [];
+      const uploadedImages: string[] = [];
+      for (let i = 0; i < imageUrls.length; i++) {
+        const uploaded = await downloadAndUploadImage(imageUrls[i], supabase, newProperty.id, i);
+        if (uploaded) uploadedImages.push(uploaded);
+        if (i < imageUrls.length - 1) await new Promise(r => setTimeout(r, 300));
+      }
+
+      if (uploadedImages.length > 0) {
+        await supabase.from('properties').update({
+          image_path: uploadedImages[0],
+          images: uploadedImages,
+        }).eq('id', newProperty.id);
+
+        const imageEntries = uploadedImages.map((imgPath, idx) => ({
+          property_id: newProperty.id,
+          image_path: imgPath,
+          display_order: idx,
+          is_primary: idx === 0,
+        }));
+        await supabase.from('property_images').insert(imageEntries);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          property: newProperty,
+          extracted: editedData,
+          images_uploaded: uploadedImages.length,
+          listing_type: finalListingType,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ── MODE: PREVIEW (or legacy save without editedData) ──
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!firecrawlKey) {
       return new Response(
@@ -105,11 +206,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const platform = detectPlatform(url);
     console.log(`Scraping listing from ${platform}: ${url}`);
 
     // Step 1: Scrape with Firecrawl
@@ -185,7 +281,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Mode: "save" - create property in DB
+    // Legacy save mode (without editedData) - fallback
     const finalListingType = listing_type || extracted.listing_type_hint || 'vanzare';
 
     const slug = extracted.title
