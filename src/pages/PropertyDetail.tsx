@@ -117,7 +117,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
