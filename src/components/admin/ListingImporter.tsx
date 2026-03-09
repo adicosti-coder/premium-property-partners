@@ -13,6 +13,7 @@ import {
   Bath, Building2, Thermometer, Zap, Sofa, Car, Layers, CalendarDays, PenLine,
   Sparkles, RefreshCw, Copy, Check
 } from "lucide-react";
+import ImageOptimizationPanel from "./ImageOptimizationPanel";
 
 interface ExtractedData {
   title: string | null;
