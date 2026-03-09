@@ -25,6 +25,8 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
 const NearFoldSection = () => {
+  const [calcRef, calcVisible] = useLazyVisible("300px");
+
   useEffect(() => {
     const handler = () => {
       requestAnimationFrame(() => {
@@ -39,10 +41,17 @@ const NearFoldSection = () => {
     <div id="calculator">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
-        <ProfitCalculator />
-        <QuickLeadForm />
         <MainNavigationCards />
       </Suspense>
+      {/* ProfitCalculator (recharts ~170KiB) deferred until near-scroll */}
+      <div ref={calcRef} style={{ minHeight: calcVisible ? undefined : '200px' }}>
+        {calcVisible && (
+          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <ProfitCalculator />
+            <QuickLeadForm />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 };
