@@ -592,8 +592,8 @@ const PropertyDetail = () => {
                 </div>
                 <p className="text-sm text-muted-foreground italic">
                   {language === 'ro'
-                    ? 'Rata de ocupare medie: 98% | Scor oaspeți: 9.4/10 din 180+ recenzii'
-                    : 'Average occupancy rate: 98% | Guest score: 9.4/10 from 180+ reviews'}
+                    ? 'Rata de ocupare medie: 98% | Scor oaspeți: 9.7/10 din 180+ recenzii'
+                    : 'Average occupancy rate: 98% | Guest score: 9.7/10 from 180+ reviews'}
                 </p>
               </div>
 

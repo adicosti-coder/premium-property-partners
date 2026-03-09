@@ -19,7 +19,7 @@ const GuestsTeaser = () => {
       ctaSecondary: "De ce să rezervi direct?",
       benefits: [
         { icon: Key, title: "Self Check-in 24/7", desc: "Acces simplu și securizat, oricând" },
-        { icon: Sparkles, title: "Curățenie Impecabilă", desc: "Scor curățenie 9.4/10 pe Booking" },
+        { icon: Sparkles, title: "Curățenie Impecabilă", desc: "Scor curățenie 9.7/10 pe Booking" },
         { icon: ShieldCheck, title: "Parcare Subterană Gratuită", desc: "Acces direct cu liftul din garaj" },
         { icon: Wifi, title: "Smart TV & WiFi Rapid", desc: "Streaming și internet de mare viteză" },
         { icon: Clock, title: "Bucătărie Complet Utilată", desc: "Cafea, condimente și ustensile incluse" },
@@ -35,7 +35,7 @@ const GuestsTeaser = () => {
       ctaSecondary: "Why book direct?",
       benefits: [
         { icon: Key, title: "24/7 Self Check-in", desc: "Simple & secure access, anytime" },
-        { icon: Sparkles, title: "Spotless Cleanliness", desc: "9.4/10 cleanliness score on Booking" },
+        { icon: Sparkles, title: "Spotless Cleanliness", desc: "9.7/10 cleanliness score on Booking" },
         { icon: ShieldCheck, title: "Free Underground Parking", desc: "Direct elevator access from garage" },
         { icon: Wifi, title: "Smart TV & Fast WiFi", desc: "Streaming platforms & high-speed internet" },
         { icon: Clock, title: "Fully Equipped Kitchen", desc: "Coffee, spices & utensils included" },
