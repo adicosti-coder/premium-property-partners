@@ -165,9 +165,7 @@ const InvestmentEngineV34 = ({
   const rankedProperties = useMemo((): RankedProperty[] => {
     if (hideRecommendations || !dbProperties.length) return [];
     const r = (interest / 100) / 12;
-    const managementFactor = strategy === "hotel" ? 0.28 : 0.05;
     const tax = parseFloat(taxRate);
-    const occMonths = parseInt(occupancy);
 
     return dbProperties
       .filter(p => p.capital_necesar && p.capital_necesar > 0 && p.estimated_revenue)
@@ -175,9 +173,29 @@ const InvestmentEngineV34 = ({
         const price = p.capital_necesar!;
         const rent = parseFloat(p.estimated_revenue!.replace(/[^0-9.]/g, "")) || 0;
         if (!rent) return null;
-        const ch = strategy === "hotel" ? rent * 12.0: rent;
-        const brut = ch * occMonths;
-        const net = brut * (1 - managementFactor) * (1 - tax);
+        let monthlyGross: number;
+        let mgmtFactor: number;
+        if (strategy === "hotel") {
+          // Estimate nightly rate from classic rent, then apply hotel formula
+          const estNightly = Math.max(rent / 10, 40);
+          monthlyGross = estNightly * 30 * (occupancyPct / 100);
+          mgmtFactor = 0.20;
+        } else {
+          const occMonths = parseInt(occupancy);
+          monthlyGross = rent;
+          mgmtFactor = 0.05;
+          const brut = rent * occMonths;
+          const net = brut * (1 - mgmtFactor) * (1 - tax);
+          const creditP = price * (1 - advance / 100);
+          const pmt = creditP > 0
+            ? (r > 0 ? creditP * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1) : creditP / 300)
+            : 0;
+          const netM = (net / 12) - pmt;
+          const yv = (net / (price * 1.02)) * 100;
+          return { name: p.name, price, yieldVal: yv, netMonthly: netM };
+        }
+        const brut = monthlyGross * 12;
+        const net = brut * (1 - mgmtFactor) * (1 - tax);
         const creditP = price * (1 - advance / 100);
         const pmt = creditP > 0
           ? (r > 0 ? creditP * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1) : creditP / 300)
@@ -189,7 +207,7 @@ const InvestmentEngineV34 = ({
       .filter(Boolean)
       .sort((a, b) => b!.yieldVal - a!.yieldVal)
       .slice(0, 3) as RankedProperty[];
-  }, [dbProperties, advance, interest, strategy, hideRecommendations, occupancy, taxRate]);
+  }, [dbProperties, advance, interest, strategy, hideRecommendations, occupancy, occupancyPct, taxRate]);
 
   const verdict = useMemo(() => {
     if (!calc) return "";
