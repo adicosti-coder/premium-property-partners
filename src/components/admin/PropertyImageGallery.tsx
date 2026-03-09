@@ -24,6 +24,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -141,7 +142,7 @@ function SortableImageItem({
         <div
           {...attributes}
           {...listeners}
-          className="absolute top-1 left-1 z-10 p-1 bg-background/80 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-1 left-1 z-10 p-1.5 bg-background/80 rounded cursor-grab active:cursor-grabbing opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity touch-none"
         >
           <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
@@ -223,6 +224,12 @@ export default function PropertyImageGallery({
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
