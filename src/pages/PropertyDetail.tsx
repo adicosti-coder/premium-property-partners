@@ -418,7 +418,7 @@ const PropertyDetail = () => {
                   const price = dbProperty.capital_necesar!;
                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                   // Hotel regime calculations
-                  const hotelMonthlyGross = baseRent * 1.65;
+                  const hotelMonthlyGross = baseRent * 2.0;
                   const managementFee = 0.28; // 28% management
                   const taxRate = 0.07; // 7% forfetar
                   const invTotal = price * 1.02;
