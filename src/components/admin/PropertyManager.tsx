@@ -226,7 +226,7 @@ export default function PropertyManager() {
         description_ro: formData.description_ro,
         description_en: formData.description_en,
         features: featuresArray,
-        booking_url: formData.booking_url,
+        booking_url: formData.booking_url || '-',
         tag: formData.tag,
         is_active: formData.is_active,
         display_order: formData.display_order,
