@@ -146,7 +146,7 @@ serve(async (req) => {
           },
           { role: "user", content: prompt },
         ],
-        max_tokens: 2000,
+        max_tokens: 4096,
         temperature: 0.75,
       }),
     });
