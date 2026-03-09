@@ -90,6 +90,13 @@ export const blogImageMap: Record<string, string> = {
   "analiza-comparativa-airbnb-vs-booking-2026-timisoara": airbnbVsBooking,
   "design-interior-regim-hotelier-timisoara": designInteriorStr,
   "ghid-investitor-diaspora-regim-hotelier-timisoara": investitorDiaspora,
+  
+  // Missing images mapping
+  "impactul-costului-vietii-asupra-chiriilor-timisoara": sezonalitateTm,
+  "evolutia-preturilor-chiriilor-timisoara-2026": timisoaraInvestitii,
+  "piata-inchirieri-termen-scurt-timisoara-tendinte-2026": preturiDinamice,
+  "predictii-piata-imobiliara-timisoara-2026-2027": preturiDinamice,
+  "cele-mai-bune-cartiere-investitii-timisoara-2026": timisoaraInvestitii,
 };
 
 export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string | null => {
