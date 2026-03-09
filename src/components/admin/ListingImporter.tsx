@@ -13,6 +13,7 @@ import {
   Bath, Building2, Thermometer, Zap, Sofa, Car, Layers, CalendarDays, PenLine,
   Sparkles, RefreshCw, Copy, Check
 } from "lucide-react";
+import ImageOptimizationPanel from "./ImageOptimizationPanel";
 
 interface ExtractedData {
   title: string | null;
@@ -470,25 +471,13 @@ const ListingImporter = () => {
               </div>
             </div>
 
-            {/* Images preview */}
-            <div className="border-t pt-4 mt-2">
-              <Label className="text-xs text-muted-foreground">
-                <ImageIcon className="w-3.5 h-3.5 inline mr-1" />
-                Imagini detectate ({editData.images?.length || 0}) — vor fi descărcate și salvate în storage
-              </Label>
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mt-2">
-                {editData.images?.slice(0, 12).map((img, i) => (
-                  <div key={i} className="aspect-square rounded-md overflow-hidden bg-muted border">
-                    <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                  </div>
-                ))}
-                {(editData.images?.length || 0) > 12 && (
-                  <div className="aspect-square rounded-md bg-muted border flex items-center justify-center text-xs text-muted-foreground">
-                    +{editData.images!.length - 12} mai multe
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Images — Premium Optimization Panel */}
+            {editData.images && editData.images.length > 0 && (
+              <ImageOptimizationPanel
+                images={editData.images}
+                onImagesChange={(newImages) => updateField("images", newImages)}
+              />
+            )}
 
             {/* Save button */}
             <div className="flex gap-3 pt-4 border-t mt-2">
