@@ -2,7 +2,104 @@
  * Image download + upload helpers for scrape-listing edge function.
  */
 
-/** Download an image from URL and upload to Supabase Storage */
+/** Remove watermark from image using Lovable AI */
+async function removeWatermark(imageBytes: Uint8Array, contentType: string): Promise<Uint8Array> {
+  const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+  if (!lovableApiKey) {
+    console.log('[Watermark] LOVABLE_API_KEY not set, skipping watermark removal');
+    return imageBytes;
+  }
+
+  try {
+    // Convert to base64 for the AI API
+    const base64 = btoa(String.fromCharCode(...imageBytes));
+    const dataUri = `data:${contentType};base64,${base64}`;
+
+    const response = await fetch('https://api.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3.1-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Remove any watermarks, phone numbers, or overlaid text from this property photo. Keep the underlying image intact and natural-looking. Return only the cleaned image.',
+              },
+              {
+                type: 'image_url',
+                image_url: { url: dataUri },
+              },
+            ],
+          },
+        ],
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      console.log(`[Watermark] AI API error: ${response.status}, skipping removal`);
+      return imageBytes;
+    }
+
+    const data = await response.json();
+    
+    // Check if the response contains an image
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) {
+      console.log('[Watermark] No content in AI response, skipping');
+      return imageBytes;
+    }
+
+    // Look for base64 image in the response
+    // The image model may return inline_data or a base64-encoded image
+    const parts = data?.choices?.[0]?.message?.parts || [];
+    for (const part of parts) {
+      if (part?.inline_data?.data) {
+        const cleanedBytes = Uint8Array.from(atob(part.inline_data.data), c => c.charCodeAt(0));
+        console.log(`[Watermark] Successfully removed watermark (${imageBytes.length} → ${cleanedBytes.length} bytes)`);
+        return cleanedBytes;
+      }
+    }
+
+    // Try extracting base64 from content string
+    if (typeof content === 'string') {
+      const b64Match = content.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
+      if (b64Match) {
+        const cleanedBytes = Uint8Array.from(atob(b64Match[1]), c => c.charCodeAt(0));
+        console.log(`[Watermark] Extracted cleaned image from response (${cleanedBytes.length} bytes)`);
+        return cleanedBytes;
+      }
+    }
+
+    // Check for image in content array format
+    if (Array.isArray(content)) {
+      for (const item of content) {
+        if (item?.type === 'image_url' && item?.image_url?.url) {
+          const match = item.image_url.url.match(/data:image\/[^;]+;base64,([A-Za-z0-9+/=]+)/);
+          if (match) {
+            const cleanedBytes = Uint8Array.from(atob(match[1]), c => c.charCodeAt(0));
+            console.log(`[Watermark] Extracted cleaned image (${cleanedBytes.length} bytes)`);
+            return cleanedBytes;
+          }
+        }
+      }
+    }
+
+    console.log('[Watermark] Could not extract image from AI response, using original');
+    return imageBytes;
+  } catch (err) {
+    console.error('[Watermark] Error during removal:', err);
+    return imageBytes;
+  }
+}
+
+/** Download an image from URL, remove watermarks, and upload to Supabase Storage */
 export async function downloadAndUploadImage(
   imageUrl: string,
   supabase: any,
@@ -19,7 +116,10 @@ export async function downloadAndUploadImage(
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
     const blob = await response.blob();
     const arrayBuffer = await blob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
+    let uint8 = new Uint8Array(arrayBuffer);
+
+    // Remove watermarks using AI
+    uint8 = await removeWatermark(uint8, contentType);
 
     const filePath = `${propertyId}/imported-${index}.${ext}`;
 
