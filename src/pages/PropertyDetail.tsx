@@ -412,45 +412,119 @@ const PropertyDetail = () => {
                 </div>
               )}
 
-              {/* SECȚIUNEA DE INVESTIȚIE - apare pentru DB properties când NU este închiriere */}
-              {dbProperty && dbProperty.listing_type !== 'inchiriere' && (isDbProperty || dbProperty.status_operativ === 'investitie') && (dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
-                <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-5 sm:p-8 rounded-3xl shadow-sm border-l-4 border-l-primary overflow-hidden">
-                  <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-6 h-6 text-primary" />
-                    <h2 className="text-2xl font-serif font-bold">
-                      {language === 'ro' ? 'Oportunitate de Investiție' : 'Investment Opportunity'}
-                    </h2>
-                  </div>
-                  {(dbProperty.estimated_revenue || dbProperty.roi_percentage || dbProperty.capital_necesar) && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                      {dbProperty.capital_necesar && (
-                        <div>
-                          <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
-                            {language === 'ro' ? 'Preț Vânzare' : 'Sale Price'}
+              {/* SECȚIUNEA DE INVESTIȚIE — Regim Hotelier — apare pentru TOATE DB properties */}
+              {dbProperty && dbProperty.capital_necesar && (
+                (() => {
+                  const price = dbProperty.capital_necesar!;
+                  const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                  // Hotel regime calculations
+                  const hotelMonthlyGross = baseRent * 1.65;
+                  const managementFee = 0.28; // 28% management
+                  const taxRate = 0.07; // 7% forfetar
+                  const invTotal = price * 1.02;
+                  const annualGross = hotelMonthlyGross * 12;
+                  const annualNet = annualGross * (1 - managementFee) * (1 - taxRate);
+                  const yieldNet = (annualNet / invTotal) * 100;
+                  const monthlyNet = annualNet / 12;
+                  const paybackYears = annualNet > 0 ? invTotal / annualNet : 0;
+                  // Credit estimation (25% avans, 6.5% dobândă, 25 ani)
+                  const credit = price * 0.75;
+                  const r = 0.065 / 12;
+                  const rata = credit > 0 ? (credit * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1)) : 0;
+                  const cashflowLunar = monthlyNet - rata;
+
+                  return (
+                    <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-5 sm:p-8 rounded-3xl shadow-sm border-l-4 border-l-primary overflow-hidden">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-6 h-6 text-primary" />
+                        <h2 className="text-2xl font-serif font-bold">
+                          {language === 'ro' ? 'Analiză Investiție — Regim Hotelier' : 'Investment Analysis — Hotel Regime'}
+                        </h2>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-5">
+                        {language === 'ro'
+                          ? 'Proiecții calculate pentru strategia de regim hotelier administrat de RealTrust & ApArt Hotel.'
+                          : 'Projections calculated for the hotel regime strategy managed by RealTrust & ApArt Hotel.'}
+                      </p>
+
+                      {/* KPI Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+                        <div className="bg-background/60 rounded-xl p-4 text-center border border-border">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
+                            {language === 'ro' ? 'Preț Achiziție' : 'Purchase Price'}
                           </p>
-                          <p className="text-3xl font-bold">€{dbProperty.capital_necesar.toLocaleString('ro-RO')}</p>
+                          <p className="text-xl sm:text-2xl font-extrabold">€{price.toLocaleString('ro-RO')}</p>
                         </div>
-                      )}
-                      {dbProperty.estimated_revenue && (
-                        <div>
-                          <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
-                            {language === 'ro' ? 'Venit Lunar Estimat' : 'Est. Monthly Revenue'}
+                        <div className="bg-background/60 rounded-xl p-4 text-center border border-border">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
+                            {language === 'ro' ? 'Venit Net Lunar' : 'Monthly Net Income'}
                           </p>
-                          <p className="text-3xl font-bold text-primary">€{dbProperty.estimated_revenue}</p>
+                          <p className="text-xl sm:text-2xl font-extrabold text-primary">€{Math.round(monthlyNet).toLocaleString('ro-RO')}</p>
                         </div>
-                      )}
-                      {dbProperty.roi_percentage && (
-                        <div>
-                          <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
-                            {language === 'ro' ? 'Randament (ROI)' : 'Annual Yield (ROI)'}
+                        <div className="bg-background/60 rounded-xl p-4 text-center border border-border">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
+                            {language === 'ro' ? 'Randament Net' : 'Net Yield'}
                           </p>
-                          <p className="text-3xl font-bold text-primary">{dbProperty.roi_percentage}%</p>
+                          <p className={`text-xl sm:text-2xl font-extrabold ${yieldNet >= 7.5 ? 'text-emerald-500' : yieldNet >= 5.5 ? 'text-amber-500' : 'text-red-500'}`}>
+                            {yieldNet.toFixed(1)}%
+                          </p>
                         </div>
-                      )}
+                        <div className="bg-background/60 rounded-xl p-4 text-center border border-border">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
+                            {language === 'ro' ? 'Cashflow Lunar' : 'Monthly Cashflow'}
+                          </p>
+                          <p className={`text-xl sm:text-2xl font-extrabold ${cashflowLunar > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {cashflowLunar > 0 ? '+' : ''}{Math.round(cashflowLunar)} €
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Details Table */}
+                      <div className="bg-background/40 rounded-xl border border-border overflow-hidden mb-5">
+                        <table className="w-full text-sm">
+                          <tbody>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Strategie' : 'Strategy'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right text-amber-500">{language === 'ro' ? '🌟 Regim Hotelier' : '🌟 Hotel Regime'}</td>
+                            </tr>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Venit Brut Lunar (x1.65)' : 'Monthly Gross Revenue (x1.65)'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">€{Math.round(hotelMonthlyGross).toLocaleString('ro-RO')}</td>
+                            </tr>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Management (28%)' : 'Management Fee (28%)'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">-€{Math.round(annualGross * managementFee / 12).toLocaleString('ro-RO')}</td>
+                            </tr>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Impozit (7% Forfetar)' : 'Tax (7% Flat Rate)'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">-€{Math.round(annualGross * (1 - managementFee) * taxRate / 12).toLocaleString('ro-RO')}</td>
+                            </tr>
+                            <tr className="border-b border-border bg-primary/5">
+                              <td className="px-4 py-2.5 text-foreground font-bold">{language === 'ro' ? 'Venit Net Anual' : 'Annual Net Income'}</td>
+                              <td className="px-4 py-2.5 font-extrabold text-right text-primary">€{Math.round(annualNet).toLocaleString('ro-RO')}</td>
+                            </tr>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Rată Credit Estimată' : 'Est. Mortgage Payment'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">€{Math.round(rata).toLocaleString('ro-RO')}/lună</td>
+                            </tr>
+                            <tr>
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Amortizare' : 'Payback Period'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">{paybackYears.toFixed(1)} {language === 'ro' ? 'ani' : 'years'}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground italic mb-4">
+                        {language === 'ro'
+                          ? '* Calculele presupun ocupare 12 luni, avans 25%, dobândă 6.5%, 25 ani. Cifrele sunt estimative.'
+                          : '* Calculations assume 12 months occupancy, 25% down payment, 6.5% interest, 25 years. Figures are estimates.'}
+                      </p>
+
+                      <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
                     </div>
-                  )}
-                  <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
-                </div>
+                  );
+                })()
               )}
 
               {/* Detalii Standard - doar pentru proprietăți cu date complete */}
@@ -566,8 +640,8 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Calculator Investiție + Card Vânzare Rapidă — ascuns pentru închirieri */}
-              {!staticProperty && dbProperty?.listing_type !== 'inchiriere' && (
+              {/* Calculator Investiție — apare pentru toate proprietățile DB */}
+              {!staticProperty && (
                 <InvestmentEngineV34
                   propertyName={property.name}
                   propertyCode={dbProperty?.property_code}
