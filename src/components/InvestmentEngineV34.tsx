@@ -22,6 +22,7 @@ interface Props {
   propertyCode?: string | null;
   defaultPrice?: number;
   defaultRent?: number;
+  defaultNightlyRate?: number;
   hideRecommendations?: boolean;
 }
 
@@ -46,11 +47,14 @@ const InvestmentEngineV34 = ({
   propertyCode,
   defaultPrice,
   defaultRent,
+  defaultNightlyRate,
   hideRecommendations = false,
 }: Props) => {
   const { language } = useLanguage();
-  const [budgetStr, setBudgetStr] = useState(defaultPrice?.toString() ?? "");
-  const [chirieStr, setChirieStr] = useState(defaultRent?.toString() ?? "");
+  const [budgetStr, setBudgetStr] = useState(defaultPrice?.toString() ?? "95000");
+  const [chirieStr, setChirieStr] = useState(defaultRent?.toString() ?? "450");
+  const [nightlyRateStr, setNightlyRateStr] = useState(defaultNightlyRate?.toString() ?? "50");
+  const [occupancyPctStr, setOccupancyPctStr] = useState("75");
   const [advanceStr, setAdvanceStr] = useState("25");
   const [interestStr, setInterestStr] = useState("6.5");
   const [occupancy, setOccupancy] = useState("12");
@@ -63,6 +67,8 @@ const InvestmentEngineV34 = ({
 
   const budget = budgetStr === "" ? NaN : parseFloat(budgetStr);
   const chirie = chirieStr === "" ? NaN : parseFloat(chirieStr);
+  const nightlyRate = nightlyRateStr === "" ? NaN : parseFloat(nightlyRateStr);
+  const occupancyPct = occupancyPctStr === "" ? 75 : parseFloat(occupancyPctStr);
   const advance = advanceStr === "" ? 0 : parseFloat(advanceStr);
   const interest = interestStr === "" ? 0 : parseFloat(interestStr);
 
@@ -81,23 +87,35 @@ const InvestmentEngineV34 = ({
   }, [hideRecommendations]);
 
   const calc = useMemo(() => {
-    if (isNaN(budget) || budget < 1000 || isNaN(chirie) || chirie < 10) return null;
+    if (isNaN(budget) || budget < 1000) return null;
 
-    const occMonths = parseInt(occupancy);
     const tax = parseFloat(taxRate);
-
-    const chirieEfectiva = strategy === "hotel" ? chirie * 2.0: chirie;
-    const managementFactor = strategy === "hotel" ? 0.28 : 0.05;
     const invTotal = budget * 1.02;
 
-    // Gross & net annual income
-    const venitBrutAnual = chirieEfectiva * occMonths;
+    let chirieEfectiva: number;
+    let managementFactor: number;
+    let venitBrutAnual: number;
+
+    if (strategy === "hotel") {
+      if (isNaN(nightlyRate) || nightlyRate < 5) return null;
+      // Hotel regime: nightly rate × 30 days × occupancy%
+      chirieEfectiva = nightlyRate * 30 * (occupancyPct / 100);
+      managementFactor = 0.20; // 20% management (mid-range 15-25%)
+      venitBrutAnual = chirieEfectiva * 12;
+    } else {
+      if (isNaN(chirie) || chirie < 10) return null;
+      const occMonths = parseInt(occupancy);
+      chirieEfectiva = chirie;
+      managementFactor = 0.05;
+      venitBrutAnual = chirieEfectiva * occMonths;
+    }
+
     const venitDupaManagement = venitBrutAnual * (1 - managementFactor);
     const venitNetAnual = venitDupaManagement * (1 - tax);
 
     // Credit
     const avansBani = budget * (advance / 100);
-    const invInitiala = avansBani + (budget * 0.02); // Down payment + acquisition taxes
+    const invInitiala = avansBani + (budget * 0.02);
     const credit = budget - avansBani;
     const r = (interest / 100) / 12;
     const rata = credit > 0
@@ -109,8 +127,8 @@ const InvestmentEngineV34 = ({
     const yieldAnual = (venitNetAnual / invTotal) * 100;
     const cashflowAnual = venitNetAnual - rataAnuala;
     const cashflowLunar = cashflowAnual / 12;
-    const coc = invInitiala > 0 ? (cashflowAnual / invInitiala) * 100 : 0; // Cash-on-Cash
-    const safety = rataAnuala > 0 ? ((venitNetAnual / rataAnuala) - 1) * 100 : 100; // Margin of Safety
+    const coc = invInitiala > 0 ? (cashflowAnual / invInitiala) * 100 : 0;
+    const safety = rataAnuala > 0 ? ((venitNetAnual / rataAnuala) - 1) * 100 : 100;
     const breakEvenRent = rataAnuala > 0 ? Math.round(rataAnuala / 12 / 0.7) : 0;
 
     // 15-year wealth projection
@@ -121,11 +139,9 @@ const InvestmentEngineV34 = ({
       wealthData.push({ year: `${i}`, value: Math.round(eq + cash) });
     }
 
-    // Exit at 10 years
     const val10 = budget * Math.pow(1.04, 10);
     const profitExit10 = (val10 - budget) + (cashflowAnual * 10);
 
-    // Total wealth 15y
     const valViitoare = budget * Math.pow(1.04, 15);
     const avereTotala = valViitoare + (cashflowAnual * 15);
 
@@ -134,7 +150,7 @@ const InvestmentEngineV34 = ({
       yieldAnual, coc, safety, breakEvenRent,
       valViitoare, avereTotala, profitExit10, wealthData, invInitiala,
     };
-  }, [budget, chirie, advance, interest, strategy, occupancy, taxRate]);
+  }, [budget, chirie, nightlyRate, occupancyPct, advance, interest, strategy, occupancy, taxRate]);
 
   // Trigger popup 10s after first valid calculation, once only
   useEffect(() => {
@@ -149,9 +165,7 @@ const InvestmentEngineV34 = ({
   const rankedProperties = useMemo((): RankedProperty[] => {
     if (hideRecommendations || !dbProperties.length) return [];
     const r = (interest / 100) / 12;
-    const managementFactor = strategy === "hotel" ? 0.28 : 0.05;
     const tax = parseFloat(taxRate);
-    const occMonths = parseInt(occupancy);
 
     return dbProperties
       .filter(p => p.capital_necesar && p.capital_necesar > 0 && p.estimated_revenue)
@@ -159,9 +173,29 @@ const InvestmentEngineV34 = ({
         const price = p.capital_necesar!;
         const rent = parseFloat(p.estimated_revenue!.replace(/[^0-9.]/g, "")) || 0;
         if (!rent) return null;
-        const ch = strategy === "hotel" ? rent * 12.0: rent;
-        const brut = ch * occMonths;
-        const net = brut * (1 - managementFactor) * (1 - tax);
+        let monthlyGross: number;
+        let mgmtFactor: number;
+        if (strategy === "hotel") {
+          // Estimate nightly rate from classic rent, then apply hotel formula
+          const estNightly = Math.max(rent / 10, 40);
+          monthlyGross = estNightly * 30 * (occupancyPct / 100);
+          mgmtFactor = 0.20;
+        } else {
+          const occMonths = parseInt(occupancy);
+          monthlyGross = rent;
+          mgmtFactor = 0.05;
+          const brut = rent * occMonths;
+          const net = brut * (1 - mgmtFactor) * (1 - tax);
+          const creditP = price * (1 - advance / 100);
+          const pmt = creditP > 0
+            ? (r > 0 ? creditP * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1) : creditP / 300)
+            : 0;
+          const netM = (net / 12) - pmt;
+          const yv = (net / (price * 1.02)) * 100;
+          return { name: p.name, price, yieldVal: yv, netMonthly: netM };
+        }
+        const brut = monthlyGross * 12;
+        const net = brut * (1 - mgmtFactor) * (1 - tax);
         const creditP = price * (1 - advance / 100);
         const pmt = creditP > 0
           ? (r > 0 ? creditP * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1) : creditP / 300)
@@ -173,7 +207,7 @@ const InvestmentEngineV34 = ({
       .filter(Boolean)
       .sort((a, b) => b!.yieldVal - a!.yieldVal)
       .slice(0, 3) as RankedProperty[];
-  }, [dbProperties, advance, interest, strategy, hideRecommendations, occupancy, taxRate]);
+  }, [dbProperties, advance, interest, strategy, hideRecommendations, occupancy, occupancyPct, taxRate]);
 
   const verdict = useMemo(() => {
     if (!calc) return "";
@@ -223,13 +257,17 @@ const InvestmentEngineV34 = ({
     namePlaceholder: "Introduceți numele dumneavoastră",
     nameLabel: "Nume Investitor (pentru Raport PDF)",
     budget: "💰 Valoare Imobil (€)",
-    rent: "🔑 Chirie Estimată (€/lună)",
+    rent: "🔑 Chirie Lunară (€)",
+    nightlyRate: "🌙 Tarif Mediu/Noapte (€)",
+    occupancyPct: "📊 Grad Ocupare (%)",
     advance: "🏦 Avans (%)",
     interest: "📈 Dobândă (%)",
     occupancy: "📅 Ocupare Anuală",
     taxRate: "🏛️ Regim Fiscal",
     budgetPlaceholder: "Ex: 120000",
-    rentPlaceholder: "Ex: 550",
+    rentPlaceholder: "Ex: 450",
+    nightlyRatePlaceholder: "Ex: 50",
+    occupancyPctPlaceholder: "Ex: 75",
     advancePlaceholder: "25",
     interestPlaceholder: "6.5",
     occ12: "12 Luni (Full)",
@@ -278,13 +316,17 @@ const InvestmentEngineV34 = ({
     namePlaceholder: "Enter your name",
     nameLabel: "Investor Name (for PDF Report)",
     budget: "💰 Property Value (€)",
-    rent: "🔑 Estimated Rent (€/month)",
+    rent: "🔑 Monthly Rent (€)",
+    nightlyRate: "🌙 Avg Nightly Rate (€)",
+    occupancyPct: "📊 Occupancy Rate (%)",
     advance: "🏦 Down Payment (%)",
     interest: "📈 Interest Rate (%)",
     occupancy: "📅 Annual Occupancy",
     taxRate: "🏛️ Tax Regime",
     budgetPlaceholder: "e.g. 120000",
-    rentPlaceholder: "e.g. 550",
+    rentPlaceholder: "e.g. 450",
+    nightlyRatePlaceholder: "e.g. 50",
+    occupancyPctPlaceholder: "e.g. 75",
     advancePlaceholder: "25",
     interestPlaceholder: "6.5",
     occ12: "12 Months (Full)",
@@ -362,6 +404,46 @@ const InvestmentEngineV34 = ({
 
         {/* Inputs Card */}
         <div className="bg-card border border-border rounded-3xl p-5 sm:p-7 shadow-xl print:hidden">
+          {/* Strategy Buttons — FIRST */}
+          <div className="flex gap-3 mb-5">
+            <button
+              onClick={() => {
+                setStrategy("clasic");
+                setBudgetStr(defaultPrice?.toString() ?? "95000");
+                setChirieStr(defaultRent?.toString() ?? "450");
+                setOccupancy("12");
+                setAdvanceStr("25");
+                setInterestStr("6.5");
+                setTaxRate("0.08");
+              }}
+              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
+                strategy === "clasic"
+                  ? "bg-foreground text-background border-foreground shadow-lg"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              {t.clasic}
+            </button>
+            <button
+              onClick={() => {
+                setStrategy("hotel");
+                setBudgetStr(defaultPrice?.toString() ?? "95000");
+                setNightlyRateStr(defaultNightlyRate?.toString() ?? "50");
+                setOccupancyPctStr("75");
+                setAdvanceStr("25");
+                setInterestStr("6.5");
+                setTaxRate("0.07");
+              }}
+              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
+                strategy === "hotel"
+                  ? "bg-amber-500 text-foreground border-amber-500 shadow-lg"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              {t.hotel}
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
               <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.budget}</Label>
@@ -374,33 +456,64 @@ const InvestmentEngineV34 = ({
                 className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
               />
             </div>
-            <div>
-              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.rent}</Label>
-              <Input
-                type="number"
-                value={chirieStr}
-                onChange={(e) => setChirieStr(e.target.value)}
-                onFocus={(e) => e.target.select()}
-                placeholder={t.rentPlaceholder}
-                className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancy}</Label>
-              <Select value={occupancy} onValueChange={setOccupancy}>
-                <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="12">{t.occ12}</SelectItem>
-                  <SelectItem value="11">{t.occ11}</SelectItem>
-                  <SelectItem value="10">{t.occ10}</SelectItem>
-                  <SelectItem value="9">{t.occ9}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {strategy === "hotel" ? (
+              <>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.nightlyRate}</Label>
+                  <Input
+                    type="number"
+                    value={nightlyRateStr}
+                    onChange={(e) => setNightlyRateStr(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder={t.nightlyRatePlaceholder}
+                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancyPct}</Label>
+                  <Input
+                    type="number"
+                    value={occupancyPctStr}
+                    onChange={(e) => setOccupancyPctStr(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder={t.occupancyPctPlaceholder}
+                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                    min={0}
+                    max={100}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.rent}</Label>
+                  <Input
+                    type="number"
+                    value={chirieStr}
+                    onChange={(e) => setChirieStr(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder={t.rentPlaceholder}
+                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancy}</Label>
+                  <Select value={occupancy} onValueChange={setOccupancy}>
+                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12">{t.occ12}</SelectItem>
+                      <SelectItem value="11">{t.occ11}</SelectItem>
+                      <SelectItem value="10">{t.occ10}</SelectItem>
+                      <SelectItem value="9">{t.occ9}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.advance}</Label>
               <Input
@@ -429,46 +542,6 @@ const InvestmentEngineV34 = ({
                 {strategy === "clasic" ? "8% (Forfetar)" : "7% (Forfetar)"}
               </div>
             </div>
-          </div>
-
-          {/* Strategy Buttons */}
-          <div className="flex gap-3 mt-2">
-            <button
-              onClick={() => {
-                setStrategy("clasic");
-                setBudgetStr("95000");
-                setChirieStr("450");
-                setOccupancy("12");
-                setAdvanceStr("25");
-                setInterestStr("6.5");
-                setTaxRate("0.08");
-              }}
-              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
-                strategy === "clasic"
-                  ? "bg-foreground text-background border-foreground shadow-lg"
-                  : "bg-muted text-muted-foreground border-border"
-              }`}
-            >
-              {t.clasic}
-            </button>
-            <button
-              onClick={() => {
-                setStrategy("hotel");
-                setBudgetStr("95000");
-                setChirieStr("750");
-                setOccupancy("12");
-                setAdvanceStr("25");
-                setInterestStr("6.5");
-                setTaxRate("0.07");
-              }}
-              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
-                strategy === "hotel"
-                  ? "bg-amber-500 text-slate-900 border-amber-500 shadow-lg"
-                  : "bg-muted text-muted-foreground border-border"
-              }`}
-            >
-              {t.hotel}
-            </button>
           </div>
         </div>
 

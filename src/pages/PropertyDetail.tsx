@@ -417,9 +417,11 @@ const PropertyDetail = () => {
                 (() => {
                   const price = dbProperty.capital_necesar!;
                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                  // Hotel regime calculations
-                  const hotelMonthlyGross = baseRent * 2.0
-                  const managementFee = 0.28; // 28% management
+                  // Hotel regime: estimate nightly rate from classic rent, apply occupancy
+                  const nightlyRate = Math.max(Math.round(baseRent / 10), 40);
+                  const occupancyPct = 75; // 75% occupancy
+                  const hotelMonthlyGross = nightlyRate * 30 * (occupancyPct / 100);
+                  const managementFee = 0.20; // 20% management (mid-range 15-25%)
                   const taxRate = 0.07; // 7% forfetar
                   const invTotal = price * 1.02;
                   const annualGross = hotelMonthlyGross * 12;
@@ -427,11 +429,11 @@ const PropertyDetail = () => {
                   const yieldNet = (annualNet / invTotal) * 100;
                   const monthlyNet = annualNet / 12;
                   const paybackYears = annualNet > 0 ? invTotal / annualNet : 0;
-                  // Credit estimation (25% avans, 6.5% dobândă, 25 ani)
                   const credit = price * 0.75;
                   const r = 0.065 / 12;
                   const rata = credit > 0 ? (credit * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1)) : 0;
                   const cashflowLunar = monthlyNet - rata;
+                  const estNightlyForEngine = nightlyRate;
 
                   return (
                     <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-5 sm:p-8 rounded-3xl shadow-sm border-l-4 border-l-primary overflow-hidden">
@@ -488,11 +490,19 @@ const PropertyDetail = () => {
                               <td className="px-4 py-2.5 font-bold text-right text-amber-500">{language === 'ro' ? '🌟 Regim Hotelier' : '🌟 Hotel Regime'}</td>
                             </tr>
                             <tr className="border-b border-border">
-                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Venit Brut Lunar (x12.0)' : 'Monthly Gross Revenue (x2.0'}</td>
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Tarif Mediu/Noapte' : 'Avg Nightly Rate'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">€{nightlyRate}</td>
+                            </tr>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Grad Ocupare' : 'Occupancy Rate'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right">{occupancyPct}%</td>
+                            </tr>
+                            <tr className="border-b border-border">
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Venit Brut Lunar' : 'Monthly Gross Revenue'}</td>
                               <td className="px-4 py-2.5 font-bold text-right">€{Math.round(hotelMonthlyGross).toLocaleString('ro-RO')}</td>
                             </tr>
                             <tr className="border-b border-border">
-                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Management (28%)' : 'Management Fee (28%)'}</td>
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Management (20%)' : 'Management Fee (20%)'}</td>
                               <td className="px-4 py-2.5 font-bold text-right">-€{Math.round(annualGross * managementFee / 12).toLocaleString('ro-RO')}</td>
                             </tr>
                             <tr className="border-b border-border">
@@ -505,7 +515,7 @@ const PropertyDetail = () => {
                             </tr>
                             <tr className="border-b border-border">
                               <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Rată Credit Estimată' : 'Est. Mortgage Payment'}</td>
-                              <td className="px-4 py-2.5 font-bold text-right">€{Math.round(rata).toLocaleString('ro-RO')}/lună</td>
+                              <td className="px-4 py-2.5 font-bold text-right">€{Math.round(rata).toLocaleString('ro-RO')}/{language === 'ro' ? 'lună' : 'mo'}</td>
                             </tr>
                             <tr>
                               <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Amortizare' : 'Payback Period'}</td>
@@ -517,8 +527,8 @@ const PropertyDetail = () => {
 
                       <p className="text-xs text-muted-foreground italic mb-4">
                         {language === 'ro'
-                          ? '* Calculele presupun ocupare 12 luni, avans 25%, dobândă 6.5%, 25 ani. Cifrele sunt estimative.'
-                          : '* Calculations assume 12 months occupancy, 25% down payment, 6.5% interest, 25 years. Figures are estimates.'}
+                          ? `* Calculele presupun tarif ${nightlyRate}€/noapte, ocupare ${occupancyPct}%, avans 25%, dobândă 6.5%, 25 ani. Cifrele sunt estimative.`
+                          : `* Calculations assume ${nightlyRate}€/night, ${occupancyPct}% occupancy, 25% down, 6.5% interest, 25 yrs. Figures are estimates.`}
                       </p>
 
                       <InvestorGuideButton fullWidth size="lg" className="py-7 text-lg rounded-2xl" />
@@ -641,15 +651,20 @@ const PropertyDetail = () => {
               </div>
 
               {/* Calculator Investiție — apare pentru toate proprietățile DB */}
-              {!staticProperty && (
-                <InvestmentEngineV34
-                  propertyName={property.name}
-                  propertyCode={dbProperty?.property_code}
-                  defaultPrice={dbProperty?.capital_necesar || 120000}
-                  defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
-                  hideRecommendations
-                />
-              )}
+              {!staticProperty && (() => {
+                const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                const estNightly = Math.max(Math.round(baseRentForEngine / 10), 40);
+                return (
+                  <InvestmentEngineV34
+                    propertyName={property.name}
+                    propertyCode={dbProperty?.property_code}
+                    defaultPrice={dbProperty?.capital_necesar || 120000}
+                    defaultRent={baseRentForEngine}
+                    defaultNightlyRate={estNightly}
+                    hideRecommendations
+                  />
+                );
+              })()}
 
               {/* Proximity List — walking/driving distances */}
               <PropertyProximity propertySlug={slug || ""} />

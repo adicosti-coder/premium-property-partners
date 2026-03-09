@@ -4,24 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TrendingUp, MessageCircle, Download } from "lucide-react";
 
 const InvestmentYieldCalculator = () => {
   const { language } = useLanguage();
-  const [pret, setPret] = useState(85000);
+  const [pret, setPret] = useState(95000);
   const [renovare, setRenovare] = useState(5000);
-  const [chirie, setChirie] = useState(450);
-  const [vacanta, setVacanta] = useState(1);
+  const [nightlyRate, setNightlyRate] = useState(50);
+  const [occupancyPct, setOccupancyPct] = useState(75);
 
   const investitieTotala = pret + renovare;
-  const venitAnual = chirie * 12;
+  const monthlyGross = nightlyRate * 30 * (occupancyPct / 100);
+  const venitAnual = monthlyGross * 12 * 0.80 * 0.93; // after 20% mgmt + 7% tax
   const yieldAnual = investitieTotala > 0 ? (venitAnual / investitieTotala) * 100 : 0;
   const aniAmortizare = venitAnual > 0 ? investitieTotala / venitAnual : 0;
 
@@ -32,24 +26,25 @@ const InvestmentYieldCalculator = () => {
 
   const handleDownload = useCallback(() => {
     const text = [
-      "RealTrust | Analiză Investiție",
+      "RealTrust | Analiză Investiție — Regim Hotelier",
       "═══════════════════════════════",
       `Preț Achiziție: ${pret.toLocaleString()} €`,
       `Mobilare/Renovare: ${renovare.toLocaleString()} €`,
       `Investiție Totală: ${investitieTotala.toLocaleString()} €`,
-      `Chirie Lunară: ${chirie.toLocaleString()} €`,
-      `Grad de ocupare: ${12 - vacanta} luni / an`,
+      `Tarif/Noapte: ${nightlyRate} €`,
+      `Grad Ocupare: ${occupancyPct}%`,
+      `Venit Brut Lunar: ${Math.round(monthlyGross).toLocaleString()} €`,
       "───────────────────────────────",
       `Randament Anual (Yield): ${yieldAnual.toFixed(2)}%`,
       `Amortizare: ${aniAmortizare.toFixed(1)} ani`,
-      `Profit Estimat: ${Math.round(venitAnual).toLocaleString()} € / an`,
+      `Profit Net Estimat: ${Math.round(venitAnual).toLocaleString()} € / an`,
     ].join("\n");
     const blob = new Blob([text], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "Analiza-Investitie-RealTrust.txt";
     link.click();
-  }, [pret, renovare, investitieTotala, chirie, vacanta, yieldAnual, aniAmortizare, venitAnual]);
+  }, [pret, renovare, investitieTotala, nightlyRate, occupancyPct, monthlyGross, yieldAnual, aniAmortizare, venitAnual]);
 
   const ro = language === "ro";
 
@@ -59,16 +54,16 @@ const InvestmentYieldCalculator = () => {
         <div className="text-center mb-8">
           <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
             <TrendingUp className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-            {ro ? "Calculator Investiție" : "Investment Calculator"}
+            {ro ? "Calculator Regim Hotelier" : "Hotel Regime Calculator"}
           </span>
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
             {ro ? "Analiză Randament " : "Investment Yield "}
-            <span className="text-primary">{ro ? "Imobiliar" : "Analysis"}</span>
+            <span className="text-primary">{ro ? "Regim Hotelier" : "Hotel Regime"}</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             {ro
-              ? "Calculează rapid randamentul unei investiții imobiliare în Timișoara"
-              : "Quickly calculate the yield of a real estate investment in Timișoara"}
+              ? "Calculează rapid randamentul unei investiții în regim hotelier premium în Timișoara"
+              : "Quickly calculate the yield of a premium hotel regime investment in Timișoara"}
           </p>
         </div>
 
@@ -100,34 +95,30 @@ const InvestmentYieldCalculator = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="calc-chirie" className="text-muted-foreground text-sm">
-                  {ro ? "Chirie Lunară (€)" : "Monthly Rent (€)"}
+                <Label htmlFor="calc-nightly" className="text-muted-foreground text-sm">
+                  {ro ? "Tarif Mediu/Noapte (€)" : "Avg Nightly Rate (€)"}
                 </Label>
                 <Input
-                  id="calc-chirie"
+                  id="calc-nightly"
                   type="number"
-                  value={chirie}
-                  onChange={(e) => setChirie(Number(e.target.value) || 0)}
+                  value={nightlyRate}
+                  onChange={(e) => setNightlyRate(Number(e.target.value) || 0)}
                   className="bg-muted/50 border-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground text-sm">
-                  {ro ? "Grad de ocupare" : "Occupancy Rate"}
+                <Label htmlFor="calc-occupancy" className="text-muted-foreground text-sm">
+                  {ro ? "Grad Ocupare (%)" : "Occupancy Rate (%)"}
                 </Label>
-                <Select
-                  value={String(vacanta)}
-                  onValueChange={(v) => setVacanta(Number(v))}
-                >
-                  <SelectTrigger className="bg-muted/50 border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">12 {ro ? "luni / an" : "months / year"}</SelectItem>
-                    <SelectItem value="1">11 {ro ? "luni / an" : "months / year"}</SelectItem>
-                    <SelectItem value="2">10 {ro ? "luni / an" : "months / year"}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="calc-occupancy"
+                  type="number"
+                  value={occupancyPct}
+                  onChange={(e) => setOccupancyPct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                  className="bg-muted/50 border-border"
+                  min={0}
+                  max={100}
+                />
               </div>
             </div>
 
