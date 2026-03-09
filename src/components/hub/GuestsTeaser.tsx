@@ -35,7 +35,7 @@ const GuestsTeaser = () => {
       ctaSecondary: "Why book direct?",
       benefits: [
         { icon: Key, title: "24/7 Self Check-in", desc: "Simple & secure access, anytime" },
-        { icon: Sparkles, title: "Spotless Cleanliness", desc: "9.4/10 cleanliness score on Booking" },
+        { icon: Sparkles, title: "Spotless Cleanliness", desc: "9.7/10 cleanliness score on Booking" },
         { icon: ShieldCheck, title: "Free Underground Parking", desc: "Direct elevator access from garage" },
         { icon: Wifi, title: "Smart TV & Fast WiFi", desc: "Streaming platforms & high-speed internet" },
         { icon: Clock, title: "Fully Equipped Kitchen", desc: "Coffee, spices & utensils included" },
