@@ -1,5 +1,4 @@
-import { useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browserStorage";
 
@@ -24,8 +23,10 @@ const getSessionId = (): string => {
   return sessionId;
 };
 
+/** Safe path getter — works even outside Router context */
+const getCurrentPath = () => (isBrowser() ? window.location.pathname : "/");
+
 export const useCtaAnalytics = () => {
-  const location = useLocation();
 
   const trackCta = useCallback(
     async (options: TrackCtaOptions) => {
@@ -41,7 +42,7 @@ export const useCtaAnalytics = () => {
 
         await supabase.from("cta_analytics").insert({
           cta_type: ctaType,
-          page_path: location.pathname,
+          page_path: getCurrentPath(),
           property_id: propertyId,
           property_name: propertyName,
           user_id: user?.id || null,
@@ -59,7 +60,7 @@ export const useCtaAnalytics = () => {
         console.error("CTA tracking error:", error);
       }
     },
-    [location.pathname]
+    []
   );
 
   // Convenience methods
