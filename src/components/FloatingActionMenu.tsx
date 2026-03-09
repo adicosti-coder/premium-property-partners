@@ -248,6 +248,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                         <Link
                           to={item.to}
                           onClick={() => setIsOpen(false)}
+                          aria-label={item.label}
                           className={cn(
                             "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
                             item.bgColor,
