@@ -9,7 +9,7 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Property } from "@/data/properties";
-import { jsPDF } from "jspdf";
+
 
 interface PropertyCompareModalProps {
   open: boolean;
