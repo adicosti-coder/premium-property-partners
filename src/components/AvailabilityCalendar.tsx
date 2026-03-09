@@ -140,7 +140,7 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
         <span className="font-semibold text-foreground">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </span>
-        <Button variant="ghost" size="icon" onClick={nextMonth}>
+        <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Luna următoare">
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
