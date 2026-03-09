@@ -42,7 +42,7 @@ export const useCtaAnalytics = () => {
 
         await supabase.from("cta_analytics").insert({
           cta_type: ctaType,
-          page_path: location.pathname,
+          page_path: getCurrentPath(),
           property_id: propertyId,
           property_name: propertyName,
           user_id: user?.id || null,
