@@ -654,7 +654,7 @@ const PropertyDetail = () => {
               {/* Calculator Investiție — apare pentru toate proprietățile DB */}
               {!staticProperty && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                const estNightly = Math.max(Math.round(baseRentForEngine / 10), 40);
+                const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
                   <InvestmentEngineV34
                     propertyName={property.name}
