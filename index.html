@@ -45,9 +45,10 @@
 
     <!-- Preconnect only to the single most critical origin (API) -->
     <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
-    <!-- Non-critical origins: dns-prefetch only (no preconnect) -->
+    <!-- Cloudflare Turnstile: preconnect (used on every page for captcha) -->
+    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin />
+    <!-- Non-critical origins: dns-prefetch only -->
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
-    <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
     <!-- Preload hero LCP image — WebP only (JPG fallback not needed with WebP support) -->
