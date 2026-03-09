@@ -51,8 +51,10 @@
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
-    <!-- Preload hero LCP image — WebP only (JPG fallback not needed with WebP support) -->
-    <link rel="preload" as="image" type="image/webp" href="/images/hero-cinematic.webp" fetchpriority="high" />
+    <!-- Preload hero LCP image — responsive: mobile 800w, desktop 1920w -->
+    <link rel="preload" as="image" type="image/webp" fetchpriority="high"
+          imagesrcset="/images/hero-cinematic-800w.webp 800w, /images/hero-cinematic.webp 1920w"
+          imagesizes="100vw" />
 
     <!-- Preload hero font (Playfair Display) — used in above-fold H1 -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
