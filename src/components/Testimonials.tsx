@@ -213,18 +213,20 @@ const Testimonials = () => {
               </button>
               
               {/* Dots */}
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 {testimonials.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => emblaApi?.scrollTo(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
+                    className="flex items-center justify-center w-10 h-10"
+                    aria-label={`Go to testimonial ${index + 1}`}
+                  >
+                    <span className={`block h-2 rounded-full transition-all ${
                       index === selectedIndex 
                         ? 'bg-primary w-6' 
-                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                    }`}
-                    aria-label={`Go to testimonial ${index + 1}`}
-                  />
+                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2'
+                    }`} />
+                  </button>
                 ))}
               </div>
               

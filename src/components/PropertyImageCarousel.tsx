@@ -146,7 +146,7 @@ const PropertyImageCarousel = ({ images, propertyName, property, className = "" 
 
       {/* Dots indicator */}
       {displayImages.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex z-10">
           {displayImages.map((_, index) => (
             <button
               key={index}
@@ -155,13 +155,15 @@ const PropertyImageCarousel = ({ images, propertyName, property, className = "" 
                 e.stopPropagation();
                 emblaApi?.scrollTo(index);
               }}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className="flex items-center justify-center w-8 h-8"
+              aria-label={`Go to image ${index + 1}`}
+            >
+              <span className={`block h-2 rounded-full transition-all duration-300 ${
                 index === selectedIndex
                   ? "bg-primary w-4"
-                  : "bg-background/70 hover:bg-background"
-              }`}
-              aria-label={`Go to image ${index + 1}`}
-            />
+                  : "bg-background/70 hover:bg-background w-2"
+              }`} />
+            </button>
           ))}
         </div>
       )}
