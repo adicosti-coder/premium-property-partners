@@ -3,12 +3,20 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getNightlyRate, getPropertyTypeOptions, getCapacityRange, type PropertyType } from "@/utils/nightlyRatePricing";
 
 const InvestmentQuickCalculator = () => {
   const { language } = useLanguage();
   const presets = {
     clasic: { pret: 95000, chirie: 450, expenses: 30 },
-    hotel: { pret: 95000, nightlyRate: 50, occupancyPct: 75, expenses: 0 },
+    hotel: { pret: 95000, nightlyRate: 45, occupancyPct: 75, expenses: 0 },
   };
 
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("hotel");
@@ -17,6 +25,8 @@ const InvestmentQuickCalculator = () => {
   const [nightlyRate, setNightlyRate] = useState(presets.hotel.nightlyRate);
   const [occupancyPct, setOccupancyPct] = useState(presets.hotel.occupancyPct);
   const [expenses, setExpenses] = useState(presets.hotel.expenses);
+  const [propertyType, setPropertyType] = useState<PropertyType>("studio");
+  const [capacity, setCapacity] = useState(2);
 
   const switchStrategy = (s: "clasic" | "hotel") => {
     setStrategy(s);
@@ -25,7 +35,8 @@ const InvestmentQuickCalculator = () => {
       setChirie(presets.clasic.chirie);
       setExpenses(presets.clasic.expenses);
     } else {
-      setNightlyRate(presets.hotel.nightlyRate);
+      const rate = getNightlyRate(propertyType, capacity);
+      setNightlyRate(rate);
       setOccupancyPct(presets.hotel.occupancyPct);
       setExpenses(presets.hotel.expenses);
     }
