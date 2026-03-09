@@ -33,7 +33,7 @@ const AnimationToggle = () => {
       variant="ghost"
       size="sm"
       onClick={handleToggle}
-      className="relative w-9 h-9 p-0 text-muted-foreground hover:text-foreground transition-colors overflow-hidden"
+      className="relative w-11 h-11 min-w-[44px] min-h-[44px] p-0 text-muted-foreground hover:text-foreground transition-colors overflow-hidden"
       aria-label={label}
       title={label}
     >

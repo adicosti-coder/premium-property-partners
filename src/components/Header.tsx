@@ -41,36 +41,41 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Track active section based on scroll position
+  // Track active section based on scroll position — throttled via rAF
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (location.pathname !== "/") {
-        setActiveSection(location.pathname);
-        return;
-      }
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (location.pathname !== "/") {
+          setActiveSection(location.pathname);
+          return;
+        }
 
-      const sections = ["contact", "portofoliu", "calculator", "beneficii"];
-      const scrollPosition = window.scrollY + 100;
+        const sections = ["contact", "portofoliu", "calculator", "beneficii"];
+        const scrollPosition = window.scrollY + 100;
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(`#${section}`);
-            return;
+        for (const section of sections) {
+          const element = document.getElementById(section);
+          if (element) {
+            const { offsetTop, offsetHeight } = element;
+            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+              setActiveSection(`#${section}`);
+              return;
+            }
           }
         }
-      }
 
-      // If at top of page, set home as active
-      if (window.scrollY < 100) {
-        setActiveSection("/");
-      }
+        if (window.scrollY < 100) {
+          setActiveSection("/");
+        }
+      });
     };
 
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
@@ -195,14 +200,15 @@ const Header = () => {
           
             {/* Favorites link */}
             {favorites.length > 0 && (
-              <Link to="/favorite">
+              <Link to="/favorite" aria-label={language === 'ro' ? `Favorite (${favorites.length})` : `Favorites (${favorites.length})`}>
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="relative text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(0_80%_50%/0.3)]"
+                  className="relative w-11 h-11 min-w-[44px] min-h-[44px] p-0 text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(0_80%_50%/0.3)]"
+                  aria-label={language === 'ro' ? `Favorite (${favorites.length})` : `Favorites (${favorites.length})`}
                 >
-                  <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                  <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
                     {favorites.length}
                   </span>
                 </Button>
@@ -216,13 +222,14 @@ const Header = () => {
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
-            <Link to="/auth" aria-label="Admin">
+            <Link to="/auth" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="hidden lg:inline-flex text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
+                className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
+                aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
               >
-                <Shield className="w-4 h-4 md:mr-0 lg:mr-0 xl:mr-1.5" />
+                <Shield className="w-5 h-5 md:mr-0 lg:mr-0 xl:mr-1.5" />
                 <span className="hidden xl:inline">Admin</span>
               </Button>
             </Link>
@@ -239,8 +246,9 @@ const Header = () => {
             
             {/* Mobile menu button */}
             <button
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30 hover:from-amber-400 hover:to-amber-500 transition-all duration-200 border border-amber-400/50 min-w-[100px] justify-center"
+              className="flex items-center gap-2 px-4 py-2.5 min-h-[48px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30 hover:from-amber-400 hover:to-amber-500 transition-all duration-200 border border-amber-400/50 min-w-[100px] justify-center"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? (language === 'ro' ? 'Închide meniul' : 'Close menu') : (language === 'ro' ? 'Deschide meniul' : 'Open menu')}
             >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <><Menu className="w-5 h-5" /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
             </button>
