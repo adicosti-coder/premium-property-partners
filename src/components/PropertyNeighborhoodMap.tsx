@@ -249,6 +249,8 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
       // POI markers
       pois.forEach((poi) => {
         const poiEl = document.createElement('div');
+        const poiLabel = language === 'ro' ? poi.name : poi.nameEn;
+        poiEl.setAttribute('aria-label', poiLabel);
         const color = categoryColors[poi.category] || '#95a5a6';
         poiEl.style.cssText = `
           width: 32px; height: 32px;

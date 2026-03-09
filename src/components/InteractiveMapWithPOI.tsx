@@ -465,6 +465,7 @@ const InteractiveMapWithPOI = () => {
       
       const poiEl = document.createElement('div');
       poiEl.className = `poi-marker poi-${poi.category}`;
+      poiEl.setAttribute('aria-label', (language === 'ro' ? poi.name : poi.name_en) || poi.name);
       poiEl.dataset.type = poi.category;
       poiEl.dataset.poiId = poi.id;
       poiEl.style.cssText = `
