@@ -404,6 +404,46 @@ const InvestmentEngineV34 = ({
 
         {/* Inputs Card */}
         <div className="bg-card border border-border rounded-3xl p-5 sm:p-7 shadow-xl print:hidden">
+          {/* Strategy Buttons — FIRST */}
+          <div className="flex gap-3 mb-5">
+            <button
+              onClick={() => {
+                setStrategy("clasic");
+                setBudgetStr(defaultPrice?.toString() ?? "95000");
+                setChirieStr(defaultRent?.toString() ?? "450");
+                setOccupancy("12");
+                setAdvanceStr("25");
+                setInterestStr("6.5");
+                setTaxRate("0.08");
+              }}
+              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
+                strategy === "clasic"
+                  ? "bg-foreground text-background border-foreground shadow-lg"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              {t.clasic}
+            </button>
+            <button
+              onClick={() => {
+                setStrategy("hotel");
+                setBudgetStr(defaultPrice?.toString() ?? "95000");
+                setNightlyRateStr(defaultNightlyRate?.toString() ?? "50");
+                setOccupancyPctStr("75");
+                setAdvanceStr("25");
+                setInterestStr("6.5");
+                setTaxRate("0.07");
+              }}
+              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
+                strategy === "hotel"
+                  ? "bg-amber-500 text-foreground border-amber-500 shadow-lg"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              {t.hotel}
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
               <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.budget}</Label>
@@ -416,33 +456,64 @@ const InvestmentEngineV34 = ({
                 className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
               />
             </div>
-            <div>
-              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.rent}</Label>
-              <Input
-                type="number"
-                value={chirieStr}
-                onChange={(e) => setChirieStr(e.target.value)}
-                onFocus={(e) => e.target.select()}
-                placeholder={t.rentPlaceholder}
-                className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancy}</Label>
-              <Select value={occupancy} onValueChange={setOccupancy}>
-                <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="12">{t.occ12}</SelectItem>
-                  <SelectItem value="11">{t.occ11}</SelectItem>
-                  <SelectItem value="10">{t.occ10}</SelectItem>
-                  <SelectItem value="9">{t.occ9}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {strategy === "hotel" ? (
+              <>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.nightlyRate}</Label>
+                  <Input
+                    type="number"
+                    value={nightlyRateStr}
+                    onChange={(e) => setNightlyRateStr(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder={t.nightlyRatePlaceholder}
+                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancyPct}</Label>
+                  <Input
+                    type="number"
+                    value={occupancyPctStr}
+                    onChange={(e) => setOccupancyPctStr(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder={t.occupancyPctPlaceholder}
+                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                    min={0}
+                    max={100}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.rent}</Label>
+                  <Input
+                    type="number"
+                    value={chirieStr}
+                    onChange={(e) => setChirieStr(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder={t.rentPlaceholder}
+                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancy}</Label>
+                  <Select value={occupancy} onValueChange={setOccupancy}>
+                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12">{t.occ12}</SelectItem>
+                      <SelectItem value="11">{t.occ11}</SelectItem>
+                      <SelectItem value="10">{t.occ10}</SelectItem>
+                      <SelectItem value="9">{t.occ9}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.advance}</Label>
               <Input
@@ -471,46 +542,6 @@ const InvestmentEngineV34 = ({
                 {strategy === "clasic" ? "8% (Forfetar)" : "7% (Forfetar)"}
               </div>
             </div>
-          </div>
-
-          {/* Strategy Buttons */}
-          <div className="flex gap-3 mt-2">
-            <button
-              onClick={() => {
-                setStrategy("clasic");
-                setBudgetStr("95000");
-                setChirieStr("450");
-                setOccupancy("12");
-                setAdvanceStr("25");
-                setInterestStr("6.5");
-                setTaxRate("0.08");
-              }}
-              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
-                strategy === "clasic"
-                  ? "bg-foreground text-background border-foreground shadow-lg"
-                  : "bg-muted text-muted-foreground border-border"
-              }`}
-            >
-              {t.clasic}
-            </button>
-            <button
-              onClick={() => {
-                setStrategy("hotel");
-                setBudgetStr("95000");
-                setChirieStr("750");
-                setOccupancy("12");
-                setAdvanceStr("25");
-                setInterestStr("6.5");
-                setTaxRate("0.07");
-              }}
-              className={`flex-1 py-3.5 rounded-full font-bold text-sm transition-all duration-300 border cursor-pointer ${
-                strategy === "hotel"
-                  ? "bg-amber-500 text-slate-900 border-amber-500 shadow-lg"
-                  : "bg-muted text-muted-foreground border-border"
-              }`}
-            >
-              {t.hotel}
-            </button>
           </div>
         </div>
 
