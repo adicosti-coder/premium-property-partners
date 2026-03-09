@@ -328,6 +328,8 @@ const InvestmentEngineV34 = ({
     interest: "📈 Interest Rate (%)",
     occupancy: "📅 Annual Occupancy",
     taxRate: "🏛️ Tax Regime",
+    propertyType: "🏠 Property Type",
+    capacityLabel: "👥 Capacity (guests)",
     budgetPlaceholder: "e.g. 120000",
     rentPlaceholder: "e.g. 450",
     nightlyRatePlaceholder: "e.g. 50",
