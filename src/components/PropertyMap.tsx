@@ -201,6 +201,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
       const markerEl = document.createElement('div');
       markerEl.className = 'property-marker cursor-pointer';
+      markerEl.setAttribute('aria-label', property.name);
       markerEl.style.cssText = `
         width: 48px;
         height: 48px;

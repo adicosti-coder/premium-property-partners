@@ -380,6 +380,7 @@ const InteractiveMapWithPOI = () => {
     apartmentCoordinates.forEach((apt) => {
       const apartmentEl = document.createElement('div');
       apartmentEl.className = 'apartment-marker';
+      apartmentEl.setAttribute('aria-label', apt.name);
       apartmentEl.style.cssText = `
         width: 40px; height: 40px;
         background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
@@ -464,6 +465,7 @@ const InteractiveMapWithPOI = () => {
       
       const poiEl = document.createElement('div');
       poiEl.className = `poi-marker poi-${poi.category}`;
+      poiEl.setAttribute('aria-label', (language === 'ro' ? poi.name : poi.name_en) || poi.name);
       poiEl.dataset.type = poi.category;
       poiEl.dataset.poiId = poi.id;
       poiEl.style.cssText = `
