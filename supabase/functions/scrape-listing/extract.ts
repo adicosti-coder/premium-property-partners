@@ -208,16 +208,26 @@ export function collectImages(jsonData: any, pageLinks: string[], markdown: stri
   // From structured data
   if (Array.isArray(jsonData.images)) imageUrls.push(...jsonData.images);
 
+  // Filter out non-property images (SVGs, logos, icons, app store badges, etc.)
+  const isPropertyImage = (url: string): boolean => {
+    if (!url || typeof url !== 'string') return false;
+    // Reject SVGs, icons, logos, app badges, tiny images
+    if (/\.(svg|gif)(\?|$)/i.test(url)) return false;
+    if (/logo|icon|avatar|thumb|badge|app_store|google_play|static\/media|mapfiles|gstatic/i.test(url)) return false;
+    if (url.length < 20) return false;
+    return true;
+  };
+
+  // Filter structured data images
+  imageUrls = imageUrls.filter(isPropertyImage);
+
   // From page links
   const imageExtensions = /\.(jpg|jpeg|png|webp|avif)(\?|$)/i;
   if (Array.isArray(pageLinks)) {
     const imageFromLinks = pageLinks.filter((link: string) =>
       typeof link === 'string' &&
       imageExtensions.test(link) &&
-      !link.includes('logo') && !link.includes('icon') &&
-      !link.includes('avatar') && !link.includes('thumb') &&
-      !link.includes('placeholder') &&
-      link.length > 20
+      isPropertyImage(link)
     );
     imageUrls.push(...imageFromLinks);
   }
