@@ -87,6 +87,9 @@ export const blogImageMap: Record<string, string> = {
   "ghid-complet-fiscalitate-regim-hotelier-2026": fiscalitateRegimHotelier,
   "studiu-caz-roi-apartament-2-camere-2026": studiuCazRoi,
   "ghid-turistic-timisoara-atractii-activitati": ghidTuristicTimisoara,
+  "analiza-comparativa-airbnb-vs-booking-2026-timisoara": airbnbVsBooking,
+  "design-interior-regim-hotelier-timisoara": designInteriorStr,
+  "ghid-investitor-diaspora-regim-hotelier-timisoara": investitorDiaspora,
 };
 
 export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string | null => {
