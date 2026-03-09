@@ -231,6 +231,7 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
 
       // Property marker
       const markerEl = document.createElement('div');
+      markerEl.setAttribute('aria-label', propertyName || propertySlug);
       markerEl.style.cssText = `
         width: 44px; height: 44px;
         background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
