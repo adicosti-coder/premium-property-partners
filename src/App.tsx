@@ -51,7 +51,7 @@ const queryClient = new QueryClient({
 
 // ALL pages lazy-loaded for code splitting — Index included to cut initial JS
 const Index = lazyWithRetry(() => import("./pages/Index"));
-import NotFound from "./pages/NotFound";
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 // Lazy loaded pages (code splitting for performance)
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
