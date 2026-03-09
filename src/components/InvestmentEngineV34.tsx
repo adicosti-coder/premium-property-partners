@@ -22,6 +22,7 @@ interface Props {
   propertyCode?: string | null;
   defaultPrice?: number;
   defaultRent?: number;
+  defaultNightlyRate?: number;
   hideRecommendations?: boolean;
 }
 
