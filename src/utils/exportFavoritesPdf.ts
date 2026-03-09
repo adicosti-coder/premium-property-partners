@@ -17,7 +17,8 @@ interface ExportOptions {
   };
 }
 
-export const exportFavoritesPdf = ({ title, properties, language, labels }: ExportOptions) => {
+export const exportFavoritesPdf = async ({ title, properties, language, labels }: ExportOptions) => {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;

@@ -26,7 +26,8 @@ interface ExportOptions {
   categoryLabels: Record<string, string>;
 }
 
-export const exportPoiFavoritesPdf = ({ title, pois, language, labels, categoryLabels }: ExportOptions) => {
+export const exportPoiFavoritesPdf = async ({ title, pois, language, labels, categoryLabels }: ExportOptions) => {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;

@@ -121,7 +121,8 @@ const PropertyCompareModal = ({
     },
   ];
 
-  const exportToPdf = () => {
+  const exportToPdf = async () => {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "landscape" });
     const pageWidth = doc.internal.pageSize.getWidth();
     
