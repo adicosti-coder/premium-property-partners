@@ -26,7 +26,7 @@ const InvestmentQuickCalculator = () => {
   const calc = useMemo(() => {
     if (!pret || !chirie) return null;
 
-    const cBruta = strategy === "hotel" ? chirie * 1.65 : chirie;
+    const cBruta = strategy === "hotel" ? chirie * 2.0 : chirie;
     const factorNet = strategy === "hotel" ? 0.72 : 0.95;
     const invTotal = pret * 1.02;
 
