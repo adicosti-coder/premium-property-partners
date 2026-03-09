@@ -5,6 +5,7 @@ interface ExportOptions {
 }
 
 export const exportInvestorGuidePdf = async ({ language = "ro" }: ExportOptions = {}) => {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
