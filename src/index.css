@@ -620,38 +620,6 @@
   transform: none !important;
 }
 
-/* Direction Selector Styles */
-.dir-item {
-  position: relative;
-  cursor: pointer;
-}
-
-.dir-item:hover {
-  transform: translateY(-2px) scale(1.02);
-}
-
-.dir-cta {
-  box-shadow: 0 0 20px hsl(45 93% 58% / 0.15);
-}
-
-.dir-cta:hover {
-  box-shadow: 0 0 30px hsl(45 93% 58% / 0.25);
-}
-
-.dir-shimmer {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    hsl(45 93% 58% / 0.08) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 4s infinite;
-  pointer-events: none;
-}
 
 /* KPI Badge Styles */
 .kpi-badge {
