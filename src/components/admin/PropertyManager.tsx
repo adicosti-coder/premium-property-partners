@@ -185,11 +185,29 @@ export default function PropertyManager() {
     fetchProperties();
   }, []);
 
+  const getRequiredFields = (listingType: string) => {
+    const base = ['name', 'location'] as const;
+    switch (listingType) {
+      case 'cazare':
+        return { fields: [...base, 'booking_url'] as const, label: 'Nume, Locație și URL Rezervare' };
+      case 'vanzare':
+        return { fields: [...base] as const, label: 'Nume și Locație' };
+      case 'inchiriere':
+        return { fields: [...base] as const, label: 'Nume și Locație' };
+      case 'investitie':
+        return { fields: [...base] as const, label: 'Nume și Locație' };
+      default:
+        return { fields: [...base] as const, label: 'Nume și Locație' };
+    }
+  };
+
   const handleAddProperty = async () => {
-    if (!formData.name || !formData.location || !formData.booking_url) {
+    const { fields, label } = getRequiredFields(formData.listing_type);
+    const missing = fields.some(f => !formData[f]);
+    if (missing) {
       toast({
-        title: t.admin.error,
-        description: t.admin.properties?.fillRequired || "Fill all required fields",
+        title: "Completează câmpurile obligatorii",
+        description: `${label} sunt obligatorii.`,
         variant: "destructive",
       });
       return;
