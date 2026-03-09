@@ -134,13 +134,13 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
 
       {/* Month navigation */}
       <div className="flex items-center justify-between mb-4">
-        <Button variant="ghost" size="icon" onClick={prevMonth}>
+        <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Luna anterioară">
           <ChevronLeft className="w-4 h-4" />
         </Button>
         <span className="font-semibold text-foreground">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </span>
-        <Button variant="ghost" size="icon" onClick={nextMonth}>
+        <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Luna următoare">
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

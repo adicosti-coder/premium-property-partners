@@ -9,7 +9,7 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Property } from "@/data/properties";
-import { jsPDF } from "jspdf";
+
 
 interface PropertyCompareModalProps {
   open: boolean;
@@ -121,7 +121,8 @@ const PropertyCompareModal = ({
     },
   ];
 
-  const exportToPdf = () => {
+  const exportToPdf = async () => {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "landscape" });
     const pageWidth = doc.internal.pageSize.getWidth();
     
