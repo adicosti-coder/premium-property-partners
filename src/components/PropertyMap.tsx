@@ -15,20 +15,20 @@ const propertyCoordinates: Record<string, [number, number]> = {
   'green-forest-apart-hotel': [21.2490, 45.7785],
   // Str. Gheorghe Lazăr nr.24, clădirea Fructus Plaza
   'fructus-plaza-ultracentral-apart-hotel': [21.2209, 45.7595],
-  // Calea Circumvalațiunii nr.1, City of Mara, M9
-  'fullview-studio-deluxe': [21.2150, 45.7529],
+  // Calea Circumvalațiunii nr.1, City of Mara, M9 (spread for tap-target spacing)
+  'fullview-studio-deluxe': [21.2165, 45.7522],
   // Calea Circumvalațiunii nr.1, City of Mara, M8
-  'avenue-of-mara-apart-hotel': [21.2148, 45.7527],
+  'avenue-of-mara-apart-hotel': [21.2130, 45.7520],
   // Strada Argeș nr.4 (zona Elisabetin)
   'helios-apart-hotel': [21.2345, 45.7433],
-  // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
-  'ateneo-trevi-2-apart-hotel': [21.2113, 45.7786],
+  // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo (spread for tap-target spacing)
+  'ateneo-trevi-2-apart-hotel': [21.2095, 45.7792],
   // Calea Circumvalațiunii nr.1, City of Mara, M11
-  'sunset-da-ra-studio-deluxe': [21.2145, 45.7530],
+  'sunset-da-ra-studio-deluxe': [21.2150, 45.7540],
   // Strada Sinaia nr.2B - City of Mara M2-M7
-  'mara-luxury-golden-apart-hotel': [21.2134, 45.7535],
+  'mara-luxury-golden-apart-hotel': [21.2115, 45.7535],
   // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
-  'ateneo-apart-hotel-studio-deluxe': [21.2115, 45.7788],
+  'ateneo-apart-hotel-studio-deluxe': [21.2130, 45.7780],
   // Bd. Simion Bărnuțiu nr.79 (zona Dorobanților)
   'modern-studio-apart-hotel': [21.2603, 45.7656],
 };
