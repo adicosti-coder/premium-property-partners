@@ -267,6 +267,8 @@ const InvestmentEngineV34 = ({
     interest: "📈 Dobândă (%)",
     occupancy: "📅 Ocupare Anuală",
     taxRate: "🏛️ Regim Fiscal",
+    propertyType: "🏠 Tip Proprietate",
+    capacityLabel: "👥 Capacitate (persoane)",
     budgetPlaceholder: "Ex: 120000",
     rentPlaceholder: "Ex: 450",
     nightlyRatePlaceholder: "Ex: 50",
