@@ -401,10 +401,12 @@ const QuickStatsBar = () => {
   const [headerHeight, setHeaderHeight] = useState(160);
   
   const measureHeader = useCallback(() => {
-    const header = document.querySelector('header');
-    if (header) {
-      setHeaderHeight(header.getBoundingClientRect().height);
-    }
+    requestAnimationFrame(() => {
+      const header = document.querySelector('header');
+      if (header) {
+        setHeaderHeight(header.getBoundingClientRect().height);
+      }
+    });
   }, []);
 
   useEffect(() => {

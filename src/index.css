@@ -284,11 +284,6 @@
     box-shadow: 0 1px 3px hsl(222 40% 20% / 0.08);
   }
 
-  .glass-light {
-    background: hsl(var(--foreground) / 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
 
   /* Premium Spacing - Generous White Space */
   .section-padding {
@@ -625,38 +620,6 @@
   transform: none !important;
 }
 
-/* Direction Selector Styles */
-.dir-item {
-  position: relative;
-  cursor: pointer;
-}
-
-.dir-item:hover {
-  transform: translateY(-2px) scale(1.02);
-}
-
-.dir-cta {
-  box-shadow: 0 0 20px hsl(45 93% 58% / 0.15);
-}
-
-.dir-cta:hover {
-  box-shadow: 0 0 30px hsl(45 93% 58% / 0.25);
-}
-
-.dir-shimmer {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    hsl(45 93% 58% / 0.08) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 4s infinite;
-  pointer-events: none;
-}
 
 /* KPI Badge Styles */
 .kpi-badge {
@@ -697,27 +660,6 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-.safe-area-top {
-  padding-top: env(safe-area-inset-top, 0);
-}
-
-/* Touch feedback for mobile */
-.touch-feedback {
-  @apply active:scale-95 transition-transform duration-150;
-}
-
-/* Smooth scroll for mobile */
-@supports (-webkit-overflow-scrolling: touch) {
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Pull to refresh indicator */
-.ptr-indicator {
-  @apply fixed top-0 left-1/2 -translate-x-1/2 z-50;
-}
-
 /* Mobile-optimized button targets (44px minimum) */
 .touch-target {
   min-height: 44px;
@@ -741,8 +683,7 @@
   }
 
   /* Disable backdrop-blur on mobile (GPU-heavy) */
-  .glass,
-  .glass-light {
+  .glass {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
