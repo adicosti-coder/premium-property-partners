@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getNightlyRate, getPropertyTypeOptions, getCapacityRange, type PropertyType } from "@/utils/nightlyRatePricing";
 
 interface Props {
   propertyName?: string;
