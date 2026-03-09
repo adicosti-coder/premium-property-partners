@@ -156,6 +156,11 @@ const PropertyCard = ({
                 e.stopPropagation();
                 onToggleCompare(property.id);
               }}
+              aria-label={
+                isSelectedForCompare
+                  ? language === "ro" ? `Deselectează ${property.name} din comparare` : `Deselect ${property.name} from compare`
+                  : language === "ro" ? `Selectează ${property.name} pentru comparare` : `Select ${property.name} for compare`
+              }
               className={cn(
                 "absolute bottom-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200",
                 isSelectedForCompare
