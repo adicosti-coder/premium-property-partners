@@ -86,7 +86,7 @@ const InvestmentEngineV34 = ({
     const occMonths = parseInt(occupancy);
     const tax = parseFloat(taxRate);
 
-    const chirieEfectiva = strategy === "hotel" ? chirie * 2.0 : chirie;
+    const chirieEfectiva = strategy === "hotel" ? chirie * 2.0: chirie;
     const managementFactor = strategy === "hotel" ? 0.28 : 0.05;
     const invTotal = budget * 1.02;
 
@@ -159,7 +159,7 @@ const InvestmentEngineV34 = ({
         const price = p.capital_necesar!;
         const rent = parseFloat(p.estimated_revenue!.replace(/[^0-9.]/g, "")) || 0;
         if (!rent) return null;
-        const ch = strategy === "hotel" ? rent * 1.65 : rent;
+        const ch = strategy === "hotel" ? rent * 12.0: rent;
         const brut = ch * occMonths;
         const net = brut * (1 - managementFactor) * (1 - tax);
         const creditP = price * (1 - advance / 100);

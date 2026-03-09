@@ -418,7 +418,7 @@ const PropertyDetail = () => {
                   const price = dbProperty.capital_necesar!;
                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                   // Hotel regime calculations
-                  const hotelMonthlyGross = baseRent * 2.0;
+                  const hotelMonthlyGross = baseRent * 2.0
                   const managementFee = 0.28; // 28% management
                   const taxRate = 0.07; // 7% forfetar
                   const invTotal = price * 1.02;
@@ -488,7 +488,7 @@ const PropertyDetail = () => {
                               <td className="px-4 py-2.5 font-bold text-right text-amber-500">{language === 'ro' ? '🌟 Regim Hotelier' : '🌟 Hotel Regime'}</td>
                             </tr>
                             <tr className="border-b border-border">
-                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Venit Brut Lunar (x1.65)' : 'Monthly Gross Revenue (x1.65)'}</td>
+                              <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Venit Brut Lunar (x12.0)' : 'Monthly Gross Revenue (x2.0'}</td>
                               <td className="px-4 py-2.5 font-bold text-right">€{Math.round(hotelMonthlyGross).toLocaleString('ro-RO')}</td>
                             </tr>
                             <tr className="border-b border-border">
