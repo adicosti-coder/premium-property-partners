@@ -49,86 +49,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 40 25% 96%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 45 90% 32%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 40 25% 90%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 40 20% 92%;
-    --muted-foreground: 222 30% 35%;
-
-    --accent: 45 85% 38%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 40 20% 80%;
-    --input: 40 20% 82%;
-    --ring: 45 90% 40%;
-
-    --radius: 0.5rem;
-
-    /* Custom tokens - Light Theme */
-    --navy: 222 47% 11%;
-    --navy-light: 222 30% 20%;
-    --navy-medium: 222 35% 15%;
-    --gold: 45 90% 35%;
-    --gold-dark: 45 85% 28%;
-    --gold-light: 45 95% 50%;
-    --gold-foreground: 0 0% 100%;
-    --cream: 40 25% 96%;
-    --slate: 222 25% 38%;
-    --slate-light: 222 20% 55%;
-    
-    /* Text contrast helpers - WCAG AA compliant */
-    --text-strong: 222 47% 11%;
-    --text-medium: 222 40% 25%;
-    --text-subtle: 222 25% 38%;
-
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(40 25% 96%) 0%, hsl(40 20% 92%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45 90% 35%) 0%, hsl(45 85% 28%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(40 25% 96%) 0%, hsl(40 20% 93%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(40 15% 97%) 100%);
-
-    /* Shadows */
-    --shadow-elegant: 0 25px 50px -12px hsl(222 40% 20% / 0.18);
-    --shadow-card: 0 10px 40px -10px hsl(222 40% 20% / 0.12);
-    --shadow-glow: 0 0 40px hsl(45 90% 35% / 0.25);
-    --shadow-gold: 0 10px 40px -10px hsl(45 90% 35% / 0.35);
-
-    /* Brand colors – WCAG AA on white */
-    --whatsapp: 168 39% 35%;
-    --whatsapp-hover: 170 44% 27%;
-    --whatsapp-foreground: 0 0% 100%;
-    --booking-blue: 216 100% 17%;
-    --booking-blue-hover: 216 100% 12%;
-
-    /* Sidebar tokens */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 45 90% 35%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 25% 94%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 40 20% 85%;
-    --sidebar-ring: 45 90% 40%;
-  }
-
-  .light {
-    /* Explicit light class - same as :root for consistency */
+  /* Light theme — :root (fallback) + .light (explicit, set by useTheme) */
+  :root, .light {
     --background: 40 25% 96%;
     --foreground: 222 47% 11%;
 
@@ -156,12 +78,9 @@
     --border: 40 20% 80%;
     --input: 40 20% 82%;
     --ring: 45 90% 40%;
-    
-    /* Text contrast helpers */
-    --text-strong: 222 47% 11%;
-    --text-medium: 222 40% 25%;
-    --text-subtle: 222 25% 38%;
-    
+
+    --radius: 0.5rem;
+
     /* Custom tokens */
     --navy: 222 47% 11%;
     --navy-light: 222 30% 20%;
@@ -173,23 +92,32 @@
     --cream: 40 25% 96%;
     --slate: 222 25% 38%;
     --slate-light: 222 20% 55%;
-    
+
+    /* Text contrast helpers - WCAG AA compliant */
+    --text-strong: 222 47% 11%;
+    --text-medium: 222 40% 25%;
+    --text-subtle: 222 25% 38%;
+
+    /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(40 25% 96%) 0%, hsl(40 20% 92%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45 90% 35%) 0%, hsl(45 85% 28%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(40 25% 96%) 0%, hsl(40 20% 93%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(40 15% 97%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45 90% 35%) 0%, hsl(45 85% 28%) 100%);
-    
+
+    /* Shadows */
     --shadow-elegant: 0 25px 50px -12px hsl(222 40% 20% / 0.18);
     --shadow-card: 0 10px 40px -10px hsl(222 40% 20% / 0.12);
     --shadow-glow: 0 0 40px hsl(45 90% 35% / 0.25);
     --shadow-gold: 0 10px 40px -10px hsl(45 90% 35% / 0.35);
 
+    /* Brand colors – WCAG AA on white */
     --whatsapp: 168 39% 35%;
     --whatsapp-hover: 170 44% 27%;
     --whatsapp-foreground: 0 0% 100%;
     --booking-blue: 216 100% 17%;
     --booking-blue-hover: 216 100% 12%;
 
+    /* Sidebar tokens */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 45 90% 35%;
