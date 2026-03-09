@@ -417,9 +417,9 @@ const PropertyDetail = () => {
               {dbProperty && dbProperty.capital_necesar && (
                 (() => {
                   const price = dbProperty.capital_necesar!;
-                  const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                  // Hotel regime: estimate nightly rate from classic rent, apply occupancy
-                  const nightlyRate = Math.max(Math.round(baseRent / 10), 40);
+                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                   // Hotel regime: use base_price_per_night if available, else estimate from rent
+                   const nightlyRate = dbProperty.base_price_per_night || Math.max(Math.round(baseRent / 10), 40);
                   const occupancyPct = 75; // 75% occupancy
                   const hotelMonthlyGross = nightlyRate * 30 * (occupancyPct / 100);
                   const managementFee = 0.20; // 20% management (mid-range 15-25%)
