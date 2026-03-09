@@ -665,8 +665,6 @@ const PropertyDetail = () => {
                   />
                 );
               })()}
-                />
-              )}
 
               {/* Proximity List — walking/driving distances */}
               <PropertyProximity propertySlug={slug || ""} />
