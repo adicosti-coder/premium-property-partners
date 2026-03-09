@@ -414,8 +414,48 @@ export default function PropertyManager() {
     setPropertyImages([]);
   };
 
+  const isCazare = formData.listing_type === 'cazare';
+  const isVanzare = formData.listing_type === 'vanzare';
+  const isInchiriere = formData.listing_type === 'inchiriere';
+  const isInvestitie = formData.listing_type === 'investitie';
+  const showBookingFields = isCazare || isInvestitie;
+  const showInvestmentFields = isVanzare || isInvestitie || isInchiriere;
+
   const renderFormFields = (showGallery = false) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+      {/* Listing Type selector FIRST - controls visible fields */}
+      <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          <h4 className="font-semibold text-foreground">Tip Publicare</h4>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Tip Listing *</Label>
+            <select
+              value={formData.listing_type}
+              onChange={(e) => setFormData({ ...formData, listing_type: e.target.value, status_operativ: e.target.value })}
+              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="cazare">🏨 Cazare (regim hotelier)</option>
+              <option value="vanzare">🏠 Vânzare</option>
+              <option value="inchiriere">📋 Închiriere</option>
+              <option value="investitie">📈 Investiție Premium</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label>Etichetă</Label>
+            <Input
+              value={formData.tag}
+              onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
+              placeholder={isCazare ? "Premium, Superhost" : isVanzare ? "De Vânzare, Nou" : "De Închiriat"}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Basic info - always visible */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{t.admin.properties?.name || "Name"} *</Label>
@@ -435,8 +475,21 @@ export default function PropertyManager() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Ordine Afișare</Label>
+          <Input
+            type="number"
+            value={formData.display_order}
+            onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      {/* Descriptions */}
       <div className="space-y-2">
-        <Label>{t.admin.properties?.descriptionRo || "Description (Romanian)"}</Label>
+        <Label>{t.admin.properties?.descriptionRo || "Descriere (Română)"}</Label>
         <Textarea
           value={formData.description_ro}
           onChange={(e) => setFormData({ ...formData, description_ro: e.target.value })}
@@ -456,152 +509,151 @@ export default function PropertyManager() {
       </div>
 
       <div className="space-y-2">
-        <Label>{t.admin.properties?.features || "Features"}</Label>
+        <Label>{t.admin.properties?.features || "Facilități"}</Label>
         <Input
           value={formData.features}
           onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-          placeholder="WiFi, AC, Parking (comma separated)"
+          placeholder="WiFi, AC, Parking (separate prin virgulă)"
         />
-        <p className="text-xs text-muted-foreground">
-          {t.admin.properties?.featuresHint || "Separate features with commas"}
-        </p>
+        <p className="text-xs text-muted-foreground">Separă facilitățile prin virgulă</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>{t.admin.properties?.tag || "Tag"}</Label>
-          <Input
-            value={formData.tag}
-            onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-            placeholder="Premium, New, etc."
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>{t.admin.properties?.displayOrder || "Display Order"}</Label>
-          <Input
-            type="number"
-            value={formData.display_order}
-            onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
-            placeholder="0"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>{t.admin.properties?.bookingUrl || "Booking URL"} *</Label>
-        <Input
-          value={formData.booking_url}
-          onChange={(e) => setFormData({ ...formData, booking_url: e.target.value })}
-          placeholder="https://booking.com/..."
-        />
-      </div>
-
-      {/* Status & Listing Type Fields */}
-      <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          <h4 className="font-semibold text-foreground">Clasificare & Investiții</h4>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
+      {/* === CAZARE: Booking URL + Rating + Pricing === */}
+      {showBookingFields && (
+        <>
           <div className="space-y-2">
-            <Label>Status Operativ</Label>
-            <select
-              value={formData.status_operativ}
-              onChange={(e) => setFormData({ ...formData, status_operativ: e.target.value })}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-            >
-              <option value="cazare">Cazare (standard)</option>
-              <option value="investitie">Investiție (afișează ROI)</option>
-              <option value="vanzare">Vânzare</option>
-              <option value="inchiriere">Închiriere</option>
-            </select>
+            <Label>URL Rezervare {isCazare ? '*' : ''}</Label>
+            <Input
+              value={formData.booking_url}
+              onChange={(e) => setFormData({ ...formData, booking_url: e.target.value })}
+              placeholder="https://booking.com/..."
+            />
           </div>
-          
+
+          <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">⭐</span>
+              <h4 className="font-semibold text-foreground">Rating Booking.com</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Notă (ex: 9.4)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="10"
+                  value={formData.booking_rating}
+                  onChange={(e) => setFormData({ ...formData, booking_rating: e.target.value })}
+                  placeholder="9.4"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nr. recenzii</Label>
+                <Input
+                  type="number"
+                  value={formData.booking_review_count}
+                  onChange={(e) => setFormData({ ...formData, booking_review_count: e.target.value })}
+                  placeholder="127"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Preț / noapte (€)</Label>
+              <Input
+                type="number"
+                value={formData.base_price_per_night}
+                onChange={(e) => setFormData({ ...formData, base_price_per_night: e.target.value })}
+                placeholder="45"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Preț weekend / noapte (€)</Label>
+              <Input
+                type="number"
+                value={formData.weekend_price_per_night}
+                onChange={(e) => setFormData({ ...formData, weekend_price_per_night: e.target.value })}
+                placeholder="55"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* === VÂNZARE / ÎNCHIRIERE / INVESTIȚIE: Price & Investment fields === */}
+      {showInvestmentFields && (
+        <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <h4 className="font-semibold text-foreground">
+              {isVanzare ? 'Date Vânzare' : isInchiriere ? 'Date Închiriere' : 'Date Investiție'}
+            </h4>
+          </div>
+
           <div className="space-y-2">
-            <Label>Tip Listing</Label>
-            <select
-              value={formData.listing_type}
-              onChange={(e) => setFormData({ ...formData, listing_type: e.target.value })}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-            >
-              <option value="cazare">Cazare</option>
-              <option value="vanzare">Vânzare</option>
-              <option value="inchiriere">Închiriere</option>
-              <option value="investitie">Investiție</option>
-            </select>
+            <Label>Preț (€)</Label>
+            <Input
+              type="number"
+              value={formData.capital_necesar}
+              onChange={(e) => setFormData({ ...formData, capital_necesar: e.target.value })}
+              placeholder={isInchiriere ? "450 (chirie lunară)" : "145000 (preț total)"}
+            />
             <p className="text-xs text-muted-foreground">
-              Folosit pentru filtrare pe paginile Imobiliare/Investiții
+              {isInchiriere ? 'Chirie lunară în EUR' : 'Prețul total în EUR'}
             </p>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label>Preț (€)</Label>
-          <Input
-            type="number"
-            value={formData.capital_necesar}
-            onChange={(e) => setFormData({ ...formData, capital_necesar: e.target.value })}
-            placeholder="145000 pentru vânzare, 450 pentru închiriere/lună"
-          />
-          <p className="text-xs text-muted-foreground">
-            Pentru vânzare: prețul total. Pentru închiriere: chirie lunară.
-          </p>
-        </div>
+          {(isInvestitie) && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Venit Estimat (€/lună)</Label>
+                <Input
+                  value={formData.estimated_revenue}
+                  onChange={(e) => setFormData({ ...formData, estimated_revenue: e.target.value })}
+                  placeholder="1.450"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>ROI (%)</Label>
+                <Input
+                  value={formData.roi_percentage}
+                  onChange={(e) => setFormData({ ...formData, roi_percentage: e.target.value })}
+                  placeholder="9.4"
+                />
+              </div>
+            </div>
+          )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Venit Estimat (€/lună)</Label>
-            <Input
-              value={formData.estimated_revenue}
-              onChange={(e) => setFormData({ ...formData, estimated_revenue: e.target.value })}
-              placeholder="1.450"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>ROI (%)</Label>
-            <Input
-              value={formData.roi_percentage}
-              onChange={(e) => setFormData({ ...formData, roi_percentage: e.target.value })}
-              placeholder="9.4"
-            />
-          </div>
-        </div>
-      </div>
+          {(isInvestitie) && (
+            <div className="space-y-2">
+              <Label>URL Anunț / Sursă</Label>
+              <Input
+                value={formData.booking_url}
+                onChange={(e) => setFormData({ ...formData, booking_url: e.target.value })}
+                placeholder="https://olx.ro/... sau https://imobiliare.ro/..."
+              />
+              <p className="text-xs text-muted-foreground">Link către anunțul original</p>
+            </div>
+          )}
 
-      {/* Booking Rating */}
-      <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">⭐</span>
-          <h4 className="font-semibold text-foreground">Rating Booking.com</h4>
+          {(isVanzare || isInchiriere) && (
+            <div className="space-y-2">
+              <Label>URL Anunț</Label>
+              <Input
+                value={formData.booking_url}
+                onChange={(e) => setFormData({ ...formData, booking_url: e.target.value })}
+                placeholder="https://olx.ro/... sau link sursă"
+              />
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Notă (ex: 9.4)</Label>
-            <Input
-              type="number"
-              step="0.1"
-              min="0"
-              max="10"
-              value={formData.booking_rating}
-              onChange={(e) => setFormData({ ...formData, booking_rating: e.target.value })}
-              placeholder="9.4"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Nr. recenzii</Label>
-            <Input
-              type="number"
-              value={formData.booking_review_count}
-              onChange={(e) => setFormData({ ...formData, booking_review_count: e.target.value })}
-              placeholder="127"
-            />
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* Pricing - only for existing properties */}
-      {showGallery && editingProperty && (
+      {/* Pricing manager - only for cazare with existing properties */}
+      {showGallery && editingProperty && isCazare && (
         <PropertyPricingManager
           propertyId={editingProperty.id}
           basePricePerNight={formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null}
@@ -611,15 +663,15 @@ export default function PropertyManager() {
         />
       )}
 
-      {/* Calendar - only for existing properties */}
-      {showGallery && editingProperty && (
+      {/* Calendar - only for cazare */}
+      {showGallery && editingProperty && isCazare && (
         <PropertyBookingsCalendar
           propertyId={editingProperty.id}
           propertyName={editingProperty.name}
         />
       )}
 
-      {/* Image Gallery - only show for editing existing properties */}
+      {/* Image Gallery - all types */}
       {showGallery && editingProperty && (
         <PropertyImageGallery
           propertyId={editingProperty.id}
@@ -632,9 +684,7 @@ export default function PropertyManager() {
         <div className="p-4 bg-muted/50 rounded-lg border border-dashed border-border">
           <div className="flex items-center gap-2 text-muted-foreground">
             <ImageIcon className="w-5 h-5" />
-            <p className="text-sm">
-              {t.admin.properties?.gallery || "Image Gallery"}: Disponibilă după salvarea proprietății
-            </p>
+            <p className="text-sm">Galerie Imagini: Disponibilă după salvarea proprietății</p>
           </div>
         </div>
       )}
@@ -644,7 +694,7 @@ export default function PropertyManager() {
           checked={formData.is_active}
           onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
         />
-        <Label>{t.admin.properties?.isActive || "Active"}</Label>
+        <Label>{t.admin.properties?.isActive || "Activă"}</Label>
       </div>
     </div>
   );
