@@ -86,7 +86,7 @@ const InvestmentEngineV34 = ({
     const occMonths = parseInt(occupancy);
     const tax = parseFloat(taxRate);
 
-    const chirieEfectiva = strategy === "hotel" ? chirie * 1.65 : chirie;
+    const chirieEfectiva = strategy === "hotel" ? chirie * 2.0 : chirie;
     const managementFactor = strategy === "hotel" ? 0.28 : 0.05;
     const invTotal = budget * 1.02;
 
