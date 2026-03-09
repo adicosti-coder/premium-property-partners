@@ -640,8 +640,8 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Calculator Investiție + Card Vânzare Rapidă — ascuns pentru închirieri */}
-              {!staticProperty && dbProperty?.listing_type !== 'inchiriere' && (
+              {/* Calculator Investiție — apare pentru toate proprietățile DB */}
+              {!staticProperty && (
                 <InvestmentEngineV34
                   propertyName={property.name}
                   propertyCode={dbProperty?.property_code}
