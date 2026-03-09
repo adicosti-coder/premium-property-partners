@@ -164,14 +164,72 @@ const InvestmentQuickCalculator = () => {
         {t.title}
       </h2>
 
-      {/* Inputs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-muted/50 p-5 rounded-2xl mb-6 border border-border">
-        <div>
-          <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.propValue}</Label>
-          <Input type="number" value={pret} onChange={(e) => setPret(Number(e.target.value))} className="mt-1 text-base font-bold" />
+      <div className="bg-muted/50 p-5 rounded-2xl mb-6 border border-border space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.propValue}</Label>
+            <Input type="number" value={pret} onChange={(e) => setPret(Number(e.target.value))} className="mt-1 text-base font-bold" />
+          </div>
+          {strategy === "hotel" ? (
+            <>
+              <div>
+                <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.propertyType}</Label>
+                <Select value={propertyType} onValueChange={(val: PropertyType) => {
+                  setPropertyType(val);
+                  const range = getCapacityRange(val);
+                  setCapacity(range.defaultVal);
+                  setNightlyRate(getNightlyRate(val, range.defaultVal));
+                }}>
+                  <SelectTrigger className="mt-1 text-base font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getPropertyTypeOptions(language as "ro" | "en").map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.capacityLabel}</Label>
+                <Select value={capacity.toString()} onValueChange={(val) => {
+                  const cap = parseInt(val);
+                  setCapacity(cap);
+                  setNightlyRate(getNightlyRate(propertyType, cap));
+                }}>
+                  <SelectTrigger className="mt-1 text-base font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from(
+                      { length: getCapacityRange(propertyType).max - getCapacityRange(propertyType).min + 1 },
+                      (_, i) => getCapacityRange(propertyType).min + i
+                    ).map(n => (
+                      <SelectItem key={n} value={n.toString()}>
+                        {n} {language === "ro" ? "persoane" : "guests"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.rent}</Label>
+                <Input type="number" value={chirie} onChange={(e) => setChirie(Number(e.target.value))} className="mt-1 text-base font-bold" />
+              </div>
+              <div>
+                <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.adminExp}</Label>
+                <Input type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} className="mt-1 text-base font-bold" />
+              </div>
+            </>
+          )}
         </div>
-        {strategy === "hotel" ? (
-          <>
+
+        {/* Nightly rate & occupancy row for hotel */}
+        {strategy === "hotel" && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.nightlyRate}</Label>
               <Input type="number" value={nightlyRate} onChange={(e) => setNightlyRate(Number(e.target.value))} className="mt-1 text-base font-bold" />
@@ -180,18 +238,14 @@ const InvestmentQuickCalculator = () => {
               <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.occupancyPct}</Label>
               <Input type="number" value={occupancyPct} onChange={(e) => setOccupancyPct(Number(e.target.value))} className="mt-1 text-base font-bold" min={0} max={100} />
             </div>
-          </>
-        ) : (
-          <>
-            <div>
-              <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.rent}</Label>
-              <Input type="number" value={chirie} onChange={(e) => setChirie(Number(e.target.value))} className="mt-1 text-base font-bold" />
+            <div className="flex items-end pb-2">
+              <p className="text-xs text-muted-foreground italic">
+                {language === "ro" 
+                  ? `Tarif recomandat: €${getNightlyRate(propertyType, capacity)}/noapte` 
+                  : `Recommended: €${getNightlyRate(propertyType, capacity)}/night`}
+              </p>
             </div>
-            <div>
-              <Label className="font-bold text-[11px] text-muted-foreground uppercase">{t.adminExp}</Label>
-              <Input type="number" value={expenses} onChange={(e) => setExpenses(Number(e.target.value))} className="mt-1 text-base font-bold" />
-            </div>
-          </>
+          </div>
         )}
       </div>
 
