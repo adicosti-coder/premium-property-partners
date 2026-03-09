@@ -286,12 +286,13 @@ const Hero = () => {
       
       {/* Scroll Encouragement Indicator – desktop only, CSS animations to avoid framer-motion in critical path */}
       {!isMobile && (
-        <div 
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer"
+        <button 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer bg-transparent border-0 min-w-[48px] min-h-[48px] p-2"
           onClick={() => {
             const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
             nextSection?.scrollIntoView({ behavior: 'smooth' });
           }}
+          aria-label={language === 'ro' ? 'Derulează la calculator' : 'Scroll to calculator'}
         >
         <span className="text-sm md:text-base font-bold text-foreground tracking-wide uppercase text-gradient-gold drop-shadow-[0_0_12px_hsl(var(--primary)/0.4)] animate-pulse" style={{ animationDuration: '3s' }}>
             {language === 'ro' ? 'Cât poate produce apartamentul tău lunar?' : 'How much can your apartment earn monthly?'}
