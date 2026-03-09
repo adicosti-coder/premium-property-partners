@@ -47,11 +47,14 @@ const InvestmentEngineV34 = ({
   propertyCode,
   defaultPrice,
   defaultRent,
+  defaultNightlyRate,
   hideRecommendations = false,
 }: Props) => {
   const { language } = useLanguage();
-  const [budgetStr, setBudgetStr] = useState(defaultPrice?.toString() ?? "");
-  const [chirieStr, setChirieStr] = useState(defaultRent?.toString() ?? "");
+  const [budgetStr, setBudgetStr] = useState(defaultPrice?.toString() ?? "95000");
+  const [chirieStr, setChirieStr] = useState(defaultRent?.toString() ?? "450");
+  const [nightlyRateStr, setNightlyRateStr] = useState(defaultNightlyRate?.toString() ?? "50");
+  const [occupancyPctStr, setOccupancyPctStr] = useState("75");
   const [advanceStr, setAdvanceStr] = useState("25");
   const [interestStr, setInterestStr] = useState("6.5");
   const [occupancy, setOccupancy] = useState("12");
@@ -64,6 +67,8 @@ const InvestmentEngineV34 = ({
 
   const budget = budgetStr === "" ? NaN : parseFloat(budgetStr);
   const chirie = chirieStr === "" ? NaN : parseFloat(chirieStr);
+  const nightlyRate = nightlyRateStr === "" ? NaN : parseFloat(nightlyRateStr);
+  const occupancyPct = occupancyPctStr === "" ? 75 : parseFloat(occupancyPctStr);
   const advance = advanceStr === "" ? 0 : parseFloat(advanceStr);
   const interest = interestStr === "" ? 0 : parseFloat(interestStr);
 
