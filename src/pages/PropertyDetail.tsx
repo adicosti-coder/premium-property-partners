@@ -56,6 +56,7 @@ interface DbPropertyData {
   property_code?: string | null;
   amenities?: string[];
   house_rules?: string[];
+  base_price_per_night?: number | null;
 }
 
 // Helper to check if a string is a UUID
@@ -103,7 +104,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
             .eq("id", slug)
             .maybeSingle();
           
@@ -116,7 +117,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -416,9 +417,9 @@ const PropertyDetail = () => {
               {dbProperty && dbProperty.capital_necesar && (
                 (() => {
                   const price = dbProperty.capital_necesar!;
-                  const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                  // Hotel regime: estimate nightly rate from classic rent, apply occupancy
-                  const nightlyRate = Math.max(Math.round(baseRent / 10), 40);
+                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                   // Hotel regime: use base_price_per_night if available, else estimate from rent
+                   const nightlyRate = dbProperty.base_price_per_night || Math.max(Math.round(baseRent / 10), 40);
                   const occupancyPct = 75; // 75% occupancy
                   const hotelMonthlyGross = nightlyRate * 30 * (occupancyPct / 100);
                   const managementFee = 0.20; // 20% management (mid-range 15-25%)
@@ -653,7 +654,7 @@ const PropertyDetail = () => {
               {/* Calculator Investiție — apare pentru toate proprietățile DB */}
               {!staticProperty && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                const estNightly = Math.max(Math.round(baseRentForEngine / 10), 40);
+                const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
                   <InvestmentEngineV34
                     propertyName={property.name}
