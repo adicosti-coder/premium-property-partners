@@ -466,28 +466,44 @@ const InvestmentEngineV34 = ({
             {strategy === "hotel" ? (
               <>
                 <div>
-                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.nightlyRate}</Label>
-                  <Input
-                    type="number"
-                    value={nightlyRateStr}
-                    onChange={(e) => setNightlyRateStr(e.target.value)}
-                    onFocus={(e) => e.target.select()}
-                    placeholder={t.nightlyRatePlaceholder}
-                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
-                  />
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.propertyType}</Label>
+                  <Select value={propertyType} onValueChange={(val: PropertyType) => {
+                    setPropertyType(val);
+                    const range = getCapacityRange(val);
+                    setCapacity(range.defaultVal);
+                    setNightlyRateStr(getNightlyRate(val, range.defaultVal).toString());
+                  }}>
+                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getPropertyTypeOptions(language as "ro" | "en").map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancyPct}</Label>
-                  <Input
-                    type="number"
-                    value={occupancyPctStr}
-                    onChange={(e) => setOccupancyPctStr(e.target.value)}
-                    onFocus={(e) => e.target.select()}
-                    placeholder={t.occupancyPctPlaceholder}
-                    className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
-                    min={0}
-                    max={100}
-                  />
+                  <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.capacityLabel}</Label>
+                  <Select value={capacity.toString()} onValueChange={(val) => {
+                    const cap = parseInt(val);
+                    setCapacity(cap);
+                    setNightlyRateStr(getNightlyRate(propertyType, cap).toString());
+                  }}>
+                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(
+                        { length: getCapacityRange(propertyType).max - getCapacityRange(propertyType).min + 1 },
+                        (_, i) => getCapacityRange(propertyType).min + i
+                      ).map(n => (
+                        <SelectItem key={n} value={n.toString()}>
+                          {n} {language === "ro" ? "persoane" : "guests"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </>
             ) : (
@@ -520,6 +536,43 @@ const InvestmentEngineV34 = ({
               </>
             )}
           </div>
+
+          {/* Nightly Rate & Occupancy row for hotel strategy */}
+          {strategy === "hotel" && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div>
+                <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.nightlyRate}</Label>
+                <Input
+                  type="number"
+                  value={nightlyRateStr}
+                  onChange={(e) => setNightlyRateStr(e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  placeholder={t.nightlyRatePlaceholder}
+                  className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancyPct}</Label>
+                <Input
+                  type="number"
+                  value={occupancyPctStr}
+                  onChange={(e) => setOccupancyPctStr(e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  placeholder={t.occupancyPctPlaceholder}
+                  className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60"
+                  min={0}
+                  max={100}
+                />
+              </div>
+              <div className="flex items-end pb-1">
+                <p className="text-xs text-muted-foreground italic">
+                  {language === "ro" 
+                    ? `Tarif recomandat: €${getNightlyRate(propertyType, capacity)}/noapte` 
+                    : `Recommended rate: €${getNightlyRate(propertyType, capacity)}/night`}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.advance}</Label>
