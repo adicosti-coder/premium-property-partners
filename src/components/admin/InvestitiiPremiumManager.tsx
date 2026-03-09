@@ -225,9 +225,32 @@ export default function InvestitiiPremiumManager() {
     }
   };
 
+  const calculateROI = (property: InvestProperty): InvestProperty => {
+    const rate = property.base_price_per_night;
+    const capital = property.capital_necesar;
+    if (!rate || !capital || capital <= 0) return property;
+
+    const occupancy = 0.75;
+    const monthlyGross = rate * 30 * occupancy;
+    const annualGross = monthlyGross * 12;
+    const netFactor = 1 - 0.20 - 0.07; // 20% management + 7% tax
+    const annualNet = annualGross * netFactor;
+    const roi = (annualNet / capital) * 100;
+
+    return {
+      ...property,
+      roi_percentage: `${roi.toFixed(1)}%`,
+      estimated_revenue: `${Math.round(monthlyGross * netFactor)}–${Math.round(monthlyGross)} €/lună`,
+    };
+  };
+
   const updateField = <K extends keyof InvestProperty>(key: K, value: InvestProperty[K]) => {
     if (!editingProperty) return;
-    setEditingProperty({ ...editingProperty, [key]: value });
+    let updated = { ...editingProperty, [key]: value };
+    if (key === "base_price_per_night" || key === "capital_necesar") {
+      updated = calculateROI(updated);
+    }
+    setEditingProperty(updated);
   };
 
   const activeCount = properties.filter((p) => p.is_active).length;
