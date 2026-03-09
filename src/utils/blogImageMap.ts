@@ -40,6 +40,9 @@ import checklistDueDiligence from "@/assets/blog/checklist-due-diligence.jpg";
 import fiscalitateRegimHotelier from "@/assets/blog/fiscalitate-regim-hotelier.jpg";
 import studiuCazRoi from "@/assets/blog/studiu-caz-roi.jpg";
 import ghidTuristicTimisoara from "@/assets/blog/ghid-turistic-timisoara.jpg";
+import airbnbVsBooking from "@/assets/blog/airbnb-vs-booking.jpg";
+import designInteriorStr from "@/assets/blog/design-interior-str.jpg";
+import investitorDiaspora from "@/assets/blog/investitor-diaspora.jpg";
 
 export const blogImageMap: Record<string, string> = {
   // Existing mappings
@@ -84,6 +87,9 @@ export const blogImageMap: Record<string, string> = {
   "ghid-complet-fiscalitate-regim-hotelier-2026": fiscalitateRegimHotelier,
   "studiu-caz-roi-apartament-2-camere-2026": studiuCazRoi,
   "ghid-turistic-timisoara-atractii-activitati": ghidTuristicTimisoara,
+  "analiza-comparativa-airbnb-vs-booking-2026-timisoara": airbnbVsBooking,
+  "design-interior-regim-hotelier-timisoara": designInteriorStr,
+  "ghid-investitor-diaspora-regim-hotelier-timisoara": investitorDiaspora,
 };
 
 export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string | null => {
