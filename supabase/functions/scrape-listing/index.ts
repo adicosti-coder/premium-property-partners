@@ -1,50 +1,16 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  scrapeWithFirecrawl,
+  extractFromMarkdownWithAI,
+  collectImages,
+  buildExtracted,
+} from "./extract.ts";
+import { uploadImagesForProperty } from "./storage.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
-
-/** Download an image from URL and upload to Supabase Storage */
-async function downloadAndUploadImage(
-  imageUrl: string,
-  supabase: any,
-  propertyId: string,
-  index: number
-): Promise<string | null> {
-  try {
-    const response = await fetch(imageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RealTrust/1.0)' },
-    });
-    if (!response.ok) return null;
-
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-
-    const filePath = `${propertyId}/imported-${index}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from('property-images')
-      .upload(filePath, uint8, { contentType, upsert: true });
-
-    if (error) {
-      console.error(`Upload error for image ${index}:`, error.message);
-      return null;
-    }
-
-    const { data: publicUrl } = supabase.storage
-      .from('property-images')
-      .getPublicUrl(filePath);
-
-    return publicUrl?.publicUrl || null;
-  } catch (err) {
-    console.error(`Failed to download/upload image ${index}:`, err);
-    return null;
-  }
-}
 
 /** Detect platform from URL */
 function detectPlatform(url: string): string {
@@ -58,29 +24,51 @@ function detectPlatform(url: string): string {
   return 'Altă sursă';
 }
 
-const EXTRACTION_PROMPT = `Extract ALL property listing details from this real estate page. Return JSON with these exact fields:
-- title: property name/title (string)
-- description_short: a 1-2 sentence summary (string)
-- description_full: the complete detailed description text (string)
-- price: numeric price value only, no currency symbol (number)
-- currency: "EUR" or "RON" (string)
-- location: full address or neighborhood + city (string)
-- size: property size in sqm, number only (number)
-- rooms: number of rooms/bedrooms, number only (number)
-- bathrooms: number of bathrooms, number only (number)
-- floor: floor number or "parter"/"mansarda"/"demisol" (string or null)
-- year_built: construction year (number or null)
-- parking: parking info like "garaj", "loc parcare", "nu" (string or null)
-- heating_type: heating type like "centrala proprie", "termoficare", "pardoseala" (string or null)
-- energy_class: energy efficiency class like "A", "B", "C" (string or null)
-- furnished: "mobilat", "partial mobilat", "nemobilat" (string or null)
-- construction_type: "bloc", "casa", "vila", "duplex", "penthouse" (string or null)
-- compartimentare: "decomandat", "semidecomandat", "nedecomandat", "circular" (string or null)
-- features: array of ALL amenities/features mentioned (e.g. "aer conditionat", "balcon", "centrala", "parcare", "lift") (string[])
-- images: array of ALL property photo URLs found on the page - use full-resolution URLs, not thumbnails (string[])
-- listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental (string)
+/** Build property data for insert */
+function buildPropertyData(
+  data: Record<string, any>,
+  url: string,
+  platform: string,
+  listingType: string
+): Record<string, any> {
+  const slug = data.title
+    ? data.title.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        .substring(0, 80)
+    : `import-${Date.now()}`;
 
-Be thorough - extract every detail you can find. For missing fields, return null.`;
+  return {
+    name: data.title || 'Anunț Importat',
+    location: data.location || 'Timișoara',
+    description_ro: data.description_short || data.description_full || '',
+    description_en: '',
+    long_description_ro: data.description_full || '',
+    long_description_en: '',
+    features: data.features || [],
+    booking_url: url,
+    tag: listingType === 'vanzare' ? 'De Vânzare' : listingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
+    listing_type: listingType,
+    slug,
+    is_active: false,
+    capacity: data.rooms ? Number(data.rooms) * 2 : 2,
+    bedrooms: data.rooms ? Number(data.rooms) : 1,
+    bathrooms: data.bathrooms ? Number(data.bathrooms) : 1,
+    size: data.size ? Number(data.size) : 40,
+    base_price_per_night: data.price ? Number(data.price) : null,
+    capital_necesar: (listingType === 'vanzare' || listingType === 'investitie') ? (data.price ? Number(data.price) : null) : null,
+    floor: data.floor || null,
+    year_built: data.year_built ? Number(data.year_built) : null,
+    parking: data.parking || null,
+    heating_type: data.heating_type || null,
+    energy_class: data.energy_class || null,
+    furnished: data.furnished || null,
+    construction_type: data.construction_type || null,
+    compartimentare: data.compartimentare || null,
+    source_url: url,
+    source_platform: platform,
+  };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -104,49 +92,11 @@ Deno.serve(async (req) => {
     const platform = detectPlatform(url);
 
     // ── MODE: SAVE with pre-edited data ──
-    // When editedData is provided, skip re-scraping and use the user-edited data directly
     if (mode === 'save' && editedData) {
-      console.log(`Saving edited listing from ${platform}: ${url}`);
+      console.log(`[Save] Saving edited listing from ${platform}: ${url}`);
 
       const finalListingType = listing_type || editedData.listing_type_hint || 'vanzare';
-
-      const slug = editedData.title
-        ? editedData.title.toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-            .substring(0, 80)
-        : `import-${Date.now()}`;
-
-      const propertyData: Record<string, any> = {
-        name: editedData.title || 'Anunț Importat',
-        location: editedData.location || 'Timișoara',
-        description_ro: editedData.description_short || editedData.description_full || '',
-        description_en: '',
-        long_description_ro: editedData.description_full || '',
-        long_description_en: '',
-        features: editedData.features || [],
-        booking_url: url,
-        tag: finalListingType === 'vanzare' ? 'De Vânzare' : finalListingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
-        listing_type: finalListingType,
-        slug,
-        is_active: false,
-        capacity: editedData.rooms ? Number(editedData.rooms) * 2 : 2,
-        bedrooms: editedData.rooms ? Number(editedData.rooms) : 1,
-        bathrooms: editedData.bathrooms ? Number(editedData.bathrooms) : 1,
-        size: editedData.size ? Number(editedData.size) : 40,
-        base_price_per_night: editedData.price ? Number(editedData.price) : null,
-        capital_necesar: (finalListingType === 'vanzare' || finalListingType === 'investitie') ? (editedData.price ? Number(editedData.price) : null) : null,
-        floor: editedData.floor || null,
-        year_built: editedData.year_built ? Number(editedData.year_built) : null,
-        parking: editedData.parking || null,
-        heating_type: editedData.heating_type || null,
-        energy_class: editedData.energy_class || null,
-        furnished: editedData.furnished || null,
-        construction_type: editedData.construction_type || null,
-        compartimentare: editedData.compartimentare || null,
-        source_url: url,
-        source_platform: platform,
-      };
+      const propertyData = buildPropertyData(editedData, url, platform, finalListingType);
 
       const { data: newProperty, error: insertError } = await supabase
         .from('properties')
@@ -155,36 +105,19 @@ Deno.serve(async (req) => {
         .single();
 
       if (insertError) {
+        console.error('[Save] Insert error:', insertError.message);
         return new Response(
           JSON.stringify({ success: false, error: `Failed to create: ${insertError.message}` }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Upload images from editedData.images
+      // Upload images
       const imageUrls = Array.isArray(editedData.images) ? editedData.images : [];
-      const uploadedImages: string[] = [];
-      for (let i = 0; i < imageUrls.length; i++) {
-        const uploaded = await downloadAndUploadImage(imageUrls[i], supabase, newProperty.id, i);
-        if (uploaded) uploadedImages.push(uploaded);
-        if (i < imageUrls.length - 1) await new Promise(r => setTimeout(r, 300));
-      }
+      console.log(`[Save] Uploading ${imageUrls.length} images...`);
+      const uploadedImages = await uploadImagesForProperty(imageUrls, supabase, newProperty.id);
 
-      if (uploadedImages.length > 0) {
-        await supabase.from('properties').update({
-          image_path: uploadedImages[0],
-          images: uploadedImages,
-        }).eq('id', newProperty.id);
-
-        const imageEntries = uploadedImages.map((imgPath, idx) => ({
-          property_id: newProperty.id,
-          image_path: imgPath,
-          display_order: idx,
-          is_primary: idx === 0,
-        }));
-        await supabase.from('property_images').insert(imageEntries);
-      }
-
+      console.log(`[Save] Done. Property: ${newProperty.name}, images uploaded: ${uploadedImages.length}`);
       return new Response(
         JSON.stringify({
           success: true,
@@ -197,7 +130,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── MODE: PREVIEW (or legacy save without editedData) ──
+    // ── MODE: PREVIEW ──
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!firecrawlKey) {
       return new Response(
@@ -206,74 +139,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Scraping listing from ${platform}: ${url}`);
+    console.log(`[Preview] Scraping listing from ${platform}: ${url}`);
 
     // Step 1: Scrape with Firecrawl
-    const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url,
-        formats: ['markdown', 'links', { type: 'json', prompt: EXTRACTION_PROMPT }],
-        waitFor: 5000,
-      }),
-    });
+    const { jsonData, markdown, pageLinks } = await scrapeWithFirecrawl(url, firecrawlKey);
 
-    const scrapeData = await scrapeResponse.json();
-    const jsonData = scrapeData?.data?.json || scrapeData?.json || {};
-    const markdown = scrapeData?.data?.markdown || scrapeData?.markdown || '';
-    const pageLinks = scrapeData?.data?.links || scrapeData?.links || [];
+    // Step 2: Check if structured extraction returned data
+    const hasStructuredData = Object.values(jsonData).some(v => v !== null && v !== undefined && v !== '');
+    let finalJsonData = jsonData;
 
-    // Collect images
-    let imageUrls: string[] = [];
-    if (Array.isArray(jsonData.images)) imageUrls.push(...jsonData.images);
-
-    const imageExtensions = /\.(jpg|jpeg|png|webp|avif)(\?|$)/i;
-    const imageFromLinks = pageLinks.filter((link: string) =>
-      imageExtensions.test(link) &&
-      !link.includes('logo') && !link.includes('icon') &&
-      !link.includes('avatar') && !link.includes('thumb') &&
-      link.length > 20
-    );
-    imageUrls.push(...imageFromLinks);
-
-    const mdImageRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
-    let mdMatch;
-    while ((mdMatch = mdImageRegex.exec(markdown)) !== null) {
-      imageUrls.push(mdMatch[1]);
+    if (!hasStructuredData && markdown.length > 50) {
+      console.log('[Preview] Structured extraction empty — falling back to AI extraction from markdown');
+      const aiExtracted = await extractFromMarkdownWithAI(markdown, url);
+      finalJsonData = { ...jsonData, ...aiExtracted };
+    } else if (!hasStructuredData) {
+      console.log('[Preview] Both structured and markdown extraction empty. The page may be blocked or require JS.');
     }
-    imageUrls = [...new Set(imageUrls)].slice(0, 30);
 
-    // Build extracted data
-    const extracted = {
-      title: jsonData.title || null,
-      description_short: jsonData.description_short || null,
-      description_full: jsonData.description_full || jsonData.description || null,
-      price: jsonData.price ? Number(jsonData.price) : null,
-      currency: jsonData.currency || null,
-      location: jsonData.location || null,
-      size: jsonData.size ? Number(jsonData.size) : null,
-      rooms: jsonData.rooms ? Number(jsonData.rooms) : null,
-      bathrooms: jsonData.bathrooms ? Number(jsonData.bathrooms) : null,
-      floor: jsonData.floor || null,
-      year_built: jsonData.year_built ? Number(jsonData.year_built) : null,
-      parking: jsonData.parking || null,
-      heating_type: jsonData.heating_type || null,
-      energy_class: jsonData.energy_class || null,
-      furnished: jsonData.furnished || null,
-      construction_type: jsonData.construction_type || null,
-      compartimentare: jsonData.compartimentare || null,
-      features: Array.isArray(jsonData.features) ? jsonData.features : [],
-      images: imageUrls,
-      listing_type_hint: jsonData.listing_type_hint || null,
-      source_url: url,
-      source_platform: platform,
-    };
+    // Step 3: Collect images from all sources
+    const imageUrls = collectImages(finalJsonData, pageLinks, markdown);
+    console.log(`[Preview] Total images collected: ${imageUrls.length}`);
 
-    // If mode is "preview", return extracted data without saving
+    // Build result
+    const extracted = buildExtracted(finalJsonData, imageUrls, url, platform);
+
     if (mode === 'preview') {
       return new Response(
         JSON.stringify({ success: true, extracted }),
@@ -281,46 +170,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Legacy save mode (without editedData) - fallback
+    // Legacy save mode (without editedData)
     const finalListingType = listing_type || extracted.listing_type_hint || 'vanzare';
-
-    const slug = extracted.title
-      ? extracted.title.toLowerCase()
-          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-          .substring(0, 80)
-      : `import-${Date.now()}`;
-
-    const propertyData: Record<string, any> = {
-      name: extracted.title || 'Anunț Importat',
-      location: extracted.location || 'Timișoara',
-      description_ro: extracted.description_short || extracted.description_full || '',
-      description_en: '',
-      long_description_ro: extracted.description_full || '',
-      long_description_en: '',
-      features: extracted.features,
-      booking_url: url,
-      tag: finalListingType === 'vanzare' ? 'De Vânzare' : finalListingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
-      listing_type: finalListingType,
-      slug,
-      is_active: false,
-      capacity: extracted.rooms ? extracted.rooms * 2 : 2,
-      bedrooms: extracted.rooms || 1,
-      bathrooms: extracted.bathrooms || 1,
-      size: extracted.size || 40,
-      base_price_per_night: extracted.price || null,
-      capital_necesar: (finalListingType === 'vanzare' || finalListingType === 'investitie') ? extracted.price : null,
-      floor: extracted.floor,
-      year_built: extracted.year_built,
-      parking: extracted.parking,
-      heating_type: extracted.heating_type,
-      energy_class: extracted.energy_class,
-      furnished: extracted.furnished,
-      construction_type: extracted.construction_type,
-      compartimentare: extracted.compartimentare,
-      source_url: url,
-      source_platform: platform,
-    };
+    const propertyData = buildPropertyData(extracted, url, platform, finalListingType);
 
     const { data: newProperty, error: insertError } = await supabase
       .from('properties')
@@ -335,28 +187,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Upload images
-    const uploadedImages: string[] = [];
-    for (let i = 0; i < imageUrls.length; i++) {
-      const uploaded = await downloadAndUploadImage(imageUrls[i], supabase, newProperty.id, i);
-      if (uploaded) uploadedImages.push(uploaded);
-      if (i < imageUrls.length - 1) await new Promise(r => setTimeout(r, 300));
-    }
-
-    if (uploadedImages.length > 0) {
-      await supabase.from('properties').update({
-        image_path: uploadedImages[0],
-        images: uploadedImages,
-      }).eq('id', newProperty.id);
-
-      const imageEntries = uploadedImages.map((imgPath, idx) => ({
-        property_id: newProperty.id,
-        image_path: imgPath,
-        display_order: idx,
-        is_primary: idx === 0,
-      }));
-      await supabase.from('property_images').insert(imageEntries);
-    }
+    const uploadedImages = await uploadImagesForProperty(imageUrls, supabase, newProperty.id);
 
     return new Response(
       JSON.stringify({
@@ -369,7 +200,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Scrape listing error:', error);
+    console.error('[Error] Scrape listing error:', error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
