@@ -1,5 +1,4 @@
-import { useCallback } from "react";
-import { useLocation, useInRouterContext } from "react-router-dom";
+import { useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browserStorage";
 
@@ -24,9 +23,10 @@ const getSessionId = (): string => {
   return sessionId;
 };
 
+/** Safe path getter — works even outside Router context */
+const getCurrentPath = () => (isBrowser() ? window.location.pathname : "/");
+
 export const useCtaAnalytics = () => {
-  const inRouter = useInRouterContext();
-  const location = inRouter ? useLocation() : { pathname: typeof window !== "undefined" ? window.location.pathname : "/" };
 
   const trackCta = useCallback(
     async (options: TrackCtaOptions) => {
