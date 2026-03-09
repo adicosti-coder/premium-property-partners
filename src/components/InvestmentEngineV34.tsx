@@ -87,23 +87,35 @@ const InvestmentEngineV34 = ({
   }, [hideRecommendations]);
 
   const calc = useMemo(() => {
-    if (isNaN(budget) || budget < 1000 || isNaN(chirie) || chirie < 10) return null;
+    if (isNaN(budget) || budget < 1000) return null;
 
-    const occMonths = parseInt(occupancy);
     const tax = parseFloat(taxRate);
-
-    const chirieEfectiva = strategy === "hotel" ? chirie * 2.0: chirie;
-    const managementFactor = strategy === "hotel" ? 0.28 : 0.05;
     const invTotal = budget * 1.02;
 
-    // Gross & net annual income
-    const venitBrutAnual = chirieEfectiva * occMonths;
+    let chirieEfectiva: number;
+    let managementFactor: number;
+    let venitBrutAnual: number;
+
+    if (strategy === "hotel") {
+      if (isNaN(nightlyRate) || nightlyRate < 5) return null;
+      // Hotel regime: nightly rate × 30 days × occupancy%
+      chirieEfectiva = nightlyRate * 30 * (occupancyPct / 100);
+      managementFactor = 0.20; // 20% management (mid-range 15-25%)
+      venitBrutAnual = chirieEfectiva * 12;
+    } else {
+      if (isNaN(chirie) || chirie < 10) return null;
+      const occMonths = parseInt(occupancy);
+      chirieEfectiva = chirie;
+      managementFactor = 0.05;
+      venitBrutAnual = chirieEfectiva * occMonths;
+    }
+
     const venitDupaManagement = venitBrutAnual * (1 - managementFactor);
     const venitNetAnual = venitDupaManagement * (1 - tax);
 
     // Credit
     const avansBani = budget * (advance / 100);
-    const invInitiala = avansBani + (budget * 0.02); // Down payment + acquisition taxes
+    const invInitiala = avansBani + (budget * 0.02);
     const credit = budget - avansBani;
     const r = (interest / 100) / 12;
     const rata = credit > 0
@@ -115,8 +127,8 @@ const InvestmentEngineV34 = ({
     const yieldAnual = (venitNetAnual / invTotal) * 100;
     const cashflowAnual = venitNetAnual - rataAnuala;
     const cashflowLunar = cashflowAnual / 12;
-    const coc = invInitiala > 0 ? (cashflowAnual / invInitiala) * 100 : 0; // Cash-on-Cash
-    const safety = rataAnuala > 0 ? ((venitNetAnual / rataAnuala) - 1) * 100 : 100; // Margin of Safety
+    const coc = invInitiala > 0 ? (cashflowAnual / invInitiala) * 100 : 0;
+    const safety = rataAnuala > 0 ? ((venitNetAnual / rataAnuala) - 1) * 100 : 100;
     const breakEvenRent = rataAnuala > 0 ? Math.round(rataAnuala / 12 / 0.7) : 0;
 
     // 15-year wealth projection
@@ -127,11 +139,9 @@ const InvestmentEngineV34 = ({
       wealthData.push({ year: `${i}`, value: Math.round(eq + cash) });
     }
 
-    // Exit at 10 years
     const val10 = budget * Math.pow(1.04, 10);
     const profitExit10 = (val10 - budget) + (cashflowAnual * 10);
 
-    // Total wealth 15y
     const valViitoare = budget * Math.pow(1.04, 15);
     const avereTotala = valViitoare + (cashflowAnual * 15);
 
@@ -140,7 +150,7 @@ const InvestmentEngineV34 = ({
       yieldAnual, coc, safety, breakEvenRent,
       valViitoare, avereTotala, profitExit10, wealthData, invInitiala,
     };
-  }, [budget, chirie, advance, interest, strategy, occupancy, taxRate]);
+  }, [budget, chirie, nightlyRate, occupancyPct, advance, interest, strategy, occupancy, taxRate]);
 
   // Trigger popup 10s after first valid calculation, once only
   useEffect(() => {
