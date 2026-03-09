@@ -60,7 +60,7 @@ export const useCtaAnalytics = () => {
         console.error("CTA tracking error:", error);
       }
     },
-    [location.pathname]
+    []
   );
 
   // Convenience methods
