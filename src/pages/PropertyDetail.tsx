@@ -651,13 +651,20 @@ const PropertyDetail = () => {
               </div>
 
               {/* Calculator Investiție — apare pentru toate proprietățile DB */}
-              {!staticProperty && (
-                <InvestmentEngineV34
-                  propertyName={property.name}
-                  propertyCode={dbProperty?.property_code}
-                  defaultPrice={dbProperty?.capital_necesar || 120000}
-                  defaultRent={dbProperty?.estimated_revenue ? parseInt(dbProperty.estimated_revenue) : 550}
-                  hideRecommendations
+              {!staticProperty && (() => {
+                const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                const estNightly = Math.max(Math.round(baseRentForEngine / 10), 40);
+                return (
+                  <InvestmentEngineV34
+                    propertyName={property.name}
+                    propertyCode={dbProperty?.property_code}
+                    defaultPrice={dbProperty?.capital_necesar || 120000}
+                    defaultRent={baseRentForEngine}
+                    defaultNightlyRate={estNightly}
+                    hideRecommendations
+                  />
+                );
+              })()}
                 />
               )}
 

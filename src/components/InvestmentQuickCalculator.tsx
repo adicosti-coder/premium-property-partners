@@ -8,28 +8,46 @@ const InvestmentQuickCalculator = () => {
   const { language } = useLanguage();
   const presets = {
     clasic: { pret: 95000, chirie: 450, expenses: 30 },
-    hotel: { pret: 95000, chirie: 750, expenses: 120 },
+    hotel: { pret: 95000, nightlyRate: 50, occupancyPct: 75, expenses: 0 },
   };
 
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("hotel");
   const [pret, setPret] = useState(presets.hotel.pret);
-  const [chirie, setChirie] = useState(presets.hotel.chirie);
+  const [chirie, setChirie] = useState(presets.clasic.chirie);
+  const [nightlyRate, setNightlyRate] = useState(presets.hotel.nightlyRate);
+  const [occupancyPct, setOccupancyPct] = useState(presets.hotel.occupancyPct);
   const [expenses, setExpenses] = useState(presets.hotel.expenses);
 
   const switchStrategy = (s: "clasic" | "hotel") => {
     setStrategy(s);
     setPret(presets[s].pret);
-    setChirie(presets[s].chirie);
-    setExpenses(presets[s].expenses);
+    if (s === "clasic") {
+      setChirie(presets.clasic.chirie);
+      setExpenses(presets.clasic.expenses);
+    } else {
+      setNightlyRate(presets.hotel.nightlyRate);
+      setOccupancyPct(presets.hotel.occupancyPct);
+      setExpenses(presets.hotel.expenses);
+    }
   };
 
   const calc = useMemo(() => {
-    if (!pret || !chirie) return null;
+    if (!pret) return null;
 
-    const cBruta = strategy === "hotel" ? chirie * 2.0 : chirie;
-    const factorNet = strategy === "hotel" ? 0.72 : 0.95;
+    let cBruta: number;
+    let factorNet: number;
+
+    if (strategy === "hotel") {
+      if (!nightlyRate) return null;
+      cBruta = nightlyRate * 30 * (occupancyPct / 100);
+      factorNet = 0.80 * 0.93; // 20% management, 7% tax
+    } else {
+      if (!chirie) return null;
+      cBruta = chirie;
+      factorNet = 0.95;
+    }
+
     const invTotal = pret * 1.02;
-
     const vNetAnual = (cBruta * 12) * factorNet;
     const yieldVal = (vNetAnual / invTotal) * 100;
     const ani = vNetAnual > 0 ? invTotal / vNetAnual : 0;
@@ -60,7 +78,7 @@ const InvestmentQuickCalculator = () => {
       : (language === "ro" ? " Cashflow restrictiv." : " Restrictive cashflow.");
 
     return { yieldVal, ani, fVal, totalProf, progressPercent, verdict: verdict + cashNote };
-  }, [pret, chirie, expenses, strategy, language]);
+  }, [pret, chirie, nightlyRate, occupancyPct, expenses, strategy, language]);
 
   const yieldColor = useMemo(() => {
     if (!calc) return "text-emerald-500";
