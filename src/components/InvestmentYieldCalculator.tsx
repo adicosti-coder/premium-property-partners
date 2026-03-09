@@ -15,13 +15,14 @@ import { TrendingUp, MessageCircle, Download } from "lucide-react";
 
 const InvestmentYieldCalculator = () => {
   const { language } = useLanguage();
-  const [pret, setPret] = useState(85000);
+  const [pret, setPret] = useState(95000);
   const [renovare, setRenovare] = useState(5000);
-  const [chirie, setChirie] = useState(450);
-  const [vacanta, setVacanta] = useState(1);
+  const [nightlyRate, setNightlyRate] = useState(50);
+  const [occupancyPct, setOccupancyPct] = useState(75);
 
   const investitieTotala = pret + renovare;
-  const venitAnual = chirie * 12;
+  const monthlyGross = nightlyRate * 30 * (occupancyPct / 100);
+  const venitAnual = monthlyGross * 12 * 0.80 * 0.93; // after 20% mgmt + 7% tax
   const yieldAnual = investitieTotala > 0 ? (venitAnual / investitieTotala) * 100 : 0;
   const aniAmortizare = venitAnual > 0 ? investitieTotala / venitAnual : 0;
 
