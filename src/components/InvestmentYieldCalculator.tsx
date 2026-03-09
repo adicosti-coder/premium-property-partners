@@ -54,16 +54,16 @@ const InvestmentYieldCalculator = () => {
         <div className="text-center mb-8">
           <span className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
             <TrendingUp className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-            {ro ? "Calculator Investiție" : "Investment Calculator"}
+            {ro ? "Calculator Regim Hotelier" : "Hotel Regime Calculator"}
           </span>
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
             {ro ? "Analiză Randament " : "Investment Yield "}
-            <span className="text-primary">{ro ? "Imobiliar" : "Analysis"}</span>
+            <span className="text-primary">{ro ? "Regim Hotelier" : "Hotel Regime"}</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             {ro
-              ? "Calculează rapid randamentul unei investiții imobiliare în Timișoara"
-              : "Quickly calculate the yield of a real estate investment in Timișoara"}
+              ? "Calculează rapid randamentul unei investiții în regim hotelier premium în Timișoara"
+              : "Quickly calculate the yield of a premium hotel regime investment in Timișoara"}
           </p>
         </div>
 
