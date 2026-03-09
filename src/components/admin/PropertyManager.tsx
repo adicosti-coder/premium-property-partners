@@ -264,10 +264,12 @@ export default function PropertyManager() {
   };
 
   const handleEditProperty = async () => {
-    if (!editingProperty || !formData.name || !formData.location || !formData.booking_url) {
+    const { fields, label } = getRequiredFields(formData.listing_type);
+    const missing = !editingProperty || fields.some(f => !formData[f]);
+    if (missing) {
       toast({
         title: "Completează câmpurile obligatorii",
-        description: "Nume, Locație și Booking URL sunt obligatorii.",
+        description: `${label} sunt obligatorii.`,
         variant: "destructive",
       });
       return;
