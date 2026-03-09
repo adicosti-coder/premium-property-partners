@@ -41,36 +41,41 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Track active section based on scroll position
+  // Track active section based on scroll position — throttled via rAF
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (location.pathname !== "/") {
-        setActiveSection(location.pathname);
-        return;
-      }
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (location.pathname !== "/") {
+          setActiveSection(location.pathname);
+          return;
+        }
 
-      const sections = ["contact", "portofoliu", "calculator", "beneficii"];
-      const scrollPosition = window.scrollY + 100;
+        const sections = ["contact", "portofoliu", "calculator", "beneficii"];
+        const scrollPosition = window.scrollY + 100;
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(`#${section}`);
-            return;
+        for (const section of sections) {
+          const element = document.getElementById(section);
+          if (element) {
+            const { offsetTop, offsetHeight } = element;
+            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+              setActiveSection(`#${section}`);
+              return;
+            }
           }
         }
-      }
 
-      // If at top of page, set home as active
-      if (window.scrollY < 100) {
-        setActiveSection("/");
-      }
+        if (window.scrollY < 100) {
+          setActiveSection("/");
+        }
+      });
     };
 
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 

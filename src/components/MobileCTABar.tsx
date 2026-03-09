@@ -65,52 +65,56 @@ const MobileCTABar = () => {
         {/* Call Button */}
         <button
           onClick={handleCall}
+          aria-label={language === 'ro' ? 'Sună la RealTrust' : 'Call RealTrust'}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-card border-r border-border",
+            "flex flex-col items-center justify-center min-h-[48px] py-3 px-1 bg-card border-r border-border",
             "active:scale-95 transition-all duration-150",
             "hover:bg-muted"
           )}
         >
-          <Phone className="w-4 h-4 text-foreground mb-0.5" />
+          <Phone className="w-5 h-5 text-foreground mb-0.5" />
           <span className="text-[10px] font-semibold text-foreground">{t.call}</span>
         </button>
         
         {/* WhatsApp Button - Key conversion CTA */}
         <button
           onClick={handleWhatsApp}
+          aria-label={language === 'ro' ? 'Contactează pe WhatsApp' : 'Contact on WhatsApp'}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-whatsapp",
+            "flex flex-col items-center justify-center min-h-[48px] py-3 px-1 bg-whatsapp",
             "active:scale-95 transition-all duration-150",
             "hover:bg-whatsapp-hover"
           )}
         >
-          <MessageCircle className="w-4 h-4 text-white mb-0.5" />
+          <MessageCircle className="w-5 h-5 text-white mb-0.5" />
           <span className="text-[10px] font-bold text-white">{t.whatsapp}</span>
         </button>
         
         {/* Guests Button */}
         <button
           onClick={scrollToGuests}
+          aria-label={language === 'ro' ? 'Rezervă cazare în regim hotelier' : 'Book hotel accommodation'}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-booking-blue",
+            "flex flex-col items-center justify-center min-h-[48px] py-3 px-1 bg-booking-blue",
             "active:scale-95 transition-all duration-150",
             "hover:bg-booking-blue-hover border-l border-border"
           )}
         >
-          <Users className="w-4 h-4 text-white mb-0.5" />
+          <Users className="w-5 h-5 text-white mb-0.5" />
           <span className="text-[10px] font-bold text-white">{t.guests}</span>
         </button>
         
         {/* Owners Button */}
         <button
           onClick={scrollToOwners}
+          aria-label={language === 'ro' ? 'Câștigă din proprietatea ta' : 'Earn from your property'}
           className={cn(
-            "flex flex-col items-center justify-center py-2.5 px-1 bg-primary",
+            "flex flex-col items-center justify-center min-h-[48px] py-3 px-1 bg-primary",
             "active:scale-95 transition-all duration-150",
             "hover:bg-primary/90 border-l border-border"
           )}
         >
-          <Building className="w-4 h-4 text-primary-foreground mb-0.5" />
+          <Building className="w-5 h-5 text-primary-foreground mb-0.5" />
           <span className="text-[10px] font-semibold text-primary-foreground">{t.owners}</span>
         </button>
       </div>

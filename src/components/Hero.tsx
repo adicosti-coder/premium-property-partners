@@ -301,7 +301,7 @@ const Hero = () => {
             <div className="w-2 h-3.5 bg-primary rounded-full animate-bounce" />
           </div>
           <ChevronDown className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} />
-        </div>
+        </button>
       )}
       
       {/* Bottom gradient fade */}
