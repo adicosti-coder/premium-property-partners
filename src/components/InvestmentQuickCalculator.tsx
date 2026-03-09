@@ -12,9 +12,9 @@ const InvestmentQuickCalculator = () => {
   };
 
   const [strategy, setStrategy] = useState<"clasic" | "hotel">("hotel");
-  const [pret, setPret] = useState(presets.clasic.pret);
-  const [chirie, setChirie] = useState(presets.clasic.chirie);
-  const [expenses, setExpenses] = useState(presets.clasic.expenses);
+  const [pret, setPret] = useState(presets.hotel.pret);
+  const [chirie, setChirie] = useState(presets.hotel.chirie);
+  const [expenses, setExpenses] = useState(presets.hotel.expenses);
 
   const switchStrategy = (s: "clasic" | "hotel") => {
     setStrategy(s);
