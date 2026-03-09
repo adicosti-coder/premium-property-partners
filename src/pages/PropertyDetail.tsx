@@ -469,7 +469,103 @@ const PropertyDetail = () => {
                   <p className="text-muted-foreground leading-relaxed">{language === 'en' ? property.longDescriptionEn : property.longDescription}</p>
                 </div>
               )}
-              
+
+              {/* 🏨 Regim Hotelier — Randament Superior */}
+              <div className="bg-gradient-to-br from-primary/5 to-accent/10 border border-primary/15 p-5 sm:p-8 rounded-2xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🏨</span>
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold">
+                    {language === 'ro' ? 'Regim Hotelier — Randament Superior' : 'Short-Term Rental — Superior Returns'}
+                  </h2>
+                </div>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  {language === 'ro'
+                    ? 'Administrarea în regim hotelier oferă avantaje semnificative față de închirierea clasică pe termen lung:'
+                    : 'Short-term rental management offers significant advantages over traditional long-term leasing:'}
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3 mb-4">
+                  {(language === 'ro' ? [
+                    { icon: '📈', text: 'Randament net de 9%+ vs 3-4% închiriere clasică' },
+                    { icon: '💰', text: 'Dynamic Pricing — prețuri optimizate automat în funcție de cerere' },
+                    { icon: '🔑', text: 'Self check-in cu smart lock — fără deplasări la predarea cheilor' },
+                    { icon: '🧹', text: 'Curățenie profesionistă după fiecare sejur' },
+                    { icon: '📊', text: 'Ocupare optimizată pe Booking.com & Airbnb — vizibilitate maximă' },
+                    { icon: '⭐', text: 'Rating-uri ridicate ce cresc valoarea proprietății' },
+                  ] : [
+                    { icon: '📈', text: 'Net yield of 9%+ vs 3-4% with classic rental' },
+                    { icon: '💰', text: 'Dynamic Pricing — rates auto-optimized based on demand' },
+                    { icon: '🔑', text: 'Self check-in with smart lock — no key handover needed' },
+                    { icon: '🧹', text: 'Professional cleaning after each stay' },
+                    { icon: '📊', text: 'Optimized occupancy on Booking.com & Airbnb — maximum visibility' },
+                    { icon: '⭐', text: 'High ratings that increase property value' },
+                  ]).map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <span className="text-lg shrink-0">{item.icon}</span>
+                      <span className="text-foreground/85">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground italic">
+                  {language === 'ro'
+                    ? 'Rata de ocupare medie: 98% | Scor oaspeți: 9.4/10 din 180+ recenzii'
+                    : 'Average occupancy rate: 98% | Guest score: 9.4/10 from 180+ reviews'}
+                </p>
+              </div>
+
+              {/* 🤝 Avantajele Colaborării cu RealTrust */}
+              <div className="bg-card border border-border p-5 sm:p-8 rounded-2xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🤝</span>
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold">
+                    {language === 'ro' ? 'Avantajele Colaborării cu RealTrust' : 'Benefits of Partnering with RealTrust'}
+                  </h2>
+                </div>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  {language === 'ro'
+                    ? 'Management complet, transparent și orientat spre maximizarea profitului proprietarului:'
+                    : 'Complete, transparent management focused on maximizing owner profit:'}
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3 mb-5">
+                  {(language === 'ro' ? [
+                    { icon: '📸', label: 'Fotografii profesionale', desc: 'și listare optimizată pe toate platformele' },
+                    { icon: '💬', label: 'Guest Relations dedicat', desc: '— comunicare non-stop cu oaspeții' },
+                    { icon: '📊', label: 'Raportare lunară detaliată', desc: '— transparență totală financiară' },
+                    { icon: '🛡️', label: 'Asigurare 3M EUR', desc: '— proprietatea ta, protejată complet' },
+                    { icon: '💵', label: 'Comision transparent 15-25%', desc: '— fără costuri ascunse' },
+                    { icon: '✅', label: 'Tu doar încasezi profitul', desc: '— noi ne ocupăm de tot restul' },
+                  ] : [
+                    { icon: '📸', label: 'Professional photography', desc: 'and optimized listing on all platforms' },
+                    { icon: '💬', label: 'Dedicated Guest Relations', desc: '— 24/7 guest communication' },
+                    { icon: '📊', label: 'Detailed monthly reports', desc: '— full financial transparency' },
+                    { icon: '🛡️', label: '€3M Insurance', desc: '— your property, fully protected' },
+                    { icon: '💵', label: 'Transparent 15-25% commission', desc: '— no hidden fees' },
+                    { icon: '✅', label: 'You just collect the profit', desc: '— we handle everything else' },
+                  ]).map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <span className="text-lg shrink-0">{item.icon}</span>
+                      <div>
+                        <span className="font-semibold text-foreground">{item.label}</span>
+                        <span className="text-muted-foreground"> {item.desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button asChild variant="default" size="sm">
+                    <Link to="/pentru-proprietari">
+                      {language === 'ro' ? 'Află Mai Multe' : 'Learn More'}
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === 'ro' ? `Bună ziua, sunt interesat de serviciile de administrare pentru proprietatea ${property.name}` : `Hello, I'm interested in management services for ${property.name}`)}`, '_blank')}
+                  >
+                    {language === 'ro' ? 'Contactează-ne pe WhatsApp' : 'Contact Us on WhatsApp'}
+                  </Button>
+                </div>
+              </div>
+
               {/* Calculator Investiție + Card Vânzare Rapidă — ascuns pentru închirieri */}
               {!staticProperty && dbProperty?.listing_type !== 'inchiriere' && (
                 <InvestmentEngineV34
