@@ -102,34 +102,30 @@ const InvestmentYieldCalculator = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="calc-chirie" className="text-muted-foreground text-sm">
-                  {ro ? "Chirie Lunară (€)" : "Monthly Rent (€)"}
+                <Label htmlFor="calc-nightly" className="text-muted-foreground text-sm">
+                  {ro ? "Tarif Mediu/Noapte (€)" : "Avg Nightly Rate (€)"}
                 </Label>
                 <Input
-                  id="calc-chirie"
+                  id="calc-nightly"
                   type="number"
-                  value={chirie}
-                  onChange={(e) => setChirie(Number(e.target.value) || 0)}
+                  value={nightlyRate}
+                  onChange={(e) => setNightlyRate(Number(e.target.value) || 0)}
                   className="bg-muted/50 border-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground text-sm">
-                  {ro ? "Grad de ocupare" : "Occupancy Rate"}
+                <Label htmlFor="calc-occupancy" className="text-muted-foreground text-sm">
+                  {ro ? "Grad Ocupare (%)" : "Occupancy Rate (%)"}
                 </Label>
-                <Select
-                  value={String(vacanta)}
-                  onValueChange={(v) => setVacanta(Number(v))}
-                >
-                  <SelectTrigger className="bg-muted/50 border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">12 {ro ? "luni / an" : "months / year"}</SelectItem>
-                    <SelectItem value="1">11 {ro ? "luni / an" : "months / year"}</SelectItem>
-                    <SelectItem value="2">10 {ro ? "luni / an" : "months / year"}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="calc-occupancy"
+                  type="number"
+                  value={occupancyPct}
+                  onChange={(e) => setOccupancyPct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+                  className="bg-muted/50 border-border"
+                  min={0}
+                  max={100}
+                />
               </div>
             </div>
 
