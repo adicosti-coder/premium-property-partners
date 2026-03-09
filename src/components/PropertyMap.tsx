@@ -202,8 +202,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       const markerEl = document.createElement('div');
       markerEl.className = 'property-marker cursor-pointer';
       markerEl.style.cssText = `
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
         background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%);
         border-radius: 50%;
         display: flex;
