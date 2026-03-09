@@ -33,24 +33,25 @@ const InvestmentYieldCalculator = () => {
 
   const handleDownload = useCallback(() => {
     const text = [
-      "RealTrust | Analiză Investiție",
+      "RealTrust | Analiză Investiție — Regim Hotelier",
       "═══════════════════════════════",
       `Preț Achiziție: ${pret.toLocaleString()} €`,
       `Mobilare/Renovare: ${renovare.toLocaleString()} €`,
       `Investiție Totală: ${investitieTotala.toLocaleString()} €`,
-      `Chirie Lunară: ${chirie.toLocaleString()} €`,
-      `Grad de ocupare: ${12 - vacanta} luni / an`,
+      `Tarif/Noapte: ${nightlyRate} €`,
+      `Grad Ocupare: ${occupancyPct}%`,
+      `Venit Brut Lunar: ${Math.round(monthlyGross).toLocaleString()} €`,
       "───────────────────────────────",
       `Randament Anual (Yield): ${yieldAnual.toFixed(2)}%`,
       `Amortizare: ${aniAmortizare.toFixed(1)} ani`,
-      `Profit Estimat: ${Math.round(venitAnual).toLocaleString()} € / an`,
+      `Profit Net Estimat: ${Math.round(venitAnual).toLocaleString()} € / an`,
     ].join("\n");
     const blob = new Blob([text], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "Analiza-Investitie-RealTrust.txt";
     link.click();
-  }, [pret, renovare, investitieTotala, chirie, vacanta, yieldAnual, aniAmortizare, venitAnual]);
+  }, [pret, renovare, investitieTotala, nightlyRate, occupancyPct, monthlyGross, yieldAnual, aniAmortizare, venitAnual]);
 
   const ro = language === "ro";
 
