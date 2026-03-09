@@ -94,8 +94,10 @@ INSTRUCȚIUNI DE SCRIERE:
 3. Folosește ortografie și gramatică impecabilă în limba română, cu diacritice corecte (ă, â, î, ș, ț).
 4. Include termeni economici și imobiliari de specialitate, potriviți contextului.
 5. Evidențiază USP-uri (Unique Selling Points) — ce face proprietatea specială.
-6. Ultimul paragraf: call-to-action clar care menționează RealTrust ca partener de încredere.
-7. Generează și un TITLU optimizat SEO (max 80 caractere) și o DESCRIERE SCURTĂ (max 200 caractere).
+6. OBLIGATORIU: Include o secțiune dedicată "🏨 Regim Hotelier — Randament Superior" care explică avantajele administrării în regim hotelier vs. închiriere clasică: ocupare optimizată, dynamic pricing, vizibilitate pe Booking/Airbnb, self check-in cu smart lock, curățenie profesionistă după fiecare sejur, rating-uri ridicate. Menționează randamentul net de 9%+ vs 3-4% închiriere clasică.
+7. OBLIGATORIU: Include o secțiune "🤝 Avantajele Colaborării cu RealTrust" care detaliază: management complet (fotografii profesionale, guest relations, dynamic pricing), comision transparent 15-25%, raportare lunară detaliată, asigurare 3M EUR, echipă dedicată, 180+ recenzii cu scor 9.4/10, ocupare 98%, proprietarul doar încasează profitul.
+8. Ultimul paragraf: call-to-action clar care menționează RealTrust ca partener de încredere.
+9. Generează și un TITLU optimizat SEO (max 80 caractere) și o DESCRIERE SCURTĂ (max 200 caractere).
 
 FORMAT RĂSPUNS (obligatoriu):
 ---TITLU---
@@ -146,7 +148,7 @@ serve(async (req) => {
           },
           { role: "user", content: prompt },
         ],
-        max_tokens: 2000,
+        max_tokens: 4096,
         temperature: 0.75,
       }),
     });
