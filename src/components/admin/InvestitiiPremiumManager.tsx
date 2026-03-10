@@ -225,7 +225,7 @@ export default function InvestitiiPremiumManager() {
     }
   };
 
-  const calculateROI = (property: InvestProperty): InvestProperty => {
+  const calculateROI = useCallback((property: InvestProperty): InvestProperty => {
     const rate = property.base_price_per_night;
     const capital = property.capital_necesar;
     if (!rate || !capital || capital <= 0) return property;
@@ -242,14 +242,67 @@ export default function InvestitiiPremiumManager() {
       roi_percentage: `${roi.toFixed(1)}%`,
       estimated_revenue: `${Math.round(monthlyGross * netFactor)}–${Math.round(monthlyGross)} €/lună`,
     };
+  }, []);
+
+  // Auto-calculate ROI when relevant fields change
+  useEffect(() => {
+    if (!editingProperty) return;
+    const { base_price_per_night, capital_necesar } = editingProperty;
+    if (!base_price_per_night || !capital_necesar || capital_necesar <= 0) return;
+    
+    const updated = calculateROI(editingProperty);
+    if (updated.roi_percentage !== editingProperty.roi_percentage || 
+        updated.estimated_revenue !== editingProperty.estimated_revenue) {
+      setEditingProperty(updated);
+    }
+  }, [editingProperty?.base_price_per_night, editingProperty?.capital_necesar, calculateROI]);
+
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateToEN = async () => {
+    if (!editingProperty?.description_ro) {
+      toast({ title: "Completează mai întâi Descrierea RO", variant: "destructive" });
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional real estate translator. Translate Romanian property descriptions to English. Keep the same tone and structure. Return ONLY the translated text, no explanations."
+            },
+            {
+              role: "user",
+              content: editingProperty.description_ro
+            }
+          ],
+        }),
+      });
+      const data = await response.json();
+      const translated = data?.choices?.[0]?.message?.content?.trim();
+      if (translated) {
+        setEditingProperty(prev => prev ? { ...prev, description_en: translated } : prev);
+        toast({ title: "✅ Descriere tradusă în engleză!" });
+      } else {
+        throw new Error("No translation returned");
+      }
+    } catch (err: any) {
+      toast({ title: "Eroare la traducere", description: err.message, variant: "destructive" });
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const updateField = <K extends keyof InvestProperty>(key: K, value: InvestProperty[K]) => {
     if (!editingProperty) return;
-    let updated = { ...editingProperty, [key]: value };
-    if (key === "base_price_per_night" || key === "capital_necesar") {
-      updated = calculateROI(updated);
-    }
+    const updated = { ...editingProperty, [key]: value };
     setEditingProperty(updated);
   };
 
