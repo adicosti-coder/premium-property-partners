@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Edit, Star, Euro, Users, Bed, Maximize2, ExternalLink,
-  Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath,
+  Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath, Languages,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyImageGallery from "./PropertyImageGallery";
@@ -225,7 +225,7 @@ export default function InvestitiiPremiumManager() {
     }
   };
 
-  const calculateROI = (property: InvestProperty): InvestProperty => {
+  const calculateROI = useCallback((property: InvestProperty): InvestProperty => {
     const rate = property.base_price_per_night;
     const capital = property.capital_necesar;
     if (!rate || !capital || capital <= 0) return property;
@@ -242,14 +242,50 @@ export default function InvestitiiPremiumManager() {
       roi_percentage: `${roi.toFixed(1)}%`,
       estimated_revenue: `${Math.round(monthlyGross * netFactor)}–${Math.round(monthlyGross)} €/lună`,
     };
+  }, []);
+
+  // Auto-calculate ROI when relevant fields change
+  useEffect(() => {
+    if (!editingProperty) return;
+    const { base_price_per_night, capital_necesar } = editingProperty;
+    if (!base_price_per_night || !capital_necesar || capital_necesar <= 0) return;
+    
+    const updated = calculateROI(editingProperty);
+    if (updated.roi_percentage !== editingProperty.roi_percentage || 
+        updated.estimated_revenue !== editingProperty.estimated_revenue) {
+      setEditingProperty(updated);
+    }
+  }, [editingProperty?.base_price_per_night, editingProperty?.capital_necesar, calculateROI]);
+
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateToEN = async () => {
+    if (!editingProperty?.description_ro) {
+      toast({ title: "Completează mai întâi Descrierea RO", variant: "destructive" });
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-text", {
+        body: { text: editingProperty.description_ro, sourceLang: "Romanian", targetLang: "English" },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.translated) {
+        setEditingProperty(prev => prev ? { ...prev, description_en: data.translated } : prev);
+        toast({ title: "✅ Descriere tradusă în engleză!" });
+      } else {
+        throw new Error("No translation returned");
+      }
+    } catch (err: any) {
+      toast({ title: "Eroare la traducere", description: err.message, variant: "destructive" });
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const updateField = <K extends keyof InvestProperty>(key: K, value: InvestProperty[K]) => {
     if (!editingProperty) return;
-    let updated = { ...editingProperty, [key]: value };
-    if (key === "base_price_per_night" || key === "capital_necesar") {
-      updated = calculateROI(updated);
-    }
+    const updated = { ...editingProperty, [key]: value };
     setEditingProperty(updated);
   };
 
@@ -506,7 +542,20 @@ export default function InvestitiiPremiumManager() {
                     <Textarea value={editingProperty.description_ro} onChange={(e) => updateField("description_ro", e.target.value)} rows={3} />
                   </div>
                   <div>
-                    <Label>Descriere EN</Label>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label>Descriere EN</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTranslateToEN}
+                        disabled={isTranslating || !editingProperty.description_ro}
+                        className="h-7 text-xs gap-1"
+                      >
+                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                        {isTranslating ? "Se traduce..." : "Traducere Auto"}
+                      </Button>
+                    </div>
                     <Textarea value={editingProperty.description_en} onChange={(e) => updateField("description_en", e.target.value)} rows={3} />
                   </div>
                 </div>

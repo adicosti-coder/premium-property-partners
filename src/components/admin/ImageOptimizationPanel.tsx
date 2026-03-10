@@ -12,6 +12,7 @@ import {
   Upload
 } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Collapsible,
   CollapsibleContent,
@@ -52,6 +53,33 @@ function getQualityBadge(sizeKB: number) {
   return { label: "Grea", color: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30" };
 }
 
+/** Fetch image as blob, using proxy for external URLs to avoid CORS */
+async function fetchImageBlob(url: string): Promise<{ blob: Blob; size: number }> {
+  const isExternal = url.startsWith("http") && !url.includes("supabase.co");
+  
+  if (isExternal) {
+    // Use edge function proxy for external URLs
+    const { data, error } = await supabase.functions.invoke("proxy-image", {
+      body: { url },
+    });
+    if (error || !data?.data) {
+      throw new Error(error?.message || "Proxy fetch failed");
+    }
+    const binaryStr = atob(data.data);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: data.contentType || "image/jpeg" });
+    return { blob, size: data.size || blob.size };
+  }
+  
+  // Direct fetch for same-origin / supabase URLs
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return { blob, size: blob.size };
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
@@ -81,17 +109,15 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        // Fetch image to get size
-        const response = await fetch(updated[i].url);
-        const blob = await response.blob();
-        const originalSize = blob.size;
+        const { blob, size: originalSize } = await fetchImageBlob(updated[i].url);
 
-        // Get dimensions
+        // Get dimensions using object URL from blob
+        const objectUrl = URL.createObjectURL(blob);
         const dims = await new Promise<{ w: number; h: number }>((resolve) => {
           const img = new Image();
-          img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-          img.onerror = () => resolve({ w: 0, h: 0 });
-          img.src = updated[i].url;
+          img.onload = () => { URL.revokeObjectURL(objectUrl); resolve({ w: img.naturalWidth, h: img.naturalHeight }); };
+          img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve({ w: 0, h: 0 }); };
+          img.src = objectUrl;
         });
 
         updated[i] = {
@@ -116,8 +142,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     setItems([...updated]);
 
     try {
-      const response = await fetch(updated[index].url);
-      const blob = await response.blob();
+      const { blob } = await fetchImageBlob(updated[index].url);
       const file = new File([blob], `image-${index}.jpg`, { type: blob.type });
 
       const compressed = await compressImage(file, {
@@ -164,8 +189,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        const response = await fetch(updated[i].url);
-        const blob = await response.blob();
+        const { blob } = await fetchImageBlob(updated[i].url);
         const file = new File([blob], `image-${i}.jpg`, { type: blob.type });
 
         const compressed = await compressImage(file, {
