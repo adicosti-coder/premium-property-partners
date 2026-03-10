@@ -24,6 +24,9 @@ export const EXTRACTION_PROMPT = `Extract ALL property listing details from this
 - features: array of ALL amenities/features mentioned (e.g. "aer conditionat", "balcon", "centrala", "parcare", "lift") (string[])
 - images: array of ALL property photo URLs found on the page - use full-resolution URLs, not thumbnails (string[])
 - listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental (string)
+- contact_name: the name of the property owner or agent posting the listing (string or null)
+- contact_phone: the phone number of the owner/agent - look for it in the listing details, sidebar, or contact section (string or null)
+- contact_email: the email of the owner/agent if available (string or null)
 
 Be thorough - extract every detail you can find. For missing fields, return null.`;
 
