@@ -133,7 +133,7 @@ export async function extractFromMarkdownWithAI(markdown: string, url: string): 
           },
           {
             role: 'user',
-            content: `Extract property details from this listing page content. Return JSON with these fields: title, description_short, description_full, price (number), currency ("EUR"/"RON"), location, size (number, sqm), rooms (number), bathrooms (number), floor, year_built (number), parking, heating_type, energy_class, furnished, construction_type, compartimentare, features (string array), images (array of image URLs), listing_type_hint ("vanzare"/"inchiriere"/"cazare").\n\nPage URL: ${url}\n\nPage content:\n${truncatedMarkdown}`,
+            content: `Extract property details from this listing page content. Return JSON with these fields: title, description_short, description_full, price (number), currency ("EUR"/"RON"), location, size (number, sqm), rooms (number), bathrooms (number), floor, year_built (number), parking, heating_type, energy_class, furnished, construction_type, compartimentare, features (string array), images (array of image URLs), listing_type_hint ("vanzare"/"inchiriere"/"cazare"), contact_name (owner/agent name), contact_phone (phone number), contact_email (email if available).\n\nPage URL: ${url}\n\nPage content:\n${truncatedMarkdown}`,
           },
         ],
         temperature: 0.1,
