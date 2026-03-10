@@ -53,6 +53,33 @@ function getQualityBadge(sizeKB: number) {
   return { label: "Grea", color: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30" };
 }
 
+/** Fetch image as blob, using proxy for external URLs to avoid CORS */
+async function fetchImageBlob(url: string): Promise<{ blob: Blob; size: number }> {
+  const isExternal = url.startsWith("http") && !url.includes("supabase.co");
+  
+  if (isExternal) {
+    // Use edge function proxy for external URLs
+    const { data, error } = await supabase.functions.invoke("proxy-image", {
+      body: { url },
+    });
+    if (error || !data?.data) {
+      throw new Error(error?.message || "Proxy fetch failed");
+    }
+    const binaryStr = atob(data.data);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: data.contentType || "image/jpeg" });
+    return { blob, size: data.size || blob.size };
+  }
+  
+  // Direct fetch for same-origin / supabase URLs
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return { blob, size: blob.size };
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
