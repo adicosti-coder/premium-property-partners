@@ -354,6 +354,17 @@ const ListingImporter = () => {
               </div>
             </div>
 
+            {/* Contact info (private) */}
+            <div className="border-t pt-4 mt-2">
+              <p className="text-sm font-medium text-muted-foreground mb-1">🔒 Date Contact Proprietar (nu se afișează public)</p>
+              <p className="text-xs text-muted-foreground mb-3">Aceste date sunt salvate doar pentru uz intern.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {renderFieldRow(<User className="w-4 h-4" />, "Nume proprietar", "contact_name", "text", "Ion Popescu")}
+                {renderFieldRow(<Phone className="w-4 h-4" />, "Telefon proprietar", "contact_phone", "text", "0721 123 456")}
+                {renderFieldRow(<Mail className="w-4 h-4" />, "Email proprietar", "contact_email", "text", "email@exemplu.ro")}
+              </div>
+            </div>
+
             {/* Description */}
             <div className="border-t pt-4 mt-2">
               {renderFieldRow(<PenLine className="w-4 h-4" />, "Descriere scurtă", "description_short", "textarea", "Rezumat scurt al anunțului...")}
