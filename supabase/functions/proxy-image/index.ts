@@ -1,6 +1,7 @@
-import { corsHeaders } from "../_shared/securityHeaders.ts";
+import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
