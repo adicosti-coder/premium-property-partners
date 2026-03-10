@@ -266,29 +266,12 @@ export default function InvestitiiPremiumManager() {
     }
     setIsTranslating(true);
     try {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional real estate translator. Translate Romanian property descriptions to English. Keep the same tone and structure. Return ONLY the translated text, no explanations."
-            },
-            {
-              role: "user",
-              content: editingProperty.description_ro
-            }
-          ],
-        }),
+      const { data, error } = await supabase.functions.invoke("translate-text", {
+        body: { text: editingProperty.description_ro, sourceLang: "Romanian", targetLang: "English" },
       });
-      const data = await response.json();
-      const translated = data?.choices?.[0]?.message?.content?.trim();
-      if (translated) {
-        setEditingProperty(prev => prev ? { ...prev, description_en: translated } : prev);
+      if (error) throw new Error(error.message);
+      if (data?.translated) {
+        setEditingProperty(prev => prev ? { ...prev, description_en: data.translated } : prev);
         toast({ title: "✅ Descriere tradusă în engleză!" });
       } else {
         throw new Error("No translation returned");
