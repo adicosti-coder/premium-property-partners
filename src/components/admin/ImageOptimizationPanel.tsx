@@ -109,17 +109,15 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        // Fetch image to get size
-        const response = await fetch(updated[i].url);
-        const blob = await response.blob();
-        const originalSize = blob.size;
+        const { blob, size: originalSize } = await fetchImageBlob(updated[i].url);
 
-        // Get dimensions
+        // Get dimensions using object URL from blob
+        const objectUrl = URL.createObjectURL(blob);
         const dims = await new Promise<{ w: number; h: number }>((resolve) => {
           const img = new Image();
-          img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-          img.onerror = () => resolve({ w: 0, h: 0 });
-          img.src = updated[i].url;
+          img.onload = () => { URL.revokeObjectURL(objectUrl); resolve({ w: img.naturalWidth, h: img.naturalHeight }); };
+          img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve({ w: 0, h: 0 }); };
+          img.src = objectUrl;
         });
 
         updated[i] = {
