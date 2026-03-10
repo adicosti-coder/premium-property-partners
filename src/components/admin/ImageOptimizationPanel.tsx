@@ -142,8 +142,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     setItems([...updated]);
 
     try {
-      const response = await fetch(updated[index].url);
-      const blob = await response.blob();
+      const { blob } = await fetchImageBlob(updated[index].url);
       const file = new File([blob], `image-${index}.jpg`, { type: blob.type });
 
       const compressed = await compressImage(file, {
@@ -190,8 +189,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        const response = await fetch(updated[i].url);
-        const blob = await response.blob();
+        const { blob } = await fetchImageBlob(updated[i].url);
         const file = new File([blob], `image-${i}.jpg`, { type: blob.type });
 
         const compressed = await compressImage(file, {
