@@ -12,6 +12,7 @@ import {
   Upload
 } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Collapsible,
   CollapsibleContent,
