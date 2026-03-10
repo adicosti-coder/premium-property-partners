@@ -282,6 +282,9 @@ export function buildExtracted(
     features: Array.isArray(jsonData.features) ? jsonData.features : [],
     images: imageUrls,
     listing_type_hint: jsonData.listing_type_hint || null,
+    contact_name: jsonData.contact_name || null,
+    contact_phone: jsonData.contact_phone || null,
+    contact_email: jsonData.contact_email || null,
     source_url: url,
     source_platform: platform,
   };

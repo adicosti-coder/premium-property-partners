@@ -36,6 +36,9 @@ interface ExtractedData {
   features: string[];
   images: string[];
   listing_type_hint: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
   source_url: string;
   source_platform: string;
 }
