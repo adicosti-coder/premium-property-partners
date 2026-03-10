@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Edit, Star, Euro, Users, Bed, Maximize2, ExternalLink,
-  Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath,
+  Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath, Languages,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyImageGallery from "./PropertyImageGallery";
