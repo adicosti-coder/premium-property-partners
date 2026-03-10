@@ -11,7 +11,7 @@ import {
   Loader2, LinkIcon, CheckCircle2, ImageIcon, MapPin, Ruler,
   BedDouble, BadgeEuro, AlertCircle, ExternalLink, Eye, Save,
   Bath, Building2, Thermometer, Zap, Sofa, Car, Layers, CalendarDays, PenLine,
-  Sparkles, RefreshCw, Copy, Check
+  Sparkles, RefreshCw, Copy, Check, Phone, User, Mail
 } from "lucide-react";
 import ImageOptimizationPanel from "./ImageOptimizationPanel";
 
@@ -36,6 +36,9 @@ interface ExtractedData {
   features: string[];
   images: string[];
   listing_type_hint: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
   source_url: string;
   source_platform: string;
 }
@@ -348,6 +351,17 @@ const ListingImporter = () => {
                 {renderFieldRow(<Sofa className="w-4 h-4" />, "Mobilare", "furnished", "text", "Mobilat complet")}
                 {renderFieldRow(<Building2 className="w-4 h-4" />, "Tip construcție", "construction_type", "text", "Bloc")}
                 {renderFieldRow(<Layers className="w-4 h-4" />, "Compartimentare", "compartimentare", "text", "Decomandat")}
+              </div>
+            </div>
+
+            {/* Contact info (private) */}
+            <div className="border-t pt-4 mt-2">
+              <p className="text-sm font-medium text-muted-foreground mb-1">🔒 Date Contact Proprietar (nu se afișează public)</p>
+              <p className="text-xs text-muted-foreground mb-3">Aceste date sunt salvate doar pentru uz intern.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {renderFieldRow(<User className="w-4 h-4" />, "Nume proprietar", "contact_name", "text", "Ion Popescu")}
+                {renderFieldRow(<Phone className="w-4 h-4" />, "Telefon proprietar", "contact_phone", "text", "0721 123 456")}
+                {renderFieldRow(<Mail className="w-4 h-4" />, "Email proprietar", "contact_email", "text", "email@exemplu.ro")}
               </div>
             </div>
 

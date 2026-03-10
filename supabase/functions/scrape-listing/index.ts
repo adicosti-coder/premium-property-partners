@@ -67,6 +67,9 @@ function buildPropertyData(
     compartimentare: data.compartimentare || null,
     source_url: url,
     source_platform: platform,
+    contact_name: data.contact_name || null,
+    contact_phone: data.contact_phone || null,
+    contact_email: data.contact_email || null,
   };
 }
 

@@ -1758,6 +1758,9 @@ export type Database = {
           check_out_time: string | null
           compartimentare: string | null
           construction_type: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
           description_en: string
           description_ro: string
@@ -1807,6 +1810,9 @@ export type Database = {
           check_out_time?: string | null
           compartimentare?: string | null
           construction_type?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           description_en: string
           description_ro: string
@@ -1856,6 +1862,9 @@ export type Database = {
           check_out_time?: string | null
           compartimentare?: string | null
           construction_type?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
           description_en?: string
           description_ro?: string

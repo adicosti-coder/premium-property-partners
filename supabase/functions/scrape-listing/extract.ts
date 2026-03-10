@@ -24,6 +24,9 @@ export const EXTRACTION_PROMPT = `Extract ALL property listing details from this
 - features: array of ALL amenities/features mentioned (e.g. "aer conditionat", "balcon", "centrala", "parcare", "lift") (string[])
 - images: array of ALL property photo URLs found on the page - use full-resolution URLs, not thumbnails (string[])
 - listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental (string)
+- contact_name: the name of the property owner or agent posting the listing (string or null)
+- contact_phone: the phone number of the owner/agent - look for it in the listing details, sidebar, or contact section (string or null)
+- contact_email: the email of the owner/agent if available (string or null)
 
 Be thorough - extract every detail you can find. For missing fields, return null.`;
 
@@ -48,6 +51,9 @@ export interface ExtractedListing {
   features: string[];
   images: string[];
   listing_type_hint: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
   source_url: string;
   source_platform: string;
 }
@@ -127,7 +133,7 @@ export async function extractFromMarkdownWithAI(markdown: string, url: string): 
           },
           {
             role: 'user',
-            content: `Extract property details from this listing page content. Return JSON with these fields: title, description_short, description_full, price (number), currency ("EUR"/"RON"), location, size (number, sqm), rooms (number), bathrooms (number), floor, year_built (number), parking, heating_type, energy_class, furnished, construction_type, compartimentare, features (string array), images (array of image URLs), listing_type_hint ("vanzare"/"inchiriere"/"cazare").\n\nPage URL: ${url}\n\nPage content:\n${truncatedMarkdown}`,
+            content: `Extract property details from this listing page content. Return JSON with these fields: title, description_short, description_full, price (number), currency ("EUR"/"RON"), location, size (number, sqm), rooms (number), bathrooms (number), floor, year_built (number), parking, heating_type, energy_class, furnished, construction_type, compartimentare, features (string array), images (array of image URLs), listing_type_hint ("vanzare"/"inchiriere"/"cazare"), contact_name (owner/agent name), contact_phone (phone number), contact_email (email if available).\n\nPage URL: ${url}\n\nPage content:\n${truncatedMarkdown}`,
           },
         ],
         temperature: 0.1,
@@ -276,6 +282,9 @@ export function buildExtracted(
     features: Array.isArray(jsonData.features) ? jsonData.features : [],
     images: imageUrls,
     listing_type_hint: jsonData.listing_type_hint || null,
+    contact_name: jsonData.contact_name || null,
+    contact_phone: jsonData.contact_phone || null,
+    contact_email: jsonData.contact_email || null,
     source_url: url,
     source_platform: platform,
   };
