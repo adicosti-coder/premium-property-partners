@@ -559,7 +559,20 @@ export default function InvestitiiPremiumManager() {
                     <Textarea value={editingProperty.description_ro} onChange={(e) => updateField("description_ro", e.target.value)} rows={3} />
                   </div>
                   <div>
-                    <Label>Descriere EN</Label>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label>Descriere EN</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTranslateToEN}
+                        disabled={isTranslating || !editingProperty.description_ro}
+                        className="h-7 text-xs gap-1"
+                      >
+                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                        {isTranslating ? "Se traduce..." : "Traducere Auto"}
+                      </Button>
+                    </div>
                     <Textarea value={editingProperty.description_en} onChange={(e) => updateField("description_en", e.target.value)} rows={3} />
                   </div>
                 </div>

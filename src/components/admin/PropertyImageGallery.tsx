@@ -616,10 +616,13 @@ export default function PropertyImageGallery({
 
     if (!over || active.id === over.id) return;
 
-    const oldIndex = images.findIndex(img => img.id === active.id);
-    const newIndex = images.findIndex(img => img.id === over.id);
+    // Use sortedImages (the displayed order) for correct drag-and-drop
+    const oldIndex = sortedImages.findIndex(img => img.id === active.id);
+    const newIndex = sortedImages.findIndex(img => img.id === over.id);
 
-    const reorderedImages = arrayMove(images, oldIndex, newIndex).map(
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reorderedImages = arrayMove(sortedImages, oldIndex, newIndex).map(
       (img, index) => ({
         ...img,
         display_order: index,
