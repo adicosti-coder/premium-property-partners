@@ -11,7 +11,7 @@ import {
   Loader2, LinkIcon, CheckCircle2, ImageIcon, MapPin, Ruler,
   BedDouble, BadgeEuro, AlertCircle, ExternalLink, Eye, Save,
   Bath, Building2, Thermometer, Zap, Sofa, Car, Layers, CalendarDays, PenLine,
-  Sparkles, RefreshCw, Copy, Check
+  Sparkles, RefreshCw, Copy, Check, Phone, User, Mail
 } from "lucide-react";
 import ImageOptimizationPanel from "./ImageOptimizationPanel";
 
