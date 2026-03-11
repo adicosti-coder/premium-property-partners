@@ -2,6 +2,19 @@
  * Image download + upload helpers for scrape-listing edge function.
  */
 
+/** Convert Uint8Array to base64 without exceeding call stack */
+function uint8ToBase64(bytes: Uint8Array): string {
+  const chunkSize = 8192;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    for (let j = 0; j < chunk.length; j++) {
+      binary += String.fromCharCode(chunk[j]);
+    }
+  }
+  return btoa(binary);
+}
+
 /** Remove watermark from image using Lovable AI */
 async function removeWatermark(imageBytes: Uint8Array, contentType: string): Promise<Uint8Array> {
   const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -11,11 +24,10 @@ async function removeWatermark(imageBytes: Uint8Array, contentType: string): Pro
   }
 
   try {
-    // Convert to base64 for the AI API
-    const base64 = btoa(String.fromCharCode(...imageBytes));
+    const base64 = uint8ToBase64(imageBytes);
     const dataUri = `data:${contentType};base64,${base64}`;
 
-    const response = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
@@ -38,6 +50,7 @@ async function removeWatermark(imageBytes: Uint8Array, contentType: string): Pro
             ],
           },
         ],
+        modalities: ["image", "text"],
         temperature: 0.1,
       }),
     });
@@ -48,16 +61,28 @@ async function removeWatermark(imageBytes: Uint8Array, contentType: string): Pro
     }
 
     const data = await response.json();
-    
-    // Check if the response contains an image
+
+    // Check for images array in the response (standard format)
+    const images = data?.choices?.[0]?.message?.images;
+    if (images && images.length > 0) {
+      const imgUrl = images[0]?.image_url?.url;
+      if (imgUrl && imgUrl.startsWith('data:')) {
+        const b64Match = imgUrl.match(/base64,(.+)/);
+        if (b64Match) {
+          const cleanedBytes = Uint8Array.from(atob(b64Match[1]), c => c.charCodeAt(0));
+          console.log(`[Watermark] Successfully removed watermark (${imageBytes.length} → ${cleanedBytes.length} bytes)`);
+          return cleanedBytes;
+        }
+      }
+    }
+
     const content = data?.choices?.[0]?.message?.content;
     if (!content) {
       console.log('[Watermark] No content in AI response, skipping');
       return imageBytes;
     }
 
-    // Look for base64 image in the response
-    // The image model may return inline_data or a base64-encoded image
+    // Look for inline_data in parts
     const parts = data?.choices?.[0]?.message?.parts || [];
     for (const part of parts) {
       if (part?.inline_data?.data) {
