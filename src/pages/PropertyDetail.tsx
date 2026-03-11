@@ -577,7 +577,7 @@ const PropertyDetail = () => {
                     { icon: '📊', text: 'Ocupare optimizată pe Booking.com & Airbnb — vizibilitate maximă' },
                     { icon: '⭐', text: 'Rating-uri ridicate ce cresc valoarea proprietății' },
                   ] : [
-                    { icon: '📈', text: 'Net yield of 9%+ vs 3-4% with classic rental' },
+                    { icon: '📈', text: 'Net yield of 9.4% vs 3-4% with classic rental' },
                     { icon: '💰', text: 'Dynamic Pricing — rates auto-optimized based on demand' },
                     { icon: '🔑', text: 'Self check-in with smart lock — no key handover needed' },
                     { icon: '🧹', text: 'Professional cleaning after each stay' },
