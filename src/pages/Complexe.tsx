@@ -52,7 +52,7 @@ const Complexe = () => {
   const translations = {
     ro: {
       title: "Complexe Rezidențiale Timișoara | Management Regim Hotelier",
-      metaDescription: "Administrare profesională în regim hotelier pentru cele mai căutate complexe rezidențiale din Timișoara: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia și multe altele. ROI 9%+.",
+      metaDescription: "Administrare profesională în regim hotelier pentru cele mai căutate complexe rezidențiale din Timișoara: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia și multe altele. ROI 9.4%+.",
       heroTitle: "Complexe Rezidențiale",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "Administrăm proprietăți în cele mai exclusiviste ansambluri rezidențiale din Timișoara. Descoperă complexul tău și află potențialul de venit.",
