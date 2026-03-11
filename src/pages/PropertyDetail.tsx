@@ -570,7 +570,7 @@ const PropertyDetail = () => {
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 mb-4">
                   {(language === 'ro' ? [
-                    { icon: '📈', text: 'Randament net de 9%+ vs 3-4% închiriere clasică' },
+                    { icon: '📈', text: 'Randament net de 9.4% vs 3-4% închiriere clasică' },
                     { icon: '💰', text: 'Dynamic Pricing — prețuri optimizate automat în funcție de cerere' },
                     { icon: '🔑', text: 'Self check-in cu smart lock — fără deplasări la predarea cheilor' },
                     { icon: '🧹', text: 'Curățenie profesionistă după fiecare sejur' },
