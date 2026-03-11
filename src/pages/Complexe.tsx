@@ -82,7 +82,7 @@ const Complexe = () => {
       neighborhoodsList: ["Center", "North", "South", "East", "West", "Green Forest"],
       statsTitle: "Proven Results",
       avgRoi: "Average ROI",
-      avgRoiValue: "9.2%",
+      avgRoiValue: "9.4%",
       occupancy: "Avg Occupancy",
       occupancyValue: "95%",
       totalProperties: "Properties",
