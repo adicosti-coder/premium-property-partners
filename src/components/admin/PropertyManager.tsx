@@ -142,6 +142,58 @@ export default function PropertyManager() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  // Auto-calculate ROI when price/night and capital change
+  const calculateROI = useCallback((fd: PropertyFormData): { roi: string; revenue: string } | null => {
+    const rate = fd.base_price_per_night ? parseFloat(fd.base_price_per_night) : 0;
+    const capital = fd.capital_necesar ? parseFloat(fd.capital_necesar) : 0;
+    if (!rate || !capital || capital <= 0) return null;
+
+    const occupancy = 0.75;
+    const monthlyGross = rate * 30 * occupancy;
+    const annualGross = monthlyGross * 12;
+    const netFactor = 1 - 0.20 - 0.07;
+    const annualNet = annualGross * netFactor;
+    const roi = (annualNet / capital) * 100;
+
+    return {
+      roi: `${roi.toFixed(1)}%`,
+      revenue: `${Math.round(monthlyGross * netFactor)}–${Math.round(monthlyGross)} €/lună`,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (formData.listing_type !== 'investitie') return;
+    const result = calculateROI(formData);
+    if (result && (result.roi !== formData.roi_percentage || result.revenue !== formData.estimated_revenue)) {
+      setFormData(prev => ({ ...prev, roi_percentage: result.roi, estimated_revenue: result.revenue }));
+    }
+  }, [formData.base_price_per_night, formData.capital_necesar, formData.listing_type, calculateROI]);
+
+  const handleTranslateToEN = async () => {
+    if (!formData.description_ro) {
+      toast({ title: "Completează mai întâi Descrierea RO", variant: "destructive" });
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-text", {
+        body: { text: formData.description_ro, sourceLang: "Romanian", targetLang: "English" },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.translated) {
+        setFormData(prev => ({ ...prev, description_en: data.translated }));
+        toast({ title: "✅ Descriere tradusă în engleză!" });
+      } else {
+        throw new Error("No translation returned");
+      }
+    } catch (err: any) {
+      toast({ title: "Eroare la traducere", description: err.message, variant: "destructive" });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const fetchProperties = async () => {
     setIsLoading(true);
