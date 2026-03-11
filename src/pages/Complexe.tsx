@@ -62,7 +62,7 @@ const Complexe = () => {
       neighborhoodsList: ["Centru", "Nord", "Sud", "Est", "Vest", "Pădurea Verde"],
       statsTitle: "Rezultate Demonstrate",
       avgRoi: "ROI Mediu",
-      avgRoiValue: "9.2%",
+      avgRoiValue: "9.4%",
       occupancy: "Ocupare Medie",
       occupancyValue: "95%",
       totalProperties: "Proprietăți",
