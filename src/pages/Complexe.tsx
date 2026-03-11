@@ -298,7 +298,7 @@ const Complexe = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-sm text-primary">
                             <TrendingUp className="w-4 h-4" />
-                            <span className="font-medium">ROI 8.5%+</span>
+                            <span className="font-medium">ROI 9.4%+</span>
                           </div>
                           <span className="text-sm text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
                             {t.viewDetails}

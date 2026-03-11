@@ -93,7 +93,7 @@ export function useKeyboardNavigation<T>({
 }: UseKeyboardNavigationOptions<T>): UseKeyboardNavigationReturn {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [typeAheadQuery, setTypeAheadQuery] = useState("");
-  const typeAheadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typeAheadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset highlighted index when dependencies change
   useEffect(() => {

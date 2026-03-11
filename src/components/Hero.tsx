@@ -390,7 +390,7 @@ const HeroContent = ({
       {/* Trust text */}
       <div className="mt-6">
         <p className="text-foreground/90 text-sm">
-          {t.hero.trustText} <span className="font-semibold text-foreground">24h</span>
+          {t.hero.trustText}
         </p>
         <p className="text-foreground/80 text-sm mt-1">
           {t.hero.trustPrivacy}
