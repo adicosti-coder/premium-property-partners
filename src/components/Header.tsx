@@ -310,17 +310,19 @@ const Header = () => {
                   );
                 })}
                 
-                {/* Admin link in mobile menu */}
-                <div>
-                  <Link
-                    to="/auth"
-                    className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Shield className="w-4 h-4" />
-                    Admin
-                  </Link>
-                </div>
+                {/* Admin link in mobile menu - only for authenticated */}
+                {isAuthenticated && (
+                  <div>
+                    <Link
+                      to="/auth"
+                      className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </Link>
+                  </div>
+                )}
 
                 {/* Mobile settings row */}
                 <div className="flex items-center gap-2 pt-4 border-t border-border">
