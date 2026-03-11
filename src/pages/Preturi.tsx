@@ -253,8 +253,8 @@ const Preturi = () => {
       <section className="relative pt-40 pb-16 bg-gradient-to-b from-blue-950/60 via-blue-900/20 to-background overflow-hidden">
         <div className="container mx-auto px-6 mb-8">
           <PageSummary
-            summaryRo="Pachete de administrare RealTrust: Starter (15%), Esențial (20%), Premium (25%). Fiecare include listare pe platforme, suport clienți și raportare financiară. Fără perioadă minimă de contract."
-            summaryEn="RealTrust management packages: Starter (15%), Essential (20%), Premium (25%). Each includes platform listing, guest support and financial reporting. No minimum contract period."
+            summaryRo="Pachete de administrare RealTrust: Starter (15%), Esențial (18%), Standard (20%), Premium (25%). Fiecare include listare pe platforme, suport clienți și raportare financiară. Fără perioadă minimă de contract."
+            summaryEn="RealTrust management packages: Starter (15%), Essential (18%), Standard (20%), Premium (25%). Each includes platform listing, guest support and financial reporting. No minimum contract period."
           />
         </div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.08),transparent_70%)]" />

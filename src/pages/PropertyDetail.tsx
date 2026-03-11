@@ -86,7 +86,7 @@ const PropertyDetail = () => {
   const [dbReviews, setDbReviews] = useState<any[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [isAutoplay, setIsAutoplay] = useState(false);
-  const autoplayRef = useRef<NodeJS.Timeout | null>(null);
+  const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track property views
   usePropertyViewTracking(dbProperty?.id);
@@ -570,14 +570,14 @@ const PropertyDetail = () => {
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 mb-4">
                   {(language === 'ro' ? [
-                    { icon: '📈', text: 'Randament net de 9%+ vs 3-4% închiriere clasică' },
+                    { icon: '📈', text: 'Randament net de 9.4% vs 3-4% închiriere clasică' },
                     { icon: '💰', text: 'Dynamic Pricing — prețuri optimizate automat în funcție de cerere' },
                     { icon: '🔑', text: 'Self check-in cu smart lock — fără deplasări la predarea cheilor' },
                     { icon: '🧹', text: 'Curățenie profesionistă după fiecare sejur' },
                     { icon: '📊', text: 'Ocupare optimizată pe Booking.com & Airbnb — vizibilitate maximă' },
                     { icon: '⭐', text: 'Rating-uri ridicate ce cresc valoarea proprietății' },
                   ] : [
-                    { icon: '📈', text: 'Net yield of 9%+ vs 3-4% with classic rental' },
+                    { icon: '📈', text: 'Net yield of 9.4% vs 3-4% with classic rental' },
                     { icon: '💰', text: 'Dynamic Pricing — rates auto-optimized based on demand' },
                     { icon: '🔑', text: 'Self check-in with smart lock — no key handover needed' },
                     { icon: '🧹', text: 'Professional cleaning after each stay' },
@@ -776,8 +776,8 @@ const PropertyDetail = () => {
               </div>
               <p className="text-foreground/80 leading-relaxed mb-4">
                 {language === 'ro'
-                  ? <>ApArt Hotel by RealTrust administrează proprietăți cu randament de <strong className="text-primary">9%+</strong>. Află cum te putem ajuta cu <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">administrare regim hotelier Timișoara</Link> sau vezi ofertele noastre de <Link to="/imobiliare" className="text-primary hover:underline font-medium">vânzări apartamente Timișoara</Link>.</>
-                  : <>ApArt Hotel by RealTrust manages properties with <strong className="text-primary">9%+</strong> returns. Find out how we can help with <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">short-term rental management in Timișoara</Link> or browse our <Link to="/imobiliare" className="text-primary hover:underline font-medium">apartments for sale in Timișoara</Link>.</>
+                  ? <>ApArt Hotel by RealTrust administrează proprietăți cu randament de <strong className="text-primary">9.4%</strong>. Află cum te putem ajuta cu <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">administrare regim hotelier Timișoara</Link> sau vezi ofertele noastre de <Link to="/imobiliare" className="text-primary hover:underline font-medium">vânzări apartamente Timișoara</Link>.</>
+                  : <>ApArt Hotel by RealTrust manages properties with <strong className="text-primary">9.4%</strong> returns. Find out how we can help with <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">short-term rental management in Timișoara</Link> or browse our <Link to="/imobiliare" className="text-primary hover:underline font-medium">apartments for sale in Timișoara</Link>.</>
                 }
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

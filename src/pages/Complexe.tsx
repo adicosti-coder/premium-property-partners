@@ -52,7 +52,7 @@ const Complexe = () => {
   const translations = {
     ro: {
       title: "Complexe Rezidențiale Timișoara | Management Regim Hotelier",
-      metaDescription: "Administrare profesională în regim hotelier pentru cele mai căutate complexe rezidențiale din Timișoara: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia și multe altele. ROI 9%+.",
+      metaDescription: "Administrare profesională în regim hotelier pentru cele mai căutate complexe rezidențiale din Timișoara: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia și multe altele. ROI 9.4%+.",
       heroTitle: "Complexe Rezidențiale",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "Administrăm proprietăți în cele mai exclusiviste ansambluri rezidențiale din Timișoara. Descoperă complexul tău și află potențialul de venit.",
@@ -62,7 +62,7 @@ const Complexe = () => {
       neighborhoodsList: ["Centru", "Nord", "Sud", "Est", "Vest", "Pădurea Verde"],
       statsTitle: "Rezultate Demonstrate",
       avgRoi: "ROI Mediu",
-      avgRoiValue: "9.2%",
+      avgRoiValue: "9.4%",
       occupancy: "Ocupare Medie",
       occupancyValue: "95%",
       totalProperties: "Proprietăți",
@@ -72,7 +72,7 @@ const Complexe = () => {
     },
     en: {
       title: "Residential Complexes Timișoara | Short-Term Rental Management",
-      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. 9%+ ROI.",
+      metaDescription: "Professional short-term rental management for Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia and more. 9.4%+ ROI.",
       heroTitle: "Residential Complexes",
       heroTitleHighlight: "Timișoara",
       heroSubtitle: "We manage properties in Timișoara's most exclusive residential complexes. Discover your complex and find out your income potential.",
@@ -82,7 +82,7 @@ const Complexe = () => {
       neighborhoodsList: ["Center", "North", "South", "East", "West", "Green Forest"],
       statsTitle: "Proven Results",
       avgRoi: "Average ROI",
-      avgRoiValue: "9.2%",
+      avgRoiValue: "9.4%",
       occupancy: "Avg Occupancy",
       occupancyValue: "95%",
       totalProperties: "Properties",
@@ -298,7 +298,7 @@ const Complexe = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-sm text-primary">
                             <TrendingUp className="w-4 h-4" />
-                            <span className="font-medium">ROI 8.5%+</span>
+                            <span className="font-medium">ROI 9.4%+</span>
                           </div>
                           <span className="text-sm text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
                             {t.viewDetails}

@@ -214,25 +214,27 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            {/* Notifications - hidden on mobile, visible md+ */}
-            <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>
+            {/* Notifications - hidden on mobile, visible md+ only for authenticated */}
+            {isAuthenticated && <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>}
             {/* Animation toggle - hidden on mobile */}
             <div className="hidden md:block"><Suspense fallback={null}><AnimationToggle /></Suspense></div>
             {/* Theme toggle - visible on all screens */}
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
-            <Link to="/auth" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
-                aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
-              >
-                <Shield className="w-5 h-5 md:mr-0 lg:mr-0 xl:mr-1.5" />
-                <span className="hidden xl:inline">Admin</span>
-              </Button>
-            </Link>
+            {isAuthenticated && (
+              <Link to="/auth" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
+                  aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
+                >
+                  <Shield className="w-5 h-5 md:mr-0 lg:mr-0 xl:mr-1.5" />
+                  <span className="hidden xl:inline">Admin</span>
+                </Button>
+              </Link>
+            )}
             {/* Owners CTA - distinct gold button - visible only on 2xl+ */}
             <Button 
               variant="default" 
@@ -308,24 +310,26 @@ const Header = () => {
                   );
                 })}
                 
-                {/* Admin link in mobile menu */}
-                <div>
-                  <Link
-                    to="/auth"
-                    className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Shield className="w-4 h-4" />
-                    Admin
-                  </Link>
-                </div>
+                {/* Admin link in mobile menu - only for authenticated */}
+                {isAuthenticated && (
+                  <div>
+                    <Link
+                      to="/auth"
+                      className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </Link>
+                  </div>
+                )}
 
                 {/* Mobile settings row */}
                 <div className="flex items-center gap-2 pt-4 border-t border-border">
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
-                  <NotificationBell />
+                  {isAuthenticated && <NotificationBell />}
                   <AnimationToggle />
                   <ThemeToggle />
                   <LanguageSwitcher />

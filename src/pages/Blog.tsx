@@ -420,7 +420,7 @@ const Blog = () => {
                           </Badge>
                         )}
                         {article.is_premium && (
-                          <Badge className="bg-amber-500/90 text-white border-amber-600">
+                          <Badge className="bg-amber-500/90 text-white border-amber-600" title={language === 'ro' ? 'Conținut exclusiv pentru membri autentificați' : 'Exclusive content for authenticated members'}>
                             <Crown className="w-3 h-3 mr-1" />
                             {t.premiumBadge}
                           </Badge>
