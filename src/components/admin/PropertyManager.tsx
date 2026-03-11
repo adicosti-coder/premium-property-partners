@@ -46,7 +46,8 @@ import {
   EyeOff,
   GripVertical,
   Image as ImageIcon,
-  TrendingUp
+  TrendingUp,
+  Languages
 } from "lucide-react";
 import PropertyImageGallery from "./PropertyImageGallery";
 import PropertyPricingManager from "./PropertyPricingManager";
