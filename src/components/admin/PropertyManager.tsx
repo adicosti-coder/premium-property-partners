@@ -552,7 +552,20 @@ export default function PropertyManager() {
       </div>
 
       <div className="space-y-2">
-        <Label>{t.admin.properties?.descriptionEn || "Description (English)"}</Label>
+        <div className="flex items-center justify-between">
+          <Label>{t.admin.properties?.descriptionEn || "Descriere (Engleză)"}</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleTranslateToEN}
+            disabled={isTranslating || !formData.description_ro}
+            className="gap-1.5 h-7 text-xs"
+          >
+            {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+            Traducere Auto
+          </Button>
+        </div>
         <Textarea
           value={formData.description_en}
           onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
