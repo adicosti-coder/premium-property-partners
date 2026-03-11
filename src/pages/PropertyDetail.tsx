@@ -776,8 +776,8 @@ const PropertyDetail = () => {
               </div>
               <p className="text-foreground/80 leading-relaxed mb-4">
                 {language === 'ro'
-                  ? <>ApArt Hotel by RealTrust administrează proprietăți cu randament de <strong className="text-primary">9%+</strong>. Află cum te putem ajuta cu <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">administrare regim hotelier Timișoara</Link> sau vezi ofertele noastre de <Link to="/imobiliare" className="text-primary hover:underline font-medium">vânzări apartamente Timișoara</Link>.</>
-                  : <>ApArt Hotel by RealTrust manages properties with <strong className="text-primary">9%+</strong> returns. Find out how we can help with <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">short-term rental management in Timișoara</Link> or browse our <Link to="/imobiliare" className="text-primary hover:underline font-medium">apartments for sale in Timișoara</Link>.</>
+                  ? <>ApArt Hotel by RealTrust administrează proprietăți cu randament de <strong className="text-primary">9.4%</strong>. Află cum te putem ajuta cu <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">administrare regim hotelier Timișoara</Link> sau vezi ofertele noastre de <Link to="/imobiliare" className="text-primary hover:underline font-medium">vânzări apartamente Timișoara</Link>.</>
+                  : <>ApArt Hotel by RealTrust manages properties with <strong className="text-primary">9.4%</strong> returns. Find out how we can help with <Link to="/pentru-proprietari" className="text-primary hover:underline font-medium">short-term rental management in Timișoara</Link> or browse our <Link to="/imobiliare" className="text-primary hover:underline font-medium">apartments for sale in Timișoara</Link>.</>
                 }
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
