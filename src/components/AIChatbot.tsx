@@ -859,19 +859,180 @@ const AIChatbot = () => {
                     )}
                   </div>
 
+                  {/* ─── Property Report Card ─── */}
+                  {propertyReport && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="mx-2 mt-6 p-5 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30 shadow-xl space-y-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-primary" />
+                          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary">
+                            {language === "ro" ? "Raport Proprietate" : "Property Report"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-3xl font-bold text-foreground">{propertyReport.scor}</span>
+                          <span className="text-sm text-muted-foreground">/{propertyReport.max_scor}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Score progress bar */}
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(propertyReport.scor / propertyReport.max_scor) * 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className={cn(
+                            "h-full rounded-full",
+                            propertyReport.scor >= 100 ? "bg-accent" : propertyReport.scor >= 70 ? "bg-primary" : "bg-destructive"
+                          )}
+                        />
+                      </div>
+                      
+                      {/* Stats row */}
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-background/50 rounded-xl p-2.5 border border-border/30">
+                          <MapPin className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+                          <p className="text-xs font-bold text-foreground">{propertyReport.zona}</p>
+                          <p className="text-[10px] text-muted-foreground">{language === "ro" ? "Zonă" : "Zone"}</p>
+                        </div>
+                        <div className="bg-background/50 rounded-xl p-2.5 border border-border/30">
+                          <TrendingUp className="w-4 h-4 mx-auto text-accent mb-1" />
+                          <p className="text-xs font-bold text-foreground">{propertyReport.roi_estimat}</p>
+                          <p className="text-[10px] text-muted-foreground">ROI</p>
+                        </div>
+                        <div className="bg-background/50 rounded-xl p-2.5 border border-border/30">
+                          <span className="text-sm">€</span>
+                          <p className="text-xs font-bold text-foreground">{propertyReport.tarif_noapte}€</p>
+                          <p className="text-[10px] text-muted-foreground">{language === "ro" ? "Noapte" : "Night"}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Consultant note */}
+                      <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+                        "{propertyReport.note_consultant}"
+                      </p>
+                      
+                      {/* Recommendations */}
+                      {propertyReport.recomandari?.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {language === "ro" ? "Recomandări" : "Recommendations"}
+                          </p>
+                          {propertyReport.recomandari.map((rec, i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs text-foreground/80">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />
+                              {rec}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* CTA */}
+                      <Button
+                        variant="whatsapp"
+                        size="lg"
+                        className="w-full gap-2"
+                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(
+                          `Scor HostScan: ${propertyReport.scor}/${propertyReport.max_scor} pentru ${propertyReport.zona}. ROI estimat: ${propertyReport.roi_estimat}. Vreau o evaluare detaliată.`
+                        )}`)}
+                      >
+                        {language === "ro" ? "CONTACTEAZĂ ECHIPA" : "CONTACT TEAM"}
+                      </Button>
+                    </motion.div>
+                  )}
+
                   {/* Quick Actions */}
-                  {messages.length <= 1 && !isLoading && (
-                    <div className="flex flex-wrap gap-2 mt-10 justify-center px-4">
-                      {text.quickActions.map((action, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSend(action)}
-                          className="px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-[11px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary/40 transition-all text-foreground"
+                  {messages.length <= 1 && !isLoading && !showQualificationWizard && (
+                    <div className="mt-6 space-y-4">
+                      {/* Qualification wizard trigger */}
+                      {!qualificationData && (currentPath.includes("/pentru-proprietari") || currentPath.includes("/investitii") || currentPath === "/") && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => setShowQualificationWizard(true)}
+                          className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 text-sm font-semibold text-primary hover:from-primary/20 hover:to-accent/20 transition-all flex items-center justify-center gap-2"
                         >
-                          {action}
-                        </button>
-                      ))}
+                          <TrendingUp className="w-4 h-4" />
+                          {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și ROI-ul" : "📊 Property Analysis — Get Score & ROI"}
+                        </motion.button>
+                      )}
+                      <div className="flex flex-wrap gap-2 justify-center px-4">
+                        {text.quickActions.map((action, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSend(action)}
+                            className="px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-[11px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary/40 transition-all text-foreground"
+                          >
+                            {action}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+                  )}
+
+                  {/* ─── Qualification Wizard ─── */}
+                  {showQualificationWizard && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mx-2 mt-6 p-5 rounded-2xl bg-gradient-to-br from-card to-muted/30 border border-primary/20 shadow-xl space-y-4"
+                    >
+                      <div className="text-center space-y-1">
+                        <h3 className="text-lg font-bold text-foreground">
+                          {language === "ro" ? "Analiză Proprietate" : "Property Analysis"}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {language === "ro" ? "Completează pentru o analiză personalizată cu scor și ROI" : "Fill in for a personalized score and ROI analysis"}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Input
+                          placeholder={language === "ro" ? "Prenume *" : "First name *"}
+                          value={wizardForm.name}
+                          onChange={e => setWizardForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="h-12 rounded-xl bg-background/50 border-border/50"
+                        />
+                        <Input
+                          type="tel"
+                          placeholder={language === "ro" ? "Telefon WhatsApp * (ex: 0723...)" : "WhatsApp phone * (e.g. +40...)"}
+                          value={wizardForm.phone}
+                          onChange={e => setWizardForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="h-12 rounded-xl bg-background/50 border-border/50"
+                        />
+                        <select
+                          value={wizardForm.zone}
+                          onChange={e => setWizardForm(prev => ({ ...prev, zone: e.target.value }))}
+                          className="w-full h-12 rounded-xl bg-background/50 border border-border/50 px-3 text-sm text-foreground"
+                        >
+                          {QUALIFICATION_ZONES.map(z => (
+                            <option key={z} value={z}>{z}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setShowQualificationWizard(false)}
+                        >
+                          {language === "ro" ? "Anulează" : "Cancel"}
+                        </Button>
+                        <Button
+                          className="flex-1 gap-2"
+                          onClick={handleQualificationSubmit}
+                          disabled={!wizardForm.name.trim() || !wizardForm.phone.trim()}
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          {language === "ro" ? "ÎNCEPE ANALIZA" : "START ANALYSIS"}
+                        </Button>
+                      </div>
+                    </motion.div>
                   )}
                 </ScrollArea>
 
