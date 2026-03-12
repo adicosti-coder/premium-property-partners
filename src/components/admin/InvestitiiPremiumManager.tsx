@@ -528,22 +528,28 @@ export default function InvestitiiPremiumManager() {
 
       {/* Search & Filters */}
       <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Caută după nume, locație, contact, telefon..."
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Caută după nume, locație, contact, telefon, email, platformă..."
               className="pl-9"
             />
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2">
-            <Filter className="w-4 h-4" /> Filtre
+            <Filter className="w-4 h-4" /> {showFilters ? "Ascunde filtre" : "Arată filtre"}
           </Button>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-2">
+              <RotateCcw className="w-4 h-4" /> Resetează
+            </Button>
+          )}
         </div>
+
         {showFilters && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
             <div>
               <Label className="text-xs mb-1">Camere</Label>
               <Select value={filterBedrooms} onValueChange={setFilterBedrooms}>
@@ -553,12 +559,13 @@ export default function InvestitiiPremiumManager() {
                   <SelectItem value="1">1 cameră</SelectItem>
                   <SelectItem value="2">2 camere</SelectItem>
                   <SelectItem value="3">3 camere</SelectItem>
-                  <SelectItem value="4">4+ camere</SelectItem>
+                  <SelectItem value="4plus">4+ camere</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label className="text-xs mb-1">Capital</Label>
+              <Label className="text-xs mb-1">Capital (interval)</Label>
               <Select value={filterPriceRange} onValueChange={setFilterPriceRange}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -570,8 +577,9 @@ export default function InvestitiiPremiumManager() {
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label className="text-xs mb-1">Capacitate min.</Label>
+              <Label className="text-xs mb-1">Capacitate minimă</Label>
               <Select value={filterCapacity} onValueChange={setFilterCapacity}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -582,9 +590,89 @@ export default function InvestitiiPremiumManager() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label className="text-xs mb-1">Status</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">Capital minim (€)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={filterCapitalMin}
+                onChange={(e) => setFilterCapitalMin(e.target.value)}
+                placeholder="ex: 100000"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">Capital maxim (€)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={filterCapitalMax}
+                onChange={(e) => setFilterCapitalMax(e.target.value)}
+                placeholder="ex: 180000"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">ROI minim (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                step="0.1"
+                value={filterRoiMin}
+                onChange={(e) => setFilterRoiMin(e.target.value)}
+                placeholder="ex: 8"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">Date contact</Label>
+              <Select value={filterContact} onValueChange={setFilterContact}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="with">Cu contact</SelectItem>
+                  <SelectItem value="without">Fără contact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="sm:col-span-2 lg:col-span-4">
+              <Label className="text-xs mb-1">Platformă sursă</Label>
+              <Select value={filterSource} onValueChange={setFilterSource}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Toate sursele" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate sursele</SelectItem>
+                  <SelectItem value="manual">Manual (fără sursă)</SelectItem>
+                  {sourceOptions.map((source) => (
+                    <SelectItem key={source} value={source}>
+                      {source}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
-        {(searchTerm || filterBedrooms !== "all" || filterPriceRange !== "all" || filterCapacity !== "all") && (
+
+        {hasActiveFilters && (
           <p className="text-xs text-muted-foreground">{filteredProperties.length} din {properties.length} proprietăți</p>
         )}
       </div>
