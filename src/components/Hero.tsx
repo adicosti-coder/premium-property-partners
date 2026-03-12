@@ -133,7 +133,8 @@ const Hero = () => {
   // Reduce parallax calculations on mobile for performance
   const parallaxOffset = isMobile ? 0 : scrollY * 0.4;
   const blurAmount = isMobile ? 0 : Math.min(scrollY * 0.02, 10);
-  const contentOpacity = Math.min(1, Math.max(0, 1 - scrollY * 0.002));
+  // On mobile: no fade-in effect — content visible instantly for LCP
+  const contentOpacity = isMobile ? 1 : Math.min(1, Math.max(0, 1 - scrollY * 0.002));
   const contentTranslate = isMobile ? 0 : scrollY * 0.3;
 
   return (
