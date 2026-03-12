@@ -287,7 +287,7 @@
 
   /* Premium Spacing - Generous White Space */
   .section-padding {
-    @apply py-28 md:py-32 lg:py-36;
+    @apply py-16 md:py-20 lg:py-24;
   }
 
   .section-padding-sm {
