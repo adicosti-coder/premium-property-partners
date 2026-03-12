@@ -133,7 +133,8 @@ const Hero = () => {
   // Reduce parallax calculations on mobile for performance
   const parallaxOffset = isMobile ? 0 : scrollY * 0.4;
   const blurAmount = isMobile ? 0 : Math.min(scrollY * 0.02, 10);
-  const contentOpacity = Math.min(1, Math.max(0, 1 - scrollY * 0.002));
+  // On mobile: no fade-in effect — content visible instantly for LCP
+  const contentOpacity = isMobile ? 1 : Math.min(1, Math.max(0, 1 - scrollY * 0.002));
   const contentTranslate = isMobile ? 0 : scrollY * 0.3;
 
   return (
@@ -243,11 +244,12 @@ const Hero = () => {
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
       <div 
-        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 transition-opacity duration-100 min-h-[60vh] md:min-h-[50vh]"
-        style={{ 
+        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 min-h-[60vh] md:min-h-[50vh]"
+        style={isMobile ? undefined : { 
           opacity: contentOpacity,
           transform: `translateY(-${contentTranslate}px)`,
-          willChange: 'opacity, transform'
+          willChange: 'opacity, transform',
+          transition: 'opacity 0.1s'
         }}
       >
         <div className="max-w-4xl">
@@ -408,21 +410,23 @@ const HeroContent = ({
         </p>
       </div>
       
-      {/* Feature Cards */}
-      <div className="grid grid-cols-1 gap-3 mt-8">
-        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/80 text-sm">{t.hero.features?.payments || "Plăți"}</p>
-          <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
+      {/* Feature Cards — hidden on mobile to reduce DOM and improve LCP */}
+      {!isMobile && (
+        <div className="grid grid-cols-1 gap-3 mt-8">
+          <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+            <p className="text-foreground/80 text-sm">{t.hero.features?.payments || "Plăți"}</p>
+            <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
+          </div>
+          <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+            <p className="text-foreground/80 text-sm">{t.hero.features?.model || "Model"}</p>
+            <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
+          </div>
+          <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+            <p className="text-foreground/80 text-sm">{t.hero.features?.response || "Răspuns"}</p>
+            <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
+          </div>
         </div>
-        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/80 text-sm">{t.hero.features?.model || "Model"}</p>
-          <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
-        </div>
-        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/80 text-sm">{t.hero.features?.response || "Răspuns"}</p>
-          <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
-        </div>
-      </div>
+      )}
     </>
   );
 }

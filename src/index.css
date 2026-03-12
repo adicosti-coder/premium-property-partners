@@ -694,5 +694,14 @@
    contain-intrinsic-size prevents layout shift when sections pop into view. */
 .cv-auto {
   content-visibility: auto;
-  contain-intrinsic-size: auto 500px;
+  contain-intrinsic-size: auto 600px;
+}
+
+/* Force hero content visible immediately — no fade-in delay for LCP */
+@media (max-width: 768px) {
+  #main-content > section:first-child .container {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
