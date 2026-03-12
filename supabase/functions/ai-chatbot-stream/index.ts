@@ -170,12 +170,40 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = await buildSystemPrompt(language, pageContext);
+    let systemPrompt = await buildSystemPrompt(language, pageContext);
+
+    // Enhance system prompt with qualification context and HostScan capabilities
+    if (qualificationContext) {
+      systemPrompt += `\n\n=== PROPERTY OWNER QUALIFICATION ===
+Owner pre-qualified via wizard:
+• Name: ${qualificationContext.name || "N/A"}
+• Phone: ${qualificationContext.phone || "N/A"}
+• Zone: ${qualificationContext.zone || "N/A"}
+Treat this as a warm lead. Focus on ROI analysis for their zone. Use calculate_roi proactively.`;
+    }
+
+    systemPrompt += `\n\n=== PHOTO ANALYSIS ===
+If the user sends a property photo, analyze:
+1. Finish quality (premium/standard/basic) and estimated impact on nightly rate
+2. Furnishing style and condition
+3. Specific ROI recommendations based on visual assessment
+4. Score the property 0-140 points across: Location(30), Finishes(25), Furnishing(25), Layout(20), Amenities(20), Condition(20)
+
+When you complete a full property analysis, include a structured report at the end using this exact format:
+<RAPORT_JSON>{"scor": 115, "max_scor": 140, "zona": "ISHO", "roi_estimat": "9.4%", "tarif_noapte": 110, "note_consultant": "Proprietate excelentă cu finisaje premium și potențial ridicat de randament.", "recomandari": ["Optimizare iluminat", "Adăugare smart lock"], "categorie": "Premium"}</RAPORT_JSON>`;
+
+    // Build user message content (text + optional image)
+    const userContent: any = imageBase64
+      ? [
+          { type: "text", text: message || "Am atașat o imagine cu proprietatea mea. Analizează te rog." },
+          { type: "image_url", image_url: { url: imageBase64 } },
+        ]
+      : message;
 
     const messages = [
       { role: "system", content: systemPrompt },
       ...conversationHistory.slice(-10).map((m: any) => ({ role: m.role, content: m.content })),
-      { role: "user", content: message },
+      { role: "user", content: userContent },
     ];
 
     console.log(`[chatbot] Request from ${getClientIP(req)}, lang: ${language}`);
