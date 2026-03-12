@@ -1,6 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Shield, Heart } from "lucide-react";
 import { useState, useEffect, lazy, Suspense } from "react";
+
+// Inline SVG icons to avoid loading lucide-react in critical path (~25KB saving)
+const MenuIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>;
+const XIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+const ShieldIcon = ({ className = "w-5 h-5" }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>;
+const HeartIcon = ({ className = "w-5 h-5" }: { className?: string }) => <svg className={className} fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -215,7 +220,7 @@ const Header = () => {
                   className="relative w-11 h-11 min-w-[44px] min-h-[44px] p-0 text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(0_80%_50%/0.3)]"
                   aria-label={language === 'ro' ? `Favorite (${favorites.length})` : `Favorites (${favorites.length})`}
                 >
-                  <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                  <HeartIcon className="w-5 h-5 fill-red-500 text-red-500" />
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
                     {favorites.length}
                   </span>
@@ -238,7 +243,7 @@ const Header = () => {
                   className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
                   aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
                 >
-                  <Shield className="w-5 h-5 md:mr-0 lg:mr-0 xl:mr-1.5" />
+                  <ShieldIcon className="w-5 h-5" />
                   <span className="hidden xl:inline">Admin</span>
                 </Button>
               </Link>
@@ -260,7 +265,7 @@ const Header = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? (language === 'ro' ? 'Închide meniul' : 'Close menu') : (language === 'ro' ? 'Deschide meniul' : 'Open menu')}
             >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <><Menu className="w-5 h-5" /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
+            {mobileMenuOpen ? <XIcon /> : <><MenuIcon /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
             </button>
           </div>
         </div>
@@ -326,7 +331,7 @@ const Header = () => {
                       className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Shield className="w-4 h-4" />
+                      <ShieldIcon className="w-4 h-4" />
                       Admin
                     </Link>
                   </div>

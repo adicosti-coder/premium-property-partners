@@ -38,7 +38,7 @@ const NearFoldSection = () => {
   }, []);
 
   return (
-    <div id="calculator">
+    <div id="calculator" className="cv-auto">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
         <MainNavigationCards />
@@ -60,7 +60,7 @@ const NearFoldSection = () => {
 const MidFoldSection = () => {
   const [ref, visible] = useLazyVisible("400px");
   return (
-    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
+    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <DualServicePaths />
@@ -74,7 +74,7 @@ const MidFoldSection = () => {
 const TeaserSections = () => {
   const [ref, visible] = useLazyVisible("400px");
   return (
-    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
+    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <section id="beneficii">
@@ -93,7 +93,7 @@ const TeaserSections = () => {
 const BottomFoldSection = ({ language }: { language: string }) => {
   const [ref, visible] = useLazyVisible("200px");
   return (
-    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
+    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <BlogPreview />
@@ -167,7 +167,7 @@ const Index = () => {
         <TeaserSections />
 
         {/* Property gallery + testimonials */}
-        <div ref={heavyRef} style={{ minHeight: heavyVisible ? undefined : '100px' }}>
+        <div ref={heavyRef} className="cv-auto" style={{ minHeight: heavyVisible ? undefined : '100px' }}>
           {heavyVisible && (
             <Suspense fallback={<div className="min-h-[400px]" />}>
               <section id="portofoliu">
