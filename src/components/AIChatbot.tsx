@@ -4,7 +4,8 @@ import {
   X, Send, Bot, User, Sparkles, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
-  Copy, Check, Phone, PhoneOff, Star
+  Copy, Check, Phone, PhoneOff, Star, Camera,
+  CheckCircle2, MapPin, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,24 @@ interface Message {
   timestamp: Date;
   isStreaming?: boolean;
   isError?: boolean;
+  imagePreview?: string;
+}
+
+interface PropertyReport {
+  scor: number;
+  max_scor: number;
+  zona: string;
+  roi_estimat: string;
+  tarif_noapte: number;
+  note_consultant: string;
+  recomandari: string[];
+  categorie: string;
+}
+
+interface QualificationData {
+  name: string;
+  phone: string;
+  zone: string;
 }
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
