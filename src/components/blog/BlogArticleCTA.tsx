@@ -21,6 +21,10 @@ const BlogArticleCTA = () => {
       ownerCta: "Cere analiză gratuită",
       ownerBack: "Înapoi la Blog",
       ownerFooter: "Plățile intră direct la tine · structură transparentă · fără obligații.",
+      aiLabel: "ANALIZĂ AI",
+      aiTitle: "Analizează-ți proprietatea cu AI",
+      aiDescription: "Încarcă poze, primește scor instant (0-140) și estimare ROI personalizată. Gratuit, fără obligații.",
+      aiCta: "Începe analiza AI",
     },
     en: {
       guestLabel: "GUEST ACCOMMODATION",
