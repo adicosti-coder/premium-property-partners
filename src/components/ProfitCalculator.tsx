@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip as RechartsTooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Tooltip as ShadTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import LeadCaptureForm from "./LeadCaptureForm";
+const FastTrackScoring = lazy(() => import("./FastTrackScoring"));
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
