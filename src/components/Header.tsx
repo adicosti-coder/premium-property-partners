@@ -222,7 +222,7 @@ const Header = () => {
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
-            {isAuthenticated && (
+            {isAuthenticated === true && (
               <Link to="/auth" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
                 <Button 
                   variant="ghost" 
