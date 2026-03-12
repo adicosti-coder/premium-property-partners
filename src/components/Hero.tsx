@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown } from "lucide-react";
 
 // Hero image served from public/ — optimized compressed versions
 const HERO_IMAGE_PUBLIC = "/images/hero-optimized-1920w.webp";
