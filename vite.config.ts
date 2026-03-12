@@ -68,17 +68,20 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
+            // Only split core vendor libs loaded on every page
             "vendor-react": ["react", "react-dom", "react-router-dom"],
             "vendor-query": ["@tanstack/react-query"],
-            "vendor-motion": ["framer-motion"],
-            "vendor-charts": ["recharts"],
             "vendor-supabase": ["@supabase/supabase-js"],
-            "vendor-mapbox": ["mapbox-gl"],
+            // Heavy libs loaded lazily — let Rollup tree-shake & split naturally
+            // framer-motion, recharts, mapbox-gl are NOT in manualChunks
+            // so they only load when their lazy component is rendered
           },
         },
       },
       // Increase chunk size warning limit given vendor splitting
       chunkSizeWarningLimit: 600,
+      // Target modern browsers to reduce polyfill size
+      target: 'es2020',
     },
   };
 });
