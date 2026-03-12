@@ -410,21 +410,23 @@ const HeroContent = ({
         </p>
       </div>
       
-      {/* Feature Cards */}
-      <div className="grid grid-cols-1 gap-3 mt-8">
-        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/80 text-sm">{t.hero.features?.payments || "Plăți"}</p>
-          <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
+      {/* Feature Cards — hidden on mobile to reduce DOM and improve LCP */}
+      {!isMobile && (
+        <div className="grid grid-cols-1 gap-3 mt-8">
+          <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+            <p className="text-foreground/80 text-sm">{t.hero.features?.payments || "Plăți"}</p>
+            <p className="text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</p>
+          </div>
+          <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+            <p className="text-foreground/80 text-sm">{t.hero.features?.model || "Model"}</p>
+            <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
+          </div>
+          <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
+            <p className="text-foreground/80 text-sm">{t.hero.features?.response || "Răspuns"}</p>
+            <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
+          </div>
         </div>
-        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/80 text-sm">{t.hero.features?.model || "Model"}</p>
-          <p className="text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</p>
-        </div>
-        <div className="p-4 bg-card/90 border border-border/70 rounded-xl backdrop-blur-sm shadow-sm">
-          <p className="text-foreground/80 text-sm">{t.hero.features?.response || "Răspuns"}</p>
-          <p className="text-foreground font-medium">{t.hero.features?.responseDesc || "În aceeași zi"}</p>
-        </div>
-      </div>
+      )}
     </>
   );
 }
