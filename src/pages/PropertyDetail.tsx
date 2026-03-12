@@ -392,14 +392,14 @@ const PropertyDetail = () => {
                   <PropertyAIScore
                     propertyName={property.name}
                     location={property.location}
-                    basePrice={property.base_price_per_night}
-                    bookingRating={property.booking_rating}
-                    reviewCount={property.booking_review_count}
+                    basePrice={(property as any).base_price_per_night ?? null}
+                    bookingRating={(property as any).booking_rating ?? null}
+                    reviewCount={(property as any).booking_review_count ?? null}
                     bedrooms={property.bedrooms}
                     capacity={property.capacity}
-                    amenities={property.amenities}
-                    size={property.size}
-                    tag={property.tag}
+                    amenities={(property as any).amenities ?? null}
+                    size={(property as any).size ?? null}
+                    tag={(property as any).tag ?? undefined}
                     className="my-2"
                   />
                 </Suspense>

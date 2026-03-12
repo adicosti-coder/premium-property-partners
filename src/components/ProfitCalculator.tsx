@@ -614,6 +614,19 @@ const ProfitCalculator = () => {
                       ? '📋 Completezi un scurt formular → Primești analiza personalizată pe WhatsApp în 24h' 
                       : '📋 Fill a short form → Get your personalized analysis via WhatsApp within 24h'}
                   </p>
+                  
+                  {/* Fast-Track AI Scoring */}
+                  <Suspense fallback={null}>
+                    <FastTrackScoring
+                      calculatorData={{
+                        netProfit: calculations.netProfit,
+                        yearlyNet: calculations.yearlyNet,
+                        occupancy,
+                        adr,
+                        managementFee,
+                      }}
+                    />
+                  </Suspense>
                 </div>
               </div>
             </div>
