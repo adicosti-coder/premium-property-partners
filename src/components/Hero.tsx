@@ -145,7 +145,7 @@ const Hero = () => {
             <picture>
               {!isCustom && (
                 <source
-                  srcSet="/images/hero-cinematic-800w.webp 800w, /images/hero-cinematic.webp 1920w"
+                  srcSet="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
                   sizes="100vw"
                   type="image/webp"
                 />

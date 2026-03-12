@@ -115,17 +115,14 @@
   <body>
     <div id="root"></div>
     <!-- Pre-rendered hero skeleton — shows instantly before JS loads, hidden once React mounts -->
+    <!-- Skeleton removed: was loading hero image twice (1.3MB duplicate). React Hero handles the image. -->
     <div id="hero-skeleton" aria-hidden="true">
       <div class="hero-bg">
-        <picture>
-          <source srcset="/images/hero-cinematic-800w.webp 800w, /images/hero-cinematic.webp 1920w" sizes="100vw" type="image/webp" />
-          <img src="/images/hero-cinematic.webp" alt="Apartamente regim hotelier Timișoara — administrare profesională ApArt Hotel" width="1920" height="1080" fetchpriority="high" decoding="sync" />
-        </picture>
         <div class="hero-overlay"></div>
       </div>
       <div class="hero-content">
         <h1>RealTrust & ApArt Hotel Timișoara — Imobiliare & Regim Hotelier</h1>
-        <p>Agenție imobiliară și administrare ApArt Hotel în Timișoara. Investiții, vânzări și închirieri cu randament 9%+. Cazare în regim hotelier la standarde înalte.</p>
+        <p>Agenție imobiliară și administrare ApArt Hotel în Timișoara.</p>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
