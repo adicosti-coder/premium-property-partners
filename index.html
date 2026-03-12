@@ -45,8 +45,8 @@
 
     <!-- Preconnect only to the single most critical origin (API) -->
     <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
-    <!-- Cloudflare Turnstile: preconnect (used on every page for captcha) -->
-    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin />
+    <!-- Cloudflare Turnstile: dns-prefetch only (not used on every page) -->
+    <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
     <!-- Non-critical origins: dns-prefetch only -->
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
