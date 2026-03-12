@@ -17,11 +17,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     if (saved && (saved === 'ro' || saved === 'en')) {
       return saved;
     }
-    // Check browser language
-    const browserLang = isBrowser() && typeof navigator !== 'undefined'
-      ? navigator.language.split('-')[0]
-      : 'ro';
-    return browserLang === 'en' ? 'en' : 'ro';
+    // Default to Romanian — primary audience is Romanian
+    return 'ro';
   });
 
   const setLanguage = (lang: Language) => {
