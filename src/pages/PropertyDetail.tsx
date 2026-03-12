@@ -28,6 +28,7 @@ const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
 const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighborhoodMap"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const PropertyAIScore = lazy(() => import("@/components/PropertyAIScore"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
@@ -387,6 +388,21 @@ const PropertyDetail = () => {
                   </Badge>
                 )}
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
+                <Suspense fallback={null}>
+                  <PropertyAIScore
+                    propertyName={property.name}
+                    location={property.location}
+                    basePrice={(property as any).base_price_per_night ?? null}
+                    bookingRating={(property as any).booking_rating ?? null}
+                    reviewCount={(property as any).booking_review_count ?? null}
+                    bedrooms={property.bedrooms}
+                    capacity={property.capacity}
+                    amenities={(property as any).amenities ?? null}
+                    size={(property as any).size ?? null}
+                    tag={(property as any).tag ?? undefined}
+                    className="my-2"
+                  />
+                </Suspense>
                 <p className="text-muted-foreground flex items-center gap-1 min-w-0 flex-wrap">
                   <MapPin className="w-4 h-4 shrink-0" />
                   <span className="break-all truncate">{property.location}</span>
