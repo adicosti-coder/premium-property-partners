@@ -118,7 +118,7 @@ export async function extractFromMarkdownWithAI(markdown: string, url: string): 
   try {
     const truncatedMarkdown = markdown.substring(0, 8000);
     
-    const aiResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
