@@ -93,7 +93,7 @@ const TeaserSections = () => {
 const BottomFoldSection = ({ language }: { language: string }) => {
   const [ref, visible] = useLazyVisible("200px");
   return (
-    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
+    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
       {visible && (
         <Suspense fallback={null}>
           <BlogPreview />

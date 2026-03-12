@@ -688,3 +688,11 @@
     -webkit-backdrop-filter: none !important;
   }
 }
+
+/* content-visibility: auto — skip rendering of off-screen sections entirely.
+   This dramatically reduces initial paint time and TBT on mobile.
+   contain-intrinsic-size prevents layout shift when sections pop into view. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
