@@ -265,7 +265,7 @@ const Header = () => {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? (language === 'ro' ? 'Închide meniul' : 'Close menu') : (language === 'ro' ? 'Deschide meniul' : 'Open menu')}
             >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <><Menu className="w-5 h-5" /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
+            {mobileMenuOpen ? <XIcon /> : <><MenuIcon /><span className="text-sm font-extrabold tracking-wider">MENIU</span></>}
             </button>
           </div>
         </div>
