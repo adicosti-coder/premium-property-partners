@@ -32,7 +32,8 @@ const RealEstateListings = () => {
         .select("id, name, location, listing_type, capital_necesar, image_path, description_ro, description_en")
         .in("listing_type", ["vanzare", "inchiriere"])
         .eq("is_active", true)
-        .order("display_order");
+        .order("display_order")
+        .limit(6);
       setListings(data || []);
       setLoading(false);
     };
