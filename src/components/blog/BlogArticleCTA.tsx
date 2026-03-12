@@ -156,6 +156,49 @@ const BlogArticleCTA = () => {
         </Card>
       </motion.div>
 
+      {/* AI Analysis Section */}
+      <motion.div variants={cardVariants}>
+        <Card className="bg-gradient-to-br from-primary/5 to-accent/5 backdrop-blur-sm border-primary/20 overflow-hidden group hover:border-primary/40 transition-colors duration-300">
+          <CardContent className="p-6 md:p-8">
+            <motion.div 
+              className="flex items-center gap-2 mb-3"
+              variants={contentVariants}
+            >
+              <BrainCircuit className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold tracking-widest text-primary uppercase">
+                {t.aiLabel}
+              </span>
+            </motion.div>
+            
+            <motion.h3 
+              className="text-xl md:text-2xl font-serif font-bold text-foreground mb-3"
+              variants={contentVariants}
+            >
+              {t.aiTitle}
+            </motion.h3>
+            
+            <motion.p 
+              className="text-muted-foreground mb-6"
+              variants={contentVariants}
+            >
+              {t.aiDescription}
+            </motion.p>
+            
+            <motion.div 
+              className="flex flex-wrap gap-3"
+              variants={buttonVariants}
+            >
+              <Button asChild variant="premium" className="gap-2 group/btn">
+                <Link to="/analiza-proprietate">
+                  {t.aiCta}
+                  <BrainCircuit className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+                </Link>
+              </Button>
+            </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Owner Section */}
       <motion.div variants={cardVariants}>
         <Card className="bg-card/80 backdrop-blur-sm border-border/50 overflow-hidden group hover:border-primary/30 transition-colors duration-300">
