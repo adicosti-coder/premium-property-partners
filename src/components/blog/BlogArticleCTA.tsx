@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Home, Building2, ArrowRight, ArrowLeft } from "lucide-react";
+import { Home, Building2, ArrowRight, ArrowLeft, BrainCircuit } from "lucide-react";
 import { motion } from "framer-motion";
 
 const BlogArticleCTA = () => {
