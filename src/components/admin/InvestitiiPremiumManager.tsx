@@ -16,7 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Edit, Star, Euro, Users, Bed, Maximize2, ExternalLink,
   Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath, Languages,
-  Phone, User, Mail, Link2, Calendar, Filter, Search,
+  Phone, User, Mail, Link2, Filter, Search, RotateCcw,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyImageGallery from "./PropertyImageGallery";
@@ -118,7 +118,13 @@ export default function InvestitiiPremiumManager() {
   const [filterBedrooms, setFilterBedrooms] = useState<string>("all");
   const [filterPriceRange, setFilterPriceRange] = useState<string>("all");
   const [filterCapacity, setFilterCapacity] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterContact, setFilterContact] = useState<string>("all");
+  const [filterSource, setFilterSource] = useState<string>("all");
+  const [filterRoiMin, setFilterRoiMin] = useState<string>("");
+  const [filterCapitalMin, setFilterCapitalMin] = useState<string>("");
+  const [filterCapitalMax, setFilterCapitalMax] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(true);
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -158,29 +164,131 @@ export default function InvestitiiPremiumManager() {
 
   useEffect(() => { fetchProperties(); }, []);
 
+  const sourceOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          properties
+            .map((p) => p.source_platform?.trim())
+            .filter((value): value is string => Boolean(value))
+        )
+      ).sort((a, b) => a.localeCompare(b, "ro", { sensitivity: "base" })),
+    [properties]
+  );
+
   // Filtered properties
   const filteredProperties = useMemo(() => {
-    return properties.filter(p => {
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matches = p.name.toLowerCase().includes(term) ||
+    return properties.filter((p) => {
+      const term = searchTerm.trim().toLowerCase();
+      if (term) {
+        const matches =
+          p.name.toLowerCase().includes(term) ||
           p.location.toLowerCase().includes(term) ||
           (p.contact_name && p.contact_name.toLowerCase().includes(term)) ||
-          (p.contact_phone && p.contact_phone.includes(term));
+          (p.contact_phone && p.contact_phone.includes(term)) ||
+          (p.contact_email && p.contact_email.toLowerCase().includes(term)) ||
+          (p.source_platform && p.source_platform.toLowerCase().includes(term)) ||
+          (p.source_url && p.source_url.toLowerCase().includes(term));
+
         if (!matches) return false;
       }
-      if (filterBedrooms !== "all" && p.bedrooms !== parseInt(filterBedrooms)) return false;
-      if (filterCapacity !== "all" && p.capacity < parseInt(filterCapacity)) return false;
+
+      if (filterBedrooms !== "all") {
+        if (filterBedrooms === "4plus") {
+          if (p.bedrooms < 4) return false;
+        } else if (p.bedrooms !== Number.parseInt(filterBedrooms, 10)) {
+          return false;
+        }
+      }
+
+      if (filterCapacity !== "all" && p.capacity < Number.parseInt(filterCapacity, 10)) return false;
+
+      const capital = p.capital_necesar || 0;
       if (filterPriceRange !== "all") {
-        const capital = p.capital_necesar || 0;
         if (filterPriceRange === "under100k" && capital >= 100000) return false;
         if (filterPriceRange === "100k-150k" && (capital < 100000 || capital > 150000)) return false;
         if (filterPriceRange === "150k-200k" && (capital < 150000 || capital > 200000)) return false;
         if (filterPriceRange === "over200k" && capital < 200000) return false;
       }
+
+      if (filterCapitalMin && capital < Number.parseInt(filterCapitalMin, 10)) return false;
+      if (filterCapitalMax && capital > Number.parseInt(filterCapitalMax, 10)) return false;
+
+      if (filterStatus === "active" && !p.is_active) return false;
+      if (filterStatus === "inactive" && p.is_active) return false;
+
+      const hasContact = Boolean(p.contact_name || p.contact_phone || p.contact_email);
+      if (filterContact === "with" && !hasContact) return false;
+      if (filterContact === "without" && hasContact) return false;
+
+      if (filterSource === "manual" && p.source_url) return false;
+      if (filterSource !== "all" && filterSource !== "manual") {
+        const normalizedSource = p.source_platform?.trim().toLowerCase() || "";
+        if (normalizedSource !== filterSource.toLowerCase()) return false;
+      }
+
+      if (filterRoiMin) {
+        const roiValue = Number.parseFloat((p.roi_percentage || "").replace(",", ".").replace("%", "").trim());
+        if (Number.isNaN(roiValue) || roiValue < Number.parseFloat(filterRoiMin)) return false;
+      }
+
       return true;
     });
-  }, [properties, searchTerm, filterBedrooms, filterPriceRange, filterCapacity]);
+  }, [
+    properties,
+    searchTerm,
+    filterBedrooms,
+    filterPriceRange,
+    filterCapacity,
+    filterStatus,
+    filterContact,
+    filterSource,
+    filterRoiMin,
+    filterCapitalMin,
+    filterCapitalMax,
+  ]);
+
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        searchTerm ||
+          filterBedrooms !== "all" ||
+          filterPriceRange !== "all" ||
+          filterCapacity !== "all" ||
+          filterStatus !== "all" ||
+          filterContact !== "all" ||
+          filterSource !== "all" ||
+          filterRoiMin ||
+          filterCapitalMin ||
+          filterCapitalMax
+      ),
+    [
+      searchTerm,
+      filterBedrooms,
+      filterPriceRange,
+      filterCapacity,
+      filterStatus,
+      filterContact,
+      filterSource,
+      filterRoiMin,
+      filterCapitalMin,
+      filterCapitalMax,
+    ]
+  );
+
+  const resetFilters = useCallback(() => {
+    setSearchTerm("");
+    setFilterBedrooms("all");
+    setFilterPriceRange("all");
+    setFilterCapacity("all");
+    setFilterStatus("all");
+    setFilterContact("all");
+    setFilterSource("all");
+    setFilterRoiMin("");
+    setFilterCapitalMin("");
+    setFilterCapitalMax("");
+  }, []);
+
 
   const fetchPropertyImages = async (propertyId: string) => {
     const { data } = await supabase
@@ -420,22 +528,28 @@ export default function InvestitiiPremiumManager() {
 
       {/* Search & Filters */}
       <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Caută după nume, locație, contact, telefon..."
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Caută după nume, locație, contact, telefon, email, platformă..."
               className="pl-9"
             />
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2">
-            <Filter className="w-4 h-4" /> Filtre
+            <Filter className="w-4 h-4" /> {showFilters ? "Ascunde filtre" : "Arată filtre"}
           </Button>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-2">
+              <RotateCcw className="w-4 h-4" /> Resetează
+            </Button>
+          )}
         </div>
+
         {showFilters && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
             <div>
               <Label className="text-xs mb-1">Camere</Label>
               <Select value={filterBedrooms} onValueChange={setFilterBedrooms}>
@@ -445,12 +559,13 @@ export default function InvestitiiPremiumManager() {
                   <SelectItem value="1">1 cameră</SelectItem>
                   <SelectItem value="2">2 camere</SelectItem>
                   <SelectItem value="3">3 camere</SelectItem>
-                  <SelectItem value="4">4+ camere</SelectItem>
+                  <SelectItem value="4plus">4+ camere</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label className="text-xs mb-1">Capital</Label>
+              <Label className="text-xs mb-1">Capital (interval)</Label>
               <Select value={filterPriceRange} onValueChange={setFilterPriceRange}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -462,8 +577,9 @@ export default function InvestitiiPremiumManager() {
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label className="text-xs mb-1">Capacitate min.</Label>
+              <Label className="text-xs mb-1">Capacitate minimă</Label>
               <Select value={filterCapacity} onValueChange={setFilterCapacity}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -474,9 +590,89 @@ export default function InvestitiiPremiumManager() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label className="text-xs mb-1">Status</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">Capital minim (€)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={filterCapitalMin}
+                onChange={(e) => setFilterCapitalMin(e.target.value)}
+                placeholder="ex: 100000"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">Capital maxim (€)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={filterCapitalMax}
+                onChange={(e) => setFilterCapitalMax(e.target.value)}
+                placeholder="ex: 180000"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">ROI minim (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                step="0.1"
+                value={filterRoiMin}
+                onChange={(e) => setFilterRoiMin(e.target.value)}
+                placeholder="ex: 8"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs mb-1">Date contact</Label>
+              <Select value={filterContact} onValueChange={setFilterContact}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="with">Cu contact</SelectItem>
+                  <SelectItem value="without">Fără contact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="sm:col-span-2 lg:col-span-4">
+              <Label className="text-xs mb-1">Platformă sursă</Label>
+              <Select value={filterSource} onValueChange={setFilterSource}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Toate sursele" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate sursele</SelectItem>
+                  <SelectItem value="manual">Manual (fără sursă)</SelectItem>
+                  {sourceOptions.map((source) => (
+                    <SelectItem key={source} value={source}>
+                      {source}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
-        {(searchTerm || filterBedrooms !== "all" || filterPriceRange !== "all" || filterCapacity !== "all") && (
+
+        {hasActiveFilters && (
           <p className="text-xs text-muted-foreground">{filteredProperties.length} din {properties.length} proprietăți</p>
         )}
       </div>
