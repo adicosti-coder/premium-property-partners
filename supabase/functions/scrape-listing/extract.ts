@@ -185,6 +185,33 @@ function extractFromMarkdownRegex(markdown: string): Record<string, any> {
   const titleMatch = markdown.match(/^#\s+(.+)$/m) || markdown.match(/^##\s+(.+)$/m);
   if (titleMatch) result.title = titleMatch[1].trim();
 
+  // Try to find phone numbers (Romanian format)
+  const phonePatterns = [
+    /(?:telefon|tel|phone|contact|apel|suna)[:\s]*([+]?[0-9][\d\s.\-]{7,14})/i,
+    /(?:0[27]\d{2}[\s.-]?\d{3}[\s.-]?\d{3})/,
+    /(?:\+40[\s.-]?\d{3}[\s.-]?\d{3}[\s.-]?\d{3})/,
+  ];
+  for (const pattern of phonePatterns) {
+    const phoneMatch = markdown.match(pattern);
+    if (phoneMatch) {
+      result.contact_phone = (phoneMatch[1] || phoneMatch[0]).replace(/[\s.-]/g, '').trim();
+      break;
+    }
+  }
+
+  // Try to find contact name patterns
+  const namePatterns = [
+    /(?:proprietar|agent|contact|publicat de|postat de)[:\s]*([A-ZÀ-Ž][a-zà-ž]+(?:\s+[A-ZÀ-Ž][a-zà-ž]+)+)/i,
+    /(?:nume|name)[:\s]*([A-ZÀ-Ž][a-zà-ž]+(?:\s+[A-ZÀ-Ž][a-zà-ž]+)+)/i,
+  ];
+  for (const pattern of namePatterns) {
+    const nameMatch = markdown.match(pattern);
+    if (nameMatch) {
+      result.contact_name = nameMatch[1].trim();
+      break;
+    }
+  }
+
   // Extract images from markdown
   const images: string[] = [];
   const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
