@@ -275,6 +275,7 @@ const CityGuideSection: React.FC = () => {
     transport: Bus,
     health: Heart,
     entertainment: Clapperboard,
+    services: MapPin,
   };
 
   const categoryColors: Record<string, string> = {
