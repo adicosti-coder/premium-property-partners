@@ -24,9 +24,11 @@ export const EXTRACTION_PROMPT = `Extract ALL property listing details from this
 - features: array of ALL amenities/features mentioned (e.g. "aer conditionat", "balcon", "centrala", "parcare", "lift") (string[])
 - images: array of ALL property photo URLs found on the page - use full-resolution URLs, not thumbnails (string[])
 - listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental (string)
-- contact_name: the name of the property owner or agent posting the listing (string or null)
-- contact_phone: the phone number of the owner/agent - look for it in the listing details, sidebar, or contact section (string or null)
+- contact_name: the name of the property owner, agent, or person posting the listing. Look in sidebars, footers, contact sections, "Publicat de", "Agent", "Proprietar" labels. (string or null)
+- contact_phone: the phone number - VERY IMPORTANT! Search thoroughly in: contact section, sidebar, "Detalii contact", "Telefon", "Sună", buttons with phone icons, hidden phone sections, footer contact info. Romanian numbers start with 07xx or +407xx. Return the full number. (string or null)
 - contact_email: the email of the owner/agent if available (string or null)
+
+IMPORTANT: Try very hard to find the phone number and contact name. They are often in a sidebar, a "contact" button, or shown after clicking "Arată telefonul". If you see partial phone like "07xx xxx ..." extract whatever is visible.
 
 Be thorough - extract every detail you can find. For missing fields, return null.`;
 
