@@ -275,7 +275,7 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* Scroll Encouragement Indicator – desktop only, CSS animations to avoid framer-motion in critical path */}
+      {/* Scroll Encouragement Indicator – desktop only, pure CSS to avoid JS icon imports in critical path */}
       {!isMobile && (
         <button 
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer bg-transparent border-0 min-w-[48px] min-h-[48px] p-2"
@@ -291,7 +291,8 @@ const Hero = () => {
           <div className="w-9 h-14 rounded-full border-2 border-primary flex items-start justify-center p-2 shadow-[0_0_16px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)] transition-shadow">
             <div className="w-2 h-3.5 bg-primary rounded-full animate-bounce" />
           </div>
-          <ChevronDown className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} />
+          {/* Inline SVG chevron instead of importing lucide-react ChevronDown in critical path */}
+          <svg className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </button>
       )}
       
