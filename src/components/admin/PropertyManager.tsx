@@ -883,13 +883,69 @@ export default function PropertyManager() {
         </div>
       </div>
 
+      {/* Search & Filters */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Caută după nume, locație, etichetă..."
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2">
+            <Filter className="w-4 h-4" /> {showFilters ? "Ascunde filtre" : "Arată filtre"}
+          </Button>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-2">
+              <RotateCcw className="w-4 h-4" /> Resetează
+            </Button>
+          )}
+        </div>
+
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+            <div>
+              <Label className="text-xs mb-1">Tip listing</Label>
+              <Select value={filterListingType} onValueChange={setFilterListingType}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="cazare">🏨 Cazare</SelectItem>
+                  <SelectItem value="vanzare">🏠 Vânzare</SelectItem>
+                  <SelectItem value="inchiriere">📋 Închiriere</SelectItem>
+                  <SelectItem value="investitie">📈 Investiție</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1">Status</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
+        {hasActiveFilters && (
+          <p className="text-xs text-muted-foreground">{filteredProperties.length} din {properties.length} proprietăți</p>
+        )}
+      </div>
+
       {/* Table */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : properties.length === 0 ? (
+        ) : filteredProperties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Home className="w-16 h-16 text-muted-foreground/30 mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">
