@@ -311,7 +311,7 @@ const Header = () => {
                 })}
                 
                 {/* Admin link in mobile menu - only for authenticated */}
-                {isAuthenticated && (
+                {isAuthenticated === true && (
                   <div>
                     <Link
                       to="/auth"
