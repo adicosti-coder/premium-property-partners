@@ -167,7 +167,7 @@ const Index = () => {
         <TeaserSections />
 
         {/* Property gallery + testimonials */}
-        <div ref={heavyRef} style={{ minHeight: heavyVisible ? undefined : '100px' }}>
+        <div ref={heavyRef} className="cv-auto" style={{ minHeight: heavyVisible ? undefined : '100px' }}>
           {heavyVisible && (
             <Suspense fallback={<div className="min-h-[400px]" />}>
               <section id="portofoliu">
