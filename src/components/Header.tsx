@@ -41,42 +41,49 @@ const Header = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Track active section based on scroll position — throttled via rAF
+  // Track active section via IntersectionObserver — no forced reflow
   useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        if (location.pathname !== "/") {
-          setActiveSection(location.pathname);
-          return;
-        }
+    if (location.pathname !== "/") {
+      setActiveSection(location.pathname);
+      return;
+    }
 
-        const sections = ["contact", "portofoliu", "calculator", "beneficii"];
-        const scrollPosition = window.scrollY + 100;
+    const sectionIds = ["contact", "portofoliu", "calculator", "beneficii"];
+    const visibleSections = new Set<string>();
 
-        for (const section of sections) {
-          const element = document.getElementById(section);
-          if (element) {
-            const { offsetTop, offsetHeight } = element;
-            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-              setActiveSection(`#${section}`);
-              return;
-            }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const id = entry.target.id;
+          if (entry.isIntersecting) {
+            visibleSections.add(id);
+          } else {
+            visibleSections.delete(id);
+          }
+        });
+
+        // Pick the first visible section in DOM order
+        for (const id of sectionIds) {
+          if (visibleSections.has(id)) {
+            setActiveSection(`#${id}`);
+            return;
           }
         }
 
+        // No section visible — check if at top
         if (window.scrollY < 100) {
           setActiveSection("/");
         }
-      });
-    };
+      },
+      { rootMargin: "-80px 0px 0px 0px", threshold: 0 }
+    );
 
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
   }, [location.pathname]);
 
   // Update active section when route changes
