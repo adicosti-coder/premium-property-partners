@@ -420,6 +420,9 @@ const PentruProprietari = () => {
         onContinue={() => scrollToCalculator()}
       />
 
+      {/* Photo Property Analysis - AI Visual */}
+      <PhotoPropertyAnalysis />
+
       {/* Property Qualification */}
       <PropertyQualification onContact={handleWhatsApp} />
 
