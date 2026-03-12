@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -15,10 +16,13 @@ import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Edit, Star, Euro, Users, Bed, Maximize2, ExternalLink,
   Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath, Languages,
+  Phone, User, Mail, Link2, Calendar, Filter, Search,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyImageGallery from "./PropertyImageGallery";
 import { Image as ImageIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ro } from "date-fns/locale";
 
 interface InvestProperty {
   id: string;
@@ -52,6 +56,12 @@ interface InvestProperty {
   estimated_revenue: string | null;
   roi_percentage: string | null;
   capital_necesar: number | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  source_url: string | null;
+  source_platform: string | null;
+  created_at: string;
 }
 
 const emptyProperty: Omit<InvestProperty, "id"> = {
@@ -85,6 +95,12 @@ const emptyProperty: Omit<InvestProperty, "id"> = {
   estimated_revenue: null,
   roi_percentage: null,
   capital_necesar: null,
+  contact_name: null,
+  contact_phone: null,
+  contact_email: null,
+  source_url: null,
+  source_platform: null,
+  created_at: new Date().toISOString(),
 };
 
 export default function InvestitiiPremiumManager() {
@@ -96,6 +112,13 @@ export default function InvestitiiPremiumManager() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [propertyImages, setPropertyImages] = useState<any[]>([]);
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBedrooms, setFilterBedrooms] = useState<string>("all");
+  const [filterPriceRange, setFilterPriceRange] = useState<string>("all");
+  const [filterCapacity, setFilterCapacity] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -122,12 +145,42 @@ export default function InvestitiiPremiumManager() {
         check_out_time: d.check_out_time ?? "11:00",
         images: d.images ?? [],
         features: d.features ?? [],
+        contact_name: d.contact_name ?? null,
+        contact_phone: d.contact_phone ?? null,
+        contact_email: d.contact_email ?? null,
+        source_url: d.source_url ?? null,
+        source_platform: d.source_platform ?? null,
+        created_at: d.created_at ?? new Date().toISOString(),
       })));
     }
     setLoading(false);
   };
 
   useEffect(() => { fetchProperties(); }, []);
+
+  // Filtered properties
+  const filteredProperties = useMemo(() => {
+    return properties.filter(p => {
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matches = p.name.toLowerCase().includes(term) ||
+          p.location.toLowerCase().includes(term) ||
+          (p.contact_name && p.contact_name.toLowerCase().includes(term)) ||
+          (p.contact_phone && p.contact_phone.includes(term));
+        if (!matches) return false;
+      }
+      if (filterBedrooms !== "all" && p.bedrooms !== parseInt(filterBedrooms)) return false;
+      if (filterCapacity !== "all" && p.capacity < parseInt(filterCapacity)) return false;
+      if (filterPriceRange !== "all") {
+        const capital = p.capital_necesar || 0;
+        if (filterPriceRange === "under100k" && capital >= 100000) return false;
+        if (filterPriceRange === "100k-150k" && (capital < 100000 || capital > 150000)) return false;
+        if (filterPriceRange === "150k-200k" && (capital < 150000 || capital > 200000)) return false;
+        if (filterPriceRange === "over200k" && capital < 200000) return false;
+      }
+      return true;
+    });
+  }, [properties, searchTerm, filterBedrooms, filterPriceRange, filterCapacity]);
 
   const fetchPropertyImages = async (propertyId: string) => {
     const { data } = await supabase
@@ -187,6 +240,11 @@ export default function InvestitiiPremiumManager() {
       estimated_revenue: editingProperty.estimated_revenue,
       roi_percentage: editingProperty.roi_percentage,
       capital_necesar: editingProperty.capital_necesar,
+      contact_name: editingProperty.contact_name,
+      contact_phone: editingProperty.contact_phone,
+      contact_email: editingProperty.contact_email,
+      source_url: editingProperty.source_url,
+      source_platform: editingProperty.source_platform,
       listing_type: "investitie",
       tag: "Premium",
     };
@@ -233,7 +291,7 @@ export default function InvestitiiPremiumManager() {
     const occupancy = 0.75;
     const monthlyGross = rate * 30 * occupancy;
     const annualGross = monthlyGross * 12;
-    const netFactor = 1 - 0.20 - 0.07; // 20% management + 7% tax
+    const netFactor = 1 - 0.20 - 0.07;
     const annualNet = annualGross * netFactor;
     const roi = (annualNet / capital) * 100;
 
@@ -244,7 +302,6 @@ export default function InvestitiiPremiumManager() {
     };
   }, []);
 
-  // Auto-calculate ROI when relevant fields change
   useEffect(() => {
     if (!editingProperty) return;
     const { base_price_per_night, capital_necesar } = editingProperty;
@@ -361,22 +418,88 @@ export default function InvestitiiPremiumManager() {
         </div>
       </div>
 
+      {/* Search & Filters */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Caută după nume, locație, contact, telefon..."
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2">
+            <Filter className="w-4 h-4" /> Filtre
+          </Button>
+        </div>
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+            <div>
+              <Label className="text-xs mb-1">Camere</Label>
+              <Select value={filterBedrooms} onValueChange={setFilterBedrooms}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="1">1 cameră</SelectItem>
+                  <SelectItem value="2">2 camere</SelectItem>
+                  <SelectItem value="3">3 camere</SelectItem>
+                  <SelectItem value="4">4+ camere</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1">Capital</Label>
+              <Select value={filterPriceRange} onValueChange={setFilterPriceRange}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="under100k">&lt; 100.000 €</SelectItem>
+                  <SelectItem value="100k-150k">100–150k €</SelectItem>
+                  <SelectItem value="150k-200k">150–200k €</SelectItem>
+                  <SelectItem value="over200k">&gt; 200.000 €</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1">Capacitate min.</Label>
+              <Select value={filterCapacity} onValueChange={setFilterCapacity}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="2">2+ persoane</SelectItem>
+                  <SelectItem value="4">4+ persoane</SelectItem>
+                  <SelectItem value="6">6+ persoane</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+        {(searchTerm || filterBedrooms !== "all" || filterPriceRange !== "all" || filterCapacity !== "all") && (
+          <p className="text-xs text-muted-foreground">{filteredProperties.length} din {properties.length} proprietăți</p>
+        )}
+      </div>
+
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Proprietate</TableHead>
               <TableHead className="hidden md:table-cell">Locație</TableHead>
-              <TableHead className="text-center">Rating</TableHead>
+              <TableHead className="hidden lg:table-cell">Contact</TableHead>
               <TableHead className="text-center">ROI</TableHead>
               <TableHead className="text-center hidden sm:table-cell">Capital</TableHead>
+              <TableHead className="hidden lg:table-cell text-center">Camere</TableHead>
+              <TableHead className="hidden xl:table-cell">Adăugat</TableHead>
+              <TableHead className="hidden xl:table-cell">Sursă</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="w-[100px]">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {properties.map((property) => (
+            {filteredProperties.map((property) => (
               <TableRow key={property.id} className={!property.is_active ? "opacity-50" : ""}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -394,10 +517,21 @@ export default function InvestitiiPremiumManager() {
                     <MapPin className="w-3 h-3" />{property.location.split(",")[0]}
                   </span>
                 </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span className="font-semibold text-sm">{property.booking_rating ?? "–"}</span>
+                <TableCell className="hidden lg:table-cell">
+                  <div className="space-y-0.5 min-w-0">
+                    {property.contact_name && (
+                      <p className="text-xs font-medium text-foreground flex items-center gap-1 truncate">
+                        <User className="w-3 h-3 shrink-0" />{property.contact_name}
+                      </p>
+                    )}
+                    {property.contact_phone && (
+                      <a href={`tel:${property.contact_phone}`} className="text-xs text-green-600 flex items-center gap-1 hover:underline">
+                        <Phone className="w-3 h-3 shrink-0" />{property.contact_phone}
+                      </a>
+                    )}
+                    {!property.contact_name && !property.contact_phone && (
+                      <span className="text-xs text-muted-foreground">–</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
@@ -405,6 +539,23 @@ export default function InvestitiiPremiumManager() {
                 </TableCell>
                 <TableCell className="text-center hidden sm:table-cell">
                   <span className="text-sm">{property.capital_necesar ? `${property.capital_necesar.toLocaleString()} €` : "–"}</span>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-center">
+                  <span className="text-sm">{property.bedrooms}</span>
+                </TableCell>
+                <TableCell className="hidden xl:table-cell">
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(property.created_at), "dd MMM yyyy", { locale: ro })}
+                  </span>
+                </TableCell>
+                <TableCell className="hidden xl:table-cell">
+                  {property.source_url ? (
+                    <a href={property.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" />{property.source_platform || "Link"}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Manual</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-center">
                   {!property.is_active ? (
@@ -468,6 +619,38 @@ export default function InvestitiiPremiumManager() {
                   <div>
                     <Label>Ordine afișare</Label>
                     <Input type="number" value={editingProperty.display_order} onChange={(e) => updateField("display_order", parseInt(e.target.value) || 0)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Phone className="w-4 h-4" /> Date Contact Proprietar
+                </h3>
+                <p className="text-xs text-muted-foreground -mt-2">Aceste date sunt vizibile doar în panoul admin, nu sunt publice.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="flex items-center gap-1"><User className="w-3 h-3" />Nume proprietar</Label>
+                    <Input value={editingProperty.contact_name || ""} onChange={(e) => updateField("contact_name", e.target.value || null)} placeholder="Ion Popescu" />
+                  </div>
+                  <div>
+                    <Label className="flex items-center gap-1"><Phone className="w-3 h-3" />Telefon proprietar</Label>
+                    <Input value={editingProperty.contact_phone || ""} onChange={(e) => updateField("contact_phone", e.target.value || null)} placeholder="0721 123 456" />
+                  </div>
+                  <div>
+                    <Label className="flex items-center gap-1"><Mail className="w-3 h-3" />Email proprietar</Label>
+                    <Input value={editingProperty.contact_email || ""} onChange={(e) => updateField("contact_email", e.target.value || null)} placeholder="email@exemplu.ro" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="flex items-center gap-1"><Link2 className="w-3 h-3" />Link anunț original</Label>
+                    <Input value={editingProperty.source_url || ""} onChange={(e) => updateField("source_url", e.target.value || null)} placeholder="https://olx.ro/..." />
+                  </div>
+                  <div>
+                    <Label>Platformă sursă</Label>
+                    <Input value={editingProperty.source_platform || ""} onChange={(e) => updateField("source_platform", e.target.value || null)} placeholder="OLX, Imobiliare.ro, etc." />
                   </div>
                 </div>
               </div>

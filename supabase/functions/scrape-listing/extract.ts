@@ -24,9 +24,11 @@ export const EXTRACTION_PROMPT = `Extract ALL property listing details from this
 - features: array of ALL amenities/features mentioned (e.g. "aer conditionat", "balcon", "centrala", "parcare", "lift") (string[])
 - images: array of ALL property photo URLs found on the page - use full-resolution URLs, not thumbnails (string[])
 - listing_type_hint: "vanzare" if for sale, "inchiriere" if for rent, "cazare" if short-term rental (string)
-- contact_name: the name of the property owner or agent posting the listing (string or null)
-- contact_phone: the phone number of the owner/agent - look for it in the listing details, sidebar, or contact section (string or null)
+- contact_name: the name of the property owner, agent, or person posting the listing. Look in sidebars, footers, contact sections, "Publicat de", "Agent", "Proprietar" labels. (string or null)
+- contact_phone: the phone number - VERY IMPORTANT! Search thoroughly in: contact section, sidebar, "Detalii contact", "Telefon", "Sună", buttons with phone icons, hidden phone sections, footer contact info. Romanian numbers start with 07xx or +407xx. Return the full number. (string or null)
 - contact_email: the email of the owner/agent if available (string or null)
+
+IMPORTANT: Try very hard to find the phone number and contact name. They are often in a sidebar, a "contact" button, or shown after clicking "Arată telefonul". If you see partial phone like "07xx xxx ..." extract whatever is visible.
 
 Be thorough - extract every detail you can find. For missing fields, return null.`;
 
@@ -118,7 +120,7 @@ export async function extractFromMarkdownWithAI(markdown: string, url: string): 
   try {
     const truncatedMarkdown = markdown.substring(0, 8000);
     
-    const aiResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
@@ -184,6 +186,33 @@ function extractFromMarkdownRegex(markdown: string): Record<string, any> {
   // Try to find title (first heading)
   const titleMatch = markdown.match(/^#\s+(.+)$/m) || markdown.match(/^##\s+(.+)$/m);
   if (titleMatch) result.title = titleMatch[1].trim();
+
+  // Try to find phone numbers (Romanian format)
+  const phonePatterns = [
+    /(?:telefon|tel|phone|contact|apel|suna)[:\s]*([+]?[0-9][\d\s.\-]{7,14})/i,
+    /(?:0[27]\d{2}[\s.-]?\d{3}[\s.-]?\d{3})/,
+    /(?:\+40[\s.-]?\d{3}[\s.-]?\d{3}[\s.-]?\d{3})/,
+  ];
+  for (const pattern of phonePatterns) {
+    const phoneMatch = markdown.match(pattern);
+    if (phoneMatch) {
+      result.contact_phone = (phoneMatch[1] || phoneMatch[0]).replace(/[\s.-]/g, '').trim();
+      break;
+    }
+  }
+
+  // Try to find contact name patterns
+  const namePatterns = [
+    /(?:proprietar|agent|contact|publicat de|postat de)[:\s]*([A-ZÀ-Ž][a-zà-ž]+(?:\s+[A-ZÀ-Ž][a-zà-ž]+)+)/i,
+    /(?:nume|name)[:\s]*([A-ZÀ-Ž][a-zà-ž]+(?:\s+[A-ZÀ-Ž][a-zà-ž]+)+)/i,
+  ];
+  for (const pattern of namePatterns) {
+    const nameMatch = markdown.match(pattern);
+    if (nameMatch) {
+      result.contact_name = nameMatch[1].trim();
+      break;
+    }
+  }
 
   // Extract images from markdown
   const images: string[] = [];
