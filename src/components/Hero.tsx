@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown } from "lucide-react";
 
 // Hero image served from public/ — optimized compressed versions
 const HERO_IMAGE_PUBLIC = "/images/hero-optimized-1920w.webp";
@@ -61,35 +60,46 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
-  // Fetch hero settings from database — deferred to avoid blocking LCP
+  // Fetch hero settings from database — deferred until after LCP
   useEffect(() => {
-    // Delay the fetch so it doesn't compete with LCP image loading
-    const timer = setTimeout(async () => {
-      try {
-        const { data, error } = await (supabase
-          .from("public_site_settings" as any)
-          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
-          .single() as any);
-        
-        if (!error && data) {
-          setHeroSettings({
-            videoUrl: data.hero_video_url || "/hero-video.mp4",
-            customFallbackImage: data.hero_image_url,
-            customTitle: language === "ro" ? data.hero_title_ro : data.hero_title_en,
-            customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
-            customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
-            customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
-            customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
-            customCtaPrimary: language === "ro" ? data.hero_cta_primary_ro : data.hero_cta_primary_en,
-            customCtaSecondary: language === "ro" ? data.hero_cta_secondary_ro : data.hero_cta_secondary_en,
-          });
+    // Use requestIdleCallback to avoid competing with LCP rendering
+    const load = () => {
+      (async () => {
+        try {
+          const { data, error } = await (supabase
+            .from("public_site_settings" as any)
+            .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
+            .single() as any);
+          
+          if (!error && data) {
+            setHeroSettings({
+              videoUrl: data.hero_video_url || "/hero-video.mp4",
+              customFallbackImage: data.hero_image_url,
+              customTitle: language === "ro" ? data.hero_title_ro : data.hero_title_en,
+              customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
+              customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
+              customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
+              customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
+              customCtaPrimary: language === "ro" ? data.hero_cta_primary_ro : data.hero_cta_primary_en,
+              customCtaSecondary: language === "ro" ? data.hero_cta_secondary_ro : data.hero_cta_secondary_en,
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching hero settings:", err);
         }
-      } catch (err) {
-        console.error("Error fetching hero settings:", err);
-      }
-    }, 200);
-    
-    return () => clearTimeout(timer);
+      })();
+    };
+
+    // Defer to idle time, fallback to 1.5s timeout (well after LCP)
+    const idleId = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(load, { timeout: 3000 })
+      : null;
+    const timerId = idleId === null ? setTimeout(load, 1500) : null;
+
+    return () => {
+      if (idleId !== null) cancelIdleCallback(idleId);
+      if (timerId !== null) clearTimeout(timerId);
+    };
   }, [language]);
 
   // Check connection speed for lazy loading
@@ -276,7 +286,7 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* Scroll Encouragement Indicator – desktop only, CSS animations to avoid framer-motion in critical path */}
+      {/* Scroll Encouragement Indicator – desktop only, pure CSS to avoid JS icon imports in critical path */}
       {!isMobile && (
         <button 
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer bg-transparent border-0 min-w-[48px] min-h-[48px] p-2"
@@ -292,7 +302,8 @@ const Hero = () => {
           <div className="w-9 h-14 rounded-full border-2 border-primary flex items-start justify-center p-2 shadow-[0_0_16px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.5)] transition-shadow">
             <div className="w-2 h-3.5 bg-primary rounded-full animate-bounce" />
           </div>
-          <ChevronDown className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} />
+          {/* Inline SVG chevron instead of importing lucide-react ChevronDown in critical path */}
+          <svg className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </button>
       )}
       
