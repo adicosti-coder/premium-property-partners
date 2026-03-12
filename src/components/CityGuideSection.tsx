@@ -167,6 +167,7 @@ const CityGuideSection: React.FC = () => {
         transport: 'Transport',
         health: 'Sănătate',
         entertainment: 'Divertisment',
+        services: 'Servicii',
       },
       seeOnMap: 'Vezi pe Hartă',
       localTip: 'Sfat Local',
@@ -221,6 +222,7 @@ const CityGuideSection: React.FC = () => {
         transport: 'Transport',
         health: 'Health',
         entertainment: 'Entertainment',
+        services: 'Services',
       },
       seeOnMap: 'See on Map',
       localTip: 'Local Tip',
@@ -273,6 +275,7 @@ const CityGuideSection: React.FC = () => {
     transport: Bus,
     health: Heart,
     entertainment: Clapperboard,
+    services: MapPin,
   };
 
   const categoryColors: Record<string, string> = {
@@ -285,6 +288,7 @@ const CityGuideSection: React.FC = () => {
     transport: 'from-blue-500/20 to-blue-500/5 border-blue-500/30',
     health: 'from-red-500/20 to-red-500/5 border-red-500/30',
     entertainment: 'from-teal-500/20 to-teal-500/5 border-teal-500/30',
+    services: 'from-slate-500/20 to-slate-500/5 border-slate-500/30',
   };
 
   const categoryIconColors: Record<string, string> = {
@@ -297,6 +301,7 @@ const CityGuideSection: React.FC = () => {
     transport: 'text-blue-500',
     health: 'text-red-500',
     entertainment: 'text-teal-500',
+    services: 'text-slate-500',
   };
 
   // Use fetched tips or fallback to hardcoded

@@ -32,7 +32,8 @@ const RealEstateListings = () => {
         .select("id, name, location, listing_type, capital_necesar, image_path, description_ro, description_en")
         .in("listing_type", ["vanzare", "inchiriere"])
         .eq("is_active", true)
-        .order("display_order");
+        .order("display_order")
+        .limit(6);
       setListings(data || []);
       setLoading(false);
     };
@@ -137,6 +138,20 @@ const RealEstateListings = () => {
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {listings.length >= 6 && (
+          <div className="text-center mt-10">
+            <Button
+              variant="outline"
+              size="lg"
+              className="group"
+              onClick={() => navigate("/imobiliare")}
+            >
+              {language === "ro" ? "Vezi toate proprietățile" : "View all properties"}
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
           </div>
         )}
       </div>
