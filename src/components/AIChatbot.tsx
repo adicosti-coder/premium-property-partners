@@ -321,22 +321,57 @@ const AIChatbot = () => {
     doc.save("ApArt_Concierge_Transcript.pdf");
   };
 
+  // --- Image Upload Handler ---
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(language === "ro" ? "Imaginea este prea mare (max 5MB)" : "Image too large (max 5MB)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setAttachedImage(reader.result as string);
+    reader.readAsDataURL(file);
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // --- Qualification Wizard Submit ---
+  const handleQualificationSubmit = () => {
+    if (!wizardForm.name.trim() || !wizardForm.phone.trim()) {
+      toast.error(language === "ro" ? "Completează numele și telefonul" : "Please fill in name and phone");
+      return;
+    }
+    const data: QualificationData = { name: wizardForm.name.trim(), phone: wizardForm.phone.trim(), zone: wizardForm.zone };
+    setQualificationData(data);
+    localStorage.setItem("apart_qualification_data", JSON.stringify(data));
+    setShowQualificationWizard(false);
+    // Start conversation with context
+    handleSend(language === "ro" 
+      ? `Salut! Sunt ${data.name}. Am un apartament în zona ${data.zone} și vreau o analiză de potențial.`
+      : `Hi! I'm ${data.name}. I have an apartment in ${data.zone} and I'd like a potential analysis.`
+    );
+  };
+
   // --- Streaming Send with auto-retry for network errors ---
   const handleSend = async (overrideMessage?: string, retryCount = 0) => {
     const content = overrideMessage || input.trim();
-    if (!content || isLoading) return;
+    const hasImage = !!attachedImage;
+    if ((!content && !hasImage) || isLoading) return;
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
 
+    const currentImage = attachedImage;
     const assistantId = retryCount === 0 ? crypto.randomUUID() : undefined;
     if (retryCount === 0) {
       setMessages(prev => [
         ...prev,
-        { id: crypto.randomUUID(), role: "user", content, timestamp: new Date() },
+        { id: crypto.randomUUID(), role: "user", content: content || (language === "ro" ? "Am atașat o imagine cu proprietatea." : "I attached a property image."), timestamp: new Date(), imagePreview: currentImage || undefined },
         { id: assistantId!, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
       ]);
       setInput("");
+      setAttachedImage(null);
     }
     const targetId = assistantId || messages.filter(m => m.role === "assistant").pop()?.id || "";
     setIsLoading(true);
@@ -354,10 +389,12 @@ const AIChatbot = () => {
           "Accept": "text/event-stream",
         },
         body: JSON.stringify({
-          message: content,
+          message: content || "",
           language,
           conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           pageContext: currentPath,
+          imageBase64: hasImage ? currentImage : undefined,
+          qualificationContext: qualificationData || undefined,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -408,6 +445,14 @@ const AIChatbot = () => {
         }
       }
       const id = retryCount === 0 ? assistantId! : targetId;
+      
+      // --- Parse report from completed response ---
+      const report = parsePropertyReport(acc);
+      if (report) {
+        setPropertyReport(report);
+        acc = cleanReportFromText(acc);
+      }
+      
       setMessages(prev => prev.map(m => m.id === id ? { ...m, isStreaming: false, content: acc || text.error } : m));
       // Show rating prompt after 3+ user messages
       setMessageCount(prev => {
