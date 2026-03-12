@@ -61,6 +61,8 @@ serve(async (req: Request) => {
       { url: "/recomanda-proprietar", priority: "0.6", changefreq: "monthly" },
       { url: "/comunitate", priority: "0.6", changefreq: "weekly" },
       { url: "/pentru-oaspeti", priority: "0.7", changefreq: "weekly" },
+      { url: "/preturi", priority: "0.7", changefreq: "weekly" },
+      { url: "/analiza-proprietate", priority: "0.8", changefreq: "weekly" },
     ];
 
     // Fetch published blog articles (with image for image sitemap)
