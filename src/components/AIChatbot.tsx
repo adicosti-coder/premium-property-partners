@@ -812,6 +812,10 @@ const AIChatbot = () => {
                               ? "bg-destructive/10 border border-destructive/20 rounded-tl-none"
                               : "bg-muted/50 rounded-tl-none border border-border/30"
                         )}>
+                          {/* Image preview */}
+                          {m.imagePreview && (
+                            <img src={m.imagePreview} alt="Property" className="rounded-xl border border-border/20 max-h-40 mb-2 w-full object-cover" />
+                          )}
                           <MarkdownContent content={m.content || (m.isStreaming ? "" : "...")} isStreaming={m.isStreaming && !m.content} />
                           
                           {/* Message actions */}
