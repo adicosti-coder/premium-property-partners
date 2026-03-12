@@ -323,7 +323,10 @@ const InteractiveMapWithPOI = () => {
       const canvas = map.current.getCanvas();
       const handleContextLost = (e: Event) => {
         e.preventDefault();
-        setTokenError(language === 'ro' ? 'Context grafic pierdut – reîncărcați pagina' : 'Graphics context lost – please reload');
+        // Wait 3 seconds for auto-restore before showing error
+        setTimeout(() => {
+          setTokenError(language === 'ro' ? 'Context grafic pierdut – reîncărcați pagina' : 'Graphics context lost – please reload');
+        }, 3000);
       };
       const handleContextRestored = () => {
         setTokenError(null);

@@ -301,6 +301,7 @@ const CityGuideSection: React.FC = () => {
     transport: 'text-blue-500',
     health: 'text-red-500',
     entertainment: 'text-teal-500',
+    services: 'text-slate-500',
   };
 
   // Use fetched tips or fallback to hardcoded

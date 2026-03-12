@@ -140,6 +140,20 @@ const RealEstateListings = () => {
             })}
           </div>
         )}
+
+        {listings.length >= 6 && (
+          <div className="text-center mt-10">
+            <Button
+              variant="outline"
+              size="lg"
+              className="group"
+              onClick={() => navigate("/imobiliare")}
+            >
+              {language === "ro" ? "Vezi toate proprietățile" : "View all properties"}
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
