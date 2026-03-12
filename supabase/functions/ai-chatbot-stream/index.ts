@@ -152,9 +152,9 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [], pageContext = "/" } = await req.json();
+    const { message, language = "ro", conversationHistory = [], pageContext = "/", imageBase64, qualificationContext } = await req.json();
 
-    if (!message || message.length > 2000) {
+    if ((!message && !imageBase64) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
