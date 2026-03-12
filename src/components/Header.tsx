@@ -243,7 +243,7 @@ const Header = () => {
                   className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
                   aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
                 >
-                  <Shield className="w-5 h-5 md:mr-0 lg:mr-0 xl:mr-1.5" />
+                  <ShieldIcon className="w-5 h-5" />
                   <span className="hidden xl:inline">Admin</span>
                 </Button>
               </Link>
