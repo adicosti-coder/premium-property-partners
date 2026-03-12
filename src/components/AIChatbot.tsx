@@ -594,6 +594,8 @@ const AIChatbot = () => {
     setShowRating(false);
     setRatingGiven(null);
     setMessageCount(0);
+    setPropertyReport(null);
+    setAttachedImage(null);
   };
 
   const handleRating = async (rating: number) => {
