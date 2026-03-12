@@ -1062,6 +1062,23 @@ const AIChatbot = () => {
 
                 {/* ─── Premium Input ─── */}
                 <div className="p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
+                  {/* Attached image preview */}
+                  {attachedImage && (
+                    <div className="mb-3 relative inline-block">
+                      <img src={attachedImage} alt="Preview" className="h-16 rounded-xl border border-primary/30 object-cover" />
+                      <button
+                        onClick={() => setAttachedImage(null)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px]"
+                      >
+                        ✕
+                      </button>
+                      <div className="flex items-center gap-1 mt-1 text-[10px] text-accent">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {language === "ro" ? "Pregătit pentru analiză vizuală" : "Ready for visual analysis"}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Voice transfer banner */}
                   {messages.length > 2 && sharedContext && (
                     <button
@@ -1073,11 +1090,26 @@ const AIChatbot = () => {
                     </button>
                   )}
 
-                  <div className="flex gap-3 items-center">
+                  <div className="flex gap-2 items-center">
+                    {/* Camera button */}
+                    <label className="cursor-pointer h-14 w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+                      <Camera className="w-5 h-5 text-primary" />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
                     <div className="relative flex-1">
                       <Input
                         ref={inputRef}
-                        placeholder={text.placeholder}
+                        placeholder={attachedImage 
+                          ? (language === "ro" ? "Descrie proprietatea (opțional)..." : "Describe the property (optional)...") 
+                          : text.placeholder
+                        }
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
@@ -1091,7 +1123,7 @@ const AIChatbot = () => {
                       size="icon"
                       className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform"
                       onClick={() => handleSend()}
-                      disabled={!input.trim() || isLoading}
+                      disabled={(!input.trim() && !attachedImage) || isLoading}
                     >
                       {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
                     </Button>
