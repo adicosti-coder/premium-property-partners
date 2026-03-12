@@ -118,7 +118,13 @@ export default function InvestitiiPremiumManager() {
   const [filterBedrooms, setFilterBedrooms] = useState<string>("all");
   const [filterPriceRange, setFilterPriceRange] = useState<string>("all");
   const [filterCapacity, setFilterCapacity] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterContact, setFilterContact] = useState<string>("all");
+  const [filterSource, setFilterSource] = useState<string>("all");
+  const [filterRoiMin, setFilterRoiMin] = useState<string>("");
+  const [filterCapitalMin, setFilterCapitalMin] = useState<string>("");
+  const [filterCapitalMax, setFilterCapitalMax] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(true);
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -158,29 +164,131 @@ export default function InvestitiiPremiumManager() {
 
   useEffect(() => { fetchProperties(); }, []);
 
+  const sourceOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          properties
+            .map((p) => p.source_platform?.trim())
+            .filter((value): value is string => Boolean(value))
+        )
+      ).sort((a, b) => a.localeCompare(b, "ro", { sensitivity: "base" })),
+    [properties]
+  );
+
   // Filtered properties
   const filteredProperties = useMemo(() => {
-    return properties.filter(p => {
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matches = p.name.toLowerCase().includes(term) ||
+    return properties.filter((p) => {
+      const term = searchTerm.trim().toLowerCase();
+      if (term) {
+        const matches =
+          p.name.toLowerCase().includes(term) ||
           p.location.toLowerCase().includes(term) ||
           (p.contact_name && p.contact_name.toLowerCase().includes(term)) ||
-          (p.contact_phone && p.contact_phone.includes(term));
+          (p.contact_phone && p.contact_phone.includes(term)) ||
+          (p.contact_email && p.contact_email.toLowerCase().includes(term)) ||
+          (p.source_platform && p.source_platform.toLowerCase().includes(term)) ||
+          (p.source_url && p.source_url.toLowerCase().includes(term));
+
         if (!matches) return false;
       }
-      if (filterBedrooms !== "all" && p.bedrooms !== parseInt(filterBedrooms)) return false;
-      if (filterCapacity !== "all" && p.capacity < parseInt(filterCapacity)) return false;
+
+      if (filterBedrooms !== "all") {
+        if (filterBedrooms === "4plus") {
+          if (p.bedrooms < 4) return false;
+        } else if (p.bedrooms !== Number.parseInt(filterBedrooms, 10)) {
+          return false;
+        }
+      }
+
+      if (filterCapacity !== "all" && p.capacity < Number.parseInt(filterCapacity, 10)) return false;
+
+      const capital = p.capital_necesar || 0;
       if (filterPriceRange !== "all") {
-        const capital = p.capital_necesar || 0;
         if (filterPriceRange === "under100k" && capital >= 100000) return false;
         if (filterPriceRange === "100k-150k" && (capital < 100000 || capital > 150000)) return false;
         if (filterPriceRange === "150k-200k" && (capital < 150000 || capital > 200000)) return false;
         if (filterPriceRange === "over200k" && capital < 200000) return false;
       }
+
+      if (filterCapitalMin && capital < Number.parseInt(filterCapitalMin, 10)) return false;
+      if (filterCapitalMax && capital > Number.parseInt(filterCapitalMax, 10)) return false;
+
+      if (filterStatus === "active" && !p.is_active) return false;
+      if (filterStatus === "inactive" && p.is_active) return false;
+
+      const hasContact = Boolean(p.contact_name || p.contact_phone || p.contact_email);
+      if (filterContact === "with" && !hasContact) return false;
+      if (filterContact === "without" && hasContact) return false;
+
+      if (filterSource === "manual" && p.source_url) return false;
+      if (filterSource !== "all" && filterSource !== "manual") {
+        const normalizedSource = p.source_platform?.trim().toLowerCase() || "";
+        if (normalizedSource !== filterSource.toLowerCase()) return false;
+      }
+
+      if (filterRoiMin) {
+        const roiValue = Number.parseFloat((p.roi_percentage || "").replace(",", ".").replace("%", "").trim());
+        if (Number.isNaN(roiValue) || roiValue < Number.parseFloat(filterRoiMin)) return false;
+      }
+
       return true;
     });
-  }, [properties, searchTerm, filterBedrooms, filterPriceRange, filterCapacity]);
+  }, [
+    properties,
+    searchTerm,
+    filterBedrooms,
+    filterPriceRange,
+    filterCapacity,
+    filterStatus,
+    filterContact,
+    filterSource,
+    filterRoiMin,
+    filterCapitalMin,
+    filterCapitalMax,
+  ]);
+
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        searchTerm ||
+          filterBedrooms !== "all" ||
+          filterPriceRange !== "all" ||
+          filterCapacity !== "all" ||
+          filterStatus !== "all" ||
+          filterContact !== "all" ||
+          filterSource !== "all" ||
+          filterRoiMin ||
+          filterCapitalMin ||
+          filterCapitalMax
+      ),
+    [
+      searchTerm,
+      filterBedrooms,
+      filterPriceRange,
+      filterCapacity,
+      filterStatus,
+      filterContact,
+      filterSource,
+      filterRoiMin,
+      filterCapitalMin,
+      filterCapitalMax,
+    ]
+  );
+
+  const resetFilters = useCallback(() => {
+    setSearchTerm("");
+    setFilterBedrooms("all");
+    setFilterPriceRange("all");
+    setFilterCapacity("all");
+    setFilterStatus("all");
+    setFilterContact("all");
+    setFilterSource("all");
+    setFilterRoiMin("");
+    setFilterCapitalMin("");
+    setFilterCapitalMax("");
+  }, []);
+
 
   const fetchPropertyImages = async (propertyId: string) => {
     const { data } = await supabase
