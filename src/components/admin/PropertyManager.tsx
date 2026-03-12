@@ -972,7 +972,7 @@ export default function PropertyManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {properties.map((property) => (
+              {filteredProperties.map((property) => (
                 <TableRow key={property.id} className={!property.is_active ? "opacity-50" : ""}>
                   <TableCell className="text-muted-foreground">
                     {property.display_order}
