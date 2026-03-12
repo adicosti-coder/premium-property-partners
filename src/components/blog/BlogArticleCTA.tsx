@@ -38,6 +38,10 @@ const BlogArticleCTA = () => {
       ownerCta: "Request free analysis",
       ownerBack: "Back to Blog",
       ownerFooter: "Payments go directly to you · transparent structure · no obligations.",
+      aiLabel: "AI ANALYSIS",
+      aiTitle: "Analyze your property with AI",
+      aiDescription: "Upload photos, get an instant score (0-140) and personalized ROI estimate. Free, no obligations.",
+      aiCta: "Start AI analysis",
     },
   };
 
