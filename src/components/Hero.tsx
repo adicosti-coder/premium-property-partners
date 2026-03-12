@@ -244,11 +244,12 @@ const Hero = () => {
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
       
       <div 
-        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 transition-opacity duration-100 min-h-[60vh] md:min-h-[50vh]"
-        style={{ 
+        className="container relative z-10 mx-auto px-6 py-20 lg:py-32 min-h-[60vh] md:min-h-[50vh]"
+        style={isMobile ? undefined : { 
           opacity: contentOpacity,
           transform: `translateY(-${contentTranslate}px)`,
-          willChange: 'opacity, transform'
+          willChange: 'opacity, transform',
+          transition: 'opacity 0.1s'
         }}
       >
         <div className="max-w-4xl">
