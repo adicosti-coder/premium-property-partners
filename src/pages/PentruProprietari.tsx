@@ -52,6 +52,7 @@ const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const FloatingInvestorGuide = lazy(() => import("@/components/FloatingInvestorGuide"));
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
+const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
