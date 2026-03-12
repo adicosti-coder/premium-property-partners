@@ -388,6 +388,21 @@ const PropertyDetail = () => {
                   </Badge>
                 )}
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
+                <Suspense fallback={null}>
+                  <PropertyAIScore
+                    propertyName={property.name}
+                    location={property.location}
+                    basePrice={property.base_price_per_night}
+                    bookingRating={property.booking_rating}
+                    reviewCount={property.booking_review_count}
+                    bedrooms={property.bedrooms}
+                    capacity={property.capacity}
+                    amenities={property.amenities}
+                    size={property.size}
+                    tag={property.tag}
+                    className="my-2"
+                  />
+                </Suspense>
                 <p className="text-muted-foreground flex items-center gap-1 min-w-0 flex-wrap">
                   <MapPin className="w-4 h-4 shrink-0" />
                   <span className="break-all truncate">{property.location}</span>
