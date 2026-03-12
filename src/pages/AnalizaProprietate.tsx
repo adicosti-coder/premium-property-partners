@@ -219,7 +219,7 @@ const AnalizaProprietate = () => {
       <SEOHead
         title={text.pageTitle}
         description={text.pageDesc}
-        canonicalPath="/analiza-proprietate"
+        url="https://www.realtrust.ro/analiza-proprietate"
       />
       <Header />
       <main className="min-h-screen bg-background pt-20">
