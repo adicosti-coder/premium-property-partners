@@ -248,6 +248,32 @@ export default function PropertyManager() {
     fetchProperties();
   }, []);
 
+  const filteredProperties = useMemo(() => {
+    return properties.filter((p) => {
+      const term = searchTerm.trim().toLowerCase();
+      if (term) {
+        const matches =
+          p.name.toLowerCase().includes(term) ||
+          p.location.toLowerCase().includes(term) ||
+          (p.tag && p.tag.toLowerCase().includes(term)) ||
+          (p.listing_type && p.listing_type.toLowerCase().includes(term));
+        if (!matches) return false;
+      }
+      if (filterListingType !== "all" && p.listing_type !== filterListingType) return false;
+      if (filterStatus === "active" && !p.is_active) return false;
+      if (filterStatus === "inactive" && p.is_active) return false;
+      return true;
+    });
+  }, [properties, searchTerm, filterListingType, filterStatus]);
+
+  const hasActiveFilters = Boolean(searchTerm || filterListingType !== "all" || filterStatus !== "all");
+
+  const resetFilters = useCallback(() => {
+    setSearchTerm("");
+    setFilterListingType("all");
+    setFilterStatus("all");
+  }, []);
+
   const getRequiredFields = (listingType: string) => {
     const base = ['name', 'location'] as const;
     switch (listingType) {
