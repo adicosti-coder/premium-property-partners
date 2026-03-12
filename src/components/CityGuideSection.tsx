@@ -288,6 +288,7 @@ const CityGuideSection: React.FC = () => {
     transport: 'from-blue-500/20 to-blue-500/5 border-blue-500/30',
     health: 'from-red-500/20 to-red-500/5 border-red-500/30',
     entertainment: 'from-teal-500/20 to-teal-500/5 border-teal-500/30',
+    services: 'from-slate-500/20 to-slate-500/5 border-slate-500/30',
   };
 
   const categoryIconColors: Record<string, string> = {
