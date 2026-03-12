@@ -4,7 +4,8 @@ import {
   X, Send, Bot, User, Sparkles, Loader2, 
   ExternalLink, Minimize2, Mic, Headphones,
   Layers, ShieldCheck, FileDown, RotateCcw,
-  Copy, Check, Phone, PhoneOff, Star
+  Copy, Check, Phone, PhoneOff, Star, Camera,
+  CheckCircle2, MapPin, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,24 @@ interface Message {
   timestamp: Date;
   isStreaming?: boolean;
   isError?: boolean;
+  imagePreview?: string;
+}
+
+interface PropertyReport {
+  scor: number;
+  max_scor: number;
+  zona: string;
+  roi_estimat: string;
+  tarif_noapte: number;
+  note_consultant: string;
+  recomandari: string[];
+  categorie: string;
+}
+
+interface QualificationData {
+  name: string;
+  phone: string;
+  zone: string;
 }
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
@@ -135,6 +154,16 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
     : ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"];
 };
 
+// --- Report Parser ---
+const parsePropertyReport = (text: string): PropertyReport | null => {
+  const match = text.match(/<RAPORT_JSON>([\s\S]*?)<\/RAPORT_JSON>/);
+  if (!match) return null;
+  try { return JSON.parse(match[1].trim()); } catch { return null; }
+};
+const cleanReportFromText = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPORT_JSON>/g, "").trim();
+
+const QUALIFICATION_ZONES = ["ISHO", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
+
 const AIChatbot = () => {
   const { language } = useLanguage();
   const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -149,6 +178,20 @@ const AIChatbot = () => {
   const [ratingGiven, setRatingGiven] = useState<number | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  
+  // --- HostScan Features ---
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [propertyReport, setPropertyReport] = useState<PropertyReport | null>(null);
+  const [showQualificationWizard, setShowQualificationWizard] = useState(false);
+  const [qualificationData, setQualificationData] = useState<QualificationData | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const saved = localStorage.getItem("apart_qualification_data");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [wizardForm, setWizardForm] = useState({ name: "", phone: "", zone: "ISHO" });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {
     if (typeof window === "undefined") return [];
@@ -278,22 +321,57 @@ const AIChatbot = () => {
     doc.save("ApArt_Concierge_Transcript.pdf");
   };
 
+  // --- Image Upload Handler ---
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(language === "ro" ? "Imaginea este prea mare (max 5MB)" : "Image too large (max 5MB)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setAttachedImage(reader.result as string);
+    reader.readAsDataURL(file);
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // --- Qualification Wizard Submit ---
+  const handleQualificationSubmit = () => {
+    if (!wizardForm.name.trim() || !wizardForm.phone.trim()) {
+      toast.error(language === "ro" ? "Completează numele și telefonul" : "Please fill in name and phone");
+      return;
+    }
+    const data: QualificationData = { name: wizardForm.name.trim(), phone: wizardForm.phone.trim(), zone: wizardForm.zone };
+    setQualificationData(data);
+    localStorage.setItem("apart_qualification_data", JSON.stringify(data));
+    setShowQualificationWizard(false);
+    // Start conversation with context
+    handleSend(language === "ro" 
+      ? `Salut! Sunt ${data.name}. Am un apartament în zona ${data.zone} și vreau o analiză de potențial.`
+      : `Hi! I'm ${data.name}. I have an apartment in ${data.zone} and I'd like a potential analysis.`
+    );
+  };
+
   // --- Streaming Send with auto-retry for network errors ---
   const handleSend = async (overrideMessage?: string, retryCount = 0) => {
     const content = overrideMessage || input.trim();
-    if (!content || isLoading) return;
+    const hasImage = !!attachedImage;
+    if ((!content && !hasImage) || isLoading) return;
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
 
+    const currentImage = attachedImage;
     const assistantId = retryCount === 0 ? crypto.randomUUID() : undefined;
     if (retryCount === 0) {
       setMessages(prev => [
         ...prev,
-        { id: crypto.randomUUID(), role: "user", content, timestamp: new Date() },
+        { id: crypto.randomUUID(), role: "user", content: content || (language === "ro" ? "Am atașat o imagine cu proprietatea." : "I attached a property image."), timestamp: new Date(), imagePreview: currentImage || undefined },
         { id: assistantId!, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
       ]);
       setInput("");
+      setAttachedImage(null);
     }
     const targetId = assistantId || messages.filter(m => m.role === "assistant").pop()?.id || "";
     setIsLoading(true);
@@ -311,10 +389,12 @@ const AIChatbot = () => {
           "Accept": "text/event-stream",
         },
         body: JSON.stringify({
-          message: content,
+          message: content || "",
           language,
           conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           pageContext: currentPath,
+          imageBase64: hasImage ? currentImage : undefined,
+          qualificationContext: qualificationData || undefined,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -365,6 +445,14 @@ const AIChatbot = () => {
         }
       }
       const id = retryCount === 0 ? assistantId! : targetId;
+      
+      // --- Parse report from completed response ---
+      const report = parsePropertyReport(acc);
+      if (report) {
+        setPropertyReport(report);
+        acc = cleanReportFromText(acc);
+      }
+      
       setMessages(prev => prev.map(m => m.id === id ? { ...m, isStreaming: false, content: acc || text.error } : m));
       // Show rating prompt after 3+ user messages
       setMessageCount(prev => {
@@ -506,6 +594,8 @@ const AIChatbot = () => {
     setShowRating(false);
     setRatingGiven(null);
     setMessageCount(0);
+    setPropertyReport(null);
+    setAttachedImage(null);
   };
 
   const handleRating = async (rating: number) => {
@@ -722,6 +812,10 @@ const AIChatbot = () => {
                               ? "bg-destructive/10 border border-destructive/20 rounded-tl-none"
                               : "bg-muted/50 rounded-tl-none border border-border/30"
                         )}>
+                          {/* Image preview */}
+                          {m.imagePreview && (
+                            <img src={m.imagePreview} alt="Property" className="rounded-xl border border-border/20 max-h-40 mb-2 w-full object-cover" />
+                          )}
                           <MarkdownContent content={m.content || (m.isStreaming ? "" : "...")} isStreaming={m.isStreaming && !m.content} />
                           
                           {/* Message actions */}
@@ -765,19 +859,180 @@ const AIChatbot = () => {
                     )}
                   </div>
 
+                  {/* ─── Property Report Card ─── */}
+                  {propertyReport && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="mx-2 mt-6 p-5 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30 shadow-xl space-y-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-primary" />
+                          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary">
+                            {language === "ro" ? "Raport Proprietate" : "Property Report"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-3xl font-bold text-foreground">{propertyReport.scor}</span>
+                          <span className="text-sm text-muted-foreground">/{propertyReport.max_scor}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Score progress bar */}
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(propertyReport.scor / propertyReport.max_scor) * 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className={cn(
+                            "h-full rounded-full",
+                            propertyReport.scor >= 100 ? "bg-accent" : propertyReport.scor >= 70 ? "bg-primary" : "bg-destructive"
+                          )}
+                        />
+                      </div>
+                      
+                      {/* Stats row */}
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-background/50 rounded-xl p-2.5 border border-border/30">
+                          <MapPin className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+                          <p className="text-xs font-bold text-foreground">{propertyReport.zona}</p>
+                          <p className="text-[10px] text-muted-foreground">{language === "ro" ? "Zonă" : "Zone"}</p>
+                        </div>
+                        <div className="bg-background/50 rounded-xl p-2.5 border border-border/30">
+                          <TrendingUp className="w-4 h-4 mx-auto text-accent mb-1" />
+                          <p className="text-xs font-bold text-foreground">{propertyReport.roi_estimat}</p>
+                          <p className="text-[10px] text-muted-foreground">ROI</p>
+                        </div>
+                        <div className="bg-background/50 rounded-xl p-2.5 border border-border/30">
+                          <span className="text-sm">€</span>
+                          <p className="text-xs font-bold text-foreground">{propertyReport.tarif_noapte}€</p>
+                          <p className="text-[10px] text-muted-foreground">{language === "ro" ? "Noapte" : "Night"}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Consultant note */}
+                      <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+                        "{propertyReport.note_consultant}"
+                      </p>
+                      
+                      {/* Recommendations */}
+                      {propertyReport.recomandari?.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {language === "ro" ? "Recomandări" : "Recommendations"}
+                          </p>
+                          {propertyReport.recomandari.map((rec, i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs text-foreground/80">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />
+                              {rec}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* CTA */}
+                      <Button
+                        variant="whatsapp"
+                        size="lg"
+                        className="w-full gap-2"
+                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(
+                          `Scor HostScan: ${propertyReport.scor}/${propertyReport.max_scor} pentru ${propertyReport.zona}. ROI estimat: ${propertyReport.roi_estimat}. Vreau o evaluare detaliată.`
+                        )}`)}
+                      >
+                        {language === "ro" ? "CONTACTEAZĂ ECHIPA" : "CONTACT TEAM"}
+                      </Button>
+                    </motion.div>
+                  )}
+
                   {/* Quick Actions */}
-                  {messages.length <= 1 && !isLoading && (
-                    <div className="flex flex-wrap gap-2 mt-10 justify-center px-4">
-                      {text.quickActions.map((action, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSend(action)}
-                          className="px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-[11px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary/40 transition-all text-foreground"
+                  {messages.length <= 1 && !isLoading && !showQualificationWizard && (
+                    <div className="mt-6 space-y-4">
+                      {/* Qualification wizard trigger */}
+                      {!qualificationData && (currentPath.includes("/pentru-proprietari") || currentPath.includes("/investitii") || currentPath === "/") && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => setShowQualificationWizard(true)}
+                          className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 text-sm font-semibold text-primary hover:from-primary/20 hover:to-accent/20 transition-all flex items-center justify-center gap-2"
                         >
-                          {action}
-                        </button>
-                      ))}
+                          <TrendingUp className="w-4 h-4" />
+                          {language === "ro" ? "📊 Analiză Proprietate — Află Scorul și ROI-ul" : "📊 Property Analysis — Get Score & ROI"}
+                        </motion.button>
+                      )}
+                      <div className="flex flex-wrap gap-2 justify-center px-4">
+                        {text.quickActions.map((action, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSend(action)}
+                            className="px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-[11px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:border-primary/40 transition-all text-foreground"
+                          >
+                            {action}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+                  )}
+
+                  {/* ─── Qualification Wizard ─── */}
+                  {showQualificationWizard && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mx-2 mt-6 p-5 rounded-2xl bg-gradient-to-br from-card to-muted/30 border border-primary/20 shadow-xl space-y-4"
+                    >
+                      <div className="text-center space-y-1">
+                        <h3 className="text-lg font-bold text-foreground">
+                          {language === "ro" ? "Analiză Proprietate" : "Property Analysis"}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {language === "ro" ? "Completează pentru o analiză personalizată cu scor și ROI" : "Fill in for a personalized score and ROI analysis"}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Input
+                          placeholder={language === "ro" ? "Prenume *" : "First name *"}
+                          value={wizardForm.name}
+                          onChange={e => setWizardForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="h-12 rounded-xl bg-background/50 border-border/50"
+                        />
+                        <Input
+                          type="tel"
+                          placeholder={language === "ro" ? "Telefon WhatsApp * (ex: 0723...)" : "WhatsApp phone * (e.g. +40...)"}
+                          value={wizardForm.phone}
+                          onChange={e => setWizardForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="h-12 rounded-xl bg-background/50 border-border/50"
+                        />
+                        <select
+                          value={wizardForm.zone}
+                          onChange={e => setWizardForm(prev => ({ ...prev, zone: e.target.value }))}
+                          className="w-full h-12 rounded-xl bg-background/50 border border-border/50 px-3 text-sm text-foreground"
+                        >
+                          {QUALIFICATION_ZONES.map(z => (
+                            <option key={z} value={z}>{z}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setShowQualificationWizard(false)}
+                        >
+                          {language === "ro" ? "Anulează" : "Cancel"}
+                        </Button>
+                        <Button
+                          className="flex-1 gap-2"
+                          onClick={handleQualificationSubmit}
+                          disabled={!wizardForm.name.trim() || !wizardForm.phone.trim()}
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          {language === "ro" ? "ÎNCEPE ANALIZA" : "START ANALYSIS"}
+                        </Button>
+                      </div>
+                    </motion.div>
                   )}
                 </ScrollArea>
 
@@ -807,6 +1062,23 @@ const AIChatbot = () => {
 
                 {/* ─── Premium Input ─── */}
                 <div className="p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
+                  {/* Attached image preview */}
+                  {attachedImage && (
+                    <div className="mb-3 relative inline-block">
+                      <img src={attachedImage} alt="Preview" className="h-16 rounded-xl border border-primary/30 object-cover" />
+                      <button
+                        onClick={() => setAttachedImage(null)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px]"
+                      >
+                        ✕
+                      </button>
+                      <div className="flex items-center gap-1 mt-1 text-[10px] text-accent">
+                        <CheckCircle2 className="w-3 h-3" />
+                        {language === "ro" ? "Pregătit pentru analiză vizuală" : "Ready for visual analysis"}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Voice transfer banner */}
                   {messages.length > 2 && sharedContext && (
                     <button
@@ -818,11 +1090,26 @@ const AIChatbot = () => {
                     </button>
                   )}
 
-                  <div className="flex gap-3 items-center">
+                  <div className="flex gap-2 items-center">
+                    {/* Camera button */}
+                    <label className="cursor-pointer h-14 w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+                      <Camera className="w-5 h-5 text-primary" />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
                     <div className="relative flex-1">
                       <Input
                         ref={inputRef}
-                        placeholder={text.placeholder}
+                        placeholder={attachedImage 
+                          ? (language === "ro" ? "Descrie proprietatea (opțional)..." : "Describe the property (optional)...") 
+                          : text.placeholder
+                        }
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
@@ -836,7 +1123,7 @@ const AIChatbot = () => {
                       size="icon"
                       className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform"
                       onClick={() => handleSend()}
-                      disabled={!input.trim() || isLoading}
+                      disabled={(!input.trim() && !attachedImage) || isLoading}
                     >
                       {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
                     </Button>
