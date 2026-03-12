@@ -38,7 +38,7 @@ const NearFoldSection = () => {
   }, []);
 
   return (
-    <div id="calculator">
+    <div id="calculator" className="cv-auto">
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
         <MainNavigationCards />
