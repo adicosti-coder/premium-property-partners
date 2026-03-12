@@ -167,6 +167,7 @@ const CityGuideSection: React.FC = () => {
         transport: 'Transport',
         health: 'Sănătate',
         entertainment: 'Divertisment',
+        services: 'Servicii',
       },
       seeOnMap: 'Vezi pe Hartă',
       localTip: 'Sfat Local',
