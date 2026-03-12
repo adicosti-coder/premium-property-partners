@@ -222,6 +222,7 @@ const CityGuideSection: React.FC = () => {
         transport: 'Transport',
         health: 'Health',
         entertainment: 'Entertainment',
+        services: 'Services',
       },
       seeOnMap: 'See on Map',
       localTip: 'Local Tip',
