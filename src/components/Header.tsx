@@ -331,7 +331,7 @@ const Header = () => {
                       className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Shield className="w-4 h-4" />
+                      <ShieldIcon className="w-4 h-4" />
                       Admin
                     </Link>
                   </div>
