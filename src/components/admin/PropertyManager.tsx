@@ -148,6 +148,12 @@ export default function PropertyManager() {
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
 
+  // Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterListingType, setFilterListingType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(true);
+
   // Auto-calculate ROI when price/night and capital change
   const calculateROI = useCallback((fd: PropertyFormData): { roi: string; revenue: string } | null => {
     const rate = fd.base_price_per_night ? parseFloat(fd.base_price_per_night) : 0;
