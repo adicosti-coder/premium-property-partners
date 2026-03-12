@@ -16,7 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Edit, Star, Euro, Users, Bed, Maximize2, ExternalLink,
   Eye, EyeOff, MapPin, Plus, Save, Loader2, Trash2, Bath, Languages,
-  Phone, User, Mail, Link2, Calendar, Filter, Search, RotateCcw,
+  Phone, User, Mail, Link2, Filter, Search, RotateCcw,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyImageGallery from "./PropertyImageGallery";
