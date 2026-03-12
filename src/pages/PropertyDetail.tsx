@@ -28,6 +28,7 @@ const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
 const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighborhoodMap"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const PropertyAIScore = lazy(() => import("@/components/PropertyAIScore"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
