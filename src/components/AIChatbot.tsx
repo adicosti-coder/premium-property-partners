@@ -154,6 +154,16 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
     : ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"];
 };
 
+// --- Report Parser ---
+const parsePropertyReport = (text: string): PropertyReport | null => {
+  const match = text.match(/<RAPORT_JSON>([\s\S]*?)<\/RAPORT_JSON>/);
+  if (!match) return null;
+  try { return JSON.parse(match[1].trim()); } catch { return null; }
+};
+const cleanReportFromText = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPORT_JSON>/g, "").trim();
+
+const QUALIFICATION_ZONES = ["ISHO", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
+
 const AIChatbot = () => {
   const { language } = useLanguage();
   const currentPath = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -168,6 +178,20 @@ const AIChatbot = () => {
   const [ratingGiven, setRatingGiven] = useState<number | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  
+  // --- HostScan Features ---
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [propertyReport, setPropertyReport] = useState<PropertyReport | null>(null);
+  const [showQualificationWizard, setShowQualificationWizard] = useState(false);
+  const [qualificationData, setQualificationData] = useState<QualificationData | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const saved = localStorage.getItem("apart_qualification_data");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [wizardForm, setWizardForm] = useState({ name: "", phone: "", zone: "ISHO" });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {
     if (typeof window === "undefined") return [];
