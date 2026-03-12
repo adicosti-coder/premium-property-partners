@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown } from "lucide-react";
 
-// Hero image served from public/ so <picture> can negotiate WebP/AVIF
-const HERO_IMAGE_PUBLIC = "/images/hero-cinematic.webp";
+// Hero image served from public/ — optimized compressed versions
+const HERO_IMAGE_PUBLIC = "/images/hero-optimized-1920w.webp";
 interface HeroSettings {
   videoUrl: string;
   customFallbackImage: string | null;
@@ -145,7 +145,7 @@ const Hero = () => {
             <picture>
               {!isCustom && (
                 <source
-                  srcSet="/images/hero-cinematic-800w.webp 800w, /images/hero-cinematic.webp 1920w"
+                  srcSet="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
                   sizes="100vw"
                   type="image/webp"
                 />
