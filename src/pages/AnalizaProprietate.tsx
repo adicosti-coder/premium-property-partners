@@ -482,6 +482,63 @@ const AnalizaProprietate = () => {
               )}
             </AnimatePresence>
           </motion.div>
+
+          {/* Social Proof Section */}
+          {step === "wizard" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-10 space-y-6"
+            >
+              {/* Trust indicators */}
+              <div className="grid grid-cols-3 gap-4 text-center">
+                {[
+                  { value: "140", label: language === "ro" ? "Puncte Scor" : "Score Points", icon: "📊" },
+                  { value: "50+", label: language === "ro" ? "Proprietăți Analizate" : "Properties Analyzed", icon: "🏠" },
+                  { value: "2 min", label: language === "ro" ? "Timp Analiză" : "Analysis Time", icon: "⚡" },
+                ].map((stat) => (
+                  <div key={stat.label} className="p-4 rounded-2xl bg-card border border-border/50">
+                    <span className="text-2xl">{stat.icon}</span>
+                    <p className="text-xl font-bold text-foreground mt-1">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* How it works */}
+              <div className="bg-card border border-border/50 rounded-2xl p-6">
+                <h3 className="font-bold text-foreground text-center mb-4">
+                  {language === "ro" ? "Cum funcționează?" : "How does it work?"}
+                </h3>
+                <div className="space-y-3">
+                  {(language === "ro" ? [
+                    { step: "1", text: "Completezi datele de bază ale proprietății" },
+                    { step: "2", text: "AI-ul analizează zona, piața și potențialul" },
+                    { step: "3", text: "Primești scor din 140, ROI estimat și recomandări" },
+                  ] : [
+                    { step: "1", text: "Fill in your property's basic details" },
+                    { step: "2", text: "AI analyzes the area, market and potential" },
+                    { step: "3", text: "Get a score out of 140, estimated ROI and recommendations" },
+                  ]).map((item) => (
+                    <div key={item.step} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center shrink-0">
+                        {item.step}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{item.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA bottom */}
+              <p className="text-center text-xs text-muted-foreground">
+                {language === "ro" 
+                  ? "🔒 Datele tale sunt confidențiale. Nu trimitem spam." 
+                  : "🔒 Your data is confidential. We don't send spam."}
+              </p>
+            </motion.div>
+          )}
         </div>
       </main>
       <Footer />
