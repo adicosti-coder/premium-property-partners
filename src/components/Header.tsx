@@ -214,8 +214,8 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            {/* Notifications - hidden on mobile, visible md+ only for authenticated */}
-            {isAuthenticated && <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>}
+            {/* Notifications - hidden on mobile, visible md+ only for authenticated admins */}
+            {isAuthenticated === true && <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>}
             {/* Animation toggle - hidden on mobile */}
             <div className="hidden md:block"><Suspense fallback={null}><AnimationToggle /></Suspense></div>
             {/* Theme toggle - visible on all screens */}
