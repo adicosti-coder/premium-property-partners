@@ -117,6 +117,13 @@ interface PropertyFormData {
   booking_review_count: string;
   base_price_per_night: string;
   weekend_price_per_night: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  source_url: string;
+  source_platform: string;
+  capacity: string;
+  bedrooms: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -138,6 +145,13 @@ const initialFormData: PropertyFormData = {
   booking_review_count: "",
   base_price_per_night: "",
   weekend_price_per_night: "",
+  contact_name: "",
+  contact_phone: "",
+  contact_email: "",
+  source_url: "",
+  source_platform: "",
+  capacity: "",
+  bedrooms: "",
 };
 
 export default function PropertyManager() {
