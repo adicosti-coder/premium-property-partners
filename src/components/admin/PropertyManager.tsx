@@ -349,6 +349,13 @@ export default function PropertyManager() {
         booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
         base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
         weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
+        contact_name: formData.contact_name || null,
+        contact_phone: formData.contact_phone || null,
+        contact_email: formData.contact_email || null,
+        source_url: formData.source_url || null,
+        source_platform: formData.source_platform || null,
+        capacity: formData.capacity ? parseInt(formData.capacity) : null,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
       });
 
       if (error) throw error;
