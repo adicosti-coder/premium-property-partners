@@ -277,7 +277,10 @@ export default function PropertyManager() {
           p.name.toLowerCase().includes(term) ||
           p.location.toLowerCase().includes(term) ||
           (p.tag && p.tag.toLowerCase().includes(term)) ||
-          (p.listing_type && p.listing_type.toLowerCase().includes(term));
+          (p.listing_type && p.listing_type.toLowerCase().includes(term)) ||
+          (p.contact_name && p.contact_name.toLowerCase().includes(term)) ||
+          (p.contact_phone && p.contact_phone.toLowerCase().includes(term)) ||
+          (p.source_url && p.source_url.toLowerCase().includes(term));
         if (!matches) return false;
       }
       if (filterListingType !== "all" && p.listing_type !== filterListingType) return false;
