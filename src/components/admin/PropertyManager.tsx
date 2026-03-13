@@ -606,6 +606,28 @@ export default function PropertyManager() {
         </div>
       </div>
 
+      {/* Capacity & Bedrooms - always visible */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Capacitate (persoane)</Label>
+          <Input
+            type="number"
+            value={formData.capacity}
+            onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+            placeholder="4"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Dormitoare</Label>
+          <Input
+            type="number"
+            value={formData.bedrooms}
+            onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+            placeholder="2"
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Ordine Afișare</Label>
@@ -615,6 +637,58 @@ export default function PropertyManager() {
             onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
             placeholder="0"
           />
+        </div>
+      </div>
+
+      {/* Contact proprietar - private */}
+      <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🔒</span>
+          <h4 className="font-semibold text-foreground">Date Contact Proprietar (privat)</h4>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-2">
+            <Label>Nume</Label>
+            <Input
+              value={formData.contact_name}
+              onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+              placeholder="Ion Popescu"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Telefon</Label>
+            <Input
+              value={formData.contact_phone}
+              onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+              placeholder="0722..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              value={formData.contact_email}
+              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+              placeholder="email@exemplu.ro"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label>Platformă sursă</Label>
+            <Input
+              value={formData.source_platform}
+              onChange={(e) => setFormData({ ...formData, source_platform: e.target.value })}
+              placeholder="OLX, Storia, Imobiliare.ro"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>URL sursă</Label>
+            <Input
+              value={formData.source_url}
+              onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
+              placeholder="https://olx.ro/..."
+            />
+          </div>
         </div>
       </div>
 
