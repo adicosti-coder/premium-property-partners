@@ -1079,12 +1079,20 @@ export default function PropertyManager() {
             </Button>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]"><GripVertical className="w-4 h-4" /></TableHead>
                 <TableHead><Home className="w-4 h-4 inline mr-1" />{t.admin.properties?.name || "Name"}</TableHead>
                 <TableHead><MapPin className="w-4 h-4 inline mr-1" />{t.admin.properties?.location || "Location"}</TableHead>
+                <TableHead>Preț/n</TableHead>
+                <TableHead>Cap.</TableHead>
+                <TableHead>Dorm.</TableHead>
+                <TableHead>Capital</TableHead>
+                <TableHead>ROI</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Sursă</TableHead>
                 <TableHead>{t.admin.properties?.tag || "Tag"}</TableHead>
                 <TableHead>{t.admin.properties?.status || "Status"}</TableHead>
                 <TableHead className="w-[120px]">{t.admin.tableHeaders.actions}</TableHead>
@@ -1099,7 +1107,39 @@ export default function PropertyManager() {
                   <TableCell className="font-medium max-w-[200px] truncate">
                     {property.name}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{property.location}</TableCell>
+                  <TableCell className="text-muted-foreground max-w-[150px] truncate">{property.location}</TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {property.base_price_per_night ? `${property.base_price_per_night}€` : '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.capacity ?? '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.bedrooms ?? '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {property.capital_necesar ? `${property.capital_necesar.toLocaleString()}€` : '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {property.roi_percentage || '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.contact_name || property.contact_phone ? (
+                      <div className="text-xs space-y-0.5">
+                        {property.contact_name && <div className="font-medium">{property.contact_name}</div>}
+                        {property.contact_phone && (
+                          <a href={`tel:${property.contact_phone}`} className="text-primary hover:underline">{property.contact_phone}</a>
+                        )}
+                      </div>
+                    ) : '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.source_url ? (
+                      <a href={property.source_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs max-w-[100px] truncate block">
+                        {property.source_platform || 'Link'}
+                      </a>
+                    ) : (property.source_platform || '–')}
+                  </TableCell>
                   <TableCell>
                     {property.tag && (
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
@@ -1175,6 +1215,7 @@ export default function PropertyManager() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
 
