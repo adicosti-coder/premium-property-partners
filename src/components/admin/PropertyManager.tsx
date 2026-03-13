@@ -514,6 +514,13 @@ export default function PropertyManager() {
       booking_review_count: property.booking_review_count?.toString() || "",
       base_price_per_night: property.base_price_per_night?.toString() || "",
       weekend_price_per_night: property.weekend_price_per_night?.toString() || "",
+      contact_name: property.contact_name || "",
+      contact_phone: property.contact_phone || "",
+      contact_email: property.contact_email || "",
+      source_url: property.source_url || "",
+      source_platform: property.source_platform || "",
+      capacity: property.capacity?.toString() || "",
+      bedrooms: property.bedrooms?.toString() || "",
     });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
