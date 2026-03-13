@@ -80,6 +80,13 @@ interface Property {
   booking_review_count: number | null;
   base_price_per_night: number | null;
   weekend_price_per_night: number | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  source_url: string | null;
+  source_platform: string | null;
+  capacity: number | null;
+  bedrooms: number | null;
 }
 
 interface PropertyImage {
@@ -110,6 +117,13 @@ interface PropertyFormData {
   booking_review_count: string;
   base_price_per_night: string;
   weekend_price_per_night: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  source_url: string;
+  source_platform: string;
+  capacity: string;
+  bedrooms: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -131,6 +145,13 @@ const initialFormData: PropertyFormData = {
   booking_review_count: "",
   base_price_per_night: "",
   weekend_price_per_night: "",
+  contact_name: "",
+  contact_phone: "",
+  contact_email: "",
+  source_url: "",
+  source_platform: "",
+  capacity: "",
+  bedrooms: "",
 };
 
 export default function PropertyManager() {
@@ -256,7 +277,10 @@ export default function PropertyManager() {
           p.name.toLowerCase().includes(term) ||
           p.location.toLowerCase().includes(term) ||
           (p.tag && p.tag.toLowerCase().includes(term)) ||
-          (p.listing_type && p.listing_type.toLowerCase().includes(term));
+          (p.listing_type && p.listing_type.toLowerCase().includes(term)) ||
+          (p.contact_name && p.contact_name.toLowerCase().includes(term)) ||
+          (p.contact_phone && p.contact_phone.toLowerCase().includes(term)) ||
+          (p.source_url && p.source_url.toLowerCase().includes(term));
         if (!matches) return false;
       }
       if (filterListingType !== "all" && p.listing_type !== filterListingType) return false;
@@ -328,6 +352,13 @@ export default function PropertyManager() {
         booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
         base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
         weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
+        contact_name: formData.contact_name || null,
+        contact_phone: formData.contact_phone || null,
+        contact_email: formData.contact_email || null,
+        source_url: formData.source_url || null,
+        source_platform: formData.source_platform || null,
+        capacity: formData.capacity ? parseInt(formData.capacity) : null,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
       });
 
       if (error) throw error;
@@ -397,6 +428,13 @@ export default function PropertyManager() {
           booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
           base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
           weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
+          contact_name: formData.contact_name || null,
+          contact_phone: formData.contact_phone || null,
+          contact_email: formData.contact_email || null,
+          source_url: formData.source_url || null,
+          source_platform: formData.source_platform || null,
+          capacity: formData.capacity ? parseInt(formData.capacity) : null,
+          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         })
         .eq("id", editingProperty.id);
 
@@ -493,6 +531,13 @@ export default function PropertyManager() {
       booking_review_count: property.booking_review_count?.toString() || "",
       base_price_per_night: property.base_price_per_night?.toString() || "",
       weekend_price_per_night: property.weekend_price_per_night?.toString() || "",
+      contact_name: property.contact_name || "",
+      contact_phone: property.contact_phone || "",
+      contact_email: property.contact_email || "",
+      source_url: property.source_url || "",
+      source_platform: property.source_platform || "",
+      capacity: property.capacity?.toString() || "",
+      bedrooms: property.bedrooms?.toString() || "",
     });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
@@ -564,6 +609,28 @@ export default function PropertyManager() {
         </div>
       </div>
 
+      {/* Capacity & Bedrooms - always visible */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Capacitate (persoane)</Label>
+          <Input
+            type="number"
+            value={formData.capacity}
+            onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+            placeholder="4"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Dormitoare</Label>
+          <Input
+            type="number"
+            value={formData.bedrooms}
+            onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+            placeholder="2"
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Ordine Afișare</Label>
@@ -573,6 +640,58 @@ export default function PropertyManager() {
             onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
             placeholder="0"
           />
+        </div>
+      </div>
+
+      {/* Contact proprietar - private */}
+      <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🔒</span>
+          <h4 className="font-semibold text-foreground">Date Contact Proprietar (privat)</h4>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-2">
+            <Label>Nume</Label>
+            <Input
+              value={formData.contact_name}
+              onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+              placeholder="Ion Popescu"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Telefon</Label>
+            <Input
+              value={formData.contact_phone}
+              onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+              placeholder="0722..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              value={formData.contact_email}
+              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+              placeholder="email@exemplu.ro"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label>Platformă sursă</Label>
+            <Input
+              value={formData.source_platform}
+              onChange={(e) => setFormData({ ...formData, source_platform: e.target.value })}
+              placeholder="OLX, Storia, Imobiliare.ro"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>URL sursă</Label>
+            <Input
+              value={formData.source_url}
+              onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
+              placeholder="https://olx.ro/..."
+            />
+          </div>
         </div>
       </div>
 
@@ -960,12 +1079,20 @@ export default function PropertyManager() {
             </Button>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]"><GripVertical className="w-4 h-4" /></TableHead>
                 <TableHead><Home className="w-4 h-4 inline mr-1" />{t.admin.properties?.name || "Name"}</TableHead>
                 <TableHead><MapPin className="w-4 h-4 inline mr-1" />{t.admin.properties?.location || "Location"}</TableHead>
+                <TableHead>Preț/n</TableHead>
+                <TableHead>Cap.</TableHead>
+                <TableHead>Dorm.</TableHead>
+                <TableHead>Capital</TableHead>
+                <TableHead>ROI</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Sursă</TableHead>
                 <TableHead>{t.admin.properties?.tag || "Tag"}</TableHead>
                 <TableHead>{t.admin.properties?.status || "Status"}</TableHead>
                 <TableHead className="w-[120px]">{t.admin.tableHeaders.actions}</TableHead>
@@ -980,7 +1107,39 @@ export default function PropertyManager() {
                   <TableCell className="font-medium max-w-[200px] truncate">
                     {property.name}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{property.location}</TableCell>
+                  <TableCell className="text-muted-foreground max-w-[150px] truncate">{property.location}</TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {property.base_price_per_night ? `${property.base_price_per_night}€` : '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.capacity ?? '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.bedrooms ?? '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {property.capital_necesar ? `${property.capital_necesar.toLocaleString()}€` : '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {property.roi_percentage || '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.contact_name || property.contact_phone ? (
+                      <div className="text-xs space-y-0.5">
+                        {property.contact_name && <div className="font-medium">{property.contact_name}</div>}
+                        {property.contact_phone && (
+                          <a href={`tel:${property.contact_phone}`} className="text-primary hover:underline">{property.contact_phone}</a>
+                        )}
+                      </div>
+                    ) : '–'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {property.source_url ? (
+                      <a href={property.source_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs max-w-[100px] truncate block">
+                        {property.source_platform || 'Link'}
+                      </a>
+                    ) : (property.source_platform || '–')}
+                  </TableCell>
                   <TableCell>
                     {property.tag && (
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
@@ -1056,6 +1215,7 @@ export default function PropertyManager() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
 
