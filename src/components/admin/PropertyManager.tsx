@@ -80,6 +80,13 @@ interface Property {
   booking_review_count: number | null;
   base_price_per_night: number | null;
   weekend_price_per_night: number | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  source_url: string | null;
+  source_platform: string | null;
+  capacity: number | null;
+  bedrooms: number | null;
 }
 
 interface PropertyImage {
