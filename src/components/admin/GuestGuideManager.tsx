@@ -16,7 +16,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Copy, ExternalLink, CopyPlus } from "lucide-react";
 import { format } from "date-fns";
 
 interface GuestGuide {
@@ -115,6 +115,31 @@ const GuestGuideManager = () => {
     setDialogOpen(true);
   };
 
+  const handleDuplicate = (guide: GuestGuide) => {
+    setEditingId(null);
+    setForm({
+      booking_id: "",
+      property_name: guide.property_name,
+      check_in_date: "",
+      check_out_date: "",
+      check_in_time: guide.check_in_time || "15:00",
+      check_out_time: guide.check_out_time || "11:00",
+      wifi_name: guide.wifi_name || "",
+      wifi_password: guide.wifi_password || "",
+      pin_code: "",
+      access_instructions: guide.access_instructions || "",
+      access_video_url: guide.access_video_url || "",
+      parking_instructions: guide.parking_instructions || "",
+      parking_gps_lat: guide.parking_gps_lat,
+      parking_gps_lng: guide.parking_gps_lng,
+      whatsapp_number: guide.whatsapp_number || "",
+      property_image: guide.property_image || "",
+      additional_notes: guide.additional_notes || "",
+    });
+    setDialogOpen(true);
+    toast({ title: "Ghid duplicat 📋", description: "Completează Booking ID, datele și codul keybox." });
+  };
+
   const handleSave = async () => {
     if (!form.booking_id || !form.property_name || !form.check_in_date || !form.check_out_date) {
       toast({ title: "Completează câmpurile obligatorii", variant: "destructive" });
@@ -196,7 +221,7 @@ const GuestGuideManager = () => {
                   <TableHead>Proprietate</TableHead>
                   <TableHead>Check-in</TableHead>
                   <TableHead>Check-out</TableHead>
-                  <TableHead>PIN</TableHead>
+                  <TableHead>Keybox</TableHead>
                   <TableHead>Link</TableHead>
                   <TableHead>Acțiuni</TableHead>
                 </TableRow>
@@ -222,6 +247,9 @@ const GuestGuideManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleDuplicate(g)} title="Duplică ghidul">
+                          <CopyPlus className="w-3.5 h-3.5 text-blue-500" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(g)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
@@ -263,7 +291,7 @@ const GuestGuideManager = () => {
               {renderFormField("Ora Check-out", "check_out_time")}
               {renderFormField("WiFi Rețea", "wifi_name")}
               {renderFormField("WiFi Parolă", "wifi_password")}
-              {renderFormField("Cod PIN", "pin_code")}
+              {renderFormField("Cod Keybox", "pin_code")}
               {renderFormField("WhatsApp", "whatsapp_number")}
               {renderFormField("Video Acces URL", "access_video_url")}
               {renderFormField("Imagine Proprietate URL", "property_image")}

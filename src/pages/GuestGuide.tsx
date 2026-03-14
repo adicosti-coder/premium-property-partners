@@ -16,8 +16,8 @@ const t = {
     notFoundDesc: "Verifică link-ul primit sau contactează-ne.",
     checkIn: "Check-in",
     checkOut: "Check-out",
-    pinCode: "Cod PIN Acces",
-    pinLocked: "Codul PIN va fi vizibil în ziua check-in-ului",
+    pinCode: "Cod Keybox Acces",
+    pinLocked: "Codul keybox va fi vizibil în ziua check-in-ului",
     pinAvailable: "Codul tău de acces",
     wifi: "Wi-Fi",
     wifiName: "Rețea",
@@ -43,8 +43,8 @@ const t = {
     notFoundDesc: "Please check the link you received or contact us.",
     checkIn: "Check-in",
     checkOut: "Check-out",
-    pinCode: "Access PIN Code",
-    pinLocked: "The PIN code will be visible on your check-in day",
+    pinCode: "Keybox Access Code",
+    pinLocked: "The keybox code will be visible on your check-in day",
     pinAvailable: "Your access code",
     wifi: "Wi-Fi",
     wifiName: "Network",
@@ -180,7 +180,7 @@ const GuestGuide = () => {
           </CardContent>
         </Card>
 
-        {/* PIN Code */}
+        {/* Keybox Code */}
         {guide.pin_code && (
           <Card className={isCheckInDay ? "border-primary/50 bg-primary/5" : ""}>
             <CardContent className="p-4">
