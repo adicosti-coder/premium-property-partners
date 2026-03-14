@@ -143,3 +143,6 @@ verify_jwt = false
 
 [functions.ai-property-search]
 verify_jwt = false
+
+[functions.lead-webhook]
+verify_jwt = false
