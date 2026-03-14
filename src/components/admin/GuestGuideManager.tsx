@@ -16,7 +16,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Copy, ExternalLink, CopyPlus } from "lucide-react";
 import { format } from "date-fns";
 
 interface GuestGuide {
