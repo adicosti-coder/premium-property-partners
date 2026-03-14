@@ -196,7 +196,7 @@ const GuestGuideManager = () => {
                   <TableHead>Proprietate</TableHead>
                   <TableHead>Check-in</TableHead>
                   <TableHead>Check-out</TableHead>
-                  <TableHead>PIN</TableHead>
+                  <TableHead>Keybox</TableHead>
                   <TableHead>Link</TableHead>
                   <TableHead>Acțiuni</TableHead>
                 </TableRow>
