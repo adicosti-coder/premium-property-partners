@@ -207,7 +207,7 @@ INFORMAȚII DESPRE COMPANIE:
 - Nume: ApArt Hotel Timișoara (parte din RealTrust)
 - Locație: Timișoara, România
 - Servicii: Administrare apartamente în regim hotelier, management proprietăți
-- Contact: WhatsApp +40723154520, email adicosti@gmail.com
+- Contact: WhatsApp +40723154520, email info@realtrust.ro
 - Rată ocupare: 98%
 - Rating: 4.9/5 stele
 
