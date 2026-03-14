@@ -75,8 +75,9 @@
       #hero-skeleton .hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(247,245,240,0.85),rgba(247,245,240,0.45),transparent)}
       .dark #hero-skeleton .hero-overlay{background:linear-gradient(to right,rgba(15,23,42,0.7),rgba(15,23,42,0.3),transparent)}
       #hero-skeleton .hero-content{position:relative;z-index:10;max-width:56rem;padding:5rem 1.5rem}
-      #hero-skeleton .hero-content h1{font-family:'Playfair Display','Playfair Display Fallback','Times New Roman',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;line-height:1.1;margin-bottom:1.5rem}
-      #hero-skeleton .hero-content p{font-size:1.125rem;max-width:42rem;margin-bottom:2rem;opacity:.85}
+      #hero-skeleton .hero-content h1{font-family:'Playfair Display','Playfair Display Fallback','Times New Roman',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;line-height:1.1;margin-bottom:1.5rem;color:#1e293b}
+      #hero-skeleton .hero-content p{font-family:'NotoSans',system-ui,sans-serif;font-size:1.125rem;line-height:1.625;max-width:42rem;margin-bottom:2rem;opacity:.85;color:#1e293b}
+      .dark #hero-skeleton .hero-content h1,.dark #hero-skeleton .hero-content p{color:#e2e8f0}
       /* Hide skeleton once React hydrates */
       #root:not(:empty) ~ #hero-skeleton,
       #root:not(:empty) + #hero-skeleton{display:none}
