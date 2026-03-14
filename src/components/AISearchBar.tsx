@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Search, X, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
