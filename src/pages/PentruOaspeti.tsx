@@ -371,12 +371,22 @@ const PentruOaspeti = () => {
               </div>
             </motion.div>
 
+            {/* AI Smart Search */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={heroAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.35 }}
+              className="mt-10 max-w-2xl mx-auto"
+            >
+              <Suspense fallback={null}><AISearchBar /></Suspense>
+            </motion.div>
+
             {/* Quick Availability Search Widget */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={heroAnimation.isVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-12 max-w-4xl mx-auto"
+              className="mt-6 max-w-4xl mx-auto"
             >
               <Suspense fallback={null}><QuickAvailabilitySearch /></Suspense>
             </motion.div>
