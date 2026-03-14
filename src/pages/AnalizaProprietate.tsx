@@ -525,6 +525,15 @@ const AnalizaProprietate = () => {
             </AnimatePresence>
           </motion.div>
 
+          {/* Photo AI Analysis — visible in wizard step, before social proof */}
+          {step === "wizard" && (
+            <div className="mt-8">
+              <Suspense fallback={null}>
+                <PhotoPropertyAnalysis />
+              </Suspense>
+            </div>
+          )}
+
           {/* Social Proof Section */}
           {step === "wizard" && (
             <motion.div
