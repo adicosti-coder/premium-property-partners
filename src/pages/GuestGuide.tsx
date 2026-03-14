@@ -180,7 +180,7 @@ const GuestGuide = () => {
           </CardContent>
         </Card>
 
-        {/* PIN Code */}
+        {/* Keybox Code */}
         {guide.pin_code && (
           <Card className={isCheckInDay ? "border-primary/50 bg-primary/5" : ""}>
             <CardContent className="p-4">

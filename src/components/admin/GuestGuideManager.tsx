@@ -115,6 +115,31 @@ const GuestGuideManager = () => {
     setDialogOpen(true);
   };
 
+  const handleDuplicate = (guide: GuestGuide) => {
+    setEditingId(null);
+    setForm({
+      booking_id: "",
+      property_name: guide.property_name,
+      check_in_date: "",
+      check_out_date: "",
+      check_in_time: guide.check_in_time || "15:00",
+      check_out_time: guide.check_out_time || "11:00",
+      wifi_name: guide.wifi_name || "",
+      wifi_password: guide.wifi_password || "",
+      pin_code: "",
+      access_instructions: guide.access_instructions || "",
+      access_video_url: guide.access_video_url || "",
+      parking_instructions: guide.parking_instructions || "",
+      parking_gps_lat: guide.parking_gps_lat,
+      parking_gps_lng: guide.parking_gps_lng,
+      whatsapp_number: guide.whatsapp_number || "",
+      property_image: guide.property_image || "",
+      additional_notes: guide.additional_notes || "",
+    });
+    setDialogOpen(true);
+    toast({ title: "Ghid duplicat 📋", description: "Completează Booking ID, datele și codul keybox." });
+  };
+
   const handleSave = async () => {
     if (!form.booking_id || !form.property_name || !form.check_in_date || !form.check_out_date) {
       toast({ title: "Completează câmpurile obligatorii", variant: "destructive" });
