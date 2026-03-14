@@ -150,31 +150,25 @@ const Hero = () => {
         }}
       >
         {/* Static hero image — responsive srcSet for mobile LCP optimization */}
-        {(() => {
-          const imgSrc = heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC;
-          const isCustom = imgSrc !== HERO_IMAGE_PUBLIC;
-          return (
-            <picture>
-              {!isCustom && (
-                <source
-                  srcSet="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
-                  sizes="100vw"
-                  type="image/webp"
-                />
-              )}
-              <img
-                src={imgSrc}
-                alt="Apartamente regim hotelier Timișoara — ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Parcare subterană gratuită, self check-in 24/7"
-                className="w-full h-full object-cover"
-                width={1920}
-                height={1080}
-                fetchPriority="high"
-                decoding="sync"
-                loading="eager"
-              />
-            </picture>
-          );
-        })()}
+        <picture>
+          {!(heroSettings.customFallbackImage) && (
+            <source
+              srcSet="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
+              sizes="100vw"
+              type="image/webp"
+            />
+          )}
+          <img
+            src={heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC}
+            alt="Apartamente regim hotelier Timișoara — ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Parcare subterană gratuită, self check-in 24/7"
+            className="w-full h-full object-cover"
+            width={1920}
+            height={1080}
+            fetchPriority="high"
+            decoding="sync"
+            loading="eager"
+          />
+        </picture>
         {/* Video — completely excluded from DOM on mobile to prevent any download */}
         {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
