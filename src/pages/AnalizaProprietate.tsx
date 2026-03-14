@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { lazy, Suspense } from "react";
 
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
+const HostScanMiniMap = lazy(() => import("@/components/HostScanMiniMap"));
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 const ZONES = ["Fructus Plaza", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
@@ -386,6 +387,20 @@ const AnalizaProprietate = () => {
                         </div>
                       </motion.div>
                     ))}
+
+                    {/* Inline map after first AI response */}
+                    {messages.length >= 2 && messages.some(m => m.role === "assistant" && m.content.length > 50) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="my-2"
+                      >
+                        <Suspense fallback={null}>
+                          <HostScanMiniMap zone={report?.zona || form.zone} />
+                        </Suspense>
+                      </motion.div>
+                    )}
 
                     {/* Report Card */}
                     {report && (
