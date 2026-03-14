@@ -152,9 +152,9 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [], pageContext = "/", imageBase64, qualificationContext } = await req.json();
+    const { message, language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext } = await req.json();
 
-    if ((!message && !imageBase64) || (message && message.length > 2000)) {
+    if ((!message && !imageBase64 && !imagesArray?.length) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -182,23 +182,40 @@ Owner pre-qualified via wizard:
 Treat this as a warm lead. Focus on ROI analysis for their zone. Use calculate_roi proactively.`;
     }
 
-    systemPrompt += `\n\n=== PHOTO ANALYSIS ===
-If the user sends a property photo, analyze:
-1. Finish quality (premium/standard/basic) and estimated impact on nightly rate
-2. Furnishing style and condition
-3. Specific ROI recommendations based on visual assessment
-4. Score the property 0-140 points across: Location(30), Finishes(25), Furnishing(25), Layout(20), Amenities(20), Condition(20)
+    systemPrompt += `\n\n=== PHOTO ANALYSIS (MULTIMODAL) ===
+If the user sends property photos (one or multiple), analyze the COMPLETE set:
+1. Cross-correlate details across all rooms to evaluate finish consistency
+2. Score renovation quality, furnishing style, and overall condition
+3. Rate each category 0-140: Location(30), Finishes(25), Furnishing(25), Layout(20), Amenities(20), Condition(20)
+4. Identify the weakest room/area and strongest room/area
+5. Provide specific, actionable ROI recommendations based on all visual evidence
+6. Estimate nightly rate potential for Airbnb/Booking in Timișoara
+
+IMPORTANT: When multiple photos are provided, evaluate the ENTIRE property holistically.
+Compare consistency between rooms (e.g., if living room has premium finishes but bathroom is outdated, note this).
 
 When you complete a full property analysis, include a structured report at the end using this exact format:
 <RAPORT_JSON>{"scor": 115, "max_scor": 140, "zona": "ISHO", "roi_estimat": "9.4%", "tarif_noapte": 110, "note_consultant": "Proprietate excelentă cu finisaje premium și potențial ridicat de randament.", "recomandari": ["Optimizare iluminat", "Adăugare smart lock"], "categorie": "Premium"}</RAPORT_JSON>`;
 
-    // Build user message content (text + optional image)
-    const userContent: any = imageBase64
-      ? [
-          { type: "text", text: message || "Am atașat o imagine cu proprietatea mea. Analizează te rog." },
-          { type: "image_url", image_url: { url: imageBase64 } },
-        ]
-      : message;
+    // Build user message content (text + optional images array)
+    let userContent: any;
+    const allImages = imagesArray?.length ? imagesArray : (imageBase64 ? [imageBase64] : []);
+    
+    if (allImages.length > 0) {
+      // Multi-image: send text + all images (up to 20)
+      const imageParts = allImages.slice(0, 20).map((img: string) => ({
+        type: "image_url",
+        image_url: { url: img },
+      }));
+      userContent = [
+        { type: "text", text: message || (language === "ro" 
+          ? `Am atașat ${allImages.length} fotografi${allImages.length === 1 ? "e" : "i"} cu proprietatea mea. Analizează setul complet și oferă un scor final holistic.`
+          : `I attached ${allImages.length} photo${allImages.length === 1 ? "" : "s"} of my property. Analyze the complete set and provide a holistic final score.`) },
+        ...imageParts,
+      ];
+    } else {
+      userContent = message;
+    }
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -219,7 +236,7 @@ When you complete a full property analysis, include a structured report at the e
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages,
-        max_tokens: 1000,
+        max_tokens: allImages.length > 1 ? 2000 : 1000,
         temperature: 0.7,
         tools: TOOL_DEFINITIONS,
         stream: false,
