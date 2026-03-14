@@ -682,15 +682,17 @@ export default function InvestitiiPremiumManager() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Proprietate</TableHead>
-              <TableHead className="hidden md:table-cell">Locație</TableHead>
-              <TableHead className="hidden lg:table-cell">Contact</TableHead>
-              <TableHead className="text-center">ROI</TableHead>
-              <TableHead className="text-center hidden sm:table-cell">Capital</TableHead>
-              <TableHead className="hidden lg:table-cell text-center">Camere</TableHead>
-              <TableHead className="hidden xl:table-cell">Adăugat</TableHead>
-              <TableHead className="hidden xl:table-cell">Sursă</TableHead>
-              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="min-w-[180px]">Proprietate</TableHead>
+              <TableHead className="min-w-[120px]">Locație</TableHead>
+              <TableHead className="min-w-[100px] text-center">Preț/Noapte</TableHead>
+              <TableHead className="text-center min-w-[60px]">Capacitate</TableHead>
+              <TableHead className="text-center min-w-[60px]">Camere</TableHead>
+              <TableHead className="text-center min-w-[60px]">ROI</TableHead>
+              <TableHead className="text-center min-w-[100px]">Capital</TableHead>
+              <TableHead className="min-w-[140px]">Contact</TableHead>
+              <TableHead className="min-w-[100px]">Sursă</TableHead>
+              <TableHead className="min-w-[80px]">Adăugat</TableHead>
+              <TableHead className="text-center min-w-[70px]">Status</TableHead>
               <TableHead className="w-[100px]">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
