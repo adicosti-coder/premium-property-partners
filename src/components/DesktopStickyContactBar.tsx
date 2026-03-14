@@ -20,7 +20,7 @@ const DesktopStickyContactBar = () => {
 
   const handleEmail = () => {
     trackEmail();
-    window.location.href = "mailto:adicosti@gmail.com";
+    window.location.href = "mailto:info@realtrust.ro";
   };
 
   return (
