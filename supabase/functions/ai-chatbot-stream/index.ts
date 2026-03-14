@@ -197,13 +197,25 @@ Compare consistency between rooms (e.g., if living room has premium finishes but
 When you complete a full property analysis, include a structured report at the end using this exact format:
 <RAPORT_JSON>{"scor": 115, "max_scor": 140, "zona": "ISHO", "roi_estimat": "9.4%", "tarif_noapte": 110, "note_consultant": "Proprietate excelentă cu finisaje premium și potențial ridicat de randament.", "recomandari": ["Optimizare iluminat", "Adăugare smart lock"], "categorie": "Premium"}</RAPORT_JSON>`;
 
-    // Build user message content (text + optional image)
-    const userContent: any = imageBase64
-      ? [
-          { type: "text", text: message || "Am atașat o imagine cu proprietatea mea. Analizează te rog." },
-          { type: "image_url", image_url: { url: imageBase64 } },
-        ]
-      : message;
+    // Build user message content (text + optional images array)
+    let userContent: any;
+    const allImages = imagesArray?.length ? imagesArray : (imageBase64 ? [imageBase64] : []);
+    
+    if (allImages.length > 0) {
+      // Multi-image: send text + all images (up to 20)
+      const imageParts = allImages.slice(0, 20).map((img: string) => ({
+        type: "image_url",
+        image_url: { url: img },
+      }));
+      userContent = [
+        { type: "text", text: message || (language === "ro" 
+          ? `Am atașat ${allImages.length} fotografi${allImages.length === 1 ? "e" : "i"} cu proprietatea mea. Analizează setul complet și oferă un scor final holistic.`
+          : `I attached ${allImages.length} photo${allImages.length === 1 ? "" : "s"} of my property. Analyze the complete set and provide a holistic final score.`) },
+        ...imageParts,
+      ];
+    } else {
+      userContent = message;
+    }
 
     const messages = [
       { role: "system", content: systemPrompt },
