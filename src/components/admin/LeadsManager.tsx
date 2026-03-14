@@ -92,6 +92,15 @@ interface Lead {
     roomType?: string;
     location?: string;
     estimatedIncome?: number;
+    // HostScan AI report fields
+    scor?: number;
+    max_scor?: number;
+    zona?: string;
+    roi_estimat?: string;
+    tarif_noapte?: number;
+    note_consultant?: string;
+    recomandari?: string[];
+    categorie?: string;
   } | null;
   created_at: string;
   source: string | null;
