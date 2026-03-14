@@ -989,7 +989,7 @@ const LeadsManager = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <LeadNotesDialog 
                           leadId={lead.id} 
