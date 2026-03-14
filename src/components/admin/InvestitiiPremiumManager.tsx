@@ -682,15 +682,17 @@ export default function InvestitiiPremiumManager() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Proprietate</TableHead>
-              <TableHead className="hidden md:table-cell">Locație</TableHead>
-              <TableHead className="hidden lg:table-cell">Contact</TableHead>
-              <TableHead className="text-center">ROI</TableHead>
-              <TableHead className="text-center hidden sm:table-cell">Capital</TableHead>
-              <TableHead className="hidden lg:table-cell text-center">Camere</TableHead>
-              <TableHead className="hidden xl:table-cell">Adăugat</TableHead>
-              <TableHead className="hidden xl:table-cell">Sursă</TableHead>
-              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="min-w-[180px]">Proprietate</TableHead>
+              <TableHead className="min-w-[120px]">Locație</TableHead>
+              <TableHead className="min-w-[100px] text-center">Preț/Noapte</TableHead>
+              <TableHead className="text-center min-w-[60px]">Capacitate</TableHead>
+              <TableHead className="text-center min-w-[60px]">Camere</TableHead>
+              <TableHead className="text-center min-w-[60px]">ROI</TableHead>
+              <TableHead className="text-center min-w-[100px]">Capital</TableHead>
+              <TableHead className="min-w-[140px]">Contact</TableHead>
+              <TableHead className="min-w-[100px]">Sursă</TableHead>
+              <TableHead className="min-w-[80px]">Adăugat</TableHead>
+              <TableHead className="text-center min-w-[70px]">Status</TableHead>
               <TableHead className="w-[100px]">Acțiuni</TableHead>
             </TableRow>
           </TableHeader>
@@ -700,20 +702,34 @@ export default function InvestitiiPremiumManager() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     {property.image_path && (
-                      <img src={property.image_path} alt={property.name} className="w-12 h-12 rounded-lg object-cover hidden sm:block" />
+                      <img src={property.image_path} alt={property.name} className="w-12 h-12 rounded-lg object-cover" />
                     )}
                     <div className="min-w-0">
                       <p className="font-medium text-foreground text-sm truncate max-w-[200px]">{property.name}</p>
-                      <p className="text-xs text-muted-foreground md:hidden truncate">{property.location}</p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
+                <TableCell>
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />{property.location.split(",")[0]}
+                    <MapPin className="w-3 h-3 shrink-0" />{property.location.split(",")[0]}
                   </span>
                 </TableCell>
-                <TableCell className="hidden lg:table-cell">
+                <TableCell className="text-center">
+                  <span className="text-sm">{property.base_price_per_night ? `${property.base_price_per_night} €` : "–"}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <span className="text-sm">{property.capacity ?? "–"}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <span className="text-sm">{property.bedrooms}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <span className="font-semibold text-sm text-primary">{property.roi_percentage ?? "–"}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <span className="text-sm">{property.capital_necesar ? `${property.capital_necesar.toLocaleString()} €` : "–"}</span>
+                </TableCell>
+                <TableCell>
                   <div className="space-y-0.5 min-w-0">
                     {property.contact_name && (
                       <p className="text-xs font-medium text-foreground flex items-center gap-1 truncate">
@@ -725,26 +741,17 @@ export default function InvestitiiPremiumManager() {
                         <Phone className="w-3 h-3 shrink-0" />{property.contact_phone}
                       </a>
                     )}
-                    {!property.contact_name && !property.contact_phone && (
+                    {property.contact_email && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                        <Mail className="w-3 h-3 shrink-0" />{property.contact_email}
+                      </p>
+                    )}
+                    {!property.contact_name && !property.contact_phone && !property.contact_email && (
                       <span className="text-xs text-muted-foreground">–</span>
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <span className="font-semibold text-sm text-primary">{property.roi_percentage ?? "–"}</span>
-                </TableCell>
-                <TableCell className="text-center hidden sm:table-cell">
-                  <span className="text-sm">{property.capital_necesar ? `${property.capital_necesar.toLocaleString()} €` : "–"}</span>
-                </TableCell>
-                <TableCell className="hidden lg:table-cell text-center">
-                  <span className="text-sm">{property.bedrooms}</span>
-                </TableCell>
-                <TableCell className="hidden xl:table-cell">
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(property.created_at), "dd MMM yyyy", { locale: ro })}
-                  </span>
-                </TableCell>
-                <TableCell className="hidden xl:table-cell">
+                <TableCell>
                   {property.source_url ? (
                     <a href={property.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
                       <ExternalLink className="w-3 h-3" />{property.source_platform || "Link"}
@@ -752,6 +759,11 @@ export default function InvestitiiPremiumManager() {
                   ) : (
                     <span className="text-xs text-muted-foreground">Manual</span>
                   )}
+                </TableCell>
+                <TableCell>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(property.created_at), "dd MMM yyyy", { locale: ro })}
+                  </span>
                 </TableCell>
                 <TableCell className="text-center">
                   {!property.is_active ? (
