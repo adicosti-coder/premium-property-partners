@@ -10,7 +10,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
-import { supabase } from "@/lib/supabaseClient";
+// supabase imported dynamically below to keep vendor-supabase (~43KB) off critical path
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 
