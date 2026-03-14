@@ -175,6 +175,8 @@ const LeadsManager = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingReadId, setTogglingReadId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [readFilter, setReadFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
