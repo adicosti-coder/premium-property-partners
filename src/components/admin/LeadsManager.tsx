@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 import LeadNotesDialog from "./LeadNotesDialog";
+import LeadDetailDialog from "./LeadDetailDialog";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -174,6 +176,8 @@ const LeadsManager = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingReadId, setTogglingReadId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [readFilter, setReadFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
@@ -857,7 +861,11 @@ const LeadsManager = () => {
                 {filteredLeads.map((lead) => (
                   <TableRow 
                     key={lead.id} 
-                    className={!lead.is_read ? "bg-primary/5 hover:bg-primary/10" : ""}
+                    className={cn(
+                      "cursor-pointer",
+                      !lead.is_read ? "bg-primary/5 hover:bg-primary/10" : ""
+                    )}
+                    onClick={() => { setSelectedLead(lead); setDetailOpen(true); }}
                   >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
@@ -981,7 +989,7 @@ const LeadsManager = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <LeadNotesDialog 
                           leadId={lead.id} 
@@ -1050,6 +1058,13 @@ const LeadsManager = () => {
           ? `Afișez ${filteredLeads.length} din ${leads.length} lead-uri`
           : `Showing ${filteredLeads.length} of ${leads.length} leads`}
       </p>
+
+      {/* Lead Detail Modal */}
+      <LeadDetailDialog
+        lead={selectedLead}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 };
