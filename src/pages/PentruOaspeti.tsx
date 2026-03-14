@@ -10,6 +10,7 @@ const CleaningStandards = lazy(() => import("@/components/CleaningStandards"));
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
 const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
 const QuickAvailabilitySearch = lazy(() => import("@/components/QuickAvailabilitySearch"));
+const AISearchBar = lazy(() => import("@/components/AISearchBar"));
 const CityGuideSection = lazy(() => import("@/components/CityGuideSection"));
 import SEOHead from "@/components/SEOHead";
 import { useLanguage } from "@/i18n/LanguageContext";
