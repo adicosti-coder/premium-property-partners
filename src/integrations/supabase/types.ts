@@ -1177,6 +1177,75 @@ export type Database = {
           },
         ]
       }
+      guest_guides: {
+        Row: {
+          access_instructions: string | null
+          access_video_url: string | null
+          additional_notes: string | null
+          booking_id: string
+          check_in_date: string
+          check_in_time: string | null
+          check_out_date: string
+          check_out_time: string | null
+          created_at: string | null
+          id: string
+          parking_gps_lat: number | null
+          parking_gps_lng: number | null
+          parking_instructions: string | null
+          pin_code: string | null
+          property_image: string | null
+          property_name: string
+          updated_at: string | null
+          whatsapp_number: string | null
+          wifi_name: string | null
+          wifi_password: string | null
+        }
+        Insert: {
+          access_instructions?: string | null
+          access_video_url?: string | null
+          additional_notes?: string | null
+          booking_id: string
+          check_in_date: string
+          check_in_time?: string | null
+          check_out_date: string
+          check_out_time?: string | null
+          created_at?: string | null
+          id?: string
+          parking_gps_lat?: number | null
+          parking_gps_lng?: number | null
+          parking_instructions?: string | null
+          pin_code?: string | null
+          property_image?: string | null
+          property_name: string
+          updated_at?: string | null
+          whatsapp_number?: string | null
+          wifi_name?: string | null
+          wifi_password?: string | null
+        }
+        Update: {
+          access_instructions?: string | null
+          access_video_url?: string | null
+          additional_notes?: string | null
+          booking_id?: string
+          check_in_date?: string
+          check_in_time?: string | null
+          check_out_date?: string
+          check_out_time?: string | null
+          created_at?: string | null
+          id?: string
+          parking_gps_lat?: number | null
+          parking_gps_lng?: number | null
+          parking_instructions?: string | null
+          pin_code?: string | null
+          property_image?: string | null
+          property_name?: string
+          updated_at?: string | null
+          whatsapp_number?: string | null
+          wifi_name?: string | null
+          wifi_password?: string | null
+        }
+        Relationships: []
+      }
       ical_sources: {
         Row: {
           created_at: string
