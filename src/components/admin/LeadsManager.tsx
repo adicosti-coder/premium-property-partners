@@ -846,6 +846,7 @@ const LeadsManager = () => {
                   <TableHead>{text.name}</TableHead>
                   <TableHead>{text.contact}</TableHead>
                   <TableHead>{text.property}</TableHead>
+                  <TableHead>HostScan</TableHead>
                   <TableHead>{text.profit}</TableHead>
                   <TableHead>{text.source}</TableHead>
                   <TableHead>{text.date}</TableHead>
