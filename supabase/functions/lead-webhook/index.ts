@@ -32,6 +32,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify shared secret
+  const webhookSecret = req.headers.get("x-webhook-secret");
+  if (webhookSecret !== "Secret_Leads_2024_!_Sec") {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized - Invalid webhook secret" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     const payload = await req.json();
     
