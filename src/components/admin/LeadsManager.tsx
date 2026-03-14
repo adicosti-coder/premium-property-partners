@@ -128,6 +128,8 @@ const sourceLabels: Record<string, { ro: string; en: string; color: string }> = 
   "rental-calculator": { ro: "Rental Income", en: "Rental Income", color: "bg-green-500" },
   quick_form: { ro: "Formular Rapid", en: "Quick Form", color: "bg-purple-500" },
   real_estate_contact: { ro: "Contact Imobiliare", en: "Real Estate Contact", color: "bg-orange-500" },
+  "HostScan AI Report": { ro: "HostScan AI", en: "HostScan AI", color: "bg-emerald-500" },
+  "AI Chat (Tools)": { ro: "Chat AI", en: "AI Chat", color: "bg-cyan-500" },
 };
 
 // Notification sound using Web Audio API
