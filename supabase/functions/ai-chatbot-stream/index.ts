@@ -236,7 +236,7 @@ When you complete a full property analysis, include a structured report at the e
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages,
-        max_tokens: 1000,
+        max_tokens: allImages.length > 1 ? 2000 : 1000,
         temperature: 0.7,
         tools: TOOL_DEFINITIONS,
         stream: false,
