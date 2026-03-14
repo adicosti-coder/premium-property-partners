@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/i18n/LanguageContext";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
@@ -91,6 +92,7 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
   ({ content, isStreaming }, ref) => (
     <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight">
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground/90">{children}</p>,
           strong: ({ children }) => <strong className="font-bold text-primary bg-primary/5 px-1 rounded">{children}</strong>,
@@ -108,6 +110,10 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
           h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
           h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
           h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+          table: ({ children }) => <table className="w-full border-collapse text-xs my-3 rounded-lg overflow-hidden">{children}</table>,
+          thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
+          th: ({ children }) => <th className="px-2 py-1.5 text-left font-semibold border border-border/50">{children}</th>,
+          td: ({ children }) => <td className="px-2 py-1.5 border border-border/50">{children}</td>,
         }}
       >
         {content}
