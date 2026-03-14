@@ -295,8 +295,7 @@ const GuestGuideManager = () => {
               {renderFormField("WhatsApp", "whatsapp_number")}
               {renderFormField("Video Acces URL", "access_video_url")}
               {renderFormField("Imagine Proprietate URL", "property_image")}
-              {renderFormField("Latitudine Parcare", "parking_gps_lat", "number")}
-              {renderFormField("Longitudine Parcare", "parking_gps_lng", "number")}
+              {renderFormField("Locație Parcare (Google Maps URL)", "parking_instructions")}
             </div>
             <div className="space-y-1">
               <Label>Instrucțiuni Acces</Label>
