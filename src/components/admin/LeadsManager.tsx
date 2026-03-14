@@ -54,6 +54,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 import LeadNotesDialog from "./LeadNotesDialog";
+import LeadDetailDialog from "./LeadDetailDialog";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
