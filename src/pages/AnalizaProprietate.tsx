@@ -380,8 +380,8 @@ const AnalizaProprietate = () => {
                           {m.imagePreview && (
                             <img src={m.imagePreview} alt="Property" className="rounded-xl max-h-32 mb-2 w-full object-cover" />
                           )}
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>{m.content || "..."}</ReactMarkdown>
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_table]:my-3 [&_th]:bg-muted [&_th]:px-2 [&_th]:py-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-border/50 [&_td]:px-2 [&_td]:py-1.5 [&_td]:border [&_td]:border-border/50 [&_table]:rounded-lg [&_table]:overflow-hidden">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || "..."}</ReactMarkdown>
                           </div>
                         </div>
                       </motion.div>
