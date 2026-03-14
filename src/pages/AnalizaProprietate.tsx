@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -379,8 +380,8 @@ const AnalizaProprietate = () => {
                           {m.imagePreview && (
                             <img src={m.imagePreview} alt="Property" className="rounded-xl max-h-32 mb-2 w-full object-cover" />
                           )}
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>{m.content || "..."}</ReactMarkdown>
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_table]:my-3 [&_th]:bg-muted [&_th]:px-2 [&_th]:py-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-border/50 [&_td]:px-2 [&_td]:py-1.5 [&_td]:border [&_td]:border-border/50 [&_table]:rounded-lg [&_table]:overflow-hidden">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || "..."}</ReactMarkdown>
                           </div>
                         </div>
                       </motion.div>
@@ -471,41 +472,39 @@ const AnalizaProprietate = () => {
                     <div ref={scrollRef} />
                   </div>
 
-                  {/* Input */}
-                  {!report && (
-                    <div className="p-4 border-t border-border/30">
-                      {attachedImage && (
-                        <div className="mb-2 relative inline-block">
-                          <img src={attachedImage} alt="Preview" className="h-14 rounded-xl border border-primary/30 object-cover" />
-                          <button onClick={() => setAttachedImage(null)} className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-destructive text-destructive-foreground rounded-full text-[8px] flex items-center justify-center">✕</button>
-                          <p className="text-[10px] text-accent flex items-center gap-1 mt-0.5"><CheckCircle2 className="w-3 h-3" />{text.imageReady}</p>
-                        </div>
-                      )}
-                      <div className="flex gap-2 items-center">
-                        <label className="cursor-pointer h-12 w-12 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 transition-all shrink-0">
-                          <Camera className="w-5 h-5 text-primary" />
-                          <input ref={fileInputRef} type="file" hidden accept="image/*" capture="environment" onChange={handleImageUpload} />
-                        </label>
-                        <Input
-                          ref={inputRef}
-                          placeholder={attachedImage ? text.imagePlaceholder : text.placeholder}
-                          value={input}
-                          onChange={e => setInput(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
-                          className="h-12 rounded-xl"
-                          disabled={isLoading}
-                        />
-                        <Button
-                          size="icon"
-                          className="h-12 w-12 rounded-xl"
-                          onClick={() => handleSend()}
-                          disabled={(!input.trim() && !attachedImage) || isLoading}
-                        >
-                          {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                        </Button>
+                  {/* Input — always visible in chat mode */}
+                  <div className="p-4 border-t border-border/30">
+                    {attachedImage && (
+                      <div className="mb-2 relative inline-block">
+                        <img src={attachedImage} alt="Preview" className="h-14 rounded-xl border border-primary/30 object-cover" />
+                        <button onClick={() => setAttachedImage(null)} className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-destructive text-destructive-foreground rounded-full text-[8px] flex items-center justify-center">✕</button>
+                        <p className="text-[10px] text-accent flex items-center gap-1 mt-0.5"><CheckCircle2 className="w-3 h-3" />{text.imageReady}</p>
                       </div>
+                    )}
+                    <div className="flex gap-2 items-center">
+                      <label className="cursor-pointer h-12 w-12 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 transition-all shrink-0">
+                        <Camera className="w-5 h-5 text-primary" />
+                        <input ref={fileInputRef} type="file" hidden accept="image/*" capture="environment" onChange={handleImageUpload} />
+                      </label>
+                      <Input
+                        ref={inputRef}
+                        placeholder={attachedImage ? text.imagePlaceholder : text.placeholder}
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
+                        className="h-12 rounded-xl"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        size="icon"
+                        className="h-12 w-12 rounded-xl"
+                        onClick={() => handleSend()}
+                        disabled={(!input.trim() && !attachedImage) || isLoading}
+                      >
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                      </Button>
                     </div>
-                  )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
