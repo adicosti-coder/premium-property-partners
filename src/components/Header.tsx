@@ -180,7 +180,7 @@ const Header = () => {
 
       <div className="glass border-b border-border/50 dark:border-border shadow-sm dark:shadow-none">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16 md:h-20 gap-2">
+          <div className="flex items-center justify-between h-16 md:h-20 gap-2 overflow-visible">
           {/* Logo - 3 lines layout centered */}
           <a href="/" className="group relative flex flex-col items-center gap-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:drop-shadow-[0_8px_20px_hsl(45_100%_50%/0.3)] flex-shrink-0 mr-1 md:mr-2 lg:mr-3">
             {/* Shimmer overlay */}
