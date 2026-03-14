@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Camera, TrendingUp, MapPin, CheckCircle2, 
   Bot, User, Loader2, ArrowRight, Building2, Phone,
-  Sparkles, RotateCcw, Star, ImageIcon
+  Sparkles, RotateCcw, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,8 @@ import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient"
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { lazy, Suspense } from "react";
+import HostScanUploader from "@/components/hostscan/HostScanUploader";
 
-const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 const HostScanMiniMap = lazy(() => import("@/components/HostScanMiniMap"));
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
@@ -49,10 +49,28 @@ const parseReport = (text: string): PropertyReport | null => {
 };
 const cleanReport = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPORT_JSON>/g, "").trim();
 
+/** Compress a base64 image to max ~800px wide */
+function compressImage(base64: string, maxWidth = 800, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => resolve(base64);
+    img.src = base64;
+  });
+}
+
 const AnalizaProprietate = () => {
   const { language } = useLanguage();
-   const [step, setStep] = useState<"wizard" | "chat">("wizard");
-   const [activeTab, setActiveTab] = useState<"text" | "photo">("text");
+  const [step, setStep] = useState<"wizard" | "chat">("wizard");
+  const [wizardImages, setWizardImages] = useState<string[]>([]);
   const [form, setForm] = useState({ name: "", phone: "", zone: "Fructus Plaza", rooms: "2" });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -83,9 +101,12 @@ const AnalizaProprietate = () => {
       zoneLabel: "Zona proprietății",
       roomsLabel: "Număr camere",
       startBtn: "ÎNCEPE ANALIZA AI",
+      startBtnWithPhotos: "ANALIZEAZĂ TEXT + FOTO",
       placeholder: "Descrie proprietatea ta...",
       imagePlaceholder: "Adaugă detalii despre imagine...",
       imageReady: "Imagine pregătită pentru analiză vizuală",
+      photosTitle: "Fotografii proprietate (opțional)",
+      photosHint: "Adaugă fotografii pentru o analiză vizuală suplimentară",
     },
     en: {
       pageTitle: "AI Property Analysis | RealTrust",
@@ -98,23 +119,40 @@ const AnalizaProprietate = () => {
       zoneLabel: "Property zone",
       roomsLabel: "Number of rooms",
       startBtn: "START AI ANALYSIS",
+      startBtnWithPhotos: "ANALYZE TEXT + PHOTOS",
       placeholder: "Describe your property...",
       imagePlaceholder: "Add details about the image...",
       imageReady: "Image ready for visual analysis",
+      photosTitle: "Property photos (optional)",
+      photosHint: "Add photos for additional visual analysis",
     },
   };
   const text = t[language as keyof typeof t] || t.ro;
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
       toast.error(language === "ro" ? "Completează numele și telefonul" : "Fill in name and phone");
       return;
     }
     setStep("chat");
-    const introMsg = language === "ro"
+
+    let introMsg = language === "ro"
       ? `Salut! Sunt ${form.name}. Am un apartament cu ${form.rooms} camere în zona ${form.zone}. Vreau o analiză completă cu scor și ROI estimat.`
       : `Hi! I'm ${form.name}. I have a ${form.rooms}-room apartment in ${form.zone}. I'd like a complete analysis with score and estimated ROI.`;
-    handleSend(introMsg);
+
+    if (wizardImages.length > 0) {
+      introMsg += language === "ro"
+        ? ` Am atașat ${wizardImages.length} fotografi${wizardImages.length === 1 ? "e" : "i"} ale proprietății pentru analiză vizuală completă.`
+        : ` I attached ${wizardImages.length} photo${wizardImages.length === 1 ? "" : "s"} of the property for complete visual analysis.`;
+    }
+
+    // Compress images if any
+    let compressed: string[] | undefined;
+    if (wizardImages.length > 0) {
+      compressed = await Promise.all(wizardImages.map((img) => compressImage(img)));
+    }
+
+    handleSend(introMsg, compressed);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +168,7 @@ const AnalizaProprietate = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSend = async (overrideMessage?: string) => {
+  const handleSend = async (overrideMessage?: string, imagesArray?: string[]) => {
     const content = overrideMessage || input.trim();
     const hasImage = !!attachedImage;
     if (!content && !hasImage) return;
@@ -164,6 +202,7 @@ const AnalizaProprietate = () => {
           conversationHistory: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
           pageContext: "/analiza-proprietate",
           imageBase64: hasImage ? currentImage : undefined,
+          imagesArray: imagesArray || undefined,
           qualificationContext: { name: form.name, phone: form.phone, zone: form.zone },
         }),
       });
@@ -218,6 +257,7 @@ const AnalizaProprietate = () => {
     setReport(null);
     setInput("");
     setAttachedImage(null);
+    setWizardImages([]);
   };
 
   return (
@@ -283,92 +323,72 @@ const AnalizaProprietate = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-0"
+                  className="p-6 md:p-8 space-y-5"
                 >
-                  {/* Tabs */}
-                  <div className="flex border-b border-border/50">
-                    <button
-                      onClick={() => setActiveTab("text")}
-                      className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all border-b-2",
-                        activeTab === "text"
-                          ? "border-primary text-primary"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <TrendingUp className="w-4 h-4" />
-                      {language === "ro" ? "Analiză Text AI" : "AI Text Analysis"}
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("photo")}
-                      className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all border-b-2",
-                        activeTab === "photo"
-                          ? "border-primary text-primary"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      {language === "ro" ? "Analiză Foto AI" : "AI Photo Analysis"}
-                    </button>
+                  {/* Text fields */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <Input
+                      placeholder={text.nameLabel}
+                      value={form.name}
+                      onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="h-13 rounded-xl"
+                    />
+                    <Input
+                      type="tel"
+                      placeholder={text.phoneLabel}
+                      value={form.phone}
+                      onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
+                      className="h-13 rounded-xl"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.zoneLabel}</label>
+                        <select
+                          value={form.zone}
+                          onChange={e => setForm(prev => ({ ...prev, zone: e.target.value }))}
+                          className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
+                        >
+                          {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.roomsLabel}</label>
+                        <select
+                          value={form.rooms}
+                          onChange={e => setForm(prev => ({ ...prev, rooms: e.target.value }))}
+                          className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
+                        >
+                          {["Studio", "1", "2", "3", "4+"].map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
-                  {activeTab === "text" ? (
-                    <div className="p-6 md:p-8 space-y-5">
-                      <div className="grid grid-cols-1 gap-4">
-                        <Input
-                          placeholder={text.nameLabel}
-                          value={form.name}
-                          onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                          className="h-13 rounded-xl"
-                        />
-                        <Input
-                          type="tel"
-                          placeholder={text.phoneLabel}
-                          value={form.phone}
-                          onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
-                          className="h-13 rounded-xl"
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.zoneLabel}</label>
-                            <select
-                              value={form.zone}
-                              onChange={e => setForm(prev => ({ ...prev, zone: e.target.value }))}
-                              className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
-                            >
-                              {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.roomsLabel}</label>
-                            <select
-                              value={form.rooms}
-                              onChange={e => setForm(prev => ({ ...prev, rooms: e.target.value }))}
-                              className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
-                            >
-                              {["Studio", "1", "2", "3", "4+"].map(r => <option key={r} value={r}>{r}</option>)}
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        size="xl"
-                        className="w-full gap-2"
-                        onClick={handleStartAnalysis}
-                        disabled={!form.name.trim() || !form.phone.trim()}
-                      >
-                        <TrendingUp className="w-5 h-5" />
-                        {text.startBtn}
-                      </Button>
+                  {/* Divider + Photo upload section */}
+                  <div className="border-t border-border/40 pt-5 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Camera className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-foreground">{text.photosTitle}</h3>
                     </div>
-                  ) : (
-                    <div className="p-6 md:p-8">
-                      <Suspense fallback={null}>
-                        <PhotoPropertyAnalysis />
-                      </Suspense>
-                    </div>
-                  )}
+                    <p className="text-xs text-muted-foreground">{text.photosHint}</p>
+                    <HostScanUploader
+                      images={wizardImages}
+                      onImagesChange={setWizardImages}
+                      maxImages={20}
+                      language={language}
+                    />
+                  </div>
+
+                  {/* Single CTA button */}
+                  <Button
+                    size="xl"
+                    className="w-full gap-2"
+                    onClick={handleStartAnalysis}
+                    disabled={!form.name.trim() || !form.phone.trim()}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    {wizardImages.length > 0 ? text.startBtnWithPhotos : text.startBtn}
+                  </Button>
                 </motion.div>
               ) : (
                 <motion.div
@@ -387,7 +407,10 @@ const AnalizaProprietate = () => {
                         <h3 className="font-bold text-sm text-foreground">HostScan AI</h3>
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{form.zone} · {form.rooms} cam</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                            {form.zone} · {form.rooms} cam
+                            {wizardImages.length > 0 && ` · ${wizardImages.length} 📷`}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -594,12 +617,12 @@ const AnalizaProprietate = () => {
                 </h3>
                 <div className="space-y-3">
                   {(language === "ro" ? [
-                    { step: "1", text: "Completezi datele de bază ale proprietății" },
-                    { step: "2", text: "AI-ul analizează zona, piața și potențialul" },
+                    { step: "1", text: "Completezi datele de bază + adaugi fotografii (opțional)" },
+                    { step: "2", text: "AI-ul analizează zona, piața, fotografiile și potențialul" },
                     { step: "3", text: "Primești scor din 140, ROI estimat și recomandări" },
                   ] : [
-                    { step: "1", text: "Fill in your property's basic details" },
-                    { step: "2", text: "AI analyzes the area, market and potential" },
+                    { step: "1", text: "Fill in basic details + add photos (optional)" },
+                    { step: "2", text: "AI analyzes area, market, photos and potential" },
                     { step: "3", text: "Get a score out of 140, estimated ROI and recommendations" },
                   ]).map((item) => (
                     <div key={item.step} className="flex items-center gap-3">
