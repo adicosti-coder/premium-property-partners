@@ -20,7 +20,7 @@ import { lazy, Suspense } from "react";
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
-const ZONES = ["ISHO", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
+const ZONES = ["Fructus Plaza", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
 
 interface Message {
   id: string;
@@ -50,7 +50,7 @@ const cleanReport = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPO
 const AnalizaProprietate = () => {
   const { language } = useLanguage();
   const [step, setStep] = useState<"wizard" | "chat">("wizard");
-  const [form, setForm] = useState({ name: "", phone: "", zone: "ISHO", rooms: "2" });
+  const [form, setForm] = useState({ name: "", phone: "", zone: "Fructus Plaza", rooms: "2" });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
