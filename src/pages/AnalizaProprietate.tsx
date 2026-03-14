@@ -569,6 +569,11 @@ const AnalizaProprietate = () => {
           )}
         </div>
       </main>
+      {/* Photo AI Analysis Section */}
+      <Suspense fallback={null}>
+        <PhotoPropertyAnalysis />
+      </Suspense>
+
       <Footer />
     </>
   );
