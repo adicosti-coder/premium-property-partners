@@ -263,7 +263,7 @@ const GuestGuideManager = () => {
               {renderFormField("Ora Check-out", "check_out_time")}
               {renderFormField("WiFi Rețea", "wifi_name")}
               {renderFormField("WiFi Parolă", "wifi_password")}
-              {renderFormField("Cod PIN", "pin_code")}
+              {renderFormField("Cod Keybox", "pin_code")}
               {renderFormField("WhatsApp", "whatsapp_number")}
               {renderFormField("Video Acces URL", "access_video_url")}
               {renderFormField("Imagine Proprietate URL", "property_image")}
