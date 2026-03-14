@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Camera, TrendingUp, MapPin, CheckCircle2, 
   Bot, User, Loader2, ArrowRight, Building2, Phone,
-  Sparkles, RotateCcw, Star
+  Sparkles, RotateCcw, Star, ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,8 @@ const cleanReport = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPO
 
 const AnalizaProprietate = () => {
   const { language } = useLanguage();
-  const [step, setStep] = useState<"wizard" | "chat">("wizard");
+   const [step, setStep] = useState<"wizard" | "chat">("wizard");
+   const [activeTab, setActiveTab] = useState<"text" | "photo">("text");
   const [form, setForm] = useState({ name: "", phone: "", zone: "Fructus Plaza", rooms: "2" });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -282,54 +283,92 @@ const AnalizaProprietate = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="p-6 md:p-8 space-y-5"
+                  className="space-y-0"
                 >
-                  <div className="grid grid-cols-1 gap-4">
-                    <Input
-                      placeholder={text.nameLabel}
-                      value={form.name}
-                      onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                      className="h-13 rounded-xl"
-                    />
-                    <Input
-                      type="tel"
-                      placeholder={text.phoneLabel}
-                      value={form.phone}
-                      onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className="h-13 rounded-xl"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.zoneLabel}</label>
-                        <select
-                          value={form.zone}
-                          onChange={e => setForm(prev => ({ ...prev, zone: e.target.value }))}
-                          className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
-                        >
-                          {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.roomsLabel}</label>
-                        <select
-                          value={form.rooms}
-                          onChange={e => setForm(prev => ({ ...prev, rooms: e.target.value }))}
-                          className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
-                        >
-                          {["Studio", "1", "2", "3", "4+"].map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      </div>
-                    </div>
+                  {/* Tabs */}
+                  <div className="flex border-b border-border/50">
+                    <button
+                      onClick={() => setActiveTab("text")}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all border-b-2",
+                        activeTab === "text"
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      {language === "ro" ? "Analiză Text AI" : "AI Text Analysis"}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("photo")}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all border-b-2",
+                        activeTab === "photo"
+                          ? "border-primary text-primary"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      {language === "ro" ? "Analiză Foto AI" : "AI Photo Analysis"}
+                    </button>
                   </div>
-                  <Button
-                    size="xl"
-                    className="w-full gap-2"
-                    onClick={handleStartAnalysis}
-                    disabled={!form.name.trim() || !form.phone.trim()}
-                  >
-                    <TrendingUp className="w-5 h-5" />
-                    {text.startBtn}
-                  </Button>
+
+                  {activeTab === "text" ? (
+                    <div className="p-6 md:p-8 space-y-5">
+                      <div className="grid grid-cols-1 gap-4">
+                        <Input
+                          placeholder={text.nameLabel}
+                          value={form.name}
+                          onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="h-13 rounded-xl"
+                        />
+                        <Input
+                          type="tel"
+                          placeholder={text.phoneLabel}
+                          value={form.phone}
+                          onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="h-13 rounded-xl"
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.zoneLabel}</label>
+                            <select
+                              value={form.zone}
+                              onChange={e => setForm(prev => ({ ...prev, zone: e.target.value }))}
+                              className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
+                            >
+                              {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.roomsLabel}</label>
+                            <select
+                              value={form.rooms}
+                              onChange={e => setForm(prev => ({ ...prev, rooms: e.target.value }))}
+                              className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
+                            >
+                              {["Studio", "1", "2", "3", "4+"].map(r => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="xl"
+                        className="w-full gap-2"
+                        onClick={handleStartAnalysis}
+                        disabled={!form.name.trim() || !form.phone.trim()}
+                      >
+                        <TrendingUp className="w-5 h-5" />
+                        {text.startBtn}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="p-6 md:p-8">
+                      <Suspense fallback={null}>
+                        <PhotoPropertyAnalysis />
+                      </Suspense>
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div
@@ -524,15 +563,6 @@ const AnalizaProprietate = () => {
               )}
             </AnimatePresence>
           </motion.div>
-
-          {/* Photo AI Analysis — visible in wizard step, before social proof */}
-          {step === "wizard" && (
-            <div className="mt-8">
-              <Suspense fallback={null}>
-                <PhotoPropertyAnalysis />
-              </Suspense>
-            </div>
-          )}
 
           {/* Social Proof Section */}
           {step === "wizard" && (
