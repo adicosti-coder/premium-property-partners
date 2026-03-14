@@ -1058,6 +1058,13 @@ const LeadsManager = () => {
           ? `Afișez ${filteredLeads.length} din ${leads.length} lead-uri`
           : `Showing ${filteredLeads.length} of ${leads.length} leads`}
       </p>
+
+      {/* Lead Detail Modal */}
+      <LeadDetailDialog
+        lead={selectedLead}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   );
 };
