@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Send, Camera, TrendingUp, MapPin, CheckCircle2, 
   Bot, User, Loader2, ArrowRight, Building2, Phone,
-  Sparkles, RotateCcw, Star
+  Sparkles, RotateCcw, Star, ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
