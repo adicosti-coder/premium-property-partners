@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { lazy, Suspense } from "react";
 
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
+const HostScanMiniMap = lazy(() => import("@/components/HostScanMiniMap"));
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 const ZONES = ["Fructus Plaza", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
