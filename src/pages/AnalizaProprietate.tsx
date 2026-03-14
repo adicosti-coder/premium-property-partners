@@ -388,6 +388,20 @@ const AnalizaProprietate = () => {
                       </motion.div>
                     ))}
 
+                    {/* Inline map after first AI response */}
+                    {messages.length >= 2 && messages.some(m => m.role === "assistant" && m.content.length > 50) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="my-2"
+                      >
+                        <Suspense fallback={null}>
+                          <HostScanMiniMap zone={report?.zona || form.zone} />
+                        </Suspense>
+                      </motion.div>
+                    )}
+
                     {/* Report Card */}
                     {report && (
                       <motion.div
