@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 import { toast } from "sonner";
