@@ -31,6 +31,24 @@ interface AnalysisResult {
   report: PropertyReport | null;
 }
 
+/** Compress a base64 image to max ~800px wide, JPEG quality 0.7 to reduce payload */
+function compressImage(base64: string, maxWidth = 800, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => resolve(base64); // fallback to original
+    img.src = base64;
+  });
+}
+
 const PhotoPropertyAnalysis = () => {
   const { language } = useLanguage();
   const [images, setImages] = useState<string[]>([]);
@@ -48,6 +66,7 @@ const PhotoPropertyAnalysis = () => {
       subtitle: "Încarcă până la 20 de fotografii cu proprietatea ta și primești instant evaluare AI cu scor, ROI și recomandări.",
       analyzeBtn: "ANALIZEAZĂ CU AI",
       analyzing: "Se analizează",
+      compressing: "Se optimizează imaginile",
       newAnalysis: "Analiză Nouă",
       emailLabel: "Email pentru raport (opțional)",
       gdprText: "Sunt de acord cu prelucrarea datelor conform GDPR pentru primirea raportului.",
@@ -59,6 +78,7 @@ const PhotoPropertyAnalysis = () => {
       subtitle: "Upload up to 20 photos of your property and get instant AI evaluation with score, ROI and recommendations.",
       analyzeBtn: "ANALYZE WITH AI",
       analyzing: "Analyzing",
+      compressing: "Optimizing images",
       newAnalysis: "New Analysis",
       emailLabel: "Email for report (optional)",
       gdprText: "I agree to GDPR data processing to receive the report.",
@@ -78,27 +98,26 @@ const PhotoPropertyAnalysis = () => {
     setProgress(0);
     setResult(null);
 
+    // Step 1: Compress all images
+    setProgress(5);
+    const compressed = await Promise.all(images.map((img) => compressImage(img)));
+    setProgress(15);
+
     // Animate progress
     const progressInterval = setInterval(() => {
       setProgress((p) => {
         if (p >= 90) { clearInterval(progressInterval); return 90; }
-        return p + Math.random() * 8;
+        return p + Math.random() * 6;
       });
-    }, 300);
+    }, 400);
 
     try {
       const apiKey = getSupabasePublishableKey();
 
-      const imagePrompt = images.length === 1
-        ? (language === "ro"
-          ? "Analizează această proprietate. Evaluează finisajele, starea, potențialul de închiriere și generează un raport complet cu scor."
-          : "Analyze this property. Evaluate finishes, condition, rental potential and generate a complete report with score.")
-        : (language === "ro"
-          ? `Analizează aceste ${images.length} fotografii ale proprietății. Evaluează finisajele, designul interior, starea generală, potențialul de închiriere și generează un raport complet cu scor.`
-          : `Analyze these ${images.length} property photos. Evaluate finishes, interior design, overall condition, rental potential and generate a complete report with score.`);
+      const imagePrompt = language === "ro"
+        ? `Analizează aceste ${compressed.length} fotografi${compressed.length === 1 ? "e" : "i"} ale proprietății. Evaluează setul complet: corelează detaliile din fiecare cameră pentru a evalua consistența finisajelor, calitatea renovării și dotările întregului apartament. Oferă un scor final și recomandări bazate pe întreaga proprietate.`
+        : `Analyze these ${compressed.length} property photo${compressed.length === 1 ? "" : "s"}. Evaluate the complete set: cross-correlate details from each room to assess finish consistency, renovation quality and amenities across the entire apartment. Provide a final score and recommendations based on the whole property.`;
 
-      // For multiple images, send only the first image via imageBase64 and reference the count
-      // The edge function supports single image; for multi-image we send the first and mention the count
       const response = await fetch(STREAM_URL, {
         method: "POST",
         headers: {
@@ -111,7 +130,7 @@ const PhotoPropertyAnalysis = () => {
           language,
           conversationHistory: [],
           pageContext: "/pentru-proprietari",
-          imageBase64: images[0], // Primary image for vision analysis
+          imagesArray: compressed, // Send ALL compressed images
         }),
       });
 
@@ -222,7 +241,7 @@ const PhotoPropertyAnalysis = () => {
         <div className="text-center mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5" />
-            AI · HostScan
+            AI · HostScan v2
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">{text.title}</h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto">{text.subtitle}</p>
@@ -251,7 +270,7 @@ const PhotoPropertyAnalysis = () => {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-primary font-medium flex items-center gap-2">
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        {text.analyzing}... {text.imageCount(images.length)}
+                        {progress < 15 ? text.compressing : text.analyzing}... {text.imageCount(images.length)}
                       </span>
                       <span className="text-muted-foreground font-mono">{Math.round(progress)}%</span>
                     </div>
@@ -323,6 +342,8 @@ const PhotoPropertyAnalysis = () => {
                       src={img}
                       alt={`Property ${i + 1}`}
                       className="h-20 w-28 object-cover rounded-xl shrink-0 border border-border/30"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ))}
                   {images.length > 6 && (
