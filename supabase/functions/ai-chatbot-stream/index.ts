@@ -182,12 +182,17 @@ Owner pre-qualified via wizard:
 Treat this as a warm lead. Focus on ROI analysis for their zone. Use calculate_roi proactively.`;
     }
 
-    systemPrompt += `\n\n=== PHOTO ANALYSIS ===
-If the user sends a property photo, analyze:
-1. Finish quality (premium/standard/basic) and estimated impact on nightly rate
-2. Furnishing style and condition
-3. Specific ROI recommendations based on visual assessment
-4. Score the property 0-140 points across: Location(30), Finishes(25), Furnishing(25), Layout(20), Amenities(20), Condition(20)
+    systemPrompt += `\n\n=== PHOTO ANALYSIS (MULTIMODAL) ===
+If the user sends property photos (one or multiple), analyze the COMPLETE set:
+1. Cross-correlate details across all rooms to evaluate finish consistency
+2. Score renovation quality, furnishing style, and overall condition
+3. Rate each category 0-140: Location(30), Finishes(25), Furnishing(25), Layout(20), Amenities(20), Condition(20)
+4. Identify the weakest room/area and strongest room/area
+5. Provide specific, actionable ROI recommendations based on all visual evidence
+6. Estimate nightly rate potential for Airbnb/Booking in Timișoara
+
+IMPORTANT: When multiple photos are provided, evaluate the ENTIRE property holistically.
+Compare consistency between rooms (e.g., if living room has premium finishes but bathroom is outdated, note this).
 
 When you complete a full property analysis, include a structured report at the end using this exact format:
 <RAPORT_JSON>{"scor": 115, "max_scor": 140, "zona": "ISHO", "roi_estimat": "9.4%", "tarif_noapte": 110, "note_consultant": "Proprietate excelentă cu finisaje premium și potențial ridicat de randament.", "recomandari": ["Optimizare iluminat", "Adăugare smart lock"], "categorie": "Premium"}</RAPORT_JSON>`;
