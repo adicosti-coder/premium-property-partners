@@ -105,6 +105,26 @@
           document.documentElement.classList.add(theme);
         } catch (_) {}
       })();
+      // Convert Vite-injected render-blocking CSS to async loading.
+      // Critical styles are already inlined above, so the full stylesheet
+      // can load without blocking first paint / LCP.
+      (function () {
+        try {
+          var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+              m.addedNodes.forEach(function (node) {
+                if (node.tagName === 'LINK' && node.rel === 'stylesheet' && node.href && node.href.indexOf('/assets/') !== -1) {
+                  node.media = 'print';
+                  node.onload = function () { node.media = 'all'; };
+                }
+              });
+            });
+          });
+          observer.observe(document.head, { childList: true });
+          // Stop observing after 5s — all links will be injected by then
+          setTimeout(function () { observer.disconnect(); }, 5000);
+        } catch (_) {}
+      })();
     </script>
 
     <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->

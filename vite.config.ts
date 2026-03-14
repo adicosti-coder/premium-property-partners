@@ -63,15 +63,16 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react/jsx-runtime", "mapbox-gl"],
     },
     build: {
-      // Disable modulepreload polyfill — lazy chunks should NOT be eagerly preloaded
-      modulePreload: { polyfill: false },
+      // Fully disable modulepreload — prevents browser from eagerly fetching lazy chunks
+      modulePreload: false,
       rollupOptions: {
         output: {
           manualChunks: {
             // Only split core vendor libs loaded on every page
             "vendor-react": ["react", "react-dom", "react-router-dom"],
             "vendor-query": ["@tanstack/react-query"],
-            "vendor-supabase": ["@supabase/supabase-js"],
+            // Supabase removed from manualChunks — it's dynamically imported in Hero/Header
+            // so Rollup will only load it when those dynamic imports execute (after LCP)
             // Heavy libs loaded lazily — let Rollup tree-shake & split naturally
             // framer-motion, recharts, mapbox-gl are NOT in manualChunks
             // so they only load when their lazy component is rendered
