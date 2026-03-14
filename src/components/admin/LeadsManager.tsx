@@ -907,6 +907,34 @@ const LeadsManager = () => {
                       </div>
                     </TableCell>
                     <TableCell>
+                      {lead.simulation_data?.scor != null ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white ${
+                              lead.simulation_data.scor >= 100 ? "bg-emerald-500" : lead.simulation_data.scor >= 70 ? "bg-amber-500" : "bg-red-500"
+                            }`}>
+                              {lead.simulation_data.scor}
+                            </div>
+                            <div className="text-xs">
+                              <p className="font-medium">/{lead.simulation_data.max_scor || 140}</p>
+                              <p className="text-muted-foreground">{lead.simulation_data.categorie || "—"}</p>
+                            </div>
+                          </div>
+                          {lead.simulation_data.zona && (
+                            <p className="text-[10px] text-muted-foreground">📍 {lead.simulation_data.zona}</p>
+                          )}
+                          {lead.simulation_data.roi_estimat && (
+                            <p className="text-[10px] font-medium text-emerald-600">ROI: {lead.simulation_data.roi_estimat}</p>
+                          )}
+                          {lead.simulation_data.tarif_noapte && (
+                            <p className="text-[10px] text-muted-foreground">{lead.simulation_data.tarif_noapte}€/noapte</p>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       {lead.calculated_net_profit ? (
                         <div>
                           <span className="font-semibold text-primary">
