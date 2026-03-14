@@ -277,7 +277,7 @@ const AboutUs = () => {
         items: [
           { icon: MapPin, label: "Office", value: "Timișoara, Romania" },
           { icon: Phone, label: "Phone", value: "+40 723 154 520" },
-          { icon: Mail, label: "Email", value: "adicosti@gmail.com" }
+          { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
       cta: {
