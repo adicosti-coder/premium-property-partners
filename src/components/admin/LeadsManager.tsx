@@ -860,7 +860,11 @@ const LeadsManager = () => {
                 {filteredLeads.map((lead) => (
                   <TableRow 
                     key={lead.id} 
-                    className={!lead.is_read ? "bg-primary/5 hover:bg-primary/10" : ""}
+                    className={cn(
+                      "cursor-pointer",
+                      !lead.is_read ? "bg-primary/5 hover:bg-primary/10" : ""
+                    )}
+                    onClick={() => { setSelectedLead(lead); setDetailOpen(true); }}
                   >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
