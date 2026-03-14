@@ -153,9 +153,9 @@ const Footer = () => {
                 <Phone className="w-4 h-4" />
                 0723 154 520
               </a>
-              <a href="mailto:adicosti@gmail.com" className="flex items-center gap-2 text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
+              <a href="mailto:info@realtrust.ro" className="flex items-center gap-2 text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="w-4 h-4" />
-                adicosti@gmail.com
+                info@realtrust.ro
               </a>
             </div>
           </div>
