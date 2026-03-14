@@ -137,3 +137,6 @@ verify_jwt = false
 
 [functions.rewrite-listing-description]
 verify_jwt = false
+
+[functions.hostscan-report]
+verify_jwt = false
