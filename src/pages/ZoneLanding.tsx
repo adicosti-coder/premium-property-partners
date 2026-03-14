@@ -183,7 +183,7 @@ const ZoneLanding = () => {
     description: language === "en" ? data.seoDescriptionEn : data.seoDescription,
     url: `https://realtrust.ro/zona/${data.slug}`,
     telephone: "+40723154520",
-    email: "adicosti@gmail.com",
+    email: "info@realtrust.ro",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Timișoara",

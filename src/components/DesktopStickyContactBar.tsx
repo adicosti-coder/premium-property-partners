@@ -67,7 +67,7 @@ const DesktopStickyContactBar = () => {
               )}
             >
               <Mail className="w-4 h-4" />
-              <span className="font-medium">adicosti@gmail.com</span>
+              <span className="font-medium">info@realtrust.ro</span>
             </button>
           </div>
         </div>

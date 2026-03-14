@@ -323,7 +323,7 @@ const AboutUs = () => {
       "@type": "ContactPoint",
       "telephone": "+40723154520",
       "contactType": "customer service",
-      "email": "adicosti@gmail.com",
+      "email": "info@realtrust.ro",
       "availableLanguage": ["Romanian", "English"]
     },
     "sameAs": [

@@ -239,7 +239,7 @@ COMPANY INFORMATION:
 - Name: ApArt Hotel Timișoara (part of RealTrust)
 - Location: Timișoara, Romania
 - Services: Short-term rental apartment management, property management
-- Contact: WhatsApp +40723154520, email adicosti@gmail.com
+- Contact: WhatsApp +40723154520, email info@realtrust.ro
 - Occupancy rate: 98%
 - Rating: 4.9/5 stars
 

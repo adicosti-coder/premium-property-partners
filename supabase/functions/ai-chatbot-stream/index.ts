@@ -58,7 +58,7 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
 
 === COMPANY ===
 • ApArt Hotel Timișoara (RealTrust) | Timișoara, România
-• WhatsApp: ${whatsapp} | Email: adicosti@gmail.com
+• WhatsApp: ${whatsapp} | Email: info@realtrust.ro
 • Rating: 4.9/5 | Ocupare: 98%
 
 === PROPERTIES ===

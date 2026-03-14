@@ -248,7 +248,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                   </a>
 
                   <a 
-                    href="mailto:adicosti@gmail.com"
+                    href="mailto:info@realtrust.ro"
                     className="flex items-center gap-4 p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -256,7 +256,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">{form.contactInfo.email}</p>
-                      <p className="text-foreground font-medium">adicosti@gmail.com</p>
+                      <p className="text-foreground font-medium">info@realtrust.ro</p>
                     </div>
                   </a>
 
