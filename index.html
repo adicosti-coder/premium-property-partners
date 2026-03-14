@@ -71,7 +71,7 @@
       .dark body{background:#0f172a;color:#e2e8f0}
       #hero-skeleton{position:relative;min-height:100dvh;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding-top:7rem}
       #hero-skeleton .hero-bg{position:absolute;inset:0}
-      #hero-skeleton .hero-bg img{width:100%;height:100%;object-fit:cover}
+      #hero-skeleton .hero-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
       #hero-skeleton .hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(247,245,240,0.85),rgba(247,245,240,0.45),transparent)}
       .dark #hero-skeleton .hero-overlay{background:linear-gradient(to right,rgba(15,23,42,0.7),rgba(15,23,42,0.3),transparent)}
       #hero-skeleton .hero-content{position:relative;z-index:10;max-width:56rem;padding:5rem 1.5rem}
@@ -121,14 +121,20 @@
     <!-- Skeleton removed: was loading hero image twice (1.3MB duplicate). React Hero handles the image. -->
     <div id="hero-skeleton" aria-hidden="true">
       <div class="hero-bg">
+        <img src="/images/hero-optimized-800w.webp"
+             srcset="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
+             sizes="100vw" type="image/webp"
+             alt="" width="1920" height="1080"
+             fetchpriority="high" decoding="sync" loading="eager"
+             style="width:100%;height:100%;object-fit:cover" />
         <div class="hero-overlay"></div>
       </div>
       <div class="hero-content">
         <h1>RealTrust & ApArt Hotel Timișoara — Imobiliare & Regim Hotelier</h1>
-        <p>Agenție imobiliară și administrare ApArt Hotel în Timișoara.</p>
+        <p>Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, ROI 9.4% Net Verificat.</p>
       </div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
   </body>
 
 </html>

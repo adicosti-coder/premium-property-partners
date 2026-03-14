@@ -10,7 +10,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/hooks/useFavorites";
-import { supabase } from "@/lib/supabaseClient";
+// supabase imported dynamically below to keep vendor-supabase (~43KB) off critical path
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 
@@ -30,28 +30,35 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Defer auth check — not needed for initial render, avoids blocking LCP
+  // Defer auth check — dynamic import keeps vendor-supabase (~43KB) off critical path
   useEffect(() => {
     let cancelled = false;
-    const init = () => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    const init = async () => {
+      const { supabase } = await import("@/lib/supabaseClient");
+      
       if (cancelled) return;
-      supabase.auth.getSession().then(({ data: { session } }) => {
+
+      // Check current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!cancelled) setIsAuthenticated(!!session);
+
+      // Listen for auth changes
+      const { data } = supabase.auth.onAuthStateChange((_, session) => {
         if (!cancelled) setIsAuthenticated(!!session);
       });
+      subscription = data.subscription;
     };
 
     // Defer the session check to after first paint using idle callback
     const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(init, { timeout: 3000 })
-      : setTimeout(init, 1500) as unknown as number;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsAuthenticated(!!session);
-    });
+      ? requestIdleCallback(() => init(), { timeout: 3000 })
+      : setTimeout(() => init(), 1500) as unknown as number;
 
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
       if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
       else clearTimeout(id);
     };
