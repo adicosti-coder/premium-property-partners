@@ -6,63 +6,15 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { User, Session } from "@supabase/supabase-js";
 import {
-  ArrowLeft,
-  LogOut,
-  Loader2,
-  Trash2,
-  Users,
-  Phone,
-  Home,
-  Euro,
-  Building2,
-  Hotel,
-  Calendar,
-  CalendarDays,
-  ShieldAlert,
-  Building,
-  LayoutDashboard,
-  FileText,
-  BarChart3,
-  Key,
-  Wrench,
-  Mail,
-  MailCheck,
-  Megaphone,
-  Play,
-  MapPin,
-  Film,
-  Lightbulb,
-  FlaskConical,
-  Shield,
-  ShieldCheck,
-  PenLine,
-  MousePointerClick,
-  Target, TrendingUp, LinkIcon, Search,
+  ArrowLeft, LogOut, Loader2, Users, ShieldAlert,
+  Building, LayoutDashboard, FileText, BarChart3, Key, Wrench,
+  Mail, MailCheck, Megaphone, Play, MapPin, Film, Lightbulb,
+  FlaskConical, Shield, ShieldCheck, PenLine, MousePointerClick,
+  Target, TrendingUp, LinkIcon, Search, Euro, Building2, Hotel,
+  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen,
 } from "lucide-react";
-import { format } from "date-fns";
-import { ro, enUS } from "date-fns/locale";
-import { MessageSquare } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import BookingManager from "@/components/admin/BookingManager";
@@ -96,6 +48,7 @@ import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManage
 import ICalManager from "@/components/admin/ICalManager";
 import ListingImporter from "@/components/admin/ListingImporter";
 import ProspectManager from "@/components/admin/ProspectManager";
+import GuestGuideManager from "@/components/admin/GuestGuideManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
@@ -134,7 +87,6 @@ const Admin = () => {
   
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
   const { newLeadsCount } = useNewLeadsNotification(activeTab);
-  const dateLocale = language === 'ro' ? ro : enUS;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -265,93 +217,41 @@ const Admin = () => {
         </div>
       </header>
 
-      {/* Content with Tabs */}
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-card border border-border flex flex-wrap h-auto gap-1 p-2 overflow-x-auto max-w-full">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <LayoutDashboard className="w-4 h-4" />
-              {t.admin.tabs?.dashboard || "Dashboard"}
-            </TabsTrigger>
-            <TabsTrigger value="leads" className="flex items-center gap-2 relative">
-              <Users className="w-4 h-4" />
-              {t.admin.tabs?.leads || "Leads"}
-              {newLeadsCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-2 -right-2 min-w-5 h-5 text-xs px-1.5 animate-bounce"
-                >
-                  {newLeadsCount > 99 ? '99+' : newLeadsCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <CalendarDays className="w-4 h-4" />
-              {t.admin.tabs?.bookings || "Bookings"}
-            </TabsTrigger>
-            <TabsTrigger value="cazare" className="flex items-center gap-2">
-              <Hotel className="w-4 h-4" />
-              Cazare
-            </TabsTrigger>
-            <TabsTrigger value="properties" className="flex items-center gap-2">
-              <Building className="w-4 h-4" />
-              {t.admin.tabs?.properties || "Properties"}
-            </TabsTrigger>
-            <TabsTrigger value="investitii-premium" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Investiții Premium
+            {/* Alphabetically sorted tabs */}
+            <TabsTrigger value="ab-testing" className="flex items-center gap-2">
+              <FlaskConical className="w-4 h-4" />
+              A/B Testing
             </TabsTrigger>
             <TabsTrigger value="blog" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Blog
             </TabsTrigger>
-            <TabsTrigger value="owner-codes" className="flex items-center gap-2">
-              <Key className="w-4 h-4" />
-              {t.admin.tabs?.ownerCodes || "Owner Codes"}
-            </TabsTrigger>
-            <TabsTrigger value="maintenance" className="flex items-center gap-2">
-              <Wrench className="w-4 h-4" />
-              {t.admin.tabs?.maintenance || "Maintenance"}
-            </TabsTrigger>
-            <TabsTrigger value="newsletter" className="flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              {t.admin.tabs?.newsletter || "Newsletter"}
-            </TabsTrigger>
-            <TabsTrigger value="complexes" className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Complexe
-            </TabsTrigger>
-            <TabsTrigger value="video-testimonials" className="flex items-center gap-2">
-              <Play className="w-4 h-4" />
-              Video
-            </TabsTrigger>
-            <TabsTrigger value="poi" className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              POI
-            </TabsTrigger>
-            <TabsTrigger value="hero-video" className="flex items-center gap-2">
-              <Film className="w-4 h-4" />
-              Hero Video
-            </TabsTrigger>
-            <TabsTrigger value="local-tips" className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
-              Sfaturi Locale
-            </TabsTrigger>
-            <TabsTrigger value="followup-stats" className="flex items-center gap-2">
-              <MailCheck className="w-4 h-4" />
-              Follow-up
-            </TabsTrigger>
-            <TabsTrigger value="ab-testing" className="flex items-center gap-2">
-              <FlaskConical className="w-4 h-4" />
-              A/B Testing
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              Reviews
+            <TabsTrigger value="prospects" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Bot Prospectare
             </TabsTrigger>
             <TabsTrigger value="captcha" className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Captcha
+            </TabsTrigger>
+            <TabsTrigger value="cazare" className="flex items-center gap-2">
+              <Hotel className="w-4 h-4" />
+              Cazare
+            </TabsTrigger>
+            <TabsTrigger value="discount-codes" className="flex items-center gap-2">
+              <Euro className="w-4 h-4" />
+              Coduri Promo
+            </TabsTrigger>
+            <TabsTrigger value="owner-codes" className="flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              {t.admin.tabs?.ownerCodes || "Coduri Proprietari"}
+            </TabsTrigger>
+            <TabsTrigger value="complexes" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Complexe
             </TabsTrigger>
             <TabsTrigger value="community" className="flex items-center gap-2">
               <PenLine className="w-4 h-4" />
@@ -361,25 +261,25 @@ const Admin = () => {
               <MousePointerClick className="w-4 h-4" />
               CTA Analytics
             </TabsTrigger>
-            <TabsTrigger value="funnel-analytics" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Funnel
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" />
-              Securitate
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="w-4 h-4" />
+              {t.admin.tabs?.dashboard || "Dashboard"}
             </TabsTrigger>
             <TabsTrigger value="email-campaigns" className="flex items-center gap-2">
               <Megaphone className="w-4 h-4" />
               Email Marketing
             </TabsTrigger>
-            <TabsTrigger value="discount-codes" className="flex items-center gap-2">
-              <Euro className="w-4 h-4" />
-              Coduri Promo
+            <TabsTrigger value="followup-stats" className="flex items-center gap-2">
+              <MailCheck className="w-4 h-4" />
+              Follow-up
             </TabsTrigger>
-            <TabsTrigger value="property-views" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              Vizualizări
+            <TabsTrigger value="funnel-analytics" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Funnel
+            </TabsTrigger>
+            <TabsTrigger value="hero-video" className="flex items-center gap-2">
+              <Film className="w-4 h-4" />
+              Hero Video
             </TabsTrigger>
             <TabsTrigger value="ical-sync" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -389,158 +289,103 @@ const Admin = () => {
               <LinkIcon className="w-4 h-4" />
               Import Anunț
             </TabsTrigger>
-            <TabsTrigger value="prospects" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Bot Prospectare
+            <TabsTrigger value="investitii-premium" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Investiții Premium
+            </TabsTrigger>
+            <TabsTrigger value="leads" className="flex items-center gap-2 relative">
+              <Users className="w-4 h-4" />
+              {t.admin.tabs?.leads || "Lead-uri"}
+              {newLeadsCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 min-w-5 h-5 text-xs px-1.5 animate-bounce"
+                >
+                  {newLeadsCount > 99 ? '99+' : newLeadsCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              {t.admin.tabs?.maintenance || "Mentenanță"}
+            </TabsTrigger>
+            <TabsTrigger value="newsletter" className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              {t.admin.tabs?.newsletter || "Newsletter"}
+            </TabsTrigger>
+            <TabsTrigger value="poi" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              POI
+            </TabsTrigger>
+            <TabsTrigger value="guest-guides" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Portal Oaspeți
+            </TabsTrigger>
+            <TabsTrigger value="properties" className="flex items-center gap-2">
+              <Building className="w-4 h-4" />
+              {t.admin.tabs?.properties || "Proprietăți"}
+            </TabsTrigger>
+            <TabsTrigger value="bookings" className="flex items-center gap-2">
+              <CalendarDays className="w-4 h-4" />
+              {t.admin.tabs?.bookings || "Rezervări"}
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Reviews
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Securitate
+            </TabsTrigger>
+            <TabsTrigger value="local-tips" className="flex items-center gap-2">
+              <Lightbulb className="w-4 h-4" />
+              Sfaturi Locale
+            </TabsTrigger>
+            <TabsTrigger value="video-testimonials" className="flex items-center gap-2">
+              <Play className="w-4 h-4" />
+              Video
+            </TabsTrigger>
+            <TabsTrigger value="property-views" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Vizualizări
             </TabsTrigger>
           </TabsList>
 
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard">
-            <AdminDashboard />
-          </TabsContent>
-
-          {/* Leads Tab */}
-          <TabsContent value="leads">
-            <LeadsManager />
-          </TabsContent>
-
-          {/* Bookings Tab */}
-          <TabsContent value="bookings">
-            <BookingManager />
-          </TabsContent>
-
-          {/* Cazare Tab */}
-          <TabsContent value="cazare">
-            <CazareManager />
-          </TabsContent>
-
-          <TabsContent value="properties">
-            <PropertyManager />
-          </TabsContent>
-
-          {/* Investiții Premium Tab */}
-          <TabsContent value="investitii-premium">
-            <InvestitiiPremiumManager />
-          </TabsContent>
-
-          {/* Blog Tab */}
-          <TabsContent value="blog">
-            <BlogManager />
-          </TabsContent>
-
-          {/* Owner Codes Tab */}
-          <TabsContent value="owner-codes">
-            <OwnerCodeManager />
-          </TabsContent>
-
-          {/* Maintenance Tab */}
-          <TabsContent value="maintenance">
-            <MaintenanceManager />
-          </TabsContent>
-
-          {/* Newsletter Tab */}
-          <TabsContent value="newsletter">
-            <NewsletterManager />
-          </TabsContent>
-
-          {/* Complexes Tab */}
-          <TabsContent value="complexes">
-            <ComplexManager />
-          </TabsContent>
-
-          {/* Video Testimonials Tab */}
-          <TabsContent value="video-testimonials">
-            <VideoTestimonialsManager />
-          </TabsContent>
-
-          {/* POI Tab */}
-          <TabsContent value="poi">
-            <POIManager />
-          </TabsContent>
-
-          {/* Hero Video Tab */}
+          <TabsContent value="dashboard"><AdminDashboard /></TabsContent>
+          <TabsContent value="leads"><LeadsManager /></TabsContent>
+          <TabsContent value="bookings"><BookingManager /></TabsContent>
+          <TabsContent value="cazare"><CazareManager /></TabsContent>
+          <TabsContent value="properties"><PropertyManager /></TabsContent>
+          <TabsContent value="investitii-premium"><InvestitiiPremiumManager /></TabsContent>
+          <TabsContent value="blog"><BlogManager /></TabsContent>
+          <TabsContent value="owner-codes"><OwnerCodeManager /></TabsContent>
+          <TabsContent value="maintenance"><MaintenanceManager /></TabsContent>
+          <TabsContent value="newsletter"><NewsletterManager /></TabsContent>
+          <TabsContent value="complexes"><ComplexManager /></TabsContent>
+          <TabsContent value="video-testimonials"><VideoTestimonialsManager /></TabsContent>
+          <TabsContent value="poi"><POIManager /></TabsContent>
           <TabsContent value="hero-video">
             <div className="space-y-6">
               <HeroVideoManager />
               <HeroTextManager />
             </div>
           </TabsContent>
-
-          {/* Local Tips Tab */}
-          <TabsContent value="local-tips">
-            <LocalTipsManager />
-          </TabsContent>
-
-          {/* Follow-up Stats Tab */}
-          <TabsContent value="followup-stats">
-            <FollowupStatsManager />
-          </TabsContent>
-
-          {/* A/B Testing Tab */}
-          <TabsContent value="ab-testing">
-            <ABTestManager />
-          </TabsContent>
-
-          {/* Reviews Tab */}
-          <TabsContent value="reviews">
-            <ReviewsManager />
-          </TabsContent>
-
-          {/* Captcha Logs Tab */}
-          <TabsContent value="captcha">
-            <CaptchaLogsManager />
-          </TabsContent>
-
-          {/* Community Tab */}
-          <TabsContent value="community">
-            <CommunityManager />
-          </TabsContent>
-
-          {/* CTA Analytics Tab */}
-          <TabsContent value="cta-analytics">
-            <CtaAnalyticsManager />
-          </TabsContent>
-
-          {/* Funnel Analytics Tab */}
-          <TabsContent value="funnel-analytics">
-            <FunnelAnalyticsManager />
-          </TabsContent>
-
-          {/* Security Checklist Tab */}
-          <TabsContent value="security">
-            <SecurityChecklist />
-          </TabsContent>
-
-          {/* Email Campaigns Tab */}
-          <TabsContent value="email-campaigns">
-            <EmailCampaignManager />
-          </TabsContent>
-
-          {/* Discount Codes Tab */}
-          <TabsContent value="discount-codes">
-            <DiscountCodeManager />
-          </TabsContent>
-
-          {/* Property Views Tab */}
-          <TabsContent value="property-views">
-            <PropertyViewsManager />
-          </TabsContent>
-
-          {/* iCal Sync Tab */}
-          <TabsContent value="ical-sync">
-            <ICalManager />
-          </TabsContent>
-
-          {/* Prospect Bot Tab */}
-          <TabsContent value="prospects">
-            <ProspectManager />
-          </TabsContent>
-
-          {/* Listing Import Tab */}
-          <TabsContent value="listing-import">
-            <ListingImporter />
-          </TabsContent>
+          <TabsContent value="local-tips"><LocalTipsManager /></TabsContent>
+          <TabsContent value="followup-stats"><FollowupStatsManager /></TabsContent>
+          <TabsContent value="ab-testing"><ABTestManager /></TabsContent>
+          <TabsContent value="reviews"><ReviewsManager /></TabsContent>
+          <TabsContent value="captcha"><CaptchaLogsManager /></TabsContent>
+          <TabsContent value="community"><CommunityManager /></TabsContent>
+          <TabsContent value="cta-analytics"><CtaAnalyticsManager /></TabsContent>
+          <TabsContent value="funnel-analytics"><FunnelAnalyticsManager /></TabsContent>
+          <TabsContent value="security"><SecurityChecklist /></TabsContent>
+          <TabsContent value="email-campaigns"><EmailCampaignManager /></TabsContent>
+          <TabsContent value="discount-codes"><DiscountCodeManager /></TabsContent>
+          <TabsContent value="property-views"><PropertyViewsManager /></TabsContent>
+          <TabsContent value="ical-sync"><ICalManager /></TabsContent>
+          <TabsContent value="prospects"><ProspectManager /></TabsContent>
+          <TabsContent value="listing-import"><ListingImporter /></TabsContent>
+          <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
