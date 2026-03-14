@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, memo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { MapPin } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
 
 // Zone coordinates in Timișoara
 const ZONE_COORDS: Record<string, [number, number]> = {
@@ -36,17 +36,46 @@ const HostScanMiniMap = memo(({ zone, className = "" }: HostScanMiniMapProps) =>
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
   const coords = ZONE_COORDS[zone] || ZONE_COORDS["Centru"];
 
+  // Step 1: Resolve token (env var or edge function fallback)
   useEffect(() => {
-    if (!mapContainer.current) return;
+    const envToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+    if (envToken) {
+      setMapboxToken(envToken);
+      setIsLoading(false);
+      return;
+    }
 
-    const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
-    if (!token) { setError(true); return; }
+    // Fallback: fetch from edge function
+    const fetchToken = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabaseClient');
+        const { data, error: fnError } = await supabase.functions.invoke('get-mapbox-token');
+        if (fnError) throw fnError;
+        if (data?.token) {
+          setMapboxToken(data.token);
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchToken();
+  }, []);
 
-    mapboxgl.accessToken = token;
+  // Step 2: Initialize map when token is ready
+  useEffect(() => {
+    if (!mapContainer.current || !mapboxToken) return;
+
+    mapboxgl.accessToken = mapboxToken;
 
     try {
       map.current = new mapboxgl.Map({
@@ -90,7 +119,15 @@ const HostScanMiniMap = memo(({ zone, className = "" }: HostScanMiniMapProps) =>
     }
 
     return () => { map.current?.remove(); };
-  }, [coords, zone, language]);
+  }, [coords, zone, language, mapboxToken]);
+
+  if (isLoading) {
+    return (
+      <div className={`rounded-2xl bg-muted/30 border border-border/30 p-6 flex items-center justify-center gap-2 ${className}`} style={{ minHeight: 200 }}>
+        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   if (error) {
     return (
