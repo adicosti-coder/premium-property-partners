@@ -31,7 +31,7 @@ const ContactSection = () => {
     trackEmail();
     const subject = encodeURIComponent("Solicitare Evaluare Gratuită - RealTrust");
     const body = encodeURIComponent(t.contactSection.template);
-    window.location.href = `mailto:adicosti@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:info@realtrust.ro?subject=${subject}&body=${body}`;
   };
 
   const handleCall = () => {
