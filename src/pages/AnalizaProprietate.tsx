@@ -51,7 +51,8 @@ const cleanReport = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPO
 
 const AnalizaProprietate = () => {
   const { language } = useLanguage();
-  const [step, setStep] = useState<"wizard" | "chat">("wizard");
+   const [step, setStep] = useState<"wizard" | "chat">("wizard");
+   const [activeTab, setActiveTab] = useState<"text" | "photo">("text");
   const [form, setForm] = useState({ name: "", phone: "", zone: "Fructus Plaza", rooms: "2" });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
