@@ -140,3 +140,6 @@ verify_jwt = false
 
 [functions.hostscan-report]
 verify_jwt = false
+
+[functions.ai-property-search]
+verify_jwt = false
