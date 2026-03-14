@@ -121,9 +121,14 @@ const ScrollToTop = () => {
 const DeferredShell = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    // Delay non-critical shell until after first paint
-    const id = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(id);
+    // Delay non-critical shell until truly idle — avoids competing with LCP
+    const id = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(() => setReady(true), { timeout: 4000 })
+      : setTimeout(() => setReady(true), 2000) as unknown as number;
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
   }, []);
 
   return (

@@ -30,20 +30,31 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Check authentication status
+  // Defer auth check — not needed for initial render, avoids blocking LCP
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+    let cancelled = false;
+    const init = () => {
+      if (cancelled) return;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!cancelled) setIsAuthenticated(!!session);
+      });
     };
-    
-    checkAuth();
-    
+
+    // Defer the session check to after first paint using idle callback
+    const id = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(init, { timeout: 3000 })
+      : setTimeout(init, 1500) as unknown as number;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setIsAuthenticated(!!session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
   }, []);
 
   // Track active section via IntersectionObserver — no forced reflow
