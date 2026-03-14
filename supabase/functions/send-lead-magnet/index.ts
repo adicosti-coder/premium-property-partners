@@ -126,7 +126,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: "RealTrust Leads <onboarding@resend.dev>",
-            to: ["adicosti@gmail.com"],
+            to: ["info@realtrust.ro"],
             subject: `🎯 Lead Magnet: ${name} vrea Ghidul Investitorului 2026`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

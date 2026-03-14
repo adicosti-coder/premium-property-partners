@@ -31,7 +31,7 @@ const ContactSection = () => {
     trackEmail();
     const subject = encodeURIComponent("Solicitare Evaluare Gratuită - RealTrust");
     const body = encodeURIComponent(t.contactSection.template);
-    window.location.href = `mailto:adicosti@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:info@realtrust.ro?subject=${subject}&body=${body}`;
   };
 
   const handleCall = () => {
@@ -81,7 +81,7 @@ const ContactSection = () => {
                 </a>
 
                 <a
-                  href="mailto:adicosti@gmail.com"
+                  href="mailto:info@realtrust.ro"
                   className="flex items-center gap-4 group"
                 >
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -90,7 +90,7 @@ const ContactSection = () => {
                   <div>
                     <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.email}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
-                      adicosti@gmail.com
+                      info@realtrust.ro
                     </p>
                   </div>
                 </a>

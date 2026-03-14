@@ -153,9 +153,9 @@ const Footer = () => {
                 <Phone className="w-4 h-4" />
                 0723 154 520
               </a>
-              <a href="mailto:adicosti@gmail.com" className="flex items-center gap-2 text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
+              <a href="mailto:info@realtrust.ro" className="flex items-center gap-2 text-foreground/60 dark:text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="w-4 h-4" />
-                adicosti@gmail.com
+                info@realtrust.ro
               </a>
             </div>
           </div>
@@ -277,8 +277,8 @@ const Footer = () => {
             </p>
             <p>
               {language === 'ro'
-                ? '** Protecția datelor personale: Datele personale furnizate prin formularele de pe acest site sunt prelucrate în conformitate cu Regulamentul (UE) 2016/679 (GDPR). Le folosim exclusiv pentru a răspunde solicitărilor dumneavoastră, a vă contacta în legătură cu serviciile noastre și a îmbunătăți experiența pe site. Datele sunt păstrate în siguranță și nu sunt transmise terților fără consimțământul dumneavoastră, cu excepția obligațiilor legale. Aveți dreptul de acces, rectificare, ștergere și portabilitate a datelor. Pentru întrebări, ne puteți contacta la adicosti@gmail.com.'
-                : '** Personal data protection: Personal data provided through forms on this website is processed in accordance with Regulation (EU) 2016/679 (GDPR). We use it exclusively to respond to your requests, contact you regarding our services and improve the site experience. Data is kept secure and not shared with third parties without your consent, except for legal obligations. You have the right to access, rectify, delete and port your data. For questions, contact us at adicosti@gmail.com.'
+                ? '** Protecția datelor personale: Datele personale furnizate prin formularele de pe acest site sunt prelucrate în conformitate cu Regulamentul (UE) 2016/679 (GDPR). Le folosim exclusiv pentru a răspunde solicitărilor dumneavoastră, a vă contacta în legătură cu serviciile noastre și a îmbunătăți experiența pe site. Datele sunt păstrate în siguranță și nu sunt transmise terților fără consimțământul dumneavoastră, cu excepția obligațiilor legale. Aveți dreptul de acces, rectificare, ștergere și portabilitate a datelor. Pentru întrebări, ne puteți contacta la info@realtrust.ro.'
+                : '** Personal data protection: Personal data provided through forms on this website is processed in accordance with Regulation (EU) 2016/679 (GDPR). We use it exclusively to respond to your requests, contact you regarding our services and improve the site experience. Data is kept secure and not shared with third parties without your consent, except for legal obligations. You have the right to access, rectify, delete and port your data. For questions, contact us at info@realtrust.ro.'
               }
             </p>
           </div>

@@ -153,7 +153,7 @@ const AboutUs = () => {
         items: [
           { icon: MapPin, label: "Sediu", value: "Timișoara, România" },
           { icon: Phone, label: "Telefon", value: "+40 723 154 520" },
-          { icon: Mail, label: "Email", value: "adicosti@gmail.com" }
+          { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
       cta: {
@@ -277,7 +277,7 @@ const AboutUs = () => {
         items: [
           { icon: MapPin, label: "Office", value: "Timișoara, Romania" },
           { icon: Phone, label: "Phone", value: "+40 723 154 520" },
-          { icon: Mail, label: "Email", value: "adicosti@gmail.com" }
+          { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
       cta: {
@@ -323,7 +323,7 @@ const AboutUs = () => {
       "@type": "ContactPoint",
       "telephone": "+40723154520",
       "contactType": "customer service",
-      "email": "adicosti@gmail.com",
+      "email": "info@realtrust.ro",
       "availableLanguage": ["Romanian", "English"]
     },
     "sameAs": [
