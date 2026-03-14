@@ -222,6 +222,9 @@ const GuestGuideManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleDuplicate(g)} title="Duplică ghidul">
+                          <CopyPlus className="w-3.5 h-3.5 text-blue-500" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(g)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
