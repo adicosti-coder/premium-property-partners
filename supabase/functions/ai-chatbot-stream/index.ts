@@ -152,7 +152,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [], pageContext = "/", imageBase64, qualificationContext } = await req.json();
+    const { message, language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext } = await req.json();
 
     if ((!message && !imageBase64 && !imagesArray?.length) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
