@@ -203,7 +203,7 @@ const Header = () => {
           {/* Navigation moved to hamburger menu on all resolutions */}
 
           {/* Right side container - search and actions */}
-          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink min-w-0">
             {/* Tagline - All screens */}
             <p className="text-[8px] sm:text-[9px] md:text-[10px] lg:text-[11px] xl:text-xs 2xl:text-sm leading-tight text-muted-foreground font-medium hidden sm:block">
               {language === "ro"
