@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 import { useLocation } from "react-router-dom";
+import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
 
 declare global {
   interface Window {
@@ -182,6 +183,15 @@ const ExitIntentPopup = () => {
       toast.success(text.successTitle, {
         description: text.successMessage,
       });
+
+      // Auto-download Investment Catalog PDF for buyers
+      if (isBuyerPath) {
+        try {
+          await exportInvestmentCatalogPdf({ language: language as "ro" | "en" });
+        } catch (pdfErr) {
+          console.error("Error generating catalog PDF:", pdfErr);
+        }
+      }
       
       setEmail("");
       handleClose();
