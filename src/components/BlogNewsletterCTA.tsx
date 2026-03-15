@@ -160,7 +160,7 @@ const BlogNewsletterCTA = () => {
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-center py-4"
                 >
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <CheckCircle className="w-16 h-16 mx-auto mb-4 text-[hsl(142,76%,36%)]" />
                   <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t.success}
                   </h3>
