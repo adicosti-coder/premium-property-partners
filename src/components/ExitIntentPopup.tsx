@@ -4,11 +4,15 @@ import { X, Gift, ArrowRight, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
-import { Turnstile } from "@marsidev/react-turnstile";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 import { useLocation } from "react-router-dom";
+
+declare global {
+  interface Window {
+    ml?: (command: string, payload: string | object) => void;
+  }
+}
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();
@@ -17,17 +21,42 @@ const ExitIntentPopup = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasShown, setHasShown] = useState(false);
-  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const mailerLiteLoadedRef = useRef(false);
 
   // Detect if user is on owner/investment pages
   const isOwnerPath = ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
 
-  // Fetch Turnstile site key on mount
+  // Load MailerLite script on mount
   useEffect(() => {
-    supabase.functions.invoke("get-turnstile-site-key").then(({ data }) => {
-      if (data?.siteKey) setTurnstileSiteKey(data.siteKey);
-    });
+    if (typeof window === "undefined") return;
+    
+    // Check if script already loaded
+    if (document.getElementById("mailerlite-script")) {
+      mailerLiteLoadedRef.current = true;
+      return;
+    }
+    
+    const script = document.createElement("script");
+    script.id = "mailerlite-script";
+    script.async = true;
+    script.src = "https://assets.mailerlite.com/js/universal.js";
+    
+    script.onload = () => {
+      if (window.ml) {
+        window.ml("account", "2192327");
+        mailerLiteLoadedRef.current = true;
+      }
+    };
+    
+    script.onerror = () => {
+      console.error("Failed to load MailerLite script");
+    };
+    
+    document.head.appendChild(script);
+    
+    return () => {
+      // Cleanup not needed for external scripts
+    };
   }, []);
 
   const t = {
@@ -50,6 +79,8 @@ const ExitIntentPopup = () => {
       successMessage: isOwnerPath
         ? "Ți-am trimis ghidul gratuit. Îl găsești în inbox în câteva minute!"
         : "Ți-am trimis codul de reducere. Folosește-l în următoarele 48 de ore!",
+      invalidEmail: "Te rugăm să introduci un email valid",
+      errorMessage: "A apărut o eroare. Încearcă din nou.",
     },
     en: {
       guestTitle: "Wait! Don't leave yet...",
@@ -67,6 +98,8 @@ const ExitIntentPopup = () => {
       successMessage: isOwnerPath
         ? "We've sent you the free guide. You'll find it in your inbox in a few minutes!"
         : "We've sent you the discount code. Use it within the next 48 hours!",
+      invalidEmail: "Please enter a valid email",
+      errorMessage: "An error occurred. Please try again.",
     },
   };
 
@@ -109,50 +142,39 @@ const ExitIntentPopup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
-      toast.error(language === "ro" ? "Te rugăm să introduci un email valid" : "Please enter a valid email");
+      toast.error(text.invalidEmail);
       return;
     }
 
-    // Check if Turnstile verification is complete
-    if (turnstileToken && turnstileSiteKey) {
-      setIsSubmitting(true);
-      await submitExitIntent(turnstileToken);
-    } else {
-      toast.error(language === "ro" ? "Te rugăm să aștepți verificarea de securitate" : "Please wait for security verification");
-    }
-  };
-
-  const submitExitIntent = async (captchaToken: string | null) => {
     setIsSubmitting(true);
+
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "subscribe-newsletter",
-        { body: { email, captchaToken, captchaType: "turnstile", formType: "newsletter_exit_popup" } }
-      );
+      // Check if MailerLite is loaded
+      if (!window.ml || !mailerLiteLoadedRef.current) {
+        throw new Error("MailerLite not loaded");
+      }
 
-      if (fnError) throw fnError;
-
-      // Send discount email via edge function
-      await supabase.functions.invoke("send-exit-discount", {
-        body: { email, language },
+      // Trigger MailerLite subscription with tracking event
+      window.ml("track", {
+        event: isOwnerPath ? "owner_guide_request" : "discount_code_request",
+        email: email,
+        language: language,
+        source: "exit_intent_popup",
+        user_type: isOwnerPath ? "owner" : "guest",
       });
 
       toast.success(text.successTitle, {
         description: text.successMessage,
       });
       
+      setEmail("");
       handleClose();
     } catch (error) {
       console.error("Error submitting exit popup:", error);
-      toast.error(language === "ro" ? "A apărut o eroare. Încearcă din nou." : "An error occurred. Please try again.");
+      toast.error(text.errorMessage);
     } finally {
       setIsSubmitting(false);
-      setTurnstileToken(null);
     }
-  };
-
-  const handleTurnstileSuccess = (token: string) => {
-    setTurnstileToken(token);
   };
 
   return (
@@ -257,19 +279,6 @@ const ExitIntentPopup = () => {
                   >
                     {text.noThanks}
                   </button>
-                  {turnstileSiteKey && (
-                    <div className="flex justify-center">
-                      <Turnstile
-                        siteKey={turnstileSiteKey}
-                        onSuccess={handleTurnstileSuccess}
-                        onError={() => {
-                          setIsSubmitting(false);
-                          toast.error(language === "ro" ? "Eroare verificare" : "Verification error");
-                        }}
-                        options={{ theme: "auto", size: "invisible" }}
-                      />
-                    </div>
-                  )}
                 </form>
               </div>
             </div>
