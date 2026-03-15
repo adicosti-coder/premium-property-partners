@@ -411,7 +411,7 @@ const CatalogInvestitii = () => {
                 </section>
               )}
 
-              {/* Financial Comparison */}
+              {/* Financial Comparison - Bar Chart */}
               <section className="bg-foreground text-primary-foreground py-16 md:py-24">
                 <div className="max-w-4xl mx-auto px-4">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-4">
@@ -423,38 +423,47 @@ const CatalogInvestitii = () => {
                       : "Based on a 2-room central apartment (value: €140,000)"}
                   </p>
 
-                  <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-                    {/* Table header */}
-                    <div className="grid grid-cols-3 gap-0 bg-white/10 px-4 md:px-6 py-3">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                        {isRo ? "Indicator" : "Metric"}
+                  {/* Bar Chart */}
+                  <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-8">
+                    <ResponsiveContainer width="100%" height={360}>
+                      <BarChart
+                        data={[
+                          { name: isRo ? "Venit Brut/Lună" : "Gross/Month", hotel: 1460, classic: 450 },
+                          { name: isRo ? "Cheltuieli" : "Costs", hotel: 365, classic: 50 },
+                          { name: isRo ? "Venit Net/Lună" : "Net/Month", hotel: 1095, classic: 400 },
+                          { name: isRo ? "Venit Net/An" : "Net/Year", hotel: 13140, classic: 4800 },
+                        ]}
+                        margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
+                        barGap={4}
+                        barCategoryGap="20%"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                        <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v.toLocaleString()}`} />
+                        <Tooltip
+                          contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 12, color: "#fff", fontSize: 13 }}
+                          formatter={(value: number, name: string) => [`€${value.toLocaleString()}`, name === "hotel" ? (isRo ? "Regim Hotelier" : "Hotel-style") : (isRo ? "Chirie Clasică" : "Classic Rent")]}
+                        />
+                        <Bar dataKey="hotel" name={isRo ? "Regim Hotelier" : "Hotel-style"} radius={[6, 6, 0, 0]} fill="#D4AF37">
+                          <LabelList dataKey="hotel" position="top" formatter={(v: number) => `€${v.toLocaleString()}`} style={{ fill: "#D4AF37", fontSize: 11, fontWeight: 700 }} />
+                        </Bar>
+                        <Bar dataKey="classic" name={isRo ? "Chirie Clasică" : "Classic Rent"} radius={[6, 6, 0, 0]} fill="rgba(255,255,255,0.25)">
+                          <LabelList dataKey="classic" position="top" formatter={(v: number) => `€${v.toLocaleString()}`} style={{ fill: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600 }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                    {/* Legend */}
+                    <div className="flex justify-center gap-8 mt-4">
+                      <span className="flex items-center gap-2 text-sm">
+                        <span className="w-3 h-3 rounded-sm bg-primary" />
+                        <span className="text-white/70">{isRo ? "Regim Hotelier" : "Hotel-style"}</span>
                       </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-primary text-center">
-                        {isRo ? "Regim Hotelier" : "Hotel-style"}
-                      </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-white/50 text-center">
-                        {isRo ? "Chirie Clasică" : "Classic Rent"}
+                      <span className="flex items-center gap-2 text-sm">
+                        <span className="w-3 h-3 rounded-sm bg-white/25" />
+                        <span className="text-white/70">{isRo ? "Chirie Clasică" : "Classic Rent"}</span>
                       </span>
                     </div>
-                    {/* Rows */}
-                    {comparisonRows.map((row, i) => (
-                      <div
-                        key={i}
-                        className={`grid grid-cols-3 gap-0 px-4 md:px-6 py-3 border-t border-white/5 ${
-                          row.highlight ? "bg-primary/10" : i % 2 === 0 ? "bg-white/[0.02]" : ""
-                        }`}
-                      >
-                        <span className={`text-sm ${row.highlight ? "font-bold text-primary" : "text-white/80"}`}>
-                          {row.label}
-                        </span>
-                        <span className={`text-sm text-center font-semibold ${row.highlight ? "text-primary text-lg" : "text-white"}`}>
-                          {row.hotel}
-                        </span>
-                        <span className={`text-sm text-center ${row.highlight ? "text-white/60" : "text-white/50"}`}>
-                          {row.classic}
-                        </span>
-                      </div>
-                    ))}
                   </div>
 
                   {/* Highlight box */}
