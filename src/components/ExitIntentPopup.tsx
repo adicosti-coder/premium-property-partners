@@ -169,12 +169,14 @@ const ExitIntentPopup = () => {
       }
 
       // Trigger MailerLite subscription with tracking event
+      const userType = isBuyerPath ? "buyer" : isOwnerPath ? "owner" : "guest";
+      const event = isBuyerPath ? "investment_catalog_request" : isOwnerPath ? "owner_guide_request" : "discount_code_request";
       window.ml("track", {
-        event: isOwnerPath ? "owner_guide_request" : "discount_code_request",
+        event,
         email: email,
         language: language,
         source: "exit_intent_popup",
-        user_type: isOwnerPath ? "owner" : "guest",
+        user_type: userType,
       });
 
       toast.success(text.successTitle, {
