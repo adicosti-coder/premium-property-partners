@@ -200,6 +200,7 @@ const App = () => (
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
                     <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />
                     <Route path="/guide/:bookingId" element={<GuestGuide />} />
+                    <Route path="/catalog-investitii" element={<CatalogInvestitii />} />
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
                     <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />
