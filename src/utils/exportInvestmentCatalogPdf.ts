@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ExportOptions {
   language?: "ro" | "en";
+  returnBlob?: boolean;
 }
 
 export const exportInvestmentCatalogPdf = async ({ language = "ro" }: ExportOptions = {}) => {
