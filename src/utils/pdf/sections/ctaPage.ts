@@ -50,18 +50,32 @@ export const drawCtaPage = (ctx: PdfContext) => {
   const ctaLines = doc.splitTextToSize(ctaText, cardW - 30);
   doc.text(ctaLines, pageWidth / 2, cardY + 36, { align: "center" });
 
-  // Gold CTA button (clickable)
-  const btnW = 100;
-  const btnH = 22;
+  // Gold CTA button with pulse/glow effect (double border + shadow)
+  const btnW = 110;
+  const btnH = 24;
   const btnX = (pageWidth - btnW) / 2;
-  const btnY = cardY + 55;
+  const btnY = cardY + 53;
 
+  // Outer glow ring
+  doc.setFillColor(212, 175, 55);
+  doc.roundedRect(btnX - 3, btnY - 3, btnW + 6, btnH + 6, 6, 6, "F");
+  // Dark gap
+  doc.setFillColor(...COLORS.black);
+  doc.roundedRect(btnX - 1.5, btnY - 1.5, btnW + 3, btnH + 3, 5, 5, "F");
+  // Main button
   doc.setFillColor(...COLORS.gold);
-  doc.roundedRect(btnX, btnY, btnW, btnH, 3, 3, "F");
-  doc.setFontSize(11);
+  doc.roundedRect(btnX, btnY, btnW, btnH, 4, 4, "F");
+  // Inner highlight
+  doc.setFillColor(230, 200, 80);
+  doc.roundedRect(btnX + 2, btnY + 1, btnW - 4, btnH / 2 - 1, 3, 3, "F");
+  // Re-draw main gradient area
+  doc.setFillColor(...COLORS.gold);
+  doc.roundedRect(btnX + 2, btnY + btnH / 2 - 2, btnW - 4, btnH / 2 + 1, 0, 0, "F");
+
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.black);
-  doc.text(isRo ? "CONTACTEAZĂ-NE" : "CONTACT US", pageWidth / 2, btnY + 14, { align: "center" });
+  doc.text(isRo ? "▶ CONTACTEAZĂ-NE" : "▶ CONTACT US", pageWidth / 2, btnY + 16, { align: "center" });
   doc.link(btnX, btnY, btnW, btnH, { url: "https://www.realtrust.ro/contact" });
 
   // Contact details
@@ -85,16 +99,24 @@ export const drawCtaPage = (ctx: PdfContext) => {
     doc.link(pageWidth / 2 + 5, y - 3.5, 60, 5, { url: item.url });
   });
 
-  // WhatsApp CTA
+  // WhatsApp CTA with glow effect
   const waY = contactY + contactItems.length * 14 + 10;
+  const waBtnW = 90;
+  const waBtnX = (pageWidth - waBtnW) / 2;
+
+  // Green glow ring
   doc.setFillColor(37, 211, 102);
-  const waBtnW = 80;
-  doc.roundedRect((pageWidth - waBtnW) / 2, waY, waBtnW, 16, 3, 3, "F");
-  doc.setFontSize(9);
+  doc.roundedRect(waBtnX - 2.5, waY - 2.5, waBtnW + 5, 23, 5, 5, "F");
+  doc.setFillColor(...COLORS.anthracite);
+  doc.roundedRect(waBtnX - 1, waY - 1, waBtnW + 2, 20, 4, 4, "F");
+  doc.setFillColor(37, 211, 102);
+  doc.roundedRect(waBtnX, waY, waBtnW, 18, 3, 3, "F");
+
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.white);
-  doc.text("WhatsApp", pageWidth / 2, waY + 10.5, { align: "center" });
-  doc.link((pageWidth - waBtnW) / 2, waY, waBtnW, 16, { url: "https://wa.me/40723154520" });
+  doc.text("▶ WhatsApp", pageWidth / 2, waY + 12, { align: "center" });
+  doc.link(waBtnX, waY, waBtnW, 18, { url: "https://wa.me/40723154520" });
 
   // Footer
   doc.setFontSize(7);

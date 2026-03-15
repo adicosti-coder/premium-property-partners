@@ -59,13 +59,11 @@ export const drawFinancialPage = (ctx: PdfContext) => {
       label: isRo ? "Regim Hotelier" : "Hotel-style",
       value: 13140,
       color: COLORS.gold,
-      labelColor: COLORS.gold,
     },
     {
       label: isRo ? "Chirie Clasică" : "Classic Rent",
       value: 4800,
       color: COLORS.anthraciteLight,
-      labelColor: COLORS.anthraciteLight,
     },
   ];
 
@@ -115,7 +113,7 @@ export const drawFinancialPage = (ctx: PdfContext) => {
 
   ctx.yPosition = diffY + 32;
 
-  // ========== KEY METRICS TABLE (compact) ==========
+  // ========== KEY METRICS TABLE ==========
   ctx.yPosition += 5;
   addNewPageIfNeeded(ctx, 55);
 
@@ -137,7 +135,6 @@ export const drawFinancialPage = (ctx: PdfContext) => {
 
   const colWidths = [contentWidth * 0.4, contentWidth * 0.3, contentWidth * 0.3];
 
-  // Table header
   doc.setFillColor(...COLORS.anthracite);
   doc.roundedRect(margin, ctx.yPosition, contentWidth, 9, 2, 2, "F");
   doc.setFontSize(8);
@@ -164,5 +161,125 @@ export const drawFinancialPage = (ctx: PdfContext) => {
     ctx.yPosition += 8;
   });
 
+  drawPageFooter(ctx);
+
+  // ========== PIE CHART PAGE — OPERATIONAL COSTS BREAKDOWN ==========
+  doc.addPage();
+  ctx.yPosition = 20;
+
+  drawSectionHeader(ctx, isRo ? "DETALIEREA CHELTUIELILOR OPERAȚIONALE" : "OPERATIONAL COSTS BREAKDOWN");
+  drawParagraph(ctx,
+    isRo
+      ? "Cheltuielile lunare tipice pentru un apartament de 2 camere administrat în regim hotelier (€365/lună)."
+      : "Typical monthly expenses for a 2-room apartment managed in hotel-style (€365/month)."
+  );
+
+  ctx.yPosition += 5;
+
+  const pieData = isRo
+    ? [
+        { label: "Curățenie", value: 35, color: COLORS.gold },
+        { label: "Utilități", value: 20, color: COLORS.green },
+        { label: "Comision platforme", value: 18, color: COLORS.anthraciteLight },
+        { label: "Lenjerie & consumabile", value: 12, color: [100, 149, 237] as readonly [number, number, number] },
+        { label: "Marketing", value: 8, color: COLORS.goldDark },
+        { label: "Mentenanță", value: 7, color: COLORS.red },
+      ]
+    : [
+        { label: "Cleaning", value: 35, color: COLORS.gold },
+        { label: "Utilities", value: 20, color: COLORS.green },
+        { label: "Platform fees", value: 18, color: COLORS.anthraciteLight },
+        { label: "Linens & supplies", value: 12, color: [100, 149, 237] as readonly [number, number, number] },
+        { label: "Marketing", value: 8, color: COLORS.goldDark },
+        { label: "Maintenance", value: 7, color: COLORS.red },
+      ];
+
+  const total = pieData.reduce((s, d) => s + d.value, 0);
+  const cx = pageWidth / 2 - 30;
+  const cy = ctx.yPosition + 50;
+  const radius = 40;
+  const innerRadius = 20;
+
+  // Draw donut chart
+  let startAngle = -Math.PI / 2;
+  pieData.forEach((slice) => {
+    const sliceAngle = (slice.value / total) * 2 * Math.PI;
+    const segments = Math.max(Math.ceil(sliceAngle / 0.05), 2);
+
+    doc.setFillColor(slice.color[0], slice.color[1], slice.color[2]);
+
+    for (let s = 0; s < segments; s++) {
+      const a1 = startAngle + (sliceAngle * s) / segments;
+      const a2 = startAngle + (sliceAngle * (s + 1)) / segments;
+      const ox1 = cx + Math.cos(a1) * radius;
+      const oy1 = cy + Math.sin(a1) * radius;
+      const ox2 = cx + Math.cos(a2) * radius;
+      const oy2 = cy + Math.sin(a2) * radius;
+      const ix1 = cx + Math.cos(a1) * innerRadius;
+      const iy1 = cy + Math.sin(a1) * innerRadius;
+      const ix2 = cx + Math.cos(a2) * innerRadius;
+      const iy2 = cy + Math.sin(a2) * innerRadius;
+
+      doc.triangle(ox1, oy1, ox2, oy2, ix1, iy1, "F");
+      doc.triangle(ox2, oy2, ix2, iy2, ix1, iy1, "F");
+    }
+
+    // Label line from mid-angle
+    const midAngle = startAngle + sliceAngle / 2;
+    const labelR = radius + 8;
+    const lx = cx + Math.cos(midAngle) * labelR;
+    const ly = cy + Math.sin(midAngle) * labelR;
+    const extendX = lx + (Math.cos(midAngle) > 0 ? 12 : -12);
+
+    doc.setDrawColor(slice.color[0], slice.color[1], slice.color[2]);
+    doc.setLineWidth(0.4);
+    doc.line(lx, ly, extendX, ly);
+
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(slice.color[0], slice.color[1], slice.color[2]);
+    const labelAlign = Math.cos(midAngle) > 0 ? "left" : "right";
+    const labelX = Math.cos(midAngle) > 0 ? extendX + 2 : extendX - 2;
+    doc.text(`${slice.label} ${slice.value}%`, labelX, ly + 1.5, { align: labelAlign as any });
+
+    startAngle += sliceAngle;
+  });
+
+  // Center text in donut
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.text("€365", cx, cy - 2, { align: "center" });
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...COLORS.gray);
+  doc.text(isRo ? "/lună" : "/month", cx, cy + 5, { align: "center" });
+
+  // Legend on the right
+  const legendX = cx + radius + 35;
+  let legendY = cy - 30;
+
+  doc.setFillColor(...COLORS.offWhite);
+  doc.roundedRect(legendX - 5, legendY - 8, 65, pieData.length * 11 + 10, 3, 3, "F");
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...COLORS.textPrimary);
+  doc.text(isRo ? "Cheltuieli lunare" : "Monthly costs", legendX, legendY);
+  legendY += 8;
+
+  pieData.forEach((slice) => {
+    doc.setFillColor(slice.color[0], slice.color[1], slice.color[2]);
+    doc.roundedRect(legendX, legendY - 3, 6, 6, 1, 1, "F");
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...COLORS.textSecondary);
+    doc.text(`${slice.label}`, legendX + 9, legendY + 1);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${slice.value}%`, legendX + 52, legendY + 1, { align: "right" });
+    legendY += 11;
+  });
+
+  ctx.yPosition = cy + radius + 20;
   drawPageFooter(ctx);
 };
