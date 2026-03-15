@@ -68,8 +68,8 @@ const CatalogInvestitii = () => {
     fetchProperties();
   }, []);
 
-  const saleProperties = properties.filter(p => p.listing_type === "sale" || p.tag === "Investiție");
-  const rentalProperties = properties.filter(p => p.listing_type !== "sale" && p.tag !== "Investiție");
+  const saleProperties = properties.filter(p => p.listing_type === "vanzare" || p.listing_type === "investitie");
+  const rentalProperties = properties.filter(p => p.listing_type === "cazare" || p.listing_type === "inchiriere");
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
