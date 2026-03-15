@@ -11,7 +11,7 @@ const emailSchema = z.string().trim().email().max(255);
 
 declare global {
   interface Window {
-    ml?: (command: string, accountId: string) => void;
+    ml?: (command: string, accountId: string | object) => void;
   }
 }
 
@@ -22,13 +22,17 @@ const BlogNewsletterCTA = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mailerLiteLoadedRef = useRef(false);
 
   // Load MailerLite script on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     
     // Check if script already loaded
-    if (document.getElementById("mailerlite-script")) return;
+    if (document.getElementById("mailerlite-script")) {
+      mailerLiteLoadedRef.current = true;
+      return;
+    }
     
     const script = document.createElement("script");
     script.id = "mailerlite-script";
@@ -38,10 +42,19 @@ const BlogNewsletterCTA = () => {
     script.onload = () => {
       if (window.ml) {
         window.ml("account", "2192327");
+        mailerLiteLoadedRef.current = true;
       }
     };
     
+    script.onerror = () => {
+      console.error("Failed to load MailerLite script");
+    };
+    
     document.head.appendChild(script);
+    
+    return () => {
+      // Cleanup not needed for external scripts
+    };
   }, []);
 
   const translations = {
@@ -99,43 +112,30 @@ const BlogNewsletterCTA = () => {
       return;
     }
 
-    // Check if Turnstile verification is complete
-    if (turnstileToken && turnstileSiteKey) {
-      setIsLoading(true);
-      await submitNewsletter(result.data, turnstileToken);
-    } else {
-      toast.error(language === "ro" ? "Te rugăm să aștepți verificarea de securitate" : "Please wait for security verification");
-    }
-  };
-
-  const submitNewsletter = async (validatedEmail: string, captchaToken: string | null) => {
     setIsLoading(true);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "subscribe-newsletter",
-        { body: { email: validatedEmail, captchaToken, captchaType: "turnstile", formType: "newsletter_blog" } }
-      );
-
-      if (fnError) throw fnError;
-
-      if (data?.duplicate) {
-        toast.info(t.alreadySubscribed);
-      } else {
-        setIsSubscribed(true);
-        toast.success(t.success);
+      // Check if MailerLite is loaded
+      if (!window.ml || !mailerLiteLoadedRef.current) {
+        throw new Error("MailerLite not loaded");
       }
+
+      // Trigger MailerLite subscription
+      window.ml("track", "newsletter_signup", {
+        email: result.data,
+        language: language,
+        source: "blog_article",
+      });
+
+      setIsSubscribed(true);
+      toast.success(t.success);
+      setEmail("");
     } catch (error) {
       console.error("Newsletter subscription error:", error);
       toast.error(t.error);
     } finally {
       setIsLoading(false);
-      setTurnstileToken(null);
     }
-  };
-
-  const handleTurnstileSuccess = (token: string) => {
-    setTurnstileToken(token);
   };
 
   return (
@@ -203,19 +203,6 @@ const BlogNewsletterCTA = () => {
                     >
                       {isLoading ? t.subscribing : t.subscribe}
                     </Button>
-                    {turnstileSiteKey && (
-                      <div className="flex justify-center mt-2">
-                        <Turnstile
-                          siteKey={turnstileSiteKey}
-                          onSuccess={handleTurnstileSuccess}
-                          onError={() => {
-                            setIsLoading(false);
-                            toast.error(language === "ro" ? "Eroare verificare" : "Verification error");
-                          }}
-                          options={{ theme: "auto", size: "invisible" }}
-                        />
-                      </div>
-                    )}
                   </form>
                 </>
               )}
