@@ -36,6 +36,7 @@ interface Property {
   capital_necesar: number | null;
   slug: string | null;
   image_path: string | null;
+  images: string[] | null;
 }
 
 const CatalogInvestitii = () => {
