@@ -128,7 +128,7 @@ export const drawTestimonialsPage = (ctx: PdfContext) => {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.gold);
   doc.text(
-    isRo ? "★ 9.6 / 10 RATING MEDIU PE BOOKING.COM  •  500+ RECENZII" : "★ 9.6 / 10 AVERAGE BOOKING.COM RATING  •  500+ REVIEWS",
+    isRo ? "★ 9.7 / 10 RATING MEDIU PE BOOKING.COM  •  500+ RECENZII" : "★ 9.7 / 10 AVERAGE BOOKING.COM RATING  •  500+ REVIEWS",
     pageWidth / 2, ctx.yPosition + 12.5, { align: "center" }
   );
 
