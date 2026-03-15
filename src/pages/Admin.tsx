@@ -48,6 +48,7 @@ import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManage
 import ICalManager from "@/components/admin/ICalManager";
 import ListingImporter from "@/components/admin/ListingImporter";
 import ProspectManager from "@/components/admin/ProspectManager";
+import CatalogManager from "@/components/admin/CatalogManager";
 import GuestGuideManager from "@/components/admin/GuestGuideManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
@@ -237,6 +238,10 @@ const Admin = () => {
               <Shield className="w-4 h-4" />
               Captcha
             </TabsTrigger>
+            <TabsTrigger value="catalogs" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Cataloage PDF
+            </TabsTrigger>
             <TabsTrigger value="cazare" className="flex items-center gap-2">
               <Hotel className="w-4 h-4" />
               Cazare
@@ -386,6 +391,7 @@ const Admin = () => {
           <TabsContent value="prospects"><ProspectManager /></TabsContent>
           <TabsContent value="listing-import"><ListingImporter /></TabsContent>
           <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
+          <TabsContent value="catalogs"><CatalogManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>

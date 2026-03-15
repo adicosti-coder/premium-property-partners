@@ -2,9 +2,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ExportOptions {
   language?: "ro" | "en";
+  returnBlob?: boolean;
 }
 
-export const exportInvestmentCatalogPdf = async ({ language = "ro" }: ExportOptions = {}) => {
+export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob = false }: ExportOptions = {}): Promise<Blob | void> => {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -385,6 +386,10 @@ export const exportInvestmentCatalogPdf = async ({ language = "ro" }: ExportOpti
     `© ${new Date().getFullYear()} RealTrust Aparthotel. ${isRo ? "Toate drepturile rezervate." : "All rights reserved."}`,
     pageWidth / 2, pageHeight - 15, { align: "center" }
   );
+
+  if (returnBlob) {
+    return doc.output("blob");
+  }
 
   const fileName = isRo
     ? "catalog-investitii-timisoara-2026.pdf"
