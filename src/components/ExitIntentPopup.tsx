@@ -23,8 +23,9 @@ const ExitIntentPopup = () => {
   const [hasShown, setHasShown] = useState(false);
   const mailerLiteLoadedRef = useRef(false);
 
-  // Detect if user is on owner/investment pages
-  const isOwnerPath = ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
+  // Detect user type based on current page
+  const isBuyerPath = ["/vanzare", "/investitii-active"].some(p => location.pathname.startsWith(p));
+  const isOwnerPath = !isBuyerPath && ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
 
   // Load MailerLite script on mount
   useEffect(() => {
