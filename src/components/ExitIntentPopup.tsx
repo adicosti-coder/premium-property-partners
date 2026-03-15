@@ -234,7 +234,7 @@ const ExitIntentPopup = () => {
                 {/* Badge */}
                 <div className="flex justify-center mb-4">
                   <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
-                    {isOwnerPath ? <TrendingUp className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
+                    {isBuyerPath ? <BookOpen className="w-4 h-4" /> : isOwnerPath ? <TrendingUp className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
                     {badge}
                   </span>
                 </div>
@@ -242,7 +242,9 @@ const ExitIntentPopup = () => {
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/30">
-                    {isOwnerPath 
+                    {isBuyerPath 
+                      ? <BookOpen className="w-10 h-10 text-primary-foreground" />
+                      : isOwnerPath 
                       ? <TrendingUp className="w-10 h-10 text-primary-foreground" />
                       : <Gift className="w-10 h-10 text-primary-foreground" />
                     }
