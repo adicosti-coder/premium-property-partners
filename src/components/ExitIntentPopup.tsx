@@ -72,12 +72,19 @@ const ExitIntentPopup = () => {
       ownerSubtitle: "ROI 9.4% — Cum îți maximizezi venitul?",
       ownerDescription: "Primești analiza completă de piață + strategii dovedite pentru apartamentul tău din Timișoara.",
       ownerBadge: "Ghid Proprietari 2026",
+      // Buyer variant
+      buyerTitle: "Catalogul de Investiții 2026",
+      buyerSubtitle: "Apartamente cu ROI garantat în Timișoara",
+      buyerDescription: "Primești catalogul complet cu proprietăți disponibile, analiză financiară și randamente dovedite.",
+      buyerBadge: "Catalog Investiții",
       // Common
       placeholder: "email@exemplu.com",
-      cta: isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
+      cta: isBuyerPath ? "Descarcă Catalogul!" : isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
       noThanks: "Nu, mulțumesc",
       successTitle: "🎉 Verifică-ți emailul!",
-      successMessage: isOwnerPath
+      successMessage: isBuyerPath
+        ? "Ți-am trimis catalogul de investiții. Îl găsești în inbox în câteva minute!"
+        : isOwnerPath
         ? "Ți-am trimis ghidul gratuit. Îl găsești în inbox în câteva minute!"
         : "Ți-am trimis codul de reducere. Folosește-l în următoarele 48 de ore!",
       invalidEmail: "Te rugăm să introduci un email valid",
@@ -92,11 +99,17 @@ const ExitIntentPopup = () => {
       ownerSubtitle: "9.4% ROI — How to maximize your income?",
       ownerDescription: "Get the complete market analysis + proven strategies for your Timișoara apartment.",
       ownerBadge: "Owners Guide 2026",
+      buyerTitle: "Investment Catalog 2026",
+      buyerSubtitle: "Apartments with guaranteed ROI in Timișoara",
+      buyerDescription: "Get the complete catalog with available properties, financial analysis and proven returns.",
+      buyerBadge: "Investment Catalog",
       placeholder: "email@example.com",
-      cta: isOwnerPath ? "I want the Free Guide!" : "I want the discount!",
+      cta: isBuyerPath ? "Download the Catalog!" : isOwnerPath ? "I want the Free Guide!" : "I want the discount!",
       noThanks: "No, thanks",
       successTitle: "🎉 Check your email!",
-      successMessage: isOwnerPath
+      successMessage: isBuyerPath
+        ? "We've sent you the investment catalog. You'll find it in your inbox in a few minutes!"
+        : isOwnerPath
         ? "We've sent you the free guide. You'll find it in your inbox in a few minutes!"
         : "We've sent you the discount code. Use it within the next 48 hours!",
       invalidEmail: "Please enter a valid email",
@@ -105,10 +118,10 @@ const ExitIntentPopup = () => {
   };
 
   const text = t[language as keyof typeof t] || t.ro;
-  const title = isOwnerPath ? text.ownerTitle : text.guestTitle;
-  const subtitle = isOwnerPath ? text.ownerSubtitle : text.guestSubtitle;
-  const description = isOwnerPath ? text.ownerDescription : text.guestDescription;
-  const badge = isOwnerPath ? text.ownerBadge : text.guestBadge;
+  const title = isBuyerPath ? text.buyerTitle : isOwnerPath ? text.ownerTitle : text.guestTitle;
+  const subtitle = isBuyerPath ? text.buyerSubtitle : isOwnerPath ? text.ownerSubtitle : text.guestSubtitle;
+  const description = isBuyerPath ? text.buyerDescription : isOwnerPath ? text.ownerDescription : text.guestDescription;
+  const badge = isBuyerPath ? text.buyerBadge : isOwnerPath ? text.ownerBadge : text.guestBadge;
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
     if (!isBrowser()) return;
