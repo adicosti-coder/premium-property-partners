@@ -84,6 +84,7 @@ const Preturi = lazyWithRetry(() => import("./pages/Preturi"));
 const ZoneLanding = lazyWithRetry(() => import("./pages/ZoneLanding"));
 const AnalizaProprietate = lazyWithRetry(() => import("./pages/AnalizaProprietate"));
 const GuestGuide = lazyWithRetry(() => import("./pages/GuestGuide"));
+const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"));
 
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
