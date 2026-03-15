@@ -293,7 +293,7 @@ const Footer = () => {
         <div className="border-t border-border/50 dark:border-border pt-6 pb-2">
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <Lock className="w-4 h-4 text-[hsl(142,76%,36%)] dark:text-[hsl(142,76%,46%)]" />
               <span className="font-medium">SSL 256-bit</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
