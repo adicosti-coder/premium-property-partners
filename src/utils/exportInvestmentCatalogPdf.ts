@@ -1,8 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
 import { drawCoverPage } from "@/utils/pdf/sections/coverPage";
+import { drawVisionPage } from "@/utils/pdf/sections/visionPage";
 import { drawWhyTimisoaraPage } from "@/utils/pdf/sections/whyTimisoaraPage";
 import { drawPropertiesPages } from "@/utils/pdf/sections/propertiesPages";
 import { drawFinancialPage } from "@/utils/pdf/sections/financialPage";
+import { drawTestimonialsPage } from "@/utils/pdf/sections/testimonialsPage";
 import { drawCtaPage } from "@/utils/pdf/sections/ctaPage";
 import type { PdfContext, PropertyRow } from "@/utils/pdf/pdfTypes";
 
