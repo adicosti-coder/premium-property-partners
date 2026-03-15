@@ -11,8 +11,11 @@ import { toast } from "sonner";
 import {
   TrendingUp, Building, Star, ArrowRight, Download, MapPin,
   BedDouble, Bath, Users, Euro, CheckCircle2, Shield, BarChart3,
-  Sparkles, Lock, Mail,
+  Sparkles, Lock, Mail, Award, Flame, Plane, Train,
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
+} from "recharts";
 
 interface Property {
   name: string;
@@ -33,6 +36,7 @@ interface Property {
   capital_necesar: number | null;
   slug: string | null;
   image_path: string | null;
+  images: string[] | null;
 }
 
 const CatalogInvestitii = () => {
@@ -59,7 +63,7 @@ const CatalogInvestitii = () => {
     const fetchProperties = async () => {
       const { data } = await supabase
         .from("properties")
-        .select("name, location, size, bedrooms, bathrooms, capacity, base_price_per_night, roi_percentage, estimated_revenue, booking_rating, booking_review_count, description_ro, description_en, tag, listing_type, capital_necesar, slug, image_path")
+        .select("name, location, size, bedrooms, bathrooms, capacity, base_price_per_night, roi_percentage, estimated_revenue, booking_rating, booking_review_count, description_ro, description_en, tag, listing_type, capital_necesar, slug, image_path, images")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
       setProperties(data ?? []);
@@ -143,41 +147,21 @@ const CatalogInvestitii = () => {
 
   const reasons = isRo
     ? [
-        { icon: TrendingUp, text: "Creștere turistică +40% — Capitala Culturală Europeană" },
-        { icon: Building, text: "Al 2-lea hub IT din România — cerere constantă" },
-        { icon: BarChart3, text: "ROI 8-11% hotelier vs 3-4% chirie clasică" },
-        { icon: Euro, text: "Prețuri cu 30-50% sub București sau Cluj" },
-        { icon: Shield, text: "Infrastructură modernizată: aeroport, tramvaie, regenerare urbană" },
+        { icon: TrendingUp, text: "Creștere turistică +40% — Capitala Culturală Europeană", gradient: "from-amber-500/20 to-yellow-500/10" },
+        { icon: Building, text: "Al 2-lea hub IT din România — cerere constantă", gradient: "from-blue-500/20 to-indigo-500/10" },
+        { icon: BarChart3, text: "ROI 8-11% hotelier vs 3-4% chirie clasică", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: Euro, text: "Prețuri cu 30-50% sub București sau Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
+        { icon: Plane, text: "Infrastructură modernizată: aeroport, tramvaie, regenerare urbană", gradient: "from-purple-500/20 to-violet-500/10" },
       ]
     : [
-        { icon: TrendingUp, text: "+40% tourism growth — European Capital of Culture" },
-        { icon: Building, text: "Romania's 2nd IT hub — constant demand" },
-        { icon: BarChart3, text: "8-11% hotel-style ROI vs 3-4% classic rental" },
-        { icon: Euro, text: "Prices 30-50% below Bucharest or Cluj" },
-        { icon: Shield, text: "Modernized infrastructure: airport, trams, urban regeneration" },
+        { icon: TrendingUp, text: "+40% tourism growth — European Capital of Culture", gradient: "from-amber-500/20 to-yellow-500/10" },
+        { icon: Building, text: "Romania's 2nd IT hub — constant demand", gradient: "from-blue-500/20 to-indigo-500/10" },
+        { icon: BarChart3, text: "8-11% hotel-style ROI vs 3-4% classic rental", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: Euro, text: "Prices 30-50% below Bucharest or Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
+        { icon: Plane, text: "Modernized infrastructure: airport, trams, urban regeneration", gradient: "from-purple-500/20 to-violet-500/10" },
       ];
 
-  const comparisonRows = isRo
-    ? [
-        { label: "Preț mediu/noapte", hotel: "€65", classic: "—" },
-        { label: "Chirie lunară", hotel: "—", classic: "€450" },
-        { label: "Ocupare medie", hotel: "75%", classic: "100%" },
-        { label: "Venit brut/lună", hotel: "€1.460", classic: "€450" },
-        { label: "Cheltuieli operaționale", hotel: "-€365", classic: "-€50" },
-        { label: "Venit net/lună", hotel: "€1.095", classic: "€400" },
-        { label: "Venit net/an", hotel: "€13.140", classic: "€4.800" },
-        { label: "ROI anual", hotel: "9,4%", classic: "3,4%", highlight: true },
-      ]
-    : [
-        { label: "Avg price/night", hotel: "€65", classic: "—" },
-        { label: "Monthly rent", hotel: "—", classic: "€450" },
-        { label: "Avg occupancy", hotel: "75%", classic: "100%" },
-        { label: "Gross income/month", hotel: "€1,460", classic: "€450" },
-        { label: "Operating costs", hotel: "-€365", classic: "-€50" },
-        { label: "Net income/month", hotel: "€1,095", classic: "€400" },
-        { label: "Net income/year", hotel: "€13,140", classic: "€4,800" },
-        { label: "Annual ROI", hotel: "9.4%", classic: "3.4%", highlight: true },
-      ];
+  // comparisonRows removed - using bar chart instead
 
   return (
     <>
@@ -346,7 +330,7 @@ const CatalogInvestitii = () => {
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
                   {t.whyTitle}
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {reasons.map((r, i) => (
                     <motion.div
                       key={i}
@@ -354,12 +338,12 @@ const CatalogInvestitii = () => {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="flex items-start gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+                      className="flex items-start gap-5 p-6 rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all group"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <r.icon className="w-5 h-5 text-primary" />
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${r.gradient} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                        <r.icon className="w-7 h-7 text-primary" />
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed">{r.text}</p>
+                      <p className="text-sm md:text-base text-foreground leading-relaxed font-medium">{r.text}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -407,7 +391,7 @@ const CatalogInvestitii = () => {
                 </section>
               )}
 
-              {/* Financial Comparison */}
+              {/* Financial Comparison - Bar Chart */}
               <section className="bg-foreground text-primary-foreground py-16 md:py-24">
                 <div className="max-w-4xl mx-auto px-4">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-4">
@@ -419,38 +403,47 @@ const CatalogInvestitii = () => {
                       : "Based on a 2-room central apartment (value: €140,000)"}
                   </p>
 
-                  <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-                    {/* Table header */}
-                    <div className="grid grid-cols-3 gap-0 bg-white/10 px-4 md:px-6 py-3">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                        {isRo ? "Indicator" : "Metric"}
+                  {/* Bar Chart */}
+                  <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-8">
+                    <ResponsiveContainer width="100%" height={360}>
+                      <BarChart
+                        data={[
+                          { name: isRo ? "Venit Brut/Lună" : "Gross/Month", hotel: 1460, classic: 450 },
+                          { name: isRo ? "Cheltuieli" : "Costs", hotel: 365, classic: 50 },
+                          { name: isRo ? "Venit Net/Lună" : "Net/Month", hotel: 1095, classic: 400 },
+                          { name: isRo ? "Venit Net/An" : "Net/Year", hotel: 13140, classic: 4800 },
+                        ]}
+                        margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
+                        barGap={4}
+                        barCategoryGap="20%"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                        <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v.toLocaleString()}`} />
+                        <Tooltip
+                          contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 12, color: "#fff", fontSize: 13 }}
+                          formatter={(value: number, name: string) => [`€${value.toLocaleString()}`, name === "hotel" ? (isRo ? "Regim Hotelier" : "Hotel-style") : (isRo ? "Chirie Clasică" : "Classic Rent")]}
+                        />
+                        <Bar dataKey="hotel" name={isRo ? "Regim Hotelier" : "Hotel-style"} radius={[6, 6, 0, 0]} fill="#D4AF37">
+                          <LabelList dataKey="hotel" position="top" formatter={(v: number) => `€${v.toLocaleString()}`} style={{ fill: "#D4AF37", fontSize: 11, fontWeight: 700 }} />
+                        </Bar>
+                        <Bar dataKey="classic" name={isRo ? "Chirie Clasică" : "Classic Rent"} radius={[6, 6, 0, 0]} fill="rgba(255,255,255,0.25)">
+                          <LabelList dataKey="classic" position="top" formatter={(v: number) => `€${v.toLocaleString()}`} style={{ fill: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600 }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                    {/* Legend */}
+                    <div className="flex justify-center gap-8 mt-4">
+                      <span className="flex items-center gap-2 text-sm">
+                        <span className="w-3 h-3 rounded-sm bg-primary" />
+                        <span className="text-white/70">{isRo ? "Regim Hotelier" : "Hotel-style"}</span>
                       </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-primary text-center">
-                        {isRo ? "Regim Hotelier" : "Hotel-style"}
-                      </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-white/50 text-center">
-                        {isRo ? "Chirie Clasică" : "Classic Rent"}
+                      <span className="flex items-center gap-2 text-sm">
+                        <span className="w-3 h-3 rounded-sm bg-white/25" />
+                        <span className="text-white/70">{isRo ? "Chirie Clasică" : "Classic Rent"}</span>
                       </span>
                     </div>
-                    {/* Rows */}
-                    {comparisonRows.map((row, i) => (
-                      <div
-                        key={i}
-                        className={`grid grid-cols-3 gap-0 px-4 md:px-6 py-3 border-t border-white/5 ${
-                          row.highlight ? "bg-primary/10" : i % 2 === 0 ? "bg-white/[0.02]" : ""
-                        }`}
-                      >
-                        <span className={`text-sm ${row.highlight ? "font-bold text-primary" : "text-white/80"}`}>
-                          {row.label}
-                        </span>
-                        <span className={`text-sm text-center font-semibold ${row.highlight ? "text-primary text-lg" : "text-white"}`}>
-                          {row.hotel}
-                        </span>
-                        <span className={`text-sm text-center ${row.highlight ? "text-white/60" : "text-white/50"}`}>
-                          {row.classic}
-                        </span>
-                      </div>
-                    ))}
                   </div>
 
                   {/* Highlight box */}
@@ -516,76 +509,130 @@ const CatalogInvestitii = () => {
 };
 
 /* Property Card subcomponent */
-const PropertyCard = ({ property, t, index }: { property: Property; t: Record<string, string>; index: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay: index * 0.08 }}
-    className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all group"
-  >
-    <div className="p-5">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{property.name}</h3>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3 h-3" /> {property.location}
-          </p>
-        </div>
+const PropertyCard = ({ property, t, index }: { property: Property; t: Record<string, string>; index: number }) => {
+  const imgSrc = property.image_path || (property.images && property.images.length > 0 ? property.images[0] : null);
+  const roiNum = property.roi_percentage ? parseFloat(property.roi_percentage.replace(/[^0-9.]/g, "")) : 0;
+  const isTopRated = property.booking_rating && property.booking_rating >= 9.5;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08 }}
+      className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all group"
+    >
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden bg-muted">
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={property.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+            <Building className="w-12 h-12 text-muted-foreground/40" />
+          </div>
+        )}
+
+        {/* ROI Badge */}
         {property.roi_percentage && (
-          <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold whitespace-nowrap">
+          <span className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold shadow-lg backdrop-blur-sm">
             ROI {property.roi_percentage}
           </span>
         )}
-      </div>
 
-      {/* Details */}
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
-        {property.size && <span className="flex items-center gap-1">{property.size} m²</span>}
-        {property.bedrooms && (
-          <span className="flex items-center gap-1">
-            <BedDouble className="w-3 h-3" /> {property.bedrooms} {t.rooms}
+        {/* Urgency Badge */}
+        {roiNum >= 8 && (
+          <span className="absolute top-3 left-3 px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
+            <Flame className="w-3.5 h-3.5" />
+            {t.night === "noapte" ? "OPORTUNITATE" : "HOT DEAL"}
           </span>
         )}
-        {property.bathrooms && (
-          <span className="flex items-center gap-1">
-            <Bath className="w-3 h-3" /> {property.bathrooms} {t.baths}
-          </span>
-        )}
-        {property.capacity && (
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" /> {property.capacity} {t.guests}
-          </span>
+
+        {/* Top Rated Badge */}
+        {isTopRated && (
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground/80 backdrop-blur-sm shadow-lg">
+            <Award className="w-4 h-4 text-primary" />
+            <span className="text-xs font-bold text-primary">TOP RATED</span>
+          </div>
         )}
       </div>
 
-      {/* Financials */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        {property.base_price_per_night && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold">
-            <Euro className="w-3 h-3" /> €{property.base_price_per_night}/{t.night}
-          </span>
-        )}
-        {property.capital_necesar && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted text-foreground text-xs font-semibold">
-            {t.investment}: €{property.capital_necesar.toLocaleString()}
-          </span>
-        )}
-      </div>
+      <div className="p-5">
+        {/* Header */}
+        <div className="mb-3">
+          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors leading-tight">{property.name}</h3>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location + ", Timișoara")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary/80 hover:text-primary flex items-center gap-1 mt-1 hover:underline"
+          >
+            <MapPin className="w-3 h-3" /> {property.location}
+          </a>
+        </div>
 
-      {/* Rating */}
-      {property.booking_rating && (
-        <div className="flex items-center gap-2 text-xs">
-          <Star className="w-3.5 h-3.5 text-primary fill-primary" />
-          <span className="font-semibold text-foreground">{property.booking_rating}/10</span>
-          {property.booking_review_count && (
-            <span className="text-muted-foreground">({property.booking_review_count} {t.reviews})</span>
+        {/* Details */}
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+          {property.size && <span>{property.size} m²</span>}
+          {property.bedrooms && (
+            <span className="flex items-center gap-1">
+              <BedDouble className="w-3 h-3" /> {property.bedrooms} {t.rooms}
+            </span>
+          )}
+          {property.bathrooms && (
+            <span className="flex items-center gap-1">
+              <Bath className="w-3 h-3" /> {property.bathrooms} {t.baths}
+            </span>
+          )}
+          {property.capacity && (
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" /> {property.capacity} {t.guests}
+            </span>
           )}
         </div>
-      )}
-    </div>
-  </motion.div>
-);
+
+        {/* Financials */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {property.base_price_per_night && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <Euro className="w-3 h-3" /> €{property.base_price_per_night}/{t.night}
+            </span>
+          )}
+          {property.capital_necesar && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-foreground text-xs font-semibold">
+              {t.investment}: €{property.capital_necesar.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* Rating - Enhanced */}
+        {property.booking_rating && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${isTopRated ? "bg-primary/10 border border-primary/20" : "bg-muted/50"}`}>
+            <div className="flex items-center gap-0.5">
+              {[...Array(5)].map((_, si) => (
+                <Star
+                  key={si}
+                  className={`w-3.5 h-3.5 ${
+                    si < Math.round(property.booking_rating! / 2)
+                      ? "text-primary fill-primary"
+                      : "text-muted-foreground/30"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="font-bold text-sm text-foreground">{property.booking_rating}/10</span>
+            {property.booking_review_count && (
+              <span className="text-xs text-muted-foreground">({property.booking_review_count} {t.reviews})</span>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
 export default CatalogInvestitii;
