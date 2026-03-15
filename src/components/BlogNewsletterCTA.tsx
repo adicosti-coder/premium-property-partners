@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Mail, CheckCircle, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Turnstile } from "@marsidev/react-turnstile";
 
 const emailSchema = z.string().trim().email().max(255);
+
+declare global {
+  interface Window {
+    ml?: (command: string, payload: string | object) => void;
+  }
+}
 
 const BlogNewsletterCTA = () => {
   const { language } = useLanguage();
@@ -17,15 +21,40 @@ const BlogNewsletterCTA = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mailerLiteLoadedRef = useRef(false);
 
-  // Fetch Turnstile site key on mount
+  // Load MailerLite script on mount
   useEffect(() => {
-    supabase.functions.invoke("get-turnstile-site-key").then(({ data }) => {
-      if (data?.siteKey) setTurnstileSiteKey(data.siteKey);
-    });
+    if (typeof window === "undefined") return;
+    
+    // Check if script already loaded
+    if (document.getElementById("mailerlite-script")) {
+      mailerLiteLoadedRef.current = true;
+      return;
+    }
+    
+    const script = document.createElement("script");
+    script.id = "mailerlite-script";
+    script.async = true;
+    script.src = "https://assets.mailerlite.com/js/universal.js";
+    
+    script.onload = () => {
+      if (window.ml) {
+        window.ml("account", "2192327");
+        mailerLiteLoadedRef.current = true;
+      }
+    };
+    
+    script.onerror = () => {
+      console.error("Failed to load MailerLite script");
+    };
+    
+    document.head.appendChild(script);
+    
+    return () => {
+      // Cleanup not needed for external scripts
+    };
   }, []);
 
   const translations = {
@@ -83,43 +112,31 @@ const BlogNewsletterCTA = () => {
       return;
     }
 
-    // Check if Turnstile verification is complete
-    if (turnstileToken && turnstileSiteKey) {
-      setIsLoading(true);
-      await submitNewsletter(result.data, turnstileToken);
-    } else {
-      toast.error(language === "ro" ? "Te rugăm să aștepți verificarea de securitate" : "Please wait for security verification");
-    }
-  };
-
-  const submitNewsletter = async (validatedEmail: string, captchaToken: string | null) => {
     setIsLoading(true);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "subscribe-newsletter",
-        { body: { email: validatedEmail, captchaToken, captchaType: "turnstile", formType: "newsletter_blog" } }
-      );
-
-      if (fnError) throw fnError;
-
-      if (data?.duplicate) {
-        toast.info(t.alreadySubscribed);
-      } else {
-        setIsSubscribed(true);
-        toast.success(t.success);
+      // Check if MailerLite is loaded
+      if (!window.ml || !mailerLiteLoadedRef.current) {
+        throw new Error("MailerLite not loaded");
       }
+
+      // Trigger MailerLite subscription with tracking event
+      window.ml("track", {
+        event: "newsletter_signup",
+        email: result.data,
+        language: language,
+        source: "blog_article",
+      });
+
+      setIsSubscribed(true);
+      toast.success(t.success);
+      setEmail("");
     } catch (error) {
       console.error("Newsletter subscription error:", error);
       toast.error(t.error);
     } finally {
       setIsLoading(false);
-      setTurnstileToken(null);
     }
-  };
-
-  const handleTurnstileSuccess = (token: string) => {
-    setTurnstileToken(token);
   };
 
   return (
@@ -143,7 +160,7 @@ const BlogNewsletterCTA = () => {
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-center py-4"
                 >
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <CheckCircle className="w-16 h-16 mx-auto mb-4 text-[hsl(142,76%,36%)]" />
                   <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t.success}
                   </h3>
@@ -187,19 +204,6 @@ const BlogNewsletterCTA = () => {
                     >
                       {isLoading ? t.subscribing : t.subscribe}
                     </Button>
-                    {turnstileSiteKey && (
-                      <div className="flex justify-center mt-2">
-                        <Turnstile
-                          siteKey={turnstileSiteKey}
-                          onSuccess={handleTurnstileSuccess}
-                          onError={() => {
-                            setIsLoading(false);
-                            toast.error(language === "ro" ? "Eroare verificare" : "Verification error");
-                          }}
-                          options={{ theme: "auto", size: "invisible" }}
-                        />
-                      </div>
-                    )}
                   </form>
                 </>
               )}
