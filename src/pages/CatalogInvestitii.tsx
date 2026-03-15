@@ -529,76 +529,130 @@ const CatalogInvestitii = () => {
 };
 
 /* Property Card subcomponent */
-const PropertyCard = ({ property, t, index }: { property: Property; t: Record<string, string>; index: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay: index * 0.08 }}
-    className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all group"
-  >
-    <div className="p-5">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">{property.name}</h3>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3 h-3" /> {property.location}
-          </p>
-        </div>
+const PropertyCard = ({ property, t, index }: { property: Property; t: Record<string, string>; index: number }) => {
+  const imgSrc = property.image_path || (property.images && property.images.length > 0 ? property.images[0] : null);
+  const roiNum = property.roi_percentage ? parseFloat(property.roi_percentage.replace(/[^0-9.]/g, "")) : 0;
+  const isTopRated = property.booking_rating && property.booking_rating >= 9.5;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08 }}
+      className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all group"
+    >
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden bg-muted">
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={property.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+            <Building className="w-12 h-12 text-muted-foreground/40" />
+          </div>
+        )}
+
+        {/* ROI Badge */}
         {property.roi_percentage && (
-          <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold whitespace-nowrap">
+          <span className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold shadow-lg backdrop-blur-sm">
             ROI {property.roi_percentage}
           </span>
         )}
-      </div>
 
-      {/* Details */}
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
-        {property.size && <span className="flex items-center gap-1">{property.size} m²</span>}
-        {property.bedrooms && (
-          <span className="flex items-center gap-1">
-            <BedDouble className="w-3 h-3" /> {property.bedrooms} {t.rooms}
+        {/* Urgency Badge */}
+        {roiNum >= 8 && (
+          <span className="absolute top-3 left-3 px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
+            <Flame className="w-3.5 h-3.5" />
+            {t.night === "noapte" ? "OPORTUNITATE" : "HOT DEAL"}
           </span>
         )}
-        {property.bathrooms && (
-          <span className="flex items-center gap-1">
-            <Bath className="w-3 h-3" /> {property.bathrooms} {t.baths}
-          </span>
-        )}
-        {property.capacity && (
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" /> {property.capacity} {t.guests}
-          </span>
+
+        {/* Top Rated Badge */}
+        {isTopRated && (
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground/80 backdrop-blur-sm shadow-lg">
+            <Award className="w-4 h-4 text-primary" />
+            <span className="text-xs font-bold text-primary">TOP RATED</span>
+          </div>
         )}
       </div>
 
-      {/* Financials */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        {property.base_price_per_night && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold">
-            <Euro className="w-3 h-3" /> €{property.base_price_per_night}/{t.night}
-          </span>
-        )}
-        {property.capital_necesar && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted text-foreground text-xs font-semibold">
-            {t.investment}: €{property.capital_necesar.toLocaleString()}
-          </span>
-        )}
-      </div>
+      <div className="p-5">
+        {/* Header */}
+        <div className="mb-3">
+          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors leading-tight">{property.name}</h3>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location + ", Timișoara")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary/80 hover:text-primary flex items-center gap-1 mt-1 hover:underline"
+          >
+            <MapPin className="w-3 h-3" /> {property.location}
+          </a>
+        </div>
 
-      {/* Rating */}
-      {property.booking_rating && (
-        <div className="flex items-center gap-2 text-xs">
-          <Star className="w-3.5 h-3.5 text-primary fill-primary" />
-          <span className="font-semibold text-foreground">{property.booking_rating}/10</span>
-          {property.booking_review_count && (
-            <span className="text-muted-foreground">({property.booking_review_count} {t.reviews})</span>
+        {/* Details */}
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+          {property.size && <span>{property.size} m²</span>}
+          {property.bedrooms && (
+            <span className="flex items-center gap-1">
+              <BedDouble className="w-3 h-3" /> {property.bedrooms} {t.rooms}
+            </span>
+          )}
+          {property.bathrooms && (
+            <span className="flex items-center gap-1">
+              <Bath className="w-3 h-3" /> {property.bathrooms} {t.baths}
+            </span>
+          )}
+          {property.capacity && (
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" /> {property.capacity} {t.guests}
+            </span>
           )}
         </div>
-      )}
-    </div>
-  </motion.div>
-);
+
+        {/* Financials */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {property.base_price_per_night && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <Euro className="w-3 h-3" /> €{property.base_price_per_night}/{t.night}
+            </span>
+          )}
+          {property.capital_necesar && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-foreground text-xs font-semibold">
+              {t.investment}: €{property.capital_necesar.toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* Rating - Enhanced */}
+        {property.booking_rating && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${isTopRated ? "bg-primary/10 border border-primary/20" : "bg-muted/50"}`}>
+            <div className="flex items-center gap-0.5">
+              {[...Array(5)].map((_, si) => (
+                <Star
+                  key={si}
+                  className={`w-3.5 h-3.5 ${
+                    si < Math.round(property.booking_rating! / 2)
+                      ? "text-primary fill-primary"
+                      : "text-muted-foreground/30"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="font-bold text-sm text-foreground">{property.booking_rating}/10</span>
+            {property.booking_review_count && (
+              <span className="text-xs text-muted-foreground">({property.booking_review_count} {t.reviews})</span>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
 
 export default CatalogInvestitii;
