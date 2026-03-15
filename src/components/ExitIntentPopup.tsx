@@ -183,6 +183,15 @@ const ExitIntentPopup = () => {
       toast.success(text.successTitle, {
         description: text.successMessage,
       });
+
+      // Auto-download Investment Catalog PDF for buyers
+      if (isBuyerPath) {
+        try {
+          await exportInvestmentCatalogPdf({ language: language as "ro" | "en" });
+        } catch (pdfErr) {
+          console.error("Error generating catalog PDF:", pdfErr);
+        }
+      }
       
       setEmail("");
       handleClose();
