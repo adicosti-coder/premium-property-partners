@@ -11,7 +11,7 @@ const emailSchema = z.string().trim().email().max(255);
 
 declare global {
   interface Window {
-    ml?: (command: string, accountId: string | object) => void;
+    ml?: (command: string, payload: string | object) => void;
   }
 }
 
@@ -120,8 +120,9 @@ const BlogNewsletterCTA = () => {
         throw new Error("MailerLite not loaded");
       }
 
-      // Trigger MailerLite subscription
-      window.ml("track", "newsletter_signup", {
+      // Trigger MailerLite subscription with tracking event
+      window.ml("track", {
+        event: "newsletter_signup",
         email: result.data,
         language: language,
         source: "blog_article",
