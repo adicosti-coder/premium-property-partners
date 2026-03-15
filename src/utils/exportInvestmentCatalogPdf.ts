@@ -37,7 +37,40 @@ export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob =
   const loadImage = async (url: string): Promise<string | null> => {
     if (imageCache.has(url)) return imageCache.get(url)!;
     try {
-      const res = await fetch(url);
+      // Try HTML Image element first (handles CORS better for same-origin storage)
+      return await new Promise<string | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const cCtx = canvas.getContext("2d");
+            if (!cCtx) { resolve(null); return; }
+            cCtx.drawImage(img, 0, 0);
+            const b64 = canvas.toDataURL("image/jpeg", 0.85);
+            imageCache.set(url, b64);
+            resolve(b64);
+          } catch {
+            // Canvas tainted — fallback to fetch
+            fetchAsBase64(url).then(resolve);
+          }
+        };
+        img.onerror = () => {
+          // Image element failed — fallback to fetch
+          fetchAsBase64(url).then(resolve);
+        };
+        img.src = url;
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchAsBase64 = async (url: string): Promise<string | null> => {
+    try {
+      const res = await fetch(url, { mode: "cors" });
       if (!res.ok) return null;
       const blob = await res.blob();
       return await new Promise<string>((resolve) => {
