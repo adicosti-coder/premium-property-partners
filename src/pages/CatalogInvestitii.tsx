@@ -341,11 +341,9 @@ const CatalogInvestitii = () => {
                     <CheckCircle2 className="w-4 h-4 text-primary" />
                     {isRo ? "Catalog Deblocat" : "Catalog Unlocked"}
                   </span>
-                  <Button size="sm" variant="premium" asChild>
-                    <a href={getPdfUrl()} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="premium" onClick={handleDownloadPdf} disabled={downloading}>
                       <Download className="w-4 h-4 mr-2" />
-                      {t.downloadPdf}
-                    </a>
+                      {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
                   </Button>
                 </div>
               </div>
