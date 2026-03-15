@@ -528,7 +528,7 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
           </p>
         </div>
         {property.roi_percentage && (
-          <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold whitespace-nowrap">
+          <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold whitespace-nowrap">
             ROI {property.roi_percentage}
           </span>
         )}
