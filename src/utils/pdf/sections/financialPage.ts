@@ -150,7 +150,7 @@ export const drawFinancialPage = (ctx: PdfContext) => {
 
   rows.forEach((row, idx) => {
     const bgColor = idx % 2 === 0 ? COLORS.offWhite : COLORS.white;
-    doc.setFillColor(...bgColor);
+    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
     doc.rect(margin, ctx.yPosition - 3, contentWidth, 8, "F");
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
