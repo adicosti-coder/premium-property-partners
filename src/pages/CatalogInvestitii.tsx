@@ -174,7 +174,6 @@ const CatalogInvestitii = () => {
       <SEOHead
         title={t.title}
         description={t.subtitle}
-        canonical="/catalog-investitii"
       />
 
       <div className="min-h-screen bg-background">
