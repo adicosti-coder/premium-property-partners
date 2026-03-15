@@ -387,6 +387,10 @@ export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob =
     pageWidth / 2, pageHeight - 15, { align: "center" }
   );
 
+  if (returnBlob) {
+    return doc.output("blob");
+  }
+
   const fileName = isRo
     ? "catalog-investitii-timisoara-2026.pdf"
     : "investment-catalog-timisoara-2026.pdf";
