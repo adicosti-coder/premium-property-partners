@@ -147,18 +147,18 @@ const CatalogInvestitii = () => {
 
   const reasons = isRo
     ? [
-        { icon: TrendingUp, text: "Creștere turistică +40% — Capitala Culturală Europeană" },
-        { icon: Building, text: "Al 2-lea hub IT din România — cerere constantă" },
-        { icon: BarChart3, text: "ROI 8-11% hotelier vs 3-4% chirie clasică" },
-        { icon: Euro, text: "Prețuri cu 30-50% sub București sau Cluj" },
-        { icon: Shield, text: "Infrastructură modernizată: aeroport, tramvaie, regenerare urbană" },
+        { icon: TrendingUp, text: "Creștere turistică +40% — Capitala Culturală Europeană", gradient: "from-amber-500/20 to-yellow-500/10" },
+        { icon: Building, text: "Al 2-lea hub IT din România — cerere constantă", gradient: "from-blue-500/20 to-indigo-500/10" },
+        { icon: BarChart3, text: "ROI 8-11% hotelier vs 3-4% chirie clasică", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: Euro, text: "Prețuri cu 30-50% sub București sau Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
+        { icon: Plane, text: "Infrastructură modernizată: aeroport, tramvaie, regenerare urbană", gradient: "from-purple-500/20 to-violet-500/10" },
       ]
     : [
-        { icon: TrendingUp, text: "+40% tourism growth — European Capital of Culture" },
-        { icon: Building, text: "Romania's 2nd IT hub — constant demand" },
-        { icon: BarChart3, text: "8-11% hotel-style ROI vs 3-4% classic rental" },
-        { icon: Euro, text: "Prices 30-50% below Bucharest or Cluj" },
-        { icon: Shield, text: "Modernized infrastructure: airport, trams, urban regeneration" },
+        { icon: TrendingUp, text: "+40% tourism growth — European Capital of Culture", gradient: "from-amber-500/20 to-yellow-500/10" },
+        { icon: Building, text: "Romania's 2nd IT hub — constant demand", gradient: "from-blue-500/20 to-indigo-500/10" },
+        { icon: BarChart3, text: "8-11% hotel-style ROI vs 3-4% classic rental", gradient: "from-emerald-500/20 to-green-500/10" },
+        { icon: Euro, text: "Prices 30-50% below Bucharest or Cluj", gradient: "from-amber-500/20 to-orange-500/10" },
+        { icon: Plane, text: "Modernized infrastructure: airport, trams, urban regeneration", gradient: "from-purple-500/20 to-violet-500/10" },
       ];
 
   const comparisonRows = isRo
