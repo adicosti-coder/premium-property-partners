@@ -184,15 +184,9 @@ const ExitIntentPopup = () => {
         description: text.successMessage,
       });
 
-      // Redirect buyer to static catalog PDF
+      // Redirect buyer to catalog page
       if (isBuyerPath) {
-        const fileName = language === "en"
-          ? "investment-catalog-timisoara-2026.pdf"
-          : "catalog-investitii-timisoara-2026.pdf";
-        const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
-        if (data?.publicUrl) {
-          window.open(data.publicUrl, "_blank");
-        }
+        window.open(`/catalog-investitii?email=${encodeURIComponent(email)}&token=invest2026`, "_blank");
       }
       
       setEmail("");
