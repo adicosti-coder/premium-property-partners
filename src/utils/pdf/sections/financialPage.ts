@@ -81,7 +81,7 @@ export const drawFinancialPage = (ctx: PdfContext) => {
     doc.roundedRect(bx + 1.5, by + 1.5, barW, barH, 2, 2, "F");
 
     // Bar itself
-    doc.setFillColor(...bar.color);
+    doc.setFillColor(bar.color[0], bar.color[1], bar.color[2]);
     doc.roundedRect(bx, by, barW, barH, 2, 2, "F");
 
     // Value on top
