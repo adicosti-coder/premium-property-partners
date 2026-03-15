@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
 import SEOHead from "@/components/SEOHead";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -97,10 +98,26 @@ const CatalogInvestitii = () => {
     }
   };
 
-  const getPdfUrl = () => {
-    const fileName = isRo ? "catalog-investitii-timisoara-2026.pdf" : "investment-catalog-timisoara-2026.pdf";
-    const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
-    return data.publicUrl;
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      // Try storage first, fall back to client-side generation
+      const fileName = isRo ? "catalog-investitii-timisoara-2026.pdf" : "investment-catalog-timisoara-2026.pdf";
+      const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
+      
+      const res = await fetch(data.publicUrl, { method: "HEAD" });
+      if (res.ok) {
+        window.open(data.publicUrl, "_blank");
+      } else {
+        await exportInvestmentCatalogPdf({ language: isRo ? "ro" : "en" });
+      }
+    } catch {
+      await exportInvestmentCatalogPdf({ language: isRo ? "ro" : "en" });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const t = {
@@ -324,11 +341,9 @@ const CatalogInvestitii = () => {
                     <CheckCircle2 className="w-4 h-4 text-primary" />
                     {isRo ? "Catalog Deblocat" : "Catalog Unlocked"}
                   </span>
-                  <Button size="sm" variant="premium" asChild>
-                    <a href={getPdfUrl()} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="premium" onClick={handleDownloadPdf} disabled={downloading}>
                       <Download className="w-4 h-4 mr-2" />
-                      {t.downloadPdf}
-                    </a>
+                      {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
                   </Button>
                 </div>
               </div>
@@ -473,11 +488,9 @@ const CatalogInvestitii = () => {
                     {t.ctaDesc}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button variant="premium" size="xl" asChild>
-                      <a href={getPdfUrl()} target="_blank" rel="noopener noreferrer">
+                    <Button variant="premium" size="xl" onClick={handleDownloadPdf} disabled={downloading}>
                         <Download className="w-5 h-5 mr-2" />
-                        {t.downloadPdf}
-                      </a>
+                        {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
                     </Button>
                     <Button variant="outline" size="xl" asChild>
                       <a href="/#contact">
