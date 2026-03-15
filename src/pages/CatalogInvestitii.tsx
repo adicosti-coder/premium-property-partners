@@ -63,7 +63,7 @@ const CatalogInvestitii = () => {
     const fetchProperties = async () => {
       const { data } = await supabase
         .from("properties")
-        .select("name, location, size, bedrooms, bathrooms, capacity, base_price_per_night, roi_percentage, estimated_revenue, booking_rating, booking_review_count, description_ro, description_en, tag, listing_type, capital_necesar, slug, image_path")
+        .select("name, location, size, bedrooms, bathrooms, capacity, base_price_per_night, roi_percentage, estimated_revenue, booking_rating, booking_review_count, description_ro, description_en, tag, listing_type, capital_necesar, slug, image_path, images")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
       setProperties(data ?? []);
