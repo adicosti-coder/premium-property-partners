@@ -225,7 +225,7 @@ const CatalogInvestitii = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
                 {[
-                  { value: String(properties.length || "—"), label: isRo ? "Proprietăți" : "Properties" },
+                  { value: loading ? "—" : String(properties.length), label: isRo ? "Proprietăți" : "Properties" },
                   { value: "9.4%", label: isRo ? "ROI Mediu" : "Avg ROI" },
                   { value: "85%", label: isRo ? "Ocupare" : "Occupancy" },
                 ].map((stat, i) => (
