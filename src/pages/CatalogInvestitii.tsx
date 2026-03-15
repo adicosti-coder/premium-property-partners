@@ -98,10 +98,26 @@ const CatalogInvestitii = () => {
     }
   };
 
-  const getPdfUrl = () => {
-    const fileName = isRo ? "catalog-investitii-timisoara-2026.pdf" : "investment-catalog-timisoara-2026.pdf";
-    const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
-    return data.publicUrl;
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      // Try storage first, fall back to client-side generation
+      const fileName = isRo ? "catalog-investitii-timisoara-2026.pdf" : "investment-catalog-timisoara-2026.pdf";
+      const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
+      
+      const res = await fetch(data.publicUrl, { method: "HEAD" });
+      if (res.ok) {
+        window.open(data.publicUrl, "_blank");
+      } else {
+        await exportInvestmentCatalogPdf({ language: isRo ? "ro" : "en" });
+      }
+    } catch {
+      await exportInvestmentCatalogPdf({ language: isRo ? "ro" : "en" });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const t = {
