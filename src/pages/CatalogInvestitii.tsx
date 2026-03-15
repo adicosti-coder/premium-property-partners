@@ -488,11 +488,9 @@ const CatalogInvestitii = () => {
                     {t.ctaDesc}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button variant="premium" size="xl" asChild>
-                      <a href={getPdfUrl()} target="_blank" rel="noopener noreferrer">
+                    <Button variant="premium" size="xl" onClick={handleDownloadPdf} disabled={downloading}>
                         <Download className="w-5 h-5 mr-2" />
-                        {t.downloadPdf}
-                      </a>
+                        {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
                     </Button>
                     <Button variant="outline" size="xl" asChild>
                       <a href="/#contact">
