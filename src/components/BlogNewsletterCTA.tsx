@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Mail, CheckCircle, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Turnstile } from "@marsidev/react-turnstile";
 
 const emailSchema = z.string().trim().email().max(255);
+
+declare global {
+  interface Window {
+    ml?: (command: string, accountId: string) => void;
+  }
+}
 
 const BlogNewsletterCTA = () => {
   const { language } = useLanguage();
@@ -17,15 +21,27 @@ const BlogNewsletterCTA = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Turnstile site key on mount
+  // Load MailerLite script on mount
   useEffect(() => {
-    supabase.functions.invoke("get-turnstile-site-key").then(({ data }) => {
-      if (data?.siteKey) setTurnstileSiteKey(data.siteKey);
-    });
+    if (typeof window === "undefined") return;
+    
+    // Check if script already loaded
+    if (document.getElementById("mailerlite-script")) return;
+    
+    const script = document.createElement("script");
+    script.id = "mailerlite-script";
+    script.async = true;
+    script.src = "https://assets.mailerlite.com/js/universal.js";
+    
+    script.onload = () => {
+      if (window.ml) {
+        window.ml("account", "2192327");
+      }
+    };
+    
+    document.head.appendChild(script);
   }, []);
 
   const translations = {
