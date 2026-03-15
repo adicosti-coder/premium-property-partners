@@ -11,8 +11,11 @@ import { toast } from "sonner";
 import {
   TrendingUp, Building, Star, ArrowRight, Download, MapPin,
   BedDouble, Bath, Users, Euro, CheckCircle2, Shield, BarChart3,
-  Sparkles, Lock, Mail,
+  Sparkles, Lock, Mail, Award, Flame, Plane, Train,
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
+} from "recharts";
 
 interface Property {
   name: string;
