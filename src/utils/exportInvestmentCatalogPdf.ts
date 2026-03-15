@@ -24,8 +24,8 @@ export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob =
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
-  const saleProperties = (properties ?? []).filter(p => p.listing_type === "sale" || p.tag === "Investiție");
-  const rentalProperties = (properties ?? []).filter(p => p.listing_type !== "sale" && p.tag !== "Investiție");
+  const saleProperties = (properties ?? []).filter(p => p.listing_type === "vanzare" || p.listing_type === "investitie");
+  const rentalProperties = (properties ?? []).filter(p => p.listing_type === "cazare" || p.listing_type === "inchiriere");
 
   // — Helpers —
   const addNewPageIfNeeded = (requiredSpace: number) => {
