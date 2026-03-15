@@ -39,6 +39,26 @@ interface Property {
   images: string[] | null;
 }
 
+const PROPERTY_IMAGES_BUCKET = "property-images";
+
+const resolvePropertyImageUrl = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  if (
+    normalized.startsWith("http://") ||
+    normalized.startsWith("https://") ||
+    normalized.startsWith("/") ||
+    normalized.startsWith("data:image/")
+  ) {
+    return normalized;
+  }
+
+  const path = normalized.replace(/^property-images\//, "");
+  return supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
+};
+
 const CatalogInvestitii = () => {
   const { language } = useLanguage();
   const [searchParams] = useSearchParams();
