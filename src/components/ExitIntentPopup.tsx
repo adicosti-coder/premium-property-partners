@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 import { useLocation } from "react-router-dom";
-import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
+import { supabase } from "@/integrations/supabase/client";
 
 declare global {
   interface Window {
