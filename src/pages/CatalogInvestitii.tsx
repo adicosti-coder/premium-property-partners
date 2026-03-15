@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
 import SEOHead from "@/components/SEOHead";
 import { Input } from "@/components/ui/input";
@@ -103,18 +103,11 @@ const CatalogInvestitii = () => {
   const handleDownloadPdf = async () => {
     setDownloading(true);
     try {
-      // Try storage first, fall back to client-side generation
-      const fileName = isRo ? "catalog-investitii-timisoara-2026.pdf" : "investment-catalog-timisoara-2026.pdf";
-      const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
-      
-      const res = await fetch(data.publicUrl, { method: "HEAD" });
-      if (res.ok) {
-        window.open(data.publicUrl, "_blank");
-      } else {
-        await exportInvestmentCatalogPdf({ language: isRo ? "ro" : "en" });
-      }
-    } catch {
       await exportInvestmentCatalogPdf({ language: isRo ? "ro" : "en" });
+      toast.success(isRo ? "PDF descărcat cu succes!" : "PDF downloaded successfully!");
+    } catch (err: any) {
+      console.error("PDF generation error:", err);
+      toast.error(isRo ? "Eroare la generarea PDF-ului. Încearcă din nou." : "Error generating PDF. Please try again.");
     } finally {
       setDownloading(false);
     }
