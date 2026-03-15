@@ -87,7 +87,7 @@ export const drawFinancialPage = (ctx: PdfContext) => {
     // Value on top
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(...bar.color);
+    doc.setTextColor(bar.color[0], bar.color[1], bar.color[2]);
     doc.text(`€${bar.value.toLocaleString()}`, bx + barW / 2, by - 4, { align: "center" });
 
     // Label below
