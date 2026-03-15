@@ -95,7 +95,7 @@ const HostScanUploader = ({ images, onImagesChange, maxImages = 20, language }: 
         ref={fileInputRef}
         type="file"
         hidden
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/*"
         multiple
         onChange={(e) => handleFiles(e.target.files)}
       />
