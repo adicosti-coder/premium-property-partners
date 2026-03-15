@@ -161,27 +161,7 @@ const CatalogInvestitii = () => {
         { icon: Plane, text: "Modernized infrastructure: airport, trams, urban regeneration", gradient: "from-purple-500/20 to-violet-500/10" },
       ];
 
-  const comparisonRows = isRo
-    ? [
-        { label: "Preț mediu/noapte", hotel: "€65", classic: "—" },
-        { label: "Chirie lunară", hotel: "—", classic: "€450" },
-        { label: "Ocupare medie", hotel: "75%", classic: "100%" },
-        { label: "Venit brut/lună", hotel: "€1.460", classic: "€450" },
-        { label: "Cheltuieli operaționale", hotel: "-€365", classic: "-€50" },
-        { label: "Venit net/lună", hotel: "€1.095", classic: "€400" },
-        { label: "Venit net/an", hotel: "€13.140", classic: "€4.800" },
-        { label: "ROI anual", hotel: "9,4%", classic: "3,4%", highlight: true },
-      ]
-    : [
-        { label: "Avg price/night", hotel: "€65", classic: "—" },
-        { label: "Monthly rent", hotel: "—", classic: "€450" },
-        { label: "Avg occupancy", hotel: "75%", classic: "100%" },
-        { label: "Gross income/month", hotel: "€1,460", classic: "€450" },
-        { label: "Operating costs", hotel: "-€365", classic: "-€50" },
-        { label: "Net income/month", hotel: "€1,095", classic: "€400" },
-        { label: "Net income/year", hotel: "€13,140", classic: "€4,800" },
-        { label: "Annual ROI", hotel: "9.4%", classic: "3.4%", highlight: true },
-      ];
+  // comparisonRows removed - using bar chart instead
 
   return (
     <>
