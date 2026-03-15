@@ -184,12 +184,14 @@ const ExitIntentPopup = () => {
         description: text.successMessage,
       });
 
-      // Auto-download Investment Catalog PDF for buyers
+      // Redirect buyer to static catalog PDF
       if (isBuyerPath) {
-        try {
-          await exportInvestmentCatalogPdf({ language: language as "ro" | "en" });
-        } catch (pdfErr) {
-          console.error("Error generating catalog PDF:", pdfErr);
+        const fileName = language === "en"
+          ? "investment-catalog-timisoara-2026.pdf"
+          : "catalog-investitii-timisoara-2026.pdf";
+        const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
+        if (data?.publicUrl) {
+          window.open(data.publicUrl, "_blank");
         }
       }
       
