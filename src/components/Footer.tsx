@@ -3,32 +3,59 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, Phone, Mail, Send, Settings, ShieldCheck, Lock, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { z } from "zod";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
 import AnimationToggle from "./AnimationToggle";
 import ThemeToggle from "./ThemeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const emailSchema = z.string().trim().email().max(255);
 
+declare global {
+  interface Window {
+    ml?: (command: string, payload: string | object) => void;
+  }
+}
+
 const Footer = () => {
   const { t, language } = useLanguage();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hcaptchaSiteKey, setHcaptchaSiteKey] = useState<string>("");
-  const [captchaReady, setCaptchaReady] = useState(false);
-  const hcaptchaRef = useRef<HCaptcha>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const mailerLiteLoadedRef = useRef(false);
 
-  // Defer hCaptcha loading until user interacts with the newsletter form
-  const loadCaptcha = () => {
-    if (captchaReady) return;
-    setCaptchaReady(true);
-    supabase.functions.invoke("get-hcaptcha-site-key").then(({ data }) => {
-      if (data?.siteKey) setHcaptchaSiteKey(data.siteKey);
-    });
-  };
+  // Load MailerLite script on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    // Check if script already loaded
+    if (document.getElementById("mailerlite-script")) {
+      mailerLiteLoadedRef.current = true;
+      return;
+    }
+    
+    const script = document.createElement("script");
+    script.id = "mailerlite-script";
+    script.async = true;
+    script.src = "https://assets.mailerlite.com/js/universal.js";
+    
+    script.onload = () => {
+      if (window.ml) {
+        window.ml("account", "2192327");
+        mailerLiteLoadedRef.current = true;
+      }
+    };
+    
+    script.onerror = () => {
+      console.error("Failed to load MailerLite script");
+    };
+    
+    document.head.appendChild(script);
+    
+    return () => {
+      // Cleanup not needed for external scripts
+    };
+  }, []);
 
   const translations = {
     ro: {
@@ -82,45 +109,30 @@ const Footer = () => {
       return;
     }
 
-    // Trigger invisible hCaptcha verification
-    if (hcaptchaRef.current && hcaptchaSiteKey) {
-      setIsLoading(true);
-      hcaptchaRef.current.execute();
-    } else {
-      // Fallback if hCaptcha not loaded - still allow submission but log warning
-      console.warn("hCaptcha not loaded, proceeding without verification");
-      await submitNewsletter(result.data, null);
-    }
-  };
-
-  const submitNewsletter = async (validatedEmail: string, captchaToken: string | null) => {
     setIsLoading(true);
+
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "subscribe-newsletter",
-        { body: { email: validatedEmail, captchaToken, captchaType: "hcaptcha", formType: "newsletter_footer" } }
-      );
-
-      if (fnError) throw fnError;
-
-      if (data?.duplicate) {
-        toast.error(tr.alreadySubscribed);
-      } else {
-        toast.success(tr.successMessage);
-        setEmail("");
+      // Check if MailerLite is loaded
+      if (!window.ml || !mailerLiteLoadedRef.current) {
+        throw new Error("MailerLite not loaded");
       }
-    } catch {
+
+      // Trigger MailerLite subscription with tracking event
+      window.ml("track", {
+        event: "newsletter_signup",
+        email: result.data,
+        language: language,
+        source: "footer",
+      });
+
+      setIsSubscribed(true);
+      toast.success(tr.successMessage);
+      setEmail("");
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
       toast.error(tr.errorMessage);
     } finally {
       setIsLoading(false);
-      hcaptchaRef.current?.resetCaptcha();
-    }
-  };
-
-  const handleCaptchaVerify = async (token: string) => {
-    const result = emailSchema.safeParse(email);
-    if (result.success) {
-      await submitNewsletter(result.data, token);
     }
   };
 
@@ -205,38 +217,31 @@ const Footer = () => {
           <div className="md:col-span-1">
             <h3 className="text-foreground font-semibold mb-4 text-base">{tr.newsletter}</h3>
             <p className="text-foreground/60 dark:text-muted-foreground text-sm mb-4">{tr.newsletterDesc}</p>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <Input
-                type="email"
-                placeholder={tr.emailPlaceholder}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onFocus={loadCaptcha}
-                className="bg-muted border-border text-foreground placeholder:text-foreground/40 dark:placeholder:text-muted-foreground text-sm"
-                required
-              />
-              <Button
-                type="submit"
-                size="icon"
-                disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
-                aria-label={language === 'ro' ? 'Abonează-te la newsletter' : 'Subscribe to newsletter'}
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-              {hcaptchaSiteKey && (
-                <HCaptcha
-                  ref={hcaptchaRef}
-                  sitekey={hcaptchaSiteKey}
-                  size="invisible"
-                  onVerify={handleCaptchaVerify}
-                  onError={() => {
-                    setIsLoading(false);
-                    toast.error(language === "ro" ? "Eroare captcha" : "Captcha error");
-                  }}
+            {isSubscribed ? (
+              <p className="text-sm text-[hsl(142,76%,36%)] font-medium">
+                {language === 'ro' ? '✓ Abonat cu succes!' : '✓ Successfully subscribed!'}
+              </p>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder={tr.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-muted border-border text-foreground placeholder:text-foreground/40 dark:placeholder:text-muted-foreground text-sm"
+                  required
                 />
-              )}
-            </form>
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={isLoading}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
+                  aria-label={language === 'ro' ? 'Abonează-te la newsletter' : 'Subscribe to newsletter'}
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </form>
+            )}
           </div>
 
           {/* Accessibility Settings */}
@@ -288,7 +293,7 @@ const Footer = () => {
         <div className="border-t border-border/50 dark:border-border pt-6 pb-2">
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <Lock className="w-4 h-4 text-[hsl(142,76%,36%)] dark:text-[hsl(142,76%,46%)]" />
               <span className="font-medium">SSL 256-bit</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
