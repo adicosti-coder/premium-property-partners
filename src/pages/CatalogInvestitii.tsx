@@ -530,7 +530,17 @@ const CatalogInvestitii = () => {
 
 /* Property Card subcomponent */
 const PropertyCard = ({ property, t, index }: { property: Property; t: Record<string, string>; index: number }) => {
-  const imgSrc = property.image_path || (property.images && property.images.length > 0 ? property.images[0] : null);
+  const imageCandidates = [property.image_path, ...(property.images ?? [])]
+    .map(resolvePropertyImageUrl)
+    .filter((src, idx, arr): src is string => Boolean(src) && arr.indexOf(src) === idx);
+
+  const [imageIndex, setImageIndex] = useState(0);
+
+  useEffect(() => {
+    setImageIndex(0);
+  }, [property.image_path, property.images]);
+
+  const currentImageSrc = imageIndex >= 0 ? imageCandidates[imageIndex] ?? null : null;
   const roiNum = property.roi_percentage ? parseFloat(property.roi_percentage.replace(/[^0-9.]/g, "")) : 0;
   const isTopRated = property.booking_rating && property.booking_rating >= 9.5;
 
@@ -544,12 +554,16 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
     >
       {/* Image */}
       <div className="relative h-48 overflow-hidden bg-muted">
-        {imgSrc ? (
+        {currentImageSrc ? (
           <img
-            src={imgSrc}
+            src={currentImageSrc}
             alt={property.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             loading="lazy"
+            decoding="async"
+            onError={() => {
+              setImageIndex((prev) => (prev < imageCandidates.length - 1 ? prev + 1 : -1));
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
