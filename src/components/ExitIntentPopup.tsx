@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift, ArrowRight, Sparkles, TrendingUp } from "lucide-react";
+import { X, Gift, ArrowRight, Sparkles, TrendingUp, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -23,8 +23,9 @@ const ExitIntentPopup = () => {
   const [hasShown, setHasShown] = useState(false);
   const mailerLiteLoadedRef = useRef(false);
 
-  // Detect if user is on owner/investment pages
-  const isOwnerPath = ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
+  // Detect user type based on current page
+  const isBuyerPath = ["/vanzare", "/investitii-active"].some(p => location.pathname.startsWith(p));
+  const isOwnerPath = !isBuyerPath && ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
 
   // Load MailerLite script on mount
   useEffect(() => {
@@ -71,12 +72,19 @@ const ExitIntentPopup = () => {
       ownerSubtitle: "ROI 9.4% — Cum îți maximizezi venitul?",
       ownerDescription: "Primești analiza completă de piață + strategii dovedite pentru apartamentul tău din Timișoara.",
       ownerBadge: "Ghid Proprietari 2026",
+      // Buyer variant
+      buyerTitle: "Catalogul de Investiții 2026",
+      buyerSubtitle: "Apartamente cu ROI garantat în Timișoara",
+      buyerDescription: "Primești catalogul complet cu proprietăți disponibile, analiză financiară și randamente dovedite.",
+      buyerBadge: "Catalog Investiții",
       // Common
       placeholder: "email@exemplu.com",
-      cta: isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
+      cta: isBuyerPath ? "Descarcă Catalogul!" : isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
       noThanks: "Nu, mulțumesc",
       successTitle: "🎉 Verifică-ți emailul!",
-      successMessage: isOwnerPath
+      successMessage: isBuyerPath
+        ? "Ți-am trimis catalogul de investiții. Îl găsești în inbox în câteva minute!"
+        : isOwnerPath
         ? "Ți-am trimis ghidul gratuit. Îl găsești în inbox în câteva minute!"
         : "Ți-am trimis codul de reducere. Folosește-l în următoarele 48 de ore!",
       invalidEmail: "Te rugăm să introduci un email valid",
@@ -91,11 +99,17 @@ const ExitIntentPopup = () => {
       ownerSubtitle: "9.4% ROI — How to maximize your income?",
       ownerDescription: "Get the complete market analysis + proven strategies for your Timișoara apartment.",
       ownerBadge: "Owners Guide 2026",
+      buyerTitle: "Investment Catalog 2026",
+      buyerSubtitle: "Apartments with guaranteed ROI in Timișoara",
+      buyerDescription: "Get the complete catalog with available properties, financial analysis and proven returns.",
+      buyerBadge: "Investment Catalog",
       placeholder: "email@example.com",
-      cta: isOwnerPath ? "I want the Free Guide!" : "I want the discount!",
+      cta: isBuyerPath ? "Download the Catalog!" : isOwnerPath ? "I want the Free Guide!" : "I want the discount!",
       noThanks: "No, thanks",
       successTitle: "🎉 Check your email!",
-      successMessage: isOwnerPath
+      successMessage: isBuyerPath
+        ? "We've sent you the investment catalog. You'll find it in your inbox in a few minutes!"
+        : isOwnerPath
         ? "We've sent you the free guide. You'll find it in your inbox in a few minutes!"
         : "We've sent you the discount code. Use it within the next 48 hours!",
       invalidEmail: "Please enter a valid email",
@@ -104,10 +118,10 @@ const ExitIntentPopup = () => {
   };
 
   const text = t[language as keyof typeof t] || t.ro;
-  const title = isOwnerPath ? text.ownerTitle : text.guestTitle;
-  const subtitle = isOwnerPath ? text.ownerSubtitle : text.guestSubtitle;
-  const description = isOwnerPath ? text.ownerDescription : text.guestDescription;
-  const badge = isOwnerPath ? text.ownerBadge : text.guestBadge;
+  const title = isBuyerPath ? text.buyerTitle : isOwnerPath ? text.ownerTitle : text.guestTitle;
+  const subtitle = isBuyerPath ? text.buyerSubtitle : isOwnerPath ? text.ownerSubtitle : text.guestSubtitle;
+  const description = isBuyerPath ? text.buyerDescription : isOwnerPath ? text.ownerDescription : text.guestDescription;
+  const badge = isBuyerPath ? text.buyerBadge : isOwnerPath ? text.ownerBadge : text.guestBadge;
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
     if (!isBrowser()) return;
@@ -155,12 +169,14 @@ const ExitIntentPopup = () => {
       }
 
       // Trigger MailerLite subscription with tracking event
+      const userType = isBuyerPath ? "buyer" : isOwnerPath ? "owner" : "guest";
+      const event = isBuyerPath ? "investment_catalog_request" : isOwnerPath ? "owner_guide_request" : "discount_code_request";
       window.ml("track", {
-        event: isOwnerPath ? "owner_guide_request" : "discount_code_request",
+        event,
         email: email,
         language: language,
         source: "exit_intent_popup",
-        user_type: isOwnerPath ? "owner" : "guest",
+        user_type: userType,
       });
 
       toast.success(text.successTitle, {
@@ -218,7 +234,7 @@ const ExitIntentPopup = () => {
                 {/* Badge */}
                 <div className="flex justify-center mb-4">
                   <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
-                    {isOwnerPath ? <TrendingUp className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
+                    {isBuyerPath ? <BookOpen className="w-4 h-4" /> : isOwnerPath ? <TrendingUp className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
                     {badge}
                   </span>
                 </div>
@@ -226,7 +242,9 @@ const ExitIntentPopup = () => {
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/30">
-                    {isOwnerPath 
+                    {isBuyerPath 
+                      ? <BookOpen className="w-10 h-10 text-primary-foreground" />
+                      : isOwnerPath 
                       ? <TrendingUp className="w-10 h-10 text-primary-foreground" />
                       : <Gift className="w-10 h-10 text-primary-foreground" />
                     }
