@@ -238,6 +238,10 @@ const Admin = () => {
               <Shield className="w-4 h-4" />
               Captcha
             </TabsTrigger>
+            <TabsTrigger value="catalogs" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Cataloage PDF
+            </TabsTrigger>
             <TabsTrigger value="cazare" className="flex items-center gap-2">
               <Hotel className="w-4 h-4" />
               Cazare
