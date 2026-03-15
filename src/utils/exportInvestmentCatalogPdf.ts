@@ -86,6 +86,7 @@ export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob =
 
   // ========== BUILD PDF ==========
   drawCoverPage(ctx, saleProperties, rentalProperties);
+  drawVisionPage(ctx);
   drawWhyTimisoaraPage(ctx);
   
   if (saleProperties.length > 0) {
@@ -96,6 +97,7 @@ export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob =
   }
 
   drawFinancialPage(ctx);
+  drawTestimonialsPage(ctx);
   drawCtaPage(ctx);
 
   if (returnBlob) {

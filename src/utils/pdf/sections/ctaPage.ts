@@ -99,16 +99,24 @@ export const drawCtaPage = (ctx: PdfContext) => {
     doc.link(pageWidth / 2 + 5, y - 3.5, 60, 5, { url: item.url });
   });
 
-  // WhatsApp CTA
+  // WhatsApp CTA with glow effect
   const waY = contactY + contactItems.length * 14 + 10;
+  const waBtnW = 90;
+  const waBtnX = (pageWidth - waBtnW) / 2;
+
+  // Green glow ring
   doc.setFillColor(37, 211, 102);
-  const waBtnW = 80;
-  doc.roundedRect((pageWidth - waBtnW) / 2, waY, waBtnW, 16, 3, 3, "F");
-  doc.setFontSize(9);
+  doc.roundedRect(waBtnX - 2.5, waY - 2.5, waBtnW + 5, 23, 5, 5, "F");
+  doc.setFillColor(...COLORS.anthracite);
+  doc.roundedRect(waBtnX - 1, waY - 1, waBtnW + 2, 20, 4, 4, "F");
+  doc.setFillColor(37, 211, 102);
+  doc.roundedRect(waBtnX, waY, waBtnW, 18, 3, 3, "F");
+
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.white);
-  doc.text("WhatsApp", pageWidth / 2, waY + 10.5, { align: "center" });
-  doc.link((pageWidth - waBtnW) / 2, waY, waBtnW, 16, { url: "https://wa.me/40723154520" });
+  doc.text("▶ WhatsApp", pageWidth / 2, waY + 12, { align: "center" });
+  doc.link(waBtnX, waY, waBtnW, 18, { url: "https://wa.me/40723154520" });
 
   // Footer
   doc.setFontSize(7);

@@ -55,6 +55,23 @@ const drawPropertyCard = (ctx: PdfContext, prop: PropertyRow, x: number, y: numb
     doc.text(`ROI ${prop.roi_percentage}`, x + cardW - badgeW - 2, y + 13);
   }
 
+  // Urgency badge for high-ROI properties
+  const roiNum = prop.roi_percentage ? parseFloat(prop.roi_percentage.replace(/[^0-9.]/g, "")) : 0;
+  if (roiNum >= 8) {
+    const urgBadgeW = 38;
+    const urgBadgeH = 9;
+    // Pulsing red badge effect (double border)
+    doc.setFillColor(...COLORS.red);
+    doc.roundedRect(x + 3, y + 6, urgBadgeW, urgBadgeH, 2, 2, "F");
+    doc.setDrawColor(255, 100, 100);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(x + 2, y + 5, urgBadgeW + 2, urgBadgeH + 2, 3, 3, "S");
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...COLORS.white);
+    doc.text(isRo ? "🔥 OPORTUNITATE" : "🔥 HOT DEAL", x + 5, y + 12);
+  }
+
   let textY = y + imgH + 8;
 
   // Name
