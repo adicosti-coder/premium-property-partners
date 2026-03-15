@@ -391,6 +391,7 @@ const Admin = () => {
           <TabsContent value="prospects"><ProspectManager /></TabsContent>
           <TabsContent value="listing-import"><ListingImporter /></TabsContent>
           <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
+          <TabsContent value="catalogs"><CatalogManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
