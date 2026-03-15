@@ -41,21 +41,73 @@ interface Property {
 
 const PROPERTY_IMAGES_BUCKET = "property-images";
 
+const localAssetImageMap = Object.entries(
+  import.meta.glob("../assets/*.{avif,gif,jpg,jpeg,png,svg,webp}", {
+    eager: true,
+    import: "default",
+  })
+).reduce<Record<string, string>>((acc, [filePath, assetUrl]) => {
+  const fileName = filePath.split("/").pop();
+  if (fileName && typeof assetUrl === "string") {
+    acc[fileName] = assetUrl;
+  }
+  return acc;
+}, {});
+
+const extractStoragePathFromUrl = (urlValue: string): string | null => {
+  try {
+    const parsed = new URL(urlValue);
+    const prefixes = [
+      `/storage/v1/object/public/${PROPERTY_IMAGES_BUCKET}/`,
+      `/storage/v1/object/sign/${PROPERTY_IMAGES_BUCKET}/`,
+      `/storage/v1/render/image/public/${PROPERTY_IMAGES_BUCKET}/`,
+    ];
+
+    for (const prefix of prefixes) {
+      const index = parsed.pathname.indexOf(prefix);
+      if (index >= 0) {
+        return decodeURIComponent(parsed.pathname.slice(index + prefix.length));
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const resolvePropertyImageUrl = (value: string | null | undefined): string | null => {
   if (!value) return null;
   const normalized = value.trim();
   if (!normalized) return null;
 
-  if (
-    normalized.startsWith("http://") ||
-    normalized.startsWith("https://") ||
-    normalized.startsWith("/") ||
-    normalized.startsWith("data:image/")
-  ) {
+  if (normalized.startsWith("data:image/")) {
     return normalized;
   }
 
-  const path = normalized.replace(/^property-images\//, "");
+  const normalizedWithoutQuery = normalized.split("?")[0];
+  const fileName = normalizedWithoutQuery.split("/").pop();
+
+  if (fileName && localAssetImageMap[fileName]) {
+    return localAssetImageMap[fileName];
+  }
+
+  if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+    const storagePath = extractStoragePathFromUrl(normalized);
+    if (storagePath) {
+      return supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+    }
+    return normalized;
+  }
+
+  if (normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  const path = normalized
+    .replace(/^property-images\//, "")
+    .replace(/^\//, "");
+
   return supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
 };
 
