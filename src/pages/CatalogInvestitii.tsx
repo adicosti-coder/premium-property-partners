@@ -350,7 +350,7 @@ const CatalogInvestitii = () => {
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
                   {t.whyTitle}
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {reasons.map((r, i) => (
                     <motion.div
                       key={i}
@@ -358,12 +358,12 @@ const CatalogInvestitii = () => {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="flex items-start gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+                      className="flex items-start gap-5 p-6 rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all group"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <r.icon className="w-5 h-5 text-primary" />
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${r.gradient} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                        <r.icon className="w-7 h-7 text-primary" />
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed">{r.text}</p>
+                      <p className="text-sm md:text-base text-foreground leading-relaxed font-medium">{r.text}</p>
                     </motion.div>
                   ))}
                 </div>
