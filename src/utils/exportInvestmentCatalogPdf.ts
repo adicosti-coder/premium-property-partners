@@ -5,7 +5,7 @@ interface ExportOptions {
   returnBlob?: boolean;
 }
 
-export const exportInvestmentCatalogPdf = async ({ language = "ro" }: ExportOptions = {}) => {
+export const exportInvestmentCatalogPdf = async ({ language = "ro", returnBlob = false }: ExportOptions = {}): Promise<Blob | void> => {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
