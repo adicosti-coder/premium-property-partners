@@ -5,16 +5,19 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
 import SEOHead from "@/components/SEOHead";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   TrendingUp, Building, Star, ArrowRight, Download, MapPin,
   BedDouble, Bath, Users, Euro, CheckCircle2, Shield, BarChart3,
-  Sparkles, Lock, Mail, Award, Flame, Plane, Train,
+  Sparkles, Lock, Mail, Award, Flame, Plane,
 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList,
 } from "recharts";
 
 interface Property {
@@ -40,6 +43,7 @@ interface Property {
 }
 
 const PROPERTY_IMAGES_BUCKET = "property-images";
+const CATALOG_URL = "https://www.realtrust.ro/catalog-investitii";
 
 const localAssetImageMap = Object.entries(
   import.meta.glob("../assets/*.{avif,gif,jpg,jpeg,png,svg,webp}", {
@@ -121,7 +125,6 @@ const CatalogInvestitii = () => {
   const [loading, setLoading] = useState(true);
   const isRo = language === "ro";
 
-  // Check if accessed via email token
   useEffect(() => {
     const token = searchParams.get("token");
     const emailParam = searchParams.get("email");
@@ -130,7 +133,6 @@ const CatalogInvestitii = () => {
     }
   }, [searchParams]);
 
-  // Fetch properties
   useEffect(() => {
     const fetchProperties = async () => {
       const { data } = await supabase
@@ -144,8 +146,8 @@ const CatalogInvestitii = () => {
     fetchProperties();
   }, []);
 
-  const saleProperties = properties.filter(p => p.listing_type === "vanzare" || p.listing_type === "investitie");
-  const rentalProperties = properties.filter(p => p.listing_type === "cazare" || p.listing_type === "inchiriere");
+  const saleProperties = properties.filter((p) => p.listing_type === "vanzare" || p.listing_type === "investitie");
+  const rentalProperties = properties.filter((p) => p.listing_type === "cazare" || p.listing_type === "inchiriere");
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,7 +157,6 @@ const CatalogInvestitii = () => {
     }
     setIsSubmitting(true);
     try {
-      // Track with MailerLite
       if (window.ml) {
         window.ml("track", {
           event: "investment_catalog_unlock",
@@ -190,7 +191,7 @@ const CatalogInvestitii = () => {
   };
 
   const t = {
-    title: isRo ? "Catalogul de Investiții Timișoara 2026" : "Timișoara Investment Catalog 2026",
+    title: isRo ? "Catalog investiții Timișoara 2026 | RealTrust" : "Timișoara Investment Catalog 2026 | RealTrust",
     subtitle: isRo
       ? "Proprietăți premium cu randament garantat în Capitala Culturală a Europei"
       : "Premium properties with guaranteed returns in the European Capital of Culture",
@@ -214,7 +215,6 @@ const CatalogInvestitii = () => {
     guests: isRo ? "persoane" : "guests",
     reviews: isRo ? "recenzii" : "reviews",
     investment: isRo ? "Capital" : "Investment",
-    revenue: isRo ? "Venit estimat" : "Est. Revenue",
   };
 
   const reasons = isRo
@@ -233,21 +233,28 @@ const CatalogInvestitii = () => {
         { icon: Plane, text: "Modernized infrastructure: airport, trams, urban regeneration", gradient: "from-purple-500/20 to-violet-500/10" },
       ];
 
-  // comparisonRows removed - using bar chart instead
+  const breadcrumbItems = [
+    {
+      name: isRo ? "Catalog Investiții 2026" : "Investment Catalog 2026",
+      url: CATALOG_URL,
+    },
+  ];
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
       <SEOHead
         title={t.title}
         description={t.subtitle}
+        url={CATALOG_URL}
+        breadcrumbItems={breadcrumbItems}
       />
+      <Header />
 
-      <div className="min-h-screen bg-background">
-        {/* Hero */}
+      <main className="pt-16 md:pt-20">
         <section className="relative overflow-hidden bg-foreground text-primary-foreground">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.15),transparent_60%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--accent)/0.1),transparent_60%)]" />
-          
+
           <div className="relative max-w-6xl mx-auto px-4 py-20 md:py-32 text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -261,9 +268,17 @@ const CatalogInvestitii = () => {
 
               <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6 leading-tight">
                 {isRo ? (
-                  <>Catalogul de <span className="text-primary">Investiții</span><br />Timișoara 2026</>
+                  <>
+                    Catalogul de <span className="text-primary">Investiții</span>
+                    <br />
+                    Timișoara 2026
+                  </>
                 ) : (
-                  <>Timișoara <span className="text-primary">Investment</span><br />Catalog 2026</>
+                  <>
+                    Timișoara <span className="text-primary">Investment</span>
+                    <br />
+                    Catalog 2026
+                  </>
                 )}
               </h1>
 
@@ -271,7 +286,6 @@ const CatalogInvestitii = () => {
                 {t.subtitle}
               </p>
 
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
                 {[
                   { value: loading ? "—" : String(properties.length), label: isRo ? "Proprietăți" : "Properties" },
@@ -293,11 +307,9 @@ const CatalogInvestitii = () => {
             </motion.div>
           </div>
 
-          {/* Decorative bottom wave */}
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
         </section>
 
-        {/* Gate / Content */}
         <AnimatePresence mode="wait">
           {!isUnlocked ? (
             <motion.section
@@ -315,9 +327,7 @@ const CatalogInvestitii = () => {
                   <h2 className="text-2xl font-serif font-bold text-center text-foreground mb-2">
                     {t.unlockTitle}
                   </h2>
-                  <p className="text-muted-foreground text-center text-sm">
-                    {t.unlockDesc}
-                  </p>
+                  <p className="text-muted-foreground text-center text-sm">{t.unlockDesc}</p>
                 </div>
 
                 <form onSubmit={handleUnlock} className="p-8 pt-6 space-y-4">
@@ -355,7 +365,6 @@ const CatalogInvestitii = () => {
                   </div>
                 </form>
 
-                {/* Preview teaser */}
                 <div className="border-t border-border px-8 py-6 bg-muted/30">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                     {isRo ? "Ce vei primi:" : "What you'll get:"}
@@ -383,21 +392,19 @@ const CatalogInvestitii = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              {/* Download bar */}
-              <div className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border">
+              <div className="sticky top-16 md:top-20 z-40 bg-card/80 backdrop-blur-lg border-b border-border">
                 <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
                   <span className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
                     {isRo ? "Catalog Deblocat" : "Catalog Unlocked"}
                   </span>
                   <Button size="sm" variant="premium" onClick={handleDownloadPdf} disabled={downloading}>
-                      <Download className="w-4 h-4 mr-2" />
-                      {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
+                    <Download className="w-4 h-4 mr-2" />
+                    {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
                   </Button>
                 </div>
               </div>
 
-              {/* Why Timișoara */}
               <section className="max-w-5xl mx-auto px-4 py-16 md:py-24">
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
                   {t.whyTitle}
@@ -421,7 +428,6 @@ const CatalogInvestitii = () => {
                 </div>
               </section>
 
-              {/* Sale Properties */}
               {saleProperties.length > 0 && (
                 <section className="bg-muted/30 py-16 md:py-24">
                   <div className="max-w-6xl mx-auto px-4">
@@ -442,7 +448,6 @@ const CatalogInvestitii = () => {
                 </section>
               )}
 
-              {/* Active Portfolio */}
               {rentalProperties.length > 0 && (
                 <section className="py-16 md:py-24">
                   <div className="max-w-6xl mx-auto px-4">
@@ -463,7 +468,6 @@ const CatalogInvestitii = () => {
                 </section>
               )}
 
-              {/* Financial Comparison - Bar Chart */}
               <section className="bg-foreground text-primary-foreground py-16 md:py-24">
                 <div className="max-w-4xl mx-auto px-4">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-4">
@@ -475,7 +479,6 @@ const CatalogInvestitii = () => {
                       : "Based on a 2-room central apartment (value: €140,000)"}
                   </p>
 
-                  {/* Bar Chart */}
                   <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-8">
                     <ResponsiveContainer width="100%" height={360}>
                       <BarChart
@@ -494,7 +497,10 @@ const CatalogInvestitii = () => {
                         <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v.toLocaleString()}`} />
                         <Tooltip
                           contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 12, color: "#fff", fontSize: 13 }}
-                          formatter={(value: number, name: string) => [`€${value.toLocaleString()}`, name === "hotel" ? (isRo ? "Regim Hotelier" : "Hotel-style") : (isRo ? "Chirie Clasică" : "Classic Rent")]}
+                          formatter={(value: number, name: string) => [
+                            `€${value.toLocaleString()}`,
+                            name === "hotel" ? (isRo ? "Regim Hotelier" : "Hotel-style") : (isRo ? "Chirie Clasică" : "Classic Rent"),
+                          ]}
                         />
                         <Bar dataKey="hotel" name={isRo ? "Regim Hotelier" : "Hotel-style"} radius={[6, 6, 0, 0]} fill="#D4AF37">
                           <LabelList dataKey="hotel" position="top" formatter={(v: number) => `€${v.toLocaleString()}`} style={{ fill: "#D4AF37", fontSize: 11, fontWeight: 700 }} />
@@ -505,7 +511,6 @@ const CatalogInvestitii = () => {
                       </BarChart>
                     </ResponsiveContainer>
 
-                    {/* Legend */}
                     <div className="flex justify-center gap-8 mt-4">
                       <span className="flex items-center gap-2 text-sm">
                         <span className="w-3 h-3 rounded-sm bg-primary" />
@@ -518,7 +523,6 @@ const CatalogInvestitii = () => {
                     </div>
                   </div>
 
-                  {/* Highlight box */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -536,19 +540,16 @@ const CatalogInvestitii = () => {
                 </div>
               </section>
 
-              {/* CTA */}
               <section className="py-16 md:py-24">
                 <div className="max-w-3xl mx-auto px-4 text-center">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
                     {t.ctaTitle}
                   </h2>
-                  <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                    {t.ctaDesc}
-                  </p>
+                  <p className="text-muted-foreground mb-8 max-w-xl mx-auto">{t.ctaDesc}</p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button variant="premium" size="xl" onClick={handleDownloadPdf} disabled={downloading}>
-                        <Download className="w-5 h-5 mr-2" />
-                        {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
+                      <Download className="w-5 h-5 mr-2" />
+                      {downloading ? (isRo ? "Se generează..." : "Generating...") : t.downloadPdf}
                     </Button>
                     <Button variant="outline" size="xl" asChild>
                       <a href="/#contact">
@@ -566,21 +567,19 @@ const CatalogInvestitii = () => {
                       <span>📞</span> +40 723 154 520
                     </span>
                   </div>
-
-                  <p className="mt-8 text-xs text-muted-foreground">
-                    © {new Date().getFullYear()} RealTrust Aparthotel. {isRo ? "Toate drepturile rezervate." : "All rights reserved."}
-                  </p>
                 </div>
               </section>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </>
+      </main>
+
+      <Footer />
+      <BackToTop />
+    </div>
   );
 };
 
-/* Property Card subcomponent */
 const PropertyCard = ({ property, t, index }: { property: Property; t: Record<string, string>; index: number }) => {
   const imageCandidates = [property.image_path, ...(property.images ?? [])]
     .map(resolvePropertyImageUrl)
@@ -604,7 +603,6 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
       transition={{ delay: index * 0.08 }}
       className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all group"
     >
-      {/* Image */}
       <div className="relative h-48 overflow-hidden bg-muted">
         {currentImageSrc ? (
           <img
@@ -623,22 +621,19 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
           </div>
         )}
 
-        {/* ROI Badge */}
         {property.roi_percentage && (
           <span className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold shadow-lg backdrop-blur-sm">
             ROI {property.roi_percentage}
           </span>
         )}
 
-        {/* Urgency Badge */}
         {roiNum >= 8 && (
-          <span className="absolute top-3 left-3 px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
+          <span className="absolute top-3 left-3 px-3 py-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
             <Flame className="w-3.5 h-3.5" />
             {t.night === "noapte" ? "OPORTUNITATE" : "HOT DEAL"}
           </span>
         )}
 
-        {/* Top Rated Badge */}
         {isTopRated && (
           <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground/80 backdrop-blur-sm shadow-lg">
             <Award className="w-4 h-4 text-primary" />
@@ -648,11 +643,10 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
       </div>
 
       <div className="p-5">
-        {/* Header */}
         <div className="mb-3">
           <h3 className="font-bold text-foreground group-hover:text-primary transition-colors leading-tight">{property.name}</h3>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location + ", Timișoara")}`}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.location}, Timișoara`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-primary/80 hover:text-primary flex items-center gap-1 mt-1 hover:underline"
@@ -661,7 +655,6 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
           </a>
         </div>
 
-        {/* Details */}
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
           {property.size && <span>{property.size} m²</span>}
           {property.bedrooms && (
@@ -681,7 +674,6 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
           )}
         </div>
 
-        {/* Financials */}
         <div className="flex flex-wrap gap-2 mb-3">
           {property.base_price_per_night && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
@@ -695,18 +687,13 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
           )}
         </div>
 
-        {/* Rating - Enhanced */}
         {property.booking_rating && (
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${isTopRated ? "bg-primary/10 border border-primary/20" : "bg-muted/50"}`}>
             <div className="flex items-center gap-0.5">
               {[...Array(5)].map((_, si) => (
                 <Star
                   key={si}
-                  className={`w-3.5 h-3.5 ${
-                    si < Math.round(property.booking_rating! / 2)
-                      ? "text-primary fill-primary"
-                      : "text-muted-foreground/30"
-                  }`}
+                  className={`w-3.5 h-3.5 ${si < Math.round(property.booking_rating / 2) ? "text-primary fill-primary" : "text-muted-foreground/30"}`}
                 />
               ))}
             </div>
