@@ -70,7 +70,16 @@ function extractFailureReason(data: any): string | null {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
+function canPassRemoteUrlToAi(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname.endsWith(".apollo.olxcdn.com") || hostname === "apollo.olxcdn.com";
+  } catch {
+    return false;
+  }
+}
+
+async function tryModel(lovableApiKey: string, model: string, prompt: string, imageInput: string) {
   const retryDelays = [0, 2000, 5000];
 
   for (let attemptIndex = 0; attemptIndex < retryDelays.length; attemptIndex++) {
@@ -95,7 +104,7 @@ async function tryModel(lovableApiKey: string, model: string, prompt: string, da
               },
               {
                 type: "image_url",
-                image_url: { url: dataUri },
+                image_url: { url: imageInput },
               },
             ],
           },
@@ -146,22 +155,26 @@ serve(async (req) => {
       });
     }
 
-    let dataUri = imageDataUrl as string | undefined;
+    let imageInput = imageDataUrl as string | undefined;
 
-    if (!dataUri && imageUrl) {
-      const imgResp = await fetch(imageUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)" },
-      });
-      if (!imgResp.ok) {
-        return new Response(JSON.stringify({ error: "Failed to fetch image source" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!imageInput && imageUrl) {
+      if (canPassRemoteUrlToAi(imageUrl)) {
+        imageInput = imageUrl;
+      } else {
+        const imgResp = await fetch(imageUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)" },
         });
-      }
+        if (!imgResp.ok) {
+          return new Response(JSON.stringify({ error: "Failed to fetch image source" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
 
-      const contentType = imgResp.headers.get("content-type") || "image/jpeg";
-      const bytes = new Uint8Array(await imgResp.arrayBuffer());
-      dataUri = `data:${contentType};base64,${bytesToBase64(bytes)}`;
+        const contentType = imgResp.headers.get("content-type") || "image/jpeg";
+        const bytes = new Uint8Array(await imgResp.arrayBuffer());
+        imageInput = `data:${contentType};base64,${bytesToBase64(bytes)}`;
+      }
     }
 
     const attempt = {
