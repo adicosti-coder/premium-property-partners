@@ -929,7 +929,85 @@ export default function PropertyImageGallery({
         </p>
       )}
 
-      {/* Lightbox Preview */}
+      {/* Draft Images Section */}
+      {draftImages.length > 0 && (
+        <div className="border-t pt-4 mt-4">
+          <button
+            type="button"
+            onClick={() => setIsDraftsOpen(!isDraftsOpen)}
+            className="flex items-center gap-2 w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {isDraftsOpen ? (
+              <ChevronLeft className="w-4 h-4 rotate-[-90deg]" />
+            ) : (
+              <ChevronRight className="w-4 h-4 rotate-0" />
+            )}
+            📦 Imagini Draft ({draftImages.length}) — salvate dar nepublicate
+          </button>
+          
+          {isDraftsOpen && (
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Aceste imagini au fost salvate la import dar nu sunt vizibile pe site. 
+                Poți elimina watermark-ul, apoi publica.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {draftImages.map((draft) => {
+                  const imgUrl = draft.image_path.startsWith('http') 
+                    ? draft.image_path 
+                    : getPublicUrl(draft.image_path);
+                  const isProcessing = removingWatermarkId === draft.id;
+                  const isPublishing = publishingIds.has(draft.id);
+                  
+                  return (
+                    <div key={draft.id} className="relative rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/30 group">
+                      <img
+                        src={imgUrl || ""}
+                        alt="Draft"
+                        className="w-full h-24 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="h-7 text-xs px-2"
+                          onClick={() => handleRemoveWatermark(draft)}
+                          disabled={isProcessing || isPublishing}
+                        >
+                          {isProcessing ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <>🧹 Watermark</>
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-7 text-xs px-2"
+                          onClick={() => handlePublishDraft(draft)}
+                          disabled={isProcessing || isPublishing}
+                        >
+                          {isPublishing ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <>✅ Publică</>
+                          )}
+                        </Button>
+                      </div>
+                      <div className="absolute top-1 left-1 bg-muted/80 text-muted-foreground text-[10px] px-1.5 py-0.5 rounded">
+                        Draft
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
         <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
           <div 
