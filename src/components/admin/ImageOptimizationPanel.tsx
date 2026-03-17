@@ -289,6 +289,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     updated[index] = {
       ...updated[index],
       url: updated[index].originalUrl,
+      persistedUrl: undefined,
       optimized: false,
       optimizedBlob: undefined,
       optimizedSize: undefined,

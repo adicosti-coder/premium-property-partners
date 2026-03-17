@@ -2,12 +2,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function bytesToBase64(bytes: Uint8Array): string {
+  const chunkSize = 8192;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    for (let j = 0; j < chunk.length; j++) binary += String.fromCharCode(chunk[j]);
+  }
+  return btoa(binary);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -19,42 +29,32 @@ serve(async (req) => {
       });
     }
 
-    const { imageUrl } = await req.json();
-    if (!imageUrl) {
-      return new Response(JSON.stringify({ error: "imageUrl required" }), {
+    const { imageUrl, imageDataUrl } = await req.json();
+    if (!imageUrl && !imageDataUrl) {
+      return new Response(JSON.stringify({ error: "imageUrl or imageDataUrl required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fetch the image
-    const imgResp = await fetch(imageUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)" },
-    });
-    if (!imgResp.ok) {
-      return new Response(JSON.stringify({ error: "Failed to fetch image" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let dataUri = imageDataUrl as string | undefined;
+
+    if (!dataUri && imageUrl) {
+      const imgResp = await fetch(imageUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)" },
       });
-    }
-
-    const contentType = imgResp.headers.get("content-type") || "image/jpeg";
-    const arrayBuffer = await imgResp.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-
-    // Convert to base64
-    const chunkSize = 8192;
-    let binary = "";
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-      for (let j = 0; j < chunk.length; j++) {
-        binary += String.fromCharCode(chunk[j]);
+      if (!imgResp.ok) {
+        return new Response(JSON.stringify({ error: "Failed to fetch image source" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-    }
-    const base64 = btoa(binary);
-    const dataUri = `data:${contentType};base64,${base64}`;
 
-    // Call AI to remove watermarks
+      const contentType = imgResp.headers.get("content-type") || "image/jpeg";
+      const bytes = new Uint8Array(await imgResp.arrayBuffer());
+      dataUri = `data:${contentType};base64,${bytesToBase64(bytes)}`;
+    }
+
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -62,14 +62,14 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-image-preview",
+        model: "google/gemini-3-pro-image-preview",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Remove any watermarks, phone numbers, logos, or overlaid text from this property photo. Keep the underlying image intact and natural-looking. Return only the cleaned image.",
+                text: "Remove all visible watermarks, agency logos, brand marks, phone numbers, labels, and overlaid text from this real-estate photo. Reconstruct the hidden pixels naturally, preserve perspective and room details, do not crop, do not change furniture placement, and return only the cleaned image.",
               },
               {
                 type: "image_url",
@@ -79,7 +79,7 @@ serve(async (req) => {
           },
         ],
         modalities: ["image", "text"],
-        temperature: 0.1,
+        temperature: 0.05,
       }),
     });
 
@@ -87,26 +87,20 @@ serve(async (req) => {
       const errText = await aiResp.text();
       console.error("AI API error:", aiResp.status, errText);
       return new Response(JSON.stringify({ error: "AI processing failed", cleaned: false }), {
-        status: 200,
+        status: aiResp.status === 402 || aiResp.status === 429 ? aiResp.status : 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await aiResp.json();
-
-    // Try to extract image from various response formats
     let cleanedDataUri: string | null = null;
 
-    // Format 1: images array
     const images = data?.choices?.[0]?.message?.images;
     if (images?.length > 0) {
       const imgUrl = images[0]?.image_url?.url;
-      if (imgUrl?.startsWith("data:")) {
-        cleanedDataUri = imgUrl;
-      }
+      if (imgUrl?.startsWith("data:")) cleanedDataUri = imgUrl;
     }
 
-    // Format 2: content array with image_url
     if (!cleanedDataUri) {
       const content = data?.choices?.[0]?.message?.content;
       if (Array.isArray(content)) {
@@ -122,7 +116,6 @@ serve(async (req) => {
       }
     }
 
-    // Format 3: inline_data in parts
     if (!cleanedDataUri) {
       const parts = data?.choices?.[0]?.message?.parts || [];
       for (const part of parts) {
@@ -134,19 +127,16 @@ serve(async (req) => {
       }
     }
 
-    if (cleanedDataUri) {
-      return new Response(JSON.stringify({ cleaned: true, dataUri: cleanedDataUri }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ cleaned: false, error: "Could not extract cleaned image from AI response" }), {
-      status: 200,
+    return new Response(JSON.stringify({
+      cleaned: Boolean(cleanedDataUri),
+      dataUri: cleanedDataUri,
+      error: cleanedDataUri ? null : "AI did not return a cleaned image",
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
