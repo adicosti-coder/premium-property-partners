@@ -284,10 +284,20 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        const sourceBlob = (await fetchImageBlob(updated[i].originalUrl)).blob;
-        const imageDataUrl = await prepareImageForWatermarkRemoval(sourceBlob, i);
+        const sourceUrl = updated[i].originalUrl || updated[i].url;
+        const requestBody: { imageUrl?: string; imageDataUrl?: string } = {};
+        let originalSize = updated[i].originalSize;
+
+        if (isRemoteImageUrl(sourceUrl)) {
+          requestBody.imageUrl = sourceUrl;
+        } else {
+          const { blob, size } = await fetchImageBlob(sourceUrl);
+          requestBody.imageDataUrl = await prepareImageForWatermarkRemoval(blob, i);
+          originalSize = originalSize || size;
+        }
+
         const { data, error } = await supabase.functions.invoke("remove-watermark", {
-          body: { imageDataUrl },
+          body: requestBody,
         });
 
         if (error) throw new Error(error.message);
@@ -321,7 +331,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
           optimized: true,
           optimizedBlob: blob,
           optimizedSize: blob.size,
-          originalSize: updated[i].originalSize || sourceBlob.size,
+          originalSize: originalSize || blob.size,
           status: "done",
           error: undefined,
         };
