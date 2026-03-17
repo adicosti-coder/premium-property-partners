@@ -22,6 +22,7 @@ import {
 interface ImageItem {
   url: string;
   originalUrl: string;
+  persistedUrl?: string;
   optimized: boolean;
   optimizedBlob?: Blob;
   originalSize?: number;
@@ -78,6 +79,18 @@ async function fetchImageBlob(url: string): Promise<{ blob: Blob; size: number }
   const response = await fetch(url);
   const blob = await response.blob();
   return { blob, size: blob.size };
+}
+
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Conversie imagine eșuată"));
+    };
+    reader.onerror = () => reject(new Error("Conversie imagine eșuată"));
+    reader.readAsDataURL(blob);
+  });
 }
 
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
@@ -155,10 +168,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       });
 
       const optimizedUrl = URL.createObjectURL(compressed);
+      const persistedUrl = await blobToDataUrl(compressed);
 
       updated[index] = {
         ...updated[index],
         url: optimizedUrl,
+        persistedUrl,
         optimized: true,
         optimizedBlob: compressed,
         optimizedSize: compressed.size,
@@ -202,10 +217,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
         });
 
         const optimizedUrl = URL.createObjectURL(compressed);
+        const persistedUrl = await blobToDataUrl(compressed);
 
         updated[i] = {
           ...updated[i],
           url: optimizedUrl,
+          persistedUrl,
           optimized: true,
           optimizedBlob: compressed,
           optimizedSize: compressed.size,
@@ -241,30 +258,32 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        const imageUrl = updated[i].url;
+        const sourceBlob = (await fetchImageBlob(updated[i].originalUrl)).blob;
+        const imageDataUrl = await blobToDataUrl(sourceBlob);
         const { data, error } = await supabase.functions.invoke("remove-watermark", {
-          body: { imageUrl },
+          body: { imageDataUrl },
         });
 
         if (error) throw new Error(error.message);
-
-        if (data?.cleaned && data?.dataUri) {
-          const resp = await fetch(data.dataUri);
-          const blob = await resp.blob();
-          const optimizedUrl = URL.createObjectURL(blob);
-
-          updated[i] = {
-            ...updated[i],
-            url: optimizedUrl,
-            optimized: true,
-            optimizedBlob: blob,
-            optimizedSize: blob.size,
-            originalSize: updated[i].originalSize || blob.size,
-            status: "done",
-          };
-        } else {
-          updated[i] = { ...updated[i], status: "done" };
+        if (!data?.cleaned || !data?.dataUri) {
+          throw new Error(data?.error || "AI nu a returnat o imagine curățată");
         }
+
+        const resp = await fetch(data.dataUri);
+        const blob = await resp.blob();
+        const optimizedUrl = URL.createObjectURL(blob);
+
+        updated[i] = {
+          ...updated[i],
+          url: optimizedUrl,
+          persistedUrl: data.dataUri,
+          optimized: true,
+          optimizedBlob: blob,
+          optimizedSize: blob.size,
+          originalSize: updated[i].originalSize || sourceBlob.size,
+          status: "done",
+          error: undefined,
+        };
       } catch {
         updated[i] = { ...updated[i], status: "error", error: "Eliminare watermark eșuată" };
       }
@@ -288,6 +307,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     updated[index] = {
       ...updated[index],
       url: updated[index].originalUrl,
+      persistedUrl: undefined,
       optimized: false,
       optimizedBlob: undefined,
       optimizedSize: undefined,
@@ -345,7 +365,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
   // Sync with parent
   const syncImages = (updatedItems: ImageItem[]) => {
-    onImagesChange(updatedItems.filter((i) => i.selected).map((i) => (i.optimized ? i.originalUrl : i.url)));
+    onImagesChange(updatedItems.filter((i) => i.selected).map((i) => i.persistedUrl || i.originalUrl || i.url));
   };
 
   // Stats
