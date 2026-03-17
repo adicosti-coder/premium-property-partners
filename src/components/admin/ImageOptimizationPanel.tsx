@@ -448,6 +448,23 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
             </div>
           </div>
 
+          {/* ===== Watermark Removal ===== */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={removeWatermarks}
+              disabled={isRemovingWatermarks || isBatchOptimizing || isAnalyzing || selectedCount === 0}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 flex-1 sm:flex-none"
+            >
+              {isRemovingWatermarks ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Eliminare watermark ({watermarkProgress}%)...</>
+              ) : (
+                <><Eraser className="w-3.5 h-3.5 mr-1.5" />🔴 Elimină Watermark ({selectedCount})</>
+              )}
+            </Button>
+          </div>
+
           {/* ===== Action Bar ===== */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
