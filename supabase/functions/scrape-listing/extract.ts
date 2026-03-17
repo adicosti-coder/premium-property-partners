@@ -262,10 +262,12 @@ export function collectImages(jsonData: any, pageLinks: string[], markdown: stri
     return null;
   };
 
-  // From structured data
-  if (Array.isArray(jsonData.images)) imageUrls.push(...jsonData.images);
+  const isApolloImageUrl = (url: string): boolean =>
+    /^https?:\/\/[^/]*apollo\.olxcdn\.com(?::443)?\/v1\/files\/[^/]+\/image(?:;|$)/i.test(url);
 
-  // Filter out non-property images (SVGs, logos, icons, app store badges, etc.)
+  const isDirectImageUrl = (url: string): boolean =>
+    /\.(jpg|jpeg|png|webp|avif)(\?|$)/i.test(url) || isApolloImageUrl(url);
+
   const isPropertyImage = (url: string): boolean => {
     if (!url || typeof url !== 'string') return false;
     if (!/^https?:\/\//i.test(url)) return false;
@@ -275,17 +277,36 @@ export function collectImages(jsonData: any, pageLinks: string[], markdown: stri
     return true;
   };
 
+  const dedupeApolloImages = (urls: string[]): string[] => {
+    const bestByFile = new Map<string, { url: string; score: number }>();
+
+    for (const url of urls) {
+      const match = url.match(/\/v1\/files\/([^/]+)\/image/i);
+      const fileKey = match?.[1] || url;
+      const sizeMatch = url.match(/;s=(\d+)x(\d+)/i);
+      const score = sizeMatch ? Number(sizeMatch[1]) * Number(sizeMatch[2]) : Number.MAX_SAFE_INTEGER;
+      const current = bestByFile.get(fileKey);
+
+      if (!current || score > current.score) {
+        bestByFile.set(fileKey, { url, score });
+      }
+    }
+
+    return Array.from(bestByFile.values()).map((entry) => entry.url);
+  };
+
+  if (Array.isArray(jsonData.images)) imageUrls.push(...jsonData.images);
+
   imageUrls = imageUrls
     .map(normalizeImageUrl)
     .filter((url): url is string => Boolean(url))
-    .filter(isPropertyImage);
+    .filter((url) => isDirectImageUrl(url) && isPropertyImage(url));
 
-  const imageExtensions = /\.(jpg|jpeg|png|webp|avif)(\?|$)/i;
   if (Array.isArray(pageLinks)) {
     const imageFromLinks = pageLinks
       .map((link: string) => normalizeImageUrl(link))
       .filter((link): link is string => Boolean(link))
-      .filter((link: string) => imageExtensions.test(link) && isPropertyImage(link));
+      .filter((link: string) => isDirectImageUrl(link) && isPropertyImage(link));
     imageUrls.push(...imageFromLinks);
   }
 
@@ -293,16 +314,20 @@ export function collectImages(jsonData: any, pageLinks: string[], markdown: stri
   let mdMatch;
   while ((mdMatch = mdImageRegex.exec(markdown)) !== null) {
     const normalized = normalizeImageUrl(mdMatch[1]);
-    if (normalized && isPropertyImage(normalized)) imageUrls.push(normalized);
+    if (normalized && isDirectImageUrl(normalized) && isPropertyImage(normalized)) imageUrls.push(normalized);
   }
 
-  const rawImgRegex = /((?:https?:)?\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|avif)(?:\?[^\s"'<>]*)?)/gi;
-  while ((mdMatch = rawImgRegex.exec(markdown)) !== null) {
+  const rawUrlRegex = /((?:https?:)?\/\/[^\s"'<>]+)/gi;
+  while ((mdMatch = rawUrlRegex.exec(markdown)) !== null) {
     const normalized = normalizeImageUrl(mdMatch[1]);
-    if (normalized && isPropertyImage(normalized)) imageUrls.push(normalized);
+    if (normalized && isDirectImageUrl(normalized) && isPropertyImage(normalized)) imageUrls.push(normalized);
   }
 
-  return [...new Set(imageUrls)].slice(0, 30);
+  const uniqueImages = [...new Set(imageUrls)];
+  const apolloImages = dedupeApolloImages(uniqueImages.filter(isApolloImageUrl));
+  const otherImages = uniqueImages.filter((url) => !isApolloImageUrl(url));
+
+  return [...apolloImages, ...otherImages].slice(0, 30);
 }
 
 /** Build the final extracted data object */
