@@ -184,7 +184,7 @@ serve(async (req) => {
     };
     let lastError = "AI did not return a cleaned image";
 
-    const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, dataUri!);
+    const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, imageInput!);
     if (result.ok && result.cleanedDataUri) {
       return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model: attempt.model }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
