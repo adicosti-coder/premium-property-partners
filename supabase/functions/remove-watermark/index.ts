@@ -71,6 +71,12 @@ function extractFailureReason(data: any): string | null {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function isPolicyBlockedMessage(message: string | null | undefined): boolean {
+  if (!message) return false;
+
+  return /cannot fulfill this request|respecting intellectual property|copyright|watermark|branding|logo|phone numbers|illegal|unethical/i.test(message);
+}
+
 function canPassRemoteUrlToAi(url: string): boolean {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
@@ -261,7 +267,14 @@ serve(async (req) => {
     if (!result.ok) {
       lastError = result.errorText || `AI processing failed for ${attempt.model}`;
       console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
-      return new Response(JSON.stringify({ cleaned: false, error: lastError, status: result.status, retryable: result.status === 429 }), {
+      return new Response(JSON.stringify({
+        cleaned: false,
+        error: lastError,
+        status: result.status,
+        retryable: result.status === 429,
+        code: isPolicyBlockedMessage(lastError) ? "policy_blocked" : undefined,
+        blocked: isPolicyBlockedMessage(lastError),
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -271,7 +284,17 @@ serve(async (req) => {
       console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
     }
 
-    return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
+    const blockedByPolicy = isPolicyBlockedMessage(lastError);
+
+    return new Response(JSON.stringify({
+      cleaned: false,
+      error: blockedByPolicy
+        ? "Providerul AI integrat a refuzat editarea acestei imagini deoarece detectează eliminare de watermark/branding."
+        : lastError,
+      rawError: lastError,
+      code: blockedByPolicy ? "policy_blocked" : undefined,
+      blocked: blockedByPolicy,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
