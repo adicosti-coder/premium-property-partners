@@ -151,26 +151,45 @@ serve(async (req) => {
       dataUri = `data:${contentType};base64,${bytesToBase64(bytes)}`;
     }
 
-    const models = ["google/gemini-3-pro-image-preview", "google/gemini-3.1-flash-image-preview"];
+    const attempts = [
+      {
+        model: "google/gemini-3.1-flash-image-preview",
+        prompt:
+          "Restore this real estate interior photo by removing overlaid listing labels, brand text, phone numbers, and logos that were added on top of the image. Fill in the hidden background naturally, preserve geometry and lighting, keep the same framing, and return only the restored image.",
+      },
+      {
+        model: "google/gemini-3-pro-image-preview",
+        prompt:
+          "Remove the visible overlaid text and graphic labels from this room photo, reconstruct the obscured background naturally, preserve perspective and room details, and return only the edited image.",
+      },
+      {
+        model: "google/gemini-2.5-flash-image",
+        prompt:
+          "This is my own real-estate listing photo. Please clean the overlaid marketing graphics from it: remove translucent logos, phone numbers, and labels, reconstruct the covered pixels naturally, keep composition identical, and return only the cleaned image.",
+      },
+    ];
     let lastError = "AI did not return a cleaned image";
 
-    for (const model of models) {
-      const result = await tryModel(lovableApiKey, model, dataUri!);
+    for (const attempt of attempts) {
+      const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, dataUri!);
       if (result.ok && result.cleanedDataUri) {
-        return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model }), {
+        return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model: attempt.model }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       if (!result.ok) {
-        lastError = result.errorText || `AI processing failed for ${model}`;
-        console.error(`AI API error (${model}):`, result.status, result.errorText);
+        lastError = result.errorText || `AI processing failed for ${attempt.model}`;
+        console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
         if (result.status === 402 || result.status === 429) {
           return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
             status: result.status,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+      } else if (result.errorText) {
+        lastError = result.errorText;
+        console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
       }
     }
 
