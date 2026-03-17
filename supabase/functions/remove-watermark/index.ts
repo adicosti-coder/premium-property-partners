@@ -267,7 +267,14 @@ serve(async (req) => {
     if (!result.ok) {
       lastError = result.errorText || `AI processing failed for ${attempt.model}`;
       console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
-      return new Response(JSON.stringify({ cleaned: false, error: lastError, status: result.status, retryable: result.status === 429 }), {
+      return new Response(JSON.stringify({
+        cleaned: false,
+        error: lastError,
+        status: result.status,
+        retryable: result.status === 429,
+        code: isPolicyBlockedMessage(lastError) ? "policy_blocked" : undefined,
+        blocked: isPolicyBlockedMessage(lastError),
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -277,7 +284,17 @@ serve(async (req) => {
       console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
     }
 
-    return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
+    const blockedByPolicy = isPolicyBlockedMessage(lastError);
+
+    return new Response(JSON.stringify({
+      cleaned: false,
+      error: blockedByPolicy
+        ? "Providerul AI integrat a refuzat editarea acestei imagini deoarece detectează eliminare de watermark/branding."
+        : lastError,
+      rawError: lastError,
+      code: blockedByPolicy ? "policy_blocked" : undefined,
+      blocked: blockedByPolicy,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
