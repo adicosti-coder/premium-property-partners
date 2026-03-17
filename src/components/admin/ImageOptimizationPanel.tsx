@@ -9,7 +9,7 @@ import {
   ImageIcon, Loader2, Sparkles, ArrowUpCircle, Minimize2, CheckCircle2,
   Trash2, GripVertical, AlertTriangle, Download, RotateCcw, ZoomIn,
   FileImage, HardDrive, Maximize2, Settings2, Wand2, X, ChevronDown, ChevronUp,
-  Upload
+  Upload, Eraser
 } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
 import { supabase } from "@/lib/supabaseClient";
@@ -98,6 +98,8 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
   const [isBatchOptimizing, setIsBatchOptimizing] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isRemovingWatermarks, setIsRemovingWatermarks] = useState(false);
+  const [watermarkProgress, setWatermarkProgress] = useState(0);
 
   // Analyze all images (fetch size & dimensions)
   const analyzeImages = useCallback(async () => {
@@ -223,7 +225,61 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     setIsBatchOptimizing(false);
   }, [items, quality, maxWidth, autoWebp]);
 
+  // Remove watermarks from selected images using AI
+  const removeWatermarks = useCallback(async () => {
+    setIsRemovingWatermarks(true);
+    setWatermarkProgress(0);
+    const selected = items.filter((item) => item.selected);
+    const total = selected.length;
+    const updated = [...items];
+    let completed = 0;
+
+    for (let i = 0; i < updated.length; i++) {
+      if (!updated[i].selected) continue;
+
+      updated[i] = { ...updated[i], status: "optimizing" };
+      setItems([...updated]);
+
+      try {
+        const imageUrl = updated[i].url;
+        const { data, error } = await supabase.functions.invoke("remove-watermark", {
+          body: { imageUrl },
+        });
+
+        if (error) throw new Error(error.message);
+
+        if (data?.cleaned && data?.dataUri) {
+          const resp = await fetch(data.dataUri);
+          const blob = await resp.blob();
+          const optimizedUrl = URL.createObjectURL(blob);
+
+          updated[i] = {
+            ...updated[i],
+            url: optimizedUrl,
+            optimized: true,
+            optimizedBlob: blob,
+            optimizedSize: blob.size,
+            originalSize: updated[i].originalSize || blob.size,
+            status: "done",
+          };
+        } else {
+          updated[i] = { ...updated[i], status: "done" };
+        }
+      } catch {
+        updated[i] = { ...updated[i], status: "error", error: "Eliminare watermark eșuată" };
+      }
+
+      completed++;
+      setWatermarkProgress(Math.round((completed / total) * 100));
+      setItems([...updated]);
+    }
+
+    syncImages(updated);
+    setIsRemovingWatermarks(false);
+  }, [items]);
+
   // Reset single image
+
   const resetImage = (index: number) => {
     const updated = [...items];
     if (updated[index].optimized && updated[index].url.startsWith("blob:")) {
@@ -420,6 +476,20 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
               )}
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={removeWatermarks}
+              disabled={isRemovingWatermarks || isBatchOptimizing || isAnalyzing || selectedCount === 0}
+              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            >
+              {isRemovingWatermarks ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Eliminare watermark ({watermarkProgress}%)...</>
+              ) : (
+                <><Eraser className="w-3.5 h-3.5 mr-1.5" />Elimină Watermark ({selectedCount})</>
+              )}
+            </Button>
+
             <Button size="sm" variant="ghost" onClick={toggleSelectAll}>
               {items.every((i) => i.selected) ? "Deselectează tot" : "Selectează tot"}
             </Button>
@@ -444,6 +514,9 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
           {/* Batch progress */}
           {isBatchOptimizing && (
             <Progress value={batchProgress} className="h-2" />
+          )}
+          {isRemovingWatermarks && (
+            <Progress value={watermarkProgress} className="h-2" />
           )}
 
           {/* ===== Image Grid ===== */}
