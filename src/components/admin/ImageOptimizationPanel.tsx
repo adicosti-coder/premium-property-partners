@@ -279,10 +279,11 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     const updated = [...items];
     let completed = 0;
     let stoppedByLimit = false;
+    let stoppedByPolicy = false;
 
     for (let i = 0; i < updated.length; i++) {
       if (!updated[i].selected) continue;
-      if (stoppedByLimit) {
+      if (stoppedByLimit || stoppedByPolicy) {
         updated[i] = { ...updated[i], status: "idle", error: undefined };
         setItems([...updated]);
         continue;
@@ -312,8 +313,15 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
         if (!data?.cleaned || (!data?.imageUrl && !data?.dataUri)) {
           const backendMessage = data?.error || "AI nu a returnat o imagine curățată";
           const statusCode = Number(data?.status || 0);
+          const errorCode = typeof data?.code === "string" ? data.code : "";
+          const isPolicyBlocked = Boolean(data?.blocked) || errorCode === "policy_blocked";
           const isRateLimited = statusCode === 429 || /resource exhausted|try again later|rate limit/i.test(backendMessage);
           const isOutOfCredits = statusCode === 402 || /payment required|add funds|credits/i.test(backendMessage);
+
+          if (isPolicyBlocked) {
+            stoppedByPolicy = true;
+            throw new Error("Providerul AI a blocat eliminarea watermark pentru această imagine. Am oprit lotul imediat ca să nu consume credite inutil pe restul.");
+          }
 
           if (isRateLimited) {
             stoppedByLimit = true;
@@ -355,7 +363,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setWatermarkProgress(Math.round((completed / total) * 100));
       setItems([...updated]);
 
-      if (!stoppedByLimit && completed < total) {
+      if (!stoppedByLimit && !stoppedByPolicy && completed < total) {
         await sleep(WATERMARK_REQUEST_DELAY_MS);
       }
     }
@@ -363,7 +371,13 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     syncImages(updated);
     setIsRemovingWatermarks(false);
 
-    if (stoppedByLimit) {
+    if (stoppedByPolicy) {
+      toast({
+        title: "Procesare oprită",
+        description: "Providerul AI a refuzat eliminarea watermark-ului pe această sursă. Lotul a fost oprit imediat pentru a limita consumul de credite.",
+        variant: "destructive",
+      });
+    } else if (stoppedByLimit) {
       toast({
         title: "Procesare oprită temporar",
         description: "Serviciul AI a limitat cererile. Am oprit lotul ca să evit consum inutil; reîncearcă peste 30-60 secunde.",
