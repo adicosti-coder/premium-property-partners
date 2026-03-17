@@ -258,30 +258,32 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        const imageUrl = updated[i].url;
+        const sourceBlob = updated[i].optimizedBlob || (await fetchImageBlob(updated[i].originalUrl)).blob;
+        const imageDataUrl = await blobToDataUrl(sourceBlob);
         const { data, error } = await supabase.functions.invoke("remove-watermark", {
-          body: { imageUrl },
+          body: { imageDataUrl },
         });
 
         if (error) throw new Error(error.message);
-
-        if (data?.cleaned && data?.dataUri) {
-          const resp = await fetch(data.dataUri);
-          const blob = await resp.blob();
-          const optimizedUrl = URL.createObjectURL(blob);
-
-          updated[i] = {
-            ...updated[i],
-            url: optimizedUrl,
-            optimized: true,
-            optimizedBlob: blob,
-            optimizedSize: blob.size,
-            originalSize: updated[i].originalSize || blob.size,
-            status: "done",
-          };
-        } else {
-          updated[i] = { ...updated[i], status: "done" };
+        if (!data?.cleaned || !data?.dataUri) {
+          throw new Error(data?.error || "AI nu a returnat o imagine curățată");
         }
+
+        const resp = await fetch(data.dataUri);
+        const blob = await resp.blob();
+        const optimizedUrl = URL.createObjectURL(blob);
+
+        updated[i] = {
+          ...updated[i],
+          url: optimizedUrl,
+          persistedUrl: data.dataUri,
+          optimized: true,
+          optimizedBlob: blob,
+          optimizedSize: blob.size,
+          originalSize: updated[i].originalSize || sourceBlob.size,
+          status: "done",
+          error: undefined,
+        };
       } catch {
         updated[i] = { ...updated[i], status: "error", error: "Eliminare watermark eșuată" };
       }
