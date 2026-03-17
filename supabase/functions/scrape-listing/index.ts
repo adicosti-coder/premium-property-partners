@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 3: Collect images from all sources
-    const imageUrls = collectImages(finalJsonData, pageLinks, markdown);
+    const imageUrls = collectImages(finalJsonData, pageLinks, markdown, url);
     console.log(`[Preview] Total images collected: ${imageUrls.length}`);
 
     // Build result

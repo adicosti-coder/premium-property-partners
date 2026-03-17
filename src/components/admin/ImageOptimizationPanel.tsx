@@ -56,13 +56,19 @@ function getQualityBadge(sizeKB: number) {
 }
 
 /** Fetch image as blob, using proxy for external URLs to avoid CORS */
+function normalizeClientImageUrl(url: string): string {
+  const trimmed = url.trim();
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  return trimmed;
+}
+
 async function fetchImageBlob(url: string): Promise<{ blob: Blob; size: number }> {
-  const isExternal = url.startsWith("http") && !url.includes("supabase.co");
+  const normalizedUrl = normalizeClientImageUrl(url);
+  const isExternal = /^https?:\/\//i.test(normalizedUrl) && !normalizedUrl.includes("supabase.co");
   
   if (isExternal) {
-    // Use edge function proxy for external URLs
     const { data, error } = await supabase.functions.invoke("proxy-image", {
-      body: { url },
+      body: { url: normalizedUrl },
     });
     if (error || !data?.data) {
       throw new Error(error?.message || "Proxy fetch failed");
@@ -76,8 +82,10 @@ async function fetchImageBlob(url: string): Promise<{ blob: Blob; size: number }
     return { blob, size: data.size || blob.size };
   }
   
-  // Direct fetch for same-origin / supabase URLs
-  const response = await fetch(url);
+  const response = await fetch(normalizedUrl);
+  if (!response.ok) {
+    throw new Error(`Fetch failed: ${response.status}`);
+  }
   const blob = await response.blob();
   return { blob, size: blob.size };
 }
@@ -111,7 +119,7 @@ async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promi
 
 const WATERMARK_REQUEST_DELAY_MS = 2200;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(url);
+const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(normalizeClientImageUrl(url));
 
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>

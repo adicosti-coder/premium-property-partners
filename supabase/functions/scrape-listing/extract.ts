@@ -237,8 +237,30 @@ function extractFromMarkdownRegex(markdown: string): Record<string, any> {
 }
 
 /** Collect image URLs from multiple sources */
-export function collectImages(jsonData: any, pageLinks: string[], markdown: string): string[] {
+export function collectImages(jsonData: any, pageLinks: string[], markdown: string, pageUrl?: string): string[] {
   let imageUrls: string[] = [];
+
+  const normalizeImageUrl = (rawUrl: string): string | null => {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return null;
+
+    try {
+      if (trimmed.startsWith('//')) {
+        return `https:${trimmed}`;
+      }
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+      if (pageUrl) {
+        return new URL(trimmed, pageUrl).toString();
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  };
 
   // From structured data
   if (Array.isArray(jsonData.images)) imageUrls.push(...jsonData.images);
@@ -246,38 +268,38 @@ export function collectImages(jsonData: any, pageLinks: string[], markdown: stri
   // Filter out non-property images (SVGs, logos, icons, app store badges, etc.)
   const isPropertyImage = (url: string): boolean => {
     if (!url || typeof url !== 'string') return false;
-    // Reject SVGs, icons, logos, app badges, tiny images
+    if (!/^https?:\/\//i.test(url)) return false;
     if (/\.(svg|gif)(\?|$)/i.test(url)) return false;
     if (/logo|icon|avatar|thumb|badge|app_store|google_play|static\/media|mapfiles|gstatic/i.test(url)) return false;
     if (url.length < 20) return false;
     return true;
   };
 
-  // Filter structured data images
-  imageUrls = imageUrls.filter(isPropertyImage);
+  imageUrls = imageUrls
+    .map(normalizeImageUrl)
+    .filter((url): url is string => Boolean(url))
+    .filter(isPropertyImage);
 
-  // From page links
   const imageExtensions = /\.(jpg|jpeg|png|webp|avif)(\?|$)/i;
   if (Array.isArray(pageLinks)) {
-    const imageFromLinks = pageLinks.filter((link: string) =>
-      typeof link === 'string' &&
-      imageExtensions.test(link) &&
-      isPropertyImage(link)
-    );
+    const imageFromLinks = pageLinks
+      .map((link: string) => normalizeImageUrl(link))
+      .filter((link): link is string => Boolean(link))
+      .filter((link: string) => imageExtensions.test(link) && isPropertyImage(link));
     imageUrls.push(...imageFromLinks);
   }
 
-  // From markdown
-  const mdImageRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
+  const mdImageRegex = /!\[.*?\]\(([^\s)]+)\)/g;
   let mdMatch;
   while ((mdMatch = mdImageRegex.exec(markdown)) !== null) {
-    if (isPropertyImage(mdMatch[1])) imageUrls.push(mdMatch[1]);
+    const normalized = normalizeImageUrl(mdMatch[1]);
+    if (normalized && isPropertyImage(normalized)) imageUrls.push(normalized);
   }
 
-  // Also raw URLs in markdown
-  const rawImgRegex = /(https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)(?:\?[^\s"'<>]*)?)/gi;
+  const rawImgRegex = /((?:https?:)?\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|avif)(?:\?[^\s"'<>]*)?)/gi;
   while ((mdMatch = rawImgRegex.exec(markdown)) !== null) {
-    if (isPropertyImage(mdMatch[1])) imageUrls.push(mdMatch[1]);
+    const normalized = normalizeImageUrl(mdMatch[1]);
+    if (normalized && isPropertyImage(normalized)) imageUrls.push(normalized);
   }
 
   return [...new Set(imageUrls)].slice(0, 30);
