@@ -374,13 +374,13 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     if (stoppedByPolicy) {
       toast({
         title: "Procesare oprită",
-        description: "Providerul AI a refuzat eliminarea watermark-ului pe această sursă. Lotul a fost oprit imediat pentru a limita consumul de credite.",
+        description: "Dewatermark nu a putut procesa una din imagini. Lotul a fost oprit pentru a limita consumul de credite.",
         variant: "destructive",
       });
     } else if (stoppedByLimit) {
       toast({
         title: "Procesare oprită temporar",
-        description: "Serviciul AI a limitat cererile. Am oprit lotul ca să evit consum inutil; reîncearcă peste 30-60 secunde.",
+        description: "Serviciul Dewatermark a limitat cererile sau creditele sunt epuizate. Reîncearcă peste câteva secunde.",
         variant: "destructive",
       });
     }
