@@ -92,8 +92,8 @@ export async function compressImage(
     return file;
   }
 
-  // Skip if file is already small (under 200KB)
-  if (file.size < 200 * 1024) {
+  // Skip if file is already small (under 200KB), unless conversion is forced
+  if (file.size < 200 * 1024 && !opts.force) {
     console.log('File already small, skipping compression');
     return file;
   }
