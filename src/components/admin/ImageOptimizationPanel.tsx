@@ -9,7 +9,7 @@ import {
   ImageIcon, Loader2, Sparkles, ArrowUpCircle, Minimize2, CheckCircle2,
   Trash2, GripVertical, AlertTriangle, Download, RotateCcw, ZoomIn,
   FileImage, HardDrive, Maximize2, Settings2, Wand2, X, ChevronDown, ChevronUp,
-  Upload
+  Upload, Eraser
 } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
 import { supabase } from "@/lib/supabaseClient";
