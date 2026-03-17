@@ -54,7 +54,7 @@ function buildPropertyData(
     capacity: data.rooms ? Number(data.rooms) * 2 : 2,
     bedrooms: data.rooms ? Number(data.rooms) : 1,
     bathrooms: data.bathrooms ? Number(data.bathrooms) : 1,
-    size: data.size ? Number(data.size) : 40,
+    size: data.size ? Math.round(Number(data.size)) : 40,
     base_price_per_night: data.price ? Number(data.price) : null,
     capital_necesar: (listingType === 'vanzare' || listingType === 'investitie') ? (data.price ? Number(data.price) : null) : null,
     floor: data.floor || null,
