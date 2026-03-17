@@ -102,6 +102,7 @@ const ListingImporter = () => {
 
       setExtracted(data.extracted);
       setEditData({ ...data.extracted });
+      setAllOriginalImages([...(data.extracted.images || [])]);
       if (data.extracted.listing_type_hint) {
         setListingType(data.extracted.listing_type_hint);
       }
