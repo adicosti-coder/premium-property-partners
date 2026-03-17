@@ -150,7 +150,7 @@ const generateWebSiteJsonLd = () => ({
 const SEOHead = ({
   title,
   description,
-  image = `${BASE_URL}/og-image.jpg`,
+  image = `${BASE_URL}/images/hero-optimized-1920w.webp`,
   imageAlt,
   url,
   type = "website",

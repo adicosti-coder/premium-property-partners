@@ -212,7 +212,7 @@ const ComplexDetail = () => {
       "@type": "LocalBusiness",
       "name": `RealTrust - Management ${complex.name}`,
       "description": description,
-      "image": images[0]?.image_path || "https://www.realtrust.ro/og-image.jpg",
+      "image": images[0]?.image_path || "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
       "url": pageUrl,
       "telephone": "+40723154520",
       "address": {
