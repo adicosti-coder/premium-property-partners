@@ -69,6 +69,7 @@ const ListingImporter = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
   const [editData, setEditData] = useState<ExtractedData | null>(null);
+  const [allOriginalImages, setAllOriginalImages] = useState<string[]>([]);
   const [saveResult, setSaveResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
