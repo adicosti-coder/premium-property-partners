@@ -19,14 +19,17 @@ function extractCleanedImage(data: any): string | null {
   const images = data?.choices?.[0]?.message?.images;
   if (images?.length > 0) {
     const imgUrl = images[0]?.image_url?.url;
-    if (imgUrl?.startsWith("data:")) return imgUrl;
+    if (typeof imgUrl === "string" && (imgUrl.startsWith("data:") || imgUrl.startsWith("http"))) {
+      return imgUrl;
+    }
   }
 
   const content = data?.choices?.[0]?.message?.content;
   if (Array.isArray(content)) {
     for (const item of content) {
-      if (item?.type === "image_url" && item?.image_url?.url?.startsWith("data:")) {
-        return item.image_url.url;
+      const imgUrl = item?.image_url?.url;
+      if (item?.type === "image_url" && typeof imgUrl === "string" && (imgUrl.startsWith("data:") || imgUrl.startsWith("http"))) {
+        return imgUrl;
       }
     }
   } else if (typeof content === "string") {
@@ -45,7 +48,27 @@ function extractCleanedImage(data: any): string | null {
   return null;
 }
 
-async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
+function extractFailureReason(data: any): string | null {
+  const message = data?.choices?.[0]?.message;
+  const content = message?.content;
+
+  if (typeof content === "string" && content.trim()) {
+    return content.trim();
+  }
+
+  if (Array.isArray(content)) {
+    const textParts = content
+      .filter((item: any) => item?.type === "text" && typeof item?.text === "string")
+      .map((item: any) => item.text.trim())
+      .filter(Boolean);
+
+    if (textParts.length > 0) return textParts.join(" ");
+  }
+
+  return null;
+}
+
+async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -60,7 +83,7 @@ async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
           content: [
             {
               type: "text",
-              text: "Remove all visible watermarks, agency logos, brand marks, phone numbers, labels, and overlaid text from this real-estate photo. Reconstruct the hidden pixels naturally, preserve perspective and room details, do not crop, do not alter composition, and return only the cleaned image.",
+              text: prompt,
             },
             {
               type: "image_url",
@@ -80,7 +103,12 @@ async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
   }
 
   const data = await response.json();
-  return { ok: true, status: 200, errorText: null, cleanedDataUri: extractCleanedImage(data) };
+  return {
+    ok: true,
+    status: 200,
+    errorText: extractFailureReason(data),
+    cleanedDataUri: extractCleanedImage(data),
+  };
 }
 
 serve(async (req) => {
