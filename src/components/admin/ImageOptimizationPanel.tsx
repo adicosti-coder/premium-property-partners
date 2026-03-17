@@ -387,6 +387,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       optimizedBlob: undefined,
       optimizedSize: undefined,
       status: "idle",
+      error: undefined,
     };
     setItems([...updated]);
     syncImages(updated);
