@@ -309,7 +309,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
         });
 
         if (error) throw new Error(error.message);
-        if (!data?.cleaned || !data?.dataUri) {
+        if (!data?.cleaned || (!data?.imageUrl && !data?.dataUri)) {
           const backendMessage = data?.error || "AI nu a returnat o imagine curățată";
           const statusCode = Number(data?.status || 0);
           const isRateLimited = statusCode === 429 || /resource exhausted|try again later|rate limit/i.test(backendMessage);
@@ -328,18 +328,18 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
           throw new Error(backendMessage);
         }
 
-        const resp = await fetch(data.dataUri);
-        const blob = await resp.blob();
-        const optimizedUrl = URL.createObjectURL(blob);
+        const persistedUrl = data.imageUrl || data.dataUri;
+        const displayUrl = data.imageUrl || data.dataUri;
+        const optimizedSize = Number(data.cleanedSize || 0) || updated[i].optimizedSize || originalSize || 0;
 
         updated[i] = {
           ...updated[i],
-          url: optimizedUrl,
-          persistedUrl: data.dataUri,
+          url: displayUrl,
+          persistedUrl,
           optimized: true,
-          optimizedBlob: blob,
-          optimizedSize: blob.size,
-          originalSize: originalSize || blob.size,
+          optimizedBlob: undefined,
+          optimizedSize,
+          originalSize: originalSize || optimizedSize,
           status: "done",
           error: undefined,
         };
@@ -387,6 +387,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       optimizedBlob: undefined,
       optimizedSize: undefined,
       status: "idle",
+      error: undefined,
     };
     setItems([...updated]);
     syncImages(updated);

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,54 @@ function canPassRemoteUrlToAi(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+function parseDataUri(dataUri: string): { bytes: Uint8Array; contentType: string } | null {
+  const match = dataUri.match(/^data:(image\/[^;]+);base64,(.+)$/);
+  if (!match) return null;
+
+  const [, contentType, base64] = match;
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return { bytes, contentType };
+}
+
+function extensionFromContentType(contentType: string): string {
+  if (contentType.includes("png")) return "png";
+  if (contentType.includes("webp")) return "webp";
+  if (contentType.includes("gif")) return "gif";
+  return "jpg";
+}
+
+async function uploadCleanedImage(cleanedImage: string) {
+  if (!cleanedImage.startsWith("data:")) {
+    return { imageUrl: cleanedImage, size: null };
+  }
+
+  const parsed = parseDataUri(cleanedImage);
+  if (!parsed) throw new Error("Invalid cleaned image payload");
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Storage backend not configured");
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const extension = extensionFromContentType(parsed.contentType);
+  const filePath = `watermark-cleaned/${crypto.randomUUID()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from("property-images")
+    .upload(filePath, parsed.bytes, { contentType: parsed.contentType, upsert: false });
+
+  if (error) {
+    throw new Error(`Storage upload failed: ${error.message}`);
+  }
+
+  const { data } = supabase.storage.from("property-images").getPublicUrl(filePath);
+  return { imageUrl: data.publicUrl, size: parsed.bytes.byteLength };
 }
 
 async function tryModel(lovableApiKey: string, model: string, prompt: string, imageInput: string) {
@@ -180,15 +229,33 @@ serve(async (req) => {
     const attempt = {
       model: "google/gemini-2.5-flash-image",
       prompt:
-        "Clean the overlaid marketing graphics from this interior listing photo: remove translucent agency logo, phone number, and room label overlays; reconstruct the hidden background naturally; preserve layout and lighting; return only the edited image.",
+        "Restore this interior listing photo by removing overlaid branding, room labels, logos, and phone numbers; reconstruct hidden background naturally; preserve room geometry and lighting; return only the edited image.",
     };
     let lastError = "AI did not return a cleaned image";
 
     const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, imageInput!);
     if (result.ok && result.cleanedDataUri) {
-      return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model: attempt.model }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      try {
+        const uploaded = await uploadCleanedImage(result.cleanedDataUri);
+        return new Response(JSON.stringify({
+          cleaned: true,
+          imageUrl: uploaded.imageUrl,
+          cleanedSize: uploaded.size,
+          model: attempt.model,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        return new Response(JSON.stringify({
+          cleaned: true,
+          dataUri: result.cleanedDataUri,
+          model: attempt.model,
+          uploadFallback: true,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (!result.ok) {
