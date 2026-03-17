@@ -47,7 +47,7 @@ const Footer = () => {
     };
     
     script.onerror = () => {
-      console.error("Failed to load MailerLite script");
+      // Silenced: CSP may block MailerLite — newsletter falls back to DB-only
     };
     
     document.head.appendChild(script);
