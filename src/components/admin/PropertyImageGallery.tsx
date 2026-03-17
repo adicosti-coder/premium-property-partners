@@ -219,6 +219,95 @@ export default function PropertyImageGallery({
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Draft images state
+  const [draftImages, setDraftImages] = useState<(PropertyImage & { is_published?: boolean; original_url?: string })[]>([]);
+  const [isDraftsOpen, setIsDraftsOpen] = useState(false);
+  const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
+  const [removingWatermarkId, setRemovingWatermarkId] = useState<string | null>(null);
+
+  // Fetch draft images
+  useEffect(() => {
+    const fetchDrafts = async () => {
+      const { data } = await supabase
+        .from('property_images')
+        .select('*')
+        .eq('property_id', propertyId)
+        .eq('is_published', false)
+        .order('created_at', { ascending: true });
+      setDraftImages(data || []);
+    };
+    fetchDrafts();
+  }, [propertyId, images]);
+
+  // Publish a draft image
+  const handlePublishDraft = async (draft: PropertyImage) => {
+    setPublishingIds(prev => new Set(prev).add(draft.id));
+    try {
+      const nextOrder = images.length;
+      const { error } = await supabase
+        .from('property_images')
+        .update({ is_published: true, display_order: nextOrder })
+        .eq('id', draft.id);
+      if (error) throw error;
+
+      // Update parent
+      const published = { ...draft, is_published: true, display_order: nextOrder };
+      onImagesChange([...images, published]);
+      setDraftImages(prev => prev.filter(d => d.id !== draft.id));
+
+      // Update properties.images array
+      const allPublished = [...images, published];
+      await supabase.from('properties').update({
+        images: allPublished.map(i => i.image_path),
+        ...(allPublished.length === 1 ? { image_path: published.image_path } : {}),
+      }).eq('id', propertyId);
+
+      toast({ title: "✅ Imagine publicată!", description: "Imaginea este acum vizibilă pe site." });
+    } catch (err) {
+      console.error("Error publishing draft:", err);
+      toast({ title: "Eroare", description: "Nu s-a putut publica imaginea", variant: "destructive" });
+    } finally {
+      setPublishingIds(prev => { const s = new Set(prev); s.delete(draft.id); return s; });
+    }
+  };
+
+  // Remove watermark from a draft image using Dewatermark API
+  const handleRemoveWatermark = async (draft: PropertyImage) => {
+    setRemovingWatermarkId(draft.id);
+    try {
+      const imageUrl = draft.image_path.startsWith('http') 
+        ? draft.image_path 
+        : supabase.storage.from('property-images').getPublicUrl(draft.image_path).data.publicUrl;
+
+      const { data, error } = await supabase.functions.invoke('remove-watermark', {
+        body: { imageUrl },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.cleaned) throw new Error(data?.error || 'Eliminare watermark eșuată');
+
+      const newImageUrl = data.imageUrl || data.dataUri;
+
+      // Update the draft image path in DB
+      await supabase
+        .from('property_images')
+        .update({ image_path: newImageUrl })
+        .eq('id', draft.id);
+
+      setDraftImages(prev => prev.map(d => d.id === draft.id ? { ...d, image_path: newImageUrl } : d));
+      toast({ title: "✅ Watermark eliminat!", description: "Imaginea a fost procesată cu succes." });
+    } catch (err) {
+      console.error("Watermark removal error:", err);
+      toast({ 
+        title: "Eroare watermark", 
+        description: err instanceof Error ? err.message : "Eroare necunoscută", 
+        variant: "destructive" 
+      });
+    } finally {
+      setRemovingWatermarkId(null);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -840,7 +929,85 @@ export default function PropertyImageGallery({
         </p>
       )}
 
-      {/* Lightbox Preview */}
+      {/* Draft Images Section */}
+      {draftImages.length > 0 && (
+        <div className="border-t pt-4 mt-4">
+          <button
+            type="button"
+            onClick={() => setIsDraftsOpen(!isDraftsOpen)}
+            className="flex items-center gap-2 w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {isDraftsOpen ? (
+              <ChevronLeft className="w-4 h-4 rotate-[-90deg]" />
+            ) : (
+              <ChevronRight className="w-4 h-4 rotate-0" />
+            )}
+            📦 Imagini Draft ({draftImages.length}) — salvate dar nepublicate
+          </button>
+          
+          {isDraftsOpen && (
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Aceste imagini au fost salvate la import dar nu sunt vizibile pe site. 
+                Poți elimina watermark-ul, apoi publica.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {draftImages.map((draft) => {
+                  const imgUrl = draft.image_path.startsWith('http') 
+                    ? draft.image_path 
+                    : getPublicUrl(draft.image_path);
+                  const isProcessing = removingWatermarkId === draft.id;
+                  const isPublishing = publishingIds.has(draft.id);
+                  
+                  return (
+                    <div key={draft.id} className="relative rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/30 group">
+                      <img
+                        src={imgUrl || ""}
+                        alt="Draft"
+                        className="w-full h-24 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="h-7 text-xs px-2"
+                          onClick={() => handleRemoveWatermark(draft)}
+                          disabled={isProcessing || isPublishing}
+                        >
+                          {isProcessing ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <>🧹 Watermark</>
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-7 text-xs px-2"
+                          onClick={() => handlePublishDraft(draft)}
+                          disabled={isProcessing || isPublishing}
+                        >
+                          {isPublishing ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <>✅ Publică</>
+                          )}
+                        </Button>
+                      </div>
+                      <div className="absolute top-1 left-1 bg-muted/80 text-muted-foreground text-[10px] px-1.5 py-0.5 rounded">
+                        Draft
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
         <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
           <div 

@@ -115,18 +115,20 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Upload images
-      const imageUrls = Array.isArray(editedData.images) ? editedData.images : [];
-      console.log(`[Save] Uploading ${imageUrls.length} images...`);
-      const uploadedImages = await uploadImagesForProperty(imageUrls, supabase, newProperty.id);
+      // Upload ALL original images (draft + published)
+      const publishedUrls = Array.isArray(editedData.images) ? editedData.images : [];
+      const allOriginalUrls = Array.isArray(editedData.allOriginalImages) ? editedData.allOriginalImages : publishedUrls;
+      console.log(`[Save] Uploading ${allOriginalUrls.length} total images (${publishedUrls.length} published, ${allOriginalUrls.length - publishedUrls.length} drafts)...`);
+      const result = await uploadImagesForProperty(allOriginalUrls, publishedUrls, supabase, newProperty.id);
 
-      console.log(`[Save] Done. Property: ${newProperty.name}, images uploaded: ${uploadedImages.length}`);
+      console.log(`[Save] Done. Property: ${newProperty.name}, published: ${result.published.length}, drafts: ${result.drafts}`);
       return new Response(
         JSON.stringify({
           success: true,
           property: newProperty,
           extracted: editedData,
-          images_uploaded: uploadedImages.length,
+          images_uploaded: result.published.length,
+          drafts_saved: result.drafts,
           listing_type: finalListingType,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -200,14 +202,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const uploadedImages = await uploadImagesForProperty(imageUrls, supabase, newProperty.id);
+    const result = await uploadImagesForProperty(imageUrls, imageUrls, supabase, newProperty.id);
 
     return new Response(
       JSON.stringify({
         success: true,
         property: newProperty,
         extracted,
-        images_uploaded: uploadedImages.length,
+        images_uploaded: result.published.length,
+        drafts_saved: result.drafts,
         listing_type: finalListingType,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

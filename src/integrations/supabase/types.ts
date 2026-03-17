@@ -1977,6 +1977,8 @@ export type Database = {
           id: string
           image_path: string
           is_primary: boolean
+          is_published: boolean
+          original_url: string | null
           property_id: string
         }
         Insert: {
@@ -1985,6 +1987,8 @@ export type Database = {
           id?: string
           image_path: string
           is_primary?: boolean
+          is_published?: boolean
+          original_url?: string | null
           property_id: string
         }
         Update: {
@@ -1993,6 +1997,8 @@ export type Database = {
           id?: string
           image_path?: string
           is_primary?: boolean
+          is_published?: boolean
+          original_url?: string | null
           property_id?: string
         }
         Relationships: [

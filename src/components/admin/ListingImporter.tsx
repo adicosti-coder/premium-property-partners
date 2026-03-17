@@ -69,6 +69,7 @@ const ListingImporter = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
   const [editData, setEditData] = useState<ExtractedData | null>(null);
+  const [allOriginalImages, setAllOriginalImages] = useState<string[]>([]);
   const [saveResult, setSaveResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,6 +102,7 @@ const ListingImporter = () => {
 
       setExtracted(data.extracted);
       setEditData({ ...data.extracted });
+      setAllOriginalImages([...(data.extracted.images || [])]);
       if (data.extracted.listing_type_hint) {
         setListingType(data.extracted.listing_type_hint);
       }
@@ -178,15 +180,24 @@ const ListingImporter = () => {
     setIsSaving(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
-        body: { url: url.trim(), listing_type: listingType, mode: "save", editedData: editData },
+        body: { 
+          url: url.trim(), 
+          listing_type: listingType, 
+          mode: "save", 
+          editedData: {
+            ...editData,
+            allOriginalImages,
+          },
+        },
       });
       if (fnError) throw new Error(fnError.message);
       if (!data?.success) throw new Error(data?.error || "Salvare eșuată");
 
       setSaveResult(data);
+      const draftsMsg = data.drafts_saved > 0 ? ` + ${data.drafts_saved} salvate ca draft` : "";
       toast({
         title: "✅ Anunț importat!",
-        description: `„${data.property.name}" — ${data.images_uploaded} imagini încărcate.`,
+        description: `„${data.property.name}" — ${data.images_uploaded} imagini publicate${draftsMsg}.`,
       });
     } catch (err: any) {
       toast({ title: "Eroare la salvare", description: err.message, variant: "destructive" });
