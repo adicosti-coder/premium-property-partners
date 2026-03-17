@@ -258,7 +258,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       setItems([...updated]);
 
       try {
-        const sourceBlob = updated[i].optimizedBlob || (await fetchImageBlob(updated[i].originalUrl)).blob;
+        const sourceBlob = (await fetchImageBlob(updated[i].originalUrl)).blob;
         const imageDataUrl = await blobToDataUrl(sourceBlob);
         const { data, error } = await supabase.functions.invoke("remove-watermark", {
           body: { imageDataUrl },

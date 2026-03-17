@@ -15,6 +15,74 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+function extractCleanedImage(data: any): string | null {
+  const images = data?.choices?.[0]?.message?.images;
+  if (images?.length > 0) {
+    const imgUrl = images[0]?.image_url?.url;
+    if (imgUrl?.startsWith("data:")) return imgUrl;
+  }
+
+  const content = data?.choices?.[0]?.message?.content;
+  if (Array.isArray(content)) {
+    for (const item of content) {
+      if (item?.type === "image_url" && item?.image_url?.url?.startsWith("data:")) {
+        return item.image_url.url;
+      }
+    }
+  } else if (typeof content === "string") {
+    const match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+    if (match) return match[0];
+  }
+
+  const parts = data?.choices?.[0]?.message?.parts || [];
+  for (const part of parts) {
+    if (part?.inline_data?.data) {
+      const mime = part.inline_data.mime_type || "image/png";
+      return `data:${mime};base64,${part.inline_data.data}`;
+    }
+  }
+
+  return null;
+}
+
+async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Remove all visible watermarks, agency logos, brand marks, phone numbers, labels, and overlaid text from this real-estate photo. Reconstruct the hidden pixels naturally, preserve perspective and room details, do not crop, do not alter composition, and return only the cleaned image.",
+            },
+            {
+              type: "image_url",
+              image_url: { url: dataUri },
+            },
+          ],
+        },
+      ],
+      modalities: ["image", "text"],
+      temperature: 0.05,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    return { ok: false, status: response.status, errorText: errText, cleanedDataUri: null };
+  }
+
+  const data = await response.json();
+  return { ok: true, status: 200, errorText: null, cleanedDataUri: extractCleanedImage(data) };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -55,83 +123,30 @@ serve(async (req) => {
       dataUri = `data:${contentType};base64,${bytesToBase64(bytes)}`;
     }
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Remove all visible watermarks, agency logos, brand marks, phone numbers, labels, and overlaid text from this real-estate photo. Reconstruct the hidden pixels naturally, preserve perspective and room details, do not crop, do not change furniture placement, and return only the cleaned image.",
-              },
-              {
-                type: "image_url",
-                image_url: { url: dataUri },
-              },
-            ],
-          },
-        ],
-        modalities: ["image", "text"],
-        temperature: 0.05,
-      }),
-    });
+    const models = ["google/gemini-3-pro-image-preview", "google/gemini-3.1-flash-image-preview"];
+    let lastError = "AI did not return a cleaned image";
 
-    if (!aiResp.ok) {
-      const errText = await aiResp.text();
-      console.error("AI API error:", aiResp.status, errText);
-      return new Response(JSON.stringify({ error: "AI processing failed", cleaned: false }), {
-        status: aiResp.status === 402 || aiResp.status === 429 ? aiResp.status : 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const data = await aiResp.json();
-    let cleanedDataUri: string | null = null;
-
-    const images = data?.choices?.[0]?.message?.images;
-    if (images?.length > 0) {
-      const imgUrl = images[0]?.image_url?.url;
-      if (imgUrl?.startsWith("data:")) cleanedDataUri = imgUrl;
-    }
-
-    if (!cleanedDataUri) {
-      const content = data?.choices?.[0]?.message?.content;
-      if (Array.isArray(content)) {
-        for (const item of content) {
-          if (item?.type === "image_url" && item?.image_url?.url?.startsWith("data:")) {
-            cleanedDataUri = item.image_url.url;
-            break;
-          }
-        }
-      } else if (typeof content === "string") {
-        const match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-        if (match) cleanedDataUri = match[0];
+    for (const model of models) {
+      const result = await tryModel(lovableApiKey, model, dataUri!);
+      if (result.ok && result.cleanedDataUri) {
+        return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-    }
 
-    if (!cleanedDataUri) {
-      const parts = data?.choices?.[0]?.message?.parts || [];
-      for (const part of parts) {
-        if (part?.inline_data?.data) {
-          const mime = part.inline_data.mime_type || "image/png";
-          cleanedDataUri = `data:${mime};base64,${part.inline_data.data}`;
-          break;
+      if (!result.ok) {
+        lastError = result.errorText || `AI processing failed for ${model}`;
+        console.error(`AI API error (${model}):`, result.status, result.errorText);
+        if (result.status === 402 || result.status === 429) {
+          return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
+            status: result.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
       }
     }
 
-    return new Response(JSON.stringify({
-      cleaned: Boolean(cleanedDataUri),
-      dataUri: cleanedDataUri,
-      error: cleanedDataUri ? null : "AI did not return a cleaned image",
-    }), {
+    return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
