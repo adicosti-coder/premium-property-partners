@@ -154,8 +154,8 @@ export async function compressImage(
       `Compressed: ${file.name} (${formatBytes(file.size)}) → ${newFileName} (${formatBytes(compressedFile.size)}) - ${compressionRatio}% reduction`
     );
 
-    // If compressed file is larger, return original
-    if (compressedFile.size >= file.size) {
+    // If compressed file is larger, keep original unless conversion was forced
+    if (compressedFile.size >= file.size && !opts.force && compressedFile.type === file.type) {
       console.log('Compressed file is larger, using original');
       return file;
     }

@@ -274,7 +274,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
       try {
         const sourceBlob = (await fetchImageBlob(updated[i].originalUrl)).blob;
-        const imageDataUrl = await blobToDataUrl(sourceBlob);
+        const imageDataUrl = await prepareImageForWatermarkRemoval(sourceBlob, i);
         const { data, error } = await supabase.functions.invoke("remove-watermark", {
           body: { imageDataUrl },
         });
@@ -299,8 +299,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
           status: "done",
           error: undefined,
         };
-      } catch {
-        updated[i] = { ...updated[i], status: "error", error: "Eliminare watermark eșuată" };
+      } catch (err) {
+        updated[i] = {
+          ...updated[i],
+          status: "error",
+          error: err instanceof Error ? err.message : "Eliminare watermark eșuată",
+        };
       }
 
       completed++;
