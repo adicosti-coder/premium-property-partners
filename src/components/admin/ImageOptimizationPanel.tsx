@@ -93,6 +93,21 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promise<string> {
+  const mimeType = blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+  const extension = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
+  const sourceFile = new File([blob], `watermark-source-${index}.${extension}`, { type: mimeType });
+  const normalizedFile = await compressImage(sourceFile, {
+    maxWidth: 1600,
+    maxHeight: 1600,
+    quality: 0.92,
+    outputType: "image/jpeg",
+    force: true,
+  });
+
+  return blobToDataUrl(normalizedFile);
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({

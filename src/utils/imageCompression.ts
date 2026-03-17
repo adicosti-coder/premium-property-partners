@@ -7,6 +7,7 @@ interface CompressionOptions {
   maxHeight?: number;
   quality?: number;
   outputType?: 'image/jpeg' | 'image/webp';
+  force?: boolean;
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
@@ -14,6 +15,7 @@ const DEFAULT_OPTIONS: CompressionOptions = {
   maxHeight: 1920,
   quality: 0.85,
   outputType: 'image/webp',
+  force: false,
 };
 
 /**
