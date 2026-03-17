@@ -217,10 +217,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
         });
 
         const optimizedUrl = URL.createObjectURL(compressed);
+        const persistedUrl = await blobToDataUrl(compressed);
 
         updated[i] = {
           ...updated[i],
           url: optimizedUrl,
+          persistedUrl,
           optimized: true,
           optimizedBlob: compressed,
           optimizedSize: compressed.size,
