@@ -19,14 +19,17 @@ function extractCleanedImage(data: any): string | null {
   const images = data?.choices?.[0]?.message?.images;
   if (images?.length > 0) {
     const imgUrl = images[0]?.image_url?.url;
-    if (imgUrl?.startsWith("data:")) return imgUrl;
+    if (typeof imgUrl === "string" && (imgUrl.startsWith("data:") || imgUrl.startsWith("http"))) {
+      return imgUrl;
+    }
   }
 
   const content = data?.choices?.[0]?.message?.content;
   if (Array.isArray(content)) {
     for (const item of content) {
-      if (item?.type === "image_url" && item?.image_url?.url?.startsWith("data:")) {
-        return item.image_url.url;
+      const imgUrl = item?.image_url?.url;
+      if (item?.type === "image_url" && typeof imgUrl === "string" && (imgUrl.startsWith("data:") || imgUrl.startsWith("http"))) {
+        return imgUrl;
       }
     }
   } else if (typeof content === "string") {
@@ -45,7 +48,27 @@ function extractCleanedImage(data: any): string | null {
   return null;
 }
 
-async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
+function extractFailureReason(data: any): string | null {
+  const message = data?.choices?.[0]?.message;
+  const content = message?.content;
+
+  if (typeof content === "string" && content.trim()) {
+    return content.trim();
+  }
+
+  if (Array.isArray(content)) {
+    const textParts = content
+      .filter((item: any) => item?.type === "text" && typeof item?.text === "string")
+      .map((item: any) => item.text.trim())
+      .filter(Boolean);
+
+    if (textParts.length > 0) return textParts.join(" ");
+  }
+
+  return null;
+}
+
+async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -60,7 +83,7 @@ async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
           content: [
             {
               type: "text",
-              text: "Remove all visible watermarks, agency logos, brand marks, phone numbers, labels, and overlaid text from this real-estate photo. Reconstruct the hidden pixels naturally, preserve perspective and room details, do not crop, do not alter composition, and return only the cleaned image.",
+              text: prompt,
             },
             {
               type: "image_url",
@@ -80,7 +103,12 @@ async function tryModel(lovableApiKey: string, model: string, dataUri: string) {
   }
 
   const data = await response.json();
-  return { ok: true, status: 200, errorText: null, cleanedDataUri: extractCleanedImage(data) };
+  return {
+    ok: true,
+    status: 200,
+    errorText: extractFailureReason(data),
+    cleanedDataUri: extractCleanedImage(data),
+  };
 }
 
 serve(async (req) => {
@@ -123,26 +151,45 @@ serve(async (req) => {
       dataUri = `data:${contentType};base64,${bytesToBase64(bytes)}`;
     }
 
-    const models = ["google/gemini-3-pro-image-preview", "google/gemini-3.1-flash-image-preview"];
+    const attempts = [
+      {
+        model: "google/gemini-3.1-flash-image-preview",
+        prompt:
+          "Restore this real estate interior photo by removing overlaid listing labels, brand text, phone numbers, and logos that were added on top of the image. Fill in the hidden background naturally, preserve geometry and lighting, keep the same framing, and return only the restored image.",
+      },
+      {
+        model: "google/gemini-3-pro-image-preview",
+        prompt:
+          "Remove the visible overlaid text and graphic labels from this room photo, reconstruct the obscured background naturally, preserve perspective and room details, and return only the edited image.",
+      },
+      {
+        model: "google/gemini-2.5-flash-image",
+        prompt:
+          "This is my own real-estate listing photo. Please clean the overlaid marketing graphics from it: remove translucent logos, phone numbers, and labels, reconstruct the covered pixels naturally, keep composition identical, and return only the cleaned image.",
+      },
+    ];
     let lastError = "AI did not return a cleaned image";
 
-    for (const model of models) {
-      const result = await tryModel(lovableApiKey, model, dataUri!);
+    for (const attempt of attempts) {
+      const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, dataUri!);
       if (result.ok && result.cleanedDataUri) {
-        return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model }), {
+        return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model: attempt.model }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       if (!result.ok) {
-        lastError = result.errorText || `AI processing failed for ${model}`;
-        console.error(`AI API error (${model}):`, result.status, result.errorText);
+        lastError = result.errorText || `AI processing failed for ${attempt.model}`;
+        console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
         if (result.status === 402 || result.status === 429) {
           return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
             status: result.status,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+      } else if (result.errorText) {
+        lastError = result.errorText;
+        console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
       }
     }
 
