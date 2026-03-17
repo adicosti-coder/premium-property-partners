@@ -68,47 +68,60 @@ function extractFailureReason(data: any): string | null {
   return null;
 }
 
-async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${lovableApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: prompt,
-            },
-            {
-              type: "image_url",
-              image_url: { url: dataUri },
-            },
-          ],
-        },
-      ],
-      modalities: ["image", "text"],
-      temperature: 0.05,
-    }),
-  });
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  if (!response.ok) {
-    const errText = await response.text();
-    return { ok: false, status: response.status, errorText: errText, cleanedDataUri: null };
+async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
+  const retryDelays = [0, 2000, 5000];
+
+  for (let attemptIndex = 0; attemptIndex < retryDelays.length; attemptIndex++) {
+    const retryDelay = retryDelays[attemptIndex];
+    if (retryDelay > 0) await sleep(retryDelay);
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: prompt,
+              },
+              {
+                type: "image_url",
+                image_url: { url: dataUri },
+              },
+            ],
+          },
+        ],
+        modalities: ["image", "text"],
+        temperature: 0.05,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      const canRetry = response.status === 429 && attemptIndex < retryDelays.length - 1;
+      if (canRetry) continue;
+      return { ok: false, status: response.status, errorText: errText, cleanedDataUri: null };
+    }
+
+    const data = await response.json();
+    return {
+      ok: true,
+      status: 200,
+      errorText: extractFailureReason(data),
+      cleanedDataUri: extractCleanedImage(data),
+    };
   }
 
-  const data = await response.json();
-  return {
-    ok: true,
-    status: 200,
-    errorText: extractFailureReason(data),
-    cleanedDataUri: extractCleanedImage(data),
-  };
+  return { ok: false, status: 429, errorText: "AI rate limit hit after retries", cleanedDataUri: null };
 }
 
 serve(async (req) => {
@@ -151,46 +164,31 @@ serve(async (req) => {
       dataUri = `data:${contentType};base64,${bytesToBase64(bytes)}`;
     }
 
-    const attempts = [
-      {
-        model: "google/gemini-3.1-flash-image-preview",
-        prompt:
-          "Restore this real estate interior photo by removing overlaid listing labels, brand text, phone numbers, and logos that were added on top of the image. Fill in the hidden background naturally, preserve geometry and lighting, keep the same framing, and return only the restored image.",
-      },
-      {
-        model: "google/gemini-3-pro-image-preview",
-        prompt:
-          "Remove the visible overlaid text and graphic labels from this room photo, reconstruct the obscured background naturally, preserve perspective and room details, and return only the edited image.",
-      },
-      {
-        model: "google/gemini-2.5-flash-image",
-        prompt:
-          "This is my own real-estate listing photo. Please clean the overlaid marketing graphics from it: remove translucent logos, phone numbers, and labels, reconstruct the covered pixels naturally, keep composition identical, and return only the cleaned image.",
-      },
-    ];
+    const attempt = {
+      model: "google/gemini-2.5-flash-image",
+      prompt:
+        "Clean the overlaid marketing graphics from this interior listing photo: remove translucent agency logo, phone number, and room label overlays; reconstruct the hidden background naturally; preserve layout and lighting; return only the edited image.",
+    };
     let lastError = "AI did not return a cleaned image";
 
-    for (const attempt of attempts) {
-      const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, dataUri!);
-      if (result.ok && result.cleanedDataUri) {
-        return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model: attempt.model }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, dataUri!);
+    if (result.ok && result.cleanedDataUri) {
+      return new Response(JSON.stringify({ cleaned: true, dataUri: result.cleanedDataUri, model: attempt.model }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      if (!result.ok) {
-        lastError = result.errorText || `AI processing failed for ${attempt.model}`;
-        console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
-        if (result.status === 402 || result.status === 429) {
-          return new Response(JSON.stringify({ cleaned: false, error: lastError }), {
-            status: result.status,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } else if (result.errorText) {
-        lastError = result.errorText;
-        console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
-      }
+    if (!result.ok) {
+      lastError = result.errorText || `AI processing failed for ${attempt.model}`;
+      console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
+      return new Response(JSON.stringify({ cleaned: false, error: lastError, status: result.status, retryable: result.status === 429 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (result.errorText) {
+      lastError = result.errorText;
+      console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
     }
 
     return new Response(JSON.stringify({ cleaned: false, error: lastError }), {

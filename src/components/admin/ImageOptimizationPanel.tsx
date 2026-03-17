@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "@/hooks/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
@@ -107,6 +108,9 @@ async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promi
 
   return blobToDataUrl(normalizedFile);
 }
+
+const WATERMARK_REQUEST_DELAY_MS = 2200;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
@@ -265,11 +269,17 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     const total = selected.length;
     const updated = [...items];
     let completed = 0;
+    let stoppedByLimit = false;
 
     for (let i = 0; i < updated.length; i++) {
       if (!updated[i].selected) continue;
+      if (stoppedByLimit) {
+        updated[i] = { ...updated[i], status: "idle", error: undefined };
+        setItems([...updated]);
+        continue;
+      }
 
-      updated[i] = { ...updated[i], status: "optimizing" };
+      updated[i] = { ...updated[i], status: "optimizing", error: undefined };
       setItems([...updated]);
 
       try {
@@ -281,7 +291,22 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
         if (error) throw new Error(error.message);
         if (!data?.cleaned || !data?.dataUri) {
-          throw new Error(data?.error || "AI nu a returnat o imagine curățată");
+          const backendMessage = data?.error || "AI nu a returnat o imagine curățată";
+          const statusCode = Number(data?.status || 0);
+          const isRateLimited = statusCode === 429 || /resource exhausted|try again later|rate limit/i.test(backendMessage);
+          const isOutOfCredits = statusCode === 402 || /payment required|add funds|credits/i.test(backendMessage);
+
+          if (isRateLimited) {
+            stoppedByLimit = true;
+            throw new Error("Serviciul AI este temporar ocupat. Am oprit lotul ca să nu mai consume inutil — reîncearcă peste 30-60 secunde.");
+          }
+
+          if (isOutOfCredits) {
+            stoppedByLimit = true;
+            throw new Error("Procesarea AI nu poate continua acum deoarece creditele pentru AI sunt epuizate.");
+          }
+
+          throw new Error(backendMessage);
         }
 
         const resp = await fetch(data.dataUri);
@@ -310,10 +335,22 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       completed++;
       setWatermarkProgress(Math.round((completed / total) * 100));
       setItems([...updated]);
+
+      if (!stoppedByLimit && completed < total) {
+        await sleep(WATERMARK_REQUEST_DELAY_MS);
+      }
     }
 
     syncImages(updated);
     setIsRemovingWatermarks(false);
+
+    if (stoppedByLimit) {
+      toast({
+        title: "Procesare oprită temporar",
+        description: "Serviciul AI a limitat cererile. Am oprit lotul ca să evit consum inutil; reîncearcă peste 30-60 secunde.",
+        variant: "destructive",
+      });
+    }
   }, [items]);
 
   // Reset single image
@@ -714,6 +751,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
                           </span>
                         )}
                       </div>
+                    )}
+
+                    {item.status === "error" && item.error && (
+                      <p className="text-[10px] leading-snug text-destructive line-clamp-3">
+                        {item.error}
+                      </p>
                     )}
 
                     {/* Quick action */}
