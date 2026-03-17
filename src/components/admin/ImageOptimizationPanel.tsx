@@ -117,7 +117,7 @@ async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promi
   return blobToDataUrl(normalizedFile);
 }
 
-const WATERMARK_REQUEST_DELAY_MS = 2200;
+const WATERMARK_REQUEST_DELAY_MS = 1500;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(normalizeClientImageUrl(url));
 
@@ -320,7 +320,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
           if (isPolicyBlocked) {
             stoppedByPolicy = true;
-            throw new Error("Providerul AI a blocat eliminarea watermark pentru această imagine. Am oprit lotul imediat ca să nu consume credite inutil pe restul.");
+            throw new Error("Dewatermark nu a putut procesa această imagine. Lotul a fost oprit.");
           }
 
           if (isRateLimited) {
@@ -374,13 +374,13 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     if (stoppedByPolicy) {
       toast({
         title: "Procesare oprită",
-        description: "Providerul AI a refuzat eliminarea watermark-ului pe această sursă. Lotul a fost oprit imediat pentru a limita consumul de credite.",
+        description: "Dewatermark nu a putut procesa una din imagini. Lotul a fost oprit pentru a limita consumul de credite.",
         variant: "destructive",
       });
     } else if (stoppedByLimit) {
       toast({
         title: "Procesare oprită temporar",
-        description: "Serviciul AI a limitat cererile. Am oprit lotul ca să evit consum inutil; reîncearcă peste 30-60 secunde.",
+        description: "Serviciul Dewatermark a limitat cererile sau creditele sunt epuizate. Reîncearcă peste câteva secunde.",
         variant: "destructive",
       });
     }
