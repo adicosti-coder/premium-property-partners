@@ -93,6 +93,21 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promise<string> {
+  const mimeType = blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+  const extension = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
+  const sourceFile = new File([blob], `watermark-source-${index}.${extension}`, { type: mimeType });
+  const normalizedFile = await compressImage(sourceFile, {
+    maxWidth: 1600,
+    maxHeight: 1600,
+    quality: 0.92,
+    outputType: "image/jpeg",
+    force: true,
+  });
+
+  return blobToDataUrl(normalizedFile);
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
@@ -259,7 +274,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
       try {
         const sourceBlob = (await fetchImageBlob(updated[i].originalUrl)).blob;
-        const imageDataUrl = await blobToDataUrl(sourceBlob);
+        const imageDataUrl = await prepareImageForWatermarkRemoval(sourceBlob, i);
         const { data, error } = await supabase.functions.invoke("remove-watermark", {
           body: { imageDataUrl },
         });
@@ -284,8 +299,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
           status: "done",
           error: undefined,
         };
-      } catch {
-        updated[i] = { ...updated[i], status: "error", error: "Eliminare watermark eșuată" };
+      } catch (err) {
+        updated[i] = {
+          ...updated[i],
+          status: "error",
+          error: err instanceof Error ? err.message : "Eliminare watermark eșuată",
+        };
       }
 
       completed++;
