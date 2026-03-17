@@ -22,6 +22,7 @@ import {
 interface ImageItem {
   url: string;
   originalUrl: string;
+  persistedUrl?: string;
   optimized: boolean;
   optimizedBlob?: Blob;
   originalSize?: number;
