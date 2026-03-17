@@ -98,6 +98,8 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
   const [isBatchOptimizing, setIsBatchOptimizing] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isRemovingWatermarks, setIsRemovingWatermarks] = useState(false);
+  const [watermarkProgress, setWatermarkProgress] = useState(0);
 
   // Analyze all images (fetch size & dimensions)
   const analyzeImages = useCallback(async () => {
