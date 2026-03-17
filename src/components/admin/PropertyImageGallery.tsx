@@ -219,6 +219,95 @@ export default function PropertyImageGallery({
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Draft images state
+  const [draftImages, setDraftImages] = useState<(PropertyImage & { is_published?: boolean; original_url?: string })[]>([]);
+  const [isDraftsOpen, setIsDraftsOpen] = useState(false);
+  const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
+  const [removingWatermarkId, setRemovingWatermarkId] = useState<string | null>(null);
+
+  // Fetch draft images
+  useEffect(() => {
+    const fetchDrafts = async () => {
+      const { data } = await supabase
+        .from('property_images')
+        .select('*')
+        .eq('property_id', propertyId)
+        .eq('is_published', false)
+        .order('created_at', { ascending: true });
+      setDraftImages(data || []);
+    };
+    fetchDrafts();
+  }, [propertyId, images]);
+
+  // Publish a draft image
+  const handlePublishDraft = async (draft: PropertyImage) => {
+    setPublishingIds(prev => new Set(prev).add(draft.id));
+    try {
+      const nextOrder = images.length;
+      const { error } = await supabase
+        .from('property_images')
+        .update({ is_published: true, display_order: nextOrder })
+        .eq('id', draft.id);
+      if (error) throw error;
+
+      // Update parent
+      const published = { ...draft, is_published: true, display_order: nextOrder };
+      onImagesChange([...images, published]);
+      setDraftImages(prev => prev.filter(d => d.id !== draft.id));
+
+      // Update properties.images array
+      const allPublished = [...images, published];
+      await supabase.from('properties').update({
+        images: allPublished.map(i => i.image_path),
+        ...(allPublished.length === 1 ? { image_path: published.image_path } : {}),
+      }).eq('id', propertyId);
+
+      toast({ title: "✅ Imagine publicată!", description: "Imaginea este acum vizibilă pe site." });
+    } catch (err) {
+      console.error("Error publishing draft:", err);
+      toast({ title: "Eroare", description: "Nu s-a putut publica imaginea", variant: "destructive" });
+    } finally {
+      setPublishingIds(prev => { const s = new Set(prev); s.delete(draft.id); return s; });
+    }
+  };
+
+  // Remove watermark from a draft image using Dewatermark API
+  const handleRemoveWatermark = async (draft: PropertyImage) => {
+    setRemovingWatermarkId(draft.id);
+    try {
+      const imageUrl = draft.image_path.startsWith('http') 
+        ? draft.image_path 
+        : supabase.storage.from('property-images').getPublicUrl(draft.image_path).data.publicUrl;
+
+      const { data, error } = await supabase.functions.invoke('remove-watermark', {
+        body: { imageUrl },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.cleaned) throw new Error(data?.error || 'Eliminare watermark eșuată');
+
+      const newImageUrl = data.imageUrl || data.dataUri;
+
+      // Update the draft image path in DB
+      await supabase
+        .from('property_images')
+        .update({ image_path: newImageUrl })
+        .eq('id', draft.id);
+
+      setDraftImages(prev => prev.map(d => d.id === draft.id ? { ...d, image_path: newImageUrl } : d));
+      toast({ title: "✅ Watermark eliminat!", description: "Imaginea a fost procesată cu succes." });
+    } catch (err) {
+      console.error("Watermark removal error:", err);
+      toast({ 
+        title: "Eroare watermark", 
+        description: err instanceof Error ? err.message : "Eroare necunoscută", 
+        variant: "destructive" 
+      });
+    } finally {
+      setRemovingWatermarkId(null);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
