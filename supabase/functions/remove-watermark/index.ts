@@ -6,90 +6,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function bytesToBase64(bytes: Uint8Array): string {
-  const chunkSize = 8192;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-    for (let j = 0; j < chunk.length; j++) binary += String.fromCharCode(chunk[j]);
-  }
-  return btoa(binary);
+const DEWATERMARK_URL = "https://platform.dewatermark.ai/api/object_removal/v2/erase_watermark";
+
+function extensionFromContentType(ct: string): string {
+  if (ct.includes("png")) return "png";
+  if (ct.includes("webp")) return "webp";
+  return "jpg";
 }
 
-function extractCleanedImage(data: any): string | null {
-  const images = data?.choices?.[0]?.message?.images;
-  if (images?.length > 0) {
-    const imgUrl = images[0]?.image_url?.url;
-    if (typeof imgUrl === "string" && (imgUrl.startsWith("data:") || imgUrl.startsWith("http"))) {
-      return imgUrl;
-    }
-  }
-
-  const content = data?.choices?.[0]?.message?.content;
-  if (Array.isArray(content)) {
-    for (const item of content) {
-      const imgUrl = item?.image_url?.url;
-      if (item?.type === "image_url" && typeof imgUrl === "string" && (imgUrl.startsWith("data:") || imgUrl.startsWith("http"))) {
-        return imgUrl;
-      }
-    }
-  } else if (typeof content === "string") {
-    const match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-    if (match) return match[0];
-  }
-
-  const parts = data?.choices?.[0]?.message?.parts || [];
-  for (const part of parts) {
-    if (part?.inline_data?.data) {
-      const mime = part.inline_data.mime_type || "image/png";
-      return `data:${mime};base64,${part.inline_data.data}`;
-    }
-  }
-
-  return null;
-}
-
-function extractFailureReason(data: any): string | null {
-  const message = data?.choices?.[0]?.message;
-  const content = message?.content;
-
-  if (typeof content === "string" && content.trim()) {
-    return content.trim();
-  }
-
-  if (Array.isArray(content)) {
-    const textParts = content
-      .filter((item: any) => item?.type === "text" && typeof item?.text === "string")
-      .map((item: any) => item.text.trim())
-      .filter(Boolean);
-
-    if (textParts.length > 0) return textParts.join(" ");
-  }
-
-  return null;
-}
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function isPolicyBlockedMessage(message: string | null | undefined): boolean {
-  if (!message) return false;
-
-  return /cannot fulfill this request|respecting intellectual property|copyright|watermark|branding|logo|phone numbers|illegal|unethical/i.test(message);
-}
-
-function canPassRemoteUrlToAi(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-    return hostname.endsWith(".apollo.olxcdn.com") || hostname === "apollo.olxcdn.com";
-  } catch {
-    return false;
-  }
+async function fetchImageAsBytes(url: string): Promise<{ bytes: Uint8Array; contentType: string }> {
+  const resp = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)" },
+  });
+  if (!resp.ok) throw new Error("Failed to fetch source image");
+  const contentType = resp.headers.get("content-type") || "image/jpeg";
+  const bytes = new Uint8Array(await resp.arrayBuffer());
+  return { bytes, contentType };
 }
 
 function parseDataUri(dataUri: string): { bytes: Uint8Array; contentType: string } | null {
   const match = dataUri.match(/^data:(image\/[^;]+);base64,(.+)$/);
   if (!match) return null;
-
   const [, contentType, base64] = match;
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -97,95 +34,27 @@ function parseDataUri(dataUri: string): { bytes: Uint8Array; contentType: string
   return { bytes, contentType };
 }
 
-function extensionFromContentType(contentType: string): string {
-  if (contentType.includes("png")) return "png";
-  if (contentType.includes("webp")) return "webp";
-  if (contentType.includes("gif")) return "gif";
-  return "jpg";
-}
-
-async function uploadCleanedImage(cleanedImage: string) {
-  if (!cleanedImage.startsWith("data:")) {
-    return { imageUrl: cleanedImage, size: null };
-  }
-
-  const parsed = parseDataUri(cleanedImage);
-  if (!parsed) throw new Error("Invalid cleaned image payload");
-
+async function uploadToStorage(base64Image: string, contentType: string): Promise<{ imageUrl: string; size: number }> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Storage backend not configured");
-  }
+  if (!supabaseUrl || !supabaseServiceKey) throw new Error("Storage backend not configured");
+
+  const binary = atob(base64Image);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const extension = extensionFromContentType(parsed.contentType);
-  const filePath = `watermark-cleaned/${crypto.randomUUID()}.${extension}`;
+  const ext = extensionFromContentType(contentType);
+  const filePath = `watermark-cleaned/${crypto.randomUUID()}.${ext}`;
 
   const { error } = await supabase.storage
     .from("property-images")
-    .upload(filePath, parsed.bytes, { contentType: parsed.contentType, upsert: false });
+    .upload(filePath, bytes, { contentType, upsert: false });
 
-  if (error) {
-    throw new Error(`Storage upload failed: ${error.message}`);
-  }
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
 
   const { data } = supabase.storage.from("property-images").getPublicUrl(filePath);
-  return { imageUrl: data.publicUrl, size: parsed.bytes.byteLength };
-}
-
-async function tryModel(lovableApiKey: string, model: string, prompt: string, imageInput: string) {
-  const retryDelays = [0, 2000, 5000];
-
-  for (let attemptIndex = 0; attemptIndex < retryDelays.length; attemptIndex++) {
-    const retryDelay = retryDelays[attemptIndex];
-    if (retryDelay > 0) await sleep(retryDelay);
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: prompt,
-              },
-              {
-                type: "image_url",
-                image_url: { url: imageInput },
-              },
-            ],
-          },
-        ],
-        modalities: ["image", "text"],
-        temperature: 0.05,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      const canRetry = response.status === 429 && attemptIndex < retryDelays.length - 1;
-      if (canRetry) continue;
-      return { ok: false, status: response.status, errorText: errText, cleanedDataUri: null };
-    }
-
-    const data = await response.json();
-    return {
-      ok: true,
-      status: 200,
-      errorText: extractFailureReason(data),
-      cleanedDataUri: extractCleanedImage(data),
-    };
-  }
-
-  return { ok: false, status: 429, errorText: "AI rate limit hit after retries", cleanedDataUri: null };
+  return { imageUrl: data.publicUrl, size: bytes.byteLength };
 }
 
 serve(async (req) => {
@@ -194,9 +63,9 @@ serve(async (req) => {
   }
 
   try {
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      return new Response(JSON.stringify({ error: "AI key not configured" }), {
+    const apiKey = Deno.env.get("DEWATERMARK_API_KEY");
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "Dewatermark API key not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -210,93 +79,93 @@ serve(async (req) => {
       });
     }
 
-    let imageInput = imageDataUrl as string | undefined;
+    // Get image bytes
+    let imageBytes: Uint8Array;
+    let contentType = "image/jpeg";
 
-    if (!imageInput && imageUrl) {
-      if (canPassRemoteUrlToAi(imageUrl)) {
-        imageInput = imageUrl;
-      } else {
-        const imgResp = await fetch(imageUrl, {
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)" },
-        });
-        if (!imgResp.ok) {
-          return new Response(JSON.stringify({ error: "Failed to fetch image source" }), {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-
-        const contentType = imgResp.headers.get("content-type") || "image/jpeg";
-        const bytes = new Uint8Array(await imgResp.arrayBuffer());
-        imageInput = `data:${contentType};base64,${bytesToBase64(bytes)}`;
-      }
+    if (imageDataUrl) {
+      const parsed = parseDataUri(imageDataUrl);
+      if (!parsed) throw new Error("Invalid image data URI");
+      imageBytes = parsed.bytes;
+      contentType = parsed.contentType;
+    } else {
+      const fetched = await fetchImageAsBytes(imageUrl);
+      imageBytes = fetched.bytes;
+      contentType = fetched.contentType;
     }
 
-    const attempt = {
-      model: "google/gemini-2.5-flash-image",
-      prompt:
-        "Restore this interior listing photo by removing overlaid branding, room labels, logos, and phone numbers; reconstruct hidden background naturally; preserve room geometry and lighting; return only the edited image.",
-    };
-    let lastError = "AI did not return a cleaned image";
+    // Build multipart form for Dewatermark API
+    const formData = new FormData();
+    const blob = new Blob([imageBytes], { type: "image/jpeg" });
+    formData.append("original_preview_image", blob, "image.jpeg");
+    formData.append("remove_text", "true");
+    formData.append("predict_mode", "3.0");
 
-    const result = await tryModel(lovableApiKey, attempt.model, attempt.prompt, imageInput!);
-    if (result.ok && result.cleanedDataUri) {
-      try {
-        const uploaded = await uploadCleanedImage(result.cleanedDataUri);
-        return new Response(JSON.stringify({
-          cleaned: true,
-          imageUrl: uploaded.imageUrl,
-          cleanedSize: uploaded.size,
-          model: attempt.model,
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        return new Response(JSON.stringify({
-          cleaned: true,
-          dataUri: result.cleanedDataUri,
-          model: attempt.model,
-          uploadFallback: true,
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
+    console.log(`Calling Dewatermark API for image (${imageBytes.byteLength} bytes)...`);
 
-    if (!result.ok) {
-      lastError = result.errorText || `AI processing failed for ${attempt.model}`;
-      console.error(`AI API error (${attempt.model}):`, result.status, result.errorText);
+    const dwResponse = await fetch(DEWATERMARK_URL, {
+      method: "POST",
+      headers: { "X-API-KEY": apiKey },
+      body: formData,
+    });
+
+    if (!dwResponse.ok) {
+      const errText = await dwResponse.text();
+      console.error("Dewatermark API error:", dwResponse.status, errText);
+
+      const isRateLimited = dwResponse.status === 429;
+      const isOutOfCredits = dwResponse.status === 402 || dwResponse.status === 403;
+
       return new Response(JSON.stringify({
         cleaned: false,
-        error: lastError,
-        status: result.status,
-        retryable: result.status === 429,
-        code: isPolicyBlockedMessage(lastError) ? "policy_blocked" : undefined,
-        blocked: isPolicyBlockedMessage(lastError),
+        error: isRateLimited
+          ? "Serviciul Dewatermark este temporar ocupat. Reîncearcă peste câteva secunde."
+          : isOutOfCredits
+            ? "Creditele Dewatermark sunt epuizate. Verifică contul pe dewatermark.ai."
+            : `Dewatermark API error (${dwResponse.status})`,
+        status: dwResponse.status,
+        retryable: isRateLimited,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (result.errorText) {
-      lastError = result.errorText;
-      console.warn(`AI image extraction missing (${attempt.model}):`, result.errorText);
+    const dwData = await dwResponse.json();
+    const cleanedBase64 = dwData?.edited_image?.image;
+
+    if (!cleanedBase64) {
+      console.error("Dewatermark returned no image:", JSON.stringify(dwData).slice(0, 500));
+      return new Response(JSON.stringify({
+        cleaned: false,
+        error: "Dewatermark nu a returnat o imagine procesată",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const blockedByPolicy = isPolicyBlockedMessage(lastError);
-
-    return new Response(JSON.stringify({
-      cleaned: false,
-      error: blockedByPolicy
-        ? "Providerul AI integrat a refuzat editarea acestei imagini deoarece detectează eliminare de watermark/branding."
-        : lastError,
-      rawError: lastError,
-      code: blockedByPolicy ? "policy_blocked" : undefined,
-      blocked: blockedByPolicy,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Upload cleaned image to storage
+    try {
+      const uploaded = await uploadToStorage(cleanedBase64, "image/jpeg");
+      return new Response(JSON.stringify({
+        cleaned: true,
+        imageUrl: uploaded.imageUrl,
+        cleanedSize: uploaded.size,
+        model: "dewatermark-v3",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (uploadErr) {
+      console.error("Storage upload error:", uploadErr);
+      // Fallback: return as data URI
+      return new Response(JSON.stringify({
+        cleaned: true,
+        dataUri: `data:image/jpeg;base64,${cleanedBase64}`,
+        model: "dewatermark-v3",
+        uploadFallback: true,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   } catch (err) {
     console.error("Error:", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
