@@ -225,7 +225,61 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     setIsBatchOptimizing(false);
   }, [items, quality, maxWidth, autoWebp]);
 
+  // Remove watermarks from selected images using AI
+  const removeWatermarks = useCallback(async () => {
+    setIsRemovingWatermarks(true);
+    setWatermarkProgress(0);
+    const selected = items.filter((item) => item.selected);
+    const total = selected.length;
+    const updated = [...items];
+    let completed = 0;
+
+    for (let i = 0; i < updated.length; i++) {
+      if (!updated[i].selected) continue;
+
+      updated[i] = { ...updated[i], status: "optimizing" };
+      setItems([...updated]);
+
+      try {
+        const imageUrl = updated[i].url;
+        const { data, error } = await supabase.functions.invoke("remove-watermark", {
+          body: { imageUrl },
+        });
+
+        if (error) throw new Error(error.message);
+
+        if (data?.cleaned && data?.dataUri) {
+          const resp = await fetch(data.dataUri);
+          const blob = await resp.blob();
+          const optimizedUrl = URL.createObjectURL(blob);
+
+          updated[i] = {
+            ...updated[i],
+            url: optimizedUrl,
+            optimized: true,
+            optimizedBlob: blob,
+            optimizedSize: blob.size,
+            originalSize: updated[i].originalSize || blob.size,
+            status: "done",
+          };
+        } else {
+          updated[i] = { ...updated[i], status: "done" };
+        }
+      } catch {
+        updated[i] = { ...updated[i], status: "error", error: "Eliminare watermark eșuată" };
+      }
+
+      completed++;
+      setWatermarkProgress(Math.round((completed / total) * 100));
+      setItems([...updated]);
+    }
+
+    syncImages(updated);
+    setIsRemovingWatermarks(false);
+  }, [items]);
+
   // Reset single image
+
   const resetImage = (index: number) => {
     const updated = [...items];
     if (updated[index].optimized && updated[index].url.startsWith("blob:")) {
