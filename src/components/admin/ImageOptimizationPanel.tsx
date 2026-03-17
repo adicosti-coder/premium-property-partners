@@ -476,6 +476,20 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
               )}
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={removeWatermarks}
+              disabled={isRemovingWatermarks || isBatchOptimizing || isAnalyzing || selectedCount === 0}
+              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            >
+              {isRemovingWatermarks ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Eliminare watermark ({watermarkProgress}%)...</>
+              ) : (
+                <><Eraser className="w-3.5 h-3.5 mr-1.5" />Elimină Watermark ({selectedCount})</>
+              )}
+            </Button>
+
             <Button size="sm" variant="ghost" onClick={toggleSelectAll}>
               {items.every((i) => i.selected) ? "Deselectează tot" : "Selectează tot"}
             </Button>
