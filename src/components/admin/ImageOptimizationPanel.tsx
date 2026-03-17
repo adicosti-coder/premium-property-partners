@@ -346,7 +346,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
   // Sync with parent
   const syncImages = (updatedItems: ImageItem[]) => {
-    onImagesChange(updatedItems.filter((i) => i.selected).map((i) => (i.optimized ? i.originalUrl : i.url)));
+    onImagesChange(updatedItems.filter((i) => i.selected).map((i) => i.persistedUrl || i.originalUrl || i.url));
   };
 
   // Stats
