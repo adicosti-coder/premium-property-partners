@@ -320,7 +320,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
           if (isPolicyBlocked) {
             stoppedByPolicy = true;
-            throw new Error("Providerul AI a blocat eliminarea watermark pentru această imagine. Am oprit lotul imediat ca să nu consume credite inutil pe restul.");
+            throw new Error("Dewatermark nu a putut procesa această imagine. Lotul a fost oprit.");
           }
 
           if (isRateLimited) {
