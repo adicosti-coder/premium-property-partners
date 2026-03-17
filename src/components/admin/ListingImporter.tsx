@@ -194,9 +194,10 @@ const ListingImporter = () => {
       if (!data?.success) throw new Error(data?.error || "Salvare eșuată");
 
       setSaveResult(data);
+      const draftsMsg = data.drafts_saved > 0 ? ` + ${data.drafts_saved} salvate ca draft` : "";
       toast({
         title: "✅ Anunț importat!",
-        description: `„${data.property.name}" — ${data.images_uploaded} imagini încărcate.`,
+        description: `„${data.property.name}" — ${data.images_uploaded} imagini publicate${draftsMsg}.`,
       });
     } catch (err: any) {
       toast({ title: "Eroare la salvare", description: err.message, variant: "destructive" });
