@@ -68,47 +68,60 @@ function extractFailureReason(data: any): string | null {
   return null;
 }
 
-async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${lovableApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: prompt,
-            },
-            {
-              type: "image_url",
-              image_url: { url: dataUri },
-            },
-          ],
-        },
-      ],
-      modalities: ["image", "text"],
-      temperature: 0.05,
-    }),
-  });
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  if (!response.ok) {
-    const errText = await response.text();
-    return { ok: false, status: response.status, errorText: errText, cleanedDataUri: null };
+async function tryModel(lovableApiKey: string, model: string, prompt: string, dataUri: string) {
+  const retryDelays = [0, 2000, 5000];
+
+  for (let attemptIndex = 0; attemptIndex < retryDelays.length; attemptIndex++) {
+    const retryDelay = retryDelays[attemptIndex];
+    if (retryDelay > 0) await sleep(retryDelay);
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: prompt,
+              },
+              {
+                type: "image_url",
+                image_url: { url: dataUri },
+              },
+            ],
+          },
+        ],
+        modalities: ["image", "text"],
+        temperature: 0.05,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      const canRetry = response.status === 429 && attemptIndex < retryDelays.length - 1;
+      if (canRetry) continue;
+      return { ok: false, status: response.status, errorText: errText, cleanedDataUri: null };
+    }
+
+    const data = await response.json();
+    return {
+      ok: true,
+      status: 200,
+      errorText: extractFailureReason(data),
+      cleanedDataUri: extractCleanedImage(data),
+    };
   }
 
-  const data = await response.json();
-  return {
-    ok: true,
-    status: 200,
-    errorText: extractFailureReason(data),
-    cleanedDataUri: extractCleanedImage(data),
-  };
+  return { ok: false, status: 429, errorText: "AI rate limit hit after retries", cleanedDataUri: null };
 }
 
 serve(async (req) => {

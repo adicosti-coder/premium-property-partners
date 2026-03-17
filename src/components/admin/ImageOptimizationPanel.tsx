@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "@/hooks/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
