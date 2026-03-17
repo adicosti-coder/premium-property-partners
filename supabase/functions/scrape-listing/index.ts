@@ -202,14 +202,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const uploadedImages = await uploadImagesForProperty(imageUrls, supabase, newProperty.id);
+    const result = await uploadImagesForProperty(imageUrls, imageUrls, supabase, newProperty.id);
 
     return new Response(
       JSON.stringify({
         success: true,
         property: newProperty,
         extracted,
-        images_uploaded: uploadedImages.length,
+        images_uploaded: result.published.length,
+        drafts_saved: result.drafts,
         listing_type: finalListingType,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
