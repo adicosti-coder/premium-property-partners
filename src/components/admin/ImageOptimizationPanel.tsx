@@ -117,7 +117,7 @@ async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promi
   return blobToDataUrl(normalizedFile);
 }
 
-const WATERMARK_REQUEST_DELAY_MS = 2200;
+const WATERMARK_REQUEST_DELAY_MS = 1500;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(normalizeClientImageUrl(url));
 
