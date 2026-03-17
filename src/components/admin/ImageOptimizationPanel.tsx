@@ -753,6 +753,12 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
                       </div>
                     )}
 
+                    {item.status === "error" && item.error && (
+                      <p className="text-[10px] leading-snug text-destructive line-clamp-3">
+                        {item.error}
+                      </p>
+                    )}
+
                     {/* Quick action */}
                     {!item.optimized && item.status !== "optimizing" && (
                       <Button
