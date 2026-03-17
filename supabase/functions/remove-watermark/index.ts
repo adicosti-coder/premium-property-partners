@@ -71,6 +71,12 @@ function extractFailureReason(data: any): string | null {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function isPolicyBlockedMessage(message: string | null | undefined): boolean {
+  if (!message) return false;
+
+  return /cannot fulfill this request|respecting intellectual property|copyright|watermark|branding|logo|phone numbers|illegal|unethical/i.test(message);
+}
+
 function canPassRemoteUrlToAi(url: string): boolean {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
