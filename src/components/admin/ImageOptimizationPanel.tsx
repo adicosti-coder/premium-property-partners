@@ -111,6 +111,7 @@ async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promi
 
 const WATERMARK_REQUEST_DELAY_MS = 2200;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(url);
 
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
