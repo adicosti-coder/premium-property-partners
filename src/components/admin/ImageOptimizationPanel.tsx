@@ -81,6 +81,18 @@ async function fetchImageBlob(url: string): Promise<{ blob: Blob; size: number }
   return { blob, size: blob.size };
 }
 
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Conversie imagine eșuată"));
+    };
+    reader.onerror = () => reject(new Error("Conversie imagine eșuată"));
+    reader.readAsDataURL(blob);
+  });
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
