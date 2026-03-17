@@ -109,6 +109,9 @@ async function prepareImageForWatermarkRemoval(blob: Blob, index: number): Promi
   return blobToDataUrl(normalizedFile);
 }
 
+const WATERMARK_REQUEST_DELAY_MS = 2200;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
