@@ -473,6 +473,41 @@ const PropertyDetail = () => {
                 </p>
               </div>
 
+              {/* ═══════════════════════════════════════════════════════
+                  1. SPECIFICAȚII PROPRIETATE — Ce este proprietatea
+                  ═══════════════════════════════════════════════════════ */}
+
+              {/* Specificații Premium — pentru toate proprietățile din DB */}
+              {dbProperty && (
+                <Suspense fallback={null}>
+                  <PropertyPremiumSpecs specs={dbProperty} />
+                </Suspense>
+              )}
+
+              {/* Detalii Standard - doar pentru proprietăți statice fără date DB */}
+              {staticProperty && !dbProperty && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
+                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} {language === 'ro' ? 'Oaspeți' : 'Guests'}</span></div>
+                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} {language === 'ro' ? 'Dormitoare' : 'Bedrooms'}</span></div>
+                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} {language === 'ro' ? 'Băi' : 'Bathrooms'}</span></div>
+                  <div className="flex flex-col items-center"><Maximize2 className="text-primary mb-1"/><span className="text-sm font-medium">{property.size} m²</span></div>
+                </div>
+              )}
+
+              {/* ═══════════════════════════════════════════════════════
+                  2. DESPRE PROPRIETATE — Descriere detaliată
+                  ═══════════════════════════════════════════════════════ */}
+              {property.longDescription && (
+                <div>
+                  <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
+                  <p className="text-muted-foreground leading-relaxed">{language === 'en' ? property.longDescriptionEn : property.longDescription}</p>
+                </div>
+              )}
+
+              {/* ═══════════════════════════════════════════════════════
+                  3. PREȚ & ANALIZĂ INVESTIȚIE — Cât costă, ce randament
+                  ═══════════════════════════════════════════════════════ */}
+
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
               {dbProperty?.listing_type === 'inchiriere' && dbProperty.capital_necesar && (
                 <div className="bg-card border p-6 rounded-2xl">
@@ -608,29 +643,27 @@ const PropertyDetail = () => {
                 })()
               )}
 
-              {/* Specificații Premium — pentru toate proprietățile din DB */}
-              {dbProperty && (
-                <Suspense fallback={null}>
-                  <PropertyPremiumSpecs specs={dbProperty} />
-                </Suspense>
-              )}
+              {/* ═══════════════════════════════════════════════════════
+                  4. CALCULATOR INVESTIȚIE — Scenarii detaliate
+                  ═══════════════════════════════════════════════════════ */}
+              {!staticProperty && (() => {
+                const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
+                return (
+                  <InvestmentEngineV34
+                    propertyName={property.name}
+                    propertyCode={dbProperty?.property_code}
+                    defaultPrice={dbProperty?.capital_necesar || 120000}
+                    defaultRent={baseRentForEngine}
+                    defaultNightlyRate={estNightly}
+                    hideRecommendations
+                  />
+                );
+              })()}
 
-              {/* Detalii Standard - doar pentru proprietăți statice fără date DB */}
-              {staticProperty && !dbProperty && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
-                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} {language === 'ro' ? 'Oaspeți' : 'Guests'}</span></div>
-                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} {language === 'ro' ? 'Dormitoare' : 'Bedrooms'}</span></div>
-                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} {language === 'ro' ? 'Băi' : 'Bathrooms'}</span></div>
-                  <div className="flex flex-col items-center"><Maximize2 className="text-primary mb-1"/><span className="text-sm font-medium">{property.size} m²</span></div>
-                </div>
-              )}
-
-              {property.longDescription && (
-                <div>
-                  <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
-                  <p className="text-muted-foreground leading-relaxed">{language === 'en' ? property.longDescriptionEn : property.longDescription}</p>
-                </div>
-              )}
+              {/* ═══════════════════════════════════════════════════════
+                  5. MARKETING — De ce Regim Hotelier & RealTrust
+                  ═══════════════════════════════════════════════════════ */}
 
               {/* 🏨 Regim Hotelier — Randament Superior */}
               <div className="bg-gradient-to-br from-primary/5 to-accent/10 border border-primary/15 p-5 sm:p-8 rounded-2xl">
@@ -728,21 +761,9 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
-              {/* Calculator Investiție — apare pentru toate proprietățile DB */}
-              {!staticProperty && (() => {
-                const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
-                return (
-                  <InvestmentEngineV34
-                    propertyName={property.name}
-                    propertyCode={dbProperty?.property_code}
-                    defaultPrice={dbProperty?.capital_necesar || 120000}
-                    defaultRent={baseRentForEngine}
-                    defaultNightlyRate={estNightly}
-                    hideRecommendations
-                  />
-                );
-              })()}
+              {/* ═══════════════════════════════════════════════════════
+                  6. LOCAȚIE — Proximitate & Hartă
+                  ═══════════════════════════════════════════════════════ */}
 
               {/* Proximity List — walking/driving distances */}
               <PropertyProximity propertySlug={slug || ""} />
@@ -761,6 +782,9 @@ const PropertyDetail = () => {
                 <PropertyNeighborhoodMap propertySlug={slug || ''} propertyName={property.name} />
               </div>
 
+              {/* ═══════════════════════════════════════════════════════
+                  7. COMPARAȚIE & CAZARE (proprietăți statice)
+                  ═══════════════════════════════════════════════════════ */}
               {/* Comparație Prețuri, Calculator Sejur, Disponibilitate — inline după Proximitate */}
               {staticProperty && (
                 <div className="space-y-6">
@@ -769,6 +793,10 @@ const PropertyDetail = () => {
                   <AvailabilityCalendar propertyId={property.id} />
                 </div>
               )}
+
+              {/* ═══════════════════════════════════════════════════════
+                  8. SOCIAL PROOF — Recenzii & FAQ
+                  ═══════════════════════════════════════════════════════ */}
 
               {/* Recenzii oaspeți - pentru toate proprietățile cu ID */}
               {dbProperty?.id && (
