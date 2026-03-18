@@ -168,6 +168,7 @@ export default function PropertyManager() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
+  const [premiumFields, setPremiumFields] = useState<PremiumFieldsData>({ ...defaultPremiumFields });
   const [isTranslating, setIsTranslating] = useState(false);
 
   // Filters
