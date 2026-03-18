@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useRef, useCallback } from "react";
 import { MapPin, Star, Users, BedDouble, Calendar, Eye, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,117 +78,115 @@ const PropertyCard = ({
   }, [property.images, prefetchPropertyImage]);
 
   return (
-    <div
+    <PrefetchLink
+      to={`/proprietate/${property.slug}`}
+      propertyId={String(property.id)}
       className={cn(
-        "group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant",
+        "group block bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant",
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}
       style={{ transitionDelay: isVisible ? `${index * 75}ms` : "0ms" }}
       onMouseEnter={handleCardHover}
     >
       {/* Image */}
-      <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
-        <div className="relative h-48 overflow-hidden cursor-pointer">
-          <OptimizedImage
-            src={property.images[0]}
-            alt={getImageAlt(property, 0, language as 'ro' | 'en')}
-            className="w-full h-full"
-            aspectRatio="4/3"
-            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            priority={false}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="relative h-48 overflow-hidden cursor-pointer">
+        <OptimizedImage
+          src={property.images[0]}
+          alt={getImageAlt(property, 0, language as 'ro' | 'en')}
+          className="w-full h-full"
+          aspectRatio="4/3"
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Location badge */}
-          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1 max-w-[60%]">
-            <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
-            <span className="text-xs font-medium text-foreground truncate">{property.location}</span>
-          </div>
-
-          {/* Smart Features Badge */}
-          <SmartFeaturesBadge
-            features={[...property.features, ...property.amenities]}
-            className="absolute bottom-4 left-4"
-            variant="compact"
-          />
-
-          {/* Real-time viewers badge */}
-          {viewerCount >= 2 && (
-            <ViewersBadge count={viewerCount} className="absolute bottom-4 right-4" />
-          )}
-
-          {/* Rating badge */}
-          <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
-            <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-            <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
-          </div>
-
-          {/* Favorite button */}
-          {!minimal && onToggleFavorite && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleFavorite(String(property.id), property.name);
-              }}
-              className={cn(
-                "absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200",
-                isFav
-                  ? "bg-red-500 text-white"
-                  : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
-              )}
-              aria-label={
-                isFav
-                  ? language === "ro" ? `Elimină ${property.name} din favorite` : `Remove ${property.name} from favorites`
-                  : language === "ro" ? `Adaugă ${property.name} la favorite` : `Add ${property.name} to favorites`
-              }
-            >
-              <Heart className={cn("w-4 h-4", isFav && "fill-current")} />
-            </button>
-          )}
-
-          {/* Compare checkbox */}
-          {!minimal && isFav && onToggleCompare && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleCompare(property.id);
-              }}
-              aria-label={
-                isSelectedForCompare
-                  ? language === "ro" ? `Deselectează ${property.name} din comparare` : `Deselect ${property.name} from compare`
-                  : language === "ro" ? `Selectează ${property.name} pentru comparare` : `Select ${property.name} for compare`
-              }
-              className={cn(
-                "absolute bottom-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200",
-                isSelectedForCompare
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:border-primary hover:text-primary"
-              )}
-            >
-              <Check className={cn("w-4 h-4", !isSelectedForCompare && "opacity-50")} />
-            </button>
-          )}
-
-          {/* View details overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              {t.viewDetails}
-            </span>
-          </div>
+        {/* Location badge */}
+        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center gap-1 max-w-[60%]">
+          <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+          <span className="text-xs font-medium text-foreground truncate">{property.location}</span>
         </div>
-      </PrefetchLink>
+
+        {/* Smart Features Badge */}
+        <SmartFeaturesBadge
+          features={[...property.features, ...property.amenities]}
+          className="absolute bottom-4 left-4"
+          variant="compact"
+        />
+
+        {/* Real-time viewers badge */}
+        {viewerCount >= 2 && (
+          <ViewersBadge count={viewerCount} className="absolute bottom-4 right-4" />
+        )}
+
+        {/* Rating badge */}
+        <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
+          <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
+          <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
+        </div>
+
+        {/* Favorite button */}
+        {!minimal && onToggleFavorite && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleFavorite(String(property.id), property.name);
+            }}
+            className={cn(
+              "absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200",
+              isFav
+                ? "bg-red-500 text-white"
+                : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:text-red-500"
+            )}
+            aria-label={
+              isFav
+                ? language === "ro" ? `Elimină ${property.name} din favorite` : `Remove ${property.name} from favorites`
+                : language === "ro" ? `Adaugă ${property.name} la favorite` : `Add ${property.name} to favorites`
+            }
+          >
+            <Heart className={cn("w-4 h-4", isFav && "fill-current")} />
+          </button>
+        )}
+
+        {/* Compare checkbox */}
+        {!minimal && isFav && onToggleCompare && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleCompare(property.id);
+            }}
+            aria-label={
+              isSelectedForCompare
+                ? language === "ro" ? `Deselectează ${property.name} din comparare` : `Deselect ${property.name} from compare`
+                : language === "ro" ? `Selectează ${property.name} pentru comparare` : `Select ${property.name} for compare`
+            }
+            className={cn(
+              "absolute bottom-4 right-4 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200",
+              isSelectedForCompare
+                ? "bg-primary text-primary-foreground"
+                : "bg-background/90 backdrop-blur-sm border border-border text-muted-foreground hover:border-primary hover:text-primary"
+            )}
+          >
+            <Check className={cn("w-4 h-4", !isSelectedForCompare && "opacity-50")} />
+          </button>
+        )}
+
+        {/* View details overlay */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            {t.viewDetails}
+          </span>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="p-5">
         <div className="flex items-start justify-between mb-1">
-          <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
-            <h3 className="text-lg font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
-              {property.name}
-            </h3>
-          </PrefetchLink>
+          <h3 className="text-lg font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+            {property.name}
+          </h3>
           <div className="flex items-baseline gap-1 ml-2 flex-shrink-0">
             <span className="text-lg font-bold text-primary">€{displayPrice}</span>
             <span className="text-xs text-muted-foreground">{t.perNight}</span>
@@ -243,17 +240,16 @@ const PropertyCard = ({
               {t.bookDirect}
             </a>
           </Button>
-          <Button variant="booking" size="sm" asChild>
-            <Link
-              to={`/proprietate/${property.slug}`}
-              aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
-            >
-              <Eye className="w-4 h-4" />
-            </Link>
+          <Button
+            variant="booking"
+            size="sm"
+            aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
+          >
+            <Eye className="w-4 h-4" />
           </Button>
         </div>
       </div>
-    </div>
+    </PrefetchLink>
   );
 };
 
