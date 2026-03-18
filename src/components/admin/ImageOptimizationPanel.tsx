@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
+interface ImagePanelInput {
+  id: string;
+  url: string;
+}
+
 interface ImageItem {
+  id: string;
   url: string;
   originalUrl: string;
   persistedUrl?: string;
@@ -35,9 +41,17 @@ interface ImageItem {
   selected: boolean;
 }
 
+interface ImageOptimizationPanelChangeItem {
+  id: string;
+  url: string;
+  selected: boolean;
+}
+
 interface ImageOptimizationPanelProps {
-  images: string[];
-  onImagesChange: (images: string[]) => void;
+  images?: string[];
+  imageItems?: ImagePanelInput[];
+  onImagesChange?: (images: string[]) => void;
+  onImageItemsChange?: (items: ImageOptimizationPanelChangeItem[]) => void;
 }
 
 function formatBytes(bytes: number): string {
