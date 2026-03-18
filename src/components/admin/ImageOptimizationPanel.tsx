@@ -184,7 +184,8 @@ const ImageOptimizationPanel = ({
   onImageItemsChange,
 }: ImageOptimizationPanelProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [items, setItems] = useState<ImageItem[]>(() => buildImageItems(images, imageItems));
+  const latestItemsRef = useRef<ImageItem[]>(buildImageItems(images, imageItems));
+  const [items, setItems] = useState<ImageItem[]>(latestItemsRef.current);
   const [isOpen, setIsOpen] = useState(true);
   const [quality, setQuality] = useState(85);
   const [maxWidth, setMaxWidth] = useState(1920);
@@ -199,13 +200,19 @@ const ImageOptimizationPanel = ({
   useEffect(() => {
     setItems((previousItems) => {
       revokePreviewUrls(previousItems);
-      return buildImageItems(images, imageItems);
+      const nextItems = buildImageItems(images, imageItems);
+      latestItemsRef.current = nextItems;
+      return nextItems;
     });
   }, [images, imageItems]);
 
   useEffect(() => {
-    return () => revokePreviewUrls(items);
+    latestItemsRef.current = items;
   }, [items]);
+
+  useEffect(() => {
+    return () => revokePreviewUrls(latestItemsRef.current);
+  }, []);
 
   // Analyze all images (fetch size & dimensions)
   const analyzeImages = useCallback(async () => {
