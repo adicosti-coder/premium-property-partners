@@ -19,15 +19,15 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
 
-interface CazareProperty {
+import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
+
+interface CazareProperty extends PremiumFieldsData {
   id: string;
   name: string;
   slug: string | null;
   location: string;
   description_ro: string;
   description_en: string;
-  long_description_ro: string | null;
-  long_description_en: string | null;
   booking_url: string;
   features: string[];
   image_path: string | null;
@@ -51,13 +51,12 @@ interface CazareProperty {
 }
 
 const emptyProperty: Omit<CazareProperty, "id"> = {
+  ...defaultPremiumFields,
   name: "",
   slug: "",
   location: "",
   description_ro: "",
   description_en: "",
-  long_description_ro: "",
-  long_description_en: "",
   booking_url: "",
   features: [],
   image_path: null,
@@ -168,6 +167,33 @@ export default function CazareManager() {
       display_order: editingProperty.display_order,
       listing_type: "cazare",
       tag: "Cazare",
+      // Premium fields
+      balconies: editingProperty.balconies,
+      terrace_area: editingProperty.terrace_area,
+      has_storage: editingProperty.has_storage,
+      has_cellar: editingProperty.has_cellar,
+      has_elevator: editingProperty.has_elevator,
+      has_ac: editingProperty.has_ac,
+      orientation: editingProperty.orientation,
+      view_type: editingProperty.view_type,
+      intercom_type: editingProperty.intercom_type,
+      usable_area: editingProperty.usable_area,
+      built_area: editingProperty.built_area,
+      land_area: editingProperty.land_area,
+      price_per_sqm: editingProperty.price_per_sqm,
+      annual_tax: editingProperty.annual_tax,
+      monthly_maintenance: editingProperty.monthly_maintenance,
+      renovation_year: editingProperty.renovation_year,
+      property_condition: editingProperty.property_condition,
+      total_building_floors: editingProperty.total_building_floors,
+      apartments_in_building: editingProperty.apartments_in_building,
+      floor: editingProperty.floor,
+      parking: editingProperty.parking,
+      heating_type: editingProperty.heating_type,
+      energy_class: editingProperty.energy_class,
+      furnished: editingProperty.furnished,
+      construction_type: editingProperty.construction_type,
+      compartimentare: editingProperty.compartimentare,
     };
 
     let error;
@@ -476,7 +502,7 @@ export default function CazareManager() {
 
               {/* Descriptions */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-foreground">Descrieri</h3>
+                <h3 className="text-sm font-semibold text-foreground">Descrieri Scurte</h3>
                 <div>
                   <Label>Descriere scurtă (RO)</Label>
                   <Textarea value={editingProperty.description_ro} onChange={(e) => updateField("description_ro", e.target.value)} rows={2} />
@@ -485,15 +511,13 @@ export default function CazareManager() {
                   <Label>Descriere scurtă (EN)</Label>
                   <Textarea value={editingProperty.description_en} onChange={(e) => updateField("description_en", e.target.value)} rows={2} />
                 </div>
-                <div>
-                  <Label>Descriere lungă (RO)</Label>
-                  <Textarea value={editingProperty.long_description_ro || ""} onChange={(e) => updateField("long_description_ro", e.target.value)} rows={3} />
-                </div>
-                <div>
-                  <Label>Descriere lungă (EN)</Label>
-                  <Textarea value={editingProperty.long_description_en || ""} onChange={(e) => updateField("long_description_en", e.target.value)} rows={3} />
-                </div>
               </div>
+
+              {/* Premium Fields */}
+              <PropertyPremiumFields
+                data={editingProperty}
+                onChange={(key, value) => updateField(key, value as any)}
+              />
 
               {/* Features & Amenities */}
               <div className="space-y-4">

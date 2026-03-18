@@ -56,8 +56,9 @@ import {
 import PropertyImageGallery from "./PropertyImageGallery";
 import PropertyPricingManager from "./PropertyPricingManager";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
+import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
 
-interface Property {
+interface Property extends PremiumFieldsData {
   id: string;
   name: string;
   location: string;
@@ -167,6 +168,7 @@ export default function PropertyManager() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
+  const [premiumFields, setPremiumFields] = useState<PremiumFieldsData>({ ...defaultPremiumFields });
   const [isTranslating, setIsTranslating] = useState(false);
 
   // Filters
@@ -359,6 +361,7 @@ export default function PropertyManager() {
         source_platform: formData.source_platform || null,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+        ...premiumFields,
       });
 
       if (error) throw error;
@@ -435,6 +438,7 @@ export default function PropertyManager() {
           source_platform: formData.source_platform || null,
           capacity: formData.capacity ? parseInt(formData.capacity) : null,
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+          ...premiumFields,
         })
         .eq("id", editingProperty.id);
 
@@ -539,6 +543,36 @@ export default function PropertyManager() {
       capacity: property.capacity?.toString() || "",
       bedrooms: property.bedrooms?.toString() || "",
     });
+    setPremiumFields({
+      long_description_ro: property.long_description_ro,
+      long_description_en: property.long_description_en,
+      balconies: property.balconies,
+      terrace_area: property.terrace_area,
+      has_storage: property.has_storage,
+      has_cellar: property.has_cellar,
+      has_elevator: property.has_elevator,
+      has_ac: property.has_ac,
+      orientation: property.orientation,
+      view_type: property.view_type,
+      intercom_type: property.intercom_type,
+      usable_area: property.usable_area,
+      built_area: property.built_area,
+      land_area: property.land_area,
+      price_per_sqm: property.price_per_sqm,
+      annual_tax: property.annual_tax,
+      monthly_maintenance: property.monthly_maintenance,
+      renovation_year: property.renovation_year,
+      property_condition: property.property_condition,
+      total_building_floors: property.total_building_floors,
+      apartments_in_building: property.apartments_in_building,
+      floor: property.floor,
+      parking: property.parking,
+      heating_type: property.heating_type,
+      energy_class: property.energy_class,
+      furnished: property.furnished,
+      construction_type: property.construction_type,
+      compartimentare: property.compartimentare,
+    });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
   };
@@ -546,6 +580,7 @@ export default function PropertyManager() {
   const resetForm = () => {
     setFormData(initialFormData);
     setPropertyImages([]);
+    setPremiumFields({ ...defaultPremiumFields });
   };
 
   const isCazare = formData.listing_type === 'cazare';
@@ -909,6 +944,12 @@ export default function PropertyManager() {
           </div>
         </div>
       )}
+
+      {/* Premium Fields */}
+      <PropertyPremiumFields
+        data={premiumFields}
+        onChange={(key, value) => setPremiumFields(prev => ({ ...prev, [key]: value }))}
+      />
 
       <div className="flex items-center gap-3">
         <Switch
