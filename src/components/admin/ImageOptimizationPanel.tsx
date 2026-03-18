@@ -681,6 +681,31 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
               {items.every((i) => i.selected) ? "Deselectează tot" : "Selectează tot"}
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownloadAll}
+              disabled={selectedCount === 0 || isBatchOptimizing || isRemovingWatermarks}
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5" />Descarcă ({selectedCount})
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-3.5 h-3.5 mr-1.5" />Încarcă Imagini
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleManualUpload}
+            />
+
             <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
               {totalOriginal > 0 && (
                 <>
