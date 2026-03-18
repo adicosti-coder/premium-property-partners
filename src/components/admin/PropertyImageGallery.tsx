@@ -330,6 +330,7 @@ export default function PropertyImageGallery({
   const getPublicUrl = (path: string) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
+    if (path.startsWith('data:')) return path;
     const { data } = supabase.storage.from('property-images').getPublicUrl(path);
     return data.publicUrl;
   };
