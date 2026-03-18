@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -121,7 +121,20 @@ const WATERMARK_REQUEST_DELAY_MS = 1500;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(normalizeClientImageUrl(url));
 
+async function downloadImageFile(url: string, filename: string) {
+  const normalizedUrl = normalizeClientImageUrl(url);
+  const { blob } = await fetchImageBlob(normalizedUrl);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
       url,
@@ -458,6 +471,62 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     onImagesChange(updatedItems.filter((i) => i.selected).map((i) => i.persistedUrl || i.originalUrl || i.url));
   };
 
+  // Download single image
+  const handleDownload = async (index: number) => {
+    const item = items[index];
+    const ext = autoWebp ? "webp" : "jpg";
+    const filename = `imagine-${index + 1}.${ext}`;
+    try {
+      await downloadImageFile(item.persistedUrl || item.url, filename);
+    } catch {
+      toast({ title: "Eroare", description: "Nu s-a putut descărca imaginea", variant: "destructive" });
+    }
+  };
+
+  // Download all selected images
+  const handleDownloadAll = async () => {
+    const selected = items.filter((i) => i.selected);
+    for (let i = 0; i < items.length; i++) {
+      if (!items[i].selected) continue;
+      const ext = autoWebp ? "webp" : "jpg";
+      try {
+        await downloadImageFile(items[i].persistedUrl || items[i].url, `imagine-${i + 1}.${ext}`);
+        await sleep(300);
+      } catch { /* skip failed */ }
+    }
+    toast({ title: "✅ Descărcare completă", description: `${selected.length} imagini descărcate` });
+  };
+
+  // Upload new images manually
+  const handleManualUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const newItems: ImageItem[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      const dataUrl = await blobToDataUrl(file);
+      newItems.push({
+        url: dataUrl,
+        originalUrl: dataUrl,
+        persistedUrl: dataUrl,
+        optimized: false,
+        originalSize: file.size,
+        status: "idle",
+        selected: true,
+      });
+    }
+
+    const updated = [...items, ...newItems];
+    setItems(updated);
+    syncImages(updated);
+    toast({ title: "✅ Imagini adăugate", description: `${newItems.length} imagini noi încărcate în studio` });
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   // Stats
   const totalOriginal = items.reduce((sum, i) => sum + (i.originalSize || 0), 0);
   const totalOptimized = items.reduce((sum, i) => sum + (i.optimized && i.optimizedSize ? i.optimizedSize : i.originalSize || 0), 0);
@@ -612,6 +681,31 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
               {items.every((i) => i.selected) ? "Deselectează tot" : "Selectează tot"}
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownloadAll}
+              disabled={selectedCount === 0 || isBatchOptimizing || isRemovingWatermarks}
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5" />Descarcă ({selectedCount})
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-3.5 h-3.5 mr-1.5" />Încarcă Imagini
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleManualUpload}
+            />
+
             <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
               {totalOriginal > 0 && (
                 <>
@@ -734,6 +828,13 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
                               <RotateCcw className="w-3.5 h-3.5 text-black" />
                             </button>
                           )}
+                          <button
+                            onClick={() => handleDownload(index)}
+                            className="w-7 h-7 rounded-md bg-white/90 hover:bg-white flex items-center justify-center transition-colors"
+                            title="Descarcă imaginea"
+                          >
+                            <Download className="w-3.5 h-3.5 text-black" />
+                          </button>
                           <button
                             onClick={() => removeImage(index)}
                             className="w-7 h-7 rounded-md bg-red-500/90 hover:bg-red-500 flex items-center justify-center transition-colors"
