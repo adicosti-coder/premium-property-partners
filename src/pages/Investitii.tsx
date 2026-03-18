@@ -293,10 +293,22 @@ const Investitii = () => {
             </div>
           ) : properties && properties.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {properties.map((property) => (
+              {properties.map((property) => {
+                const propertyPath = `/proprietate/${property.slug ?? property.id}`;
+
+                return (
                 <div 
-                  key={property.id} 
-                  className="group bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 min-w-0 overflow-hidden"
+                  key={property.id}
+                  className="group bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 min-w-0 overflow-hidden cursor-pointer"
+                  onClick={() => navigate(propertyPath)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(propertyPath);
+                    }
+                  }}
                 >
                   {/* Property Image */}
                   <div className="relative h-48 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
