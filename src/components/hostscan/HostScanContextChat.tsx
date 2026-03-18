@@ -48,25 +48,27 @@ const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }
 
   const t = {
     ro: {
-      title: "Întreabă despre Analiza Ta",
-      subtitle: "Chat contextual bazat pe raportul tău",
-      placeholder: "Ex: Cum pot să-mi măresc scorul?",
-      open: "💬 Întreabă despre scorul tău",
+      title: "Consultant AI — Analiza Ta",
+      subtitle: "Întrebări personalizate bazate pe raportul proprietății",
+      placeholder: "Ex: Ce renovări ar crește cel mai mult scorul?",
+      open: "💬 Discută cu consultantul AI despre scorul tău",
       suggestions: [
-        "Cum pot să-mi măresc scorul?",
-        "Ce investiție minimă recomandați?",
-        "Care e randamentul zonei mele?",
+        "🎯 Ce acțiuni concrete îmi cresc scorul cel mai rapid?",
+        "💰 Ce investiție minimă ar avea cel mai mare impact pe ROI?",
+        "📊 Cum se compară zona mea cu alte zone din Timișoara?",
+        "📸 Ce îmbunătățiri vizuale atrag mai mulți oaspeți?",
       ],
     },
     en: {
-      title: "Ask About Your Analysis",
-      subtitle: "Contextual chat based on your report",
-      placeholder: "Ex: How can I increase my score?",
-      open: "💬 Ask about your score",
+      title: "AI Consultant — Your Analysis",
+      subtitle: "Personalized questions based on your property report",
+      placeholder: "Ex: What renovations would boost my score most?",
+      open: "💬 Chat with AI consultant about your score",
       suggestions: [
-        "How can I increase my score?",
-        "What minimum investment do you recommend?",
-        "What's the yield in my area?",
+        "🎯 What concrete actions increase my score fastest?",
+        "💰 What minimum investment would have the biggest ROI impact?",
+        "📊 How does my area compare to other zones in Timișoara?",
+        "📸 What visual improvements attract more guests?",
       ],
     },
   };
