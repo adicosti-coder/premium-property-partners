@@ -40,6 +40,7 @@ interface PropertyImage {
 
 interface InvestmentProperty {
   id: string;
+  slug: string | null;
   name: string;
   location: string;
   roi_percentage: string | null;
@@ -63,7 +64,7 @@ const Investitii = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en, property_code, property_images(image_path, is_primary, display_order)")
+        .select("id, slug, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en, property_code, property_images(image_path, is_primary, display_order)")
         .eq("is_active", true)
         .eq("listing_type", "investitie")
         .order("display_order");
@@ -292,10 +293,22 @@ const Investitii = () => {
             </div>
           ) : properties && properties.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {properties.map((property) => (
+              {properties.map((property) => {
+                const propertyPath = `/proprietate/${property.slug ?? property.id}`;
+
+                return (
                 <div 
-                  key={property.id} 
-                  className="group bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 min-w-0 overflow-hidden"
+                  key={property.id}
+                  className="group bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 min-w-0 overflow-hidden cursor-pointer"
+                  onClick={() => navigate(propertyPath)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(propertyPath);
+                    }
+                  }}
                 >
                   {/* Property Image */}
                   <div className="relative h-48 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
@@ -401,21 +414,28 @@ const Investitii = () => {
                     <Button 
                       variant="outline" 
                       className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500"
-                      onClick={() => navigate(`/proprietate/${property.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(propertyPath);
+                      }}
                     >
                       {t.cardDetails}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                     <Button 
                       className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
-                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank');
+                      }}
                     >
                       <Phone className="w-4 h-4 mr-2" />
                       {t.cardCta}
                     </Button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           ) : (
             <div className="text-center py-16">
