@@ -434,7 +434,8 @@ const Investitii = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           ) : (
             <div className="text-center py-16">
