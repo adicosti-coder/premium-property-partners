@@ -607,12 +607,17 @@ const PropertyDetail = () => {
                 })()
               )}
 
-              {/* Detalii Standard - doar pentru proprietăți cu date complete */}
-              {staticProperty && (
+              {/* Specificații Premium — pentru toate proprietățile din DB */}
+              {dbProperty && (
+                <PropertyPremiumSpecs specs={dbProperty} />
+              )}
+
+              {/* Detalii Standard - doar pentru proprietăți statice fără date DB */}
+              {staticProperty && !dbProperty && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
-                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} Oaspeți</span></div>
-                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} Dormitoare</span></div>
-                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} Băi</span></div>
+                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} {language === 'ro' ? 'Oaspeți' : 'Guests'}</span></div>
+                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} {language === 'ro' ? 'Dormitoare' : 'Bedrooms'}</span></div>
+                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} {language === 'ro' ? 'Băi' : 'Bathrooms'}</span></div>
                   <div className="flex flex-col items-center"><Maximize2 className="text-primary mb-1"/><span className="text-sm font-medium">{property.size} m²</span></div>
                 </div>
               )}
