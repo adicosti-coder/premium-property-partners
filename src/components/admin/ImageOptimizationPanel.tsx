@@ -121,7 +121,20 @@ const WATERMARK_REQUEST_DELAY_MS = 1500;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const isRemoteImageUrl = (url: string) => /^https?:\/\//i.test(normalizeClientImageUrl(url));
 
+async function downloadImageFile(url: string, filename: string) {
+  const normalizedUrl = normalizeClientImageUrl(url);
+  const { blob } = await fetchImageBlob(normalizedUrl);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ImageItem[]>(() =>
     images.map((url) => ({
       url,
