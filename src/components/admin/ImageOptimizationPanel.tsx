@@ -520,7 +520,14 @@ const ImageOptimizationPanel = ({
 
   // Sync with parent
   const syncImages = (updatedItems: ImageItem[]) => {
-    onImagesChange(updatedItems.filter((i) => i.selected).map((i) => i.persistedUrl || i.originalUrl || i.url));
+    const normalizedItems = updatedItems.map((item) => ({
+      id: item.id,
+      url: item.persistedUrl || item.originalUrl || item.url,
+      selected: item.selected,
+    }));
+
+    onImageItemsChange?.(normalizedItems);
+    onImagesChange?.(normalizedItems.map((item) => item.url));
   };
 
   // Download single image
