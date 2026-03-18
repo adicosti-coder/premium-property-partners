@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
+interface ImagePanelInput {
+  id: string;
+  url: string;
+}
+
 interface ImageItem {
+  id: string;
   url: string;
   originalUrl: string;
   persistedUrl?: string;
@@ -35,9 +41,17 @@ interface ImageItem {
   selected: boolean;
 }
 
+interface ImageOptimizationPanelChangeItem {
+  id: string;
+  url: string;
+  selected: boolean;
+}
+
 interface ImageOptimizationPanelProps {
-  images: string[];
-  onImagesChange: (images: string[]) => void;
+  images?: string[];
+  imageItems?: ImagePanelInput[];
+  onImagesChange?: (images: string[]) => void;
+  onImageItemsChange?: (items: ImageOptimizationPanelChangeItem[]) => void;
 }
 
 function formatBytes(bytes: number): string {
@@ -133,17 +147,45 @@ async function downloadImageFile(url: string, filename: string) {
   URL.revokeObjectURL(a.href);
 }
 
-const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [items, setItems] = useState<ImageItem[]>(() =>
-    images.map((url) => ({
-      url,
-      originalUrl: url,
+const buildImageItems = (images: string[] = [], imageItems: ImagePanelInput[] = []): ImageItem[] => {
+  if (imageItems.length > 0) {
+    return imageItems.map((item) => ({
+      id: item.id,
+      url: item.url,
+      originalUrl: item.url,
       optimized: false,
       status: "idle" as const,
       selected: true,
-    }))
-  );
+    }));
+  }
+
+  return images.map((url, index) => ({
+    id: `image-${index}`,
+    url,
+    originalUrl: url,
+    optimized: false,
+    status: "idle" as const,
+    selected: true,
+  }));
+};
+
+const revokePreviewUrls = (items: ImageItem[]) => {
+  items.forEach((item) => {
+    if (item.url.startsWith("blob:")) {
+      URL.revokeObjectURL(item.url);
+    }
+  });
+};
+
+const ImageOptimizationPanel = ({
+  images = [],
+  imageItems = [],
+  onImagesChange,
+  onImageItemsChange,
+}: ImageOptimizationPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const latestItemsRef = useRef<ImageItem[]>(buildImageItems(images, imageItems));
+  const [items, setItems] = useState<ImageItem[]>(latestItemsRef.current);
   const [isOpen, setIsOpen] = useState(true);
   const [quality, setQuality] = useState(85);
   const [maxWidth, setMaxWidth] = useState(1920);
@@ -154,6 +196,23 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isRemovingWatermarks, setIsRemovingWatermarks] = useState(false);
   const [watermarkProgress, setWatermarkProgress] = useState(0);
+
+  useEffect(() => {
+    setItems((previousItems) => {
+      revokePreviewUrls(previousItems);
+      const nextItems = buildImageItems(images, imageItems);
+      latestItemsRef.current = nextItems;
+      return nextItems;
+    });
+  }, [images, imageItems]);
+
+  useEffect(() => {
+    latestItemsRef.current = items;
+  }, [items]);
+
+  useEffect(() => {
+    return () => revokePreviewUrls(latestItemsRef.current);
+  }, []);
 
   // Analyze all images (fetch size & dimensions)
   const analyzeImages = useCallback(async () => {
@@ -468,7 +527,14 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
 
   // Sync with parent
   const syncImages = (updatedItems: ImageItem[]) => {
-    onImagesChange(updatedItems.filter((i) => i.selected).map((i) => i.persistedUrl || i.originalUrl || i.url));
+    const normalizedItems = updatedItems.map((item) => ({
+      id: item.id,
+      url: item.persistedUrl || item.originalUrl || item.url,
+      selected: item.selected,
+    }));
+
+    onImageItemsChange?.(normalizedItems);
+    onImagesChange?.(normalizedItems.map((item) => item.url));
   };
 
   // Download single image
@@ -508,6 +574,7 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
       if (!file.type.startsWith("image/")) continue;
       const dataUrl = await blobToDataUrl(file);
       newItems.push({
+        id: crypto.randomUUID(),
         url: dataUrl,
         originalUrl: dataUrl,
         persistedUrl: dataUrl,

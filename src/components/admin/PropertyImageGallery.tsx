@@ -934,53 +934,61 @@ export default function PropertyImageGallery({
       {/* Studio Imagini — Optimize & Remove Watermarks for published images */}
       {images.length > 0 && (
         <ImageOptimizationPanel
-          images={sortedImages.map(img => {
-            if (img.image_path.startsWith('http')) return img.image_path;
-            return supabase.storage.from('property-images').getPublicUrl(img.image_path).data.publicUrl;
-          })}
-          onImagesChange={async (newUrls) => {
+          key={propertyId}
+          imageItems={sortedImages.map((img) => ({
+            id: img.id,
+            url: img.image_path.startsWith('http')
+              ? img.image_path
+              : supabase.storage.from('property-images').getPublicUrl(img.image_path).data.publicUrl,
+          }))}
+          onImageItemsChange={async (newItems) => {
             const updatedImages = [...sortedImages];
-            for (let i = 0; i < updatedImages.length && i < newUrls.length; i++) {
-              let newUrl = newUrls[i];
-              const oldPath = updatedImages[i].image_path;
-              const oldUrl = oldPath.startsWith('http') 
-                ? oldPath 
+
+            for (const nextItem of newItems) {
+              const targetIndex = updatedImages.findIndex((img) => img.id === nextItem.id);
+              if (targetIndex === -1) continue;
+
+              const currentImage = updatedImages[targetIndex];
+              const oldPath = currentImage.image_path;
+              const oldUrl = oldPath.startsWith('http')
+                ? oldPath
                 : supabase.storage.from('property-images').getPublicUrl(oldPath).data.publicUrl;
-              
-              if (newUrl !== oldUrl) {
-                // If it's a data URI, upload to storage first
-                let storagePath = newUrl;
-                if (newUrl.startsWith('data:')) {
-                  try {
-                    const response = await fetch(newUrl);
-                    const blob = await response.blob();
-                    const ext = blob.type.includes('webp') ? 'webp' : blob.type.includes('png') ? 'png' : 'jpg';
-                    const fileName = `${propertyId}/${Date.now()}-optimized-${i}.${ext}`;
-                    const { error: uploadError } = await supabase.storage
-                      .from('property-images')
-                      .upload(fileName, blob, { contentType: blob.type, upsert: true });
-                    if (uploadError) throw uploadError;
-                    storagePath = fileName;
-                  } catch (uploadErr) {
-                    console.error('Failed to upload optimized image to storage:', uploadErr);
-                    continue; // Skip this image, keep old path
-                  }
-                }
-                
-                await supabase
-                  .from('property_images')
-                  .update({ image_path: storagePath })
-                  .eq('id', updatedImages[i].id);
-                updatedImages[i] = { ...updatedImages[i], image_path: storagePath };
+
+              if (nextItem.url === oldUrl) {
+                continue;
               }
+
+              let storagePath = nextItem.url;
+              if (nextItem.url.startsWith('data:')) {
+                try {
+                  const response = await fetch(nextItem.url);
+                  const blob = await response.blob();
+                  const ext = blob.type.includes('webp') ? 'webp' : blob.type.includes('png') ? 'png' : 'jpg';
+                  const fileName = `${propertyId}/${Date.now()}-optimized-${targetIndex}.${ext}`;
+                  const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(fileName, blob, { contentType: blob.type, upsert: true });
+                  if (uploadError) throw uploadError;
+                  storagePath = fileName;
+                } catch (uploadErr) {
+                  console.error('Failed to upload optimized image to storage:', uploadErr);
+                  continue;
+                }
+              }
+
+              await supabase
+                .from('property_images')
+                .update({ image_path: storagePath })
+                .eq('id', currentImage.id);
+
+              updatedImages[targetIndex] = { ...currentImage, image_path: storagePath };
             }
-            
-            // Update properties.images array
+
             await supabase.from('properties').update({
-              images: updatedImages.map(i => i.image_path),
+              images: updatedImages.map((i) => i.image_path),
               image_path: updatedImages[0]?.image_path || null,
             }).eq('id', propertyId);
-            
+
             onImagesChange(updatedImages);
           }}
         />
