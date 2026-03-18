@@ -51,13 +51,12 @@ interface CazareProperty extends PremiumFieldsData {
 }
 
 const emptyProperty: Omit<CazareProperty, "id"> = {
+  ...defaultPremiumFields,
   name: "",
   slug: "",
   location: "",
   description_ro: "",
   description_en: "",
-  long_description_ro: "",
-  long_description_en: "",
   booking_url: "",
   features: [],
   image_path: null,
