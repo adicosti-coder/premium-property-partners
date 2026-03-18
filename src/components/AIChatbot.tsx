@@ -136,28 +136,38 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
   
   if (path.startsWith("/pentru-proprietari") || path.startsWith("/investitii")) {
     return lang === "ro"
-      ? ["Calculează-mi ROI-ul", "Cum funcționează comisionul?", "Vreau să listez proprietatea", "Ghid Investitor 2026"]
-      : ["Calculate my ROI", "How does the commission work?", "I want to list my property", "Investor Guide 2026"];
+      ? ["💰 Calculează randamentul proprietății mele", "📊 Comision 15-25% — ce include fiecare pachet?", "📸 Vreau evaluare gratuită a apartamentului", "📥 Descarcă Ghidul Investitorului 2026"]
+      : ["💰 Calculate my property's yield", "📊 15-25% commission — what's included?", "📸 I want a free apartment evaluation", "📥 Download Investor Guide 2026"];
   }
   if (path.startsWith("/proprietate/")) {
     return lang === "ro"
-      ? ["Este disponibil weekendul viitor?", "Care e prețul pentru 3 nopți?", "Ce facilități are?", "Vreau să rezerv direct"]
-      : ["Is it available next weekend?", "What's the price for 3 nights?", "What amenities does it have?", "I want to book directly"];
+      ? ["📅 Verifică disponibilitatea live", "🏷️ Aplică codul DIRECT5 (-5%)", "🛎️ Ce facilități premium sunt incluse?", "📞 Rezervă direct cu discount"]
+      : ["📅 Check live availability", "🏷️ Apply DIRECT5 code (-5%)", "🛎️ What premium amenities are included?", "📞 Book directly with discount"];
   }
   if (path.startsWith("/oaspeti") || path.startsWith("/pentru-oaspeti")) {
     return lang === "ro"
-      ? ["Ce apartamente sunt libere?", "Recomandă-mi un apartament", "Ce restaurante recomanzi?", "Cum ajung de la aeroport?"]
-      : ["Which apartments are available?", "Recommend an apartment", "Restaurant recommendations?", "How to get from the airport?"];
+      ? ["🏠 Ce apartamente sunt libere acum?", "👨‍👩‍👧 Recomandă-mi cazare pentru familie", "🍽️ Top restaurante lângă apartament", "✈️ Transfer aeroport & check-in rapid"]
+      : ["🏠 Which apartments are free now?", "👨‍👩‍👧 Recommend family-friendly stays", "🍽️ Top restaurants near apartment", "✈️ Airport transfer & express check-in"];
   }
   if (path.startsWith("/zona/")) {
     return lang === "ro"
-      ? ["Ce apartamente sunt în această zonă?", "Care e randamentul aici?", "Vreau să vizitez", "Comparație cu alte zone"]
-      : ["What apartments are in this area?", "What's the yield here?", "I want to visit", "Compare with other areas"];
+      ? ["📊 Randamentul mediu în această zonă", "🏠 Apartamente disponibile aici", "📈 Comparație ROI cu alte zone", "🗓️ Programează o vizită în zonă"]
+      : ["📊 Average yield in this area", "🏠 Available apartments here", "📈 ROI comparison with other areas", "🗓️ Schedule a visit in this area"];
   }
-  // Default
+  if (path.startsWith("/blog")) {
+    return lang === "ro"
+      ? ["💡 Cum îmi maximizez venitul din regim hotelier?", "📊 Airbnb vs Booking — ce platformă e mai bună?", "🏠 Vreau să-mi listez proprietatea", "📥 Ghidul complet al investitorului"]
+      : ["💡 How to maximize short-term rental income?", "📊 Airbnb vs Booking — which is better?", "🏠 I want to list my property", "📥 Complete investor guide"];
+  }
+  if (path.startsWith("/imobiliare")) {
+    return lang === "ro"
+      ? ["🏗️ Ce proprietăți noi sunt disponibile?", "💰 Simulare randament investiție", "🔑 Caut apartament cu potențial STR", "📞 Programează consultanță gratuită"]
+      : ["🏗️ What new properties are available?", "💰 Investment yield simulation", "🔑 Looking for STR-potential apartment", "📞 Schedule free consultation"];
+  }
+  // Default — Hub / Homepage
   return lang === "ro"
-    ? ["Ce apartamente sunt libere?", "Calculează-mi ROI-ul", "Vreau să vizitez un apartament", "Ce restaurante recomanzi?"]
-    : ["Which apartments are available?", "Calculate my ROI", "I want to visit an apartment", "Restaurant recommendations?"];
+    ? ["🏠 Ce apartamente sunt libere acum?", "💰 Calculează-mi randamentul investiției", "📸 Evaluare gratuită a proprietății mele", "🗺️ Ghid local — restaurante și atracții"]
+    : ["🏠 Which apartments are free now?", "💰 Calculate my investment yield", "📸 Free evaluation of my property", "🗺️ Local guide — restaurants & attractions"];
 };
 
 // --- Report Parser ---
