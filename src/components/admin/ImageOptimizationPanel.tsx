@@ -471,6 +471,62 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
     onImagesChange(updatedItems.filter((i) => i.selected).map((i) => i.persistedUrl || i.originalUrl || i.url));
   };
 
+  // Download single image
+  const handleDownload = async (index: number) => {
+    const item = items[index];
+    const ext = autoWebp ? "webp" : "jpg";
+    const filename = `imagine-${index + 1}.${ext}`;
+    try {
+      await downloadImageFile(item.persistedUrl || item.url, filename);
+    } catch {
+      toast({ title: "Eroare", description: "Nu s-a putut descărca imaginea", variant: "destructive" });
+    }
+  };
+
+  // Download all selected images
+  const handleDownloadAll = async () => {
+    const selected = items.filter((i) => i.selected);
+    for (let i = 0; i < items.length; i++) {
+      if (!items[i].selected) continue;
+      const ext = autoWebp ? "webp" : "jpg";
+      try {
+        await downloadImageFile(items[i].persistedUrl || items[i].url, `imagine-${i + 1}.${ext}`);
+        await sleep(300);
+      } catch { /* skip failed */ }
+    }
+    toast({ title: "✅ Descărcare completă", description: `${selected.length} imagini descărcate` });
+  };
+
+  // Upload new images manually
+  const handleManualUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const newItems: ImageItem[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      const dataUrl = await blobToDataUrl(file);
+      newItems.push({
+        url: dataUrl,
+        originalUrl: dataUrl,
+        persistedUrl: dataUrl,
+        optimized: false,
+        originalSize: file.size,
+        status: "idle",
+        selected: true,
+      });
+    }
+
+    const updated = [...items, ...newItems];
+    setItems(updated);
+    syncImages(updated);
+    toast({ title: "✅ Imagini adăugate", description: `${newItems.length} imagini noi încărcate în studio` });
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   // Stats
   const totalOriginal = items.reduce((sum, i) => sum + (i.originalSize || 0), 0);
   const totalOptimized = items.reduce((sum, i) => sum + (i.optimized && i.optimizedSize ? i.optimizedSize : i.originalSize || 0), 0);
