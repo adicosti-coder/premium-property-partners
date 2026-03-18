@@ -82,17 +82,35 @@ Deno.serve(async (req) => {
     // Also update the properties.images arrays for affected properties
     const propertyIds = [...new Set(images.map(i => i.property_id))];
     for (const propId of propertyIds) {
-      const { data: propImages } = await supabase
+      // Check if there are any published images
+      const { data: publishedImages } = await supabase
+        .from("property_images")
+        .select("id, image_path, display_order")
+        .eq("property_id", propId)
+        .eq("is_published", true)
+        .order("display_order");
+
+      // If no published images, auto-publish all migrated ones
+      if (!publishedImages || publishedImages.length === 0) {
+        await supabase
+          .from("property_images")
+          .update({ is_published: true })
+          .eq("property_id", propId)
+          .not("image_path", "like", "data:%");
+      }
+
+      // Re-fetch after potential publish
+      const { data: finalImages } = await supabase
         .from("property_images")
         .select("image_path, display_order")
         .eq("property_id", propId)
         .eq("is_published", true)
         .order("display_order");
 
-      if (propImages && propImages.length > 0) {
+      if (finalImages && finalImages.length > 0) {
         await supabase.from("properties").update({
-          images: propImages.map(i => i.image_path),
-          image_path: propImages[0].image_path,
+          images: finalImages.map(i => i.image_path),
+          image_path: finalImages[0].image_path,
         }).eq("id", propId);
       }
     }
