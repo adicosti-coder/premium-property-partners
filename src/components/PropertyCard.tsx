@@ -1,5 +1,4 @@
 import { useRef, useCallback } from "react";
-import { useRef, useCallback } from "react";
 import { MapPin, Star, Users, BedDouble, Calendar, Eye, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
