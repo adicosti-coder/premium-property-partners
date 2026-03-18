@@ -126,6 +126,20 @@ const PropertyDetail = () => {
             setDbProperty(dbProp);
             propertyId = dbProp.id;
           }
+        } else if (slug) {
+          // Fallback: try to fetch by slug column in DB
+          setIsLoadingProperty(true);
+          const { data: dbProp } = await supabase
+            .from("properties")
+            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
+            .eq("slug", slug)
+            .maybeSingle();
+          
+          if (dbProp) {
+            setDbProperty(dbProp);
+            propertyId = dbProp.id;
+          }
+          setIsLoadingProperty(false);
         }
 
         // Fetch images and reviews if we have a property ID
@@ -154,7 +168,7 @@ const PropertyDetail = () => {
       }
     };
     
-    if (isDbProperty || staticProperty) {
+    if (slug) {
       fetchPropertyData();
     }
   }, [slug, isDbProperty, staticProperty]);
