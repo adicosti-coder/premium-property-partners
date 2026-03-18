@@ -56,6 +56,7 @@ import {
 import PropertyImageGallery from "./PropertyImageGallery";
 import PropertyPricingManager from "./PropertyPricingManager";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
+import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
 
 interface Property {
   id: string;
