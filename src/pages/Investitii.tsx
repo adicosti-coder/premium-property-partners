@@ -64,7 +64,7 @@ const Investitii = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en, property_code, property_images(image_path, is_primary, display_order)")
+        .select("id, slug, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en, property_code, property_images(image_path, is_primary, display_order)")
         .eq("is_active", true)
         .eq("listing_type", "investitie")
         .order("display_order");
