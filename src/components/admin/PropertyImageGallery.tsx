@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { compressImage } from "@/utils/imageCompression";
+import ImageOptimizationPanel from "./ImageOptimizationPanel";
 import { 
   Loader2, 
   Upload, 
