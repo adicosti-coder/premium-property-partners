@@ -58,7 +58,7 @@ import PropertyPricingManager from "./PropertyPricingManager";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
 import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
 
-interface Property {
+interface Property extends PremiumFieldsData {
   id: string;
   name: string;
   location: string;
