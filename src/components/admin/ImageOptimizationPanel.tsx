@@ -147,17 +147,44 @@ async function downloadImageFile(url: string, filename: string) {
   URL.revokeObjectURL(a.href);
 }
 
-const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPanelProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [items, setItems] = useState<ImageItem[]>(() =>
-    images.map((url) => ({
-      url,
-      originalUrl: url,
+const buildImageItems = (images: string[] = [], imageItems: ImagePanelInput[] = []): ImageItem[] => {
+  if (imageItems.length > 0) {
+    return imageItems.map((item) => ({
+      id: item.id,
+      url: item.url,
+      originalUrl: item.url,
       optimized: false,
       status: "idle" as const,
       selected: true,
-    }))
-  );
+    }));
+  }
+
+  return images.map((url, index) => ({
+    id: `image-${index}`,
+    url,
+    originalUrl: url,
+    optimized: false,
+    status: "idle" as const,
+    selected: true,
+  }));
+};
+
+const revokePreviewUrls = (items: ImageItem[]) => {
+  items.forEach((item) => {
+    if (item.url.startsWith("blob:")) {
+      URL.revokeObjectURL(item.url);
+    }
+  });
+};
+
+const ImageOptimizationPanel = ({
+  images = [],
+  imageItems = [],
+  onImagesChange,
+  onImageItemsChange,
+}: ImageOptimizationPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState<ImageItem[]>(() => buildImageItems(images, imageItems));
   const [isOpen, setIsOpen] = useState(true);
   const [quality, setQuality] = useState(85);
   const [maxWidth, setMaxWidth] = useState(1920);
@@ -168,6 +195,17 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isRemovingWatermarks, setIsRemovingWatermarks] = useState(false);
   const [watermarkProgress, setWatermarkProgress] = useState(0);
+
+  useEffect(() => {
+    setItems((previousItems) => {
+      revokePreviewUrls(previousItems);
+      return buildImageItems(images, imageItems);
+    });
+  }, [images, imageItems]);
+
+  useEffect(() => {
+    return () => revokePreviewUrls(items);
+  }, [items]);
 
   // Analyze all images (fetch size & dimensions)
   const analyzeImages = useCallback(async () => {
