@@ -1815,12 +1815,16 @@ export type Database = {
         Row: {
           amenities: string[] | null
           amenities_en: string[] | null
+          annual_tax: number | null
+          apartments_in_building: number | null
+          balconies: number | null
           base_price_per_night: number | null
           bathrooms: number | null
           bedrooms: number | null
           booking_rating: number | null
           booking_review_count: number | null
           booking_url: string
+          built_area: number | null
           capacity: number | null
           capital_necesar: number | null
           check_in_time: string | null
@@ -1839,20 +1843,31 @@ export type Database = {
           features: string[]
           floor: string | null
           furnished: string | null
+          has_ac: boolean | null
+          has_cellar: boolean | null
+          has_elevator: boolean | null
+          has_storage: boolean | null
           heating_type: string | null
           house_rules: string[] | null
           house_rules_en: string[] | null
           id: string
           image_path: string | null
           images: string[] | null
+          intercom_type: string | null
           is_active: boolean
+          land_area: number | null
           listing_type: string | null
           location: string
           long_description_en: string | null
           long_description_ro: string | null
+          monthly_maintenance: number | null
           name: string
+          orientation: string | null
           parking: string | null
+          price_per_sqm: number | null
           property_code: string | null
+          property_condition: string | null
+          renovation_year: number | null
           roi_percentage: string | null
           size: number | null
           slug: string | null
@@ -1860,19 +1875,27 @@ export type Database = {
           source_url: string | null
           status_operativ: string | null
           tag: string
+          terrace_area: number | null
+          total_building_floors: number | null
           updated_at: string
+          usable_area: number | null
+          view_type: string | null
           weekend_price_per_night: number | null
           year_built: number | null
         }
         Insert: {
           amenities?: string[] | null
           amenities_en?: string[] | null
+          annual_tax?: number | null
+          apartments_in_building?: number | null
+          balconies?: number | null
           base_price_per_night?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
           booking_rating?: number | null
           booking_review_count?: number | null
           booking_url: string
+          built_area?: number | null
           capacity?: number | null
           capital_necesar?: number | null
           check_in_time?: string | null
@@ -1891,20 +1914,31 @@ export type Database = {
           features?: string[]
           floor?: string | null
           furnished?: string | null
+          has_ac?: boolean | null
+          has_cellar?: boolean | null
+          has_elevator?: boolean | null
+          has_storage?: boolean | null
           heating_type?: string | null
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
           image_path?: string | null
           images?: string[] | null
+          intercom_type?: string | null
           is_active?: boolean
+          land_area?: number | null
           listing_type?: string | null
           location: string
           long_description_en?: string | null
           long_description_ro?: string | null
+          monthly_maintenance?: number | null
           name: string
+          orientation?: string | null
           parking?: string | null
+          price_per_sqm?: number | null
           property_code?: string | null
+          property_condition?: string | null
+          renovation_year?: number | null
           roi_percentage?: string | null
           size?: number | null
           slug?: string | null
@@ -1912,19 +1946,27 @@ export type Database = {
           source_url?: string | null
           status_operativ?: string | null
           tag: string
+          terrace_area?: number | null
+          total_building_floors?: number | null
           updated_at?: string
+          usable_area?: number | null
+          view_type?: string | null
           weekend_price_per_night?: number | null
           year_built?: number | null
         }
         Update: {
           amenities?: string[] | null
           amenities_en?: string[] | null
+          annual_tax?: number | null
+          apartments_in_building?: number | null
+          balconies?: number | null
           base_price_per_night?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
           booking_rating?: number | null
           booking_review_count?: number | null
           booking_url?: string
+          built_area?: number | null
           capacity?: number | null
           capital_necesar?: number | null
           check_in_time?: string | null
@@ -1943,20 +1985,31 @@ export type Database = {
           features?: string[]
           floor?: string | null
           furnished?: string | null
+          has_ac?: boolean | null
+          has_cellar?: boolean | null
+          has_elevator?: boolean | null
+          has_storage?: boolean | null
           heating_type?: string | null
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
           image_path?: string | null
           images?: string[] | null
+          intercom_type?: string | null
           is_active?: boolean
+          land_area?: number | null
           listing_type?: string | null
           location?: string
           long_description_en?: string | null
           long_description_ro?: string | null
+          monthly_maintenance?: number | null
           name?: string
+          orientation?: string | null
           parking?: string | null
+          price_per_sqm?: number | null
           property_code?: string | null
+          property_condition?: string | null
+          renovation_year?: number | null
           roi_percentage?: string | null
           size?: number | null
           slug?: string | null
@@ -1964,7 +2017,11 @@ export type Database = {
           source_url?: string | null
           status_operativ?: string | null
           tag?: string
+          terrace_area?: number | null
+          total_building_floors?: number | null
           updated_at?: string
+          usable_area?: number | null
+          view_type?: string | null
           weekend_price_per_night?: number | null
           year_built?: number | null
         }
