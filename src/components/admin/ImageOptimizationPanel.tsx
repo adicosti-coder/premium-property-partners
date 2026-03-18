@@ -829,6 +829,13 @@ const ImageOptimizationPanel = ({ images, onImagesChange }: ImageOptimizationPan
                             </button>
                           )}
                           <button
+                            onClick={() => handleDownload(index)}
+                            className="w-7 h-7 rounded-md bg-white/90 hover:bg-white flex items-center justify-center transition-colors"
+                            title="Descarcă imaginea"
+                          >
+                            <Download className="w-3.5 h-3.5 text-black" />
+                          </button>
+                          <button
                             onClick={() => removeImage(index)}
                             className="w-7 h-7 rounded-md bg-red-500/90 hover:bg-red-500 flex items-center justify-center transition-colors"
                             title="Elimină imaginea"
