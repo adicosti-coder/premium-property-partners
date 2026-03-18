@@ -567,6 +567,7 @@ const ImageOptimizationPanel = ({
       if (!file.type.startsWith("image/")) continue;
       const dataUrl = await blobToDataUrl(file);
       newItems.push({
+        id: crypto.randomUUID(),
         url: dataUrl,
         originalUrl: dataUrl,
         persistedUrl: dataUrl,
