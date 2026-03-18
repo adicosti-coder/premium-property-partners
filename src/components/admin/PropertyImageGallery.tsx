@@ -930,6 +930,43 @@ export default function PropertyImageGallery({
         </p>
       )}
 
+      {/* Studio Imagini — Optimize & Remove Watermarks for published images */}
+      {images.length > 0 && (
+        <ImageOptimizationPanel
+          images={sortedImages.map(img => {
+            if (img.image_path.startsWith('http')) return img.image_path;
+            return supabase.storage.from('property-images').getPublicUrl(img.image_path).data.publicUrl;
+          })}
+          onImagesChange={async (newUrls) => {
+            // Update each property_image record with the new URL
+            const updatedImages = [...sortedImages];
+            for (let i = 0; i < updatedImages.length && i < newUrls.length; i++) {
+              const newUrl = newUrls[i];
+              const oldPath = updatedImages[i].image_path;
+              const oldUrl = oldPath.startsWith('http') 
+                ? oldPath 
+                : supabase.storage.from('property-images').getPublicUrl(oldPath).data.publicUrl;
+              
+              if (newUrl !== oldUrl) {
+                await supabase
+                  .from('property_images')
+                  .update({ image_path: newUrl })
+                  .eq('id', updatedImages[i].id);
+                updatedImages[i] = { ...updatedImages[i], image_path: newUrl };
+              }
+            }
+            
+            // Update properties.images array
+            await supabase.from('properties').update({
+              images: updatedImages.map(i => i.image_path),
+              image_path: updatedImages[0]?.image_path || null,
+            }).eq('id', propertyId);
+            
+            onImagesChange(updatedImages);
+          }}
+        />
+      )}
+
       {/* Draft Images Section */}
       {draftImages.length > 0 && (
         <div className="border-t pt-4 mt-4">
