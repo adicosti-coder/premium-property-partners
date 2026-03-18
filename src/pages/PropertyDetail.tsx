@@ -610,7 +610,9 @@ const PropertyDetail = () => {
 
               {/* Specificații Premium — pentru toate proprietățile din DB */}
               {dbProperty && (
-                <PropertyPremiumSpecs specs={dbProperty} />
+                <Suspense fallback={null}>
+                  <PropertyPremiumSpecs specs={dbProperty} />
+                </Suspense>
               )}
 
               {/* Detalii Standard - doar pentru proprietăți statice fără date DB */}
