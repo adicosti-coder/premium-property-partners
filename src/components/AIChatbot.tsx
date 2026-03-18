@@ -246,7 +246,7 @@ const AIChatbot = () => {
     en: {
       title: "Digital Concierge",
       status: "Available 24/7",
-      greeting: "Welcome to ApArt Hotel Timișoara! 🏠 I'm your premium Digital Concierge.\n\n**I have real-time access** and can help with:\n\n📅 **Live Availability** — instantly check which apartments are free\n💰 **ROI Simulation** — personalized investment return calculation\n🗓️ **Schedule a Visit** — I'll book the viewing for you\n🗺️ **Local Guide** — personalized restaurant & attraction recommendations\n\nHow may I assist you?",
+      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**! 🏠✨ I'm your premium Digital Concierge.\n\nI have access to **real-time data** and dedicated tools:\n\n📅 **Live Availability** — instantly check free apartments\n💰 **Personalized ROI Simulation** — yield analysis vs. classic rent\n📸 **Property Evaluation** — send photos, get a score & recommendations\n🗓️ **Schedule a Visit** — I'll arrange the viewing automatically\n🍽️ **Premium Local Guide** — restaurants, attractions & insider tips\n🏷️ **Discount code DIRECT5** — 5% off direct bookings\n\nHow may I assist you today?",
       placeholder: "Ask about accommodation, investments, Timișoara...",
       power: "AI Agent · Live Data",
       quickActions: getContextualQuickActions("en"),
