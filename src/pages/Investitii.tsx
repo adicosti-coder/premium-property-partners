@@ -414,14 +414,20 @@ const Investitii = () => {
                     <Button 
                       variant="outline" 
                       className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500"
-                      onClick={() => navigate(`/proprietate/${property.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(propertyPath);
+                      }}
                     >
                       {t.cardDetails}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                     <Button 
                       className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
-                      onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank');
+                      }}
                     >
                       <Phone className="w-4 h-4 mr-2" />
                       {t.cardCta}
