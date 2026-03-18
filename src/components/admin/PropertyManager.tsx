@@ -945,6 +945,12 @@ export default function PropertyManager() {
         </div>
       )}
 
+      {/* Premium Fields */}
+      <PropertyPremiumFields
+        data={premiumFields}
+        onChange={(key, value) => setPremiumFields(prev => ({ ...prev, [key]: value }))}
+      />
+
       <div className="flex items-center gap-3">
         <Switch
           checked={formData.is_active}
