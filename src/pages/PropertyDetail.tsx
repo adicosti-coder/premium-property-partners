@@ -29,6 +29,7 @@ const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighbor
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const PropertyAIScore = lazy(() => import("@/components/PropertyAIScore"));
+const PropertyPremiumSpecs = lazy(() => import("@/components/PropertyPremiumSpecs"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
@@ -47,6 +48,8 @@ interface DbPropertyData {
   location?: string;
   description_ro?: string;
   description_en?: string;
+  long_description_ro?: string | null;
+  long_description_en?: string | null;
   tag?: string;
   image_path?: string | null;
   capital_necesar?: number | null;
@@ -56,8 +59,45 @@ interface DbPropertyData {
   status_operativ?: string;
   property_code?: string | null;
   amenities?: string[];
+  amenities_en?: string[];
   house_rules?: string[];
+  house_rules_en?: string[];
   base_price_per_night?: number | null;
+  weekend_price_per_night?: number | null;
+  // Specs de bază
+  size?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  capacity?: number | null;
+  floor?: string | null;
+  year_built?: number | null;
+  // Câmpuri premium noi
+  balconies?: number | null;
+  terrace_area?: number | null;
+  has_storage?: boolean | null;
+  has_cellar?: boolean | null;
+  orientation?: string | null;
+  view_type?: string | null;
+  has_elevator?: boolean | null;
+  intercom_type?: string | null;
+  has_ac?: boolean | null;
+  usable_area?: number | null;
+  built_area?: number | null;
+  land_area?: number | null;
+  price_per_sqm?: number | null;
+  annual_tax?: number | null;
+  monthly_maintenance?: number | null;
+  renovation_year?: number | null;
+  property_condition?: string | null;
+  total_building_floors?: number | null;
+  apartments_in_building?: number | null;
+  parking?: string | null;
+  heating_type?: string | null;
+  energy_class?: string | null;
+  furnished?: string | null;
+  construction_type?: string | null;
+  compartimentare?: string | null;
+  features?: string[];
 }
 
 // Helper to check if a string is a UUID
@@ -105,7 +145,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
+            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("id", slug)
             .maybeSingle();
           
@@ -118,7 +158,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
+            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -131,7 +171,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
+            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("slug", slug)
             .maybeSingle();
           
@@ -184,19 +224,19 @@ const PropertyDetail = () => {
     bookingUrl: "",
     description: dbProperty.description_ro || "",
     descriptionEn: dbProperty.description_en || "",
-    longDescription: dbProperty.description_ro || "",
-    longDescriptionEn: dbProperty.description_en || "",
+    longDescription: dbProperty.long_description_ro || dbProperty.description_ro || "",
+    longDescriptionEn: dbProperty.long_description_en || dbProperty.description_en || "",
     rating: 0,
     reviews: 0,
-    capacity: 0,
-    bedrooms: 0,
-    bathrooms: 0,
-    size: 0,
+    capacity: dbProperty.capacity || 0,
+    bedrooms: dbProperty.bedrooms || 0,
+    bathrooms: dbProperty.bathrooms || 0,
+    size: dbProperty.size || 0,
     pricePerNight: dbProperty.capital_necesar || 0,
-    amenities: [],
-    amenitiesEn: [],
-    houseRules: [],
-    houseRulesEn: [],
+    amenities: dbProperty.amenities || [],
+    amenitiesEn: dbProperty.amenities_en || [],
+    houseRules: dbProperty.house_rules || [],
+    houseRulesEn: dbProperty.house_rules_en || [],
     checkInTime: "",
     checkOutTime: "",
     isActive: true,
@@ -568,12 +608,19 @@ const PropertyDetail = () => {
                 })()
               )}
 
-              {/* Detalii Standard - doar pentru proprietăți cu date complete */}
-              {staticProperty && (
+              {/* Specificații Premium — pentru toate proprietățile din DB */}
+              {dbProperty && (
+                <Suspense fallback={null}>
+                  <PropertyPremiumSpecs specs={dbProperty} />
+                </Suspense>
+              )}
+
+              {/* Detalii Standard - doar pentru proprietăți statice fără date DB */}
+              {staticProperty && !dbProperty && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-card rounded-2xl border">
-                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} Oaspeți</span></div>
-                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} Dormitoare</span></div>
-                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} Băi</span></div>
+                  <div className="flex flex-col items-center"><Users className="text-primary mb-1"/><span className="text-sm font-medium">{property.capacity} {language === 'ro' ? 'Oaspeți' : 'Guests'}</span></div>
+                  <div className="flex flex-col items-center"><BedDouble className="text-primary mb-1"/><span className="text-sm font-medium">{property.bedrooms} {language === 'ro' ? 'Dormitoare' : 'Bedrooms'}</span></div>
+                  <div className="flex flex-col items-center"><Bath className="text-primary mb-1"/><span className="text-sm font-medium">{property.bathrooms} {language === 'ro' ? 'Băi' : 'Bathrooms'}</span></div>
                   <div className="flex flex-col items-center"><Maximize2 className="text-primary mb-1"/><span className="text-sm font-medium">{property.size} m²</span></div>
                 </div>
               )}
