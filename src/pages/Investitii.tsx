@@ -40,6 +40,7 @@ interface PropertyImage {
 
 interface InvestmentProperty {
   id: string;
+  slug: string | null;
   name: string;
   location: string;
   roi_percentage: string | null;
