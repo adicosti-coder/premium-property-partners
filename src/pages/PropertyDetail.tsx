@@ -170,7 +170,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night")
+            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("slug", slug)
             .maybeSingle();
           
