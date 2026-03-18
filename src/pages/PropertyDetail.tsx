@@ -47,6 +47,8 @@ interface DbPropertyData {
   location?: string;
   description_ro?: string;
   description_en?: string;
+  long_description_ro?: string | null;
+  long_description_en?: string | null;
   tag?: string;
   image_path?: string | null;
   capital_necesar?: number | null;
@@ -56,8 +58,45 @@ interface DbPropertyData {
   status_operativ?: string;
   property_code?: string | null;
   amenities?: string[];
+  amenities_en?: string[];
   house_rules?: string[];
+  house_rules_en?: string[];
   base_price_per_night?: number | null;
+  weekend_price_per_night?: number | null;
+  // Specs de bază
+  size?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  capacity?: number | null;
+  floor?: string | null;
+  year_built?: number | null;
+  // Câmpuri premium noi
+  balconies?: number | null;
+  terrace_area?: number | null;
+  has_storage?: boolean | null;
+  has_cellar?: boolean | null;
+  orientation?: string | null;
+  view_type?: string | null;
+  has_elevator?: boolean | null;
+  intercom_type?: string | null;
+  has_ac?: boolean | null;
+  usable_area?: number | null;
+  built_area?: number | null;
+  land_area?: number | null;
+  price_per_sqm?: number | null;
+  annual_tax?: number | null;
+  monthly_maintenance?: number | null;
+  renovation_year?: number | null;
+  property_condition?: string | null;
+  total_building_floors?: number | null;
+  apartments_in_building?: number | null;
+  parking?: string | null;
+  heating_type?: string | null;
+  energy_class?: string | null;
+  furnished?: string | null;
+  construction_type?: string | null;
+  compartimentare?: string | null;
+  features?: string[];
 }
 
 // Helper to check if a string is a UUID
