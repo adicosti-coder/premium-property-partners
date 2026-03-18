@@ -502,7 +502,7 @@ export default function CazareManager() {
 
               {/* Descriptions */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-foreground">Descrieri</h3>
+                <h3 className="text-sm font-semibold text-foreground">Descrieri Scurte</h3>
                 <div>
                   <Label>Descriere scurtă (RO)</Label>
                   <Textarea value={editingProperty.description_ro} onChange={(e) => updateField("description_ro", e.target.value)} rows={2} />
@@ -511,15 +511,13 @@ export default function CazareManager() {
                   <Label>Descriere scurtă (EN)</Label>
                   <Textarea value={editingProperty.description_en} onChange={(e) => updateField("description_en", e.target.value)} rows={2} />
                 </div>
-                <div>
-                  <Label>Descriere lungă (RO)</Label>
-                  <Textarea value={editingProperty.long_description_ro || ""} onChange={(e) => updateField("long_description_ro", e.target.value)} rows={3} />
-                </div>
-                <div>
-                  <Label>Descriere lungă (EN)</Label>
-                  <Textarea value={editingProperty.long_description_en || ""} onChange={(e) => updateField("long_description_en", e.target.value)} rows={3} />
-                </div>
               </div>
+
+              {/* Premium Fields */}
+              <PropertyPremiumFields
+                data={editingProperty}
+                onChange={(key, value) => updateField(key, value as any)}
+              />
 
               {/* Features & Amenities */}
               <div className="space-y-4">
