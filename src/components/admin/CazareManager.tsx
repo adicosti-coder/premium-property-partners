@@ -19,15 +19,15 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
 
-interface CazareProperty {
+import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
+
+interface CazareProperty extends PremiumFieldsData {
   id: string;
   name: string;
   slug: string | null;
   location: string;
   description_ro: string;
   description_en: string;
-  long_description_ro: string | null;
-  long_description_en: string | null;
   booking_url: string;
   features: string[];
   image_path: string | null;
