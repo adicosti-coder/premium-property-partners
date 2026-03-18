@@ -361,6 +361,7 @@ export default function PropertyManager() {
         source_platform: formData.source_platform || null,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+        ...premiumFields,
       });
 
       if (error) throw error;
