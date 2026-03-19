@@ -21,6 +21,23 @@ export function useElevenLabsVoice() {
   const sharedContext = useOptionalSharedAssistantContext();
 
   const conversation = useConversation({
+    clientTools: {
+      list_properties: async (params: any) => {
+        console.log("[ElevenLabs] Tool: list_properties", params);
+        const result = await voiceBookingTools.list_properties(params);
+        return result;
+      },
+      check_availability: async (params: any) => {
+        console.log("[ElevenLabs] Tool: check_availability", params);
+        const result = await voiceBookingTools.check_availability(params);
+        return result;
+      },
+      create_booking: async (params: any) => {
+        console.log("[ElevenLabs] Tool: create_booking", params);
+        const result = await voiceBookingTools.create_booking(params);
+        return result;
+      },
+    },
     onConnect: () => {
       console.log("[ElevenLabs] Connected to agent");
       sharedContext?.setActiveMode("voice");
@@ -33,7 +50,6 @@ export function useElevenLabsVoice() {
     },
     onMessage: (message) => {
       console.log("[ElevenLabs] Message:", message);
-      // Add voice messages to shared context
       if (message.role === "user" && message.message) {
         sharedContext?.addMessage("user", message.message, "voice");
         sharedContext?.setVoiceTranscript("");
