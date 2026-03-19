@@ -1,5 +1,5 @@
 import { useConversation } from "@elevenlabs/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Mic, MicOff, Volume2, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { useOptionalSharedAssistantContext } from "@/hooks/useSharedAssistantContext";
 import { cn } from "@/lib/utils";
+import { voiceBookingTools } from "@/lib/voiceBookingTools";
 
 const AGENT_IDS = {
   ro: "agent_2601kgsvskeef4gvytn91he7x8y2",
