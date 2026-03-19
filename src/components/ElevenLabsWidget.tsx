@@ -24,18 +24,35 @@ export function useElevenLabsVoice() {
     clientTools: {
       list_properties: async (params: any) => {
         console.log("[ElevenLabs] Tool: list_properties", params);
-        const result = await voiceBookingTools.list_properties(params);
-        return result;
+        return await voiceBookingTools.list_properties(params);
       },
       check_availability: async (params: any) => {
         console.log("[ElevenLabs] Tool: check_availability", params);
-        const result = await voiceBookingTools.check_availability(params);
-        return result;
+        return await voiceBookingTools.check_availability(params);
       },
       create_booking: async (params: any) => {
         console.log("[ElevenLabs] Tool: create_booking", params);
-        const result = await voiceBookingTools.create_booking(params);
-        return result;
+        return await voiceBookingTools.create_booking(params);
+      },
+      search_local_guide: async (params: any) => {
+        console.log("[ElevenLabs] Tool: search_local_guide", params);
+        return await voiceBookingTools.search_local_guide(params);
+      },
+      get_guest_guide: async (params: any) => {
+        console.log("[ElevenLabs] Tool: get_guest_guide", params);
+        return await voiceBookingTools.get_guest_guide(params);
+      },
+      submit_review: async (params: any) => {
+        console.log("[ElevenLabs] Tool: submit_review", params);
+        return await voiceBookingTools.submit_review(params);
+      },
+      calculate_roi: async (params: any) => {
+        console.log("[ElevenLabs] Tool: calculate_roi", params);
+        return await voiceBookingTools.calculate_roi(params);
+      },
+      capture_lead: async (params: any) => {
+        console.log("[ElevenLabs] Tool: capture_lead", params);
+        return await voiceBookingTools.capture_lead(params);
       },
     },
     onConnect: () => {
