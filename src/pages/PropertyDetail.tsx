@@ -379,12 +379,19 @@ const PropertyDetail = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead 
         title={`${property.name} | RealTrust Timișoara`}
-        description={language === 'ro' 
-          ? `${property.name} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
-          : `${property.name} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`}
+        description={(() => {
+          const rawDesc = language === 'ro' ? (property.longDescription || property.description) : (property.longDescriptionEn || property.descriptionEn || property.longDescription || property.description);
+          if (rawDesc && rawDesc.length > 0) {
+            const clean = rawDesc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            return clean.length > 150 ? clean.slice(0, 147) + '...' : clean;
+          }
+          return language === 'ro'
+            ? `${property.name} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
+            : `${property.name} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
+        })()}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
-        imageAlt={staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : undefined}
+        imageAlt={staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${property.name} — cazare regim hotelier ${property.location}, Timișoara`}
         type="product"
         productPrice={property.pricePerNight || undefined}
         productCurrency="EUR"
