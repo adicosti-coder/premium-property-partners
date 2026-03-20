@@ -35,16 +35,45 @@ const getFeatureIcon = (feature: string) => {
   }
 };
 
+const normalizeSearchValue = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const getLocationSearchTerms = (value: string) => {
+  const normalizedValue = normalizeSearchValue(value);
+
+  const locationAliases: Record<string, string[]> = {
+    timisoara: ["timisoara", "timis", "tm"],
+    ultracentral: ["ultracentral", "central", "centru", "centrul vechi", "unirii", "victoriei"],
+    circumvalatiunii: ["circumvalatiunii", "circumvalatiunii", "iulius", "iulius mall", "city of mara"],
+  };
+
+  return locationAliases[normalizedValue] || [normalizedValue];
+};
+
 const Guests = () => {
   const { t, language } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [searchParams, setSearchParams] = useSearchParams();
+  const checkInParam = searchParams.get("checkIn") || "";
+  const checkOutParam = searchParams.get("checkOut") || "";
+  const requestedGuests = useMemo(() => {
+    const guests = searchParams.get("guests");
+    if (!guests) return null;
+
+    const parsedGuests = Number.parseInt(guests, 10);
+    return Number.isFinite(parsedGuests) && parsedGuests > 0 ? parsedGuests : null;
+  }, [searchParams]);
   const [dbOverrides, setDbOverrides] = useState<Record<string, Partial<{
     rating: number; reviews: number; images: string[];
     pricePerNight: number; capacity: number; bedrooms: number; bathrooms: number; size: number;
     description: string; descriptionEn: string; features: string[];
     bookingUrl: string; isActive: boolean;
   }>>>({});
+  const [unavailablePropertyIds, setUnavailablePropertyIds] = useState<Set<number>>(new Set());
 
   // Fetch live data from DB to overlay on static properties
   useEffect(() => {
@@ -106,6 +135,48 @@ const Guests = () => {
     fetchDbData();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUnavailablePropertyIds = async () => {
+      if (!checkInParam || !checkOutParam) {
+        setUnavailablePropertyIds(new Set());
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("property_id")
+        .not("status", "eq", "cancelled")
+        .lt("check_in", checkOutParam)
+        .gt("check_out", checkInParam);
+
+      if (error) {
+        console.error("Error fetching booking availability:", error);
+        if (isMounted) {
+          setUnavailablePropertyIds(new Set());
+        }
+        return;
+      }
+
+      if (!isMounted) return;
+
+      setUnavailablePropertyIds(
+        new Set(
+          (data || [])
+            .map((row) => Number(row.property_id))
+            .filter((propertyId) => Number.isFinite(propertyId))
+        )
+      );
+    };
+
+    fetchUnavailablePropertyIds();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [checkInParam, checkOutParam]);
+
   // Merge static data with DB overrides
   const properties = useMemo(() => {
     return staticProperties.map(p => {
@@ -142,7 +213,7 @@ const Guests = () => {
     const activeProperties = properties.filter(p => p.isActive !== false);
     const prices = activeProperties.map(p => p.pricePerNight);
     return { min: Math.min(...prices), max: Math.max(...prices) };
-  }, []);
+  }, [properties]);
   
   const [priceFilter, setPriceFilter] = useState<[number, number]>(() => {
     const minPrice = searchParams.get("minPrice");
@@ -168,6 +239,9 @@ const Guests = () => {
     const params = new URLSearchParams();
     
     if (searchQuery) params.set("q", searchQuery);
+    if (checkInParam) params.set("checkIn", checkInParam);
+    if (checkOutParam) params.set("checkOut", checkOutParam);
+    if (requestedGuests) params.set("guests", requestedGuests.toString());
     if (selectedLocation !== "all") params.set("location", selectedLocation);
     if (selectedCapacity !== "all") params.set("capacity", selectedCapacity);
     if (priceFilter[0] !== priceRange.min) params.set("minPrice", priceFilter[0].toString());
@@ -176,7 +250,7 @@ const Guests = () => {
     if (minRating !== "all") params.set("rating", minRating);
     
     setSearchParams(params, { replace: true });
-  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating, priceRange, setSearchParams]);
+  }, [searchQuery, checkInParam, checkOutParam, requestedGuests, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating, priceRange, setSearchParams]);
 
   // Update URL when filters change
   useEffect(() => {
@@ -211,16 +285,42 @@ const Guests = () => {
     let result = properties.filter((property) => {
       // Filter out inactive properties first
       if (property.isActive === false) return false;
-      
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesName = property.name.toLowerCase().includes(query);
-        const matchesLocation = property.location.toLowerCase().includes(query);
-        if (!matchesName && !matchesLocation) return false;
+
+      if (checkInParam && checkOutParam && unavailablePropertyIds.has(property.id)) {
+        return false;
+      }
+
+      if (requestedGuests && property.capacity < requestedGuests) {
+        return false;
       }
       
-      if (selectedLocation !== "all" && property.location !== selectedLocation) {
-        return false;
+      if (searchQuery) {
+        const query = normalizeSearchValue(searchQuery);
+        const searchableContent = normalizeSearchValue([
+          property.name,
+          property.location,
+          property.description,
+          property.descriptionEn,
+          ...(property.features || []),
+          ...(property.amenities || []),
+        ].join(" "));
+
+        if (!searchableContent.includes(query)) return false;
+      }
+      
+      if (selectedLocation !== "all") {
+        const locationTerms = getLocationSearchTerms(selectedLocation);
+        const searchableLocation = normalizeSearchValue([
+          property.location,
+          property.name,
+          property.description,
+          ...(property.features || []),
+          ...(property.amenities || []),
+        ].join(" "));
+
+        if (!locationTerms.some((term) => searchableLocation.includes(term))) {
+          return false;
+        }
       }
       
       if (selectedCapacity !== "all") {
@@ -260,9 +360,9 @@ const Guests = () => {
     }
 
     return result;
-  }, [searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
+  }, [properties, checkInParam, checkOutParam, unavailablePropertyIds, requestedGuests, searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
 
-const hasActiveFilters = searchQuery || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
+const hasActiveFilters = searchQuery || checkInParam || checkOutParam || requestedGuests || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
 
   const clearAllFilters = () => {
     setSearchQuery("");
