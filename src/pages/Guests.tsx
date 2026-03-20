@@ -83,7 +83,7 @@ const Guests = () => {
       const [{ data: propData }, { data: liveData }] = await Promise.all([
         supabase
           .from("properties")
-          .select("slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
+          .select("id, slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
           .eq("listing_type", "cazare"),
         supabase
           .from("property_live_data")
