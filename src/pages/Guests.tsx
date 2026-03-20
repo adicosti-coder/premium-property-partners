@@ -85,6 +85,24 @@ const getLocationSearchTerms = (value: string) => {
   return locationAliases[normalizedValue] || [normalizedValue];
 };
 
+const getRatingOptions = (ratings: number[]) => {
+  if (ratings.length === 0) {
+    return ["9.5", "9.0", "8.5", "8.0"];
+  }
+
+  const uniqueRatings = Array.from(
+    new Set(
+      ratings
+        .filter((rating) => Number.isFinite(rating))
+        .map((rating) => Math.floor(rating * 10) / 10)
+    )
+  )
+    .sort((a, b) => b - a)
+    .slice(0, 4);
+
+  return uniqueRatings.map((rating) => rating.toFixed(1));
+};
+
 const Guests = () => {
   const { t, language } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -441,6 +459,14 @@ const Guests = () => {
     }));
   }, [filteredProperties, checkInParam, checkOutParam]);
 
+  const ratingOptions = useMemo(() => {
+    return getRatingOptions(
+      properties
+        .map((property) => Number(property.rating))
+        .filter((rating) => Number.isFinite(rating))
+    );
+  }, [properties]);
+
 const hasActiveFilters = searchQuery || checkInParam || checkOutParam || requestedGuests || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
 
   const clearAllFilters = () => {
@@ -643,26 +669,13 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{language === 'ro' ? 'Orice rating' : 'Any rating'}</SelectItem>
-                <SelectItem value="4.9">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.9+
-                  </span>
-                </SelectItem>
-                <SelectItem value="4.8">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.8+
-                  </span>
-                </SelectItem>
-                <SelectItem value="4.5">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.5+
-                  </span>
-                </SelectItem>
-                <SelectItem value="4.0">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-primary text-primary" /> 4.0+
-                  </span>
-                </SelectItem>
+                {ratingOptions.map((rating) => (
+                  <SelectItem key={rating} value={rating}>
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-primary text-primary" /> {rating}+
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -805,15 +818,20 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
             {(checkInParam || checkOutParam || requestedGuests) && (
               <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
                 {checkInParam && checkOutParam && (
-                  <span className="rounded-full bg-muted px-3 py-1">
-                    {formatBookingDate(checkInParam)} → {formatBookingDate(checkOutParam)}
+                    <span className="rounded-full bg-muted px-3 py-1 font-medium text-foreground">
+                      {language === 'ro' ? 'Perioadă:' : 'Period:'} {formatBookingDate(checkInParam)} → {formatBookingDate(checkOutParam)}
                   </span>
                 )}
                 {requestedGuests && (
-                  <span className="rounded-full bg-muted px-3 py-1">
-                    {requestedGuests} {language === 'ro' ? 'oaspeți selectați' : 'guests selected'}
+                    <span className="rounded-full bg-muted px-3 py-1 font-medium text-foreground">
+                      {language === 'ro' ? 'Oaspeți:' : 'Guests:'} {requestedGuests}
                   </span>
                 )}
+                  {minRating !== "all" && (
+                    <span className="rounded-full bg-muted px-3 py-1 font-medium text-foreground">
+                      {language === 'ro' ? 'Rating minim:' : 'Minimum rating:'} {minRating}+
+                    </span>
+                  )}
               </div>
             )}
             <p className="text-sm text-muted-foreground">
