@@ -18,6 +18,25 @@ interface AvailabilityResponse {
   rows?: AvailabilityCell[][];
 }
 
+const getMonthsInRange = (checkIn: string, checkOut: string) => {
+  const months: Array<{ month: string; year: string }> = [];
+  const current = new Date(`${checkIn}T00:00:00`);
+  const end = new Date(`${checkOut}T00:00:00`);
+
+  current.setDate(1);
+  end.setDate(1);
+
+  while (current <= end) {
+    months.push({
+      month: String(current.getMonth() + 1).padStart(2, "0"),
+      year: String(current.getFullYear()),
+    });
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return months;
+};
+
 const getDatesInRange = (checkIn: string, checkOut: string) => {
   const dates: string[] = [];
   const current = new Date(`${checkIn}T00:00:00`);
@@ -78,39 +97,42 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
     return null;
   }
 
-  const availabilityUrl = new URL("service/availability/", `${url.protocol}//${url.host}/`);
-  const availabilityResponse = await fetch(availabilityUrl.toString(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      "X-Requested-With": "XMLHttpRequest",
-      "User-Agent": "RealTrustAvailability/1.0",
-    },
-    body: new URLSearchParams({
-      month: context.month,
-      year: context.year,
-      hotelId: context.hotelId,
-      offerId: context.offerId,
-      roomId: context.roomId,
-      rateId: context.rateId,
-    }),
-  });
-
-  if (!availabilityResponse.ok) {
-    return null;
-  }
-
-  const availabilityText = await availabilityResponse.text();
-  const availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
   const unavailable = new Set<string>();
 
-  for (const row of availabilityData.rows || []) {
-    for (const cell of row || []) {
-      if (!cell || cell.day === "" || cell.day === undefined || cell.day === null) continue;
-      if (cell.avail !== 0 && cell.avail !== -1) continue;
+  for (const rangeMonth of getMonthsInRange(checkIn, checkOut)) {
+    const availabilityUrl = new URL("service/availability/", `${url.protocol}//${url.host}/`);
+    const availabilityResponse = await fetch(availabilityUrl.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+        "User-Agent": "RealTrustAvailability/1.0",
+      },
+      body: new URLSearchParams({
+        month: rangeMonth.month,
+        year: rangeMonth.year,
+        hotelId: context.hotelId,
+        offerId: context.offerId,
+        roomId: context.roomId,
+        rateId: context.rateId,
+      }),
+    });
 
-      const day = String(cell.day).padStart(2, "0");
-      unavailable.add(`${context.year}-${context.month.padStart(2, "0")}-${day}`);
+    if (!availabilityResponse.ok) {
+      return null;
+    }
+
+    const availabilityText = await availabilityResponse.text();
+    const availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
+
+    for (const row of availabilityData.rows || []) {
+      for (const cell of row || []) {
+        if (!cell || cell.day === "" || cell.day === undefined || cell.day === null) continue;
+        if (cell.avail !== 0 && cell.avail !== -1) continue;
+
+        const day = String(cell.day).padStart(2, "0");
+        unavailable.add(`${rangeMonth.year}-${rangeMonth.month}-${day}`);
+      }
     }
   }
 
