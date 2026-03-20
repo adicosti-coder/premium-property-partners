@@ -7,6 +7,58 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const normalizeText = (value: string | null | undefined) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const tokenize = (value: string) =>
+  normalizeText(value)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 2);
+
+const expandLocationTerms = (value: string) => {
+  const normalizedValue = normalizeText(value);
+
+  const aliases = [
+    {
+      keys: ["iulius", "iulius mall", "circumvalatiunii", "circumvalațiunii", "city of mara"],
+      synonyms: ["iulius", "iulius mall", "circumvalatiunii", "city of mara", "take ionescu"],
+    },
+    {
+      keys: ["centru", "central", "ultracentral", "centrul vechi", "unirii", "victoriei"],
+      synonyms: ["centru", "central", "ultracentral", "centrul vechi", "unirii", "victoriei", "gheorghe lazar"],
+    },
+    {
+      keys: ["nord", "torontalului", "ateneo"],
+      synonyms: ["nord", "torontalului", "ateneo", "amazonia", "constructorilor"],
+    },
+  ];
+
+  const matchedAliases = aliases.flatMap((group) =>
+    group.keys.some((key) => normalizedValue.includes(key)) ? group.synonyms : []
+  );
+
+  return Array.from(new Set([normalizedValue, ...matchedAliases].filter(Boolean)));
+};
+
+const buildSearchablePropertyText = (property: Record<string, unknown>) =>
+  normalizeText(
+    [
+      property.name,
+      property.location,
+      property.description_ro,
+      property.description_en,
+      property.tag,
+      ...(Array.isArray(property.features) ? property.features : []),
+      ...(Array.isArray(property.amenities) ? property.amenities : []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
 serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
@@ -102,91 +154,131 @@ Respond with ONLY the JSON object. No explanation.`;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    let dbQuery = supabase
-      .from("properties")
-      .select(
-        "id, name, slug, location, listing_type, base_price_per_night, weekend_price_per_night, bedrooms, capacity, features, image_path, tag, description_ro, description_en, booking_rating, booking_review_count, amenities, property_images(image_path, is_primary, display_order)"
-      )
-      .eq("is_active", true);
-
-    // Apply listing_type filter
     const listingType = (filters.listing_type as string) || "cazare";
-    dbQuery = dbQuery.eq("listing_type", listingType);
 
-    // Apply location filter (ilike on location or name)
-    if (filters.location) {
-      const loc = filters.location as string;
-      dbQuery = dbQuery.or(
-        `location.ilike.%${loc}%,name.ilike.%${loc}%`
-      );
-    }
+    const buildBaseQuery = (useStrictNumericFilters: boolean) => {
+      let dbQuery = supabase
+        .from("properties")
+        .select(
+          "id, name, slug, location, listing_type, base_price_per_night, weekend_price_per_night, bedrooms, capacity, features, image_path, tag, description_ro, description_en, booking_rating, booking_review_count, amenities, property_images(image_path, is_primary, display_order)"
+        )
+        .eq("is_active", true)
+        .eq("listing_type", listingType);
 
-    // Apply bedrooms filter
-    if (filters.bedrooms && typeof filters.bedrooms === "number") {
-      dbQuery = dbQuery.eq("bedrooms", filters.bedrooms);
-    }
+      if (useStrictNumericFilters) {
+        if (filters.bedrooms && typeof filters.bedrooms === "number") {
+          dbQuery = dbQuery.eq("bedrooms", filters.bedrooms);
+        }
 
-    // Apply capacity filter
-    if (filters.min_capacity && typeof filters.min_capacity === "number") {
-      dbQuery = dbQuery.gte("capacity", filters.min_capacity);
-    }
+        if (filters.min_capacity && typeof filters.min_capacity === "number") {
+          dbQuery = dbQuery.gte("capacity", filters.min_capacity);
+        }
 
-    // Apply price filters
-    if (filters.max_price && typeof filters.max_price === "number") {
-      dbQuery = dbQuery.lte("base_price_per_night", filters.max_price);
-    }
-    if (filters.min_price && typeof filters.min_price === "number") {
-      dbQuery = dbQuery.gte("base_price_per_night", filters.min_price);
-    }
+        if (filters.max_price && typeof filters.max_price === "number") {
+          dbQuery = dbQuery.lte("base_price_per_night", filters.max_price);
+        }
+
+        if (filters.min_price && typeof filters.min_price === "number") {
+          dbQuery = dbQuery.gte("base_price_per_night", filters.min_price);
+        }
+      }
+
+      return dbQuery.limit(24);
+    };
 
     // Apply sort
     const sort = filters.sort as string;
-    if (sort === "price_asc") {
-      dbQuery = dbQuery.order("base_price_per_night", { ascending: true });
-    } else if (sort === "price_desc") {
-      dbQuery = dbQuery.order("base_price_per_night", { ascending: false });
-    } else if (sort === "rating_desc") {
-      dbQuery = dbQuery.order("booking_rating", { ascending: false });
-    } else {
-      dbQuery = dbQuery.order("display_order", { ascending: true });
-    }
 
-    dbQuery = dbQuery.limit(12);
+    const { data: strictCandidates, error: strictError } = await buildBaseQuery(true);
 
-    const { data: properties, error: dbError } = await dbQuery;
-
-    if (dbError) {
-      console.error("DB error:", dbError);
+    if (strictError) {
+      console.error("DB error:", strictError);
       throw new Error("Database query failed");
     }
 
-    // Step 3: If keywords exist, do client-side filtering on results
-    let results = properties || [];
+    let properties = strictCandidates || [];
+    let fallbackUsed = false;
+
+    if (properties.length === 0) {
+      const { data: relaxedCandidates, error: relaxedError } = await buildBaseQuery(false);
+
+      if (relaxedError) {
+        console.error("DB fallback error:", relaxedError);
+        throw new Error("Database query failed");
+      }
+
+      properties = relaxedCandidates || [];
+      fallbackUsed = true;
+    }
+
+    // Step 3: Score and rank client-side so searches still return useful results
     const keywords = (filters.keywords as string[]) || [];
     const features = (filters.features as string[]) || [];
+    const locationTerms = filters.location ? expandLocationTerms(filters.location as string) : [];
+    const queryTokens = Array.from(
+      new Set([
+        ...tokenize(query),
+        ...keywords.flatMap((keyword) => tokenize(keyword)),
+        ...features.flatMap((feature) => tokenize(feature)),
+        ...locationTerms.flatMap((term) => tokenize(term)),
+      ])
+    );
 
-    if (keywords.length > 0 || features.length > 0) {
-      const allTerms = [...keywords, ...features].map((k) => k.toLowerCase());
-      results = results.filter((p: any) => {
-        const searchable = [
-          p.name,
-          p.location,
-          p.description_ro,
-          p.description_en,
-          ...(p.features || []),
-          ...(p.amenities || []),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        // At least one term must match
-        return allTerms.some((term) => searchable.includes(term));
-      });
-    }
+    const scoredResults = properties.map((property: any) => {
+      const searchableText = buildSearchablePropertyText(property);
+      let score = 0;
+
+      for (const term of locationTerms) {
+        if (searchableText.includes(term)) score += 6;
+      }
+
+      for (const term of features.map((feature) => normalizeText(feature))) {
+        if (term && searchableText.includes(term)) score += 4;
+      }
+
+      for (const term of keywords.map((keyword) => normalizeText(keyword))) {
+        if (term && searchableText.includes(term)) score += 3;
+      }
+
+      for (const token of queryTokens) {
+        if (searchableText.includes(token)) score += 1;
+      }
+
+      if (normalizeText(property.name).includes(normalizeText(query))) {
+        score += 8;
+      }
+
+      return {
+        property,
+        score,
+      };
+    });
+
+    const matchedResults = scoredResults.filter(({ score }) => score > 0);
+
+    const rankedResults = (matchedResults.length > 0 ? matchedResults : scoredResults)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+
+        if (sort === "price_asc") {
+          return (a.property.base_price_per_night ?? Number.MAX_SAFE_INTEGER) - (b.property.base_price_per_night ?? Number.MAX_SAFE_INTEGER);
+        }
+
+        if (sort === "price_desc") {
+          return (b.property.base_price_per_night ?? 0) - (a.property.base_price_per_night ?? 0);
+        }
+
+        return (b.property.booking_rating ?? 0) - (a.property.booking_rating ?? 0);
+      })
+      .slice(0, 12)
+      .map(({ property }) => property);
+
+    const results = rankedResults;
 
     // Build a summary for the user
     const filterSummary = {
       parsed_filters: filters,
+      fallback_used: fallbackUsed,
       result_count: results.length,
       listing_type: listingType,
     };
