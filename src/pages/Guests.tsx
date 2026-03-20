@@ -22,6 +22,26 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import PageSummary from "@/components/PageSummary";
 
+const formatBookingDate = (date: string) => {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+
+  return new Intl.DateTimeFormat("ro-RO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(parsed);
+};
+
+const buildDirectBookingUrl = (bookingUrl: string, checkIn?: string, checkOut?: string) => {
+  if (!checkIn || !checkOut) return bookingUrl;
+
+  const url = new URL(bookingUrl);
+  url.searchParams.set("arrivalDate", checkIn);
+  url.searchParams.set("departureDate", checkOut);
+  return url.toString();
+};
+
 const getFeatureIcon = (feature: string) => {
   switch (feature.toLowerCase()) {
     case "wifi":
@@ -86,6 +106,7 @@ const Guests = () => {
   }>>>({});
   const [propertyDbIdsBySlug, setPropertyDbIdsBySlug] = useState<Record<string, string>>({});
   const [unavailablePropertySlugs, setUnavailablePropertySlugs] = useState<Set<string>>(new Set());
+  const [isCheckingLiveAvailability, setIsCheckingLiveAvailability] = useState(false);
 
   // Fetch live data from DB to overlay on static properties
   useEffect(() => {
@@ -161,6 +182,27 @@ const Guests = () => {
         return;
       }
 
+      setIsCheckingLiveAvailability(true);
+
+      const propertyPayload = staticProperties.map((property) => ({
+        slug: property.slug,
+        bookingUrl: dbOverrides[property.slug]?.bookingUrl ?? property.bookingUrl,
+      }));
+
+      const { data: liveAvailability, error: liveAvailabilityError } = await supabase.functions.invoke("live-property-availability", {
+        body: {
+          checkIn: checkInParam,
+          checkOut: checkOutParam,
+          properties: propertyPayload,
+        },
+      });
+
+      if (!liveAvailabilityError && liveAvailability?.unavailableSlugs && isMounted) {
+        setUnavailablePropertySlugs(new Set(liveAvailability.unavailableSlugs));
+        setIsCheckingLiveAvailability(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("bookings")
         .select("property_id")
@@ -172,6 +214,7 @@ const Guests = () => {
         console.error("Error fetching booking availability:", error);
         if (isMounted) {
           setUnavailablePropertySlugs(new Set());
+          setIsCheckingLiveAvailability(false);
         }
         return;
       }
@@ -196,6 +239,7 @@ const Guests = () => {
         .map(([slug]) => slug);
 
       setUnavailablePropertySlugs(new Set(matchedSlugs));
+      setIsCheckingLiveAvailability(false);
     };
 
     fetchUnavailablePropertyIds();
@@ -203,7 +247,7 @@ const Guests = () => {
     return () => {
       isMounted = false;
     };
-  }, [checkInParam, checkOutParam, propertyDbIdsBySlug]);
+  }, [checkInParam, checkOutParam, propertyDbIdsBySlug, dbOverrides]);
 
   // Merge static data with DB overrides
   const properties = useMemo(() => {
@@ -389,6 +433,13 @@ const Guests = () => {
 
     return result;
   }, [properties, checkInParam, checkOutParam, unavailablePropertySlugs, requestedGuests, searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
+
+  const propertiesWithBookingUrl = useMemo(() => {
+    return filteredProperties.map((property) => ({
+      ...property,
+      bookingUrl: buildDirectBookingUrl(property.bookingUrl, checkInParam, checkOutParam),
+    }));
+  }, [filteredProperties, checkInParam, checkOutParam]);
 
 const hasActiveFilters = searchQuery || checkInParam || checkOutParam || requestedGuests || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
 
@@ -751,11 +802,30 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
             }`}
             style={{ transitionDelay: '300ms' }}
           >
+            {(checkInParam || checkOutParam || requestedGuests) && (
+              <div className="mb-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+                {checkInParam && checkOutParam && (
+                  <span className="rounded-full bg-muted px-3 py-1">
+                    {formatBookingDate(checkInParam)} → {formatBookingDate(checkOutParam)}
+                  </span>
+                )}
+                {requestedGuests && (
+                  <span className="rounded-full bg-muted px-3 py-1">
+                    {requestedGuests} {language === 'ro' ? 'oaspeți selectați' : 'guests selected'}
+                  </span>
+                )}
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               {language === 'ro' 
-                ? `${filteredProperties.length} apartamente disponibile`
-                : `${filteredProperties.length} apartments available`}
+                ? `${propertiesWithBookingUrl.length} apartamente disponibile`
+                : `${propertiesWithBookingUrl.length} apartments available`}
             </p>
+            {isCheckingLiveAvailability && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {language === 'ro' ? 'Verific disponibilitatea live…' : 'Checking live availability…'}
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -768,7 +838,7 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
         
         <div ref={gridRef} className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProperties.map((property, index) => (
+            {propertiesWithBookingUrl.map((property, index) => (
               <article 
                 key={property.id}
                 role="link"
@@ -895,7 +965,7 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
             ))}
           </div>
 
-          {filteredProperties.length === 0 && (
+          {propertiesWithBookingUrl.length === 0 && (
             <div className="text-center py-16">
               <Filter className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
               <h3 className="text-xl font-serif font-semibold text-foreground mb-2">
