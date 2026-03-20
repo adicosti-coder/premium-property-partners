@@ -70,6 +70,10 @@ const PropertyCard = ({
   const { prefetchPropertyImage } = usePrefetch();
   const hoverPrefetched = useRef(false);
 
+  const openDirectBooking = useCallback(() => {
+    window.open(property.bookingUrl, "_blank", "noopener,noreferrer");
+  }, [property.bookingUrl]);
+
   const handleCardHover = useCallback(() => {
     if (!hoverPrefetched.current && property.images[1]) {
       prefetchPropertyImage(property.images[1]);
@@ -78,15 +82,23 @@ const PropertyCard = ({
   }, [property.images, prefetchPropertyImage]);
 
   return (
-    <PrefetchLink
-      to={`/proprietate/${property.slug}`}
-      propertyId={String(property.id)}
+    <div
+      role="link"
+      tabIndex={0}
+      aria-label={`${t.bookDirect} — ${property.name}`}
       className={cn(
-        "group block bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant",
+        "group block cursor-pointer bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant",
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}
       style={{ transitionDelay: isVisible ? `${index * 75}ms` : "0ms" }}
       onMouseEnter={handleCardHover}
+      onClick={openDirectBooking}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openDirectBooking();
+        }
+      }}
     >
       {/* Image */}
       <div className="relative h-48 overflow-hidden cursor-pointer">
@@ -240,16 +252,19 @@ const PropertyCard = ({
               {t.bookDirect}
             </a>
           </Button>
-          <Button
-            variant="booking"
-            size="sm"
-            aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
-          >
-            <Eye className="w-4 h-4" />
+          <Button variant="booking" size="sm" asChild>
+            <PrefetchLink
+              to={`/proprietate/${property.slug}`}
+              propertyId={String(property.id)}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={language === "ro" ? `Vezi detalii ${property.name}` : `View details ${property.name}`}
+            >
+              <Eye className="w-4 h-4" />
+            </PrefetchLink>
           </Button>
         </div>
       </div>
-    </PrefetchLink>
+    </div>
   );
 };
 
