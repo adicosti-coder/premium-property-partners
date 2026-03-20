@@ -73,7 +73,8 @@ const Guests = () => {
     description: string; descriptionEn: string; features: string[];
     bookingUrl: string; isActive: boolean;
   }>>>({});
-  const [unavailablePropertyIds, setUnavailablePropertyIds] = useState<Set<number>>(new Set());
+  const [propertyDbIdsBySlug, setPropertyDbIdsBySlug] = useState<Record<string, string>>({});
+  const [unavailablePropertySlugs, setUnavailablePropertySlugs] = useState<Set<string>>(new Set());
 
   // Fetch live data from DB to overlay on static properties
   useEffect(() => {
@@ -90,11 +91,15 @@ const Guests = () => {
       ]);
 
       const overrides: typeof dbOverrides = {};
+      const dbIdsBySlug: Record<string, string> = {};
 
       // Apply admin property overrides first
       if (propData) {
         propData.forEach((row: any) => {
           if (row.slug) {
+            if (row.id) {
+              dbIdsBySlug[row.slug] = row.id;
+            }
             overrides[row.slug] = {
               rating: row.booking_rating ?? undefined,
               reviews: row.booking_review_count ?? undefined,
@@ -131,6 +136,7 @@ const Guests = () => {
       }
 
       setDbOverrides(overrides);
+      setPropertyDbIdsBySlug(dbIdsBySlug);
     };
     fetchDbData();
   }, []);
@@ -140,7 +146,7 @@ const Guests = () => {
 
     const fetchUnavailablePropertyIds = async () => {
       if (!checkInParam || !checkOutParam) {
-        setUnavailablePropertyIds(new Set());
+        setUnavailablePropertySlugs(new Set());
         return;
       }
 
@@ -154,20 +160,24 @@ const Guests = () => {
       if (error) {
         console.error("Error fetching booking availability:", error);
         if (isMounted) {
-          setUnavailablePropertyIds(new Set());
+          setUnavailablePropertySlugs(new Set());
         }
         return;
       }
 
       if (!isMounted) return;
 
-      setUnavailablePropertyIds(
-        new Set(
-          (data || [])
-            .map((row) => Number(row.property_id))
-            .filter((propertyId) => Number.isFinite(propertyId))
-        )
+      const unavailableDbIds = new Set(
+        (data || [])
+          .map((row) => String(row.property_id))
+          .filter(Boolean)
       );
+
+      const matchedSlugs = Object.entries(propertyDbIdsBySlug)
+        .filter(([, dbId]) => unavailableDbIds.has(String(dbId)))
+        .map(([slug]) => slug);
+
+      setUnavailablePropertySlugs(new Set(matchedSlugs));
     };
 
     fetchUnavailablePropertyIds();
@@ -175,7 +185,7 @@ const Guests = () => {
     return () => {
       isMounted = false;
     };
-  }, [checkInParam, checkOutParam]);
+  }, [checkInParam, checkOutParam, propertyDbIdsBySlug]);
 
   // Merge static data with DB overrides
   const properties = useMemo(() => {
@@ -286,7 +296,7 @@ const Guests = () => {
       // Filter out inactive properties first
       if (property.isActive === false) return false;
 
-      if (checkInParam && checkOutParam && unavailablePropertyIds.has(property.id)) {
+        if (checkInParam && checkOutParam && unavailablePropertySlugs.has(property.slug)) {
         return false;
       }
 
@@ -360,7 +370,7 @@ const Guests = () => {
     }
 
     return result;
-  }, [properties, checkInParam, checkOutParam, unavailablePropertyIds, requestedGuests, searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
+  }, [properties, checkInParam, checkOutParam, unavailablePropertySlugs, requestedGuests, searchQuery, selectedLocation, selectedCapacity, priceFilter, sortBy, minRating]);
 
 const hasActiveFilters = searchQuery || checkInParam || checkOutParam || requestedGuests || selectedLocation !== "all" || selectedCapacity !== "all" || isPriceFiltered || sortBy !== "default" || minRating !== "all";
 
@@ -743,7 +753,17 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
             {filteredProperties.map((property, index) => (
               <article 
                 key={property.id}
-                className={`group bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant hover:-translate-y-2 ${
+                role="link"
+                tabIndex={0}
+                aria-label={`${language === 'ro' ? 'Rezervă direct' : 'Book direct'} — ${property.name}`}
+                onClick={() => window.open(property.bookingUrl, '_blank', 'noopener,noreferrer')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.open(property.bookingUrl, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                className={`group cursor-pointer bg-card rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-elegant hover:-translate-y-2 ${
                   gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
                 }`}
                 style={{ transitionDelay: gridVisible ? `${index * 100}ms` : '0ms' }}
@@ -776,8 +796,11 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
                   </div>
 
                   {/* Favorite button */}
-                  <button
-                    onClick={() => handleToggleFavorite(String(property.id), property.name)}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleFavorite(String(property.id), property.name);
+                      }}
                     className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-20 ${
                       isFavorite(String(property.id))
                         ? "bg-red-500 text-white"
@@ -835,12 +858,15 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
                       variant="default"
                       size="sm"
                       className="flex-1"
-                      onClick={() => window.open(property.bookingUrl, '_blank')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(property.bookingUrl, '_blank', 'noopener,noreferrer');
+                      }}
                     >
                       <Calendar className="w-4 h-4 mr-1" />
                       {language === 'ro' ? 'Rezervă Direct' : 'Book Direct'}
                     </Button>
-                    <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)}>
+                    <PrefetchLink to={`/proprietate/${property.slug}`} propertyId={String(property.id)} onClick={(e) => e.stopPropagation()}>
                       <Button variant="outline" size="sm">
                         {language === 'ro' ? 'Detalii' : 'Details'}
                       </Button>
