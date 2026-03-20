@@ -6,6 +6,37 @@ interface PropertyPayload {
   bookingUrl: string;
 }
 
+interface AvailabilityCell {
+  day?: string | number;
+  avail?: number;
+  min?: number;
+  no_arrival?: number;
+  no_departure_in?: number;
+}
+
+interface AvailabilityResponse {
+  rows?: AvailabilityCell[][];
+}
+
+const getMonthsInRange = (checkIn: string, checkOut: string) => {
+  const months: Array<{ month: string; year: string }> = [];
+  const current = new Date(`${checkIn}T00:00:00`);
+  const end = new Date(`${checkOut}T00:00:00`);
+
+  current.setDate(1);
+  end.setDate(1);
+
+  while (current <= end) {
+    months.push({
+      month: String(current.getMonth() + 1).padStart(2, "0"),
+      year: String(current.getFullYear()),
+    });
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return months;
+};
+
 const getDatesInRange = (checkIn: string, checkOut: string) => {
   const dates: string[] = [];
   const current = new Date(`${checkIn}T00:00:00`);
@@ -19,12 +50,90 @@ const getDatesInRange = (checkIn: string, checkOut: string) => {
   return dates;
 };
 
-const parseUnavailableDates = (html: string) => {
-  const unavailable = new Set<string>();
-  const noAvailRegex = /<(?:span|a)[^>]*class="[^"]*room-noavail[^"]*"[^>]*data-date="(\d{4}-\d{2}-\d{2})"/g;
+const extractAvailabilityContext = (html: string) => {
+  const configMatch = html.match(/new\s+Availability\w*\s*\(\s*\{([\s\S]*?)\}\s*\)/i);
+  const showAvailabilityMatch = html.match(/showAvailability\((\d+),(\d+),(\d+)\)/i);
 
-  for (const match of html.matchAll(noAvailRegex)) {
-    unavailable.add(match[1]);
+  if (!configMatch || !showAvailabilityMatch) {
+    return null;
+  }
+
+  const config = configMatch[1];
+  const hotelId = config.match(/hotelId:\s*'(\d+)'/i)?.[1];
+  const startMonth = config.match(/startMonth:\s*'(\d+)'/i)?.[1];
+  const startYear = config.match(/startYear:\s*'(\d+)'/i)?.[1];
+
+  if (!hotelId || !startMonth || !startYear) {
+    return null;
+  }
+
+  return {
+    hotelId,
+    month: startMonth,
+    year: startYear,
+    offerId: showAvailabilityMatch[1],
+    roomId: showAvailabilityMatch[2],
+    rateId: showAvailabilityMatch[3],
+  };
+};
+
+const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string) => {
+  const url = new URL(bookingUrl);
+  url.searchParams.set("arrivalDate", checkIn);
+  url.searchParams.set("departureDate", checkOut);
+
+  const pageResponse = await fetch(url.toString(), {
+    headers: { "User-Agent": "RealTrustAvailability/1.0" },
+  });
+
+  if (!pageResponse.ok) {
+    return null;
+  }
+
+  const html = await pageResponse.text();
+  const context = extractAvailabilityContext(html);
+
+  if (!context) {
+    return null;
+  }
+
+  const unavailable = new Set<string>();
+
+  for (const rangeMonth of getMonthsInRange(checkIn, checkOut)) {
+    const availabilityUrl = new URL("service/availability/", `${url.protocol}//${url.host}/`);
+    const availabilityResponse = await fetch(availabilityUrl.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+        "User-Agent": "RealTrustAvailability/1.0",
+      },
+      body: new URLSearchParams({
+        month: rangeMonth.month,
+        year: rangeMonth.year,
+        hotelId: context.hotelId,
+        offerId: context.offerId,
+        roomId: context.roomId,
+        rateId: context.rateId,
+      }),
+    });
+
+    if (!availabilityResponse.ok) {
+      return null;
+    }
+
+    const availabilityText = await availabilityResponse.text();
+    const availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
+
+    for (const row of availabilityData.rows || []) {
+      for (const cell of row || []) {
+        if (!cell || cell.day === "" || cell.day === undefined || cell.day === null) continue;
+        if (cell.avail !== 0 && cell.avail !== -1) continue;
+
+        const day = String(cell.day).padStart(2, "0");
+        unavailable.add(`${rangeMonth.year}-${rangeMonth.month}-${day}`);
+      }
+    }
   }
 
   return unavailable;
@@ -56,26 +165,18 @@ serve(async (req) => {
 
     await Promise.all(properties.map(async (property) => {
       try {
-        const url = new URL(property.bookingUrl);
-        url.searchParams.set("arrivalDate", checkIn);
-        url.searchParams.set("departureDate", checkOut);
-
-        const response = await fetch(url.toString(), {
-          headers: { "User-Agent": "RealTrustAvailability/1.0" },
-        });
-
-        if (!response.ok) {
+        const unavailableDates = await fetchUnavailableDates(property.bookingUrl, checkIn, checkOut);
+        if (!unavailableDates) {
           return;
         }
 
-        const html = await response.text();
-        const unavailableDates = parseUnavailableDates(html);
         const hasConflict = requestedDates.some((date) => unavailableDates.has(date));
 
         if (hasConflict) {
           unavailableSlugs.push(property.slug);
         }
-      } catch (_error) {
+      } catch (error) {
+        console.error("availability lookup failed", property.slug, error);
       }
     }));
 
