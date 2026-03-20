@@ -42,6 +42,17 @@ const normalizeSearchValue = (value: string) =>
     .toLowerCase()
     .trim();
 
+const getLegacyBookingPropertyId = (propertyId: string) => {
+  const compactId = propertyId.replace(/-/g, "").slice(0, 8);
+  const parsed = Number.parseInt(compactId, 16);
+
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return parsed % 1000000;
+};
+
 const getLocationSearchTerms = (value: string) => {
   const normalizedValue = normalizeSearchValue(value);
 
@@ -83,7 +94,7 @@ const Guests = () => {
       const [{ data: propData }, { data: liveData }] = await Promise.all([
         supabase
           .from("properties")
-          .select("slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
+          .select("id, slug, booking_rating, booking_review_count, images, image_path, base_price_per_night, capacity, bedrooms, bathrooms, size, description_ro, description_en, features, booking_url, is_active")
           .eq("listing_type", "cazare"),
         supabase
           .from("property_live_data")
@@ -174,7 +185,14 @@ const Guests = () => {
       );
 
       const matchedSlugs = Object.entries(propertyDbIdsBySlug)
-        .filter(([, dbId]) => unavailableDbIds.has(String(dbId)))
+        .filter(([, dbId]) => {
+          const legacyBookingId = getLegacyBookingPropertyId(dbId);
+
+          return (
+            unavailableDbIds.has(String(dbId)) ||
+            (legacyBookingId !== null && unavailableDbIds.has(String(legacyBookingId)))
+          );
+        })
         .map(([slug]) => slug);
 
       setUnavailablePropertySlugs(new Set(matchedSlugs));
