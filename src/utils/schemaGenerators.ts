@@ -55,13 +55,7 @@ export const generateLocalBusinessSchema = () => ({
   // Enhanced PriceRange for AI matching with user budgets
   "priceRange": "€50-€150 per night",
   // AggregateRating - critical for AI recommendations
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "500",
-    "bestRating": "5",
-    "worstRating": "1",
-  },
+  // AggregateRating injected dynamically from DeferredHomeSEO with real DB values
   // AreaServed - clearly marked for Timișoara
   "areaServed": [
     {
