@@ -55,7 +55,7 @@ const PWAInstallPrompt = () => {
     window.addEventListener('open-pwa-prompt', handleOpen);
     return () => window.removeEventListener('open-pwa-prompt', handleOpen);
   }, [isInstalled]);
-  }, [isInstallable, isInstalled, canPrompt, isIOSSafari]);
+  
 
   const handleInstall = async () => {
     if (canPrompt) {
