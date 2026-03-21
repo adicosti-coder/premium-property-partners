@@ -129,15 +129,16 @@ const PropertyDetail = () => {
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const directBookingUrl = dbProperty?.booking_url || staticProperty?.bookingUrl || "";
 
   const openDirectBooking = useCallback(() => {
-    if (property?.bookingUrl) {
-      window.open(property.bookingUrl, "_blank", "noopener,noreferrer");
+    if (directBookingUrl) {
+      window.open(directBookingUrl, "_blank", "noopener,noreferrer");
       return;
     }
 
     setBookingOpen(true);
-  }, [property?.bookingUrl]);
+  }, [directBookingUrl]);
 
   // Track property views
   usePropertyViewTracking(dbProperty?.id);
