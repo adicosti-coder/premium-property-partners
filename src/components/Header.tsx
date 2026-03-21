@@ -6,6 +6,13 @@ const MenuIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor
 const XIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
 const ShieldIcon = ({ className = "w-5 h-5" }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>;
 const HeartIcon = ({ className = "w-5 h-5" }: { className?: string }) => <svg className={className} fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
+const HomeIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+const BuildingIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>;
+const BedIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>;
+const TrendingIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>;
+const BookOpenIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+const PhoneIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
+const ScanIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>;
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -163,19 +170,45 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
-  const navLinks = [
-    { href: "/", label: t.nav.home, isHome: true },
-    { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true },
-    { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true },
-    { href: "/pentru-oaspeti", label: language === "ro" ? "Închiriere & Cazare Regim Hotelier" : "Rental & Hotel Accommodation", isPage: true },
-    { href: "/complexe", label: language === "ro" ? "Ansambluri & Complexuri Rezidențiale" : "Residential Complexes", isPage: true },
-    { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
-    { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true },
-    { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true },
-    { href: "/analiza-proprietate", label: language === "ro" ? "HostScan AI – Analiză Proprietate" : "HostScan AI – Property Analysis", isPage: true },
-    { href: "/blog", label: language === "ro" ? "Blog (Sfaturi, noutăți și ghiduri)" : "Blog (Tips, news & guides)", isPage: true },
-    { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
-    { href: "#contact", label: t.nav.contact },
+  // Grouped nav links with icons for premium mobile menu
+  const navGroups = [
+    {
+      label: language === "ro" ? "Principal" : "Main",
+      links: [
+        { href: "/", label: t.nav.home, isHome: true, icon: <HomeIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Proprietari" : "Owners",
+      links: [
+        { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true, icon: <BuildingIcon /> },
+        { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true, icon: <TrendingIcon /> },
+        { href: "/analiza-proprietate", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Oaspeți" : "Guests",
+      links: [
+        { href: "/pentru-oaspeti", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation", isPage: true, icon: <BedIcon /> },
+        { href: "/complexe", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes", isPage: true, icon: <BuildingIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Investiții" : "Investments",
+      links: [
+        { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
+        { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
+        { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Informații" : "Info",
+      links: [
+        { href: "/blog", label: language === "ro" ? "Blog & Ghiduri" : "Blog & Guides", isPage: true, icon: <BookOpenIcon /> },
+        { href: "/despre-noi", label: t.nav.aboutUs, isPage: true, icon: <HomeIcon /> },
+        { href: "#contact", label: t.nav.contact, icon: <PhoneIcon /> },
+      ],
+    },
   ];
 
   // Desktop nav link styling - optimized for 1024px+ screens
@@ -292,72 +325,73 @@ const Header = () => {
         {/* Mobile Navigation */}
         {/* Mobile Navigation — CSS transitions only */}
         <nav
-          className={`py-4 px-4 border-t border-border origin-top overflow-hidden bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0'}`}
+          className={`py-4 px-4 border-t border-border origin-top overflow-auto bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0'}`}
           style={{ transformOrigin: 'top' }}
         >
           {mobileMenuOpen && (
               <Suspense fallback={null}>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 
                 {/* Property Code Search - Mobile */}
                 <div className="pb-3 border-b border-border/50">
                   <PropertyCodeSearch className="w-full" />
                 </div>
 
-                {navLinks.map((link) => {
-                  const isActive = activeSection === link.href;
-                  const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
-                  const activeClasses = isActive 
-                    ? "text-primary font-semibold translate-x-2 scale-105 before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
-                    : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
+                {navGroups.map((group, gi) => (
+                  <div key={group.label}>
+                    {gi > 0 && <div className="h-px bg-border/50 my-1" />}
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 px-1 mb-1">
+                      {group.label}
+                    </p>
+                    {group.links.map((link) => {
+                      const isActive = activeSection === link.href;
+                      const linkClasses = `flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg transition-all duration-200 ${
+                        isActive 
+                          ? "text-primary bg-primary/10 font-semibold" 
+                          : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                      }`;
 
-                  return (
-                    <div key={link.href}>
-                      {link.isHome ? (
-                        <a
-                          href={link.href}
-                          onClick={handleHomeClick}
-                          className={`${baseClasses} ${activeClasses}`}
-                        >
-                          {link.label}
-                        </a>
-                      ) : link.isPage ? (
-                        <Link
-                          to={link.href}
-                          className={`${baseClasses} ${activeClasses}`}
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          {link.label}
-                        </Link>
-                      ) : (
-                        <a
-                          href={link.href}
-                          className={`${baseClasses} ${activeClasses}`}
-                          onClick={(e) => handleAnchorClick(e, link.href)}
-                        >
-                          {link.label}
-                        </a>
-                      )}
-                    </div>
-                  );
-                })}
+                      return (
+                        <div key={link.href}>
+                          {link.isHome ? (
+                            <a href={link.href} onClick={handleHomeClick} className={linkClasses}>
+                              <span className="text-primary/70">{link.icon}</span>
+                              {link.label}
+                            </a>
+                          ) : link.isPage ? (
+                            <Link to={link.href} className={linkClasses} onClick={() => setMobileMenuOpen(false)}>
+                              <span className="text-primary/70">{link.icon}</span>
+                              {link.label}
+                            </Link>
+                          ) : (
+                            <a href={link.href} className={linkClasses} onClick={(e) => handleAnchorClick(e, link.href)}>
+                              <span className="text-primary/70">{link.icon}</span>
+                              {link.label}
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
                 
                 {/* Admin link in mobile menu - only for authenticated */}
                 {isAuthenticated === true && (
-                  <div>
+                  <>
+                    <div className="h-px bg-border/50 my-1" />
                     <Link
                       to="/auth"
-                      className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
+                      className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <ShieldIcon className="w-4 h-4" />
+                      <span className="text-primary/70"><ShieldIcon className="w-4 h-4" /></span>
                       Admin
                     </Link>
-                  </div>
+                  </>
                 )}
 
                 {/* Mobile settings row */}
-                <div className="flex items-center gap-2 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 pt-3 mt-1 border-t border-border">
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
