@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Phone, Mail, Send, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,41 +6,15 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const emailSchema = z.string().trim().email().max(255);
-
-declare global {
-  interface Window {
-    ml?: (command: string, payload: string | object) => void;
-  }
-}
 
 const Footer = () => {
   const { t, language } = useLanguage();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const mailerLiteLoadedRef = useRef(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (document.getElementById("mailerlite-script")) {
-      mailerLiteLoadedRef.current = true;
-      return;
-    }
-    const script = document.createElement("script");
-    script.id = "mailerlite-script";
-    script.async = true;
-    script.src = "https://assets.mailerlite.com/js/universal.js";
-    script.onload = () => {
-      if (window.ml) {
-        window.ml("account", "2192327");
-        mailerLiteLoadedRef.current = true;
-      }
-    };
-    script.onerror = () => {};
-    document.head.appendChild(script);
-  }, []);
 
   const tr = {
     ro: {
@@ -80,8 +54,10 @@ const Footer = () => {
     }
     setIsLoading(true);
     try {
-      if (!window.ml || !mailerLiteLoadedRef.current) throw new Error("MailerLite not loaded");
-      window.ml("track", { event: "newsletter_signup", email: result.data, language, source: "footer" });
+      const { error } = await supabase.functions.invoke("subscribe-newsletter", {
+        body: { email: result.data, source: "footer", language },
+      });
+      if (error) throw error;
       setIsSubscribed(true);
       toast.success(text.successMessage);
       setEmail("");

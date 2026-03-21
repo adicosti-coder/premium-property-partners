@@ -6,14 +6,9 @@ import { toast } from "sonner";
 import { Mail, CheckCircle, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const emailSchema = z.string().trim().email().max(255);
-
-declare global {
-  interface Window {
-    ml?: (command: string, payload: string | object) => void;
-  }
-}
 
 const BlogNewsletterCTA = () => {
   const { language } = useLanguage();
@@ -22,40 +17,6 @@ const BlogNewsletterCTA = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const mailerLiteLoadedRef = useRef(false);
-
-  // Load MailerLite script on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    // Check if script already loaded
-    if (document.getElementById("mailerlite-script")) {
-      mailerLiteLoadedRef.current = true;
-      return;
-    }
-    
-    const script = document.createElement("script");
-    script.id = "mailerlite-script";
-    script.async = true;
-    script.src = "https://assets.mailerlite.com/js/universal.js";
-    
-    script.onload = () => {
-      if (window.ml) {
-        window.ml("account", "2192327");
-        mailerLiteLoadedRef.current = true;
-      }
-    };
-    
-    script.onerror = () => {
-      // Silenced: CSP may block MailerLite — newsletter falls back to DB-only
-    };
-    
-    document.head.appendChild(script);
-    
-    return () => {
-      // Cleanup not needed for external scripts
-    };
-  }, []);
 
   const translations = {
     ro: {
@@ -66,7 +27,6 @@ const BlogNewsletterCTA = () => {
       subscribing: "Se procesează...",
       success: "Te-ai abonat cu succes!",
       successMessage: "Vei primi cele mai noi articole direct în inbox.",
-      alreadySubscribed: "Ești deja abonat la newsletter!",
       invalidEmail: "Te rugăm să introduci o adresă de email validă.",
       error: "A apărut o eroare. Încearcă din nou.",
     },
@@ -78,7 +38,6 @@ const BlogNewsletterCTA = () => {
       subscribing: "Processing...",
       success: "Successfully subscribed!",
       successMessage: "You'll receive our latest articles directly in your inbox.",
-      alreadySubscribed: "You're already subscribed to our newsletter!",
       invalidEmail: "Please enter a valid email address.",
       error: "An error occurred. Please try again.",
     },
@@ -115,18 +74,10 @@ const BlogNewsletterCTA = () => {
     setIsLoading(true);
 
     try {
-      // Check if MailerLite is loaded
-      if (!window.ml || !mailerLiteLoadedRef.current) {
-        throw new Error("MailerLite not loaded");
-      }
-
-      // Trigger MailerLite subscription with tracking event
-      window.ml("track", {
-        event: "newsletter_signup",
-        email: result.data,
-        language: language,
-        source: "blog_article",
+      const { error } = await supabase.functions.invoke("subscribe-newsletter", {
+        body: { email: result.data, source: "blog_article", language },
       });
+      if (error) throw error;
 
       setIsSubscribed(true);
       toast.success(t.success);
@@ -149,7 +100,7 @@ const BlogNewsletterCTA = () => {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-8"
           >
-            {/* Decorative elements - offset to prevent overflow */}
+            {/* Decorative elements */}
             <div className="absolute top-0 -right-16 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 -left-12 w-24 h-24 bg-primary/5 rounded-full blur-2xl" />
             
