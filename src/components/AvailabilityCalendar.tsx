@@ -55,8 +55,8 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
         });
 
         if (!error) {
-          const dates = data?.unavailableDatesBySlug?.[slugKey] || [];
-          setLiveUnavailableDates(new Set(dates));
+          const dates = data?.unavailableDatesBySlug?.[slugKey];
+          setLiveUnavailableDates(Array.isArray(dates) ? new Set(dates) : new Set());
           setBookings([]);
         } else {
           setLiveUnavailableDates(new Set());
