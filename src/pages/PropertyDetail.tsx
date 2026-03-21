@@ -611,7 +611,7 @@ const PropertyDetail = () => {
                           <tbody>
                             <tr className="border-b border-border">
                               <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Strategie' : 'Strategy'}</td>
-                              <td className="px-4 py-2.5 font-bold text-right text-amber-500">{language === 'ro' ? '🌟 Regim Hotelier' : '🌟 Hotel Regime'}</td>
+                              <td className="px-4 py-2.5 font-bold text-right text-primary">{language === 'ro' ? '🌟 Regim Hotelier' : '🌟 Hotel Regime'}</td>
                             </tr>
                             <tr className="border-b border-border">
                               <td className="px-4 py-2.5 text-muted-foreground font-medium">{language === 'ro' ? 'Tarif Mediu/Noapte' : 'Avg Nightly Rate'}</td>
