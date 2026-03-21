@@ -26,12 +26,16 @@ const InlineCalculatorPopup = () => {
     localStorage.setItem("rt_popup_shown_v2", "true");
   }, []);
 
+  // Listen for FAB menu trigger instead of auto-showing
   useEffect(() => {
-    const timer = setTimeout(show, 30000);
-    const handleMouse = (e: MouseEvent) => { if (e.clientY < 0) show(); };
-    document.addEventListener("mouseleave", handleMouse);
-    return () => { clearTimeout(timer); document.removeEventListener("mouseleave", handleMouse); };
-  }, [show]);
+    const handleOpen = () => {
+      if (!localStorage.getItem("rt_popup_shown_v2")) {
+        setVisible(true);
+      }
+    };
+    window.addEventListener('open-inline-calculator', handleOpen);
+    return () => window.removeEventListener('open-inline-calculator', handleOpen);
+  }, []);
 
   const contactExpert = () => {
     const msg = `Bună ziua! Am folosit calculatorul de investiții de pe site.%0A%0ARezultate estimate:%0A- Randament: ${yieldAnual.toFixed(2)}%%0A- Amortizare: ${aniAmortizare.toFixed(1)} ani.%0A%0ADoresc mai multe informații!`;
