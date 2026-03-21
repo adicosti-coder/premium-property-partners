@@ -71,6 +71,7 @@ interface POI {
   display_order: number;
   image_url: string | null;
   is_premium: boolean;
+  website: string | null;
 }
 
 const CityGuideSection: React.FC = () => {
@@ -86,6 +87,7 @@ const CityGuideSection: React.FC = () => {
   const [currentShareCode, setCurrentShareCode] = useState<string | null>(null);
   const [sharedLinkInfo, setSharedLinkInfo] = useState<{ name: string | null; description: string | null } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(12);
   const { favorites, isFavorite, toggleFavorite, importFavorites, isImporting, favoritesCount, isAuthenticated, userId } = usePoiFavorites();
 
   // Check for shared POIs in URL and fetch link details
@@ -910,116 +912,170 @@ const CityGuideSection: React.FC = () => {
 
         {/* Interactive Map - removed: rendered in PentruOaspeti tabs to avoid WebGL context exhaustion */}
 
-        {/* Recommendations Grid */}
+        {/* Recommendations Grid — compact layout */}
         {!isLoading && filteredPois.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <AnimatePresence mode="popLayout">
-              {filteredPois.map((poi, index) => {
-                const Icon = categoryIcons[poi.category] || MapPin;
-                const colorClasses = categoryColors[poi.category] || 'from-primary/20 to-primary/5 border-primary/30';
-                const iconColor = categoryIconColors[poi.category] || 'text-primary';
-                
-                return (
-                  <motion.div
-                    key={poi.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className={`group relative rounded-2xl bg-gradient-to-br ${colorClasses} border backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
-                  >
-                    {/* Image with lazy loading and optimization OR Placeholder */}
-                    <div className="relative h-40 overflow-hidden">
-                      {poi.image_url ? (
-                        <ImageWithFallback 
-                          src={poi.image_url} 
-                          alt={language === 'ro' ? poi.name : poi.name_en}
-                          className="w-full h-full group-hover:scale-105 transition-transform duration-500"
-                          aspectRatio="16/10"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          priority={index < 3}
-                          fallbackType="custom"
-                          fallbackIcon={
-                            <POIPlaceholder 
-                              category={poi.category} 
-                              name={language === 'ro' ? poi.name : poi.name_en}
-                              className="w-full h-full"
-                            />
-                          }
-                          retryCount={1}
-                        />
-                      ) : (
-                        <POIPlaceholder 
-                          category={poi.category} 
-                          name={language === 'ro' ? poi.name : poi.name_en}
-                          className="group-hover:scale-105 transition-transform duration-500"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-                      
-                      {/* Favorite button on image */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleFavorite(poi.id);
-                        }}
-                        className="absolute top-3 left-3 w-9 h-9 rounded-full bg-background/90 flex items-center justify-center hover:bg-background transition-colors z-10"
-                        aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
-                      >
-                        <Heart 
-                          className={`w-5 h-5 transition-colors ${
-                            isFavorite(poi.id) 
-                              ? 'text-rose-500 fill-rose-500' 
-                              : 'text-muted-foreground hover:text-rose-500'
-                          }`} 
-                        />
-                      </button>
-                      
-                      {poi.rating && (
-                        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-sm">
-                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                          <span className="font-medium">{poi.rating}</span>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+              <AnimatePresence mode="popLayout">
+                {filteredPois.slice(0, visibleCount).map((poi, index) => {
+                  const Icon = categoryIcons[poi.category] || MapPin;
+                  const iconColor = categoryIconColors[poi.category] || 'text-primary';
+                  
+                  return (
+                    <motion.div
+                      key={poi.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.3) }}
+                      className="group relative rounded-xl bg-card border border-border hover:shadow-lg transition-all duration-300 overflow-hidden"
+                    >
+                      {/* Image */}
+                      <div className="relative h-28 md:h-32 overflow-hidden">
+                        {poi.image_url ? (
+                          <ImageWithFallback 
+                            src={poi.image_url} 
+                            alt={language === 'ro' ? poi.name : poi.name_en}
+                            className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                            aspectRatio="16/10"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            priority={index < 4}
+                            fallbackType="custom"
+                            fallbackIcon={
+                              <POIPlaceholder 
+                                category={poi.category} 
+                                name={language === 'ro' ? poi.name : poi.name_en}
+                                className="w-full h-full"
+                              />
+                            }
+                            retryCount={1}
+                          />
+                        ) : (
+                          <POIPlaceholder 
+                            category={poi.category} 
+                            name={language === 'ro' ? poi.name : poi.name_en}
+                            className="group-hover:scale-105 transition-transform duration-500"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                        
+                        {/* Category badge */}
+                        <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-background/90 text-[10px] font-medium">
+                          <Icon className={`w-3 h-3 ${iconColor}`} />
+                          <span className="hidden sm:inline">{getCategoryLabel(poi.category)}</span>
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="p-6">
 
-                      {/* Content */}
-                      <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                        {language === 'ro' ? poi.name : poi.name_en}
-                      </h3>
-                      
-                      {(poi.description || poi.description_en) && (
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                          {language === 'ro' 
-                            ? (poi.description || poi.description_en) 
-                            : (poi.description_en || poi.description)}
-                        </p>
-                      )}
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between">
-                        {poi.address && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span className="truncate max-w-[120px]">{poi.address}</span>
+                        {/* Premium badge */}
+                        {poi.is_premium && (
+                          <div className="absolute top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-[10px] font-semibold">
+                            <Crown className="w-2.5 h-2.5" />
+                            <span className="hidden sm:inline">Premium</span>
                           </div>
                         )}
                         
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
-                          <Sparkles className="w-3 h-3" />
-                          {getCategoryLabel(poi.category)}
+                        {/* Favorite button */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleFavorite(poi.id);
+                          }}
+                          className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-background/90 flex items-center justify-center hover:bg-background transition-colors z-10"
+                          aria-label={isFavorite(poi.id) ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          <Heart 
+                            className={`w-3.5 h-3.5 transition-colors ${
+                              isFavorite(poi.id) 
+                                ? 'text-rose-500 fill-rose-500' 
+                                : 'text-muted-foreground hover:text-rose-500'
+                            }`} 
+                          />
+                        </button>
+                        
+                        {poi.rating && (
+                          <div className="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-background/90 text-xs">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <span className="font-medium">{poi.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Content — compact */}
+                      <div className="p-2.5 md:p-3">
+                        <h3 className="text-sm font-semibold mb-0.5 group-hover:text-primary transition-colors line-clamp-1">
+                          {language === 'ro' ? poi.name : poi.name_en}
+                        </h3>
+                        
+                        {(poi.description || poi.description_en) && (
+                          <p className="text-muted-foreground text-xs mb-1.5 line-clamp-2">
+                            {language === 'ro' 
+                              ? (poi.description || poi.description_en) 
+                              : (poi.description_en || poi.description)}
+                          </p>
+                        )}
+
+                        {poi.address && (
+                          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{poi.address}</span>
+                          </div>
+                        )}
+                        
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Link
+                            to={`/pentru-oaspeti?poi=${poi.id}#city-guide-map`}
+                            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-medium"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            {t.seeOnMap}
+                          </Link>
+                          {poi.website && (
+                            <a 
+                              href={poi.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Website
+                            </a>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+
+            {/* Show more / less */}
+            {filteredPois.length > 12 && (
+              <div className="text-center mb-12">
+                {visibleCount < filteredPois.length ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setVisibleCount(prev => Math.min(prev + 12, filteredPois.length))}
+                    className="rounded-full"
+                  >
+                    <ChevronRight className="w-4 h-4 mr-1" />
+                    {language === 'ro' 
+                      ? `Vezi mai multe (${filteredPois.length - visibleCount} rămase)` 
+                      : `Show more (${filteredPois.length - visibleCount} remaining)`}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setVisibleCount(12)}
+                    className="rounded-full text-muted-foreground"
+                  >
+                    {language === 'ro' ? 'Arată mai puține' : 'Show less'}
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* Local Tips */}

@@ -71,16 +71,25 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     onError?.();
   };
 
+  // Google Places images need server-side proxy due to hotlink protection
+  const isGoogleImage =
+    src.includes("googleusercontent.com") ||
+    src.includes("googleapis.com");
+
   // Determine if we should route through Cloudinary CDN
   const isSkipCdn =
     src.startsWith("data:") ||
     src.startsWith("blob:") ||
     src.includes("res.cloudinary.com") ||
-    src.includes("googleusercontent.com") ||
-    src.includes("googleapis.com");
+    isGoogleImage;
+
+  // Proxy Google Places images through our edge function
+  const resolvedSrc = isGoogleImage
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proxy-image?url=${encodeURIComponent(src)}`
+    : src;
 
   // Build Cloudinary-optimised src (f_auto, q_auto, responsive width)
-  const cdnSrc = isSkipCdn ? src : cloudinaryUrl(src, { width });
+  const cdnSrc = isSkipCdn ? resolvedSrc : cloudinaryUrl(src, { width });
   const cdnSrcSet = isSkipCdn ? undefined : cloudinarySrcSet(src);
 
   const containerStyle: React.CSSProperties = {
