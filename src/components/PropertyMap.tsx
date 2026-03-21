@@ -236,7 +236,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       });
 
       const popupContent = `
-        <div style="padding: 0; min-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
+        <a href="/proprietate/${property.slug}" style="display: block; padding: 0; min-width: 280px; font-family: system-ui, -apple-system, sans-serif; text-decoration: none; color: inherit; cursor: pointer;">
           <img src="${property.images[0]}" alt="${property.name}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px 8px 0 0;" />
           <div style="padding: 12px;">
             <h3 style="font-weight: 600; font-size: 14px; margin: 0 0 4px 0; color: #1a1a1a;">${property.name}</h3>
@@ -258,11 +258,11 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
               <span>•</span>
               <span>${property.size} m²</span>
             </div>
-            <a href="/proprietate/${property.slug}" style="display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; font-size: 12px; font-weight: 500; padding: 10px 16px; border-radius: 6px; text-decoration: none; transition: opacity 0.2s;">
+            <div style="display: block; width: 100%; text-align: center; background: linear-gradient(135deg, #c9a962 0%, #b8963e 100%); color: white; font-size: 12px; font-weight: 500; padding: 10px 16px; border-radius: 6px;">
               ${language === 'ro' ? 'Vezi Detalii' : 'View Details'}
-            </a>
+            </div>
           </div>
-        </div>
+        </a>
       `;
 
       popup.setHTML(popupContent);
