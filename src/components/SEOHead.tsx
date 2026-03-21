@@ -56,7 +56,9 @@ const generateArticleJsonLd = (
     "name": "RealTrust & ApArt Hotel",
     "logo": {
       "@type": "ImageObject",
-      "url": `${BASE_URL}/favicon.ico`,
+      "url": `${BASE_URL}/images/hero-optimized-800w.webp`,
+      "width": 800,
+      "height": 450,
     },
   },
   ...(tags && tags.length > 0 && { "keywords": tags.join(", ") }),
