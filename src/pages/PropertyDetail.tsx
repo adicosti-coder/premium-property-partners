@@ -591,7 +591,7 @@ const PropertyDetail = () => {
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
                             {language === 'ro' ? 'Randament Net' : 'Net Yield'}
                           </p>
-                          <p className={`text-xl sm:text-2xl font-extrabold ${yieldNet >= 7.5 ? 'text-emerald-500' : yieldNet >= 5.5 ? 'text-amber-500' : 'text-red-500'}`}>
+                          <p className={`text-xl sm:text-2xl font-extrabold ${yieldNet >= 7.5 ? 'text-[hsl(var(--success))]' : yieldNet >= 5.5 ? 'text-primary' : 'text-destructive'}`}>
                             {yieldNet.toFixed(1)}%
                           </p>
                         </div>
@@ -599,7 +599,7 @@ const PropertyDetail = () => {
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
                             {language === 'ro' ? 'Cashflow Lunar' : 'Monthly Cashflow'}
                           </p>
-                          <p className={`text-xl sm:text-2xl font-extrabold ${cashflowLunar > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          <p className={`text-xl sm:text-2xl font-extrabold ${cashflowLunar > 0 ? 'text-[hsl(var(--success))]' : 'text-destructive'}`}>
                             {cashflowLunar > 0 ? '+' : ''}{Math.round(cashflowLunar)} €
                           </p>
                         </div>
