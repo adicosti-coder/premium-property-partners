@@ -158,7 +158,14 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
 
       {/* Book button */}
       <Button 
-        onClick={() => window.open(property.bookingUrl, '_blank')} 
+        onClick={() => {
+          if (property.bookingUrl) {
+            window.open(property.bookingUrl, '_blank', 'noopener,noreferrer');
+            return;
+          }
+
+          onBook?.();
+        }} 
         className="w-full mt-6"
         size="lg"
       >

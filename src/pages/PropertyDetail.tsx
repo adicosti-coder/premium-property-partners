@@ -130,6 +130,15 @@ const PropertyDetail = () => {
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const openDirectBooking = useCallback(() => {
+    if (property?.bookingUrl) {
+      window.open(property.bookingUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    setBookingOpen(true);
+  }, [property?.bookingUrl]);
+
   // Track property views
   usePropertyViewTracking(dbProperty?.id);
 
@@ -797,7 +806,7 @@ const PropertyDetail = () => {
               {staticProperty && (
                 <div className="space-y-6">
                   <PriceCompareWidget basePrice={property.pricePerNight} />
-                  <StayCalculator property={property as any} onBook={() => setBookingOpen(true)} />
+                  <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
                 </div>
               )}
@@ -840,7 +849,7 @@ const PropertyDetail = () => {
                   <Button 
                     variant="hero" 
                     className="w-full"
-                    onClick={() => setBookingOpen(true)}
+                    onClick={openDirectBooking}
                   >
                     {language === 'ro' ? 'Rezervă Acum' : 'Book Now'}
                   </Button>
