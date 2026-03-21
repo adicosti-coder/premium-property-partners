@@ -84,6 +84,7 @@ const GlobalConversionWidgets = ({
           {showExitIntent && <ExitIntentPopup />}
           <ReferralPopup />
           <InlineCalculatorPopup />
+          <FeedbackBanner />
         </Suspense>
       )}
     </>
