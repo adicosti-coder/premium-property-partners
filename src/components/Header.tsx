@@ -170,20 +170,49 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
-  const navLinks = [
-    { href: "/", label: t.nav.home, isHome: true },
-    { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true },
-    { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true },
-    { href: "/pentru-oaspeti", label: language === "ro" ? "Închiriere & Cazare Regim Hotelier" : "Rental & Hotel Accommodation", isPage: true },
-    { href: "/complexe", label: language === "ro" ? "Ansambluri & Complexuri Rezidențiale" : "Residential Complexes", isPage: true },
-    { href: "/imobiliare", label: t.nav.realEstate, isPage: true },
-    { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true },
-    { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true },
-    { href: "/analiza-proprietate", label: language === "ro" ? "HostScan AI – Analiză Proprietate" : "HostScan AI – Property Analysis", isPage: true },
-    { href: "/blog", label: language === "ro" ? "Blog (Sfaturi, noutăți și ghiduri)" : "Blog (Tips, news & guides)", isPage: true },
-    { href: "/despre-noi", label: t.nav.aboutUs, isPage: true },
-    { href: "#contact", label: t.nav.contact },
+  // Grouped nav links with icons for premium mobile menu
+  const navGroups = [
+    {
+      label: language === "ro" ? "Principal" : "Main",
+      links: [
+        { href: "/", label: t.nav.home, isHome: true, icon: <HomeIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Proprietari" : "Owners",
+      links: [
+        { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true, icon: <BuildingIcon /> },
+        { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true, icon: <TrendingIcon /> },
+        { href: "/analiza-proprietate", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Oaspeți" : "Guests",
+      links: [
+        { href: "/pentru-oaspeti", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation", isPage: true, icon: <BedIcon /> },
+        { href: "/complexe", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes", isPage: true, icon: <BuildingIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Investiții" : "Investments",
+      links: [
+        { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
+        { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
+        { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
+      ],
+    },
+    {
+      label: language === "ro" ? "Informații" : "Info",
+      links: [
+        { href: "/blog", label: language === "ro" ? "Blog & Ghiduri" : "Blog & Guides", isPage: true, icon: <BookOpenIcon /> },
+        { href: "/despre-noi", label: t.nav.aboutUs, isPage: true, icon: <HomeIcon /> },
+        { href: "#contact", label: t.nav.contact, icon: <PhoneIcon /> },
+      ],
+    },
   ];
+
+  // Flat list for desktop (if needed)
+  const navLinks = navGroups.flatMap(g => g.links);
 
   // Desktop nav link styling - optimized for 1024px+ screens
   // Ultra-compact on lg (1024-1279), compact on xl (1280-1535), comfortable on 2xl (1536+)
