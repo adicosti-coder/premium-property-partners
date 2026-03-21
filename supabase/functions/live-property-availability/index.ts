@@ -18,6 +18,13 @@ interface AvailabilityResponse {
   rows?: AvailabilityCell[][];
 }
 
+interface RequestBody {
+  checkIn?: string;
+  checkOut?: string;
+  properties?: PropertyPayload[];
+  includeUnavailableDates?: boolean;
+}
+
 const getMonthsInRange = (checkIn: string, checkOut: string) => {
   const months: Array<{ month: string; year: string }> = [];
   const current = new Date(`${checkIn}T00:00:00`);
@@ -147,11 +154,7 @@ serve(async (req) => {
   }
 
   try {
-    const { checkIn, checkOut, properties } = await req.json() as {
-      checkIn?: string;
-      checkOut?: string;
-      properties?: PropertyPayload[];
-    };
+    const { checkIn, checkOut, properties, includeUnavailableDates } = await req.json() as RequestBody;
 
     if (!checkIn || !checkOut || !Array.isArray(properties)) {
       return new Response(JSON.stringify({ error: "missing_params" }), {
@@ -162,12 +165,17 @@ serve(async (req) => {
 
     const requestedDates = getDatesInRange(checkIn, checkOut);
     const unavailableSlugs: string[] = [];
+    const unavailableDatesBySlug: Record<string, string[]> = {};
 
     await Promise.all(properties.map(async (property) => {
       try {
         const unavailableDates = await fetchUnavailableDates(property.bookingUrl, checkIn, checkOut);
         if (!unavailableDates) {
           return;
+        }
+
+        if (includeUnavailableDates) {
+          unavailableDatesBySlug[property.slug] = Array.from(unavailableDates).sort();
         }
 
         const hasConflict = requestedDates.some((date) => unavailableDates.has(date));
@@ -180,7 +188,7 @@ serve(async (req) => {
       }
     }));
 
-    return new Response(JSON.stringify({ unavailableSlugs }), {
+    return new Response(JSON.stringify({ unavailableSlugs, unavailableDatesBySlug }), {
       headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   } catch (error) {

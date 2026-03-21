@@ -797,7 +797,7 @@ const PropertyDetail = () => {
                 <div className="space-y-6">
                   <PriceCompareWidget basePrice={property.pricePerNight} />
                   <StayCalculator property={property as any} onBook={() => setBookingOpen(true)} />
-                  <AvailabilityCalendar propertyId={property.id} />
+                  <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
                 </div>
               )}
 
