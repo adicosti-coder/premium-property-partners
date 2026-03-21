@@ -97,9 +97,6 @@ const generateProductJsonLd = (
     "url": url,
   },
   // AggregateRating removed — injected dynamically with real DB values when available
-    "bestRating": "5",
-    "worstRating": "1",
-  },
 });
 
 // Helper to generate FAQ JSON-LD
