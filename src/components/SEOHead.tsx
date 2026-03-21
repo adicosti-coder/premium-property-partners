@@ -96,10 +96,7 @@ const generateProductJsonLd = (
     "availability": `https://schema.org/${availability}`,
     "url": url,
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "500",
+  // AggregateRating removed — injected dynamically with real DB values when available
     "bestRating": "5",
     "worstRating": "1",
   },
