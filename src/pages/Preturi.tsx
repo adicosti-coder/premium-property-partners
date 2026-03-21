@@ -9,7 +9,7 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import PageSummary from "@/components/PageSummary";
+
 
 const packages = {
   ro: [
