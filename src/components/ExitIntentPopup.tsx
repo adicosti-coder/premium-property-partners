@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift, ArrowRight, Sparkles, TrendingUp, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 import { useLocation } from "react-router-dom";
-
-
-declare global {
-  interface Window {
-    ml?: (command: string, payload: string | object) => void;
-  }
-}
+import { supabase } from "@/integrations/supabase/client";
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();
@@ -22,63 +16,25 @@ const ExitIntentPopup = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasShown, setHasShown] = useState(false);
-  const mailerLiteLoadedRef = useRef(false);
 
   // Detect user type based on current page
   const isBuyerPath = ["/vanzare", "/investitii-active"].some(p => location.pathname.startsWith(p));
   const isOwnerPath = !isBuyerPath && ["/pentru-proprietari", "/investitii", "/preturi"].some(p => location.pathname.startsWith(p));
 
-  // Load MailerLite script on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    // Check if script already loaded
-    if (document.getElementById("mailerlite-script")) {
-      mailerLiteLoadedRef.current = true;
-      return;
-    }
-    
-    const script = document.createElement("script");
-    script.id = "mailerlite-script";
-    script.async = true;
-    script.src = "https://assets.mailerlite.com/js/universal.js";
-    
-    script.onload = () => {
-      if (window.ml) {
-        window.ml("account", "2192327");
-        mailerLiteLoadedRef.current = true;
-      }
-    };
-    
-    script.onerror = () => {
-      // Silenced: CSP may block MailerLite — newsletter falls back to DB-only
-    };
-    
-    document.head.appendChild(script);
-    
-    return () => {
-      // Cleanup not needed for external scripts
-    };
-  }, []);
-
   const t = {
     ro: {
-      // Guest variant
       guestTitle: "Stai! Nu pleca încă...",
       guestSubtitle: "Primește 10% reducere la prima rezervare",
       guestDescription: "Lasă-ne emailul și îți trimitem codul de discount exclusiv, valabil 48 de ore.",
       guestBadge: "Ofertă Exclusivă",
-      // Owner variant
       ownerTitle: "Ghid Gratuit pentru Proprietari",
       ownerSubtitle: "ROI 9.4% — Cum îți maximizezi venitul?",
       ownerDescription: "Primești analiza completă de piață + strategii dovedite pentru apartamentul tău din Timișoara.",
       ownerBadge: "Ghid Proprietari 2026",
-      // Buyer variant
       buyerTitle: "Catalogul de Investiții 2026",
       buyerSubtitle: "Apartamente cu ROI garantat în Timișoara",
       buyerDescription: "Primești catalogul complet cu proprietăți disponibile, analiză financiară și randamente dovedite.",
       buyerBadge: "Catalog Investiții",
-      // Common
       placeholder: "email@exemplu.com",
       cta: isBuyerPath ? "Descarcă Catalogul!" : isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
       noThanks: "Nu, mulțumesc",
@@ -126,8 +82,6 @@ const ExitIntentPopup = () => {
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
     if (!isBrowser()) return;
-
-    // Only trigger when mouse leaves from the top
     if (e.clientY <= 5 && !hasShown) {
       const dismissed = getSessionStorage("exitPopupDismissed");
       if (!dismissed) {
@@ -165,27 +119,16 @@ const ExitIntentPopup = () => {
     setIsSubmitting(true);
 
     try {
-      // Check if MailerLite is loaded
-      if (!window.ml || !mailerLiteLoadedRef.current) {
-        throw new Error("MailerLite not loaded");
-      }
-
-      // Trigger MailerLite subscription with tracking event
       const userType = isBuyerPath ? "buyer" : isOwnerPath ? "owner" : "guest";
-      const event = isBuyerPath ? "investment_catalog_request" : isOwnerPath ? "owner_guide_request" : "discount_code_request";
-      window.ml("track", {
-        event,
-        email: email,
-        language: language,
-        source: "exit_intent_popup",
-        user_type: userType,
+      const { error } = await supabase.functions.invoke("subscribe-newsletter", {
+        body: { email, source: "exit_intent_popup", language, user_type: userType },
       });
+      if (error) throw error;
 
       toast.success(text.successTitle, {
         description: text.successMessage,
       });
 
-      // Redirect buyer to catalog page
       if (isBuyerPath) {
         window.open(`/catalog-investitii?email=${encodeURIComponent(email)}&token=invest2026`, "_blank");
       }

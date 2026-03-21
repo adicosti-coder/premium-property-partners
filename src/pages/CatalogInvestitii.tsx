@@ -157,15 +157,10 @@ const CatalogInvestitii = () => {
     }
     setIsSubmitting(true);
     try {
-      if (window.ml) {
-        window.ml("track", {
-          event: "investment_catalog_unlock",
-          email,
-          language,
-          source: "catalog_page",
-          user_type: "buyer",
-        });
-      }
+      // Subscribe via Supabase edge function (MailerLite removed for CSP compliance)
+      await supabase.functions.invoke("subscribe-newsletter", {
+        body: { email, source: "catalog_page", language, user_type: "buyer" },
+      }).catch(() => {});
       setIsUnlocked(true);
       toast.success(isRo ? "Catalogul a fost deblocat!" : "Catalog unlocked!");
     } catch {
