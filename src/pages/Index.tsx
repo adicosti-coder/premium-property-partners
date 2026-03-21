@@ -178,6 +178,7 @@ const Index = () => {
               <section id="portofoliu">
                 <PropertyGallery />
               </section>
+              <InteractiveMapWithPOI />
               <Testimonials />
             </Suspense>
           )}
