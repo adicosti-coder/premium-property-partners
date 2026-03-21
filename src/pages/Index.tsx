@@ -21,6 +21,9 @@ const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCa
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
+const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
+const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
+const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -64,6 +67,7 @@ const MidFoldSection = () => {
       {visible && (
         <Suspense fallback={null}>
           <DualServicePaths />
+          <ChannelLogos />
         </Suspense>
       )}
     </div>
@@ -80,6 +84,7 @@ const TeaserSections = () => {
           <section id="beneficii">
             <OwnersTeaser />
           </section>
+          <DIYvsProfessional />
           <section id="oaspeti-preview">
             <GuestsTeaser />
           </section>
@@ -173,6 +178,7 @@ const Index = () => {
               <section id="portofoliu">
                 <PropertyGallery />
               </section>
+              <InteractiveMapWithPOI />
               <Testimonials />
             </Suspense>
           )}
