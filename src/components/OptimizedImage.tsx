@@ -75,7 +75,9 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   const isSkipCdn =
     src.startsWith("data:") ||
     src.startsWith("blob:") ||
-    src.includes("res.cloudinary.com");
+    src.includes("res.cloudinary.com") ||
+    src.includes("googleusercontent.com") ||
+    src.includes("googleapis.com");
 
   // Build Cloudinary-optimised src (f_auto, q_auto, responsive width)
   const cdnSrc = isSkipCdn ? src : cloudinaryUrl(src, { width });
