@@ -211,9 +211,6 @@ const Header = () => {
     },
   ];
 
-  // Flat list for desktop (if needed)
-  const navLinks = navGroups.flatMap(g => g.links) as Array<{ href: string; label: string; isHome?: boolean; isPage?: boolean; icon: JSX.Element }>;
-
   // Desktop nav link styling - optimized for 1024px+ screens
   // Ultra-compact on lg (1024-1279), compact on xl (1280-1535), comfortable on 2xl (1536+)
   const desktopLinkBaseClasses =
