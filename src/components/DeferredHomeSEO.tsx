@@ -25,6 +25,25 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     placeholderData: keepPreviousData,
   });
 
+  // Fetch real aggregate rating from DB
+  const { data: ratingData } = useQuery({
+    queryKey: ["homepage-aggregate-rating"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("property_reviews")
+        .select("rating")
+        .eq("is_published", true);
+      if (error) throw error;
+      if (!data || data.length === 0) return null;
+      const avg = data.reduce((sum, r) => sum + (r.rating || 0), 0) / data.length;
+      // Booking.com uses 1-10 scale; convert to 1-5 for schema.org
+      const avgNormalized = avg > 5 ? (avg / 2).toFixed(1) : avg.toFixed(1);
+      return { ratingValue: avgNormalized, reviewCount: String(data.length) };
+    },
+    staleTime: Infinity, gcTime: Infinity,
+    refetchOnWindowFocus: false, refetchOnMount: false, refetchOnReconnect: false,
+  });
+
   const faqSchema = generateFAQSchema([
     { question: language === "ro" ? "Care este profitul real pe care îl pot obține din apartamentul meu?" : "What is the real profit I can get from my apartment?",
       answer: language === "ro" ? "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%." : "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%." },
@@ -35,6 +54,18 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   ]);
   const speakableSchema = generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://www.realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), faqSchema, speakableSchema];
+
+  // Inject real AggregateRating into the first schema (LocalBusiness/LodgingBusiness)
+  if (ratingData && homepageSchemas.length > 0) {
+    const mainSchema = homepageSchemas[0] as Record<string, unknown>;
+    mainSchema.aggregateRating = {
+      "@type": "AggregateRating",
+      "ratingValue": ratingData.ratingValue,
+      "reviewCount": ratingData.reviewCount,
+      "bestRating": "5",
+      "worstRating": "1",
+    };
+  }
 
   return <SEOHead jsonLd={homepageSchemas} includeWebSiteSchema={true} />;
 };

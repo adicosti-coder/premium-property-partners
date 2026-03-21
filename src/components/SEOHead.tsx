@@ -56,7 +56,9 @@ const generateArticleJsonLd = (
     "name": "RealTrust & ApArt Hotel",
     "logo": {
       "@type": "ImageObject",
-      "url": `${BASE_URL}/favicon.ico`,
+      "url": `${BASE_URL}/images/hero-optimized-800w.webp`,
+      "width": 800,
+      "height": 450,
     },
   },
   ...(tags && tags.length > 0 && { "keywords": tags.join(", ") }),
@@ -94,13 +96,7 @@ const generateProductJsonLd = (
     "availability": `https://schema.org/${availability}`,
     "url": url,
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "500",
-    "bestRating": "5",
-    "worstRating": "1",
-  },
+  // AggregateRating removed — injected dynamically with real DB values when available
 });
 
 // Helper to generate FAQ JSON-LD
@@ -192,7 +188,7 @@ const SEOHead = ({
     return finalUrl.includes("?") ? `${finalUrl}&lang=${lang}` : `${finalUrl}?lang=${lang}`;
   };
   
-  // Default JSON-LD for LocalBusiness
+  // Default JSON-LD for LocalBusiness (AggregateRating injected dynamically on homepage)
   const defaultJsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -216,14 +212,7 @@ const SEOHead = ({
       "latitude": 45.7489,
       "longitude": 21.2087
     },
-    "priceRange": "$$",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "reviewCount": "500",
-      "bestRating": "5",
-      "worstRating": "1"
-    }
+    "priceRange": "$$"
   };
   
   // Determine which JSON-LD to use based on type
