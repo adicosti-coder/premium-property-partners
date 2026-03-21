@@ -137,17 +137,18 @@ const ExitIntentPopup = () => {
     }
   }, [hasShown]);
 
+  // Listen for FAB menu trigger instead of auto exit-intent
   useEffect(() => {
-    // Add delay before enabling exit intent (don't show immediately)
-    const timer = setTimeout(() => {
-      document.addEventListener("mouseleave", handleMouseLeave);
-    }, 5000);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("mouseleave", handleMouseLeave);
+    const handleOpen = () => {
+      const dismissed = getSessionStorage("exitPopupDismissed");
+      if (!dismissed && !hasShown) {
+        setIsVisible(true);
+        setHasShown(true);
+      }
     };
-  }, [handleMouseLeave]);
+    window.addEventListener('open-exit-intent', handleOpen);
+    return () => window.removeEventListener('open-exit-intent', handleOpen);
+  }, [hasShown]);
 
   const handleClose = () => {
     setIsVisible(false);

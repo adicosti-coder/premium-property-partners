@@ -44,22 +44,17 @@ const PWAInstallPrompt = () => {
     return isIOS && isSafari;
   })();
 
+  // Listen for FAB menu trigger instead of auto-showing
   useEffect(() => {
-    // Don't show if already dismissed or installed
-    const dismissed = safeLocalStorage.getItem("pwa-prompt-dismissed");
-    if (dismissed || isInstalled) {
-      setIsDismissed(true);
-      return;
-    }
-
-    // Show prompt after delay
-    const timer = setTimeout(() => {
-      if ((isInstallable && canPrompt) || isIOSSafari) {
+    const handleOpen = () => {
+      const dismissed = safeLocalStorage.getItem("pwa-prompt-dismissed");
+      if (!dismissed && !isInstalled) {
         setIsVisible(true);
       }
-    }, 5000);
-
-    return () => clearTimeout(timer);
+    };
+    window.addEventListener('open-pwa-prompt', handleOpen);
+    return () => window.removeEventListener('open-pwa-prompt', handleOpen);
+  }, [isInstalled]);
   }, [isInstallable, isInstalled, canPrompt, isIOSSafari]);
 
   const handleInstall = async () => {
