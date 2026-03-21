@@ -71,6 +71,7 @@ interface POI {
   display_order: number;
   image_url: string | null;
   is_premium: boolean;
+  website: string | null;
 }
 
 const CityGuideSection: React.FC = () => {
