@@ -18,6 +18,7 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 const DualServicePaths = lazy(() => import("@/components/DualServicePaths"));
 const PropertyGallery = lazy(() => import("@/components/PropertyGallery"));
 const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCards"));
+const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
@@ -85,6 +86,7 @@ const TeaserSections = () => {
             <OwnersTeaser />
           </section>
           <DIYvsProfessional />
+          <ROICaseStudySection />
           <section id="oaspeti-preview">
             <GuestsTeaser />
           </section>
