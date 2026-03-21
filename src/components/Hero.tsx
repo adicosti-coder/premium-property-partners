@@ -111,7 +111,7 @@ const Hero = () => {
           )}
           <img
             src={heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC}
-            alt="Apartamente regim hotelier Timișoara — ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Parcare subterană gratuită, self check-in 24/7"
+            alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier: ATENEO, GREEN FOREST, FullView Studio, HELIOS, City of Mara, Fructus Plaza, Ring, Denya Forest, X-City — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, ROI 9.4% net verificat."
             className="w-full h-full object-cover"
             width={1920}
             height={1080}
