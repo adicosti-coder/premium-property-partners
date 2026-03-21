@@ -328,72 +328,73 @@ const Header = () => {
         {/* Mobile Navigation */}
         {/* Mobile Navigation — CSS transitions only */}
         <nav
-          className={`py-4 px-4 border-t border-border origin-top overflow-hidden bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0'}`}
+          className={`py-4 px-4 border-t border-border origin-top overflow-auto bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0'}`}
           style={{ transformOrigin: 'top' }}
         >
           {mobileMenuOpen && (
               <Suspense fallback={null}>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 
                 {/* Property Code Search - Mobile */}
                 <div className="pb-3 border-b border-border/50">
                   <PropertyCodeSearch className="w-full" />
                 </div>
 
-                {navLinks.map((link) => {
-                  const isActive = activeSection === link.href;
-                  const baseClasses = "relative text-sm font-medium py-2 transition-all duration-300 ease-out before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[2px] before:bg-primary before:transition-all before:duration-300 before:ease-out hover:scale-105 hover:drop-shadow-[0_2px_8px_hsl(var(--primary)/0.2)]";
-                  const activeClasses = isActive 
-                    ? "text-primary font-semibold translate-x-2 scale-105 before:opacity-100 drop-shadow-[0_2px_8px_hsl(var(--primary)/0.3)]" 
-                    : "text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2 before:opacity-0 hover:before:opacity-100";
+                {navGroups.map((group, gi) => (
+                  <div key={group.label}>
+                    {gi > 0 && <div className="h-px bg-border/50 my-1" />}
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 px-1 mb-1">
+                      {group.label}
+                    </p>
+                    {group.links.map((link) => {
+                      const isActive = activeSection === link.href;
+                      const linkClasses = `flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg transition-all duration-200 ${
+                        isActive 
+                          ? "text-primary bg-primary/10 font-semibold" 
+                          : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                      }`;
 
-                  return (
-                    <div key={link.href}>
-                      {link.isHome ? (
-                        <a
-                          href={link.href}
-                          onClick={handleHomeClick}
-                          className={`${baseClasses} ${activeClasses}`}
-                        >
-                          {link.label}
-                        </a>
-                      ) : link.isPage ? (
-                        <Link
-                          to={link.href}
-                          className={`${baseClasses} ${activeClasses}`}
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          {link.label}
-                        </Link>
-                      ) : (
-                        <a
-                          href={link.href}
-                          className={`${baseClasses} ${activeClasses}`}
-                          onClick={(e) => handleAnchorClick(e, link.href)}
-                        >
-                          {link.label}
-                        </a>
-                      )}
-                    </div>
-                  );
-                })}
+                      return (
+                        <div key={link.href}>
+                          {link.isHome ? (
+                            <a href={link.href} onClick={handleHomeClick} className={linkClasses}>
+                              <span className="text-primary/70">{link.icon}</span>
+                              {link.label}
+                            </a>
+                          ) : link.isPage ? (
+                            <Link to={link.href} className={linkClasses} onClick={() => setMobileMenuOpen(false)}>
+                              <span className="text-primary/70">{link.icon}</span>
+                              {link.label}
+                            </Link>
+                          ) : (
+                            <a href={link.href} className={linkClasses} onClick={(e) => handleAnchorClick(e, link.href)}>
+                              <span className="text-primary/70">{link.icon}</span>
+                              {link.label}
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
                 
                 {/* Admin link in mobile menu - only for authenticated */}
                 {isAuthenticated === true && (
-                  <div>
+                  <>
+                    <div className="h-px bg-border/50 my-1" />
                     <Link
                       to="/auth"
-                      className="relative text-sm font-medium py-2 transition-all duration-300 ease-out flex items-center gap-2 text-foreground/70 dark:text-muted-foreground hover:text-foreground hover:translate-x-2"
+                      className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <ShieldIcon className="w-4 h-4" />
+                      <span className="text-primary/70"><ShieldIcon className="w-4 h-4" /></span>
                       Admin
                     </Link>
-                  </div>
+                  </>
                 )}
 
                 {/* Mobile settings row */}
-                <div className="flex items-center gap-2 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 pt-3 mt-1 border-t border-border">
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
