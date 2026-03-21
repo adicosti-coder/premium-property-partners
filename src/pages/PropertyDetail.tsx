@@ -523,8 +523,33 @@ const PropertyDetail = () => {
               )}
 
               {/* ═══════════════════════════════════════════════════════
-                  3. PREȚ & ANALIZĂ INVESTIȚIE — Cât costă, ce randament
+                  3. LOCAȚIE — Proximitate & Hartă (important pentru oaspeți)
                   ═══════════════════════════════════════════════════════ */}
+              <PropertyProximity propertySlug={slug || ""} />
+
+              <div className="space-y-4">
+                <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
+                  <MapPin className="w-6 h-6 text-primary" />
+                  {language === 'ro' ? 'Explorează Zona' : 'Explore the Area'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ro'
+                    ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
+                    : 'Discover restaurants, shops, parks and attractions near the apartment.'}
+                </p>
+                <PropertyNeighborhoodMap propertySlug={slug || ''} propertyName={property.name} />
+              </div>
+
+              {/* ═══════════════════════════════════════════════════════
+                  4. DISPONIBILITATE & PREȚURI (esențial pentru rezervări)
+                  ═══════════════════════════════════════════════════════ */}
+              {staticProperty && (
+                <div className="space-y-6">
+                  <PriceCompareWidget basePrice={property.pricePerNight} />
+                  <StayCalculator property={property as any} onBook={openDirectBooking} />
+                  <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
+                </div>
+              )}
 
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
               {dbProperty?.listing_type === 'inchiriere' && dbProperty.capital_necesar && (
@@ -536,17 +561,37 @@ const PropertyDetail = () => {
                 </div>
               )}
 
-              {/* SECȚIUNEA DE INVESTIȚIE — Regim Hotelier — apare pentru TOATE DB properties */}
+              {/* ═══════════════════════════════════════════════════════
+                  5. SOCIAL PROOF — Recenzii & FAQ
+                  ═══════════════════════════════════════════════════════ */}
+              {dbProperty?.id && (
+                <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
+              )}
+
+              <PropertyFAQ
+                propertyName={property.name}
+                location={property.location}
+                capacity={staticProperty ? property.capacity : undefined}
+                bedrooms={staticProperty ? property.bedrooms : undefined}
+                pricePerNight={staticProperty ? property.pricePerNight : undefined}
+                isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
+                listingType={dbProperty?.listing_type}
+                amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
+                houseRules={dbProperty?.house_rules || []}
+              />
+
+              {/* ═══════════════════════════════════════════════════════
+                  6. INVESTIȚIE & ANALIZĂ (pentru investitori/proprietari)
+                  ═══════════════════════════════════════════════════════ */}
               {dbProperty && dbProperty.capital_necesar && (
                 (() => {
                   const price = dbProperty.capital_necesar!;
-                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
-                   // Hotel regime: use base_price_per_night if available, else estimate from rent
-                   const nightlyRate = dbProperty.base_price_per_night || Math.max(Math.round(baseRent / 10), 40);
-                  const occupancyPct = 75; // 75% occupancy
+                  const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
+                  const nightlyRate = dbProperty.base_price_per_night || Math.max(Math.round(baseRent / 10), 40);
+                  const occupancyPct = 75;
                   const hotelMonthlyGross = nightlyRate * 30 * (occupancyPct / 100);
-                  const managementFee = 0.20; // 20% management (mid-range 15-25%)
-                  const taxRate = 0.07; // 7% forfetar
+                  const managementFee = 0.20;
+                  const taxRate = 0.07;
                   const invTotal = price * 1.02;
                   const annualGross = hotelMonthlyGross * 12;
                   const annualNet = annualGross * (1 - managementFee) * (1 - taxRate);
@@ -557,7 +602,6 @@ const PropertyDetail = () => {
                   const r = 0.065 / 12;
                   const rata = credit > 0 ? (credit * (r * Math.pow(1 + r, 300)) / (Math.pow(1 + r, 300) - 1)) : 0;
                   const cashflowLunar = monthlyNet - rata;
-                  const estNightlyForEngine = nightlyRate;
 
                   return (
                     <div className="bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 p-5 sm:p-8 rounded-3xl shadow-sm border-l-4 border-l-primary overflow-hidden">
@@ -573,7 +617,6 @@ const PropertyDetail = () => {
                           : 'Projections calculated for the hotel regime strategy managed by RealTrust & ApArt Hotel.'}
                       </p>
 
-                      {/* KPI Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
                         <div className="bg-background/60 rounded-xl p-4 text-center border border-border">
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
@@ -605,7 +648,6 @@ const PropertyDetail = () => {
                         </div>
                       </div>
 
-                      {/* Details Table */}
                       <div className="bg-background/40 rounded-xl border border-border overflow-hidden mb-5">
                         <table className="w-full text-sm">
                           <tbody>
@@ -661,9 +703,7 @@ const PropertyDetail = () => {
                 })()
               )}
 
-              {/* ═══════════════════════════════════════════════════════
-                  4. CALCULATOR INVESTIȚIE — Scenarii detaliate
-                  ═══════════════════════════════════════════════════════ */}
+              {/* Calculator Investiție detaliat */}
               {!staticProperty && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                 const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
@@ -680,10 +720,8 @@ const PropertyDetail = () => {
               })()}
 
               {/* ═══════════════════════════════════════════════════════
-                  5. MARKETING — De ce Regim Hotelier & RealTrust
+                  7. MARKETING — De ce Regim Hotelier & RealTrust (la final)
                   ═══════════════════════════════════════════════════════ */}
-
-              {/* 🏨 Regim Hotelier — Randament Superior */}
               <div className="bg-gradient-to-br from-primary/5 to-accent/10 border border-primary/15 p-5 sm:p-8 rounded-2xl">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-2xl">🏨</span>
@@ -725,7 +763,6 @@ const PropertyDetail = () => {
                 </p>
               </div>
 
-              {/* 🤝 Avantajele Colaborării cu RealTrust */}
               <div className="bg-card border border-border p-5 sm:p-8 rounded-2xl">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-2xl">🤝</span>
@@ -778,61 +815,6 @@ const PropertyDetail = () => {
                   </Button>
                 </div>
               </div>
-
-              {/* ═══════════════════════════════════════════════════════
-                  6. LOCAȚIE — Proximitate & Hartă
-                  ═══════════════════════════════════════════════════════ */}
-
-              {/* Proximity List — walking/driving distances */}
-              <PropertyProximity propertySlug={slug || ""} />
-
-              {/* Neighborhood Map — Mapbox centered on property coordinates */}
-              <div className="space-y-4">
-                <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
-                  <MapPin className="w-6 h-6 text-primary" />
-                  {language === 'ro' ? 'Explorează Zona' : 'Explore the Area'}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ro'
-                    ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
-                    : 'Discover restaurants, shops, parks and attractions near the apartment.'}
-                </p>
-                <PropertyNeighborhoodMap propertySlug={slug || ''} propertyName={property.name} />
-              </div>
-
-              {/* ═══════════════════════════════════════════════════════
-                  7. COMPARAȚIE & CAZARE (proprietăți statice)
-                  ═══════════════════════════════════════════════════════ */}
-              {/* Comparație Prețuri, Calculator Sejur, Disponibilitate — inline după Proximitate */}
-              {staticProperty && (
-                <div className="space-y-6">
-                  <PriceCompareWidget basePrice={property.pricePerNight} />
-                  <StayCalculator property={property as any} onBook={openDirectBooking} />
-                  <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
-                </div>
-              )}
-
-              {/* ═══════════════════════════════════════════════════════
-                  8. SOCIAL PROOF — Recenzii & FAQ
-                  ═══════════════════════════════════════════════════════ */}
-
-              {/* Recenzii oaspeți - pentru toate proprietățile cu ID */}
-              {dbProperty?.id && (
-                <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
-              )}
-
-              {/* FAQ Section with Schema.org markup */}
-              <PropertyFAQ
-                propertyName={property.name}
-                location={property.location}
-                capacity={staticProperty ? property.capacity : undefined}
-                bedrooms={staticProperty ? property.bedrooms : undefined}
-                pricePerNight={staticProperty ? property.pricePerNight : undefined}
-                isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
-                listingType={dbProperty?.listing_type}
-                amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
-                houseRules={dbProperty?.house_rules || []}
-              />
             </div>
 
             {/* Bara Laterală — CTA & Contact */}
