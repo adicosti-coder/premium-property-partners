@@ -13,6 +13,8 @@ interface Booking {
   status: string;
 }
 
+type LiveLookupStatus = "live" | "unresolved";
+
 interface AvailabilityCalendarProps {
   propertyId: number;
   propertySlug?: string;
@@ -39,13 +41,34 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
       setIsLoading(true);
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+      const startDate = formatDate(startOfMonth);
+      const endDate = formatDate(endOfMonth);
+
+      const fetchFallbackBookings = async () => {
+        const { data, error } = await supabase
+          .from("bookings")
+          .select("id, property_id, check_in, check_out, status")
+          .eq("property_id", propertyId)
+          .not("status", "eq", "cancelled")
+          .lt("check_in", endDate)
+          .gt("check_out", startDate)
+          .order("check_in", { ascending: true });
+
+        if (!error && data) {
+          setBookings(data);
+        } else {
+          setBookings([]);
+        }
+
+        setLiveUnavailableDates(new Set());
+      };
 
       if (bookingUrl) {
         const slugKey = propertySlug || String(propertyId);
         const { data, error } = await supabase.functions.invoke("live-property-availability", {
           body: {
-            checkIn: formatDate(startOfMonth),
-            checkOut: formatDate(endOfMonth),
+            checkIn: startDate,
+            checkOut: endDate,
             includeUnavailableDates: true,
             properties: [{
               slug: slugKey,
@@ -54,29 +77,21 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
           },
         });
 
-        if (!error) {
+        const lookupStatus = data?.lookupStatusBySlug?.[slugKey] as LiveLookupStatus | undefined;
+
+        if (!error && lookupStatus === "live") {
           const dates = data?.unavailableDatesBySlug?.[slugKey];
           setLiveUnavailableDates(Array.isArray(dates) ? new Set(dates) : new Set());
           setBookings([]);
         } else {
-          setLiveUnavailableDates(new Set());
+          await fetchFallbackBookings();
         }
 
         setIsLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from('booking_availability')
-        .select('id, property_id, check_in, check_out, status')
-        .eq('property_id', propertyId)
-        .gte('check_out', startOfMonth.toISOString().split('T')[0])
-        .lte('check_in', endOfMonth.toISOString().split('T')[0]);
-
-      if (!error && data) {
-        setBookings(data);
-      }
-      setLiveUnavailableDates(new Set());
+      await fetchFallbackBookings();
       setIsLoading(false);
     };
 
@@ -203,10 +218,10 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
               className={cn(
                 "aspect-square flex items-center justify-center text-sm rounded-lg transition-colors relative",
                 !day.isCurrentMonth && "text-muted-foreground/30",
-                day.isCurrentMonth && !day.isBooked && !isPast && "text-foreground hover:bg-primary/10",
-                day.isCurrentMonth && day.isBooked && "bg-destructive/20 text-destructive",
-                day.isCurrentMonth && day.isCheckIn && "bg-gradient-to-r from-transparent to-destructive/20",
-                day.isCurrentMonth && day.isCheckOut && "bg-gradient-to-l from-transparent to-destructive/20",
+                day.isCurrentMonth && !day.isBooked && !isPast && "bg-[hsl(var(--success-soft))] text-[hsl(var(--success))] hover:bg-[hsl(var(--success-soft))]/80",
+                day.isCurrentMonth && day.isBooked && "bg-destructive/15 text-destructive",
+                day.isCurrentMonth && day.isCheckIn && "ring-1 ring-destructive/30",
+                day.isCurrentMonth && day.isCheckOut && "ring-1 ring-destructive/20",
                 isPast && day.isCurrentMonth && "text-muted-foreground/50",
                 isToday && "ring-2 ring-primary ring-offset-2 ring-offset-background font-bold"
               )}
@@ -220,13 +235,13 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-6 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-background border border-border" />
+          <div className="w-4 h-4 rounded border border-border bg-[hsl(var(--success-soft))]" />
           <span className="text-muted-foreground">
             {language === 'ro' ? 'Disponibil' : 'Available'}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-destructive/20" />
+          <div className="w-4 h-4 rounded bg-destructive/15" />
           <span className="text-muted-foreground">
             {language === 'ro' ? 'Ocupat' : 'Booked'}
           </span>

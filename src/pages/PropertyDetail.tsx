@@ -45,6 +45,7 @@ import {
 interface DbPropertyData {
   id: string;
   name: string;
+  booking_url?: string | null;
   location?: string;
   description_ro?: string;
   description_en?: string;
@@ -145,7 +146,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("id", slug)
             .maybeSingle();
           
@@ -158,7 +159,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -171,7 +172,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("slug", slug)
             .maybeSingle();
           
@@ -221,7 +222,7 @@ const PropertyDetail = () => {
     location: dbProperty.location || "Timișoara",
     images: dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : [],
     features: [],
-    bookingUrl: "",
+    bookingUrl: dbProperty.booking_url || "",
     description: dbProperty.description_ro || "",
     descriptionEn: dbProperty.description_en || "",
     longDescription: dbProperty.long_description_ro || dbProperty.description_ro || "",

@@ -26,6 +26,11 @@ interface RequestBody {
   includeUnavailableDates?: boolean;
 }
 
+type FetchUnavailableDatesResult = {
+  unavailableDates: Set<string>;
+  resolved: boolean;
+};
+
 const getMonthsInRange = (checkIn: string, checkOut: string) => {
   const months: Array<{ month: string; year: string }> = [];
   const current = new Date(`${checkIn}T00:00:00`);
@@ -109,7 +114,7 @@ const hasValidAvailabilityPayload = (payload: AvailabilityResponse) => {
   return hasRows && hasRooms;
 };
 
-const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string) => {
+const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string): Promise<FetchUnavailableDatesResult> => {
   const url = new URL(bookingUrl);
   url.searchParams.set("arrivalDate", checkIn);
   url.searchParams.set("departureDate", checkOut);
@@ -119,14 +124,14 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
   });
 
   if (!pageResponse.ok) {
-    return null;
+    return { unavailableDates: new Set<string>(), resolved: false };
   }
 
   const html = await pageResponse.text();
   const context = extractAvailabilityContext(html);
 
   if (!context) {
-    return null;
+    return { unavailableDates: new Set<string>(), resolved: false };
   }
 
   const unavailable = new Set<string>();
@@ -151,14 +156,20 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
     });
 
     if (!availabilityResponse.ok) {
-      return null;
+      return { unavailableDates: new Set<string>(), resolved: false };
     }
 
     const availabilityText = await availabilityResponse.text();
-    const availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
+    let availabilityData: AvailabilityResponse;
+
+    try {
+      availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
+    } catch {
+      return { unavailableDates: new Set<string>(), resolved: false };
+    }
 
     if (!hasValidAvailabilityPayload(availabilityData)) {
-      return null;
+      return { unavailableDates: new Set<string>(), resolved: false };
     }
 
     for (const row of availabilityData.rows || []) {
@@ -172,7 +183,7 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
     }
   }
 
-  return unavailable;
+  return { unavailableDates: unavailable, resolved: true };
 };
 
 serve(async (req) => {
@@ -195,11 +206,14 @@ serve(async (req) => {
     const requestedDates = getDatesInRange(checkIn, checkOut);
     const unavailableSlugs: string[] = [];
     const unavailableDatesBySlug: Record<string, string[]> = {};
+    const lookupStatusBySlug: Record<string, "live" | "unresolved"> = {};
 
     await Promise.all(properties.map(async (property) => {
       try {
-        const unavailableDates = await fetchUnavailableDates(property.bookingUrl, checkIn, checkOut);
-        if (!unavailableDates) {
+        const { unavailableDates, resolved } = await fetchUnavailableDates(property.bookingUrl, checkIn, checkOut);
+        lookupStatusBySlug[property.slug] = resolved ? "live" : "unresolved";
+
+        if (!resolved) {
           return;
         }
 
@@ -213,11 +227,12 @@ serve(async (req) => {
           unavailableSlugs.push(property.slug);
         }
       } catch (error) {
+        lookupStatusBySlug[property.slug] = "unresolved";
         console.error("availability lookup failed", property.slug, error);
       }
     }));
 
-    return new Response(JSON.stringify({ unavailableSlugs, unavailableDatesBySlug }), {
+    return new Response(JSON.stringify({ unavailableSlugs, unavailableDatesBySlug, lookupStatusBySlug }), {
       headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   } catch (error) {
