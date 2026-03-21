@@ -14,6 +14,7 @@ interface Booking {
 }
 
 type LiveLookupStatus = "live" | "unresolved";
+type AvailabilitySource = "live" | "fallback";
 
 interface AvailabilityCalendarProps {
   propertyId: number;
@@ -27,6 +28,7 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [liveUnavailableDates, setLiveUnavailableDates] = useState<Set<string>>(new Set());
+  const [availabilitySource, setAvailabilitySource] = useState<AvailabilitySource>("fallback");
   const [isLoading, setIsLoading] = useState(true);
 
   const formatDate = (date: Date) => {
@@ -61,6 +63,7 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
         }
 
         setLiveUnavailableDates(new Set());
+        setAvailabilitySource("fallback");
       };
 
       if (bookingUrl) {
@@ -83,6 +86,7 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
           const dates = data?.unavailableDatesBySlug?.[slugKey];
           setLiveUnavailableDates(Array.isArray(dates) ? new Set(dates) : new Set());
           setBookings([]);
+          setAvailabilitySource("live");
         } else {
           await fetchFallbackBookings();
         }
@@ -128,7 +132,7 @@ const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className 
       let isCheckIn = false;
       let isCheckOut = false;
       
-        if (!bookingUrl) {
+        if (availabilitySource === "fallback") {
           for (const booking of bookings) {
             const checkIn = new Date(booking.check_in);
             const checkOut = new Date(booking.check_out);

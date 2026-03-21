@@ -16,6 +16,7 @@ interface AvailabilityCell {
 
 interface AvailabilityResponse {
   rooms?: unknown[];
+  roomsByDate?: Record<string, { disp?: string | number | null; closed?: string | number | null; date?: string | null }>;
   rows?: AvailabilityCell[][];
 }
 
@@ -110,8 +111,27 @@ const extractAvailabilityContext = (html: string): AvailabilityContext | null =>
 
 const hasValidAvailabilityPayload = (payload: AvailabilityResponse) => {
   const hasRows = Array.isArray(payload.rows) && payload.rows.length > 0;
-  const hasRooms = Array.isArray(payload.rooms) && payload.rooms.length > 0;
-  return hasRows && hasRooms;
+  const hasRoomsArray = Array.isArray(payload.rooms) && payload.rooms.length > 0;
+  const hasRoomsByDate = Boolean(payload.roomsByDate && Object.keys(payload.roomsByDate).length > 0);
+  return hasRows || hasRoomsArray || hasRoomsByDate;
+};
+
+const normalizeAvailabilityPayload = (payload: unknown): AvailabilityResponse => {
+  if (!payload || typeof payload !== "object") {
+    return {};
+  }
+
+  const typedPayload = payload as Record<string, unknown>;
+  const roomsValue = typedPayload.rooms;
+
+  return {
+    rooms: Array.isArray(roomsValue) ? roomsValue : undefined,
+    roomsByDate:
+      roomsValue && typeof roomsValue === "object" && !Array.isArray(roomsValue)
+        ? (roomsValue as Record<string, { disp?: string | number | null; closed?: string | number | null; date?: string | null }>)
+        : undefined,
+    rows: Array.isArray(typedPayload.rows) ? (typedPayload.rows as AvailabilityCell[][]) : undefined,
+  };
 };
 
 const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string): Promise<FetchUnavailableDatesResult> => {
@@ -163,13 +183,29 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
     let availabilityData: AvailabilityResponse;
 
     try {
-      availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
+      availabilityData = normalizeAvailabilityPayload(JSON.parse(availabilityText));
     } catch {
       return { unavailableDates: new Set<string>(), resolved: false };
     }
 
     if (!hasValidAvailabilityPayload(availabilityData)) {
       return { unavailableDates: new Set<string>(), resolved: false };
+    }
+
+    const roomsByDate = availabilityData.roomsByDate;
+
+    if (roomsByDate) {
+      for (const [date, roomState] of Object.entries(roomsByDate)) {
+        if (!date || !date.startsWith(`${rangeMonth.year}-${rangeMonth.month}`)) continue;
+
+        const disp = Number(roomState?.disp ?? 0);
+        const closed = Number(roomState?.closed ?? 0);
+
+        if (disp <= 0 || closed === 1) {
+          unavailable.add(date);
+        }
+      }
+      continue;
     }
 
     for (const row of availabilityData.rows || []) {
