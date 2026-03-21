@@ -282,32 +282,17 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                       </motion.span>
                       
                       {/* Button */}
-                      {item.to ? (
-                        <Link
-                          to={item.to}
-                          onClick={() => setIsOpen(false)}
-                          aria-label={item.label}
-                          className={cn(
-                            "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
-                            item.bgColor,
-                            item.textColor
-                          )}
-                        >
-                          <item.icon className="w-5 h-5" />
-                        </Link>
-                      ) : (
-                        <button
-                          onClick={item.onClick}
-                          aria-label={item.label}
-                          className={cn(
-                            "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
-                            item.bgColor,
-                            item.textColor
-                          )}
-                        >
-                          <item.icon className={cn("w-5 h-5", (item as any).isAnimating && "animate-spin")} />
-                        </button>
-                      )}
+                      <button
+                        onClick={item.onClick}
+                        aria-label={item.label}
+                        className={cn(
+                          "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
+                          item.bgColor,
+                          item.textColor
+                        )}
+                      >
+                        <item.icon className={cn("w-5 h-5", (item as any).isAnimating && "animate-spin")} />
+                      </button>
                     </motion.div>
                   ))}
                 </motion.div>
