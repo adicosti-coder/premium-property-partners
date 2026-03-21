@@ -37,8 +37,8 @@ export const generateLocalBusinessSchema = () => ({
   "url": BASE_URL,
   "telephone": "+40723154520",
   "email": "info@realtrust.ro",
-  "image": `${BASE_URL}/og-image.jpg`,
-  "logo": `${BASE_URL}/favicon.ico`,
+  "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
+  "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
