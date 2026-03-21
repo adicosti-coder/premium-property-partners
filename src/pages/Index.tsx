@@ -86,6 +86,7 @@ const TeaserSections = () => {
             <OwnersTeaser />
           </section>
           <DIYvsProfessional />
+          <ROICaseStudySection />
           <section id="oaspeti-preview">
             <GuestsTeaser />
           </section>
