@@ -15,6 +15,7 @@ const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").
 const ReferralPopup = lazy(() => import("@/components/ReferralPopup"));
 const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
 const InlineCalculatorPopup = lazy(() => import("@/components/InlineCalculatorPopup"));
+const FeedbackBanner = lazy(() => import("@/components/FeedbackBanner"));
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
