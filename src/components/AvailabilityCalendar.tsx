@@ -15,21 +15,56 @@ interface Booking {
 
 interface AvailabilityCalendarProps {
   propertyId: number;
+  propertySlug?: string;
+  bookingUrl?: string;
   className?: string;
 }
 
-const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarProps) => {
+const AvailabilityCalendar = ({ propertyId, propertySlug, bookingUrl, className }: AvailabilityCalendarProps) => {
   const { language } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [liveUnavailableDates, setLiveUnavailableDates] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch bookings for this property
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchAvailability = async () => {
       setIsLoading(true);
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 2, 0);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+
+      if (bookingUrl) {
+        const slugKey = propertySlug || String(propertyId);
+        const { data, error } = await supabase.functions.invoke("live-property-availability", {
+          body: {
+            checkIn: formatDate(startOfMonth),
+            checkOut: formatDate(endOfMonth),
+            includeUnavailableDates: true,
+            properties: [{
+              slug: slugKey,
+              bookingUrl,
+            }],
+          },
+        });
+
+        if (!error) {
+          const dates = data?.unavailableDatesBySlug?.[slugKey] || [];
+          setLiveUnavailableDates(new Set(dates));
+          setBookings([]);
+        } else {
+          setLiveUnavailableDates(new Set());
+        }
+
+        setIsLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('booking_availability')
@@ -41,11 +76,12 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
       if (!error && data) {
         setBookings(data);
       }
+      setLiveUnavailableDates(new Set());
       setIsLoading(false);
     };
 
-    fetchBookings();
-  }, [propertyId, currentDate]);
+    fetchAvailability();
+  }, [propertyId, propertySlug, bookingUrl, currentDate]);
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
@@ -71,23 +107,25 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
     // Add days of current month
     for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
       const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDate(date);
       
-      let isBooked = false;
+        let isBooked = liveUnavailableDates.has(dateStr);
       let isCheckIn = false;
       let isCheckOut = false;
       
-      for (const booking of bookings) {
-        const checkIn = new Date(booking.check_in);
-        const checkOut = new Date(booking.check_out);
-        
-        if (dateStr === booking.check_in) {
-          isCheckIn = true;
-          isBooked = true;
-        } else if (dateStr === booking.check_out) {
-          isCheckOut = true;
-        } else if (date > checkIn && date < checkOut) {
-          isBooked = true;
+        if (!bookingUrl) {
+          for (const booking of bookings) {
+            const checkIn = new Date(booking.check_in);
+            const checkOut = new Date(booking.check_out);
+            
+            if (dateStr === booking.check_in) {
+              isCheckIn = true;
+              isBooked = true;
+            } else if (dateStr === booking.check_out) {
+              isCheckOut = true;
+            } else if (date > checkIn && date < checkOut) {
+              isBooked = true;
+            }
         }
       }
       
@@ -102,7 +140,7 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
     }
     
     return days;
-  }, [currentDate, bookings]);
+  }, [currentDate, bookings, liveUnavailableDates, bookingUrl]);
 
   const monthNames = language === 'ro' 
     ? ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie']
@@ -124,7 +162,7 @@ const AvailabilityCalendar = ({ propertyId, className }: AvailabilityCalendarPro
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className={cn("bg-card border border-border rounded-2xl p-6", className)}>
+    <div className={cn("relative bg-card border border-border rounded-2xl p-6", className)}>
       <div className="flex items-center gap-2 mb-6">
         <Calendar className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-serif font-semibold text-foreground">
