@@ -86,6 +86,7 @@ const CityGuideSection: React.FC = () => {
   const [currentShareCode, setCurrentShareCode] = useState<string | null>(null);
   const [sharedLinkInfo, setSharedLinkInfo] = useState<{ name: string | null; description: string | null } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(12);
   const { favorites, isFavorite, toggleFavorite, importFavorites, isImporting, favoritesCount, isAuthenticated, userId } = usePoiFavorites();
 
   // Check for shared POIs in URL and fetch link details
