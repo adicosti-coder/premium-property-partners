@@ -404,13 +404,13 @@ const InteractiveMapWithPOI = () => {
       apartmentEl.addEventListener('mouseleave', () => { apartmentEl.style.transform = 'scale(1)'; });
 
       const popup = new mapboxgl.Popup({ offset: 25, closeButton: true }).setHTML(`
-        <div style="padding: 8px; text-align: center; min-width: 160px;">
+        <a href="/proprietate/${apt.slug}" style="display: block; padding: 8px; text-align: center; min-width: 160px; text-decoration: none; cursor: pointer;">
           <strong style="color: #c9a962; font-size: 13px;">${apt.name}</strong>
           <br/>
-          <a href="/proprietate/${apt.slug}" style="color: #b8963e; font-size: 11px; text-decoration: underline; margin-top: 4px; display: inline-block;">
+          <span style="color: #b8963e; font-size: 11px; text-decoration: underline; margin-top: 4px; display: inline-block;">
             ${language === 'ro' ? 'Vezi detalii →' : 'View details →'}
-          </a>
-        </div>
+          </span>
+        </a>
       `);
 
       new mapboxgl.Marker(apartmentEl)
