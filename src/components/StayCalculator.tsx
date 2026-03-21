@@ -56,7 +56,7 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
           <span className="text-muted-foreground">
             / {language === 'ro' ? 'noapte' : 'night'}
           </span>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-semibold">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[hsl(var(--success-soft))] text-[hsl(var(--success))] text-xs font-semibold">
             -{DISCOUNT_PERCENT}%
           </span>
         </div>
@@ -130,11 +130,11 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
         </div>
 
         {/* Savings highlight */}
-        <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-green-500/10">
-          <span className="text-sm font-medium text-green-600 dark:text-green-400">
+        <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-[hsl(var(--success-soft))]">
+          <span className="text-sm font-medium text-[hsl(var(--success))]">
             {language === 'ro' ? 'Economisești' : 'You save'}
           </span>
-          <span className="text-sm font-bold text-green-600 dark:text-green-400">
+          <span className="text-sm font-bold text-[hsl(var(--success))]">
             -€{calculation.savings} ({DISCOUNT_PERCENT}%)
           </span>
         </div>
@@ -158,7 +158,14 @@ const StayCalculator = ({ property, onBook }: StayCalculatorProps) => {
 
       {/* Book button */}
       <Button 
-        onClick={() => window.open(property.bookingUrl, '_blank')} 
+        onClick={() => {
+          if (property.bookingUrl) {
+            window.open(property.bookingUrl, '_blank', 'noopener,noreferrer');
+            return;
+          }
+
+          onBook?.();
+        }} 
         className="w-full mt-6"
         size="lg"
       >
