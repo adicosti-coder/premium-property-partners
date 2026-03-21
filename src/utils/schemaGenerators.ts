@@ -10,7 +10,9 @@ const ORGANIZATION = {
   "url": BASE_URL,
   "logo": {
     "@type": "ImageObject",
-    "url": `${BASE_URL}/favicon.ico`,
+    "url": `${BASE_URL}/images/hero-optimized-800w.webp`,
+    "width": 800,
+    "height": 450,
   },
   "sameAs": [
     "https://www.facebook.com/realtrust.ro",
