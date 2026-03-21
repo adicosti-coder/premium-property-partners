@@ -67,6 +67,7 @@ const MidFoldSection = () => {
       {visible && (
         <Suspense fallback={null}>
           <DualServicePaths />
+          <ChannelLogos />
         </Suspense>
       )}
     </div>
