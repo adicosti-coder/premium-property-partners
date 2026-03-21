@@ -170,17 +170,19 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* KPI Overlay Badges - desktop only */}
-      <div className="absolute bottom-32 right-6 lg:right-12 z-20 hidden md:flex flex-col gap-3">
-        <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
-          <span className="text-primary font-bold text-xl">{language === 'ro' ? '+40% Randament' : '+40% Returns'}</span>
-          <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'vs Chirie clasică' : 'vs Classic Rent'}</span>
+      {/* KPI Overlay Badges - desktop only, positioned above scroll indicator */}
+      {!isMobile && (
+        <div className="absolute bottom-44 right-6 lg:right-12 z-20 flex flex-col gap-3">
+          <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
+            <span className="text-primary font-bold text-xl">{language === 'ro' ? '+40% Randament' : '+40% Returns'}</span>
+            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'vs Chirie clasică' : 'vs Classic Rent'}</span>
+          </div>
+          <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
+            <span className="font-bold text-foreground text-lg">Zero Stress</span>
+            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Operare full' : 'Full Operations'}</span>
+          </div>
         </div>
-        <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
-          <span className="font-bold text-foreground text-lg">Zero Stress</span>
-          <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Operare full' : 'Full Operations'}</span>
-        </div>
-      </div>
+      )}
       
       {/* Scroll indicator – desktop only */}
       {!isMobile && (
@@ -192,13 +194,12 @@ const Hero = () => {
           }}
           aria-label={language === 'ro' ? 'Derulează la calculator' : 'Scroll to calculator'}
         >
-          <span className="text-sm md:text-base font-bold text-foreground tracking-wide uppercase text-gradient-gold drop-shadow-[0_0_12px_hsl(var(--primary)/0.4)] animate-pulse" style={{ animationDuration: '3s' }}>
+          <span className="text-sm md:text-base font-bold text-primary-foreground tracking-wide uppercase px-4 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm shadow-lg">
             {language === 'ro' ? 'Cât poate produce apartamentul tău lunar?' : 'How much can your apartment earn monthly?'}
           </span>
           <div className="w-9 h-14 rounded-full border-2 border-primary flex items-start justify-center p-2 shadow-[0_0_16px_hsl(var(--primary)/0.3)]">
             <div className="w-2 h-3.5 bg-primary rounded-full animate-bounce" />
           </div>
-          <svg className="w-6 h-6 text-primary animate-bounce" style={{ animationDelay: '0.2s' }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </button>
       )}
       
