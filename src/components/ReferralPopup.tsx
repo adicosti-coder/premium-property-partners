@@ -35,16 +35,16 @@ const ReferralPopup = () => {
 
   const text = t[language as keyof typeof t] || t.ro;
 
+  // Listen for FAB menu trigger instead of auto-showing
   useEffect(() => {
-    if (!isBrowser()) return;
-    const dismissed = getSessionStorage("referralPopupDismissed");
-    if (dismissed) return;
-
-    const timer = setTimeout(() => {
+    const handleOpen = () => {
+      if (!isBrowser()) return;
+      const dismissed = getSessionStorage("referralPopupDismissed");
+      if (dismissed) return;
       setIsVisible(true);
-    }, 8000);
-
-    return () => clearTimeout(timer);
+    };
+    window.addEventListener('open-referral-popup', handleOpen);
+    return () => window.removeEventListener('open-referral-popup', handleOpen);
   }, []);
 
   const handleClose = () => {

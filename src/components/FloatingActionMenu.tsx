@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { 
   Menu, 
   X, 
@@ -10,7 +9,10 @@ import {
   Bot,
   Mic,
   MicOff,
-  Loader2
+  Loader2,
+  Calculator,
+  Download,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -93,19 +95,15 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
     lightTap();
     setIsOpen(false);
     
-    // If already connected, just toggle off (no mic needed)
     if (voiceConnected) {
       window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice'));
       return;
     }
     
-    // CRITICAL: Request microphone DIRECTLY in click handler to preserve user gesture context
-    // Mobile browsers block getUserMedia if not called directly from a user interaction
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
       });
-      // Pass the stream to ElevenLabsWidget so it doesn't need to request mic again
       window.dispatchEvent(new CustomEvent('elevenlabs-toggle-voice', { detail: { stream } }));
     } catch (error: any) {
       console.error("[FloatingActionMenu] Microphone access error:", error);
@@ -180,6 +178,42 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       textColor: "text-primary-foreground",
     }] : []),
     {
+      id: "calculator",
+      icon: Calculator,
+      label: language === 'ro' ? "Calculator ROI" : "ROI Calculator",
+      onClick: () => {
+        lightTap();
+        window.dispatchEvent(new CustomEvent('open-inline-calculator'));
+        setIsOpen(false);
+      },
+      bgColor: "bg-gradient-to-br from-amber-500 to-orange-600",
+      textColor: "text-white",
+    },
+    {
+      id: "exit-offer",
+      icon: Sparkles,
+      label: language === 'ro' ? "Ofertă Specială" : "Special Offer",
+      onClick: () => {
+        lightTap();
+        window.dispatchEvent(new CustomEvent('open-exit-intent'));
+        setIsOpen(false);
+      },
+      bgColor: "bg-gradient-to-br from-emerald-500 to-teal-600",
+      textColor: "text-white",
+    },
+    {
+      id: "pwa-install",
+      icon: Download,
+      label: language === 'ro' ? "Instalează App" : "Install App",
+      onClick: () => {
+        lightTap();
+        window.dispatchEvent(new CustomEvent('open-pwa-prompt'));
+        setIsOpen(false);
+      },
+      bgColor: "bg-gradient-to-br from-blue-500 to-indigo-600",
+      textColor: "text-white",
+    },
+    {
       id: "accessibility",
       icon: Accessibility,
       label: language === 'ro' ? "Accesibilitate" : "Accessibility",
@@ -195,7 +229,11 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       id: "referral",
       icon: Gift,
       label: referralText[language as keyof typeof referralText] || referralText.ro,
-      to: "/recomanda-proprietar",
+      onClick: () => {
+        lightTap();
+        window.dispatchEvent(new CustomEvent('open-referral-popup'));
+        setIsOpen(false);
+      },
       bgColor: "bg-gradient-to-r from-amber-500 to-orange-500",
       textColor: "text-white",
     },
@@ -244,32 +282,17 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                       </motion.span>
                       
                       {/* Button */}
-                      {item.to ? (
-                        <Link
-                          to={item.to}
-                          onClick={() => setIsOpen(false)}
-                          aria-label={item.label}
-                          className={cn(
-                            "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
-                            item.bgColor,
-                            item.textColor
-                          )}
-                        >
-                          <item.icon className="w-5 h-5" />
-                        </Link>
-                      ) : (
-                        <button
-                          onClick={item.onClick}
-                          aria-label={item.label}
-                          className={cn(
-                            "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
-                            item.bgColor,
-                            item.textColor
-                          )}
-                        >
-                          <item.icon className={cn("w-5 h-5", (item as any).isAnimating && "animate-spin")} />
-                        </button>
-                      )}
+                      <button
+                        onClick={item.onClick}
+                        aria-label={item.label}
+                        className={cn(
+                          "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
+                          item.bgColor,
+                          item.textColor
+                        )}
+                      >
+                        <item.icon className={cn("w-5 h-5", (item as any).isAnimating && "animate-spin")} />
+                      </button>
                     </motion.div>
                   ))}
                 </motion.div>
