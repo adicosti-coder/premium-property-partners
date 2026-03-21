@@ -15,6 +15,7 @@ interface AvailabilityCell {
 }
 
 interface AvailabilityResponse {
+  rooms?: unknown[];
   rows?: AvailabilityCell[][];
 }
 
@@ -57,11 +58,18 @@ const getDatesInRange = (checkIn: string, checkOut: string) => {
   return dates;
 };
 
-const extractAvailabilityContext = (html: string) => {
-  const configMatch = html.match(/new\s+Availability\w*\s*\(\s*\{([\s\S]*?)\}\s*\)/i);
-  const showAvailabilityMatch = html.match(/showAvailability\((\d+),(\d+),(\d+)\)/i);
+interface AvailabilityContext {
+  hotelId: string;
+  month: string;
+  year: string;
+  offerId: string;
+  roomId: string;
+  rateId: string;
+}
 
-  if (!configMatch || !showAvailabilityMatch) {
+const extractAvailabilityContext = (html: string): AvailabilityContext | null => {
+  const configMatch = html.match(/new\s+Availability\w*\s*\(\s*\{([\s\S]*?)\}\s*\)/i);
+  if (!configMatch) {
     return null;
   }
 
@@ -74,14 +82,31 @@ const extractAvailabilityContext = (html: string) => {
     return null;
   }
 
+  const candidates = [
+    ...html.matchAll(/btn_availability_box-(\d+)-(\d+)-(\d+)/gi),
+    ...html.matchAll(/book-(\d+)-(\d+)-(\d+)/gi),
+    ...html.matchAll(/room-(\d+)-(\d+)-(\d+)/gi),
+  ];
+
+  const firstCandidate = candidates[0];
+  if (!firstCandidate) {
+    return null;
+  }
+
   return {
     hotelId,
     month: startMonth,
     year: startYear,
-    offerId: showAvailabilityMatch[1],
-    roomId: showAvailabilityMatch[2],
-    rateId: showAvailabilityMatch[3],
+    offerId: firstCandidate[1],
+    roomId: firstCandidate[2],
+    rateId: firstCandidate[3],
   };
+};
+
+const hasValidAvailabilityPayload = (payload: AvailabilityResponse) => {
+  const hasRows = Array.isArray(payload.rows) && payload.rows.length > 0;
+  const hasRooms = Array.isArray(payload.rooms) && payload.rooms.length > 0;
+  return hasRows && hasRooms;
 };
 
 const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string) => {
@@ -131,6 +156,10 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
 
     const availabilityText = await availabilityResponse.text();
     const availabilityData = JSON.parse(availabilityText) as AvailabilityResponse;
+
+    if (!hasValidAvailabilityPayload(availabilityData)) {
+      return null;
+    }
 
     for (const row of availabilityData.rows || []) {
       for (const cell of row || []) {
