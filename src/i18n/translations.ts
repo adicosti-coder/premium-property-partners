@@ -44,12 +44,12 @@ export const translations = {
         reporting: "Raportare",
       },
       features: {
-        payments: "Plăți",
-        paymentsDesc: "Direct la proprietar",
-        model: "Model",
-        modelDesc: "Transparent, fără blocaje",
-        response: "Răspuns",
-        responseDesc: "În aceeași zi",
+        payments: "Investiție",
+        paymentsDesc: "ROI 9.4% net verificat",
+        model: "Administrare",
+        modelDesc: "Totul inclus, zero griji",
+        response: "Suport",
+        responseDesc: "Echipă dedicată non-stop",
       },
     },
     
