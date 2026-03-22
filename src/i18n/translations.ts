@@ -22,7 +22,7 @@ export const translations = {
       title: "RealTrust & ApArt Hotel Timișoara —",
       titleMid: "imobiliare & regim hotelier",
       titleHighlight: "cu randament garantat.",
-      subtitle: "Investești în imobiliare — noi îți garantăm randamentul. Administrare completă la cheie, 9.4% ROI net verificat, zero bătăi de cap. Tu încasezi, noi ne ocupăm de tot.",
+      subtitle: "Investești în imobiliare — noi îți construim o afacere la cheie, prin RealTrust Imobiliare.\nAdministrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.\nTu încasezi, noi ne ocupăm de tot.",
       cta: "Află Randamentul Tău",
       ctaSecondary: "Vreau investiție profitabilă în Timișoara",
       ctaGuests: "Pentru Oaspeți",
