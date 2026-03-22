@@ -31,7 +31,7 @@ const ChannelLogos = () => {
     switch (name) {
       case "Booking.com":
         return (
-          <svg viewBox="0 0 300 50" className="max-h-8 md:max-h-10 w-auto">
+          <svg viewBox="0 0 300 50" className="max-h-8 md:max-h-10 w-auto" role="img" aria-label="Booking.com">
             <text x="0" y="38" fill={color} style={{ fontSize: '36px', fontWeight: 700, fontFamily: 'Arial, sans-serif' }}>
               Booking.com
             </text>
