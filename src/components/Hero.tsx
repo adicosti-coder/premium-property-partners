@@ -243,7 +243,9 @@ const HeroContent = ({
   return (
     <>
       <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
-        {subtitle}
+        {subtitle.split('\n').map((line, i) => (
+          <span key={i}>{line}{i < subtitle.split('\n').length - 1 && <br />}</span>
+        ))}
       </p>
       
       {/* CTAs */}
