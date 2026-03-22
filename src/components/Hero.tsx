@@ -266,12 +266,12 @@ const HeroContent = ({
       
       {/* Trust text */}
       <div className="mt-6">
-        <p className="text-foreground/90 text-sm">
-          {t.hero.trustText}
-        </p>
-        <p className="text-foreground/80 text-sm mt-1">
-          {t.hero.trustPrivacy}
-        </p>
+         <p className="text-foreground/90 text-sm">
+           {t.hero.trustText}
+         </p>
+         <p className="text-foreground/90 text-sm mt-1">
+           {t.hero.trustPrivacy}
+         </p>
       </div>
       
       {/* Compact Feature Strip — single row instead of 3 cards */}
