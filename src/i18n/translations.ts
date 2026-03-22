@@ -22,7 +22,7 @@ export const translations = {
       title: "RealTrust & ApArt Hotel Timișoara —",
       titleMid: "imobiliare & regim hotelier",
       titleHighlight: "cu randament garantat.",
-      subtitle: "RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier: ATENEO, GREEN FOREST, FullView Studio, HELIOS, City of Mara, Fructus Plaza, Ring, Denya Forest, X-City — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, ROI 9.4% net verificat.",
+      subtitle: "Investești în imobiliare — noi îți garantăm randamentul. Administrare completă la cheie, 9.4% ROI net verificat, zero bătăi de cap. Tu încasezi, noi ne ocupăm de tot.",
       cta: "Află Randamentul Tău",
       ctaSecondary: "Vreau investiție profitabilă în Timișoara",
       ctaGuests: "Pentru Oaspeți",
