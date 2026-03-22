@@ -258,8 +258,7 @@ const HeroContent = ({
         </Button>
          <a
            href="/investitii"
-           className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 px-10 text-base rounded-xl inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
-           style={{ backgroundColor: 'hsl(222,47%,11%)', color: '#fff', border: '1px solid hsl(222,47%,11%)' }}
+           className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 px-10 text-base rounded-xl inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 bg-foreground text-background border border-foreground"
          >
            {ctaSecondary}
          </a>
@@ -267,12 +266,12 @@ const HeroContent = ({
       
       {/* Trust text */}
       <div className="mt-6">
-        <p className="text-foreground/90 text-sm">
-          {t.hero.trustText}
-        </p>
-        <p className="text-foreground/80 text-sm mt-1">
-          {t.hero.trustPrivacy}
-        </p>
+         <p className="text-foreground/90 text-sm">
+           {t.hero.trustText}
+         </p>
+         <p className="text-foreground/90 text-sm mt-1">
+           {t.hero.trustPrivacy}
+         </p>
       </div>
       
       {/* Compact Feature Strip — single row instead of 3 cards */}

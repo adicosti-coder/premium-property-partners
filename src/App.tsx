@@ -49,8 +49,8 @@ const queryClient = new QueryClient({
   },
 });
 
-// ALL pages lazy-loaded for code splitting — Index included to cut initial JS
-const Index = lazyWithRetry(() => import("./pages/Index"));
+// Index loaded eagerly — it's the landing page and LCP depends on it rendering fast
+import Index from "./pages/Index";
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 // Lazy loaded pages (code splitting for performance)
