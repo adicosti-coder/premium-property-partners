@@ -69,7 +69,7 @@ const ChannelLogos = () => {
       <div ref={ref} className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <h3
+          <h2
             className={cn(
               "text-xl md:text-2xl font-semibold text-foreground mb-2",
               "transition-all duration-500",
