@@ -45,7 +45,7 @@ const ChannelLogos = () => {
         );
       case "Expedia":
         return (
-          <svg viewBox="0 0 200 50" className="max-h-8 md:max-h-10 w-auto">
+          <svg viewBox="0 0 200 50" className="max-h-8 md:max-h-10 w-auto" role="img" aria-label="Expedia">
             <text x="0" y="38" fill={color} style={{ fontSize: '32px', fontWeight: 700, fontFamily: 'Arial, sans-serif' }}>
               Expedia
             </text>
