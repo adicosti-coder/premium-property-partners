@@ -77,7 +77,7 @@ const ChannelLogos = () => {
             )}
           >
             {t.title}
-          </h3>
+          </h2>
           <p
             className={cn(
               "text-muted-foreground",
