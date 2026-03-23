@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Link } from 'react-router-dom';
 import PremiumBenefitsBadge from './PremiumBenefitsBadge';
+import ImageWithFallback from './ImageWithFallback';
+import POIPlaceholder from './POIPlaceholder';
 import { isWebGLSupported } from '@/utils/webglSupport';
+import { resolveExternalImageUrl } from '@/utils/resolveExternalImageUrl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Loader2, 
@@ -514,6 +517,7 @@ const InteractiveMapWithPOI = () => {
       const name = language === 'ro' ? poi.name : poi.name_en;
       const description = language === 'ro' ? poi.description : poi.description_en;
       const premiumLabel = 'Premium';
+      const popupImageUrl = poi.image_url ? resolveExternalImageUrl(poi.image_url) : null;
 
       const poiPopup = new mapboxgl.Popup({
         offset: 25,
@@ -521,10 +525,10 @@ const InteractiveMapWithPOI = () => {
         maxWidth: '300px',
       }).setHTML(`
         <div style="padding: 0; overflow: hidden; border-radius: 8px;">
-          ${poi.image_url ? `
+          ${popupImageUrl ? `
             <div style="position: relative; width: 100%; height: 120px; overflow: hidden; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
               <img 
-                src="${poi.image_url}" 
+                src="${popupImageUrl}" 
                 alt="${name}"
                 loading="lazy"
                 decoding="async"
@@ -821,17 +825,27 @@ const InteractiveMapWithPOI = () => {
                 {/* Image */}
                 <div className="relative h-36 overflow-hidden bg-muted">
                   {poi.image_url ? (
-                    <img
+                    <ImageWithFallback
                       src={poi.image_url}
                       alt={name}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => { (e.currentTarget.parentElement as HTMLElement).classList.add('flex', 'items-center', 'justify-center'); e.currentTarget.style.display = 'none'; }}
+                      className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                      fallbackType="custom"
+                      fallbackIcon={
+                        <POIPlaceholder
+                          category={poi.category}
+                          name={name}
+                          className="w-full h-full"
+                        />
+                      }
+                      retryCount={1}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: config.color + '20' }}>
-                      <Icon className="w-10 h-10 opacity-30" style={{ color: config.color }} />
-                    </div>
+                    <POIPlaceholder
+                      category={poi.category}
+                      name={name}
+                      className="w-full h-full"
+                    />
                   )}
                   
                   {/* Category badge */}
@@ -842,7 +856,7 @@ const InteractiveMapWithPOI = () => {
 
                   {/* Premium badge */}
                   {poi.is_premium && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-white text-[10px] font-bold bg-gradient-to-r from-amber-500 to-amber-600 shadow">
+                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow">
                       <Crown className="w-3 h-3" />
                       Premium
                     </div>
@@ -850,8 +864,8 @@ const InteractiveMapWithPOI = () => {
 
                   {/* Rating */}
                   {poi.rating && (
-                    <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-xs">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-foreground text-xs backdrop-blur-sm">
+                      <Star className="w-3 h-3 fill-primary text-primary" />
                       {poi.rating}
                     </div>
                   )}
