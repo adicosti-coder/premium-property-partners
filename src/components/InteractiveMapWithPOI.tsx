@@ -856,7 +856,7 @@ const InteractiveMapWithPOI = () => {
 
                   {/* Premium badge */}
                   {poi.is_premium && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-white text-[10px] font-bold bg-gradient-to-r from-amber-500 to-amber-600 shadow">
+                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow">
                       <Crown className="w-3 h-3" />
                       Premium
                     </div>
@@ -864,8 +864,8 @@ const InteractiveMapWithPOI = () => {
 
                   {/* Rating */}
                   {poi.rating && (
-                    <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-xs">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    <div className="absolute bottom-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full bg-background/90 text-foreground text-xs backdrop-blur-sm">
+                      <Star className="w-3 h-3 fill-primary text-primary" />
                       {poi.rating}
                     </div>
                   )}
