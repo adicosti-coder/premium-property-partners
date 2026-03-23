@@ -40,6 +40,10 @@ import {
 
 // Main center point for the map in Timișoara
 const MAP_CENTER: [number, number] = [21.2270, 45.7540];
+const MAP_BOUNDS = new mapboxgl.LngLatBounds(
+  [21.12, 45.69],
+  [21.36, 45.83]
+);
 
 // All apartment coordinates – same as PropertyMap
 const apartmentCoordinates: { name: string; slug: string; coords: [number, number] }[] = [
@@ -319,6 +323,9 @@ const InteractiveMapWithPOI = () => {
         style: 'mapbox://styles/mapbox/light-v11',
         center: MAP_CENTER,
         zoom: 13,
+        minZoom: 11.6,
+        maxZoom: 17.5,
+        maxBounds: MAP_BOUNDS,
         pitch: 0,
         failIfMajorPerformanceCaveat: false,
       });
@@ -341,6 +348,11 @@ const InteractiveMapWithPOI = () => {
       }
 
       map.current.on('load', () => {
+        map.current?.fitBounds(MAP_BOUNDS, {
+          padding: { top: 48, right: 48, bottom: 48, left: 48 },
+          maxZoom: 13.2,
+          duration: 0,
+        });
         try { map.current?.getCanvas() && map.current.resize(); } catch (_) {}
         setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 300);
         setTimeout(() => { try { map.current?.getCanvas() && map.current.resize(); } catch (_) {} }, 1000);
@@ -567,7 +579,30 @@ const InteractiveMapWithPOI = () => {
       markersRef.current[poi.id] = marker;
       popupsRef.current[poi.id] = poiPopup;
     });
-  }, [pois, language, mapReady, scrollToCard]);
+
+    const visiblePois = (activeFilter ? pois.filter((poi) => poi.category === activeFilter) : pois)
+      .filter((poi) => Number.isFinite(poi.latitude) && Number.isFinite(poi.longitude));
+
+    const bounds = new mapboxgl.LngLatBounds();
+    apartmentCoordinates.forEach((apt) => bounds.extend(apt.coords));
+    visiblePois.forEach((poi) => bounds.extend([poi.longitude, poi.latitude]));
+
+    if (!bounds.isEmpty()) {
+      const boundedNorthEast = bounds.getNorthEast();
+      const boundedSouthWest = bounds.getSouthWest();
+
+      const safeBounds = new mapboxgl.LngLatBounds(
+        [Math.max(boundedSouthWest.lng, MAP_BOUNDS.getWest()), Math.max(boundedSouthWest.lat, MAP_BOUNDS.getSouth())],
+        [Math.min(boundedNorthEast.lng, MAP_BOUNDS.getEast()), Math.min(boundedNorthEast.lat, MAP_BOUNDS.getNorth())]
+      );
+
+      map.current.fitBounds(safeBounds, {
+        padding: { top: 56, right: 40, bottom: 56, left: 40 },
+        maxZoom: visiblePois.length <= 2 ? 15.5 : 13.4,
+        duration: 700,
+      });
+    }
+  }, [pois, language, mapReady, scrollToCard, activeFilter]);
 
   // Update marker visual when selectedPoiId changes
   useEffect(() => {

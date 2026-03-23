@@ -37,6 +37,11 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   const containerRef = (ref as React.RefObject<HTMLDivElement>) || imgRef;
 
   useEffect(() => {
+    setHasError(false);
+    setIsLoaded(false);
+  }, [src]);
+
+  useEffect(() => {
     if (priority || isInView) return;
 
     const observer = new IntersectionObserver(
@@ -97,7 +102,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
 
   return (
     <div
-      ref={imgRef}
+      ref={containerRef}
       className={`relative overflow-hidden ${className}`}
       style={containerStyle}
       onClick={onClick}

@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useEffect } from "react";
 import OptimizedImage from "@/components/OptimizedImage";
 import { ImageOff } from "lucide-react";
 
@@ -47,6 +47,13 @@ const ImageWithFallback = memo(({
   const [hasError, setHasError] = useState(false);
   const [retries, setRetries] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(src);
+    setHasError(false);
+    setRetries(0);
+    setIsLoaded(false);
+  }, [src]);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
