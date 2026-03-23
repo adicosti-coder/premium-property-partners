@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, memo } from "react";
 import { cloudinaryUrl, cloudinarySrcSet } from "@/utils/cloudinaryUrl";
+import { isGoogleHostedImage, resolveExternalImageUrl } from "@/utils/resolveExternalImageUrl";
 
 interface OptimizedImageProps {
   src: string;
@@ -72,9 +73,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   };
 
   // Google Places images need server-side proxy due to hotlink protection
-  const isGoogleImage =
-    src.includes("googleusercontent.com") ||
-    src.includes("googleapis.com");
+  const isGoogleImage = isGoogleHostedImage(src);
 
   // Determine if we should route through Cloudinary CDN
   const isSkipCdn =
@@ -84,9 +83,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     isGoogleImage;
 
   // Proxy Google Places images through our edge function
-  const resolvedSrc = isGoogleImage
-    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proxy-image?url=${encodeURIComponent(src)}`
-    : src;
+  const resolvedSrc = resolveExternalImageUrl(src);
 
   // Build Cloudinary-optimised src (f_auto, q_auto, responsive width)
   const cdnSrc = isSkipCdn ? resolvedSrc : cloudinaryUrl(src, { width });
