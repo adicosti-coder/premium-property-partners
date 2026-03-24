@@ -5,6 +5,187 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface GooglePlacePhoto {
+  photo_reference: string;
+}
+
+interface GooglePlaceResult {
+  place_id?: string;
+  name?: string;
+  formatted_address?: string;
+  photos?: GooglePlacePhoto[];
+}
+
+const normalizeText = (value: string | null | undefined) =>
+  (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const tokenize = (value: string | null | undefined) =>
+  normalizeText(value)
+    .split(' ')
+    .filter((token) => token.length > 2);
+
+function scorePlaceCandidate(place: GooglePlaceResult, expectedName: string, expectedAddress: string) {
+  const placeName = normalizeText(place.name);
+  const placeAddress = normalizeText(place.formatted_address);
+  const expectedNameTokens = tokenize(expectedName);
+  const expectedAddressTokens = tokenize(expectedAddress);
+
+  let score = 0;
+
+  expectedNameTokens.forEach((token) => {
+    if (placeName.includes(token)) score += 5;
+    if (placeAddress.includes(token)) score += 2;
+  });
+
+  expectedAddressTokens.forEach((token) => {
+    if (placeAddress.includes(token)) score += 3;
+    if (placeName.includes(token)) score += 1;
+  });
+
+  if (place.photos?.length) score += 8;
+  if (placeName === normalizeText(expectedName)) score += 10;
+
+  return score;
+}
+
+function pickBestPlace(results: GooglePlaceResult[], expectedName: string, expectedAddress: string) {
+  if (!results.length) return null;
+
+  return [...results]
+    .sort(
+      (a, b) =>
+        scorePlaceCandidate(b, expectedName, expectedAddress) -
+        scorePlaceCandidate(a, expectedName, expectedAddress)
+    )[0];
+}
+
+function buildSearchQueries(query?: string, address?: string) {
+  const rawName = (query || '').split(',')[0]?.trim();
+  const candidates = [query, rawName, address, rawName && address ? `${rawName}, ${address}` : null];
+
+  return [...new Set(candidates.filter((value): value is string => !!value && value.trim().length > 0))];
+}
+
+async function fetchGoogleApiJson(url: string) {
+  const response = await fetch(url);
+  return response.json();
+}
+
+async function resolveGooglePhotoUrl(place: GooglePlaceResult, googlePlacesApiKey: string) {
+  if (!place.photos?.length) return null;
+
+  const photoReference = place.photos[0].photo_reference;
+  const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${photoReference}&key=${googlePlacesApiKey}`;
+  const photoResponse = await fetch(photoUrl, { redirect: 'follow' });
+
+  if (!photoResponse.ok) return null;
+
+  await photoResponse.arrayBuffer();
+  return photoResponse.url;
+}
+
+async function searchNearbyPlace(
+  expectedName: string,
+  expectedAddress: string,
+  latitude: number | undefined,
+  longitude: number | undefined,
+  googlePlacesApiKey: string
+) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !expectedName.trim()) {
+    return null;
+  }
+
+  const nearbyQueries = [...new Set([expectedName, `${expectedName} ${expectedAddress}`.trim()])];
+
+  for (const nearbyQuery of nearbyQueries) {
+    const nearbyUrl = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
+    nearbyUrl.searchParams.set('location', `${latitude},${longitude}`);
+    nearbyUrl.searchParams.set('rankby', 'distance');
+    nearbyUrl.searchParams.set('keyword', nearbyQuery);
+    nearbyUrl.searchParams.set('key', googlePlacesApiKey);
+
+    const nearbyData = await fetchGoogleApiJson(nearbyUrl.toString());
+    if (nearbyData.status === 'OK' && Array.isArray(nearbyData.results) && nearbyData.results.length > 0) {
+      const place = pickBestPlace(nearbyData.results, expectedName, expectedAddress);
+      if (place?.photos?.length) {
+        return { place, source: 'google_places_nearby' };
+      }
+    }
+  }
+
+  return null;
+}
+
+async function fetchGooglePlacePhoto(options: {
+  query?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  googlePlacesApiKey: string;
+}) {
+  const { query, address, latitude, longitude, googlePlacesApiKey } = options;
+  const searchQueries = buildSearchQueries(query, address);
+  const expectedName = (query || address || '').split(',')[0]?.trim() || query || address || '';
+  const expectedAddress = address || query || '';
+
+  const nearbyMatch = await searchNearbyPlace(expectedName, expectedAddress, latitude, longitude, googlePlacesApiKey);
+  if (nearbyMatch?.place) {
+    const photoUrl = await resolveGooglePhotoUrl(nearbyMatch.place, googlePlacesApiKey);
+    if (photoUrl) {
+      return { photoUrl, place: nearbyMatch.place, source: nearbyMatch.source };
+    }
+  }
+
+  for (const searchQuery of searchQueries) {
+    const findPlaceUrl = new URL('https://maps.googleapis.com/maps/api/place/findplacefromtext/json');
+    findPlaceUrl.searchParams.set('input', searchQuery);
+    findPlaceUrl.searchParams.set('inputtype', 'textquery');
+    findPlaceUrl.searchParams.set('fields', 'place_id,name,photos,formatted_address,geometry');
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      findPlaceUrl.searchParams.set('locationBias', `circle:5000@${latitude},${longitude}`);
+    }
+    findPlaceUrl.searchParams.set('key', googlePlacesApiKey);
+
+    const findPlaceData = await fetchGoogleApiJson(findPlaceUrl.toString());
+    if (findPlaceData.status === 'OK' && Array.isArray(findPlaceData.candidates) && findPlaceData.candidates.length > 0) {
+      const place = pickBestPlace(findPlaceData.candidates, expectedName, expectedAddress);
+      if (place) {
+        const photoUrl = await resolveGooglePhotoUrl(place, googlePlacesApiKey);
+        if (photoUrl) {
+          return { photoUrl, place, source: 'google_places_findplace' };
+        }
+      }
+    }
+
+    const textSearchUrl = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
+    textSearchUrl.searchParams.set('query', searchQuery);
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      textSearchUrl.searchParams.set('location', `${latitude},${longitude}`);
+      textSearchUrl.searchParams.set('radius', '5000');
+    }
+    textSearchUrl.searchParams.set('key', googlePlacesApiKey);
+
+    const textSearchData = await fetchGoogleApiJson(textSearchUrl.toString());
+    if (textSearchData.status === 'OK' && Array.isArray(textSearchData.results) && textSearchData.results.length > 0) {
+      const place = pickBestPlace(textSearchData.results, expectedName, expectedAddress);
+      if (place) {
+        const photoUrl = await resolveGooglePhotoUrl(place, googlePlacesApiKey);
+        if (photoUrl) {
+          return { photoUrl, place, source: 'google_places_textsearch' };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 // Pexels API search
 async function searchPexels(query: string): Promise<{ url: string; source: string } | null> {
   const PEXELS_API_KEY = Deno.env.get('PEXELS_API_KEY');
@@ -304,7 +485,7 @@ serve(async (req) => {
       );
     }
 
-    // Normal flow: Try Google Places first, then cascade through free sources
+    // Normal flow: prefer real Google Places photos for exact locations
     const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY');
     
     if (!GOOGLE_PLACES_API_KEY) {
@@ -330,173 +511,33 @@ serve(async (req) => {
       );
     }
 
-    // Step 1: Find Place using Text Search
-    let locationBias = '';
-    
-    if (latitude && longitude) {
-      locationBias = `&locationBias=circle:5000@${latitude},${longitude}`;
-    }
+    const googleResult = await fetchGooglePlacePhoto({
+      query,
+      address,
+      latitude,
+      longitude,
+      googlePlacesApiKey: GOOGLE_PLACES_API_KEY,
+    });
 
-    const findPlaceUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(searchQuery)}&inputtype=textquery&fields=place_id,name,photos,formatted_address,geometry${locationBias}&key=${GOOGLE_PLACES_API_KEY}`;
-    
-    console.log('Find Place URL:', findPlaceUrl.replace(GOOGLE_PLACES_API_KEY, 'REDACTED'));
-    
-    const findPlaceResponse = await fetch(findPlaceUrl);
-    const findPlaceData = await findPlaceResponse.json();
-    
-    console.log('Find Place Response status:', findPlaceData.status);
-
-    if (findPlaceData.status !== 'OK' || !findPlaceData.candidates || findPlaceData.candidates.length === 0) {
-      // Try Text Search as fallback
-      console.log('Trying Text Search API as fallback...');
-      
-      const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery + ' Timisoara Romania')}&key=${GOOGLE_PLACES_API_KEY}`;
-      
-      const textSearchResponse = await fetch(textSearchUrl);
-      const textSearchData = await textSearchResponse.json();
-      
-      console.log('Text Search Response status:', textSearchData.status);
-      
-      if (textSearchData.status !== 'OK' || !textSearchData.results || textSearchData.results.length === 0) {
-        // Try free sources cascade as last resort
-        console.log('Google Places found nothing, trying free sources cascade...');
-        const freeResult = await searchFreeImageSources(searchQuery);
-        
-        if (freeResult) {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              photo_url: freeResult.url,
-              place_name: searchQuery,
-              source: freeResult.source,
-              message: `Image from ${freeResult.source} (Google Places found no results)`
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        return new Response(
-          JSON.stringify({ 
-            error: 'Place not found', 
-            details: textSearchData.status,
-            query: searchQuery 
-          }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Use first result from text search
-      const place = textSearchData.results[0];
-      
-      if (!place.photos || place.photos.length === 0) {
-        // Try free sources cascade for places without photos
-        console.log('Place found but no photos, trying free sources cascade...');
-        const freeResult = await searchFreeImageSources(place.name || searchQuery);
-        
-        if (freeResult) {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              photo_url: freeResult.url,
-              place_name: place.name,
-              place_id: place.place_id,
-              address: place.formatted_address,
-              source: freeResult.source,
-              message: `Image from ${freeResult.source} (Google Places had no photos)`
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        return new Response(
-          JSON.stringify({ 
-            error: 'No photos available for this place',
-            place_name: place.name,
-            place_id: place.place_id
-          }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Get photo URL from Google Places
-      const photoReference = place.photos[0].photo_reference;
-      const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`;
-      
-      console.log('Fetching photo from Text Search result...');
-      
-      const photoResponse = await fetch(photoUrl, { redirect: 'follow' });
-      const finalPhotoUrl = photoResponse.url;
-      await photoResponse.arrayBuffer();
-      
-      console.log('Photo URL obtained successfully');
-      
+    if (!googleResult) {
       return new Response(
         JSON.stringify({
-          success: true,
-          photo_url: finalPhotoUrl,
-          place_name: place.name,
-          place_id: place.place_id,
-          address: place.formatted_address,
-          photos_available: place.photos.length,
-          source: 'google_places'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const place = findPlaceData.candidates[0];
-    
-    if (!place.photos || place.photos.length === 0) {
-      // Try free sources cascade for places without photos
-      console.log('Place found but no photos, trying free sources cascade...');
-      const freeResult = await searchFreeImageSources(place.name || searchQuery);
-      
-      if (freeResult) {
-        return new Response(
-          JSON.stringify({
-            success: true,
-            photo_url: freeResult.url,
-            place_name: place.name,
-            place_id: place.place_id,
-            address: place.formatted_address,
-            source: freeResult.source,
-            message: `Image from ${freeResult.source} (Google Places had no photos)`
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          error: 'No photos available for this place',
-          place_name: place.name,
-          place_id: place.place_id
+          error: 'No real place photo found',
+          query: searchQuery,
         }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Step 2: Get Photo URL from Google Places
-    const photoReference = place.photos[0].photo_reference;
-    const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`;
-    
-    console.log('Fetching photo...');
-    
-    const photoResponse = await fetch(photoUrl, { redirect: 'follow' });
-    const finalPhotoUrl = photoResponse.url;
-    await photoResponse.arrayBuffer();
-    
-    console.log('Photo URL obtained successfully');
-
     return new Response(
       JSON.stringify({
         success: true,
-        photo_url: finalPhotoUrl,
-        place_name: place.name,
-        place_id: place.place_id,
-        address: place.formatted_address,
-        photos_available: place.photos.length,
-        source: 'google_places'
+        photo_url: googleResult.photoUrl,
+        place_name: googleResult.place.name,
+        place_id: googleResult.place.place_id,
+        address: googleResult.place.formatted_address,
+        photos_available: googleResult.place.photos?.length || 0,
+        source: googleResult.source,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
