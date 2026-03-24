@@ -145,6 +145,7 @@ const InteractiveMapWithPOI = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
+  const cardsSectionRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Record<string, mapboxgl.Marker>>({});
@@ -215,6 +216,10 @@ const InteractiveMapWithPOI = () => {
       reviews: "recenzii",
       website: "Website",
       noImage: "Fără imagine",
+      apartmentsOnly: "Doar apartamentele noastre",
+      categoryPrompt: "Alege o categorie pentru a vedea pe hartă doar punctele relevante și lista lor de carduri.",
+      selectedCategoryTitle: "Locații din categoria selectată",
+      clearCategory: "Resetează",
     },
     en: {
       badge: "Explore the Area",
@@ -232,10 +237,25 @@ const InteractiveMapWithPOI = () => {
       reviews: "reviews",
       website: "Website",
       noImage: "No image",
+      apartmentsOnly: "Our apartments only",
+      categoryPrompt: "Choose a category to show only the relevant places on the map and their cards below.",
+      selectedCategoryTitle: "Locations in the selected category",
+      clearCategory: "Reset",
     }
   };
 
   const t = content[language];
+
+  const handleFilterChange = useCallback((category: string | null) => {
+    setActiveFilter((prev) => (prev === category ? null : category));
+    setSelectedPoiId(null);
+
+    if (category) {
+      window.setTimeout(() => {
+        cardsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+  }, []);
 
   // Fly to a POI on the map and highlight its marker
   const flyToPoi = useCallback((poi: POI) => {
@@ -580,7 +600,7 @@ const InteractiveMapWithPOI = () => {
       popupsRef.current[poi.id] = poiPopup;
     });
 
-    const visiblePois = (activeFilter ? pois.filter((poi) => poi.category === activeFilter) : pois)
+    const visiblePois = (activeFilter ? pois.filter((poi) => poi.category === activeFilter) : [])
       .filter((poi) => Number.isFinite(poi.latitude) && Number.isFinite(poi.longitude));
 
     const bounds = new mapboxgl.LngLatBounds();
@@ -625,12 +645,13 @@ const InteractiveMapWithPOI = () => {
     Object.entries(markersRef.current).forEach(([id, marker]) => {
       const el = marker.getElement();
       const type = el.dataset.type;
-      el.style.display = (activeFilter === null || type === activeFilter) ? 'flex' : 'none';
+      el.style.display = activeFilter !== null && type === activeFilter ? 'flex' : 'none';
     });
   }, [activeFilter]);
 
   const availableCategories = [...new Set(pois.map(p => p.category))];
-  const filteredPois = activeFilter ? pois.filter(p => p.category === activeFilter) : pois;
+  const filteredPois = activeFilter ? pois.filter(p => p.category === activeFilter) : [];
+  const activeCategoryConfig = activeFilter ? poiTypeConfig[activeFilter] : null;
   const isLoading = tokenLoading || poisLoading;
 
   if (isLoading) {
@@ -749,14 +770,14 @@ const InteractiveMapWithPOI = () => {
           {/* Filter buttons */}
           <div className="flex flex-wrap justify-center gap-2">
             <button
-              onClick={() => setActiveFilter(null)}
+              onClick={() => handleFilterChange(null)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 activeFilter === null
                   ? 'bg-primary text-primary-foreground shadow-md'
                   : 'bg-card border border-border hover:bg-muted'
               }`}
             >
-              {language === 'ro' ? 'Toate' : 'All'} ({pois.length})
+              {t.apartmentsOnly}
             </button>
             {availableCategories.map((category) => {
               const config = poiTypeConfig[category];
@@ -767,7 +788,7 @@ const InteractiveMapWithPOI = () => {
               return (
                 <button
                   key={category}
-                  onClick={() => setActiveFilter(category)}
+                  onClick={() => handleFilterChange(category)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-md'
@@ -788,26 +809,38 @@ const InteractiveMapWithPOI = () => {
           
           {/* Legend */}
           <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border max-w-xs">
-            <div className="flex items-center gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => handleFilterChange(null)}
+              className="flex w-full items-center gap-2 mb-3 rounded-xl p-2 text-left transition-colors hover:bg-muted"
+            >
               <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center">
                 <Home className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-medium text-foreground">{t.apartment}</span>
-            </div>
+            </button>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {availableCategories.map((category) => {
                 const config = poiTypeConfig[category];
                 if (!config) return null;
                 const Icon = config.icon;
+                const isActive = activeFilter === category;
                 return (
-                  <div key={category} className="flex items-center gap-1.5">
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => handleFilterChange(category)}
+                    className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-colors ${
+                      isActive ? 'bg-primary/10 text-foreground' : 'hover:bg-muted'
+                    }`}
+                  >
                     <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: config.color }}>
                       <Icon className="w-3 h-3 text-white" />
                     </div>
                     <span className="text-muted-foreground">
                       {language === 'ro' ? config.labelRo : config.labelEn}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -832,9 +865,31 @@ const InteractiveMapWithPOI = () => {
           </AnimatePresence>
         </div>
 
-        {/* POI Cards Grid */}
-        <div ref={cardsContainerRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredPois.map((poi) => {
+        <div ref={cardsSectionRef} className="space-y-4">
+          {activeFilter && activeCategoryConfig ? (
+            <>
+              <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/70 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    {t.selectedCategoryTitle}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: activeCategoryConfig.color }}>
+                      <activeCategoryConfig.icon className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {language === 'ro' ? activeCategoryConfig.labelRo : activeCategoryConfig.labelEn} ({filteredPois.length})
+                    </h3>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => handleFilterChange(null)}>
+                  {t.clearCategory}
+                </Button>
+              </div>
+
+              <div ref={cardsContainerRef} className="md:max-h-[820px] md:overflow-y-auto md:pr-2">
+                <div className="flex snap-x gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible xl:grid-cols-3">
+                  {filteredPois.map((poi) => {
             const config = poiTypeConfig[poi.category] || poiTypeConfig.attraction;
             const Icon = config.icon;
             const name = language === 'ro' ? poi.name : poi.name_en;
@@ -850,7 +905,7 @@ const InteractiveMapWithPOI = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`bg-card rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group ${
+                className={`min-w-[280px] snap-start bg-card rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group md:min-w-0 ${
                   isSelected 
                     ? 'border-primary shadow-md shadow-primary/10 ring-2 ring-primary ring-offset-2' 
                     : 'border-border hover:border-primary/30'
@@ -950,6 +1005,14 @@ const InteractiveMapWithPOI = () => {
               </motion.div>
             );
           })}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-6 text-sm text-muted-foreground">
+              {t.categoryPrompt}
+            </div>
+          )}
         </div>
       </div>
     </section>
