@@ -290,6 +290,8 @@ const SEOHead = ({
       <meta property="og:title" content={finalTitle} />
       <meta property="og:description" content={finalDescription} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={imageAlt || finalDescription} />
       <meta property="og:locale" content={language === "ro" ? "ro_RO" : "en_US"} />
       <meta property="og:site_name" content="RealTrust & ApArt Hotel" />

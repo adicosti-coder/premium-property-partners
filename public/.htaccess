@@ -54,8 +54,7 @@
   # Prevent MIME type sniffing
   Header always set X-Content-Type-Options "nosniff"
 
-  # Enable XSS filter
-  Header always set X-XSS-Protection "1; mode=block"
+  # X-XSS-Protection removed — deprecated in modern browsers, CSP provides protection
 
   # Referrer Policy
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
