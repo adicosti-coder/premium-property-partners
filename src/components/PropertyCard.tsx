@@ -1,5 +1,5 @@
-import { useRef, useCallback } from "react";
-import { MapPin, Star, Users, BedDouble, Calendar, Eye, Heart, Check } from "lucide-react";
+import { useRef, useCallback, useState } from "react";
+import { MapPin, Star, Users, BedDouble, Calendar, Eye, Heart, Check, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import SmartFeaturesBadge from "./SmartFeaturesBadge";
@@ -10,6 +10,7 @@ import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
 import { useRealtimeViewers } from "@/hooks/useRealtimeViewers";
 import { usePrefetch } from "@/hooks/usePrefetch";
 import ViewersBadge from "@/components/ViewersBadge";
+import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
@@ -67,6 +68,7 @@ const PropertyCard = ({
     return null;
   };
 
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const { prefetchPropertyImage } = usePrefetch();
   const hoverPrefetched = useRef(false);
 
@@ -117,6 +119,15 @@ const PropertyCard = ({
           <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
           <span className="text-xs font-medium text-foreground truncate">{property.location}</span>
         </div>
+
+        {/* Expand image button */}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLightboxOpen(true); }}
+          className="absolute bottom-4 left-4 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-primary transition-colors z-10"
+          aria-label={language === "ro" ? "Mărește imaginea" : "Enlarge image"}
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
 
         {/* Smart Features Badge */}
         <SmartFeaturesBadge
@@ -264,6 +275,12 @@ const PropertyCard = ({
           </Button>
         </div>
       </div>
+
+      <PropertyImageLightbox
+        property={property}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 };
