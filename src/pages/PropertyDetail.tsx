@@ -538,6 +538,9 @@ const PropertyDetail = () => {
               </Suspense>
               <Suspense fallback={null}>
                 <NeighborhoodScore location={property.location} />
+              </Suspense>
+
+              {/* ═══════════════════════════════════════════════════════
                   1. SPECIFICAȚII PROPRIETATE — Ce este proprietatea
                   ═══════════════════════════════════════════════════════ */}
 
