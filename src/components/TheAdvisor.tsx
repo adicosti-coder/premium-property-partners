@@ -14,6 +14,7 @@ import { TrendingUp, Shield, Calculator, Lightbulb, HelpCircle } from "lucide-re
 
 interface TheAdvisorProps {
   propertyName: string;
+  propertySlug?: string;
   location: string;
   size?: number | null;
   bedrooms?: number | null;
@@ -40,6 +41,7 @@ interface AdvisorContent {
 
 const TheAdvisor = ({
   propertyName,
+  propertySlug,
   location,
   size,
   bedrooms,
@@ -57,6 +59,7 @@ const TheAdvisor = ({
   const [content, setContent] = useState<AdvisorContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const amenitiesKey = amenities?.join("|") || "";
 
   const t = language === "ro"
     ? {
@@ -88,8 +91,10 @@ const TheAdvisor = ({
     let cancelled = false;
 
     const fetchContent = async () => {
+      setError(false);
+      setIsLoading(true);
       // Check sessionStorage cache first
-      const cacheKey = `advisor_${propertyName}_${language}`;
+      const cacheKey = `advisor_v2_${propertySlug || propertyName}_${location}_${language}`;
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -105,6 +110,7 @@ const TheAdvisor = ({
           {
             body: {
               propertyName,
+              propertySlug,
               location,
               size,
               bedrooms,
@@ -140,7 +146,7 @@ const TheAdvisor = ({
 
     fetchContent();
     return () => { cancelled = true; };
-  }, [propertyName, language]);
+  }, [propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenitiesKey, listingType, yearBuilt, energyClass, roi, language]);
 
   // FAQ Schema JSON-LD
   const faqSchema = content?.faqs

@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 interface PropertyAIScoreProps {
   propertyName: string;
   location?: string;
+  listingType?: string | null;
+  roi?: string | null;
   basePrice?: number | null;
   bookingRating?: number | null;
   reviewCount?: number | null;
@@ -27,6 +29,8 @@ interface PropertyAIScoreProps {
 const PropertyAIScore = ({
   propertyName,
   location,
+  listingType,
+  roi,
   basePrice,
   bookingRating,
   reviewCount,
@@ -47,13 +51,16 @@ const PropertyAIScore = ({
 
   const score = useMemo(() => {
     let total = 0;
+    const normalizedListingType = (listingType || "").toLowerCase();
+    const isInvestmentListing = normalizedListingType === "investitie" || normalizedListingType === "vanzare";
+    const roiValue = roi ? Number.parseFloat(roi.replace(/[^0-9.]/g, "")) : null;
 
     // Location score (max 30)
-    const premiumZones = ["ISHO", "Paltim", "Centru", "Iulius", "City of Mara", "Take Ionescu", "Vivalia", "Unirii", "Victori", "Revolutiei", "Gh. Lazar", "Gheorghe Lazar", "Circumvalat"];
+    const premiumZones = ["ISHO", "Paltim", "Centru", "Iulius", "City of Mara", "Take Ionescu", "Vivalia", "Unirii", "Victori", "Revolutiei", "Gh. Lazar", "Gheorghe Lazar", "Circumvalat", "Zimbrului"];
     const locLower = (location || "").toLowerCase();
     const nameLower = (propertyName || "").toLowerCase();
     const combined = locLower + " " + nameLower;
-    if (premiumZones.some(z => combined.includes(z.toLowerCase()))) total += 28;
+    if (premiumZones.some(z => combined.includes(z.toLowerCase()))) total += 30;
     else if (locLower.includes("timișoara") || locLower.includes("timisoara")) total += 22;
     else total += 15;
 
@@ -64,7 +71,7 @@ const PropertyAIScore = ({
       else if (bookingRating >= 8.5) total += 18;
       else if (bookingRating >= 8.0) total += 15;
       else total += 10;
-    } else total += 12;
+    } else total += isInvestmentListing ? 18 : 12;
 
     // Amenities (max 25)
     const amenityCount = amenities?.length || 0;
@@ -76,7 +83,7 @@ const PropertyAIScore = ({
       else if (reviewCount >= 50) total += 20;
       else if (reviewCount >= 20) total += 15;
       else total += 10;
-    } else total += 8;
+    } else total += isInvestmentListing ? 18 : 8;
 
     // Pricing competitiveness (max 20)
     if (basePrice) {
@@ -84,6 +91,12 @@ const PropertyAIScore = ({
       else if (basePrice >= 60) total += 15;
       else total += 10;
     } else total += 10;
+
+    if (isInvestmentListing && roiValue) {
+      if (roiValue >= 10) total += 8;
+      else if (roiValue >= 8.5) total += 6;
+      else if (roiValue >= 7) total += 4;
+    }
 
     // Size bonus (max 15)
     if (size) {
@@ -93,7 +106,7 @@ const PropertyAIScore = ({
     } else total += 8;
 
     return Math.min(140, total);
-  }, [location, bookingRating, reviewCount, amenities, basePrice, size]);
+  }, [location, propertyName, bookingRating, reviewCount, amenities, basePrice, size, listingType, roi]);
 
   const percentage = (score / 140) * 100;
   const category = score >= 120 ? "Premium" : score >= 90 ? "Superior" : score >= 60 ? "Standard" : "Basic";

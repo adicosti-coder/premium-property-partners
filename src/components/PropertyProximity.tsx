@@ -9,6 +9,15 @@ interface ProximityItem {
   mode: "walk" | "drive";
 }
 
+const vivaliaProximity: ProximityItem[] = [
+  { icon: Building2, labelRo: "Iulius Town", labelEn: "Iulius Town", minutes: 5, mode: "walk" },
+  { icon: Utensils, labelRo: "Restaurante & cafenele Take Ionescu", labelEn: "Take Ionescu restaurants & cafés", minutes: 4, mode: "walk" },
+  { icon: ShoppingCart, labelRo: "Profi / supermarket", labelEn: "Profi / supermarket", minutes: 3, mode: "walk" },
+  { icon: GraduationCap, labelRo: "UVT Oituz", labelEn: "West University Oituz campus", minutes: 6, mode: "walk" },
+  { icon: Landmark, labelRo: "Bastion / Centru vechi", labelEn: "Bastion / Old Town", minutes: 6, mode: "drive" },
+  { icon: Train, labelRo: "Stații tramvai Take Ionescu", labelEn: "Take Ionescu tram stops", minutes: 4, mode: "walk" },
+];
+
 /**
  * Proximity data per property slug.
  * Distances recalculated 2026-03-05 using verified GPS coordinates
@@ -116,6 +125,9 @@ const proximityData: Record<string, ProximityItem[]> = {
     { icon: Building2,      labelRo: "Iulius Town Mall",     labelEn: "Iulius Town Mall",         minutes: 9,  mode: "drive" },
     { icon: Train,          labelRo: "Gara de Nord",         labelEn: "North Railway Station",    minutes: 14, mode: "drive" },
   ],
+  "apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda": vivaliaProximity,
+  "apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall": vivaliaProximity,
+  "ideal-investitie-utilat-complet-mobilat": vivaliaProximity,
 };
 
 interface PropertyProximityProps {
