@@ -326,7 +326,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       map.current = null;
       releaseMapSlot();
     };
-  }, [mapboxToken, language, onPropertySelect, slotRetry]);
+  }, [mapboxToken, language, onPropertySelect, slotRetry, dbCoordinates]);
 
   // Fly to selected property and open its popup
   useEffect(() => {
