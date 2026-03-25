@@ -30,6 +30,9 @@ const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const PropertyAIScore = lazy(() => import("@/components/PropertyAIScore"));
 const TheAdvisor = lazy(() => import("@/components/TheAdvisor"));
+const NeighborhoodScore = lazy(() => import("@/components/NeighborhoodScore"));
+const LiveActivityTracker = lazy(() => import("@/components/LiveActivityTracker"));
+const SimilarProperties = lazy(() => import("@/components/SimilarProperties"));
 const PropertyPremiumSpecs = lazy(() => import("@/components/PropertyPremiumSpecs"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -529,6 +532,14 @@ const PropertyDetail = () => {
                 </p>
               </div>
 
+              {/* Live Activity Tracker & Neighborhood Score */}
+              <Suspense fallback={null}>
+                <LiveActivityTracker propertyId={dbProperty?.id} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <NeighborhoodScore location={property.location} />
+              </Suspense>
+
               {/* ═══════════════════════════════════════════════════════
                   1. SPECIFICAȚII PROPRIETATE — Ce este proprietatea
                   ═══════════════════════════════════════════════════════ */}
@@ -907,6 +918,17 @@ const PropertyDetail = () => {
             </div>
           </div>
         </div>
+        {/* Similar Properties — Internal Linking Loop */}
+        <div className="container mx-auto px-4 sm:px-6 py-8">
+          <Suspense fallback={null}>
+            <SimilarProperties
+              currentPropertyId={dbProperty?.id}
+              location={property.location}
+              listingType={dbProperty?.listing_type}
+            />
+          </Suspense>
+        </div>
+
         {/* Investor Box */}
         <section className="py-12 bg-muted/40 border-t border-border">
           <div className="container mx-auto px-6">
