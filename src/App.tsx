@@ -85,7 +85,7 @@ const ZoneLanding = lazyWithRetry(() => import("./pages/ZoneLanding"));
 const AnalizaProprietate = lazyWithRetry(() => import("./pages/AnalizaProprietate"));
 const GuestGuide = lazyWithRetry(() => import("./pages/GuestGuide"));
 const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"));
-const LegalPage = lazyWithRetry(() => import("./pages/LegalPage"));
+const LegalPage = lazyWithRetry(() => import("./pages/LegalPage") as Promise<{ default: React.ComponentType<any> }>);
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
