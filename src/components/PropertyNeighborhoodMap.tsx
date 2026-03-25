@@ -9,27 +9,27 @@ import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglS
 /** Verified geocoded coordinates per property slug — real GPS positions */
 const propertyCoordinates: Record<string, [number, number]> = {
   // ── CAZARE (ApArt Hotels) ──
-  'ring-apart-hotel-spacious-deluxe': [21.2098, 45.7808],        // Str. Loichița Vasile 1-3
-  'green-forest-apart-hotel': [21.2485, 45.7790],                // Str. Constructorilor 52
-  'fructus-plaza-ultracentral-apart-hotel': [21.2245, 45.7555],  // Str. Gheorghe Lazăr 24 (lângă Piața Victoriei)
-  'fullview-studio-deluxe': [21.2130, 45.7505],                  // Calea Circumvalațiunii 1 (City of Mara)
-  'avenue-of-mara-apart-hotel': [21.2130, 45.7505],              // Calea Circumvalațiunii 1
-  'helios-apart-hotel': [21.2365, 45.7558],                      // Str. Argeș 4 (Fabric, lângă Piața Traian)
+  'ring-apart-hotel-spacious-deluxe': [21.2115815, 45.7801861],        // Str. Loichița Vasile 1-3
+  'green-forest-apart-hotel': [21.2480710, 45.7791585],                // Str. Constructorilor 52
+  'fructus-plaza-ultracentral-apart-hotel': [21.2209020, 45.7595474],  // Str. Gheorghe Lazăr 24
+  'fullview-studio-deluxe': [21.2152494, 45.7533908],                  // Calea Circumvalațiunii 1 (City of Mara)
+  'avenue-of-mara-apart-hotel': [21.2152494, 45.7533908],              // Calea Circumvalațiunii 1
+  'helios-apart-hotel': [21.2344862, 45.7432988],                      // Str. Argeș 4
   'ateneo-trevi-2-apart-hotel': [21.2098, 45.7790],              // Calea Torontalului 104K
-  'sunset-da-ra-studio-deluxe': [21.2130, 45.7505],              // Calea Circumvalațiunii 1
-  'mara-luxury-golden-apart-hotel': [21.2130, 45.7505],          // Calea Circumvalațiunii 1
+  'sunset-da-ra-studio-deluxe': [21.2152494, 45.7533908],              // Calea Circumvalațiunii 1
+  'mara-luxury-golden-apart-hotel': [21.2134140, 45.7534619],          // Str. Sinaia 2B
   'ateneo-apart-hotel-studio-deluxe': [21.2098, 45.7790],        // Calea Torontalului 104K
-  'modern-studio-apart-hotel': [21.2045, 45.7495],               // Bd. Simion Bărnuțiu 79
+  'modern-studio-apart-hotel': [21.2602816, 45.7656277],               // Bd. Simion Bărnuțiu 79
   // ── INVESTIȚII / VÂNZĂRI ──
-  'apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda': [21.2282, 45.7592],  // Vivalia, Take Ionescu
-  'apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall': [21.2282, 45.7592],            // Vivalia, Take Ionescu
-  'ideal-investitie-utilat-complet-mobilat': [21.2282, 45.7592],                                       // Vivalia, Take Ionescu
-  'apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-': [21.2235, 45.7578],  // Str. București / Take Ionescu
-  'apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net': [21.2260, 45.7540],             // Bulevardul Revoluției
-  '3-camere-complet-decomandat-hol-spatios-medicina-garaj': [21.2340, 45.7462],                        // Zona Medicina
-  'apartament-3-camere-gh-lazar-investitie-premium-randament-9-net': [21.2245, 45.7555],               // Str. Gheorghe Lazăr
-  'city-of-mara-apartament-cu-2-camere': [21.2130, 45.7505],                                          // Calea Circumvalațiunii 1
-  'ultra-central-piata-unirii-ideal-investitie': [21.2265, 45.7571],                                   // Piața Unirii
+  'apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda': [21.2341610, 45.7579883],  // Vivalia, Take Ionescu
+  'apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall': [21.2413935, 45.7628663],            // Vivalia / Zimbrului
+  'ideal-investitie-utilat-complet-mobilat': [21.2341610, 45.7579883],                                       // Vivalia, Take Ionescu
+  'apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-': [21.2372312, 45.7608103],  // Str. București / Take Ionescu
+  'apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net': [21.2330843, 45.7556125],             // Bulevardul Revoluției
+  '3-camere-complet-decomandat-hol-spatios-medicina-garaj': [21.2367143, 45.7570915],                        // Zona Medicina
+  'apartament-3-camere-gh-lazar-investitie-premium-randament-9-net': [21.2209020, 45.7595474],               // Str. Gheorghe Lazăr
+  'city-of-mara-apartament-cu-2-camere': [21.2152494, 45.7533908],                                          // Calea Circumvalațiunii 1
+  'ultra-central-piata-unirii-ideal-investitie': [21.2298369, 45.7579403],                                   // Piața Unirii
 };
 
 /** Fallback: match by property name keywords when slug is missing */
@@ -180,10 +180,58 @@ const categoryColors: Record<string, string> = {
 interface Props {
   propertySlug: string;
   propertyName?: string;
+  propertyLocation?: string;
 }
 
 /** Default center: Timișoara center (Piața Victoriei) */
 const defaultCoordinates: [number, number] = [21.2246, 45.7537];
+
+const normalizeLocation = (value?: string) =>
+  (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const addressCoordinateMatchers: Array<{ patterns: string[]; coords: [number, number] }> = [
+  { patterns: ["loichita vasile 1 3", "vasile loichita 1 3", "ring apart hotel"], coords: [21.2115815, 45.7801861] },
+  { patterns: ["constructorilor 52", "green forest apart hotel"], coords: [21.2480710, 45.7791585] },
+  { patterns: ["gheorghe lazar 24", "fructus plaza"], coords: [21.2209020, 45.7595474] },
+  { patterns: ["calea circumvalatiunii 1", "city of mara", "fullview studio deluxe", "avenue of mara apart hotel", "sunset da ra"], coords: [21.2152494, 45.7533908] },
+  { patterns: ["sinaia 2b", "mara luxury golden"], coords: [21.2134140, 45.7534619] },
+  { patterns: ["arges 4", "helios apart hotel"], coords: [21.2344862, 45.7432988] },
+  { patterns: ["torontalului 104k", "ateneo"], coords: [21.2098000, 45.7790000] },
+  { patterns: ["simion barnutiu 79", "modern studio apart hotel"], coords: [21.2602816, 45.7656277] },
+  { patterns: ["take ionescu", "vivalia"], coords: [21.2341610, 45.7579883] },
+  { patterns: ["strada bucuresti", "bucuresti langa ing", "grad de ocupare 72"], coords: [21.2372312, 45.7608103] },
+  { patterns: ["zimbrului"], coords: [21.2413935, 45.7628663] },
+  { patterns: ["revolutiei", "revolutiei din 1989"], coords: [21.2330843, 45.7556125] },
+  { patterns: ["piata unirii", "piața unirii", "ultra central"], coords: [21.2298369, 45.7579403] },
+  { patterns: ["medicina", "victor babes", "regimentul 13 calarasi"], coords: [21.2367143, 45.7570915] },
+];
+
+const resolveCoordinates = (propertySlug: string, propertyName?: string, propertyLocation?: string): [number, number] => {
+  if (propertyCoordinates[propertySlug]) return propertyCoordinates[propertySlug];
+
+  const searchable = [propertyLocation, propertyName, propertySlug]
+    .map(normalizeLocation)
+    .filter(Boolean);
+
+  for (const matcher of addressCoordinateMatchers) {
+    if (matcher.patterns.some((pattern) => searchable.some((value) => value.includes(normalizeLocation(pattern))))) {
+      return matcher.coords;
+    }
+  }
+
+  if (propertyName) {
+    const nameLower = propertyName.toLowerCase();
+    const match = nameToCoordinates.find(entry => entry.keywords.some(kw => nameLower.includes(kw)));
+    if (match) return match.coords;
+  }
+
+  return defaultCoordinates;
+};
 
 /** Default POIs for properties without specific data */
 const defaultPois: POI[] = [
@@ -202,7 +250,7 @@ const defaultPois: POI[] = [
   { name: 'Cocktail Bar Centru', nameEn: 'Downtown Cocktail Bar', lng: 21.2240, lat: 45.7555, category: 'bar', emoji: '🍸' },
 ];
 
-const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }) => {
+const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName, propertyLocation }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -211,14 +259,7 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
   const { language } = useLanguage();
 
   // Resolve coordinates: slug match → name match → default
-  const coords = propertyCoordinates[propertySlug] || (() => {
-    if (propertyName) {
-      const nameLower = propertyName.toLowerCase();
-      const match = nameToCoordinates.find(entry => entry.keywords.some(kw => nameLower.includes(kw)));
-      if (match) return match.coords;
-    }
-    return defaultCoordinates;
-  })();
+  const coords = resolveCoordinates(propertySlug, propertyName, propertyLocation);
   const pois = poiData[propertySlug] || defaultPois;
 
   // Fetch token
