@@ -918,6 +918,17 @@ const PropertyDetail = () => {
             </div>
           </div>
         </div>
+        {/* Similar Properties — Internal Linking Loop */}
+        <div className="container mx-auto px-4 sm:px-6 py-8">
+          <Suspense fallback={null}>
+            <SimilarProperties
+              currentPropertyId={dbProperty?.id}
+              location={property.location}
+              listingType={dbProperty?.listing_type}
+            />
+          </Suspense>
+        </div>
+
         {/* Investor Box */}
         <section className="py-12 bg-muted/40 border-t border-border">
           <div className="container mx-auto px-6">
