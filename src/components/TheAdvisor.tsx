@@ -64,11 +64,11 @@ const TheAdvisor = ({
   const t = language === "ro"
     ? {
         sectionTitle: "The Advisor",
-        sectionSubtitle: "Analiză premium generată de AI",
+        sectionSubtitle: "Analiză premium generată de RealTrust Expert AI",
         expertTitle: "Expert Insight",
         investmentTitle: "Indicatori de Investiție",
         faqTitle: "Întrebări Frecvente — Concierge",
-        netYield: "Randament Net",
+        netYield: "RANDAMENT (ROI)",
         rentMultiplier: "Multiplicator Chirie",
         safetyScore: "Scor Siguranță Zonă",
         loading: "Se generează analiza...",
@@ -76,11 +76,11 @@ const TheAdvisor = ({
       }
     : {
         sectionTitle: "The Advisor",
-        sectionSubtitle: "AI-powered premium analysis",
+        sectionSubtitle: "Premium analysis by RealTrust Expert AI",
         expertTitle: "Expert Insight",
         investmentTitle: "Investment Metrics",
         faqTitle: "Frequently Asked Questions — Concierge",
-        netYield: "Net Yield",
+        netYield: "YIELD (ROI)",
         rentMultiplier: "Rent Multiplier",
         safetyScore: "Zone Safety Score",
         loading: "Generating analysis...",
