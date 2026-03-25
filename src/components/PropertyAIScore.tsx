@@ -49,9 +49,11 @@ const PropertyAIScore = ({
     let total = 0;
 
     // Location score (max 30)
-    const premiumZones = ["ISHO", "Paltim", "Centru", "Iulius", "City of Mara"];
+    const premiumZones = ["ISHO", "Paltim", "Centru", "Iulius", "City of Mara", "Take Ionescu", "Vivalia", "Unirii", "Victori", "Revolutiei", "Gh. Lazar", "Gheorghe Lazar", "Circumvalat"];
     const locLower = (location || "").toLowerCase();
-    if (premiumZones.some(z => locLower.includes(z.toLowerCase()))) total += 28;
+    const nameLower = (propertyName || "").toLowerCase();
+    const combined = locLower + " " + nameLower;
+    if (premiumZones.some(z => combined.includes(z.toLowerCase()))) total += 28;
     else if (locLower.includes("timișoara") || locLower.includes("timisoara")) total += 22;
     else total += 15;
 

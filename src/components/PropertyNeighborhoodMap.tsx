@@ -19,6 +19,16 @@ const propertyCoordinates: Record<string, [number, number]> = {
   'mara-luxury-golden-apart-hotel': [21.2134, 45.7535],
   'ateneo-apart-hotel-studio-deluxe': [21.2115, 45.7788],
   'modern-studio-apart-hotel': [21.2603, 45.7656],
+  // DB-only properties — verified coordinates
+  'apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda': [21.2275, 45.7625],
+  'apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall': [21.2280, 45.7620],
+  'ideal-investitie-utilat-complet-mobilat': [21.2270, 45.7615],
+  'apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-': [21.2260, 45.7600],
+  'apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net': [21.2230, 45.7555],
+  '3-camere-complet-decomandat-hol-spatios-medicina-garaj': [21.2350, 45.7460],
+  'apartament-3-camere-gh-lazar-investitie-premium-randament-9-net': [21.2200, 45.7570],
+  'city-of-mara-apartament-cu-2-camere': [21.2148, 45.7527],
+  'ultra-central-piata-unirii-ideal-investitie': [21.2265, 45.7571],
 };
 
 /** POI data per property - tourist + utility POIs with real coordinates */
