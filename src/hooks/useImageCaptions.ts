@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 const captionCache = new Map<string, string>();
+const CAPTION_CACHE_VERSION = "v2";
 
 export function useImageCaptions(
   images: string[],
@@ -10,16 +11,19 @@ export function useImageCaptions(
 ) {
   const [captions, setCaptions] = useState<Record<number, string>>({});
   const fetchedRef = useRef<Set<string>>(new Set());
-  const propertyKey = `${propertyName}_${language}`;
+  const propertyKey = `${CAPTION_CACHE_VERSION}_${propertyName}_${language}`;
 
   useEffect(() => {
     if (!images.length || !propertyName) return;
+
+    setCaptions({});
+    fetchedRef.current = new Set();
 
     // Load from cache first
     const cached: Record<number, string> = {};
     let allCached = true;
     images.forEach((img, idx) => {
-      const key = `${propertyKey}_${idx}_${img.slice(-30)}`;
+      const key = `${propertyKey}_${idx}_${img}`;
       if (captionCache.has(key)) {
         cached[idx] = captionCache.get(key)!;
       } else {
@@ -32,7 +36,7 @@ export function useImageCaptions(
     // Fetch captions for uncached images (max 3 concurrent)
     const fetchCaption = async (idx: number) => {
       const img = images[idx];
-      const key = `${propertyKey}_${idx}_${img.slice(-30)}`;
+      const key = `${propertyKey}_${idx}_${img}`;
       if (captionCache.has(key) || fetchedRef.current.has(key)) return;
       fetchedRef.current.add(key);
 
