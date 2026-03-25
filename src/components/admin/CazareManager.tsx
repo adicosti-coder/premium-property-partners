@@ -240,8 +240,7 @@ export default function CazareManager() {
   };
 
   const updateField = <K extends keyof CazareProperty>(key: K, value: CazareProperty[K]) => {
-    if (!editingProperty) return;
-    setEditingProperty({ ...editingProperty, [key]: value });
+    setEditingProperty((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
   const activeCount = properties.filter((p) => p.is_active).length;
