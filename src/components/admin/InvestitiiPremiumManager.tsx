@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyImageGallery from "./PropertyImageGallery";
+import MapLocationPicker from "./MapLocationPicker";
 import { Image as ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -29,6 +30,8 @@ interface InvestProperty {
   name: string;
   slug: string | null;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   description_ro: string;
   description_en: string;
   long_description_ro: string | null;
@@ -100,6 +103,8 @@ const emptyProperty: Omit<InvestProperty, "id"> = {
   contact_email: null,
   source_url: null,
   source_platform: null,
+  latitude: null,
+  longitude: null,
   created_at: new Date().toISOString(),
 };
 
@@ -156,6 +161,8 @@ export default function InvestitiiPremiumManager() {
         contact_email: d.contact_email ?? null,
         source_url: d.source_url ?? null,
         source_platform: d.source_platform ?? null,
+        latitude: d.latitude ?? null,
+        longitude: d.longitude ?? null,
         created_at: d.created_at ?? new Date().toISOString(),
       })));
     }
@@ -353,6 +360,8 @@ export default function InvestitiiPremiumManager() {
       contact_email: editingProperty.contact_email,
       source_url: editingProperty.source_url,
       source_platform: editingProperty.source_platform,
+      latitude: editingProperty.latitude,
+      longitude: editingProperty.longitude,
       listing_type: "investitie",
       tag: "Premium",
     };
@@ -812,6 +821,24 @@ export default function InvestitiiPremiumManager() {
                     <Label>Locație</Label>
                     <Input value={editingProperty.location} onChange={(e) => updateField("location", e.target.value)} />
                   </div>
+                </div>
+
+                {/* Map Location Picker */}
+                <div className="p-4 bg-accent/10 rounded-xl border-2 border-primary/30 space-y-2">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2">📍 Map Location Picker — Alege poziția pe hartă</h3>
+                  <p className="text-xs text-muted-foreground">Click pe hartă sau caută o adresă pentru a seta coordonatele GPS precise.</p>
+                  <MapLocationPicker
+                    latitude={editingProperty.latitude}
+                    longitude={editingProperty.longitude}
+                    onLocationChange={(lat, lng) => {
+                      updateField("latitude", lat);
+                      updateField("longitude", lng);
+                    }}
+                    locationText={editingProperty.location}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Booking URL</Label>
                     <Input value={editingProperty.booking_url} onChange={(e) => updateField("booking_url", e.target.value)} />
