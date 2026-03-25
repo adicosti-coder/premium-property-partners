@@ -1429,6 +1429,18 @@ const POIManager = () => {
                 </div>
               </div>
 
+              {/* Map Location Picker */}
+              <div className="p-4 bg-accent/10 rounded-xl border-2 border-primary/30 space-y-2">
+                <h3 className="text-sm font-bold text-primary flex items-center gap-2">📍 Map Location Picker — Alege poziția pe hartă</h3>
+                <p className="text-xs text-muted-foreground">Click pe hartă sau caută o adresă pentru a seta coordonatele GPS precise.</p>
+                <MapLocationPicker
+                  latitude={formData.latitude ? parseFloat(formData.latitude) : null}
+                  longitude={formData.longitude ? parseFloat(formData.longitude) : null}
+                  onLocationChange={(lat, lng) => setFormData({ ...formData, latitude: lat.toString(), longitude: lng.toString() })}
+                  locationText={formData.address || formData.name}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="address">Adresă</Label>
                 <Input

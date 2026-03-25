@@ -80,6 +80,8 @@ const emptyProperty: Omit<CazareProperty, "id"> = {
   check_in_time: "15:00",
   check_out_time: "11:00",
   display_order: 0,
+  latitude: null,
+  longitude: null,
 };
 
 export default function CazareManager() {
