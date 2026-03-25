@@ -618,7 +618,7 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
-                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={(property as any).latitude} propertyLongitude={(property as any).longitude} />
+                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={dbProperty?.latitude ?? (property as any).latitude} propertyLongitude={dbProperty?.longitude ?? (property as any).longitude} />
               </div>
 
               {/* ═══════════════════════════════════════════════════════
