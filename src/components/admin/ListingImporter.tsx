@@ -14,6 +14,7 @@ import {
   Sparkles, RefreshCw, Copy, Check, Phone, User, Mail
 } from "lucide-react";
 import ImageOptimizationPanel from "./ImageOptimizationPanel";
+import MapLocationPicker from "./MapLocationPicker";
 
 interface ExtractedData {
   title: string | null;
@@ -41,6 +42,8 @@ interface ExtractedData {
   contact_email: string | null;
   source_url: string;
   source_platform: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface RewrittenData {
@@ -342,6 +345,16 @@ const ListingImporter = () => {
             {/* Main fields */}
             {renderFieldRow(<Building2 className="w-4 h-4" />, "Titlu / Nume", "title", "text", "Apartament 2 camere...")}
             {renderFieldRow(<MapPin className="w-4 h-4" />, "Locație", "location", "text", "Timișoara, Zona Centrală")}
+
+            {/* Map picker for precise positioning */}
+            <MapLocationPicker
+              latitude={editData.latitude ?? null}
+              longitude={editData.longitude ?? null}
+              onLocationChange={(lat, lng) => {
+                if (editData) setEditData({ ...editData, latitude: lat, longitude: lng });
+              }}
+              locationText={editData.location || undefined}
+            />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {renderFieldRow(<BadgeEuro className="w-4 h-4" />, "Preț", "price", "number", "75000")}

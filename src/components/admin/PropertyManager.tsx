@@ -57,6 +57,7 @@ import PropertyImageGallery from "./PropertyImageGallery";
 import PropertyPricingManager from "./PropertyPricingManager";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
 import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
+import MapLocationPicker from "./MapLocationPicker";
 
 interface Property extends PremiumFieldsData {
   id: string;
@@ -125,6 +126,8 @@ interface PropertyFormData {
   source_platform: string;
   capacity: string;
   bedrooms: string;
+  latitude: string;
+  longitude: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -153,6 +156,8 @@ const initialFormData: PropertyFormData = {
   source_platform: "",
   capacity: "",
   bedrooms: "",
+  latitude: "",
+  longitude: "",
 };
 
 export default function PropertyManager() {
@@ -361,6 +366,8 @@ export default function PropertyManager() {
         source_platform: formData.source_platform || null,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         ...premiumFields,
       });
 
@@ -414,6 +421,8 @@ export default function PropertyManager() {
         .update({
           name: formData.name,
           location: formData.location,
+          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
           description_ro: formData.description_ro,
           description_en: formData.description_en,
           features: featuresArray,
@@ -542,6 +551,8 @@ export default function PropertyManager() {
       source_platform: property.source_platform || "",
       capacity: property.capacity?.toString() || "",
       bedrooms: property.bedrooms?.toString() || "",
+      latitude: (property as any).latitude?.toString() || "",
+      longitude: (property as any).longitude?.toString() || "",
     });
     setPremiumFields({
       long_description_ro: property.long_description_ro,
@@ -643,6 +654,14 @@ export default function PropertyManager() {
           />
         </div>
       </div>
+
+      {/* Map Location Picker */}
+      <MapLocationPicker
+        latitude={formData.latitude ? parseFloat(formData.latitude) : null}
+        longitude={formData.longitude ? parseFloat(formData.longitude) : null}
+        onLocationChange={(lat, lng) => setFormData({ ...formData, latitude: lat.toString(), longitude: lng.toString() })}
+        locationText={formData.location}
+      />
 
       {/* Capacity & Bedrooms - always visible */}
       <div className="grid grid-cols-2 gap-4">
