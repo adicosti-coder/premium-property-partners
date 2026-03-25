@@ -145,6 +145,22 @@ export interface PropertySchemaData {
   amenities: string[];
   latitude?: number;
   longitude?: number;
+  // Extended fields for premium schemas
+  floor?: string | null;
+  usableArea?: number | null;
+  yearBuilt?: number | null;
+  hasElevator?: boolean | null;
+  hasAc?: boolean | null;
+  parking?: string | null;
+  orientation?: string | null;
+  energyClass?: string | null;
+  furnished?: string | null;
+  balconies?: number | null;
+  listingType?: string | null;
+  createdAt?: string | null;
+  basePricePerNight?: number | null;
+  weekendPricePerNight?: number | null;
+  neighborhood?: string | null;
 }
 
 export const generateApartmentSchema = (property: PropertySchemaData) => ({
