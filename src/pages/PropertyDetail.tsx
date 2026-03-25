@@ -532,7 +532,12 @@ const PropertyDetail = () => {
                 </p>
               </div>
 
-              {/* ═══════════════════════════════════════════════════════
+              {/* Live Activity Tracker & Neighborhood Score */}
+              <Suspense fallback={null}>
+                <LiveActivityTracker propertyId={dbProperty?.id} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <NeighborhoodScore location={property.location} />
                   1. SPECIFICAȚII PROPRIETATE — Ce este proprietatea
                   ═══════════════════════════════════════════════════════ */}
 
