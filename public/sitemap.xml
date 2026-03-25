@@ -4,7 +4,7 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://www.realtrust.ro/</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="ro" href="https://www.realtrust.ro/" />
@@ -13,146 +13,152 @@
   </url>
   <url>
     <loc>https://www.realtrust.ro/oaspeti</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/pentru-proprietari</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/complexe</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/blog</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/despre-noi</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/imobiliare</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/investitii</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/catalog-investitii</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/rezerva-direct</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/recomanda-proprietar</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/comunitate</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/pentru-oaspeti</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/preturi</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/analiza-proprietate</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Property pages use /proprietate/ prefix -->
+  <!-- Property pages -->
   <url>
     <loc>https://www.realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/green-forest-apart-hotel</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/fullview-studio-deluxe</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/avenue-of-mara-apart-hotel</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/helios-apart-hotel</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/sunset-da-ra-studio-deluxe</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.realtrust.ro/proprietate/modern-studio-apart-hotel</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.realtrust.ro/proprietate/mara-luxury-golden-apart-hotel</loc>
+    <lastmod>2026-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
