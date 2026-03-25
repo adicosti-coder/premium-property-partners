@@ -149,7 +149,7 @@ export default function MapLocationPicker({
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="flex-1"
         />
-        <Button type="button" variant="outline" size="icon" onClick={handleSearch} disabled={isSearching}>
+        <Button type="button" variant="outline" size="icon" onClick={() => { void handleSearch(); }} disabled={isSearching}>
           {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
         </Button>
         {locationText && (

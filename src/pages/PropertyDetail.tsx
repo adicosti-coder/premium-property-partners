@@ -71,6 +71,8 @@ interface DbPropertyData {
   house_rules?: string[];
   house_rules_en?: string[];
   base_price_per_night?: number | null;
+  booking_rating?: number | null;
+  booking_review_count?: number | null;
   weekend_price_per_night?: number | null;
   // Specs de bază
   size?: number | null;
