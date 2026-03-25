@@ -1856,10 +1856,12 @@ export type Database = {
           intercom_type: string | null
           is_active: boolean
           land_area: number | null
+          latitude: number | null
           listing_type: string | null
           location: string
           long_description_en: string | null
           long_description_ro: string | null
+          longitude: number | null
           monthly_maintenance: number | null
           name: string
           orientation: string | null
@@ -1927,10 +1929,12 @@ export type Database = {
           intercom_type?: string | null
           is_active?: boolean
           land_area?: number | null
+          latitude?: number | null
           listing_type?: string | null
           location: string
           long_description_en?: string | null
           long_description_ro?: string | null
+          longitude?: number | null
           monthly_maintenance?: number | null
           name: string
           orientation?: string | null
@@ -1998,10 +2002,12 @@ export type Database = {
           intercom_type?: string | null
           is_active?: boolean
           land_area?: number | null
+          latitude?: number | null
           listing_type?: string | null
           location?: string
           long_description_en?: string | null
           long_description_ro?: string | null
+          longitude?: number | null
           monthly_maintenance?: number | null
           name?: string
           orientation?: string | null

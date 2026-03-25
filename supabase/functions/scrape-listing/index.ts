@@ -70,6 +70,8 @@ function buildPropertyData(
     contact_name: data.contact_name || null,
     contact_phone: data.contact_phone || null,
     contact_email: data.contact_email || null,
+    latitude: data.latitude ? Number(data.latitude) : null,
+    longitude: data.longitude ? Number(data.longitude) : null,
   };
 }
 
