@@ -18,6 +18,7 @@ const ArticleTableOfContents = lazy(() => import("@/components/blog/ArticleTable
 const ArticleTLDR = lazy(() => import("@/components/blog/ArticleTLDR"));
 const InternalLinks = lazy(() => import("@/components/blog/InternalLinks"));
 const ArticleFAQ = lazy(() => import("@/components/blog/ArticleFAQ"));
+const ExpertSignature = lazy(() => import("@/components/ExpertSignature"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
