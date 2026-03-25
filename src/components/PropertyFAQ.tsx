@@ -93,43 +93,93 @@ const PropertyFAQ = ({
     return items;
   };
 
-  const baseFaqItems = language === "ro"
-    ? isClassicRental
-      ? [
-          { q: `Unde este situat ${propertyName}?`, a: isLocationUrl ? null : `${propertyName} este situat în ${location}, Timișoara, într-o zonă cu acces facil la transport public, restaurante și atracții turistice.`, richAnswer: locationAnswer("ro") },
-          ...(capacity ? [{ q: `Câte camere are apartamentul?`, a: `Apartamentul dispune de ${bedrooms || 1} ${(bedrooms || 1) > 1 ? "camere" : "cameră"} și poate găzdui până la ${capacity} persoane.` }] : []),
-          { q: `Care este durata minimă a contractului de închiriere?`, a: `Durata minimă a contractului este de 12 luni, cu posibilitate de prelungire. Contractul se încheie conform legislației în vigoare.` },
-          ...(pricePerNight ? [{ q: `Care este chiria lunară?`, a: `Chiria lunară este de €${pricePerNight}. Prețul nu include utilitățile (apă, curent, gaz, internet), care sunt în sarcina chiriașului.` }] : []),
-          { q: `Ce documente sunt necesare pentru închiriere?`, a: `Pentru încheierea contractului aveți nevoie de: act de identitate valabil, dovada veniturilor (fluturași de salariu sau contract de muncă) și garanția echivalentă a unei chirii lunare.` },
-          { q: `Pot rezilia contractul înainte de termen?`, a: `Da, contractul poate fi reziliat cu un preaviz de 30 de zile, conform clauzelor stabilite. Garanția se returnează integral la predarea apartamentului în stare bună.` },
-        ]
-      : [
-          { q: `Unde este situat ${propertyName}?`, a: isLocationUrl ? null : `${propertyName} este situat în ${location}, Timișoara, într-o zonă cu acces facil la transport public, restaurante și atracții turistice.`, richAnswer: locationAnswer("ro") },
-          ...(capacity ? [{ q: `Câți oaspeți pot fi cazați?`, a: `Apartamentul poate găzdui până la ${capacity} oaspeți, cu ${bedrooms || 1} ${(bedrooms || 1) > 1 ? "dormitoare" : "dormitor"}.` }] : []),
-          { q: `Cum funcționează check-in-ul?`, a: `Oferim self check-in cu smart lock — primești codul de acces automat pe WhatsApp cu 24h înainte de sosire. Nu este necesară întâlnirea cu un reprezentant.` },
-          ...(pricePerNight ? [{ q: `Care este prețul pe noapte?`, a: `Tariful pornește de la €${pricePerNight}/noapte. Prețul variază în funcție de sezon și durata sejurului. Rezervările directe beneficiază de 5% discount.` }] : []),
-          { q: `Ce facilități sunt incluse?`, a: `Toate apartamentele includ WiFi gratuit, aer condiționat, bucătărie complet echipată, lenjerie de pat premium și produse de curățenie. Parcarea este disponibilă în funcție de locație.` },
-          ...(isInvestment ? [{ q: `Ce randament pot obține din această proprietate?`, a: `Proprietățile administrate de RealTrust generează în medie un randament net de 9.2-9.4% pe an, cu o rată de ocupare de peste 85%. Contactează-ne pentru o analiză personalizată.` }] : []),
-          { q: `Pot anula rezervarea gratuit?`, a: `Da, oferim anulare gratuită cu până la 48 de ore înainte de check-in pentru majoritatea proprietăților. Verifică politica specifică la momentul rezervării.` },
-        ]
-    : isClassicRental
-      ? [
-          { q: `Where is ${propertyName} located?`, a: isLocationUrl ? null : `${propertyName} is located in ${location}, Timișoara, in an area with easy access to public transport, restaurants, and tourist attractions.`, richAnswer: locationAnswer("en") },
-          ...(capacity ? [{ q: `How many rooms does the apartment have?`, a: `The apartment has ${bedrooms || 1} room${(bedrooms || 1) > 1 ? "s" : ""} and can accommodate up to ${capacity} people.` }] : []),
-          { q: `What is the minimum lease duration?`, a: `The minimum lease duration is 12 months, with the option to extend. The contract is concluded in accordance with current legislation.` },
-          ...(pricePerNight ? [{ q: `What is the monthly rent?`, a: `The monthly rent is €${pricePerNight}. The price does not include utilities (water, electricity, gas, internet), which are the tenant's responsibility.` }] : []),
-          { q: `What documents are required for renting?`, a: `To sign the lease you need: a valid ID, proof of income (pay slips or employment contract), and a security deposit equivalent to one month's rent.` },
-          { q: `Can I terminate the lease early?`, a: `Yes, the lease can be terminated with 30 days' notice, according to the agreed terms. The deposit is fully refunded upon returning the apartment in good condition.` },
-        ]
-      : [
-          { q: `Where is ${propertyName} located?`, a: isLocationUrl ? null : `${propertyName} is located in ${location}, Timișoara, in an area with easy access to public transport, restaurants, and tourist attractions.`, richAnswer: locationAnswer("en") },
-          ...(capacity ? [{ q: `How many guests can stay?`, a: `The apartment can accommodate up to ${capacity} guests, with ${bedrooms || 1} bedroom${(bedrooms || 1) > 1 ? "s" : ""}.` }] : []),
-          { q: `How does check-in work?`, a: `We offer self check-in with smart lock — you'll receive the access code automatically via WhatsApp 24h before arrival. No need to meet a representative.` },
-          ...(pricePerNight ? [{ q: `What is the price per night?`, a: `Rates start from €${pricePerNight}/night. Prices vary by season and length of stay. Direct bookings get a 5% discount.` }] : []),
-          { q: `What amenities are included?`, a: `All apartments include free WiFi, air conditioning, fully equipped kitchen, premium bed linen, and cleaning supplies. Parking is available depending on location.` },
-          ...(isInvestment ? [{ q: `What return can I expect from this property?`, a: `Properties managed by RealTrust generate an average net yield of 9.2-9.4% per year, with an occupancy rate above 85%. Contact us for a personalized analysis.` }] : []),
-          { q: `Can I cancel for free?`, a: `Yes, we offer free cancellation up to 48 hours before check-in for most properties. Check the specific policy at the time of booking.` },
-        ];
+  const isSale = listingType === "vanzare";
+  const isInvestmentType = listingType === "investitie";
+
+  const getBaseFaqItems = () => {
+    const locationItem = {
+      q: language === "ro" ? `Unde este situat ${propertyName}?` : `Where is ${propertyName} located?`,
+      a: isLocationUrl ? null : (language === "ro"
+        ? `${propertyName} este situat în ${location}, Timișoara, într-o zonă cu acces facil la transport public, restaurante și atracții turistice.`
+        : `${propertyName} is located in ${location}, Timișoara, in an area with easy access to public transport, restaurants, and tourist attractions.`),
+      richAnswer: locationAnswer(language === "ro" ? "ro" : "en"),
+    };
+
+    if (isSale) {
+      return language === "ro" ? [
+        locationItem,
+        { q: `Care este prețul de vânzare?`, a: pricePerNight ? `Prețul solicitat este de €${pricePerNight.toLocaleString('ro-RO')}. Contactați-ne pentru detalii despre negociere și modalități de plată.` : `Contactați-ne pentru a afla prețul actual și condițiile de vânzare.` },
+        { q: `Ce acte sunt necesare pentru achiziție?`, a: `Pentru cumpărarea unui apartament aveți nevoie de: act de identitate, certificat fiscal, extras de carte funciară actualizat. Vă putem recomanda un notar de încredere din Timișoara.` },
+        { q: `Se poate achiziționa cu credit ipotecar?`, a: `Da, apartamentul este eligibil pentru credit ipotecar. Colaborăm cu brokeri de credite care pot obține cele mai bune dobânzi. Avansul minim este de 15-25%.` },
+        { q: `Care este potențialul zonei pentru investiție?`, a: `Zona ${location} din Timișoara are un trend ascendent al valorii imobiliare. Proximitatea față de centre comerciale, universități și transport public asigură cerere constantă.` },
+        { q: `Apartamentul poate fi dat în regim hotelier?`, a: `Da! RealTrust oferă servicii complete de administrare în regim hotelier cu randament net de 9-10%. Proprietatea poate genera venit imediat după achiziție.` },
+      ] : [
+        locationItem,
+        { q: `What is the sale price?`, a: pricePerNight ? `The asking price is €${pricePerNight.toLocaleString('en-US')}. Contact us for negotiation details and payment options.` : `Contact us to find out the current price and sale conditions.` },
+        { q: `What documents are needed for purchase?`, a: `To buy an apartment you need: valid ID, tax certificate, updated land registry extract. We can recommend a trusted notary in Timișoara.` },
+        { q: `Can it be purchased with a mortgage?`, a: `Yes, the apartment is eligible for mortgage financing. We work with credit brokers who can secure the best rates. Minimum down payment is 15-25%.` },
+        { q: `What is the area's investment potential?`, a: `The ${location} area in Timișoara has an upward trend in real estate values. Proximity to shopping centers, universities, and public transport ensures constant demand.` },
+        { q: `Can the apartment be rented short-term?`, a: `Yes! RealTrust offers complete short-term rental management with 9-10% net yield. The property can generate income immediately after purchase.` },
+      ];
+    }
+
+    if (isInvestmentType) {
+      return language === "ro" ? [
+        locationItem,
+        ...(pricePerNight ? [{ q: `Care este prețul de achiziție și cum se calculează randamentul?`, a: `Prețul de achiziție este de €${pricePerNight.toLocaleString('ro-RO')}. Randamentul net se calculează pe baza venitului anual din regim hotelier minus costurile de administrare (20%) și impozit (7%).` }] : []),
+        { q: `Ce randament net pot obține în regim hotelier?`, a: `Proprietățile administrate de RealTrust generează un randament net de 9-10% pe an, cu o rată de ocupare medie de 85-98%. Rezultatul depinde de sezon, locație și calitatea finisajelor.` },
+        { q: `Cum funcționează administrarea de către RealTrust?`, a: `RealTrust se ocupă de tot: listare pe Booking.com și Airbnb, fotografii profesionale, dynamic pricing, comunicare cu oaspeții, curățenie profesionistă, mentenanță și raportare lunară transparentă.` },
+        { q: `Care sunt costurile de administrare?`, a: `Comisionul de management este de 15-25% din venitul brut, în funcție de pachetul ales. Nu există costuri ascunse — totul este transparent în raportarea lunară.` },
+        { q: `Cât de rapid poate genera venit proprietatea?`, a: `Apartamentele sunt operaționale în 2-4 săptămâni de la predare. RealTrust se ocupă de amenajare, fotografiere și listare pe toate platformele majore.` },
+        { q: `Proprietatea este asigurată?`, a: `Da, toate proprietățile administrate beneficiază de asigurare de 3 milioane EUR prin programele Booking.com și Airbnb, plus asigurare suplimentară RealTrust.` },
+      ] : [
+        locationItem,
+        ...(pricePerNight ? [{ q: `What is the purchase price and how is the yield calculated?`, a: `The purchase price is €${pricePerNight.toLocaleString('en-US')}. Net yield is calculated based on annual short-term rental income minus management costs (20%) and tax (7%).` }] : []),
+        { q: `What net yield can I expect from short-term rental?`, a: `Properties managed by RealTrust generate 9-10% net yield per year, with an average occupancy rate of 85-98%. Results depend on season, location, and finish quality.` },
+        { q: `How does RealTrust management work?`, a: `RealTrust handles everything: listing on Booking.com and Airbnb, professional photography, dynamic pricing, guest communication, professional cleaning, maintenance, and transparent monthly reporting.` },
+        { q: `What are the management costs?`, a: `The management fee is 15-25% of gross revenue, depending on the chosen package. No hidden costs — everything is transparent in the monthly report.` },
+        { q: `How quickly can the property generate income?`, a: `Apartments are operational within 2-4 weeks of handover. RealTrust handles furnishing, photography, and listing on all major platforms.` },
+        { q: `Is the property insured?`, a: `Yes, all managed properties benefit from €3 million insurance through Booking.com and Airbnb programs, plus additional RealTrust insurance.` },
+      ];
+    }
+
+    if (isClassicRental) {
+      return language === "ro" ? [
+        locationItem,
+        ...(capacity ? [{ q: `Câte camere are apartamentul?`, a: `Apartamentul dispune de ${bedrooms || 1} ${(bedrooms || 1) > 1 ? "camere" : "cameră"} și poate găzdui până la ${capacity} persoane.` }] : []),
+        { q: `Care este durata minimă a contractului de închiriere?`, a: `Durata minimă a contractului este de 12 luni, cu posibilitate de prelungire. Contractul se încheie conform legislației în vigoare.` },
+        ...(pricePerNight ? [{ q: `Care este chiria lunară?`, a: `Chiria lunară este de €${pricePerNight}. Prețul nu include utilitățile (apă, curent, gaz, internet), care sunt în sarcina chiriașului.` }] : []),
+        { q: `Ce documente sunt necesare pentru închiriere?`, a: `Pentru încheierea contractului aveți nevoie de: act de identitate valabil, dovada veniturilor (fluturași de salariu sau contract de muncă) și garanția echivalentă a unei chirii lunare.` },
+        { q: `Pot rezilia contractul înainte de termen?`, a: `Da, contractul poate fi reziliat cu un preaviz de 30 de zile, conform clauzelor stabilite. Garanția se returnează integral la predarea apartamentului în stare bună.` },
+      ] : [
+        locationItem,
+        ...(capacity ? [{ q: `How many rooms does the apartment have?`, a: `The apartment has ${bedrooms || 1} room${(bedrooms || 1) > 1 ? "s" : ""} and can accommodate up to ${capacity} people.` }] : []),
+        { q: `What is the minimum lease duration?`, a: `The minimum lease duration is 12 months, with the option to extend. The contract is concluded in accordance with current legislation.` },
+        ...(pricePerNight ? [{ q: `What is the monthly rent?`, a: `The monthly rent is €${pricePerNight}. The price does not include utilities (water, electricity, gas, internet), which are the tenant's responsibility.` }] : []),
+        { q: `What documents are required for renting?`, a: `To sign the lease you need: a valid ID, proof of income (pay slips or employment contract), and a security deposit equivalent to one month's rent.` },
+        { q: `Can I terminate the lease early?`, a: `Yes, the lease can be terminated with 30 days' notice, according to the agreed terms. The deposit is fully refunded upon returning the apartment in good condition.` },
+      ];
+    }
+
+    // Default: cazare (accommodation)
+    return language === "ro" ? [
+      locationItem,
+      ...(capacity ? [{ q: `Câți oaspeți pot fi cazați?`, a: `Apartamentul poate găzdui până la ${capacity} oaspeți, cu ${bedrooms || 1} ${(bedrooms || 1) > 1 ? "dormitoare" : "dormitor"}.` }] : []),
+      { q: `Cum funcționează check-in-ul?`, a: `Oferim self check-in cu smart lock — primești codul de acces automat pe WhatsApp cu 24h înainte de sosire. Nu este necesară întâlnirea cu un reprezentant.` },
+      ...(pricePerNight ? [{ q: `Care este prețul pe noapte?`, a: `Tariful pornește de la €${pricePerNight}/noapte. Prețul variază în funcție de sezon și durata sejurului. Rezervările directe beneficiază de 5% discount.` }] : []),
+      { q: `Ce facilități sunt incluse?`, a: `Toate apartamentele includ WiFi gratuit, aer condiționat, bucătărie complet echipată, lenjerie de pat premium și produse de curățenie. Parcarea este disponibilă în funcție de locație.` },
+      { q: `Pot anula rezervarea gratuit?`, a: `Da, oferim anulare gratuită cu până la 48 de ore înainte de check-in pentru majoritatea proprietăților. Verifică politica specifică la momentul rezervării.` },
+    ] : [
+      locationItem,
+      ...(capacity ? [{ q: `How many guests can stay?`, a: `The apartment can accommodate up to ${capacity} guests, with ${bedrooms || 1} bedroom${(bedrooms || 1) > 1 ? "s" : ""}.` }] : []),
+      { q: `How does check-in work?`, a: `We offer self check-in with smart lock — you'll receive the access code automatically via WhatsApp 24h before arrival. No need to meet a representative.` },
+      ...(pricePerNight ? [{ q: `What is the price per night?`, a: `Rates start from €${pricePerNight}/night. Prices vary by season and length of stay. Direct bookings get a 5% discount.` }] : []),
+      { q: `What amenities are included?`, a: `All apartments include free WiFi, air conditioning, fully equipped kitchen, premium bed linen, and cleaning supplies. Parking is available depending on location.` },
+      { q: `Can I cancel for free?`, a: `Yes, we offer free cancellation up to 48 hours before check-in for most properties. Check the specific policy at the time of booking.` },
+    ];
+  };
+
+  const baseFaqItems = getBaseFaqItems();
 
   // Merge base FAQ with dynamic amenity-based items
   const amenityFAQs = getAmenityFAQs();
