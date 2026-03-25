@@ -361,6 +361,22 @@ const PropertyDetail = () => {
       rating: parseFloat(avgRating),
       reviewCount,
       amenities: property.amenities || [],
+      // Extended premium fields
+      floor: dbProperty?.floor,
+      usableArea: dbProperty?.usable_area,
+      yearBuilt: dbProperty?.year_built,
+      hasElevator: dbProperty?.has_elevator,
+      hasAc: dbProperty?.has_ac,
+      parking: dbProperty?.parking,
+      orientation: dbProperty?.orientation,
+      energyClass: dbProperty?.energy_class,
+      furnished: dbProperty?.furnished,
+      balconies: dbProperty?.balconies,
+      listingType: dbProperty?.listing_type,
+      createdAt: dbProperty ? undefined : undefined, // DB created_at not exposed in current query
+      basePricePerNight: dbProperty?.base_price_per_night,
+      weekendPricePerNight: dbProperty?.weekend_price_per_night,
+      neighborhood: dbProperty?.location || property.location,
     }),
     // LodgingBusiness with AggregateRating + real reviews for Google rich snippets
     {
