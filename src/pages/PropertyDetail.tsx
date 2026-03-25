@@ -8,12 +8,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getPropertyBySlug, getImageAlt } from "@/data/properties";
+import { getPropertyBySlug, getImageAlt, type Property } from "@/data/properties";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
+import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 
 const BookingForm = lazy(() => import("@/components/BookingForm"));
 const StayCalculator = lazy(() => import("@/components/StayCalculator"));
@@ -103,6 +104,7 @@ interface DbPropertyData {
   construction_type?: string | null;
   compartimentare?: string | null;
   features?: string[];
+  slug?: string | null;
 }
 
 // Helper to check if a string is a UUID
@@ -134,6 +136,7 @@ const PropertyDetail = () => {
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const directBookingUrl = dbProperty?.booking_url || staticProperty?.bookingUrl || "";
+  const normalizedListingType = (dbProperty?.listing_type || "").trim().toLowerCase();
 
   const openDirectBooking = useCallback(() => {
     if (directBookingUrl) {
@@ -160,7 +163,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("id", slug)
             .maybeSingle();
           
@@ -173,7 +176,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -186,7 +189,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
             .eq("slug", slug)
             .maybeSingle();
           
@@ -231,7 +234,7 @@ const PropertyDetail = () => {
   // Create unified property object
   const property = staticProperty || (dbProperty ? {
     id: 0, // DB properties use UUID in dbProperty.id
-    slug: slug || "",
+    slug: dbProperty.slug || slug || "",
     name: dbProperty.name,
     location: dbProperty.location || "Timișoara",
     images: dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : [],
@@ -329,6 +332,14 @@ const PropertyDetail = () => {
   }
 
   if (!property) return null;
+
+  const propertyForLightbox: Property = staticProperty || {
+    ...property,
+    featuresEn: [],
+    images: galleryImages,
+    imageAlts: galleryImages.map((_, idx) => `${property.name} – foto ${idx + 1}`),
+    imageAltsEn: galleryImages.map((_, idx) => `${property.name} – photo ${idx + 1}`),
+  };
 
   // Generate rich schema for this property (with real reviews for Google rich snippets)
   const reviewSchemaItems = dbReviews.length > 0 ? dbReviews.slice(0, 5).map((r: any) => ({
@@ -473,6 +484,7 @@ const PropertyDetail = () => {
           <Suspense fallback={null}>
             <TheAdvisor
               propertyName={property.name}
+              propertySlug={property.slug}
               location={property.location}
               size={dbProperty?.size || property.size}
               bedrooms={property.bedrooms}
@@ -505,6 +517,8 @@ const PropertyDetail = () => {
                   <PropertyAIScore
                     propertyName={property.name}
                     location={property.location}
+                    listingType={normalizedListingType}
+                    roi={dbProperty?.roi_percentage}
                     basePrice={(property as any).base_price_per_night ?? null}
                     bookingRating={(property as any).booking_rating ?? null}
                     reviewCount={(property as any).booking_review_count ?? null}
@@ -574,7 +588,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   3. LOCAȚIE — Proximitate & Hartă (important pentru oaspeți)
                   ═══════════════════════════════════════════════════════ */}
-              <PropertyProximity propertySlug={slug || ""} />
+              <PropertyProximity propertySlug={property.slug} />
 
               <div className="space-y-4">
                 <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
@@ -586,7 +600,7 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
-                <PropertyNeighborhoodMap propertySlug={slug || ''} propertyName={property.name} />
+                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} />
               </div>
 
               {/* ═══════════════════════════════════════════════════════
@@ -613,7 +627,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   5. SOCIAL PROOF — Recenzii & FAQ
                   ═══════════════════════════════════════════════════════ */}
-              {dbProperty?.id && dbProperty?.listing_type !== 'vanzare' && dbProperty?.listing_type !== 'inchiriere' && (
+              {dbProperty?.id && normalizedListingType === 'cazare' && (
                 <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
               )}
 
@@ -962,7 +976,12 @@ const PropertyDetail = () => {
         </section>
       </main>
       <Suspense fallback={null}>
-      
+      <PropertyImageLightbox
+        property={propertyForLightbox}
+        initialIndex={currentImageIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
       <Footer />
       <BookingForm isOpen={bookingOpen} onClose={() => setBookingOpen(false)} propertyName={property.name} />
       <GlobalConversionWidgets showExitIntent={false} />

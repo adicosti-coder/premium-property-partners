@@ -35,7 +35,27 @@ serve(async (req) => {
   }
 
   try {
-    const { propertyName, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi, language } = await req.json();
+    const { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi, language } = await req.json();
+
+    const propertyContextMap: Record<string, { positioning: string; poiContext: string; buyerProfile: string }> = {
+      "apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda": {
+        positioning: "Ansamblul Vivalia din zona Take Ionescu, în polul urban dintre Iulius Town, Bastion și axa centrală a orașului.",
+        poiContext: "POI relevante: Iulius Town, Bastionul Theresia, Piața Unirii, restaurantele și cafenelele de pe Take Ionescu, UVT Oituz, stațiile de tramvai din Take Ionescu.",
+        buyerProfile: "Profil cumpărător: investitor care caută activ premium, ușor de monetizat în regim hotelier, corporate housing sau revânzare către client final exigent.",
+      },
+      "apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall": {
+        positioning: "Ansamblul Vivalia din zona Take Ionescu, foarte aproape de Iulius Town și de coridorul premium spre centru.",
+        poiContext: "POI relevante: Iulius Town, Bastionul Theresia, Piața Unirii, zona comercială din jurul Vivalia, UVT Oituz și transportul public Take Ionescu.",
+        buyerProfile: "Profil cumpărător: investitor interesat de cerere constantă, flexibilitate bună la exploatare și poziție premium ușor de explicat în piață.",
+      },
+      "ideal-investitie-utilat-complet-mobilat": {
+        positioning: "Micro-locație Vivalia / Take Ionescu, conectată natural la Iulius Town și la nucleul central al Timișoarei.",
+        poiContext: "POI relevante: Iulius Town, Bastion, Piața Unirii, retail de proximitate, cafenele și artera Take Ionescu.",
+        buyerProfile: "Profil cumpărător: investitor care vizează produs urban premium, lichid și bine poziționat pentru închiriere și exit.",
+      },
+    };
+
+    const propertyContext = propertySlug ? propertyContextMap[propertySlug] : undefined;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -58,7 +78,10 @@ Clasa energetică: ${energyClass || "N/A"}
 Preț/noapte: ${pricePerNight || "N/A"} EUR
 ROI estimat: ${roi || "N/A"}
 Tip listing: ${listingType || "cazare"}
-Dotări: ${(amenities || []).join(", ") || "standard"}`;
+Dotări: ${(amenities || []).join(", ") || "standard"}
+Context local verificat: ${propertyContext?.positioning || "Folosește exclusiv locația primită și menține reperele locale coerente."}
+POI / repere apropiate: ${propertyContext?.poiContext || "Alege doar repere plauzibile pentru poziția exactă a proprietății."}
+Context de cumpărător: ${propertyContext?.buyerProfile || "Menține un ton premium și o logică investițională matură."}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
