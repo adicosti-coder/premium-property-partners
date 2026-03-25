@@ -240,7 +240,7 @@ const TheAdvisor = ({
                 <CardContent className="p-5">
                   <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
                   <p className="text-2xl font-bold text-foreground">
-                    {content.investmentMetrics.netYield}
+                    {(content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                     {t.netYield}
