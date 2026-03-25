@@ -261,6 +261,8 @@ const PropertyDetail = () => {
     checkInTime: "",
     checkOutTime: "",
     isActive: true,
+    latitude: dbProperty.latitude || null,
+    longitude: dbProperty.longitude || null,
   } : null);
 
   // 2. Funcție Trimitere către Make.com
