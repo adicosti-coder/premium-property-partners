@@ -577,13 +577,192 @@ export const generateReviewsFromDatabase = (
   };
 };
 
+// RealEstateListing Schema — price, currency, availability, publication date
+export const generateRealEstateListingSchema = (property: PropertySchemaData) => {
+  const url = `${BASE_URL}/proprietate/${property.slug}`;
+  const price = property.basePricePerNight || property.pricePerNight;
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": property.name,
+    "url": url,
+    "description": property.description,
+    "image": property.images && property.images.length > 0 ? property.images[0] : property.image,
+    "datePosted": property.createdAt || new Date().toISOString().split("T")[0],
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "EUR",
+      "price": price,
+      "priceValidUntil": new Date(Date.now() + 180 * 86400000).toISOString().split("T")[0],
+      "availability": "https://schema.org/InStock",
+      "url": url,
+      "seller": ORGANIZATION,
+      ...(property.weekendPricePerNight && property.weekendPricePerNight !== price && {
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": property.weekendPricePerNight,
+          "priceCurrency": "EUR",
+          "unitText": "weekend per night",
+        },
+      }),
+    },
+  };
+};
+
+// Accommodation Schema — floorSize, rooms, floor, premium amenities
+export const generateAccommodationSchema = (property: PropertySchemaData) => {
+  const amenityFeatures = property.amenities.map((a) => ({
+    "@type": "LocationFeatureSpecification",
+    "name": a,
+    "value": true,
+  }));
+  // Add structured premium amenities
+  if (property.hasAc) amenityFeatures.push({ "@type": "LocationFeatureSpecification", "name": "Air Conditioning", "value": true });
+  if (property.hasElevator) amenityFeatures.push({ "@type": "LocationFeatureSpecification", "name": "Elevator", "value": true });
+  if (property.parking) amenityFeatures.push({ "@type": "LocationFeatureSpecification", "name": `Parking: ${property.parking}`, "value": true });
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Accommodation",
+    "name": property.name,
+    "url": `${BASE_URL}/proprietate/${property.slug}`,
+    "description": property.description,
+    "numberOfRooms": property.bedrooms,
+    "numberOfBathroomsTotal": property.bathrooms,
+    "occupancy": {
+      "@type": "QuantitativeValue",
+      "value": property.capacity,
+      "unitText": "guests",
+    },
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": property.usableArea || property.size,
+      "unitCode": "MTK",
+    },
+    ...(property.floor && {
+      "floorLevel": property.floor,
+    }),
+    ...(property.yearBuilt && {
+      "yearBuilt": property.yearBuilt,
+    }),
+    ...(property.furnished && {
+      "permittedUsage": `Furnished: ${property.furnished}`,
+    }),
+    ...(property.energyClass && {
+      "additionalProperty": [{
+        "@type": "PropertyValue",
+        "name": "Energy Class",
+        "value": property.energyClass,
+      }],
+    }),
+    "amenityFeature": amenityFeatures,
+    "containedInPlace": {
+      "@type": "LodgingBusiness",
+      "name": "ApArt Hotel Timișoara",
+      "url": BASE_URL,
+    },
+  };
+};
+
+// Place & PostalAddress Schema — geographic entities linking
+export const generatePlaceSchema = (property: PropertySchemaData) => {
+  // Extract neighborhood from location string (e.g. "Zona Iulius Town" → "Iulius Town")
+  const neighborhood = property.neighborhood || property.location;
+  
+  const placeSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    "name": `${property.name} — ${neighborhood}, Timișoara`,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "postalCode": "300125",
+      "addressCountry": "RO",
+      "streetAddress": property.location,
+    },
+  };
+
+  if (property.latitude && property.longitude) {
+    placeSchema["geo"] = {
+      "@type": "GeoCoordinates",
+      "latitude": property.latitude,
+      "longitude": property.longitude,
+    };
+    placeSchema["hasMap"] = `https://www.google.com/maps?q=${property.latitude},${property.longitude}`;
+  }
+
+  // Link to known nearby landmarks as containedInPlace
+  const locationLower = (property.location || "").toLowerCase();
+  const nearbyLandmarks: Record<string, unknown>[] = [];
+  
+  if (locationLower.includes("iulius") || locationLower.includes("dâmbovița")) {
+    nearbyLandmarks.push({ "@type": "LocalBusiness", "name": "Iulius Town Timișoara" });
+  }
+  if (locationLower.includes("isho") || locationLower.includes("iosefin")) {
+    nearbyLandmarks.push({ "@type": "Landmark", "name": "ISHO Timișoara" });
+  }
+  if (locationLower.includes("centru") || locationLower.includes("unirii")) {
+    nearbyLandmarks.push({ "@type": "Landmark", "name": "Piața Unirii Timișoara" });
+  }
+
+  if (nearbyLandmarks.length > 0) {
+    placeSchema["containedInPlace"] = nearbyLandmarks.length === 1
+      ? nearbyLandmarks[0]
+      : nearbyLandmarks;
+  }
+
+  return placeSchema;
+};
+
+// Property BreadcrumbList Schema — Acasă > Apartamente > Timișoara > [Cartier]
+export const generatePropertyBreadcrumbSchema = (property: PropertySchemaData) => {
+  const neighborhood = property.neighborhood || property.location;
+  const items: BreadcrumbItem[] = [
+    { name: "Acasă", url: BASE_URL },
+    { name: "Apartamente", url: `${BASE_URL}/oaspeti` },
+    { name: "Timișoara", url: `${BASE_URL}/oaspeti?city=timisoara` },
+  ];
+  if (neighborhood) {
+    items.push({ name: neighborhood, url: `${BASE_URL}/oaspeti?zona=${encodeURIComponent(neighborhood)}` });
+  }
+  items.push({ name: property.name, url: `${BASE_URL}/proprietate/${property.slug}` });
+
+  return generateBreadcrumbSchema(items);
+};
+
+// ImageObject Schema — metadata for each gallery image
+export const generateImageObjectSchemas = (property: PropertySchemaData) => {
+  const images = property.images && property.images.length > 0 ? property.images : [property.image];
+  return {
+    "@context": "https://schema.org",
+    "@type": "ImageGallery",
+    "name": `${property.name} — Galerie foto`,
+    "url": `${BASE_URL}/proprietate/${property.slug}`,
+    "image": images.map((img, index) => ({
+      "@type": "ImageObject",
+      "url": img,
+      "name": `${property.name} — ${index === 0 ? "Imagine principală" : `Fotografie ${index + 1}`}`,
+      "description": `${property.name}, ${property.location}, Timișoara — ${property.bedrooms} camere, ${property.size || property.usableArea || ""} mp`,
+      "representativeOfPage": index === 0,
+      "contentUrl": img,
+      ...(index === 0 && { "thumbnail": img }),
+    })),
+    "numberOfItems": images.length,
+  };
+};
+
 // Combined schema for property pages
 export const generatePropertyPageSchemas = (
   property: PropertySchemaData,
   reviews?: ReviewData[]
 ) => {
   const schemas: Record<string, unknown>[] = [
-    generateApartmentSchema(property),
+    generateAccommodationSchema(property),
+    generateRealEstateListingSchema(property),
+    generatePlaceSchema(property),
+    generatePropertyBreadcrumbSchema(property),
+    generateImageObjectSchemas(property),
     generateHotelRoomOfferSchema(property),
   ];
 
@@ -605,7 +784,7 @@ export const generatePropertyPageSchemas = (
       generateReviewSchema(
         property.name,
         `${BASE_URL}/proprietate/${property.slug}`,
-        reviews.slice(0, 5) // Limit to 5 reviews for structured data
+        reviews.slice(0, 5)
       )
     );
   }
