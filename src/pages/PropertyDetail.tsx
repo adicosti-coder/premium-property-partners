@@ -613,7 +613,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   5. SOCIAL PROOF — Recenzii & FAQ
                   ═══════════════════════════════════════════════════════ */}
-              {dbProperty?.id && (
+              {dbProperty?.id && dbProperty?.listing_type !== 'vanzare' && dbProperty?.listing_type !== 'inchiriere' && (
                 <PropertyReviews propertyId={dbProperty.id} propertyName={property.name} />
               )}
 
