@@ -64,11 +64,11 @@ const TheAdvisor = ({
   const t = language === "ro"
     ? {
         sectionTitle: "The Advisor",
-        sectionSubtitle: "Analiză premium generată de AI",
+        sectionSubtitle: "Analiză premium generată de RealTrust Expert AI",
         expertTitle: "Expert Insight",
         investmentTitle: "Indicatori de Investiție",
         faqTitle: "Întrebări Frecvente — Concierge",
-        netYield: "Randament Net",
+        netYield: "RANDAMENT (ROI)",
         rentMultiplier: "Multiplicator Chirie",
         safetyScore: "Scor Siguranță Zonă",
         loading: "Se generează analiza...",
@@ -76,11 +76,11 @@ const TheAdvisor = ({
       }
     : {
         sectionTitle: "The Advisor",
-        sectionSubtitle: "AI-powered premium analysis",
+        sectionSubtitle: "Premium analysis by RealTrust Expert AI",
         expertTitle: "Expert Insight",
         investmentTitle: "Investment Metrics",
         faqTitle: "Frequently Asked Questions — Concierge",
-        netYield: "Net Yield",
+        netYield: "YIELD (ROI)",
         rentMultiplier: "Rent Multiplier",
         safetyScore: "Zone Safety Score",
         loading: "Generating analysis...",
@@ -240,7 +240,7 @@ const TheAdvisor = ({
                 <CardContent className="p-5">
                   <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
                   <p className="text-2xl font-bold text-foreground">
-                    {content.investmentMetrics.netYield}
+                    {(content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                     {t.netYield}
