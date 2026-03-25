@@ -215,7 +215,7 @@ const addressCoordinateMatchers: Array<{ patterns: string[]; coords: [number, nu
 
 const resolveCoordinates = (propertySlug: string, propertyName?: string, propertyLocation?: string, propertyLatitude?: number | null, propertyLongitude?: number | null): [number, number] => {
   // Priority 1: DB coordinates
-  if (propertyLatitude && propertyLongitude) {
+  if (typeof propertyLatitude === 'number' && Number.isFinite(propertyLatitude) && typeof propertyLongitude === 'number' && Number.isFinite(propertyLongitude)) {
     return [propertyLongitude, propertyLatitude];
   }
 

@@ -458,9 +458,7 @@ export default function InvestitiiPremiumManager() {
   };
 
   const updateField = <K extends keyof InvestProperty>(key: K, value: InvestProperty[K]) => {
-    if (!editingProperty) return;
-    const updated = { ...editingProperty, [key]: value };
-    setEditingProperty(updated);
+    setEditingProperty((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
   const activeCount = properties.filter((p) => p.is_active).length;
