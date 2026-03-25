@@ -400,6 +400,9 @@ const BlogArticlePage = () => {
             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
           />
 
+          {/* Expert Signature — E-E-A-T */}
+          <ExpertSignature authorName={article.author_name} />
+
           {/* Tags and Share */}
           <div className="pt-8 border-t border-border space-y-6">
             {article.tags.length > 0 && (
