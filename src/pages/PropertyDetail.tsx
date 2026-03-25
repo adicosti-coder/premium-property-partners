@@ -465,6 +465,27 @@ const PropertyDetail = () => {
           )}
         </div>
 
+        {/* ═══ THE ADVISOR — AI Content Module ═══ */}
+        <div className="container mx-auto px-4 sm:px-6 mb-8">
+          <Suspense fallback={null}>
+            <TheAdvisor
+              propertyName={property.name}
+              location={property.location}
+              size={dbProperty?.size || property.size}
+              bedrooms={property.bedrooms}
+              bathrooms={property.bathrooms}
+              capacity={property.capacity}
+              floor={dbProperty?.floor}
+              pricePerNight={dbProperty?.base_price_per_night || property.pricePerNight}
+              amenities={property.amenities}
+              listingType={dbProperty?.listing_type}
+              yearBuilt={dbProperty?.year_built}
+              energyClass={dbProperty?.energy_class}
+              roi={dbProperty?.roi_percentage}
+            />
+          </Suspense>
+        </div>
+
         <div className="container mx-auto px-4 sm:px-6 pb-24 overflow-hidden">
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8 min-w-0">
