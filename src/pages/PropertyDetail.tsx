@@ -29,6 +29,7 @@ const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighbor
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const PropertyAIScore = lazy(() => import("@/components/PropertyAIScore"));
+const TheAdvisor = lazy(() => import("@/components/TheAdvisor"));
 const PropertyPremiumSpecs = lazy(() => import("@/components/PropertyPremiumSpecs"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -462,6 +463,27 @@ const PropertyDetail = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* ═══ THE ADVISOR — AI Content Module ═══ */}
+        <div className="container mx-auto px-4 sm:px-6 mb-8">
+          <Suspense fallback={null}>
+            <TheAdvisor
+              propertyName={property.name}
+              location={property.location}
+              size={dbProperty?.size || property.size}
+              bedrooms={property.bedrooms}
+              bathrooms={property.bathrooms}
+              capacity={property.capacity}
+              floor={dbProperty?.floor}
+              pricePerNight={dbProperty?.base_price_per_night || property.pricePerNight}
+              amenities={property.amenities}
+              listingType={dbProperty?.listing_type}
+              yearBuilt={dbProperty?.year_built}
+              energyClass={dbProperty?.energy_class}
+              roi={dbProperty?.roi_percentage}
+            />
+          </Suspense>
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 pb-24 overflow-hidden">
