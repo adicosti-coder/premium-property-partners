@@ -341,8 +341,14 @@ const PropertyDetail = () => {
     ...property,
     featuresEn: [],
     images: galleryImages,
-    imageAlts: galleryImages.map((_, idx) => `${property.name} – foto ${idx + 1}`),
-    imageAltsEn: galleryImages.map((_, idx) => `${property.name} – photo ${idx + 1}`),
+    imageAlts: galleryImages.map((_, idx) => imageCaptions[idx] || `${property.name} – foto ${idx + 1}`),
+    imageAltsEn: galleryImages.map((_, idx) => imageCaptions[idx] || `${property.name} – photo ${idx + 1}`),
+  };
+
+  const getDisplayCaption = (idx: number) => {
+    if (imageCaptions[idx]) return imageCaptions[idx];
+    if (staticProperty) return getImageAlt(staticProperty, idx, language as 'ro' | 'en');
+    return `${property.name} – ${language === 'ro' ? `fotografie ${idx + 1}` : `photo ${idx + 1}`}`;
   };
 
   // Generate rich schema for this property (with real reviews for Google rich snippets)
@@ -478,17 +484,13 @@ const PropertyDetail = () => {
                   >
                     <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} foto ${idx + 1}`} className="w-full h-full object-cover" />
                   </button>
-                  {imageCaptions[idx] && (
-                    <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{imageCaptions[idx]}</p>
-                  )}
+                  <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{getDisplayCaption(idx)}</p>
                 </div>
               ))}
             </div>
           )}
           {/* Caption for currently selected image */}
-          {imageCaptions[currentImageIndex] && (
-            <p className="text-xs text-muted-foreground italic text-center mt-1">{imageCaptions[currentImageIndex]}</p>
-          )}
+          <p className="text-xs text-muted-foreground italic text-center mt-1">{getDisplayCaption(currentImageIndex)}</p>
         </div>
 
         {/* ═══ THE ADVISOR — AI Content Module ═══ */}
@@ -993,6 +995,7 @@ const PropertyDetail = () => {
         initialIndex={currentImageIndex}
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
+        captions={imageCaptions}
       />
       <Footer />
       <BookingForm isOpen={bookingOpen} onClose={() => setBookingOpen(false)} propertyName={property.name} />

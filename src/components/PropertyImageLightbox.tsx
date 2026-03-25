@@ -9,9 +9,10 @@ interface PropertyImageLightboxProps {
   initialIndex?: number;
   open: boolean;
   onClose: () => void;
+  captions?: Record<number, string>;
 }
 
-const PropertyImageLightbox = ({ property, initialIndex = 0, open, onClose }: PropertyImageLightboxProps) => {
+const PropertyImageLightbox = ({ property, initialIndex = 0, open, onClose, captions = {} }: PropertyImageLightboxProps) => {
   const { language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const images = property.images;
@@ -82,12 +83,12 @@ const PropertyImageLightbox = ({ property, initialIndex = 0, open, onClose }: Pr
       <div className="max-w-5xl w-full px-4" onClick={(e) => e.stopPropagation()}>
         <img
           src={images[currentIndex]}
-          alt={getImageAlt(property, currentIndex, language as "ro" | "en")}
+          alt={captions[currentIndex] || getImageAlt(property, currentIndex, language as "ro" | "en")}
           className="w-full max-h-[85vh] object-contain rounded-lg"
           draggable={false}
         />
         <div className="text-center mt-3">
-          <p className="text-white/90 font-medium">{property.name}</p>
+          <p className="text-white/90 font-medium">{captions[currentIndex] || property.name}</p>
           <p className="text-white/50 text-sm mt-1">
             {currentIndex + 1} / {images.length}
           </p>
