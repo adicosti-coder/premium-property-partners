@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PropertyBookingsCalendar from "./PropertyBookingsCalendar";
+import MapLocationPicker from "./MapLocationPicker";
 
 import PropertyPremiumFields, { PremiumFieldsData, defaultPremiumFields } from "./PropertyPremiumFields";
 
@@ -26,6 +27,8 @@ interface CazareProperty extends PremiumFieldsData {
   name: string;
   slug: string | null;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   description_ro: string;
   description_en: string;
   booking_url: string;
@@ -114,6 +117,8 @@ export default function CazareManager() {
         check_out_time: d.check_out_time ?? "11:00",
         images: d.images ?? [],
         features: d.features ?? [],
+        latitude: d.latitude ?? null,
+        longitude: d.longitude ?? null,
       })));
     }
     setLoading(false);
@@ -165,6 +170,8 @@ export default function CazareManager() {
       check_in_time: editingProperty.check_in_time,
       check_out_time: editingProperty.check_out_time,
       display_order: editingProperty.display_order,
+      latitude: editingProperty.latitude,
+      longitude: editingProperty.longitude,
       listing_type: "cazare",
       tag: "Cazare",
       // Premium fields
@@ -423,6 +430,24 @@ export default function CazareManager() {
                     <Label>Locație</Label>
                     <Input value={editingProperty.location} onChange={(e) => updateField("location", e.target.value)} />
                   </div>
+                </div>
+
+                {/* Map Location Picker */}
+                <div className="p-4 bg-accent/10 rounded-xl border-2 border-primary/30 space-y-2">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2">📍 Map Location Picker — Alege poziția pe hartă</h3>
+                  <p className="text-xs text-muted-foreground">Click pe hartă sau caută o adresă pentru a seta coordonatele GPS precise.</p>
+                  <MapLocationPicker
+                    latitude={editingProperty.latitude}
+                    longitude={editingProperty.longitude}
+                    onLocationChange={(lat, lng) => {
+                      updateField("latitude", lat);
+                      updateField("longitude", lng);
+                    }}
+                    locationText={editingProperty.location}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Booking URL</Label>
                     <Input value={editingProperty.booking_url} onChange={(e) => updateField("booking_url", e.target.value)} />
