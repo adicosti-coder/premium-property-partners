@@ -106,6 +106,8 @@ interface DbPropertyData {
   compartimentare?: string | null;
   features?: string[];
   slug?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 // Helper to check if a string is a UUID
@@ -164,7 +166,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude")
             .eq("id", slug)
             .maybeSingle();
           
@@ -177,7 +179,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -190,7 +192,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude")
             .eq("slug", slug)
             .maybeSingle();
           
@@ -259,6 +261,8 @@ const PropertyDetail = () => {
     checkInTime: "",
     checkOutTime: "",
     isActive: true,
+    latitude: dbProperty.latitude || null,
+    longitude: dbProperty.longitude || null,
   } : null);
 
   // 2. Funcție Trimitere către Make.com
@@ -614,7 +618,7 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
-                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={(property as any).latitude} propertyLongitude={(property as any).longitude} />
+                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={dbProperty?.latitude ?? (property as any).latitude} propertyLongitude={dbProperty?.longitude ?? (property as any).longitude} />
               </div>
 
               {/* ═══════════════════════════════════════════════════════
