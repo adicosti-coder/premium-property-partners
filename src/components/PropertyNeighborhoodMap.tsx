@@ -6,30 +6,48 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Loader2, MapPin } from 'lucide-react';
 import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglSupport';
 
-/** Verified geocoded coordinates per property slug */
+/** Verified geocoded coordinates per property slug — real GPS positions */
 const propertyCoordinates: Record<string, [number, number]> = {
-  'ring-apart-hotel-spacious-deluxe': [21.2110, 45.7805],
-  'green-forest-apart-hotel': [21.2490, 45.7785],
-  'fructus-plaza-ultracentral-apart-hotel': [21.2209, 45.7595],
-  'fullview-studio-deluxe': [21.2150, 45.7529],
-  'avenue-of-mara-apart-hotel': [21.2148, 45.7527],
-  'helios-apart-hotel': [21.2345, 45.7433],
-  'ateneo-trevi-2-apart-hotel': [21.2113, 45.7786],
-  'sunset-da-ra-studio-deluxe': [21.2145, 45.7530],
-  'mara-luxury-golden-apart-hotel': [21.2134, 45.7535],
-  'ateneo-apart-hotel-studio-deluxe': [21.2115, 45.7788],
-  'modern-studio-apart-hotel': [21.2603, 45.7656],
-  // DB-only properties — verified coordinates
-  'apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda': [21.2275, 45.7625],
-  'apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall': [21.2280, 45.7620],
-  'ideal-investitie-utilat-complet-mobilat': [21.2270, 45.7615],
-  'apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-': [21.2260, 45.7600],
-  'apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net': [21.2230, 45.7555],
-  '3-camere-complet-decomandat-hol-spatios-medicina-garaj': [21.2350, 45.7460],
-  'apartament-3-camere-gh-lazar-investitie-premium-randament-9-net': [21.2200, 45.7570],
-  'city-of-mara-apartament-cu-2-camere': [21.2148, 45.7527],
-  'ultra-central-piata-unirii-ideal-investitie': [21.2265, 45.7571],
+  // ── CAZARE (ApArt Hotels) ──
+  'ring-apart-hotel-spacious-deluxe': [21.2098, 45.7808],        // Str. Loichița Vasile 1-3
+  'green-forest-apart-hotel': [21.2485, 45.7790],                // Str. Constructorilor 52
+  'fructus-plaza-ultracentral-apart-hotel': [21.2245, 45.7555],  // Str. Gheorghe Lazăr 24 (lângă Piața Victoriei)
+  'fullview-studio-deluxe': [21.2130, 45.7505],                  // Calea Circumvalațiunii 1 (City of Mara)
+  'avenue-of-mara-apart-hotel': [21.2130, 45.7505],              // Calea Circumvalațiunii 1
+  'helios-apart-hotel': [21.2365, 45.7558],                      // Str. Argeș 4 (Fabric, lângă Piața Traian)
+  'ateneo-trevi-2-apart-hotel': [21.2098, 45.7790],              // Calea Torontalului 104K
+  'sunset-da-ra-studio-deluxe': [21.2130, 45.7505],              // Calea Circumvalațiunii 1
+  'mara-luxury-golden-apart-hotel': [21.2130, 45.7505],          // Calea Circumvalațiunii 1
+  'ateneo-apart-hotel-studio-deluxe': [21.2098, 45.7790],        // Calea Torontalului 104K
+  'modern-studio-apart-hotel': [21.2045, 45.7495],               // Bd. Simion Bărnuțiu 79
+  // ── INVESTIȚII / VÂNZĂRI ──
+  'apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda': [21.2282, 45.7592],  // Vivalia, Take Ionescu
+  'apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall': [21.2282, 45.7592],            // Vivalia, Take Ionescu
+  'ideal-investitie-utilat-complet-mobilat': [21.2282, 45.7592],                                       // Vivalia, Take Ionescu
+  'apartament-2-camere-business-regim-hotelier-activ-cu-istoric-si-grad-de-ocupare-': [21.2235, 45.7578],  // Str. București / Take Ionescu
+  'apartament-premium-3-camere-bulevardul-revolutiei-randament-9-net': [21.2260, 45.7540],             // Bulevardul Revoluției
+  '3-camere-complet-decomandat-hol-spatios-medicina-garaj': [21.2340, 45.7462],                        // Zona Medicina
+  'apartament-3-camere-gh-lazar-investitie-premium-randament-9-net': [21.2245, 45.7555],               // Str. Gheorghe Lazăr
+  'city-of-mara-apartament-cu-2-camere': [21.2130, 45.7505],                                          // Calea Circumvalațiunii 1
+  'ultra-central-piata-unirii-ideal-investitie': [21.2265, 45.7571],                                   // Piața Unirii
 };
+
+/** Fallback: match by property name keywords when slug is missing */
+const nameToCoordinates: Array<{ keywords: string[]; coords: [number, number] }> = [
+  { keywords: ['vivalia'], coords: [21.2282, 45.7592] },
+  { keywords: ['ring', 'loichita'], coords: [21.2098, 45.7808] },
+  { keywords: ['ateneo', 'torontalului'], coords: [21.2098, 45.7790] },
+  { keywords: ['city of mara', 'circumvalatiunii', 'circumvalațiunii'], coords: [21.2130, 45.7505] },
+  { keywords: ['green forest', 'constructorilor'], coords: [21.2485, 45.7790] },
+  { keywords: ['fructus', 'gheorghe lazar', 'gheorghe lazăr'], coords: [21.2245, 45.7555] },
+  { keywords: ['helios', 'arges', 'argeș'], coords: [21.2365, 45.7558] },
+  { keywords: ['modern studio', 'barnutiu', 'bărnuțiu'], coords: [21.2045, 45.7495] },
+  { keywords: ['take ionescu', 'bucuresti', 'bucurești'], coords: [21.2235, 45.7578] },
+  { keywords: ['revolutiei', 'revoluției'], coords: [21.2260, 45.7540] },
+  { keywords: ['medicina'], coords: [21.2340, 45.7462] },
+  { keywords: ['piata unirii', 'piața unirii', 'ultra-central', 'ultracentral'], coords: [21.2265, 45.7571] },
+  { keywords: ['universitate', 'universității'], coords: [21.2290, 45.7485] },
+];
 
 /** POI data per property - tourist + utility POIs with real coordinates */
 interface POI {
@@ -192,7 +210,15 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
-  const coords = propertyCoordinates[propertySlug] || defaultCoordinates;
+  // Resolve coordinates: slug match → name match → default
+  const coords = propertyCoordinates[propertySlug] || (() => {
+    if (propertyName) {
+      const nameLower = propertyName.toLowerCase();
+      const match = nameToCoordinates.find(entry => entry.keywords.some(kw => nameLower.includes(kw)));
+      if (match) return match.coords;
+    }
+    return defaultCoordinates;
+  })();
   const pois = poiData[propertySlug] || defaultPois;
 
   // Fetch token
