@@ -220,9 +220,9 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       return;
     }
 
-    // Add markers
+    // Add markers — DB coordinates take priority over hardcoded
     properties.forEach((property) => {
-      const coords = propertyCoordinates[property.slug];
+      const coords = dbCoordinates[property.slug] || propertyCoordinates[property.slug];
       if (!coords) return;
 
       const markerEl = document.createElement('div');
