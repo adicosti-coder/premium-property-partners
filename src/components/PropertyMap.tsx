@@ -53,6 +53,32 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
   const [slotRetry, setSlotRetry] = useState(0);
+  const [dbCoordinates, setDbCoordinates] = useState<Record<string, [number, number]>>({});
+
+  // Fetch DB coordinates for all properties
+  useEffect(() => {
+    const fetchDbCoords = async () => {
+      try {
+        const { data } = await supabase
+          .from('properties')
+          .select('slug, latitude, longitude')
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null);
+        if (data) {
+          const coords: Record<string, [number, number]> = {};
+          data.forEach((p: any) => {
+            if (p.slug && p.latitude && p.longitude) {
+              coords[p.slug] = [p.longitude, p.latitude];
+            }
+          });
+          setDbCoordinates(coords);
+        }
+      } catch (err) {
+        console.error('Failed to fetch DB coordinates:', err);
+      }
+    };
+    fetchDbCoords();
+  }, []);
 
   // Get Mapbox token: prefer env var, fallback to edge function
   useEffect(() => {
