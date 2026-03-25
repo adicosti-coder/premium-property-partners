@@ -1281,7 +1281,7 @@ export default function PropertyManager() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{t.admin.properties?.editProperty || "Edit Property"}</DialogTitle>
             <DialogDescription>
