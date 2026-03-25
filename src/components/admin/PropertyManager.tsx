@@ -63,6 +63,8 @@ interface Property extends PremiumFieldsData {
   id: string;
   name: string;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   description_ro: string;
   description_en: string;
   features: string[];
@@ -662,7 +664,7 @@ export default function PropertyManager() {
         <MapLocationPicker
           latitude={formData.latitude ? parseFloat(formData.latitude) : null}
           longitude={formData.longitude ? parseFloat(formData.longitude) : null}
-          onLocationChange={(lat, lng) => setFormData({ ...formData, latitude: lat.toString(), longitude: lng.toString() })}
+          onLocationChange={(lat, lng) => setFormData((prev) => ({ ...prev, latitude: lat.toString(), longitude: lng.toString() }))}
           locationText={formData.location}
         />
       </div>
