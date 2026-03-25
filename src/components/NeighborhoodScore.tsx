@@ -1,50 +1,20 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Train, GraduationCap, Coffee, MapPin } from "lucide-react";
+import { getNeighborhoodScores } from "@/utils/propertyGeo";
 
 interface NeighborhoodScoreProps {
-  location: string;
+  location?: string;
+  propertySlug?: string | null;
+  propertyName?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   className?: string;
 }
 
-// Score calculation based on known Timișoara neighborhoods
-const getNeighborhoodScores = (location: string) => {
-  const loc = (location || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-  // Default scores
-  let transport = 7;
-  let education = 6;
-  let lifestyle = 7;
-  let overallLabel = "Bun";
-
-  // Premium central zones
-  if (loc.includes("centru") || loc.includes("unirii") || loc.includes("victori") || loc.includes("operei") || loc.includes("take ionescu") || loc.includes("revolutiei") || loc.includes("gh. lazar") || loc.includes("gheorghe lazar")) {
-    transport = 10; education = 9; lifestyle = 10; overallLabel = "Excelent";
-  } else if (loc.includes("iulius") || loc.includes("dambovita") || loc.includes("circumvalat") || loc.includes("vivalia") || loc.includes("city of mara")) {
-    transport = 9; education = 8; lifestyle = 10; overallLabel = "Excelent";
-  } else if (loc.includes("isho") || loc.includes("iosefin") || loc.includes("josefin") || loc.includes("bucuresti")) {
-    transport = 9; education = 7; lifestyle = 9; overallLabel = "Foarte Bun";
-  } else if (loc.includes("fabric") || loc.includes("badea cartan") || loc.includes("medicina")) {
-    transport = 8; education = 9; lifestyle = 8; overallLabel = "Foarte Bun";
-  } else if (loc.includes("complex") || loc.includes("studentesc")) {
-    transport = 8; education = 10; lifestyle = 8; overallLabel = "Foarte Bun";
-  } else if (loc.includes("aradului") || loc.includes("torontal")) {
-    transport = 8; education = 7; lifestyle = 8; overallLabel = "Foarte Bun";
-  } else if (loc.includes("lipovei") || loc.includes("buzias") || loc.includes("barnuti")) {
-    transport = 7; education = 8; lifestyle = 7; overallLabel = "Bun";
-  } else if (loc.includes("giroc") || loc.includes("chisoda") || loc.includes("dumbravita")) {
-    transport = 6; education = 6; lifestyle = 7; overallLabel = "Bun";
-  } else if (loc.includes("mehala") || loc.includes("fratelia")) {
-    transport = 6; education = 5; lifestyle = 6; overallLabel = "Mediu";
-  }
-
-  const overall = Math.round((transport + education + lifestyle) / 3 * 10) / 10;
-  return { transport, education, lifestyle, overall, overallLabel };
-};
-
 const ScoreBar = ({ value, max = 10 }: { value: number; max?: number }) => {
   const pct = (value / max) * 100;
-  const color = value >= 8 ? "bg-primary" : value >= 6 ? "bg-amber-500" : "bg-muted-foreground/40";
+  const color = value >= 9 ? "bg-primary" : value >= 8 ? "bg-accent" : "bg-muted-foreground/40";
   return (
     <div className="flex items-center gap-2 flex-1">
       <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
@@ -55,9 +25,9 @@ const ScoreBar = ({ value, max = 10 }: { value: number; max?: number }) => {
   );
 };
 
-const NeighborhoodScore = ({ location, className = "" }: NeighborhoodScoreProps) => {
+const NeighborhoodScore = ({ location, propertySlug, propertyName, latitude, longitude, className = "" }: NeighborhoodScoreProps) => {
   const { language } = useLanguage();
-  const scores = getNeighborhoodScores(location);
+  const scores = getNeighborhoodScores({ slug: propertySlug, name: propertyName, location, latitude, longitude });
 
   const t = language === "ro"
     ? {

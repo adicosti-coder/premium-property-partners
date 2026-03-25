@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Home, Loader2, MapPin } from 'lucide-react';
 import { isWebGLSupported, acquireMapSlot, releaseMapSlot } from '@/utils/webglSupport';
+import { resolvePropertyCoordinates } from '@/utils/propertyGeo';
 
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
@@ -67,7 +68,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         if (data) {
           const coords: Record<string, [number, number]> = {};
           data.forEach((p: any) => {
-            if (p.slug && p.latitude && p.longitude) {
+            if (p.slug && Number.isFinite(p.latitude) && Number.isFinite(p.longitude)) {
               coords[p.slug] = [p.longitude, p.latitude];
             }
           });
@@ -222,7 +223,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
     // Add markers — DB coordinates take priority over hardcoded
     properties.forEach((property) => {
-      const coords = dbCoordinates[property.slug] || propertyCoordinates[property.slug];
+      const dbCoords = dbCoordinates[property.slug];
+      const coords = dbCoords || resolvePropertyCoordinates({ slug: property.slug, name: property.name, location: property.location });
       if (!coords) return;
 
       const markerEl = document.createElement('div');

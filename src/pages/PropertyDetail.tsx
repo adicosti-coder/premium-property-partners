@@ -46,6 +46,7 @@ import {
   generateBreadcrumbSchema,
   type PropertySchemaData 
 } from "@/utils/schemaGenerators";
+import { getDisplayLocation, resolvePropertyCoordinates } from "@/utils/propertyGeo";
 
 // Extindem interfața pentru a include noile câmpuri de investiție
 interface DbPropertyData {
@@ -264,6 +265,26 @@ const PropertyDetail = () => {
     latitude: dbProperty.latitude || null,
     longitude: dbProperty.longitude || null,
   } : null);
+
+  const resolvedCoordinates = property
+    ? resolvePropertyCoordinates({
+        slug: property.slug,
+        name: property.name,
+        location: dbProperty?.location || property.location,
+        latitude: dbProperty?.latitude ?? (property as any).latitude ?? null,
+        longitude: dbProperty?.longitude ?? (property as any).longitude ?? null,
+      })
+    : null;
+
+  const displayLocation = property
+    ? getDisplayLocation({
+        slug: property.slug,
+        name: property.name,
+        location: dbProperty?.location || property.location,
+        latitude: resolvedCoordinates?.[1] ?? null,
+        longitude: resolvedCoordinates?.[0] ?? null,
+      })
+    : "";
 
   // 2. Funcție Trimitere către Make.com
   const handleSendInvestmentLead = async (email: string, name: string = "Client Site") => {
@@ -534,12 +555,15 @@ const PropertyDetail = () => {
                 <Suspense fallback={null}>
                   <PropertyAIScore
                     propertyName={property.name}
+                      propertySlug={property.slug}
                     location={property.location}
+                      latitude={resolvedCoordinates?.[1] ?? null}
+                      longitude={resolvedCoordinates?.[0] ?? null}
                     listingType={normalizedListingType}
                     roi={dbProperty?.roi_percentage}
-                    basePrice={(property as any).base_price_per_night ?? null}
-                    bookingRating={(property as any).booking_rating ?? null}
-                    reviewCount={(property as any).booking_review_count ?? null}
+                      basePrice={dbProperty?.base_price_per_night ?? null}
+                      bookingRating={dbProperty?.booking_rating ?? null}
+                      reviewCount={dbProperty?.booking_review_count ?? null}
                     bedrooms={property.bedrooms}
                     capacity={property.capacity}
                     amenities={(property as any).amenities ?? null}
@@ -550,10 +574,12 @@ const PropertyDetail = () => {
                 </Suspense>
                 <p className="text-muted-foreground flex items-center gap-1 min-w-0 flex-wrap">
                   <MapPin className="w-4 h-4 shrink-0" />
-                  <span className="break-all truncate">{property.location}</span>
+                  <span className="break-all truncate">{displayLocation}</span>
                   <span className="text-muted-foreground/50">·</span>
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.name + ', ' + property.location + ', Timișoara')}`}
+                    href={resolvedCoordinates
+                      ? `https://www.google.com/maps/search/?api=1&query=${resolvedCoordinates[1]},${resolvedCoordinates[0]}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.name + ', ' + displayLocation)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium whitespace-nowrap"
@@ -569,7 +595,13 @@ const PropertyDetail = () => {
                 <LiveActivityTracker propertyId={dbProperty?.id} />
               </Suspense>
               <Suspense fallback={null}>
-                <NeighborhoodScore location={property.location} />
+                <NeighborhoodScore
+                  location={property.location}
+                  propertySlug={property.slug}
+                  propertyName={property.name}
+                  latitude={resolvedCoordinates?.[1] ?? null}
+                  longitude={resolvedCoordinates?.[0] ?? null}
+                />
               </Suspense>
 
               {/* ═══════════════════════════════════════════════════════
@@ -606,7 +638,13 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   3. LOCAȚIE — Proximitate & Hartă (important pentru oaspeți)
                   ═══════════════════════════════════════════════════════ */}
-              <PropertyProximity propertySlug={property.slug} />
+              <PropertyProximity
+                propertySlug={property.slug}
+                propertyName={property.name}
+                propertyLocation={property.location}
+                propertyLatitude={resolvedCoordinates?.[1] ?? null}
+                propertyLongitude={resolvedCoordinates?.[0] ?? null}
+              />
 
               <div className="space-y-4">
                 <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
@@ -618,7 +656,7 @@ const PropertyDetail = () => {
                     ? 'Descoperă restaurante, magazine, parcuri și atracții în apropierea apartamentului.'
                     : 'Discover restaurants, shops, parks and attractions near the apartment.'}
                 </p>
-                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={dbProperty?.latitude ?? (property as any).latitude} propertyLongitude={dbProperty?.longitude ?? (property as any).longitude} />
+                <PropertyNeighborhoodMap propertySlug={property.slug} propertyName={property.name} propertyLocation={property.location} propertyLatitude={resolvedCoordinates?.[1] ?? null} propertyLongitude={resolvedCoordinates?.[0] ?? null} />
               </div>
 
               {/* ═══════════════════════════════════════════════════════

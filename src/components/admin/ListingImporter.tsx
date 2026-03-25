@@ -351,7 +351,7 @@ const ListingImporter = () => {
               latitude={editData.latitude ?? null}
               longitude={editData.longitude ?? null}
               onLocationChange={(lat, lng) => {
-                if (editData) setEditData({ ...editData, latitude: lat, longitude: lng });
+                setEditData((prev) => (prev ? { ...prev, latitude: lat, longitude: lng } : prev));
               }}
               locationText={editData.location || undefined}
             />

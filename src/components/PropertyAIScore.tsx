@@ -4,10 +4,14 @@ import { TrendingUp, Sparkles, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { getNeighborhoodScores } from "@/utils/propertyGeo";
 
 interface PropertyAIScoreProps {
   propertyName: string;
+  propertySlug?: string | null;
   location?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   listingType?: string | null;
   roi?: string | null;
   basePrice?: number | null;
@@ -28,7 +32,10 @@ interface PropertyAIScoreProps {
  */
 const PropertyAIScore = ({
   propertyName,
+  propertySlug,
   location,
+  latitude,
+  longitude,
   listingType,
   roi,
   basePrice,
@@ -49,6 +56,11 @@ const PropertyAIScore = ({
     return () => clearTimeout(timer);
   }, []);
 
+  const geoScores = useMemo(
+    () => getNeighborhoodScores({ slug: propertySlug, name: propertyName, location, latitude, longitude }),
+    [propertySlug, propertyName, location, latitude, longitude]
+  );
+
   const score = useMemo(() => {
     let total = 0;
     const normalizedListingType = (listingType || "").toLowerCase();
@@ -56,13 +68,11 @@ const PropertyAIScore = ({
     const roiValue = roi ? Number.parseFloat(roi.replace(/[^0-9.]/g, "")) : null;
 
     // Location score (max 30)
-    const premiumZones = ["ISHO", "Paltim", "Centru", "Iulius", "City of Mara", "Take Ionescu", "Vivalia", "Unirii", "Victori", "Revolutiei", "Gh. Lazar", "Gheorghe Lazar", "Circumvalat", "Zimbrului"];
-    const locLower = (location || "").toLowerCase();
-    const nameLower = (propertyName || "").toLowerCase();
-    const combined = locLower + " " + nameLower;
-    if (premiumZones.some(z => combined.includes(z.toLowerCase()))) total += 30;
-    else if (locLower.includes("timișoara") || locLower.includes("timisoara")) total += 22;
-    else total += 15;
+    if (geoScores.overall >= 9.4) total += 30;
+    else if (geoScores.overall >= 9.0) total += 28;
+    else if (geoScores.overall >= 8.5) total += 26;
+    else if (geoScores.overall >= 8.0) total += 24;
+    else total += 20;
 
     // Quality / Rating (max 25)
     if (bookingRating) {
@@ -71,11 +81,11 @@ const PropertyAIScore = ({
       else if (bookingRating >= 8.5) total += 18;
       else if (bookingRating >= 8.0) total += 15;
       else total += 10;
-    } else total += isInvestmentListing ? 18 : 12;
+    } else total += isInvestmentListing ? 20 : geoScores.overall >= 9 ? 18 : 14;
 
     // Amenities (max 25)
     const amenityCount = amenities?.length || 0;
-    total += Math.min(25, Math.round(amenityCount * 2.5));
+    total += amenityCount > 0 ? Math.min(25, Math.round(amenityCount * 2.5)) : isInvestmentListing ? 14 : 10;
 
     // Reviews volume (max 25)
     if (reviewCount) {
@@ -83,18 +93,19 @@ const PropertyAIScore = ({
       else if (reviewCount >= 50) total += 20;
       else if (reviewCount >= 20) total += 15;
       else total += 10;
-    } else total += isInvestmentListing ? 18 : 8;
+    } else total += isInvestmentListing ? 20 : geoScores.overall >= 9 ? 14 : 10;
 
     // Pricing competitiveness (max 20)
     if (basePrice) {
       if (basePrice >= 80 && basePrice <= 150) total += 20;
       else if (basePrice >= 60) total += 15;
       else total += 10;
-    } else total += 10;
+    } else total += isInvestmentListing ? 14 : 10;
 
     if (isInvestmentListing && roiValue) {
-      if (roiValue >= 10) total += 8;
-      else if (roiValue >= 8.5) total += 6;
+      if (roiValue >= 10) total += 10;
+      else if (roiValue >= 9) total += 8;
+      else if (roiValue >= 8) total += 6;
       else if (roiValue >= 7) total += 4;
     }
 
@@ -106,7 +117,7 @@ const PropertyAIScore = ({
     } else total += 8;
 
     return Math.min(140, total);
-  }, [location, propertyName, bookingRating, reviewCount, amenities, basePrice, size, listingType, roi]);
+  }, [geoScores.overall, bookingRating, reviewCount, amenities, basePrice, size, listingType, roi]);
 
   const percentage = (score / 140) * 100;
   const category = score >= 120 ? "Premium" : score >= 90 ? "Superior" : score >= 60 ? "Standard" : "Basic";

@@ -1437,7 +1437,7 @@ const POIManager = () => {
                 <MapLocationPicker
                   latitude={formData.latitude ? parseFloat(formData.latitude) : null}
                   longitude={formData.longitude ? parseFloat(formData.longitude) : null}
-                  onLocationChange={(lat, lng) => setFormData({ ...formData, latitude: lat.toString(), longitude: lng.toString() })}
+                  onLocationChange={(lat, lng) => setFormData((prev) => ({ ...prev, latitude: lat.toString(), longitude: lng.toString() }))}
                   locationText={formData.address || formData.name}
                 />
               </div>

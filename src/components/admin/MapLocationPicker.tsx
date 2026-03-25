@@ -58,8 +58,9 @@ export default function MapLocationPicker({
     if (!token || !mapContainer.current || mapRef.current) return;
     mapboxgl.accessToken = token;
 
-    const center: [number, number] = longitude && latitude ? [longitude, latitude] : TIMISOARA_CENTER;
-    const zoom = longitude && latitude ? 16 : 13;
+    const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+    const center: [number, number] = hasCoordinates ? [longitude as number, latitude as number] : TIMISOARA_CENTER;
+    const zoom = hasCoordinates ? 16 : 13;
 
     const map = new mapboxgl.Map({
       container: mapContainer.current,
@@ -71,8 +72,8 @@ export default function MapLocationPicker({
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.on('load', () => {
-      if (latitude && longitude) {
-        updateMarker(longitude, latitude);
+      if (hasCoordinates) {
+        updateMarker(longitude as number, latitude as number);
       }
     });
 
@@ -100,8 +101,8 @@ export default function MapLocationPicker({
     }
   }, [latitude, longitude, updateMarker]);
 
-  const handleSearch = async () => {
-    const query = searchQuery.trim() || locationText || '';
+  const handleSearch = async (queryOverride?: string) => {
+    const query = queryOverride?.trim() || searchQuery.trim() || locationText || '';
     if (!query) return;
     setIsSearching(true);
     try {
@@ -157,7 +158,10 @@ export default function MapLocationPicker({
             variant="outline"
             size="icon"
             title="Caută automat din câmpul Locație"
-            onClick={() => { setSearchQuery(locationText); handleSearch(); }}
+            onClick={() => {
+              setSearchQuery(locationText);
+              handleSearch(locationText);
+            }}
           >
             <LocateFixed className="w-4 h-4" />
           </Button>
