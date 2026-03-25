@@ -310,6 +310,9 @@ const PropertyDetail = () => {
     ? dbImages.map(img => getPublicUrl(img.image_path))
     : property?.images || [];
 
+  // AI image captions
+  const imageCaptions = useImageCaptions(galleryImages, property?.name || "", language);
+
   const nextImage = useCallback(() => {
     if (galleryImages.length === 0) return;
     setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
