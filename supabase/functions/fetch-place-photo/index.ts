@@ -14,7 +14,20 @@ interface GooglePlaceResult {
   name?: string;
   formatted_address?: string;
   photos?: GooglePlacePhoto[];
+  geometry?: {
+    location?: {
+      lat?: number;
+      lng?: number;
+    };
+  };
 }
+
+const GENERIC_PLACE_TOKENS = new Set([
+  'timisoara', 'timișoara', 'romania', 'românia', 'strada', 'bulevardul', 'bulevard', 'calea', 'piata', 'piața',
+  'hotel', 'apart', 'apartament', 'centru', 'center', 'mall', 'city', 'town', 'clinica', 'clinic', 'de', 'la', 'din',
+  'si', 'și', 'the', 'of', 'shop', 'shopping', 'restaurant', 'cafe', 'bar', 'pub', 'bank', 'banca', 'spitalul',
+  'spital', 'urgenta', 'urgență', 'agenția', 'agentia'
+]);
 
 const normalizeText = (value: string | null | undefined) =>
   (value || '')
@@ -30,11 +43,53 @@ const tokenize = (value: string | null | undefined) =>
     .split(' ')
     .filter((token) => token.length > 2);
 
-function scorePlaceCandidate(place: GooglePlaceResult, expectedName: string, expectedAddress: string) {
+const getDistinctiveTokens = (value: string | null | undefined) =>
+  tokenize(value).filter((token) => !GENERIC_PLACE_TOKENS.has(token));
+
+function getDistanceInMeters(
+  latitudeA?: number,
+  longitudeA?: number,
+  latitudeB?: number,
+  longitudeB?: number,
+) {
+  if (
+    !Number.isFinite(latitudeA) ||
+    !Number.isFinite(longitudeA) ||
+    !Number.isFinite(latitudeB) ||
+    !Number.isFinite(longitudeB)
+  ) {
+    return null;
+  }
+
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const latDelta = toRadians((latitudeB as number) - (latitudeA as number));
+  const lngDelta = toRadians((longitudeB as number) - (longitudeA as number));
+  const startLat = toRadians(latitudeA as number);
+  const endLat = toRadians(latitudeB as number);
+
+  const haversine =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(startLat) * Math.cos(endLat) * Math.sin(lngDelta / 2) ** 2;
+
+  return 2 * earthRadius * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function scorePlaceCandidate(
+  place: GooglePlaceResult,
+  expectedName: string,
+  expectedAddress: string,
+  expectedLatitude?: number,
+  expectedLongitude?: number,
+) {
   const placeName = normalizeText(place.name);
   const placeAddress = normalizeText(place.formatted_address);
   const expectedNameTokens = tokenize(expectedName);
   const expectedAddressTokens = tokenize(expectedAddress);
+  const distinctiveNameTokens = getDistinctiveTokens(expectedName);
+  const distinctiveAddressTokens = getDistinctiveTokens(expectedAddress);
+  const normalizedExpectedName = normalizeText(expectedName);
+  const normalizedExpectedAddress = normalizeText(expectedAddress);
 
   let score = 0;
 
@@ -48,20 +103,66 @@ function scorePlaceCandidate(place: GooglePlaceResult, expectedName: string, exp
     if (placeName.includes(token)) score += 1;
   });
 
+  distinctiveNameTokens.forEach((token) => {
+    if (placeName.includes(token)) {
+      score += 12;
+    } else {
+      score -= 8;
+    }
+
+    if (placeAddress.includes(token)) {
+      score += 4;
+    }
+  });
+
+  distinctiveAddressTokens.forEach((token) => {
+    if (placeAddress.includes(token)) {
+      score += 6;
+    } else {
+      score -= 4;
+    }
+  });
+
   if (place.photos?.length) score += 8;
-  if (placeName === normalizeText(expectedName)) score += 10;
+  if (placeName === normalizedExpectedName) score += 22;
+  if (placeAddress === normalizedExpectedAddress) score += 18;
+  if (placeName.includes(normalizedExpectedName) || normalizedExpectedName.includes(placeName)) score += 16;
+  if (placeAddress.includes(normalizedExpectedAddress) || normalizedExpectedAddress.includes(placeAddress)) score += 10;
+
+  const candidateLatitude = place.geometry?.location?.lat;
+  const candidateLongitude = place.geometry?.location?.lng;
+  const distanceInMeters = getDistanceInMeters(
+    expectedLatitude,
+    expectedLongitude,
+    candidateLatitude,
+    candidateLongitude,
+  );
+
+  if (distanceInMeters !== null) {
+    if (distanceInMeters <= 150) score += 18;
+    else if (distanceInMeters <= 500) score += 10;
+    else if (distanceInMeters <= 1200) score += 2;
+    else if (distanceInMeters <= 3000) score -= 10;
+    else score -= 24;
+  }
 
   return score;
 }
 
-function pickBestPlace(results: GooglePlaceResult[], expectedName: string, expectedAddress: string) {
+function pickBestPlace(
+  results: GooglePlaceResult[],
+  expectedName: string,
+  expectedAddress: string,
+  expectedLatitude?: number,
+  expectedLongitude?: number,
+) {
   if (!results.length) return null;
 
   return [...results]
     .sort(
       (a, b) =>
-        scorePlaceCandidate(b, expectedName, expectedAddress) -
-        scorePlaceCandidate(a, expectedName, expectedAddress)
+        scorePlaceCandidate(b, expectedName, expectedAddress, expectedLatitude, expectedLongitude) -
+        scorePlaceCandidate(a, expectedName, expectedAddress, expectedLatitude, expectedLongitude)
     )[0];
 }
 
@@ -112,7 +213,7 @@ async function searchNearbyPlace(
 
     const nearbyData = await fetchGoogleApiJson(nearbyUrl.toString());
     if (nearbyData.status === 'OK' && Array.isArray(nearbyData.results) && nearbyData.results.length > 0) {
-      const place = pickBestPlace(nearbyData.results, expectedName, expectedAddress);
+      const place = pickBestPlace(nearbyData.results, expectedName, expectedAddress, latitude, longitude);
       if (place?.photos?.length) {
         return { place, source: 'google_places_nearby' };
       }
@@ -154,7 +255,7 @@ async function fetchGooglePlacePhoto(options: {
 
     const findPlaceData = await fetchGoogleApiJson(findPlaceUrl.toString());
     if (findPlaceData.status === 'OK' && Array.isArray(findPlaceData.candidates) && findPlaceData.candidates.length > 0) {
-      const place = pickBestPlace(findPlaceData.candidates, expectedName, expectedAddress);
+        const place = pickBestPlace(findPlaceData.candidates, expectedName, expectedAddress, latitude, longitude);
       if (place) {
         const photoUrl = await resolveGooglePhotoUrl(place, googlePlacesApiKey);
         if (photoUrl) {
@@ -173,7 +274,7 @@ async function fetchGooglePlacePhoto(options: {
 
     const textSearchData = await fetchGoogleApiJson(textSearchUrl.toString());
     if (textSearchData.status === 'OK' && Array.isArray(textSearchData.results) && textSearchData.results.length > 0) {
-      const place = pickBestPlace(textSearchData.results, expectedName, expectedAddress);
+        const place = pickBestPlace(textSearchData.results, expectedName, expectedAddress, latitude, longitude);
       if (place) {
         const photoUrl = await resolveGooglePhotoUrl(place, googlePlacesApiKey);
         if (photoUrl) {
