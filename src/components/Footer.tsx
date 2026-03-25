@@ -175,8 +175,8 @@ const Footer = () => {
             <span>© 2026 RealTrust. {t.footer.rights}</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">{t.footer.terms}</a>
-            <a href="#" className="hover:text-foreground transition-colors">{t.footer.privacy}</a>
+            <Link to="/termeni-si-conditii" className="hover:text-foreground transition-colors">{t.footer.terms}</Link>
+            <Link to="/politica-confidentialitate" className="hover:text-foreground transition-colors">{t.footer.privacy}</Link>
           </div>
         </div>
 
