@@ -181,6 +181,8 @@ interface Props {
   propertySlug: string;
   propertyName?: string;
   propertyLocation?: string;
+  propertyLatitude?: number | null;
+  propertyLongitude?: number | null;
 }
 
 /** Default center: Timișoara center (Piața Victoriei) */
@@ -211,7 +213,12 @@ const addressCoordinateMatchers: Array<{ patterns: string[]; coords: [number, nu
   { patterns: ["medicina", "victor babes", "regimentul 13 calarasi"], coords: [21.2367143, 45.7570915] },
 ];
 
-const resolveCoordinates = (propertySlug: string, propertyName?: string, propertyLocation?: string): [number, number] => {
+const resolveCoordinates = (propertySlug: string, propertyName?: string, propertyLocation?: string, propertyLatitude?: number | null, propertyLongitude?: number | null): [number, number] => {
+  // Priority 1: DB coordinates
+  if (propertyLatitude && propertyLongitude) {
+    return [propertyLongitude, propertyLatitude];
+  }
+
   if (propertyCoordinates[propertySlug]) return propertyCoordinates[propertySlug];
 
   const searchable = [propertyLocation, propertyName, propertySlug]
@@ -250,7 +257,7 @@ const defaultPois: POI[] = [
   { name: 'Cocktail Bar Centru', nameEn: 'Downtown Cocktail Bar', lng: 21.2240, lat: 45.7555, category: 'bar', emoji: '🍸' },
 ];
 
-const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName, propertyLocation }) => {
+const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName, propertyLocation, propertyLatitude, propertyLongitude }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -259,7 +266,7 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName, 
   const { language } = useLanguage();
 
   // Resolve coordinates: slug match → name match → default
-  const coords = resolveCoordinates(propertySlug, propertyName, propertyLocation);
+  const coords = resolveCoordinates(propertySlug, propertyName, propertyLocation, propertyLatitude, propertyLongitude);
   const pois = poiData[propertySlug] || defaultPois;
 
   // Fetch token
