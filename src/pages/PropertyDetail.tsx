@@ -15,6 +15,7 @@ import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
+import { useImageCaptions } from "@/hooks/useImageCaptions";
 
 const BookingForm = lazy(() => import("@/components/BookingForm"));
 const StayCalculator = lazy(() => import("@/components/StayCalculator"));

@@ -210,7 +210,15 @@ const PropertyNeighborhoodMap: React.FC<Props> = ({ propertySlug, propertyName }
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const { language } = useLanguage();
 
-  const coords = propertyCoordinates[propertySlug] || defaultCoordinates;
+  // Resolve coordinates: slug match → name match → default
+  const coords = propertyCoordinates[propertySlug] || (() => {
+    if (propertyName) {
+      const nameLower = propertyName.toLowerCase();
+      const match = nameToCoordinates.find(entry => entry.keywords.some(kw => nameLower.includes(kw)));
+      if (match) return match.coords;
+    }
+    return defaultCoordinates;
+  })();
   const pois = poiData[propertySlug] || defaultPois;
 
   // Fetch token
