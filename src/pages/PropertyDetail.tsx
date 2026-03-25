@@ -467,16 +467,24 @@ const PropertyDetail = () => {
           {galleryImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {galleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`flex-shrink-0 w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
-                  aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
-                >
-                  <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} foto ${idx + 1}`} className="w-full h-full object-cover" />
-                </button>
+                <div key={idx} className="flex-shrink-0">
+                  <button
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
+                    aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
+                  >
+                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} foto ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                  {imageCaptions[idx] && (
+                    <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{imageCaptions[idx]}</p>
+                  )}
+                </div>
               ))}
             </div>
+          )}
+          {/* Caption for currently selected image */}
+          {imageCaptions[currentImageIndex] && (
+            <p className="text-xs text-muted-foreground italic text-center mt-1">{imageCaptions[currentImageIndex]}</p>
           )}
         </div>
 
