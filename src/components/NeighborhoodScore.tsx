@@ -18,19 +18,19 @@ const getNeighborhoodScores = (location: string) => {
   let overallLabel = "Bun";
 
   // Premium central zones
-  if (loc.includes("centru") || loc.includes("unirii") || loc.includes("victori") || loc.includes("operei")) {
+  if (loc.includes("centru") || loc.includes("unirii") || loc.includes("victori") || loc.includes("operei") || loc.includes("take ionescu") || loc.includes("revolutiei") || loc.includes("gh. lazar") || loc.includes("gheorghe lazar")) {
     transport = 10; education = 9; lifestyle = 10; overallLabel = "Excelent";
-  } else if (loc.includes("iulius") || loc.includes("dambovita") || loc.includes("circumvalat")) {
+  } else if (loc.includes("iulius") || loc.includes("dambovita") || loc.includes("circumvalat") || loc.includes("vivalia") || loc.includes("city of mara")) {
     transport = 9; education = 8; lifestyle = 10; overallLabel = "Excelent";
-  } else if (loc.includes("isho") || loc.includes("iosefin") || loc.includes("josefin")) {
+  } else if (loc.includes("isho") || loc.includes("iosefin") || loc.includes("josefin") || loc.includes("bucuresti")) {
     transport = 9; education = 7; lifestyle = 9; overallLabel = "Foarte Bun";
-  } else if (loc.includes("fabric") || loc.includes("badea cartan")) {
-    transport = 8; education = 7; lifestyle = 8; overallLabel = "Foarte Bun";
+  } else if (loc.includes("fabric") || loc.includes("badea cartan") || loc.includes("medicina")) {
+    transport = 8; education = 9; lifestyle = 8; overallLabel = "Foarte Bun";
   } else if (loc.includes("complex") || loc.includes("studentesc")) {
     transport = 8; education = 10; lifestyle = 8; overallLabel = "Foarte Bun";
   } else if (loc.includes("aradului") || loc.includes("torontal")) {
     transport = 8; education = 7; lifestyle = 8; overallLabel = "Foarte Bun";
-  } else if (loc.includes("lipovei") || loc.includes("buzias")) {
+  } else if (loc.includes("lipovei") || loc.includes("buzias") || loc.includes("barnuti")) {
     transport = 7; education = 8; lifestyle = 7; overallLabel = "Bun";
   } else if (loc.includes("giroc") || loc.includes("chisoda") || loc.includes("dumbravita")) {
     transport = 6; education = 6; lifestyle = 7; overallLabel = "Bun";
