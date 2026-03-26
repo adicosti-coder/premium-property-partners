@@ -656,6 +656,37 @@ export const generateAccommodationSchema = (property: PropertySchemaData) => {
       }],
     }),
     "amenityFeature": amenityFeatures,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "addressCountry": "RO",
+      "streetAddress": property.location,
+    },
+    ...(property.latitude && property.longitude && {
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": property.latitude,
+        "longitude": property.longitude,
+      },
+    }),
+    ...(property.pricePerNight > 0 && {
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "EUR",
+        "price": property.basePricePerNight || property.pricePerNight,
+        "availability": "https://schema.org/InStock",
+        "url": `${BASE_URL}/proprietate/${property.slug}`,
+        ...(property.weekendPricePerNight && {
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": property.weekendPricePerNight,
+            "priceCurrency": "EUR",
+            "unitText": "weekend night",
+          },
+        }),
+      },
+    }),
     "containedInPlace": {
       "@type": "LodgingBusiness",
       "name": "ApArt Hotel Timișoara",
