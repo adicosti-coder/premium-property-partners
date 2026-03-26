@@ -137,13 +137,15 @@ const TheAdvisor = ({
   useEffect(() => {
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    const RETRY_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
     const fetchContent = async (isRetry = false) => {
       if (!isRetry) {
         setError(false);
         setIsLoading(true);
       }
-      // Check sessionStorage cache first
       const cacheKey = `advisor_v2_${propertySlug || propertyName}_${location}_${language}`;
       const cached = sessionStorage.getItem(cacheKey);
       if (cached && !isRetry) {
@@ -160,28 +162,14 @@ const TheAdvisor = ({
           "generate-advisor-content",
           {
             body: {
-              propertyName,
-              propertySlug,
-              location,
-              size,
-              bedrooms,
-              bathrooms,
-              capacity,
-              floor,
-              pricePerNight,
-              amenities,
-              listingType,
-              yearBuilt,
-              energyClass,
-              roi,
-              language,
+              propertyName, propertySlug, location, size, bedrooms, bathrooms,
+              capacity, floor, pricePerNight, amenities, listingType, yearBuilt,
+              energyClass, roi, language,
             },
           }
         );
 
-        if (fnError || !data) {
-          throw new Error(fnError?.message || "No data returned");
-        }
+        if (fnError || !data) throw new Error(fnError?.message || "No data returned");
 
         if (!cancelled) {
           setContent(data as AdvisorContent);
@@ -192,7 +180,6 @@ const TheAdvisor = ({
         console.error("TheAdvisor fetch error:", err);
         if (!cancelled) {
           if (!isRetry) {
-            // Use fallback content on first failure
             const lang = language === "en" ? "en" : "ro";
             const fallback = generateFallbackContent(
               { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi },
@@ -201,10 +188,13 @@ const TheAdvisor = ({
             setContent(fallback);
             setIsFallback(true);
           }
-          // Schedule retry in 5 minutes
-          retryTimer = setTimeout(() => {
-            if (!cancelled) fetchContent(true);
-          }, 5 * 60 * 1000);
+          // Retry max 3 times, every 30 min
+          retryCount++;
+          if (retryCount <= MAX_RETRIES) {
+            retryTimer = setTimeout(() => {
+              if (!cancelled) fetchContent(true);
+            }, RETRY_INTERVAL);
+          }
         }
       } finally {
         if (!cancelled && !isRetry) setIsLoading(false);
