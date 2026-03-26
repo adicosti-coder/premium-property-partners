@@ -431,6 +431,21 @@ const PropertyDetail = () => {
     faqSchemaItems.push({ question: `Can I cancel for free?`, answer: `Yes, we offer free cancellation up to 48 hours before check-in for most properties.` });
   }
 
+  // Get nearby POIs for structured data
+  const nearbyPoisForSchema = getPropertyPois({
+    slug: property.slug,
+    name: property.name,
+    location: property.location,
+    latitude: resolvedCoordinates?.[1],
+    longitude: resolvedCoordinates?.[0],
+  }).slice(0, 10).map((poi) => ({
+    name: poi.name,
+    nameEn: poi.nameEn,
+    distanceMinutes: poi.minutes,
+    mode: poi.mode,
+    category: poi.category,
+  }));
+
   const propertySchemas = [
     ...generatePropertyPageSchemas({
       name: property.name,
