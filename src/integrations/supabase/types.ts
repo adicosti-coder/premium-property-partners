@@ -2633,6 +2633,45 @@ export type Database = {
         }
         Relationships: []
       }
+      rewrite_cache: {
+        Row: {
+          created_at: string | null
+          id: string
+          language: string
+          listing_type: string
+          property_title: string
+          rewritten_full: string | null
+          rewritten_short: string | null
+          rewritten_title: string | null
+          tone: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          language?: string
+          listing_type?: string
+          property_title: string
+          rewritten_full?: string | null
+          rewritten_short?: string | null
+          rewritten_title?: string | null
+          tone?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          language?: string
+          listing_type?: string
+          property_title?: string
+          rewritten_full?: string | null
+          rewritten_short?: string | null
+          rewritten_title?: string | null
+          tone?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       shared_poi_links: {
         Row: {
           created_at: string
@@ -2797,6 +2836,36 @@ export type Database = {
           updated_at?: string
           weekly_report_enabled?: boolean | null
           weekly_report_recipients?: string[] | null
+        }
+        Relationships: []
+      }
+      translation_cache: {
+        Row: {
+          created_at: string | null
+          id: string
+          source_lang: string
+          source_text_hash: string
+          target_lang: string
+          translated: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          source_lang?: string
+          source_text_hash: string
+          target_lang?: string
+          translated: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          source_lang?: string
+          source_text_hash?: string
+          target_lang?: string
+          translated?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
