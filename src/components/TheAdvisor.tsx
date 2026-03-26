@@ -185,7 +185,16 @@ const TheAdvisor = ({
         }
       } catch (err) {
         console.error("TheAdvisor fetch error:", err);
-        if (!cancelled) setError(true);
+        if (!cancelled) {
+          // Use fallback content instead of showing error
+          const lang = language === "en" ? "en" : "ro";
+          const fallback = generateFallbackContent(
+            { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi },
+            lang
+          );
+          setContent(fallback);
+          setIsFallback(true);
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
