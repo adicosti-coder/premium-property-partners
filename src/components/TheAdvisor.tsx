@@ -136,16 +136,20 @@ const TheAdvisor = ({
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const fetchContent = async () => {
-      setError(false);
-      setIsLoading(true);
+    const fetchContent = async (isRetry = false) => {
+      if (!isRetry) {
+        setError(false);
+        setIsLoading(true);
+      }
       // Check sessionStorage cache first
       const cacheKey = `advisor_v2_${propertySlug || propertyName}_${location}_${language}`;
       const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
+      if (cached && !isRetry) {
         try {
           setContent(JSON.parse(cached));
+          setIsFallback(false);
           setIsLoading(false);
           return;
         } catch { /* ignore bad cache */ }
@@ -181,27 +185,37 @@ const TheAdvisor = ({
 
         if (!cancelled) {
           setContent(data as AdvisorContent);
+          setIsFallback(false);
           sessionStorage.setItem(cacheKey, JSON.stringify(data));
         }
       } catch (err) {
         console.error("TheAdvisor fetch error:", err);
         if (!cancelled) {
-          // Use fallback content instead of showing error
-          const lang = language === "en" ? "en" : "ro";
-          const fallback = generateFallbackContent(
-            { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi },
-            lang
-          );
-          setContent(fallback);
-          setIsFallback(true);
+          if (!isRetry) {
+            // Use fallback content on first failure
+            const lang = language === "en" ? "en" : "ro";
+            const fallback = generateFallbackContent(
+              { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi },
+              lang
+            );
+            setContent(fallback);
+            setIsFallback(true);
+          }
+          // Schedule retry in 5 minutes
+          retryTimer = setTimeout(() => {
+            if (!cancelled) fetchContent(true);
+          }, 5 * 60 * 1000);
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled && !isRetry) setIsLoading(false);
       }
     };
 
     fetchContent();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenitiesKey, listingType, yearBuilt, energyClass, roi, language]);
 
   // FAQ Schema JSON-LD
