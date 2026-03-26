@@ -619,7 +619,7 @@ export const generateRealEstateListingSchema = (property: PropertySchemaData) =>
 
 // Accommodation Schema — floorSize, rooms, floor, premium amenities
 export const generateAccommodationSchema = (property: PropertySchemaData) => {
-  const amenityFeatures = property.amenities.map((a) => ({
+  const amenityFeatures: Array<Record<string, unknown>> = property.amenities.map((a) => ({
     "@type": "LocationFeatureSpecification",
     "name": a,
     "value": true,
@@ -628,6 +628,18 @@ export const generateAccommodationSchema = (property: PropertySchemaData) => {
   if (property.hasAc) amenityFeatures.push({ "@type": "LocationFeatureSpecification", "name": "Air Conditioning", "value": true });
   if (property.hasElevator) amenityFeatures.push({ "@type": "LocationFeatureSpecification", "name": "Elevator", "value": true });
   if (property.parking) amenityFeatures.push({ "@type": "LocationFeatureSpecification", "name": `Parking: ${property.parking}`, "value": true });
+
+  // Add nearby POIs as LocationFeatureSpecification with distance
+  if (property.nearbyPois?.length) {
+    for (const poi of property.nearbyPois) {
+      const modeText = poi.mode === "walk" ? "walking" : "driving";
+      amenityFeatures.push({
+        "@type": "LocationFeatureSpecification",
+        "name": poi.nameEn || poi.name,
+        "value": `${poi.distanceMinutes} min ${modeText}`,
+      });
+    }
+  }
 
   return {
     "@context": "https://schema.org",
