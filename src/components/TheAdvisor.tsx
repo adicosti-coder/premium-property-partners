@@ -220,26 +220,7 @@ const TheAdvisor = ({
       }
     : null;
 
-  if (error) {
-    return (
-      <section className="space-y-6" aria-label="The Advisor">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Lightbulb className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-serif font-semibold text-foreground">{t.sectionTitle}</h2>
-            <p className="text-sm text-muted-foreground">{t.sectionSubtitle}</p>
-          </div>
-        </div>
-        <Card className="border-primary/20">
-          <CardContent className="p-6 text-center text-muted-foreground">
-            <p>{t.errorMsg}</p>
-          </CardContent>
-        </Card>
-      </section>
-    );
-  }
+  // No more empty error state — fallback always provides content
 
   return (
     <section className="space-y-6" aria-label="The Advisor">
