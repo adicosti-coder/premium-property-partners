@@ -46,7 +46,7 @@ import {
   generateBreadcrumbSchema,
   type PropertySchemaData 
 } from "@/utils/schemaGenerators";
-import { getDisplayLocation, resolvePropertyCoordinates } from "@/utils/propertyGeo";
+import { getDisplayLocation, resolvePropertyCoordinates, getPropertyPois } from "@/utils/propertyGeo";
 
 // Extindem interfața pentru a include noile câmpuri de investiție
 interface DbPropertyData {
