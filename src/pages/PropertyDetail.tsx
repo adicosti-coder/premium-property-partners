@@ -478,6 +478,7 @@ const PropertyDetail = () => {
       basePricePerNight: dbProperty?.base_price_per_night,
       weekendPricePerNight: dbProperty?.weekend_price_per_night,
       neighborhood: dbProperty?.location || property.location,
+      nearbyPois: nearbyPoisForSchema,
     }),
     // LodgingBusiness with AggregateRating + real reviews
     {
