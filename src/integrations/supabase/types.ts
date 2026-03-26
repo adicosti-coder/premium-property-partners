@@ -1380,6 +1380,36 @@ export type Database = {
           },
         ]
       }
+      image_caption_cache: {
+        Row: {
+          caption: string
+          created_at: string | null
+          id: string
+          image_url: string
+          language: string
+          property_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          caption: string
+          created_at?: string | null
+          id?: string
+          image_url: string
+          language?: string
+          property_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          caption?: string
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          language?: string
+          property_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lead_notes: {
         Row: {
           content: string
