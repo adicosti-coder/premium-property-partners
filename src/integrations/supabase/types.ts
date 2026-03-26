@@ -161,6 +161,33 @@ export type Database = {
         }
         Relationships: []
       }
+      advisor_cache: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          language: string
+          property_slug: string
+          updated_at: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          language?: string
+          property_slug: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          language?: string
+          property_slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       article_votes: {
         Row: {
           created_at: string

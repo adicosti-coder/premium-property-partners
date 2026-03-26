@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,36 @@ serve(async (req) => {
   try {
     const { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi, language } = await req.json();
 
+    const lang = language === "en" ? "en" : "ro";
+    const cacheSlug = propertySlug || propertyName;
+
+    // --- Supabase client for cache ---
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sb = createClient(supabaseUrl, supabaseServiceKey);
+
+    // --- Check cache first ---
+    try {
+      const { data: cached } = await sb
+        .from("advisor_cache")
+        .select("content")
+        .eq("property_slug", cacheSlug)
+        .eq("language", lang)
+        .maybeSingle();
+
+      if (cached?.content) {
+        console.log("Cache HIT for", cacheSlug, lang);
+        return new Response(JSON.stringify(cached.content), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } catch (cacheErr) {
+      console.warn("Cache read failed, continuing to AI:", cacheErr);
+    }
+
+    console.log("Cache MISS for", cacheSlug, lang);
+
+    // --- Property context map ---
     const propertyContextMap: Record<string, { positioning: string; poiContext: string; buyerProfile: string }> = {
       "apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda": {
         positioning: "Ansamblul Vivalia din zona Take Ionescu, în polul urban dintre Iulius Town, Bastion și axa centrală a orașului.",
@@ -66,7 +97,6 @@ serve(async (req) => {
       });
     }
 
-    const lang = language === "en" ? "en" : "ro";
     const userPrompt = `Generează conținut "The Advisor" pentru această proprietate${lang === "en" ? " (răspunde în engleză)" : ""}:
 
 Proprietate: ${propertyName}
@@ -113,19 +143,17 @@ Răspunde DOAR cu JSON valid.`;
     }
 
     const data = await response.json();
-    
-    // Extract content - try tool calls first, then message content
+
+    // Extract content
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     let content;
-    
+
     if (toolCall?.function?.arguments) {
-      content = typeof toolCall.function.arguments === "string" 
-        ? JSON.parse(toolCall.function.arguments) 
+      content = typeof toolCall.function.arguments === "string"
+        ? JSON.parse(toolCall.function.arguments)
         : toolCall.function.arguments;
     } else {
-      // Parse message content as JSON
       const msgContent = data.choices?.[0]?.message?.content || "";
-      // Strip markdown code fences if present
       const cleaned = msgContent.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -133,6 +161,22 @@ Răspunde DOAR cu JSON valid.`;
       } else {
         throw new Error("Could not extract structured content from AI response");
       }
+    }
+
+    // --- Save to cache (upsert) ---
+    try {
+      await sb.from("advisor_cache").upsert(
+        {
+          property_slug: cacheSlug,
+          language: lang,
+          content,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "property_slug,language" }
+      );
+      console.log("Cache SAVED for", cacheSlug, lang);
+    } catch (saveErr) {
+      console.warn("Cache save failed (non-blocking):", saveErr);
     }
 
     return new Response(JSON.stringify(content), {
