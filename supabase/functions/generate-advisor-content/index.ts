@@ -27,7 +27,8 @@ Vei primi date despre o proprietate și vei genera un JSON cu exact această str
 }
 
 Generează exact 5 FAQ-uri relevante pentru un cumpărător premium.
-Pentru investmentMetrics, estimează realist pe baza datelor primite.`;
+Pentru investmentMetrics, estimează realist pe baza datelor primite.
+IMPORTANT: Răspunde DOAR cu JSON valid, fără markdown, fără backticks, fără explicații.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -81,7 +82,9 @@ Tip listing: ${listingType || "cazare"}
 Dotări: ${(amenities || []).join(", ") || "standard"}
 Context local verificat: ${propertyContext?.positioning || "Folosește exclusiv locația primită și menține reperele locale coerente."}
 POI / repere apropiate: ${propertyContext?.poiContext || "Alege doar repere plauzibile pentru poziția exactă a proprietății."}
-Context de cumpărător: ${propertyContext?.buyerProfile || "Menține un ton premium și o logică investițională matură."}`;
+Context de cumpărător: ${propertyContext?.buyerProfile || "Menține un ton premium și o logică investițională matură."}
+
+Răspunde DOAR cu JSON valid.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -95,72 +98,23 @@ Context de cumpărător: ${propertyContext?.buyerProfile || "Menține un ton pre
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_advisor_content",
-              description: "Generate The Advisor content for a property listing",
-              parameters: {
-                type: "object",
-                properties: {
-                  expertInsight: { type: "string", description: "500-word expert analysis text" },
-                  investmentMetrics: {
-                    type: "object",
-                    properties: {
-                      netYield: { type: "string", description: "Net yield percentage e.g. 8.5%" },
-                      rentMultiplier: { type: "string", description: "Rent multiplier e.g. 14x" },
-                      zoneSafetyScore: { type: "string", description: "Zone safety score e.g. 8.5/10" },
-                    },
-                    required: ["netYield", "rentMultiplier", "zoneSafetyScore"],
-                  },
-                  faqs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        question: { type: "string" },
-                        answer: { type: "string" },
-                      },
-                      required: ["question", "answer"],
-                    },
-                    description: "5 premium buyer FAQs",
-                  },
-                },
-                required: ["expertInsight", "investmentMetrics", "faqs"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "generate_advisor_content" } },
+        temperature: 0.7,
+        max_tokens: 2000,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errText = await response.text();
       console.error("AI gateway error:", response.status, errText);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
-        status: 500,
+      return new Response(JSON.stringify({ error: `AI gateway error: ${response.status}` }), {
+        status: response.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
     
-    // Extract tool call result
+    // Extract content - try tool calls first, then message content
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     let content;
     
@@ -169,9 +123,11 @@ Context de cumpărător: ${propertyContext?.buyerProfile || "Menține un ton pre
         ? JSON.parse(toolCall.function.arguments) 
         : toolCall.function.arguments;
     } else {
-      // Fallback: try to parse message content as JSON
+      // Parse message content as JSON
       const msgContent = data.choices?.[0]?.message?.content || "";
-      const jsonMatch = msgContent.match(/\{[\s\S]*\}/);
+      // Strip markdown code fences if present
+      const cleaned = msgContent.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         content = JSON.parse(jsonMatch[0]);
       } else {
