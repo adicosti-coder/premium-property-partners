@@ -79,6 +79,9 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
             ? (language === "ro" ? "mers pe jos" : "walk")
             : (language === "ro" ? "cu mașina" : "drive");
           const distanceText = `${item.minutes} min ${modeLabel}`;
+          // Check if this POI has an internal link
+          const searchQuery = poiSearchMapping[item.labelRo] || poiSearchMapping[item.labelEn];
+          const internalLink = searchQuery ? `/oaspeti?near=${encodeURIComponent(searchQuery)}` : null;
           
           return (
             <div
@@ -94,7 +97,13 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
                 <Icon className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{label}</p>
+                {internalLink ? (
+                  <Link to={internalLink} className="text-sm font-medium text-primary hover:underline truncate block">
+                    {label}
+                  </Link>
+                ) : (
+                  <p className="text-sm font-medium text-foreground truncate">{label}</p>
+                )}
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   <span>{distanceText}</span>
