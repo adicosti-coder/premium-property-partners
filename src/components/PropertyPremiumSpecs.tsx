@@ -146,7 +146,19 @@ const PropertyPremiumSpecs = ({ specs, className }: PropertyPremiumSpecsProps) =
   if (items.length === 0) return null;
 
   return (
-    <div className={cn("bg-card border border-border rounded-2xl p-5 sm:p-6", className)}>
+    <div className={cn("bg-card border border-border rounded-2xl p-5 sm:p-6", className)} itemScope itemType="https://schema.org/Accommodation">
+      {/* Hidden structured data mirroring visible specs for crawlers */}
+      {specs.usable_area && <meta itemProp="floorSize" content={`${specs.usable_area} m²`} />}
+      {specs.size && !specs.usable_area && <meta itemProp="floorSize" content={`${specs.size} m²`} />}
+      {specs.bedrooms && <meta itemProp="numberOfRooms" content={String(specs.bedrooms)} />}
+      {specs.bathrooms && <meta itemProp="numberOfBathroomsTotal" content={String(specs.bathrooms)} />}
+      {specs.capacity && <meta itemProp="occupancy" content={`${specs.capacity} guests`} />}
+      {specs.floor && <meta itemProp="floorLevel" content={specs.floor} />}
+      {specs.year_built && <meta itemProp="yearBuilt" content={String(specs.year_built)} />}
+      {specs.energy_class && <meta itemProp="additionalProperty" content={`Energy Class: ${specs.energy_class}`} />}
+      {specs.parking && <meta itemProp="amenityFeature" content={`Parking: ${specs.parking}`} />}
+      {specs.has_ac && <meta itemProp="amenityFeature" content="Air Conditioning" />}
+      {specs.has_elevator && <meta itemProp="amenityFeature" content="Elevator" />}
       <h3 className="text-lg font-serif font-semibold mb-4">
         {isRo ? "Specificații proprietate" : "Property specifications"}
       </h3>
