@@ -1,4 +1,5 @@
 import { MapPin, Clock, ShoppingCart, Train, Building2, Waves, TreePine, Utensils, GraduationCap, Landmark, Pill, Coffee } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getPropertyPois, type GeoPoiCategory } from "@/utils/propertyGeo";
 
@@ -28,6 +29,24 @@ const categoryIcons: Record<GeoPoiCategory, React.ComponentType<{ className?: st
   transport: Train,
   mall: Building2,
   bar: Waves,
+};
+
+// Map POI names to linkable search queries for internal linking
+const poiSearchMapping: Record<string, string> = {
+  "Iulius Town": "Iulius Town",
+  "Iulius Mall": "Iulius Town",
+  "ISHO": "ISHO",
+  "Piața Unirii": "Piața Unirii",
+  "Piața Victoriei": "Piața Victoriei",
+  "Parcul Rozelor": "Parcul Rozelor",
+  "Parcul Botanic": "Parcul Botanic",
+  "UVT Oituz": "UVT",
+  "Universitatea de Vest": "UVT",
+  "Universitatea Politehnica": "UPT",
+  "UMFT": "UMFT",
+  "Bastionul Theresia": "Bastion",
+  "Shopping City": "Shopping City",
+  "Amazonia Aquapark": "Amazonia",
 };
 
 const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, propertyLatitude, propertyLongitude }: PropertyProximityProps) => {
@@ -60,6 +79,9 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
             ? (language === "ro" ? "mers pe jos" : "walk")
             : (language === "ro" ? "cu mașina" : "drive");
           const distanceText = `${item.minutes} min ${modeLabel}`;
+          // Check if this POI has an internal link
+          const searchQuery = poiSearchMapping[item.labelRo] || poiSearchMapping[item.labelEn];
+          const internalLink = searchQuery ? `/oaspeti?near=${encodeURIComponent(searchQuery)}` : null;
           
           return (
             <div
@@ -75,7 +97,13 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
                 <Icon className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{label}</p>
+                {internalLink ? (
+                  <Link to={internalLink} className="text-sm font-medium text-primary hover:underline truncate block">
+                    {label}
+                  </Link>
+                ) : (
+                  <p className="text-sm font-medium text-foreground truncate">{label}</p>
+                )}
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   <span>{distanceText}</span>
