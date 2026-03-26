@@ -205,8 +205,7 @@ const PropertyFAQ = ({
         </h2>
       </div>
       
-      {/* FAQ Schema for SEO */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      {/* FAQ Schema injected via SEOHead in PropertyDetail for proper Helmet rendering */}
       
       <Accordion type="single" collapsible className="w-full">
         {faqItems.map((item, i) => (
