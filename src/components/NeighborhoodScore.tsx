@@ -28,6 +28,7 @@ const ScoreBar = ({ value, max = 10 }: { value: number; max?: number }) => {
 const NeighborhoodScore = ({ location, propertySlug, propertyName, latitude, longitude, className = "" }: NeighborhoodScoreProps) => {
   const { language } = useLanguage();
   const scores = getNeighborhoodScores({ slug: propertySlug, name: propertyName, location, latitude, longitude });
+  const neighborhoodName = location || "Timișoara";
 
   const t = language === "ro"
     ? {
@@ -50,6 +51,8 @@ const NeighborhoodScore = ({ location, propertySlug, propertyName, latitude, lon
   return (
     <Card className={`border-primary/10 ${className}`}>
       <CardContent className="p-5">
+        {/* Hidden meta for search engine crawlers */}
+        <meta itemProp="description" content={`RealTrust Neighborhood Score for ${neighborhoodName} is based on 3 criteria: Transport (${scores.transport}/10), Education (${scores.education}/10), Lifestyle (${scores.lifestyle}/10). Overall score: ${scores.overall}/10.`} />
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />

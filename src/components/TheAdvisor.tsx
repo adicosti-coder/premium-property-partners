@@ -220,7 +220,17 @@ const TheAdvisor = ({
       }
     : null;
 
-  // No more empty error state — fallback always provides content
+  // If error and no content yet, force fallback immediately
+  if (error && !content && !isLoading) {
+    const lang = language === "en" ? "en" : "ro";
+    const fallback = generateFallbackContent(
+      { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi },
+      lang
+    );
+    setContent(fallback);
+    setIsFallback(true);
+    setError(false);
+  }
 
   return (
     <section className="space-y-6" aria-label="The Advisor">

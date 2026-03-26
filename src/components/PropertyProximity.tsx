@@ -1,4 +1,5 @@
 import { MapPin, Clock, ShoppingCart, Train, Building2, Waves, TreePine, Utensils, GraduationCap, Landmark, Pill, Coffee } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getPropertyPois, type GeoPoiCategory } from "@/utils/propertyGeo";
 
@@ -28,6 +29,24 @@ const categoryIcons: Record<GeoPoiCategory, React.ComponentType<{ className?: st
   transport: Train,
   mall: Building2,
   bar: Waves,
+};
+
+// Map POI names to linkable search queries for internal linking
+const poiSearchMapping: Record<string, string> = {
+  "Iulius Town": "Iulius Town",
+  "Iulius Mall": "Iulius Town",
+  "ISHO": "ISHO",
+  "Piața Unirii": "Piața Unirii",
+  "Piața Victoriei": "Piața Victoriei",
+  "Parcul Rozelor": "Parcul Rozelor",
+  "Parcul Botanic": "Parcul Botanic",
+  "UVT Oituz": "UVT",
+  "Universitatea de Vest": "UVT",
+  "Universitatea Politehnica": "UPT",
+  "UMFT": "UMFT",
+  "Bastionul Theresia": "Bastion",
+  "Shopping City": "Shopping City",
+  "Amazonia Aquapark": "Amazonia",
 };
 
 const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, propertyLatitude, propertyLongitude }: PropertyProximityProps) => {
