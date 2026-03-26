@@ -385,9 +385,15 @@ const InvestmentEngineV34 = ({
     return "text-red-500";
   };
 
+  // AI-readable summary sentence
+  const aiSummary = calc ? (language === "ro"
+    ? `Această proprietate oferă un randament net de ${calc.yieldAnual.toFixed(2)}% cu un venit net anual de ${Math.round(calc.venitNetAnual).toLocaleString()} €, cashflow lunar de ${Math.round(calc.cashflowLunar)} € și o perioadă de amortizare estimată la ${calc.venitNetAnual > 0 ? Math.ceil(budget / calc.venitNetAnual) : "N/A"} ani.`
+    : `This property offers a net yield of ${calc.yieldAnual.toFixed(2)}% with an annual net income of €${Math.round(calc.venitNetAnual).toLocaleString()}, monthly cashflow of €${Math.round(calc.cashflowLunar)}, and an estimated payback period of ${calc.venitNetAnual > 0 ? Math.ceil(budget / calc.venitNetAnual) : "N/A"} years.`
+  ) : null;
+
   return (
     <>
-      <div className="max-w-[1100px] mx-auto my-8 space-y-6 print:space-y-4">
+      <div id="investment-analysis" className="max-w-[1100px] mx-auto my-8 space-y-6 print:space-y-4" itemScope itemType="https://schema.org/Dataset">
         {/* Header */}
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-foreground to-amber-500 bg-clip-text text-transparent inline-block">
