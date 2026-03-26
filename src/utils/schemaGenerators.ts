@@ -161,6 +161,14 @@ export interface PropertySchemaData {
   basePricePerNight?: number | null;
   weekendPricePerNight?: number | null;
   neighborhood?: string | null;
+  // Nearby POIs for structured data
+  nearbyPois?: Array<{
+    name: string;
+    nameEn: string;
+    distanceMinutes: number;
+    mode: "walk" | "drive";
+    category: string;
+  }>;
 }
 
 export const generateApartmentSchema = (property: PropertySchemaData) => ({
