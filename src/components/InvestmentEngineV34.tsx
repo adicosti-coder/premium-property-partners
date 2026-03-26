@@ -804,6 +804,44 @@ const InvestmentEngineV34 = ({
               </Button>
             </div>
 
+            {/* AI-Readable Summary — visible to crawlers and users */}
+            {aiSummary && (
+              <div className="bg-card border border-border rounded-2xl p-5 text-sm text-muted-foreground leading-relaxed" itemProp="description">
+                <p className="font-medium text-foreground mb-2">
+                  {language === "ro" ? "📊 Rezumat Analiză" : "📊 Analysis Summary"}
+                </p>
+                <p>{aiSummary}</p>
+                {/* Hidden structured data for search engines */}
+                <meta itemProp="name" content={`${language === "ro" ? "Analiză Investiție" : "Investment Analysis"} — ${propertyName || (language === "ro" ? "Regim Hotelier Timișoara" : "Hotel Regime Timișoara")}`} />
+                <meta itemProp="creator" content="RealTrust & ApArt Hotel Timișoara" />
+                <table className="w-full mt-3 text-xs" itemProp="mainEntity" itemScope itemType="https://schema.org/Table">
+                  <caption className="sr-only">{language === "ro" ? "Indicatori financiari" : "Financial Metrics"}</caption>
+                  <tbody>
+                    <tr className="border-b border-border/50">
+                      <td className="py-1.5 text-muted-foreground">{language === "ro" ? "Randament Net (ROI)" : "Net Yield (ROI)"}</td>
+                      <td className="py-1.5 text-right font-bold text-foreground">{calc!.yieldAnual.toFixed(2)}%</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-1.5 text-muted-foreground">{language === "ro" ? "Venit Net Anual" : "Annual Net Income"}</td>
+                      <td className="py-1.5 text-right font-bold text-foreground">{Math.round(calc!.venitNetAnual).toLocaleString()} €</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-1.5 text-muted-foreground">{language === "ro" ? "Cashflow Lunar" : "Monthly Cashflow"}</td>
+                      <td className="py-1.5 text-right font-bold text-foreground">{Math.round(calc!.cashflowLunar)} €</td>
+                    </tr>
+                    <tr className="border-b border-border/50">
+                      <td className="py-1.5 text-muted-foreground">{language === "ro" ? "Cash-on-Cash Return" : "Cash-on-Cash Return"}</td>
+                      <td className="py-1.5 text-right font-bold text-foreground">{calc!.coc.toFixed(2)}%</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 text-muted-foreground">{language === "ro" ? "Amortizare estimată" : "Est. Payback Period"}</td>
+                      <td className="py-1.5 text-right font-bold text-foreground">{calc!.venitNetAnual > 0 ? Math.ceil(budget / calc!.venitNetAnual) : "N/A"} {language === "ro" ? "ani" : "years"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             {/* Legal Disclaimer */}
             <div className="border-t border-border pt-5 text-[10px] text-muted-foreground leading-snug text-justify print:block">
               <strong>{t.disclaimer}</strong><br />
