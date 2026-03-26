@@ -47,7 +47,7 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
   }));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" itemScope itemType="https://schema.org/Accommodation">
       <h2 className="text-2xl font-serif font-semibold flex items-center gap-2">
         <MapPin className="w-6 h-6 text-primary" />
         {language === "ro" ? "Ce ai în apropiere" : "What's Nearby"}
@@ -59,12 +59,18 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
           const modeLabel = item.mode === "walk"
             ? (language === "ro" ? "mers pe jos" : "walk")
             : (language === "ro" ? "cu mașina" : "drive");
+          const distanceText = `${item.minutes} min ${modeLabel}`;
           
           return (
             <div
               key={index}
               className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors"
+              itemProp="amenityFeature"
+              itemScope
+              itemType="https://schema.org/LocationFeatureSpecification"
             >
+              <meta itemProp="name" content={item.labelEn} />
+              <meta itemProp="value" content={`${item.minutes} min ${item.mode === "walk" ? "walking" : "driving"}`} />
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Icon className="w-5 h-5 text-primary" />
               </div>
@@ -72,7 +78,7 @@ const PropertyProximity = ({ propertySlug, propertyName, propertyLocation, prope
                 <p className="text-sm font-medium text-foreground truncate">{label}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {item.minutes} min {modeLabel}
+                  <span>{distanceText}</span>
                 </p>
               </div>
             </div>
