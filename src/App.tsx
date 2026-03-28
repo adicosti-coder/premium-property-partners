@@ -86,6 +86,7 @@ const AnalizaProprietate = lazyWithRetry(() => import("./pages/AnalizaProprietat
 const GuestGuide = lazyWithRetry(() => import("./pages/GuestGuide"));
 const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
+const Unsubscribe = lazyWithRetry(() => import("./pages/Unsubscribe"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
@@ -203,6 +204,7 @@ const App = () => (
                     <Route path="/catalog-investitii" element={<CatalogInvestitii />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
+                    <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
                     <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />
