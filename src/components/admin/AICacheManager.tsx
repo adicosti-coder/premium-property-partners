@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import {
   Loader2, Trash2, Sparkles, Brain, Languages, Image, PenLine,
-  RefreshCw, CheckCircle2, AlertCircle, Zap, Eye,
+  RefreshCw, CheckCircle2, AlertCircle, Zap, Eye, Play,
 } from "lucide-react";
 import {
   Collapsible,
@@ -31,6 +31,7 @@ interface CoverageData {
 const AICacheManager = () => {
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [analyzing, setAnalyzing] = useState(false);
+  const [generating, setGenerating] = useState<Record<string, boolean>>({});
   const [coverage, setCoverage] = useState<CoverageData | null>(null);
   const [properties, setProperties] = useState<PropertyInfo[]>([]);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -127,6 +128,42 @@ const AICacheManager = () => {
     analyzeCoverage();
   };
 
+  const generateMissing = async (type: "advisor" | "captions" | "all") => {
+    setGenerating((prev) => ({ ...prev, [type]: true }));
+    const label = type === "advisor" ? "Advisor" : type === "captions" ? "Caption-uri" : "Tot";
+    toast({ title: `⏳ Se generează ${label}...`, description: "Procesul poate dura câteva minute. Nu închide pagina." });
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "mvzssjyzbwccioqvhjpo";
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/bulk-generate-ai-cache`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ type, language: "ro" }),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        toast({
+          title: `✅ ${label} generat!`,
+          description: `${result.generated} elemente generate, ${result.errors} erori.`,
+        });
+        analyzeCoverage();
+      } else {
+        throw new Error(result.error || "Eroare la generare");
+      }
+    } catch (err: any) {
+      toast({ title: "Eroare la generare", description: err.message, variant: "destructive" });
+    } finally {
+      setGenerating((prev) => ({ ...prev, [type]: false }));
+    }
+  };
+
   const getPropertyName = (slug: string) => {
     return properties.find((p) => p.slug === slug)?.name || slug;
   };
@@ -188,8 +225,18 @@ const AICacheManager = () => {
                     <li key={slug}>{getPropertyName(slug)}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-muted-foreground italic mt-2">
-                  💡 Se vor genera automat când cineva vizitează pagina proprietății.
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 text-xs"
+                  onClick={() => generateMissing("advisor")}
+                  disabled={!!generating.advisor}
+                >
+                  {generating.advisor ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                  Generează cele {coverage.advisor.missing.length} lipsă
+                </Button>
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  💡 Sau se vor genera automat când cineva vizitează pagina.
                 </p>
               </div>
             ) : (
@@ -225,6 +272,16 @@ const AICacheManager = () => {
                     <li className="italic">...și alte {coverage.captions.missingProperties.length - 10}</li>
                   )}
                 </ul>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 text-xs"
+                  onClick={() => generateMissing("captions")}
+                  disabled={!!generating.captions}
+                >
+                  {generating.captions ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                  Generează caption-uri lipsă
+                </Button>
               </div>
             ) : (
               <p className="text-xs text-green-600 flex items-center gap-1">
@@ -290,15 +347,27 @@ const AICacheManager = () => {
                   )}
                 </p>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={clearAll}
-                disabled={!!loading.all}
-              >
-                {loading.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                Golire TOTALĂ
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                {(coverage.advisor.missing.length > 0 || coverage.captions.missingProperties.length > 0) && (
+                  <Button
+                    size="sm"
+                    onClick={() => generateMissing("all")}
+                    disabled={!!generating.all}
+                  >
+                    {generating.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                    Generează tot ce lipsește
+                  </Button>
+                )}
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={clearAll}
+                  disabled={!!loading.all}
+                >
+                  {loading.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                  Golire TOTALĂ
+                </Button>
+              </div>
             </div>
             <p className="text-xs text-destructive/70 mt-2">
               ⚠️ Golirea totală va forța regenerarea tuturor textelor AI și va consuma credite semnificative.
