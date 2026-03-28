@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import {
   Loader2, Trash2, Sparkles, Brain, Languages, Image, PenLine,
-  RefreshCw, CheckCircle2, AlertCircle, Zap, Eye,
+  RefreshCw, CheckCircle2, AlertCircle, Zap, Eye, Play,
 } from "lucide-react";
 import {
   Collapsible,
