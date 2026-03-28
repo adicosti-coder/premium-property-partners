@@ -332,6 +332,15 @@ const Investitii = () => {
                         </div>
                       );
                     })()}
+                    {/* ROI Golden Circle Overlay */}
+                    {property.roi_percentage && (
+                      <div className="absolute bottom-3 right-3 w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300/50 backdrop-blur-sm">
+                        <div className="text-center leading-tight">
+                          <span className="text-white font-bold text-sm block">{property.roi_percentage}%</span>
+                          <span className="text-amber-100/80 text-[9px] font-medium uppercase tracking-wider">ROI</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Property Code & ROI Badge */}
