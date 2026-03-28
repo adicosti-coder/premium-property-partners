@@ -7,6 +7,7 @@ import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
 import SEOHead from "@/components/SEOHead";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOFooterText from "@/components/SEOFooterText";
 import BackToTop from "@/components/BackToTop";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -569,6 +570,7 @@ const CatalogInvestitii = () => {
         </AnimatePresence>
       </main>
 
+      <SEOFooterText pageType="catalog" city="Timișoara" />
       <Footer />
       <BackToTop />
     </div>
