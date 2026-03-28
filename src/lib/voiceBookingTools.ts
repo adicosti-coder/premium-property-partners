@@ -8,6 +8,16 @@ import { supabase } from "@/lib/supabaseClient";
 
 // ── Helpers ──────────────────────────────────────────────
 
+/** Converts "DD-MM-YYYY" to "YYYY-MM-DD". Passes through if already ISO. */
+function formatToISO(dateStr: string): string {
+  const ddmmyyyy = /^(\d{2})-(\d{2})-(\d{4})$/;
+  const match = dateStr.match(ddmmyyyy);
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+  return dateStr;
+}
+
 async function findPropertyByName(name: string) {
   const { data: properties } = await supabase
     .from("properties")
@@ -72,25 +82,28 @@ const list_properties = async (params: { guest_count?: number }) => {
 
 const check_availability = async (params: { property_name: string; check_in: string; check_out: string }) => {
   try {
+    const checkIn = formatToISO(params.check_in);
+    const checkOut = formatToISO(params.check_out);
+
     const property = await findPropertyByName(params.property_name);
     if (!property) {
       return `Nu am găsit proprietatea "${params.property_name}". Puteți cere lista proprietăților disponibile.`;
     }
 
-    const conflicts = await checkConflicts(property.id, params.check_in, params.check_out);
+    const conflicts = await checkConflicts(property.id, checkIn, checkOut);
 
     if (conflicts.length > 0) {
-      return `Proprietatea "${property.name}" NU este disponibilă în perioada ${params.check_in} – ${params.check_out}. Există ${conflicts.length} rezervare(i) care se suprapune. Doriți să verificăm altă proprietate sau altă perioadă?`;
+      return `Proprietatea "${property.name}" NU este disponibilă în perioada ${checkIn} – ${checkOut}. Există ${conflicts.length} rezervare(i) care se suprapune. Doriți să verificăm altă proprietate sau altă perioadă?`;
     }
 
     const nights = Math.ceil(
-      (new Date(params.check_out).getTime() - new Date(params.check_in).getTime()) / 86400000
+      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000
     );
     const price = property.base_price_per_night
       ? `Preț estimat: ${nights * property.base_price_per_night} € (${nights} nopți × ${property.base_price_per_night} €).`
       : "";
 
-    return `Proprietatea "${property.name}" este DISPONIBILĂ în perioada ${params.check_in} – ${params.check_out}. Capacitate: ${property.capacity} persoane. ${price} Doriți să fac rezervarea?`;
+    return `Proprietatea "${property.name}" este DISPONIBILĂ în perioada ${checkIn} – ${checkOut}. Capacitate: ${property.capacity} persoane. ${price} Doriți să fac rezervarea?`;
   } catch (e: any) {
     return `Eroare la verificarea disponibilității: ${e.message}`;
   }
@@ -98,6 +111,9 @@ const check_availability = async (params: { property_name: string; check_in: str
 
 const create_booking = async (params: { property_name: string; check_in: string; check_out: string; guest_name: string; guest_count?: number }) => {
   try {
+    const checkIn = formatToISO(params.check_in);
+    const checkOut = formatToISO(params.check_out);
+
     const property = await findPropertyByName(params.property_name);
     if (!property) return `Nu am găsit proprietatea "${params.property_name}".`;
 
@@ -105,15 +121,15 @@ const create_booking = async (params: { property_name: string; check_in: string;
       return `Proprietatea "${property.name}" are capacitate maximă de ${property.capacity} persoane, dar ați solicitat ${params.guest_count}. Doriți să vedem altă proprietate?`;
     }
 
-    const conflicts = await checkConflicts(property.id, params.check_in, params.check_out);
+    const conflicts = await checkConflicts(property.id, checkIn, checkOut);
     if (conflicts.length > 0) {
-      return `Din păcate, proprietatea "${property.name}" a fost între timp rezervată pentru perioada ${params.check_in} – ${params.check_out}. Doriți altă perioadă?`;
+      return `Din păcate, proprietatea "${property.name}" a fost între timp rezervată pentru perioada ${checkIn} – ${checkOut}. Doriți altă perioadă?`;
     }
 
     const { data, error } = await supabase.from("bookings").insert({
       property_id: property.id as any,
-      check_in: params.check_in,
-      check_out: params.check_out,
+      check_in: checkIn,
+      check_out: checkOut,
       guest_name: params.guest_name,
       source: "voice-concierge",
       status: "confirmed",
@@ -125,10 +141,10 @@ const create_booking = async (params: { property_name: string; check_in: string;
     }
 
     const nights = Math.ceil(
-      (new Date(params.check_out).getTime() - new Date(params.check_in).getTime()) / 86400000
+      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000
     );
 
-    return `Rezervare creată cu succes! Proprietate: ${property.name}. Oaspete: ${params.guest_name}. Perioada: ${params.check_in} până pe ${params.check_out}, ${nights} nopți. ID rezervare: ${data.id}. O confirmare va fi trimisă în curând.`;
+    return `Rezervare creată cu succes! Proprietate: ${property.name}. Oaspete: ${params.guest_name}. Perioada: ${checkIn} până pe ${checkOut}, ${nights} nopți. ID rezervare: ${data.id}. O confirmare va fi trimisă în curând.`;
   } catch (e: any) {
     return `Eroare la crearea rezervării: ${e.message}`;
   }
