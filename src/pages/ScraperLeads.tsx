@@ -236,6 +236,12 @@ const ScraperLeads = () => {
                         className="hover:bg-muted/30 cursor-pointer transition-colors"
                         onClick={() => setSelectedLead(lead)}
                       >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.includes(lead.id)}
+                            onCheckedChange={() => toggleSelect(lead.id)}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium max-w-[220px] truncate">{lead.title}</TableCell>
                         <TableCell className="text-center">{getScoreBadge(lead.lead_score)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price)}</TableCell>
@@ -243,13 +249,12 @@ const ScraperLeads = () => {
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
                         <TableCell className="text-center">{getStatusBadge(lead.status)}</TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
-                          >
-                            {t.details}
-                          </Button>
+                          <ScraperLeadActions
+                            leadId={lead.id}
+                            currentStatus={lead.status}
+                            onRefresh={handleRefresh}
+                            onViewDetails={() => setSelectedLead(lead)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
