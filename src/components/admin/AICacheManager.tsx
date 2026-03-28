@@ -272,6 +272,16 @@ const AICacheManager = () => {
                     <li className="italic">...și alte {coverage.captions.missingProperties.length - 10}</li>
                   )}
                 </ul>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 text-xs"
+                  onClick={() => generateMissing("captions")}
+                  disabled={!!generating.captions}
+                >
+                  {generating.captions ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                  Generează caption-uri lipsă
+                </Button>
               </div>
             ) : (
               <p className="text-xs text-green-600 flex items-center gap-1">
