@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.live-property-availability]
 verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = true
