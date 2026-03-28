@@ -35,6 +35,7 @@ const TheAdvisor = lazy(() => import("@/components/TheAdvisor"));
 const NeighborhoodScore = lazy(() => import("@/components/NeighborhoodScore"));
 const LiveActivityTracker = lazy(() => import("@/components/LiveActivityTracker"));
 const SimilarProperties = lazy(() => import("@/components/SimilarProperties"));
+const RelatedBlogGuides = lazy(() => import("@/components/RelatedBlogGuides"));
 const PropertyPremiumSpecs = lazy(() => import("@/components/PropertyPremiumSpecs"));
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -1102,6 +1103,14 @@ const PropertyDetail = () => {
             </div>
           </div>
         </section>
+        {/* Related Blog Guides */}
+        <Suspense fallback={null}>
+          <RelatedBlogGuides
+            propertyLocation={displayLocation}
+            propertyName={property.name}
+            listingType={normalizedListingType}
+          />
+        </Suspense>
       </main>
       <Suspense fallback={null}>
       <PropertyImageLightbox

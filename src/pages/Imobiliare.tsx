@@ -30,6 +30,7 @@ import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils
 const RealEstateContactForm = lazy(() => import("@/components/RealEstateContactForm"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const RealEstateListings = lazy(() => import("@/components/RealEstateListings"));
+const SEOFooterText = lazy(() => import("@/components/SEOFooterText"));
 
 const Imobiliare = () => {
   const { t, language } = useLanguage();
@@ -368,6 +369,7 @@ const Imobiliare = () => {
         </div>
       </section>
 
+      <SEOFooterText pageType="listings" city="Timișoara" />
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />
