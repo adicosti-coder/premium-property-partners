@@ -1,166 +1,115 @@
 project_id = "mvzssjyzbwccioqvhjpo"
 
-[functions.send-lead-magnet]
-verify_jwt = false
-
-[functions.send-lead-notification]
-verify_jwt = false
-
-[functions.send-booking-notification]
-verify_jwt = false
-
-[functions.send-push-notification]
-verify_jwt = false
-
-[functions.get-vapid-public-key]
-verify_jwt = false
-
-[functions.get-mapbox-token]
-verify_jwt = false
-
-[functions.check-follow-up-reminders]
-verify_jwt = false
-
-[functions.notify-poi-import]
-verify_jwt = false
-
-[functions.send-simulation-followup]
-verify_jwt = false
-
-[functions.track-email-click]
-verify_jwt = false
-
-[functions.check-conversion-rate-alert]
-verify_jwt = false
-
-[functions.track-email-open]
-verify_jwt = false
-
-[functions.send-weekly-followup-report]
-verify_jwt = false
-
-[functions.send-advanced-simulation-followup]
-verify_jwt = false
-
-[functions.send-simulation-reminder]
-verify_jwt = false
-
-[functions.verify-hcaptcha]
-verify_jwt = false
-
-[functions.send-review-notification]
-verify_jwt = false
-
-[functions.get-hcaptcha-site-key]
-verify_jwt = false
-
-[functions.send-review-reply-notification]
-verify_jwt = false
-
-[functions.check-spam-rate-alert]
-verify_jwt = false
-
-[functions.translate-blog-article]
-verify_jwt = false
-
-[functions.send-article-notification]
-verify_jwt = false
-
-[functions.send-referral-notification]
-verify_jwt = false
-
-[functions.check-referral-reminders]
-verify_jwt = false
-
-[functions.send-exit-discount]
-verify_jwt = false
-
-[functions.ai-chatbot]
-verify_jwt = false
-
-[functions.ai-chatbot-stream]
-verify_jwt = false
-
-[functions.generate-sitemap]
-verify_jwt = false
-
-[functions.fetch-place-photo]
-verify_jwt = false
-
-[functions.send-welcome-email]
-verify_jwt = false
-
-[functions.send-campaign-email]
-verify_jwt = true
-
-[functions.validate-discount-code]
-verify_jwt = false
-
-[functions.record-discount-usage]
-verify_jwt = false
-
-[functions.get-turnstile-site-key]
-verify_jwt = false
-
-[functions.verify-turnstile]
-verify_jwt = false
-
-[functions.get-my-referrals]
-verify_jwt = false
-
-[functions.submit-referral]
-verify_jwt = false
-
-[functions.elevenlabs-conversation-token]
-verify_jwt = false
-
-[functions.get-client-config]
-verify_jwt = false
-
-[functions.verify-owner-code]
-verify_jwt = false
-
-[functions.scrape-booking-reviews]
-verify_jwt = false
-
-[functions.scrape-property-data]
-verify_jwt = false
-
-[functions.scrape-property-details]
-verify_jwt = false
-
-[functions.scrape-listing]
-verify_jwt = false
-
-[functions.sync-ical-bookings]
-verify_jwt = false
-
-[functions.rewrite-listing-description]
-verify_jwt = false
-
-[functions.hostscan-report]
-verify_jwt = false
-
-[functions.ai-property-search]
-verify_jwt = false
-
-[functions.lead-webhook]
-verify_jwt = false
-
-[functions.live-property-availability]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
-
-[functions.send-transactional-email]
-verify_jwt = true
-
-[functions.preview-transactional-email]
-verify_jwt = false
-
-[functions.handle-email-unsubscribe]
-verify_jwt = false
-
-[functions.handle-email-suppression]
-verify_jwt = false
+[functions]
+  [functions.ai-chatbot]
+    verify_jwt = false
+  [functions.ai-chatbot-stream]
+    verify_jwt = false
+  [functions.ai-property-search]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-conversion-rate-alert]
+    verify_jwt = false
+  [functions.check-follow-up-reminders]
+    verify_jwt = false
+  [functions.check-referral-reminders]
+    verify_jwt = false
+  [functions.check-spam-rate-alert]
+    verify_jwt = false
+  [functions.elevenlabs-conversation-token]
+    verify_jwt = false
+  [functions.fetch-place-photo]
+    verify_jwt = false
+  [functions.generate-sitemap]
+    verify_jwt = false
+  [functions.get-client-config]
+    verify_jwt = false
+  [functions.get-hcaptcha-site-key]
+    verify_jwt = false
+  [functions.get-mapbox-token]
+    verify_jwt = false
+  [functions.get-my-referrals]
+    verify_jwt = false
+  [functions.get-turnstile-site-key]
+    verify_jwt = false
+  [functions.get-vapid-public-key]
+    verify_jwt = false
+  [functions.handle-email-suppression]
+    verify_jwt = false
+  [functions.handle-email-unsubscribe]
+    verify_jwt = false
+  [functions.hostscan-report]
+    verify_jwt = false
+  [functions.lead-webhook]
+    verify_jwt = false
+  [functions.live-property-availability]
+    verify_jwt = false
+  [functions.notify-poi-import]
+    verify_jwt = false
+  [functions.preview-transactional-email]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.record-discount-usage]
+    verify_jwt = false
+  [functions.rewrite-listing-description]
+    verify_jwt = false
+  [functions.scrape-booking-reviews]
+    verify_jwt = false
+  [functions.scrape-listing]
+    verify_jwt = false
+  [functions.scrape-property-data]
+    verify_jwt = false
+  [functions.scrape-property-details]
+    verify_jwt = false
+  [functions.send-advanced-simulation-followup]
+    verify_jwt = false
+  [functions.send-article-notification]
+    verify_jwt = false
+  [functions.send-booking-notification]
+    verify_jwt = false
+  [functions.send-campaign-email]
+    verify_jwt = true
+  [functions.send-exit-discount]
+    verify_jwt = false
+  [functions.send-lead-magnet]
+    verify_jwt = false
+  [functions.send-lead-notification]
+    verify_jwt = false
+  [functions.send-push-notification]
+    verify_jwt = false
+  [functions.send-referral-notification]
+    verify_jwt = false
+  [functions.send-review-notification]
+    verify_jwt = false
+  [functions.send-review-reply-notification]
+    verify_jwt = false
+  [functions.send-simulation-followup]
+    verify_jwt = false
+  [functions.send-simulation-reminder]
+    verify_jwt = false
+  [functions.send-transactional-email]
+    verify_jwt = true
+  [functions.send-weekly-followup-report]
+    verify_jwt = false
+  [functions.send-welcome-email]
+    verify_jwt = false
+  [functions.submit-referral]
+    verify_jwt = false
+  [functions.sync-ical-bookings]
+    verify_jwt = false
+  [functions.track-email-click]
+    verify_jwt = false
+  [functions.track-email-open]
+    verify_jwt = false
+  [functions.translate-blog-article]
+    verify_jwt = false
+  [functions.validate-discount-code]
+    verify_jwt = false
+  [functions.verify-hcaptcha]
+    verify_jwt = false
+  [functions.verify-owner-code]
+    verify_jwt = false
+  [functions.verify-turnstile]
+    verify_jwt = false
