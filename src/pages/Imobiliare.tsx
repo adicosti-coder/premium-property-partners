@@ -29,7 +29,6 @@ import { generateRealEstateAgentSchema, generateBreadcrumbSchema } from "@/utils
 
 const RealEstateContactForm = lazy(() => import("@/components/RealEstateContactForm"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
-const InvestmentYieldCalculator = lazy(() => import("@/components/InvestmentYieldCalculator"));
 const RealEstateListings = lazy(() => import("@/components/RealEstateListings"));
 
 const Imobiliare = () => {
@@ -171,9 +170,6 @@ const Imobiliare = () => {
           </div>
         </div>
       </section>
-
-      {/* Investment Yield Calculator */}
-      <InvestmentYieldCalculator />
 
       {/* Services Section */}
       <section id="services" className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
