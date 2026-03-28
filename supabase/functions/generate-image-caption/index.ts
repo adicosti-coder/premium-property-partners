@@ -21,12 +21,15 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, serviceKey);
     const lang = language || "ro";
+    const normalizedImageUrl = imageUrl.startsWith("http")
+      ? imageUrl
+      : `${supabaseUrl}/storage/v1/object/public/property-images/${imageUrl}`;
 
     try {
       const { data: cached } = await sb
         .from("image_caption_cache")
         .select("caption")
-        .eq("image_url", imageUrl)
+        .eq("image_url", normalizedImageUrl)
         .eq("language", lang)
         .maybeSingle();
 
@@ -57,8 +60,8 @@ serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: `Describe this photo from "${propertyName}":` },
-              { type: "image_url", image_url: { url: imageUrl } },
+               { type: "text", text: `Describe this photo from "${propertyName}":` },
+               { type: "image_url", image_url: { url: normalizedImageUrl } },
             ],
           },
         ],
@@ -87,7 +90,7 @@ serve(async (req) => {
     if (caption) {
       sb.from("image_caption_cache")
         .upsert(
-          { image_url: imageUrl, property_name: propertyName, language: lang, caption, updated_at: new Date().toISOString() },
+          { image_url: normalizedImageUrl, property_name: propertyName, language: lang, caption, updated_at: new Date().toISOString() },
           { onConflict: "image_url,language" }
         )
         .then(({ error }) => { if (error) console.warn("Cache write failed:", error); });
