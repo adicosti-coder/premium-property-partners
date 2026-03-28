@@ -39,7 +39,7 @@ const ScraperLeads = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const { data: leads, isLoading } = useQuery({
+  const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
