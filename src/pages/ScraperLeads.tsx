@@ -12,9 +12,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, Euro } from "lucide-react";
+import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, Euro, StickyNote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScraperLeadActions, getLeadNotes } from "@/components/admin/ScraperLeadActions";
+import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 
 interface ScraperLead {
   id: string;
