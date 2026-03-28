@@ -11,6 +11,16 @@ import { downloadLeadAnalysisPdf } from "@/utils/exportLeadAnalysisPdf";
 interface ScraperLeadActionsProps {
   leadId: string;
   currentStatus: string;
+  leadData: {
+    title: string;
+    original_price: number;
+    extra_profit_3y: number;
+    monthly_extra: number;
+    lead_score: number;
+    url: string;
+    status: string;
+    created_at: string;
+  };
   onRefresh: () => void;
   onViewDetails: () => void;
 }
