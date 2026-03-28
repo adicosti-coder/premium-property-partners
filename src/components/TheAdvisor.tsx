@@ -45,7 +45,7 @@ function generateFallbackContent(
 ): AdvisorContent {
   const { propertyName, location, size, bedrooms, bathrooms, capacity, pricePerNight, listingType, yearBuilt, roi, amenities } = props;
   const isInvestment = listingType === "investitie" || listingType === "investment";
-  const estimatedYield = roi || (pricePerNight ? `${Math.min(((pricePerNight * 365 * 0.65) / (pricePerNight * 365 * 0.65 / 0.08) * 100), 12).toFixed(1)}%` : "7-9%");
+  const estimatedYield = roi || "9.4%";
   const sizeText = size ? `${size} mp` : "";
   const bedsText = bedrooms ? `${bedrooms}` : "N/A";
   const amenitiesText = amenities?.slice(0, 5).join(", ") || "";
@@ -312,7 +312,7 @@ const TheAdvisor = ({
                 <CardContent className="p-5">
                   <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
                   <p className="text-2xl font-bold text-foreground">
-                    {(content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
+                    {roi ? (roi.includes('%') ? roi : `${roi}%`) : (content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
                     {t.netYield}

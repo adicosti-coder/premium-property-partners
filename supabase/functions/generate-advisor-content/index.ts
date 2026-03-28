@@ -28,7 +28,7 @@ Vei primi date despre o proprietate și vei genera un JSON cu exact această str
 }
 
 Generează exact 5 FAQ-uri relevante pentru un cumpărător premium.
-Pentru investmentMetrics, estimează realist pe baza datelor primite.
+Pentru investmentMetrics: dacă primești un câmp "roi" în datele proprietății, folosește EXACT acea valoare pentru "netYield". Nu estima un ROI diferit — folosește valoarea oficială din baza de date.
 IMPORTANT: Răspunde DOAR cu JSON valid, fără markdown, fără backticks, fără explicații.`;
 
 serve(async (req) => {
