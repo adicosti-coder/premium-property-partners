@@ -590,14 +590,26 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
   const roiNum = property.roi_percentage ? parseFloat(property.roi_percentage.replace(/[^0-9.]/g, "")) : 0;
   const isTopRated = property.booking_rating && property.booking_rating >= 9.5;
 
+  const detailUrl = property.slug ? `/proprietate/${property.slug}` : null;
+
+  const CardWrapper = ({ children }: { children: React.ReactNode }) =>
+    detailUrl ? (
+      <a href={detailUrl} className="block">
+        {children}
+      </a>
+    ) : (
+      <>{children}</>
+    );
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.08 }}
-      className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all group"
-    >
+    <CardWrapper>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: index * 0.08 }}
+        className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all group cursor-pointer"
+      >
       <div className="relative h-48 overflow-hidden bg-muted">
         {currentImageSrc ? (
           <img
@@ -644,6 +656,7 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.location}, Timișoara`)}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="text-xs text-primary/80 hover:text-primary flex items-center gap-1 mt-1 hover:underline"
           >
             <MapPin className="w-3 h-3" /> {property.location}
@@ -700,6 +713,7 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
         )}
       </div>
     </motion.div>
+    </CardWrapper>
   );
 };
 
