@@ -45,7 +45,7 @@ function generateFallbackContent(
 ): AdvisorContent {
   const { propertyName, location, size, bedrooms, bathrooms, capacity, pricePerNight, listingType, yearBuilt, roi, amenities } = props;
   const isInvestment = listingType === "investitie" || listingType === "investment";
-  const estimatedYield = roi || (pricePerNight && props.capitalNecesar ? `${Math.min(((pricePerNight * 365 * 0.75 * 0.73) / props.capitalNecesar * 100), 15).toFixed(1)}%` : "9.4%");
+  const estimatedYield = roi || "9.4%";
   const sizeText = size ? `${size} mp` : "";
   const bedsText = bedrooms ? `${bedrooms}` : "N/A";
   const amenitiesText = amenities?.slice(0, 5).join(", ") || "";
