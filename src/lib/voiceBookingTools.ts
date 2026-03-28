@@ -8,6 +8,16 @@ import { supabase } from "@/lib/supabaseClient";
 
 // ── Helpers ──────────────────────────────────────────────
 
+/** Converts "DD-MM-YYYY" to "YYYY-MM-DD". Passes through if already ISO. */
+function formatToISO(dateStr: string): string {
+  const ddmmyyyy = /^(\d{2})-(\d{2})-(\d{4})$/;
+  const match = dateStr.match(ddmmyyyy);
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+  return dateStr;
+}
+
 async function findPropertyByName(name: string) {
   const { data: properties } = await supabase
     .from("properties")
