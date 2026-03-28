@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOFooterText from "@/components/SEOFooterText";
 import SEOHead from "@/components/SEOHead";
 import PageSummary from "@/components/PageSummary";
 import { generateSpeakableSchema } from "@/utils/schemaGenerators";
@@ -531,6 +532,7 @@ const Investitii = () => {
 
       <GlobalConversionWidgets />
       <BackToTop />
+      <SEOFooterText pageType="catalog" city="Timișoara" />
       <Footer />
     </div>
   );
