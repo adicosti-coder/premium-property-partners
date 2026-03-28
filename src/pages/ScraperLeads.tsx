@@ -319,6 +319,25 @@ const ScraperLeads = () => {
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {language === "ro" ? "Vezi anunțul original" : "View original listing"}
                 </Button>
+
+                {/* Notes */}
+                {(() => {
+                  const notes = getLeadNotes(selectedLead.id);
+                  if (notes.length === 0) return null;
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                        <StickyNote className="w-4 h-4" /> Notițe ({notes.length})
+                      </p>
+                      {notes.map((n, i) => (
+                        <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-sm">
+                          <p className="text-muted-foreground">{n.text}</p>
+                          <p className="text-xs text-muted-foreground/60 mt-1">{new Date(n.date).toLocaleDateString("ro-RO")}</p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
