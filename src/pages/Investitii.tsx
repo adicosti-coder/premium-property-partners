@@ -34,6 +34,7 @@ import { lazy, Suspense } from "react";
 
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
+const InvestmentYieldCalculator = lazy(() => import("@/components/InvestmentYieldCalculator"));
 
 interface PropertyImage {
   image_path: string;
@@ -259,6 +260,11 @@ const Investitii = () => {
           </div>
         </div>
       </section>
+
+      {/* Investment Yield Calculator */}
+      <Suspense fallback={<div className="min-h-[300px]" />}>
+        <InvestmentYieldCalculator />
+      </Suspense>
 
       {/* ROI Case Study */}
       <Suspense fallback={<div className="min-h-[300px]" />}>
