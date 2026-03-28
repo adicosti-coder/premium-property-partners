@@ -50,6 +50,7 @@ import ListingImporter from "@/components/admin/ListingImporter";
 import ProspectManager from "@/components/admin/ProspectManager";
 import CatalogManager from "@/components/admin/CatalogManager";
 import GuestGuideManager from "@/components/admin/GuestGuideManager";
+import AICacheManager from "@/components/admin/AICacheManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 
