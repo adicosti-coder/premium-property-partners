@@ -656,6 +656,7 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.location}, Timișoara`)}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="text-xs text-primary/80 hover:text-primary flex items-center gap-1 mt-1 hover:underline"
           >
             <MapPin className="w-3 h-3" /> {property.location}
