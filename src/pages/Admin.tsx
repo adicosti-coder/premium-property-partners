@@ -13,7 +13,7 @@ import {
   Mail, MailCheck, Megaphone, Play, MapPin, Film, Lightbulb,
   FlaskConical, Shield, ShieldCheck, PenLine, MousePointerClick,
   Target, TrendingUp, LinkIcon, Search, Euro, Building2, Hotel,
-  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen, Sparkles,
+  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen, Sparkles, Zap,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -53,6 +53,7 @@ import GuestGuideManager from "@/components/admin/GuestGuideManager";
 import AICacheManager from "@/components/admin/AICacheManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
+import { useQuery } from "@tanstack/react-query";
 
 interface Lead {
   id: string;
@@ -89,6 +90,20 @@ const Admin = () => {
   
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
   const { newLeadsCount } = useNewLeadsNotification(activeTab);
+
+  const { data: newScraperCount = 0 } = useQuery({
+    queryKey: ["scraper-leads-new-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("scraper_leads")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "new");
+      if (error) return 0;
+      return count ?? 0;
+    },
+    staleTime: 1000 * 60,
+    enabled: !!user && isAdmin,
+  });
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -346,6 +361,18 @@ const Admin = () => {
             <TabsTrigger value="security" className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" />
               Securitate
+            </TabsTrigger>
+            <TabsTrigger value="scraper-leads" className="flex items-center gap-2 relative" onClick={() => navigate("/scraper-leads")}>
+              <Zap className="w-4 h-4" />
+              Oportunități AI
+              {newScraperCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 min-w-5 h-5 text-xs px-1.5"
+                >
+                  {newScraperCount > 99 ? '99+' : newScraperCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="local-tips" className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4" />
