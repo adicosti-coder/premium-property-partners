@@ -214,13 +214,19 @@ const ScraperLeads = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={selectedIds.length === filteredLeads.length && filteredLeads.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
                       <TableHead className="font-semibold">{language === "ro" ? "Proprietate" : "Property"}</TableHead>
                       <TableHead className="font-semibold text-center">{t.score}</TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
                       <TableHead className="font-semibold text-right">{t.profit3y}</TableHead>
                       <TableHead className="font-semibold text-right">{t.monthlyExtra}</TableHead>
                       <TableHead className="font-semibold text-center">{t.status}</TableHead>
-                      <TableHead className="font-semibold text-center"></TableHead>
+                      <TableHead className="font-semibold text-center w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
