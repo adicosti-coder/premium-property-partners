@@ -2759,6 +2759,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scraper_leads: {
+        Row: {
+          created_at: string
+          extra_profit_3y: number
+          id: string
+          lead_score: number
+          monthly_extra: number
+          original_price: number
+          status: string
+          title: string
+          updated_at: string
+          url: string
+          whatsapp_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          extra_profit_3y?: number
+          id?: string
+          lead_score?: number
+          monthly_extra?: number
+          original_price?: number
+          status?: string
+          title: string
+          updated_at?: string
+          url: string
+          whatsapp_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          extra_profit_3y?: number
+          id?: string
+          lead_score?: number
+          monthly_extra?: number
+          original_price?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
       shared_poi_links: {
         Row: {
           created_at: string
