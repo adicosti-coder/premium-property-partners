@@ -31,6 +31,7 @@ interface CoverageData {
 const AICacheManager = () => {
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [analyzing, setAnalyzing] = useState(false);
+  const [generating, setGenerating] = useState<Record<string, boolean>>({});
   const [coverage, setCoverage] = useState<CoverageData | null>(null);
   const [properties, setProperties] = useState<PropertyInfo[]>([]);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
