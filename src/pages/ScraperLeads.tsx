@@ -79,6 +79,35 @@ const ScraperLeads = () => {
   const formatPrice = (price: number) =>
     price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
 
+  const getPropertyType = (title: string) => {
+    if (title.includes("🏢")) return "ansamblu";
+    if (title.includes("🏰")) return "istoric";
+    return null;
+  };
+
+  const cleanTitle = (title: string) =>
+    title.replace(/🏢|🏰/g, "").replace(/\|/g, "").replace(/\s{2,}/g, " ").trim();
+
+  const getPropertyBadge = (title: string) => {
+    const type = getPropertyType(title);
+    if (type === "ansamblu") return (
+      <Badge className="bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/20 text-[10px] px-1.5 py-0">
+        Ansamblu Nou
+      </Badge>
+    );
+    if (type === "istoric") return (
+      <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/20 text-[10px] px-1.5 py-0">
+        Istoric Premium
+      </Badge>
+    );
+    return null;
+  };
+
+  const getYield = (lead: ScraperLead) => {
+    if (!lead.original_price || lead.original_price === 0) return null;
+    return ((lead.monthly_extra * 12) / lead.original_price * 100).toFixed(1);
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   };
@@ -242,8 +271,20 @@ const ScraperLeads = () => {
                             onCheckedChange={() => toggleSelect(lead.id)}
                           />
                         </TableCell>
-                        <TableCell className="font-medium max-w-[220px] truncate">{lead.title}</TableCell>
-                        <TableCell className="text-center">{getScoreBadge(lead.lead_score)}</TableCell>
+                        <TableCell className="font-medium max-w-[220px]">
+                          <div className="flex flex-col gap-1">
+                            <span className="truncate">{cleanTitle(lead.title)}</span>
+                            {getPropertyBadge(lead.title)}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            {getScoreBadge(lead.lead_score)}
+                            {getYield(lead) && (
+                              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">{getYield(lead)}%/an</span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price)}</TableCell>
                         <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
@@ -273,7 +314,8 @@ const ScraperLeads = () => {
           {selectedLead && (
             <>
               <SheetHeader className="mb-6">
-                <SheetTitle className="text-xl font-serif">{selectedLead.title}</SheetTitle>
+                <SheetTitle className="text-xl font-serif">{cleanTitle(selectedLead.title)}</SheetTitle>
+                {getPropertyBadge(selectedLead.title)}
                 <div className="flex items-center gap-2 mt-2">
                   {getScoreBadge(selectedLead.lead_score)}
                   {getStatusBadge(selectedLead.status)}
