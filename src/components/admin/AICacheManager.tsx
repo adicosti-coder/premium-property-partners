@@ -128,6 +128,42 @@ const AICacheManager = () => {
     analyzeCoverage();
   };
 
+  const generateMissing = async (type: "advisor" | "captions" | "all") => {
+    setGenerating((prev) => ({ ...prev, [type]: true }));
+    const label = type === "advisor" ? "Advisor" : type === "captions" ? "Caption-uri" : "Tot";
+    toast({ title: `⏳ Se generează ${label}...`, description: "Procesul poate dura câteva minute. Nu închide pagina." });
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "mvzssjyzbwccioqvhjpo";
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/bulk-generate-ai-cache`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ type, language: "ro" }),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        toast({
+          title: `✅ ${label} generat!`,
+          description: `${result.generated} elemente generate, ${result.errors} erori.`,
+        });
+        analyzeCoverage();
+      } else {
+        throw new Error(result.error || "Eroare la generare");
+      }
+    } catch (err: any) {
+      toast({ title: "Eroare la generare", description: err.message, variant: "destructive" });
+    } finally {
+      setGenerating((prev) => ({ ...prev, [type]: false }));
+    }
+  };
+
   const getPropertyName = (slug: string) => {
     return properties.find((p) => p.slug === slug)?.name || slug;
   };
