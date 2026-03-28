@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -8,10 +8,13 @@ import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, Euro } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ScraperLead {
   id: string;
@@ -30,6 +33,7 @@ const ScraperLeads = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [selectedLead, setSelectedLead] = useState<ScraperLead | null>(null);
+  const [hotOnly, setHotOnly] = useState(false);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["scraper-leads"],
@@ -43,6 +47,30 @@ const ScraperLeads = () => {
     },
     staleTime: 1000 * 60 * 2,
   });
+
+  const filteredLeads = useMemo(() => {
+    if (!leads) return [];
+    return hotOnly ? leads.filter((l) => l.lead_score > 80) : leads;
+  }, [leads, hotOnly]);
+
+  const profitStats = useMemo(() => {
+    if (!leads || leads.length === 0) return null;
+    const totalProfit3y = leads.reduce((s, l) => s + (l.extra_profit_3y || 0), 0);
+    const totalMonthly = leads.reduce((s, l) => s + (l.monthly_extra || 0), 0);
+    const hotCount = leads.filter((l) => l.lead_score > 80).length;
+
+    // Group by date for chart
+    const byDate = new Map<string, number>();
+    leads.forEach((l) => {
+      const day = l.created_at?.slice(0, 10) || "N/A";
+      byDate.set(day, (byDate.get(day) || 0) + (l.extra_profit_3y || 0));
+    });
+    const chartData = Array.from(byDate.entries())
+      .map(([date, profit]) => ({ date: date.slice(5), profit }))
+      .slice(-7);
+
+    return { totalProfit3y, totalMonthly, hotCount, chartData };
+  }, [leads]);
 
   const formatPrice = (price: number) =>
     price.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
@@ -80,33 +108,84 @@ const ScraperLeads = () => {
   };
 
   const t = language === "ro"
-    ? { title: "Lead-uri Scraper", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil." }
-    : { title: "Scraper Leads", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available." };
+    ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
+    : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" };
 
   return (
     <>
-      <SEOHead
-        title={`${t.title} | RealTrust`}
-        description={t.subtitle}
-      />
+      <SEOHead title={`${t.title} | RealTrust`} description={t.subtitle} noIndex />
       <Header />
       <main className="min-h-screen bg-background pt-24 pb-16">
         <div className="container mx-auto px-4 md:px-6">
+          {/* Header */}
           <div className="flex items-center gap-3 mb-6">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
-              <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+              </div>
             </div>
           </div>
 
+          {/* Stats & Chart */}
+          {profitStats && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card className="bg-card border-border">
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-muted-foreground mb-1">{t.totalProfit}</p>
+                  <p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">+{formatPrice(profitStats.totalProfit3y)}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-card border-border">
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-muted-foreground mb-1">{t.monthlyTotal}</p>
+                  <p className="text-xl font-bold font-mono">+{formatPrice(profitStats.totalMonthly)}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-card border-border">
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-muted-foreground mb-1">{t.hotLeads}</p>
+                  <p className="text-xl font-bold font-mono flex items-center gap-1"><Flame className="w-5 h-5 text-red-500" /> {profitStats.hotCount}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-card border-border">
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-muted-foreground mb-2">{t.profit3y}</p>
+                  <div className="h-16">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={profitStats.chartData}>
+                        <Bar dataKey="profit" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
+                        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <Tooltip formatter={(v: number) => formatPrice(v)} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Filter */}
+          <div className="flex items-center gap-3 mb-4">
+            <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
+            <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
+            {hotOnly && filteredLeads.length > 0 && (
+              <Badge variant="secondary">{filteredLeads.length}</Badge>
+            )}
+          </div>
+
+          {/* Table */}
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}
             </div>
-          ) : !leads || leads.length === 0 ? (
+          ) : filteredLeads.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">{t.noData}</div>
           ) : (
             <div className="rounded-xl border border-border overflow-hidden bg-card">
@@ -124,7 +203,7 @@ const ScraperLeads = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leads.map((lead) => (
+                    {filteredLeads.map((lead) => (
                       <TableRow
                         key={lead.id}
                         className="hover:bg-muted/30 cursor-pointer transition-colors"
@@ -169,7 +248,6 @@ const ScraperLeads = () => {
               </SheetHeader>
 
               <div className="space-y-5">
-                {/* Stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
                     <p className="text-xs text-muted-foreground mb-1">{t.price}</p>
@@ -185,7 +263,6 @@ const ScraperLeads = () => {
                   </div>
                 </div>
 
-                {/* WhatsApp Message */}
                 {selectedLead.whatsapp_message && (
                   <div className="space-y-3">
                     <p className="text-sm font-medium text-foreground">{language === "ro" ? "Mesaj WhatsApp" : "WhatsApp Message"}</p>
@@ -202,7 +279,6 @@ const ScraperLeads = () => {
                   </div>
                 )}
 
-                {/* Source link */}
                 <Button
                   variant="outline"
                   className="w-full"
