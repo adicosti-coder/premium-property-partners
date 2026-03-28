@@ -347,15 +347,27 @@ const AICacheManager = () => {
                   )}
                 </p>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={clearAll}
-                disabled={!!loading.all}
-              >
-                {loading.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                Golire TOTALĂ
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                {(coverage.advisor.missing.length > 0 || coverage.captions.missingProperties.length > 0) && (
+                  <Button
+                    size="sm"
+                    onClick={() => generateMissing("all")}
+                    disabled={!!generating.all}
+                  >
+                    {generating.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                    Generează tot ce lipsește
+                  </Button>
+                )}
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={clearAll}
+                  disabled={!!loading.all}
+                >
+                  {loading.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                  Golire TOTALĂ
+                </Button>
+              </div>
             </div>
             <p className="text-xs text-destructive/70 mt-2">
               ⚠️ Golirea totală va forța regenerarea tuturor textelor AI și va consuma credite semnificative.
