@@ -206,6 +206,7 @@ const App = () => (
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
+                    <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/contact" element={<ContactRedirect />} />
                     {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
                     <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />

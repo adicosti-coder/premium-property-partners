@@ -88,7 +88,6 @@ const ScraperLeads = () => {
       <SEOHead
         title={`${t.title} | RealTrust`}
         description={t.subtitle}
-        canonicalPath="/scraper-leads"
       />
       <Header />
       <main className="min-h-screen bg-background pt-24 pb-16">
