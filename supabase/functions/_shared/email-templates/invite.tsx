@@ -8,9 +8,11 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -25,26 +27,31 @@ export const InviteEmail = ({
   siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="ro" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>Ai fost invitat să te alături {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Section style={headerSection}>
+          <Heading style={logo}>RealTrust</Heading>
+        </Section>
+        <Hr style={divider} />
+        <Heading style={h1}>Ai primit o invitație</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
+          Ai fost invitat să te alături{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          . Apasă butonul de mai jos pentru a accepta invitația și a-ți crea contul.
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Accept Invitation
-        </Button>
+        <Section style={buttonContainer}>
+          <Button style={button} href={confirmationUrl}>
+            Acceptă Invitația
+          </Button>
+        </Section>
+        <Hr style={divider} />
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          Dacă nu așteptai această invitație, poți ignora acest email în siguranță.
         </Text>
       </Container>
     </Body>
@@ -53,27 +60,14 @@ export const InviteEmail = ({
 
 export default InviteEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'NotoSans', Arial, sans-serif" }
+const container = { padding: '20px 25px', maxWidth: '580px', margin: '0 auto' }
+const headerSection = { textAlign: 'center' as const, padding: '20px 0 10px' }
+const logo = { fontSize: '28px', fontWeight: 'bold' as const, color: '#8B6914', margin: '0', fontFamily: "'Playfair Display', Georgia, serif" }
+const divider = { borderColor: '#E8DFC7', margin: '20px 0' }
+const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#1a1f36', margin: '0 0 20px', fontFamily: "'Playfair Display', Georgia, serif" }
+const text = { fontSize: '15px', color: '#55575d', lineHeight: '1.6', margin: '0 0 16px' }
+const link = { color: '#8B6914', textDecoration: 'underline' }
+const buttonContainer = { textAlign: 'center' as const, margin: '28px 0' }
+const button = { backgroundColor: '#8B6914', color: '#ffffff', padding: '12px 28px', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold' as const, textDecoration: 'none' }
+const footer = { fontSize: '13px', color: '#999999', margin: '20px 0 0', textAlign: 'center' as const }
