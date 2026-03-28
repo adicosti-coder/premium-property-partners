@@ -123,13 +123,12 @@ Răspunde DOAR cu JSON valid.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5-nano",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -153,12 +152,18 @@ Răspunde DOAR cu JSON valid.`;
         ? JSON.parse(toolCall.function.arguments)
         : toolCall.function.arguments;
     } else {
-      const msgContent = data.choices?.[0]?.message?.content || "";
+      const rawMessageContent = data.choices?.[0]?.message?.content;
+      const msgContent = Array.isArray(rawMessageContent)
+        ? rawMessageContent.map((part: any) => typeof part?.text === "string" ? part.text : "").join("\n")
+        : typeof rawMessageContent === "string"
+          ? rawMessageContent
+          : "";
       const cleaned = msgContent.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         content = JSON.parse(jsonMatch[0]);
       } else {
+        console.error("Unexpected AI response:", JSON.stringify(data));
         throw new Error("Could not extract structured content from AI response");
       }
     }

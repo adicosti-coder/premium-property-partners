@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, supabaseConfig } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,21 @@ interface CoverageData {
   captions: { cached: number; total: number; missingProperties: string[] };
   translations: { cached: number };
   rewrite: { cached: number };
+}
+
+interface FullPropertyData extends PropertyInfo {
+  location?: string | null;
+  size?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  capacity?: number | null;
+  floor?: number | null;
+  base_price_per_night?: number | null;
+  amenities?: string[] | null;
+  listing_type?: string | null;
+  year_built?: number | null;
+  energy_class?: string | null;
+  roi_percentage?: number | null;
 }
 
 const AICacheManager = () => {
@@ -98,6 +113,14 @@ const AICacheManager = () => {
     analyzeCoverage();
   }, []);
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const normalizeImageUrl = (imagePath: string) => {
+    if (!imagePath) return "";
+    if (imagePath.startsWith("http")) return imagePath;
+    return `${supabaseConfig.url}/storage/v1/object/public/property-images/${imagePath}`;
+  };
+
   const clearCache = async (table: string, label: string) => {
     setLoading((prev) => ({ ...prev, [table]: true }));
     try {
@@ -134,29 +157,112 @@ const AICacheManager = () => {
     toast({ title: `⏳ Se generează ${label}...`, description: "Procesul poate dura câteva minute. Nu închide pagina." });
 
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "mvzssjyzbwccioqvhjpo";
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/bulk-generate-ai-cache`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ type, language: "ro" }),
-        }
-      );
+      const { data: propertiesData, error: propertiesError } = await supabase
+        .from("properties" as any)
+        .select("slug, name, location, size, bedrooms, bathrooms, capacity, floor, base_price_per_night, amenities, listing_type, year_built, energy_class, roi_percentage, images")
+        .eq("is_active", true)
+        .order("name");
 
-      const result = await response.json();
-      if (response.ok) {
-        toast({
-          title: `✅ ${label} generat!`,
-          description: `${result.generated} elemente generate, ${result.errors} erori.`,
-        });
-        analyzeCoverage();
-      } else {
-        throw new Error(result.error || "Eroare la generare");
+      if (propertiesError) throw propertiesError;
+
+      const allProperties: FullPropertyData[] = (propertiesData || []).map((property: any) => ({
+        slug: property.slug || "",
+        name: property.name || "Fără nume",
+        location: property.location,
+        size: property.size,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        capacity: property.capacity,
+        floor: property.floor,
+        base_price_per_night: property.base_price_per_night,
+        amenities: Array.isArray(property.amenities) ? property.amenities : [],
+        listing_type: property.listing_type,
+        year_built: property.year_built,
+        energy_class: property.energy_class,
+        roi_percentage: property.roi_percentage,
+        images: Array.isArray(property.images) ? property.images : [],
+      }));
+
+      let generated = 0;
+      let errors = 0;
+
+      if (type === "advisor" || type === "all") {
+        const missingAdvisor = allProperties.filter((property) => property.slug && coverage?.advisor.missing.includes(property.slug));
+
+        for (const property of missingAdvisor) {
+          const { error } = await supabase.functions.invoke("generate-advisor-content", {
+            body: {
+              propertyName: property.name,
+              propertySlug: property.slug,
+              location: property.location,
+              size: property.size,
+              bedrooms: property.bedrooms,
+              bathrooms: property.bathrooms,
+              capacity: property.capacity,
+              floor: property.floor,
+              pricePerNight: property.base_price_per_night,
+              amenities: property.amenities,
+              listingType: property.listing_type,
+              yearBuilt: property.year_built,
+              energyClass: property.energy_class,
+              roi: property.roi_percentage ? `${property.roi_percentage}%` : null,
+              language: "ro",
+            },
+          });
+
+          if (error) {
+            errors += 1;
+            console.error("Advisor generate error:", property.name, error);
+          } else {
+            generated += 1;
+          }
+
+          await sleep(250);
+        }
       }
+
+      if (type === "captions" || type === "all") {
+        const { data: cachedCaptions, error: captionsError } = await supabase
+          .from("image_caption_cache")
+          .select("image_url")
+          .eq("language", "ro");
+
+        if (captionsError) throw captionsError;
+
+        const cachedCaptionUrls = new Set((cachedCaptions || []).map((entry: any) => entry.image_url));
+
+        for (const property of allProperties) {
+          const missingImages = property.images
+            .map(normalizeImageUrl)
+            .filter((imageUrl) => imageUrl && !cachedCaptionUrls.has(imageUrl));
+
+          for (const imageUrl of missingImages) {
+            const { error } = await supabase.functions.invoke("generate-image-caption", {
+              body: {
+                imageUrl,
+                propertyName: property.name,
+                language: "ro",
+              },
+            });
+
+            if (error) {
+              errors += 1;
+              console.error("Caption generate error:", property.name, imageUrl, error);
+            } else {
+              cachedCaptionUrls.add(imageUrl);
+              generated += 1;
+            }
+
+            await sleep(150);
+          }
+        }
+      }
+
+      toast({
+        title: `✅ ${label} generat!`,
+        description: `${generated} elemente generate, ${errors} erori.`,
+      });
+      analyzeCoverage();
     } catch (err: any) {
       toast({ title: "Eroare la generare", description: err.message, variant: "destructive" });
     } finally {

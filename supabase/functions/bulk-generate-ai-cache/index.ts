@@ -115,6 +115,10 @@ serve(async (req) => {
 
         for (const imageUrl of missingImages) {
           try {
+            const normalizedImageUrl = imageUrl.startsWith("http")
+              ? imageUrl
+              : `${supabaseUrl}/storage/v1/object/public/property-images/${imageUrl}`;
+
             const response = await fetch(`${supabaseUrl}/functions/v1/generate-image-caption`, {
               method: "POST",
               headers: {
@@ -122,7 +126,7 @@ serve(async (req) => {
                 "Authorization": `Bearer ${serviceKey}`,
               },
               body: JSON.stringify({
-                imageUrl,
+                imageUrl: normalizedImageUrl,
                 propertyName: prop.name,
                 language: lang,
               }),
