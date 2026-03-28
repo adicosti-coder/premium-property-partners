@@ -77,7 +77,16 @@ const ScraperLeads = () => {
   }, [leads]);
 
   const formatPrice = (price: number) =>
-    price.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
+    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredLeads.length) setSelectedIds([]);
+    else setSelectedIds(filteredLeads.map((l) => l.id));
+  };
+  const handleRefresh = () => { setSelectedIds([]); refetch(); };
 
   const getScoreBadge = (score: number) => {
     if (score > 80) return (
