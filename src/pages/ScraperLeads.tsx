@@ -252,6 +252,7 @@ const ScraperLeads = () => {
                           <ScraperLeadActions
                             leadId={lead.id}
                             currentStatus={lead.status}
+                            leadData={lead}
                             onRefresh={handleRefresh}
                             onViewDetails={() => setSelectedLead(lead)}
                           />
