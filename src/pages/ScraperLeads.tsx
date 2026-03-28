@@ -184,13 +184,21 @@ const ScraperLeads = () => {
             </div>
           )}
 
-          {/* Filter */}
-          <div className="flex items-center gap-3 mb-4">
-            <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
-            <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
-            {hotOnly && filteredLeads.length > 0 && (
-              <Badge variant="secondary">{filteredLeads.length}</Badge>
-            )}
+          {/* Filter + Bulk */}
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
+              <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
+              {hotOnly && filteredLeads.length > 0 && (
+                <Badge variant="secondary">{filteredLeads.length}</Badge>
+              )}
+            </div>
+            <ScraperBulkActions
+              selectedIds={selectedIds}
+              onClearSelection={() => setSelectedIds([])}
+              onRefresh={handleRefresh}
+              allLeads={filteredLeads}
+            />
           </div>
 
           {/* Table */}
