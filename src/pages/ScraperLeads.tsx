@@ -12,9 +12,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, Euro } from "lucide-react";
+import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, Euro, StickyNote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScraperLeadActions, getLeadNotes } from "@/components/admin/ScraperLeadActions";
+import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 
 interface ScraperLead {
   id: string;
@@ -34,8 +37,9 @@ const ScraperLeads = () => {
   const navigate = useNavigate();
   const [selectedLead, setSelectedLead] = useState<ScraperLead | null>(null);
   const [hotOnly, setHotOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const { data: leads, isLoading } = useQuery({
+  const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -73,7 +77,16 @@ const ScraperLeads = () => {
   }, [leads]);
 
   const formatPrice = (price: number) =>
-    price.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
+    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredLeads.length) setSelectedIds([]);
+    else setSelectedIds(filteredLeads.map((l) => l.id));
+  };
+  const handleRefresh = () => { setSelectedIds([]); refetch(); };
 
   const getScoreBadge = (score: number) => {
     if (score > 80) return (
@@ -171,13 +184,21 @@ const ScraperLeads = () => {
             </div>
           )}
 
-          {/* Filter */}
-          <div className="flex items-center gap-3 mb-4">
-            <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
-            <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
-            {hotOnly && filteredLeads.length > 0 && (
-              <Badge variant="secondary">{filteredLeads.length}</Badge>
-            )}
+          {/* Filter + Bulk */}
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
+              <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
+              {hotOnly && filteredLeads.length > 0 && (
+                <Badge variant="secondary">{filteredLeads.length}</Badge>
+              )}
+            </div>
+            <ScraperBulkActions
+              selectedIds={selectedIds}
+              onClearSelection={() => setSelectedIds([])}
+              onRefresh={handleRefresh}
+              allLeads={filteredLeads}
+            />
           </div>
 
           {/* Table */}
@@ -193,13 +214,19 @@ const ScraperLeads = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={selectedIds.length === filteredLeads.length && filteredLeads.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
                       <TableHead className="font-semibold">{language === "ro" ? "Proprietate" : "Property"}</TableHead>
                       <TableHead className="font-semibold text-center">{t.score}</TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
                       <TableHead className="font-semibold text-right">{t.profit3y}</TableHead>
                       <TableHead className="font-semibold text-right">{t.monthlyExtra}</TableHead>
                       <TableHead className="font-semibold text-center">{t.status}</TableHead>
-                      <TableHead className="font-semibold text-center"></TableHead>
+                      <TableHead className="font-semibold text-center w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -209,6 +236,12 @@ const ScraperLeads = () => {
                         className="hover:bg-muted/30 cursor-pointer transition-colors"
                         onClick={() => setSelectedLead(lead)}
                       >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.includes(lead.id)}
+                            onCheckedChange={() => toggleSelect(lead.id)}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium max-w-[220px] truncate">{lead.title}</TableCell>
                         <TableCell className="text-center">{getScoreBadge(lead.lead_score)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price)}</TableCell>
@@ -216,13 +249,12 @@ const ScraperLeads = () => {
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
                         <TableCell className="text-center">{getStatusBadge(lead.status)}</TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
-                          >
-                            {t.details}
-                          </Button>
+                          <ScraperLeadActions
+                            leadId={lead.id}
+                            currentStatus={lead.status}
+                            onRefresh={handleRefresh}
+                            onViewDetails={() => setSelectedLead(lead)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -287,6 +319,25 @@ const ScraperLeads = () => {
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {language === "ro" ? "Vezi anunțul original" : "View original listing"}
                 </Button>
+
+                {/* Notes */}
+                {(() => {
+                  const notes = getLeadNotes(selectedLead.id);
+                  if (notes.length === 0) return null;
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                        <StickyNote className="w-4 h-4" /> Notițe ({notes.length})
+                      </p>
+                      {notes.map((n, i) => (
+                        <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-sm">
+                          <p className="text-muted-foreground">{n.text}</p>
+                          <p className="text-xs text-muted-foreground/60 mt-1">{new Date(n.date).toLocaleDateString("ro-RO")}</p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
