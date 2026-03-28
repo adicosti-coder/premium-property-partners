@@ -37,6 +37,8 @@ export const ScraperLeadActions = ({ leadId, currentStatus, leadData, onRefresh,
   const [noteText, setNoteText] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const formatPrice = (price: number) =>
+    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
 
   const handleStatusChange = async (newStatus: string) => {
     const { error } = await supabase
@@ -47,6 +49,34 @@ export const ScraperLeadActions = ({ leadId, currentStatus, leadData, onRefresh,
       toast.error("Eroare la schimbarea statusului");
     } else {
       toast.success(`Status actualizat: ${newStatus}`);
+
+      if (newStatus === "converted") {
+        try {
+          downloadLeadAnalysisPdf(leadData);
+          toast.success("PDF descărcat automat");
+
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "lead-converted",
+              recipientEmail: "info@realtrust.ro",
+              idempotencyKey: `lead-converted-${leadId}`,
+              templateData: {
+                title: leadData.title,
+                originalPrice: formatPrice(leadData.original_price),
+                extraProfit3y: formatPrice(leadData.extra_profit_3y),
+                monthlyExtra: formatPrice(leadData.monthly_extra),
+                leadScore: leadData.lead_score,
+                url: leadData.url,
+              },
+            },
+          });
+          toast.success("Email trimis către echipă");
+        } catch (e) {
+          console.error("Conversion automation error:", e);
+          toast.error("Eroare la automatizare");
+        }
+      }
+
       onRefresh();
     }
   };
