@@ -37,6 +37,7 @@ const ScraperLeads = () => {
   const navigate = useNavigate();
   const [selectedLead, setSelectedLead] = useState<ScraperLead | null>(null);
   const [hotOnly, setHotOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["scraper-leads"],
