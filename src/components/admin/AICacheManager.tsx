@@ -138,18 +138,6 @@ const AICacheManager = () => {
     }
   };
 
-  const clearAll = async () => {
-    setLoading((prev) => ({ ...prev, all: true }));
-    const tables = ["advisor_cache", "image_caption_cache", "translation_cache", "rewrite_cache"];
-    for (const t of tables) {
-      try {
-        await supabase.from(t as any).delete().gte("created_at", "1970-01-01");
-      } catch {}
-    }
-    toast({ title: "✅ Toate cache-urile AI au fost golite!" });
-    setLoading((prev) => ({ ...prev, all: false }));
-    analyzeCoverage();
-  };
 
   const generateMissing = async (type: "advisor" | "captions" | "all") => {
     setGenerating((prev) => ({ ...prev, [type]: true }));
@@ -464,20 +452,8 @@ const AICacheManager = () => {
                     Generează tot ce lipsește
                   </Button>
                 )}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={clearAll}
-                  disabled={!!loading.all}
-                >
-                  {loading.all ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                  Golire TOTALĂ
-                </Button>
               </div>
             </div>
-            <p className="text-xs text-destructive/70 mt-2">
-              ⚠️ Golirea totală va forța regenerarea tuturor textelor AI și va consuma credite semnificative.
-            </p>
           </CardContent>
         </Card>
       )}
