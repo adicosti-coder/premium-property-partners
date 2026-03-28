@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
@@ -5,13 +6,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageSummary from "@/components/PageSummary";
-import { generateSpeakableSchema, generateFAQSchema } from "@/utils/schemaGenerators";
+import { generateSpeakableSchema } from "@/utils/schemaGenerators";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import InvestmentAnalysisModal from "@/components/InvestmentAnalysisModal";
 import { 
   TrendingUp, 
   Building2, 
@@ -24,7 +26,8 @@ import {
   Clock,
   MapPin,
   CheckCircle2,
-  Star
+  Star,
+  FileText
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -57,8 +60,12 @@ interface InvestmentProperty {
 const Investitii = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [analysisModal, setAnalysisModal] = useState<{ open: boolean; propertyId: string; propertyName: string }>({
+    open: false,
+    propertyId: "",
+    propertyName: "",
+  });
 
-  // Fetch only properties with ROI data (investment opportunities)
   const { data: properties, isLoading } = useQuery({
     queryKey: ["investment-properties"],
     queryFn: async () => {
@@ -78,19 +85,20 @@ const Investitii = () => {
     ro: {
       title: "Investiții Imobiliare",
       metaDescription: "Oportunități de investiții imobiliare în Timișoara cu randament net 9%+ verificat. Due diligence complet, administrare profesională inclusă. Noi le găsim, noi le administrăm, tu încasezi!",
-      heroTitle: "Proprietăți cu Randament",
-      heroTitleHighlight: "Verificat",
-      heroSubtitle: "Noi le găsim, noi le administrăm, tu încasezi profitul.",
+      heroTitle: "Investment",
+      heroTitleHighlight: "Deal Room",
+      heroSubtitle: "Oportunități exclusive cu randament verificat. Noi le găsim, noi le administrăm, tu încasezi profitul.",
       heroBadge: "Deal Room · RealTrust",
       ctaContact: "Programează o Discuție",
       ctaCalculator: "Calculator ROI",
       gridTitle: "Oportunități Active",
       gridSubtitle: "Proprietăți cu potențial de investiție verificat și administrare profesională inclusă.",
       cardCapital: "Capital Necesar",
-      cardYield: "Yield Anual Estimat",
+      cardYield: "Randament Anual",
       cardRevenue: "Venit Lunar Estimat",
-      cardDetails: "Vezi Detalii",
-      cardCta: "Solicită Informații",
+      cardOccupancy: "Grad Ocupare",
+      cardDetails: "Vezi Detalii Complete",
+      cardCta: "Solicită Analiză",
       noProperties: "Momentan nu avem oportunități disponibile",
       noPropertiesDesc: "Contactează-ne pentru a fi notificat când apar noi proprietăți de investiție.",
       benefits: [
@@ -102,20 +110,21 @@ const Investitii = () => {
     },
     en: {
       title: "Real Estate Investments",
-      metaDescription: "Real estate investment opportunities in Timișoara with verified 9%+ net yield. Complete due diligence, professional management included. We find, manage, you collect!",
-      heroTitle: "Properties with Verified",
-      heroTitleHighlight: "Returns",
-      heroSubtitle: "We find them, we manage them, you collect the profit.",
+      metaDescription: "Real estate investment opportunities in Timișoara with verified 9%+ net yield. Complete due diligence, professional management included.",
+      heroTitle: "Investment",
+      heroTitleHighlight: "Deal Room",
+      heroSubtitle: "Exclusive opportunities with verified returns. We find, manage, you collect the profit.",
       heroBadge: "Deal Room · RealTrust",
       ctaContact: "Schedule a Discussion",
       ctaCalculator: "ROI Calculator",
       gridTitle: "Active Opportunities",
       gridSubtitle: "Properties with verified investment potential and professional management included.",
       cardCapital: "Required Capital",
-      cardYield: "Est. Annual Yield",
+      cardYield: "Annual Yield",
       cardRevenue: "Est. Monthly Revenue",
-      cardDetails: "View Details",
-      cardCta: "Request Info",
+      cardOccupancy: "Occupancy Rate",
+      cardDetails: "View Full Details",
+      cardCta: "Request Analysis",
       noProperties: "No opportunities available at the moment",
       noPropertiesDesc: "Contact us to be notified when new investment properties become available.",
       benefits: [
@@ -129,9 +138,7 @@ const Investitii = () => {
 
   const t = texts[language as keyof typeof texts] || texts.ro;
 
-  const breadcrumbItems = [
-    { label: t.title }
-  ];
+  const breadcrumbItems = [{ label: t.title }];
 
   const formatCurrency = (value: number | null) => {
     if (!value) return "—";
@@ -163,15 +170,13 @@ const Investitii = () => {
       />
       <Header />
       
-      {/* AI-friendly page summary */}
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="RealTrust oferă oportunități de investiții imobiliare în Timișoara cu randament net verificat de 9+ ROI. Due diligence complet, administrare profesională inclusă, raportare lunară. Noi le găsim, noi le administrăm, tu încasezi profitul."
-           summaryEn="RealTrust offers real estate investment opportunities in Timișoara with verified net yields of 9%+ ROI. Complete due diligence, professional management included, monthly reporting. We find them, we manage them, you collect the profit."
+          summaryRo="RealTrust oferă oportunități de investiții imobiliare în Timișoara cu randament net verificat de 9+ ROI. Due diligence complet, administrare profesională inclusă, raportare lunară."
+          summaryEn="RealTrust offers real estate investment opportunities in Timișoara with verified net yields of 9%+ ROI. Complete due diligence, professional management included."
         />
       </div>
       
-      {/* Breadcrumb */}
       <div className="container mx-auto px-6">
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
@@ -197,7 +202,6 @@ const Investitii = () => {
               {t.heroSubtitle}
             </p>
 
-            {/* Social proof stats strip */}
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
                 { value: "9.4%", label: language === "ro" ? "ROI Net Verificat" : "Verified Net ROI" },
@@ -206,7 +210,7 @@ const Investitii = () => {
                 { value: "4.9★", label: language === "ro" ? "Rating Mediu" : "Average Rating" },
               ].map((stat, i) => (
                 <div key={i} className="text-center px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
-                  <p className="text-2xl font-bold text-primary">{stat.value}</p>
+                  <p className="text-2xl font-bold font-sans text-primary">{stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
@@ -256,12 +260,12 @@ const Investitii = () => {
         </div>
       </section>
 
-      {/* ROI Case Study - chirie clasică vs sistem */}
+      {/* ROI Case Study */}
       <Suspense fallback={<div className="min-h-[300px]" />}>
         <ROICaseStudy />
       </Suspense>
 
-      {/* Investment Grid */}
+      {/* Investment Deal Room Grid */}
       <section className="py-16 md:py-24 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
@@ -277,173 +281,181 @@ const Investitii = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-slate-900 rounded-3xl border border-slate-700 overflow-hidden">
-                  <Skeleton className="h-48 w-full bg-slate-800" />
+                  <Skeleton className="h-56 w-full bg-slate-800" />
                   <div className="p-6">
-                    <Skeleton className="h-6 w-20 mb-4 bg-slate-800" />
-                    <Skeleton className="h-8 w-3/4 mb-2 bg-slate-800" />
+                    <Skeleton className="h-8 w-3/4 mb-4 bg-slate-800" />
                     <Skeleton className="h-4 w-1/2 mb-6 bg-slate-800" />
-                    <div className="space-y-3 border-t border-slate-700 pt-6">
-                      <Skeleton className="h-6 w-full bg-slate-800" />
-                      <Skeleton className="h-6 w-full bg-slate-800" />
-                      <Skeleton className="h-6 w-full bg-slate-800" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full bg-slate-800" />
+                      <Skeleton className="h-10 w-full bg-slate-800" />
+                      <Skeleton className="h-10 w-full bg-slate-800" />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : properties && properties.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {properties.map((property) => {
                 const propertyPath = `/proprietate/${property.slug ?? property.id}`;
 
                 return (
-                <div 
-                  key={property.id}
-                  className="group bg-slate-900 text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 min-w-0 overflow-hidden cursor-pointer"
-                  onClick={() => navigate(propertyPath)}
-                  role="link"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      navigate(propertyPath);
-                    }
-                  }}
-                >
-                  {/* Property Image */}
-                  <div className="relative h-48 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-6 overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
-                    {(() => {
-                      const imgPath = property.image_path || 
-                        (property.property_images?.find(i => i.is_primary)?.image_path) ||
-                        (property.property_images?.[0]?.image_path);
-                      if (imgPath) {
-                        const src = imgPath.startsWith("http") ? imgPath : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${imgPath}`;
-                        return (
-                          <img 
-                            src={src}
-                            alt={`${property.name} — ${language === "ro" ? "apartament investiție" : "investment apartment"} ${property.location}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        );
-                      }
-                      return (
-                        <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                          <Building2 className="w-16 h-16 text-slate-600" />
-                        </div>
-                      );
-                    })()}
-                    {/* ROI Golden Circle Overlay */}
-                    {property.roi_percentage && (
-                      <div className="absolute bottom-3 right-3 w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300/50 backdrop-blur-sm">
-                        <div className="text-center leading-tight">
-                          <span className="text-white font-bold text-sm block">{property.roi_percentage}%</span>
-                          <span className="text-amber-100/80 text-[9px] font-medium uppercase tracking-wider">ROI</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Property Code & ROI Badge */}
-                  <div className="flex items-center gap-2 mb-4 flex-wrap">
-                    {property.property_code && (
-                      <Badge className="bg-slate-700 text-white border-0 font-mono text-xs">
-                        {property.property_code}
-                      </Badge>
-                    )}
-                    {property.roi_percentage && (
-                      <Badge className="bg-amber-600 text-white border-0 px-3 py-1">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        Top ROI: {property.roi_percentage}%
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Property Name & Location */}
-                  <h3 className="text-2xl font-serif font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
-                    {property.name}
-                  </h3>
-                  <div className="flex items-center gap-1 text-sm text-slate-400 mb-6 min-w-0">
-                    <MapPin className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{property.location}</span>
-                  </div>
-
-                  {/* Financial Metrics */}
-                  <div className="space-y-3 mb-6 border-t border-slate-700 pt-6">
-                    {property.capital_necesar && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2">
-                          <Wallet className="w-4 h-4" />
-                          {t.cardCapital}
-                        </span>
-                        <span className="text-white font-bold text-lg">
-                          {formatCurrency(property.capital_necesar)}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {property.estimated_revenue && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2">
-                          <BarChart3 className="w-4 h-4" />
-                          {t.cardRevenue}
-                        </span>
-                        <span className="text-amber-500 font-bold text-lg">
-                          €{property.estimated_revenue}
-                        </span>
-                      </div>
-                    )}
-
-                    {property.roi_percentage && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4" />
-                          {t.cardYield}
-                        </span>
-                        <span className="text-green-400 font-bold text-lg">
-                          {property.roi_percentage}%
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Calculated yearly profit based on revenue */}
-                    {property.estimated_revenue && (
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-                        <span className="text-slate-300 font-medium">
-                          {language === "ro" ? "Profit Anual Estimat" : "Est. Annual Profit"}
-                        </span>
-                        <span className="text-amber-500 font-bold text-xl">
-                          €{(parseFloat(property.estimated_revenue.replace(/\./g, '').replace(',', '.')) * 12).toLocaleString("ro-RO")}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="space-y-3">
-                    <Button 
-                      variant="outline" 
-                      className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-500"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                  <div
+                    key={property.id}
+                    className="group bg-slate-900 rounded-2xl sm:rounded-3xl border border-amber-500/20 hover:border-amber-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/10 overflow-hidden cursor-pointer"
+                    onClick={() => navigate(propertyPath)}
+                    role="link"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
                         navigate(propertyPath);
-                      }}
-                    >
-                      {t.cardDetails}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                    <Button 
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de investiția" : "Hello, I'm interested in investing in"} ${property.property_code ? `[${property.property_code}]` : ""}: ${property.name}`)}`, '_blank');
-                      }}
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      {t.cardCta}
-                    </Button>
+                      }
+                    }}
+                  >
+                    {/* Image with ROI Overlay */}
+                    <div className="relative h-56 overflow-hidden">
+                      {(() => {
+                        const imgPath = property.image_path ||
+                          (property.property_images?.find(i => i.is_primary)?.image_path) ||
+                          (property.property_images?.[0]?.image_path);
+                        if (imgPath) {
+                          const src = imgPath.startsWith("http") ? imgPath : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${imgPath}`;
+                          return (
+                            <img
+                              src={src}
+                              alt={`${property.name} — ${language === "ro" ? "apartament investiție" : "investment apartment"} ${property.location}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            />
+                          );
+                        }
+                        return (
+                          <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                            <Building2 className="w-16 h-16 text-slate-600" />
+                          </div>
+                        );
+                      })()}
+                      {/* Dark gradient overlay bottom */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+
+                      {/* ROI Golden Overlay — top right */}
+                      {property.roi_percentage && (
+                        <div className="absolute top-0 right-0 overflow-hidden">
+                          <div className="bg-gradient-to-bl from-amber-500 via-amber-500 to-transparent w-32 h-32 flex items-start justify-end p-3">
+                            <div className="text-right">
+                              <span className="text-white font-sans font-black text-2xl leading-none block">
+                                {property.roi_percentage}%
+                              </span>
+                              <span className="text-amber-100/90 text-[10px] font-bold uppercase tracking-widest">
+                                ROI
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Property Code Badge */}
+                      {property.property_code && (
+                        <Badge className="absolute top-3 left-3 bg-slate-900/80 text-amber-400 border-amber-500/30 font-mono text-xs backdrop-blur-sm">
+                          {property.property_code}
+                        </Badge>
+                      )}
+
+                      {/* Property name on image */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <h3 className="text-xl font-serif font-bold text-white drop-shadow-lg group-hover:text-amber-300 transition-colors leading-tight">
+                          {property.name}
+                        </h3>
+                        <div className="flex items-center gap-1 text-sm text-slate-300 mt-1">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{property.location}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Financial Table */}
+                    <div className="p-5">
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {property.estimated_revenue && (
+                            <tr className="border-b border-slate-800">
+                              <td className="py-2.5 text-slate-400 flex items-center gap-2">
+                                <BarChart3 className="w-4 h-4 text-amber-500/70" />
+                                {t.cardRevenue}
+                              </td>
+                              <td className="py-2.5 text-right font-sans font-bold text-amber-400 text-base">
+                                €{property.estimated_revenue}
+                              </td>
+                            </tr>
+                          )}
+                          {property.capital_necesar && (
+                            <tr className="border-b border-slate-800">
+                              <td className="py-2.5 text-slate-400 flex items-center gap-2">
+                                <Wallet className="w-4 h-4 text-amber-500/70" />
+                                {t.cardCapital}
+                              </td>
+                              <td className="py-2.5 text-right font-sans font-bold text-white text-base">
+                                {formatCurrency(property.capital_necesar)}
+                              </td>
+                            </tr>
+                          )}
+                          <tr>
+                            <td className="py-2.5 text-slate-400 flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4 text-green-500/70" />
+                              {t.cardOccupancy}
+                            </td>
+                            <td className="py-2.5 text-right font-sans font-bold text-green-400 text-base">
+                              85–92%
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* Annual Profit Highlight */}
+                      {property.estimated_revenue && (
+                        <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+                          <span className="text-xs text-amber-300/80 font-medium uppercase tracking-wide">
+                            {language === "ro" ? "Profit Anual Est." : "Est. Annual Profit"}
+                          </span>
+                          <span className="font-sans font-black text-lg text-amber-400">
+                            €{(parseFloat(property.estimated_revenue.replace(/\./g, '').replace(',', '.')) * 12).toLocaleString("ro-RO")}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="mt-5 grid grid-cols-2 gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(propertyPath);
+                          }}
+                        >
+                          {t.cardDetails}
+                          <ArrowRight className="w-3 h-3 ml-1" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAnalysisModal({
+                              open: true,
+                              propertyId: property.id,
+                              propertyName: property.name,
+                            });
+                          }}
+                        >
+                          <FileText className="w-3 h-3 mr-1" />
+                          {t.cardCta}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
+                );
               })}
             </div>
           ) : (
@@ -461,7 +473,6 @@ const Investitii = () => {
             </div>
           )}
 
-          {/* Quick Calculator */}
           <div className="mt-16">
             <Suspense fallback={<div className="min-h-[400px]" />}>
               <InvestmentEngineV34 defaultPrice={95000} defaultRent={450} />
@@ -503,6 +514,14 @@ const Investitii = () => {
           </div>
         </div>
       </section>
+
+      {/* Analysis Request Modal */}
+      <InvestmentAnalysisModal
+        open={analysisModal.open}
+        onOpenChange={(open) => setAnalysisModal(prev => ({ ...prev, open }))}
+        propertyId={analysisModal.propertyId}
+        propertyName={analysisModal.propertyName}
+      />
 
       <GlobalConversionWidgets />
       <BackToTop />
