@@ -225,8 +225,18 @@ const AICacheManager = () => {
                     <li key={slug}>{getPropertyName(slug)}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-muted-foreground italic mt-2">
-                  💡 Se vor genera automat când cineva vizitează pagina proprietății.
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 text-xs"
+                  onClick={() => generateMissing("advisor")}
+                  disabled={!!generating.advisor}
+                >
+                  {generating.advisor ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                  Generează cele {coverage.advisor.missing.length} lipsă
+                </Button>
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  💡 Sau se vor genera automat când cineva vizitează pagina.
                 </p>
               </div>
             ) : (
