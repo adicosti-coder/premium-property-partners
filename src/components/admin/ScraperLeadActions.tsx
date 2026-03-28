@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { MoreHorizontal, Trash2, MessageSquare, CheckCircle, Phone, Eye, StickyNote } from "lucide-react";
+import { downloadLeadAnalysisPdf } from "@/utils/exportLeadAnalysisPdf";
 
 interface ScraperLeadActionsProps {
   leadId: string;
