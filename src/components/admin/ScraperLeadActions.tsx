@@ -32,7 +32,7 @@ const statusOptions = [
   { value: "rejected", label: "Respins", icon: Trash2 },
 ];
 
-export const ScraperLeadActions = ({ leadId, currentStatus, onRefresh, onViewDetails }: ScraperLeadActionsProps) => {
+export const ScraperLeadActions = ({ leadId, currentStatus, leadData, onRefresh, onViewDetails }: ScraperLeadActionsProps) => {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
