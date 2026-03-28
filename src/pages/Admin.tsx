@@ -13,7 +13,7 @@ import {
   Mail, MailCheck, Megaphone, Play, MapPin, Film, Lightbulb,
   FlaskConical, Shield, ShieldCheck, PenLine, MousePointerClick,
   Target, TrendingUp, LinkIcon, Search, Euro, Building2, Hotel,
-  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen,
+  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen, Sparkles,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -223,6 +223,10 @@ const Admin = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-card border border-border flex flex-wrap h-auto gap-1 p-2 overflow-x-auto max-w-full">
             {/* Alphabetically sorted tabs */}
+            <TabsTrigger value="ai-cache" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              AI Cache
+            </TabsTrigger>
             <TabsTrigger value="ab-testing" className="flex items-center gap-2">
               <FlaskConical className="w-4 h-4" />
               A/B Testing
@@ -357,6 +361,7 @@ const Admin = () => {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
           <TabsContent value="dashboard"><AdminDashboard /></TabsContent>
           <TabsContent value="leads"><LeadsManager /></TabsContent>
           <TabsContent value="bookings"><BookingManager /></TabsContent>
