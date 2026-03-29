@@ -352,8 +352,8 @@ const ScraperLeads = () => {
 
   const handleWhatsApp = (lead: ScraperLead) => {
     const fallbackMsg = lead.listing_type === "inchiriere"
-      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
-      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
+      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
+      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
     const msg = encodeURIComponent(lead.whatsapp_message || fallbackMsg);
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
@@ -417,7 +417,7 @@ const ScraperLeads = () => {
     if (!filteredLeads.length) return;
     const headers = ["Titlu", "Preț", "Tip", "Profit 3Y", "Extra/lună", "Scor", "Randament %", "Status", "Tags", "URL", "Data"];
     const rows = filteredLeads.map((l) => [
-      cleanTitle(l.title), l.original_price, l.listing_type, l.extra_profit_3y, l.monthly_extra, l.lead_score,
+      cleanTitleStatic(l.title), l.original_price, l.listing_type, l.extra_profit_3y, l.monthly_extra, l.lead_score,
       getYield(l) || "N/A", l.status, (l.tags || []).join("; "), l.url, l.created_at?.slice(0, 10),
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
@@ -513,7 +513,7 @@ const ScraperLeads = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitle(lead.title)}</h4>
+                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitleStatic(lead.title)}</h4>
                           {getPropertyBadge(lead.title)}
                         </div>
                         <div className="flex flex-col items-end gap-1">
@@ -562,7 +562,7 @@ const ScraperLeads = () => {
     return (
       <>
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-lg font-serif leading-tight">{cleanTitle(selectedLead.title)}</SheetTitle>
+          <SheetTitle className="text-lg font-serif leading-tight">{cleanTitleStatic(selectedLead.title)}</SheetTitle>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {getPropertyBadge(selectedLead.title)}
             {getScoreBadge(selectedLead.lead_score)}
@@ -734,7 +734,7 @@ const ScraperLeads = () => {
                 <tr className="border-b border-border">
                   <th className="text-left p-2 text-muted-foreground font-medium">Criteriu</th>
                   {compareLeads.map((l) => (
-                    <th key={l.id} className="text-center p-2 font-medium max-w-[200px]">{cleanTitle(l.title)}</th>
+                    <th key={l.id} className="text-center p-2 font-medium max-w-[200px]">{cleanTitleStatic(l.title)}</th>
                   ))}
                 </tr>
               </thead>
@@ -986,7 +986,7 @@ const ScraperLeads = () => {
                                 {getRelativeDate(lead.created_at)}
                               </span>
                             </div>
-                            <span className="truncate">{cleanTitle(lead.title)}</span>
+                            <span className="truncate">{cleanTitleStatic(lead.title)}</span>
                             <div className="flex gap-1 flex-wrap">
                               {getPropertyBadge(lead.title)}
                               {lead.tags?.slice(0, 2).map((tag) => {
@@ -1037,7 +1037,7 @@ const ScraperLeads = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const msg = lead.whatsapp_message || 
-                                  `Bună ziua! Vă contactez referitor la "${cleanTitle(lead.title)}". Mai este disponibil?`;
+                                  `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
                                 window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
                               }}
                               title="Trimite WhatsApp"
