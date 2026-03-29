@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     url: String(l.url ?? ""),
     status: String(l.status ?? "new"),
     listing_type: String(l.listing_type ?? "vanzare"),
+    source: l.source ? String(l.source) : "OLX",
   }));
 
   const { data, error } = await supabase

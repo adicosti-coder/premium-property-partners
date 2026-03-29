@@ -2801,6 +2801,7 @@ export type Database = {
           listing_type: string
           monthly_extra: number
           original_price: number
+          source: string | null
           status: string
           tags: string[]
           title: string
@@ -2817,6 +2818,7 @@ export type Database = {
           listing_type?: string
           monthly_extra?: number
           original_price?: number
+          source?: string | null
           status?: string
           tags?: string[]
           title: string
@@ -2833,6 +2835,7 @@ export type Database = {
           listing_type?: string
           monthly_extra?: number
           original_price?: number
+          source?: string | null
           status?: string
           tags?: string[]
           title?: string

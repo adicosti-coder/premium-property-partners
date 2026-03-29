@@ -42,6 +42,7 @@ interface ScraperLead {
   listing_type: string;
   admin_notes: string | null;
   tags: string[];
+  source: string;
 }
 
 interface StatusHistoryEntry {
@@ -81,7 +82,24 @@ const CONVERSATION_LABELS = [
   { value: "urgent", label: "🚨 Urgent", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-400" },
 ];
 
-// ── Quick Reply Templates ────────────────────────
+// ── Source Colors ────────────────────────────────
+const sourceColors: Record<string, string> = {
+  "OLX": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  "OLX-Nou": "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  "Storia": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "Publi24": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+};
+
+// ── Relative Date Helper ─────────────────────────
+const getRelativeDate = (dateStr: string) => {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+  if (diff === 0) return "Azi";
+  if (diff === 1) return "Ieri";
+  if (diff < 7) return `${diff} zile`;
+  return new Date(dateStr).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' });
+};
+
+
 const QUICK_REPLY_CATEGORIES = [
   {
     id: "proprietari",
@@ -907,7 +925,15 @@ const ScraperLeads = () => {
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
                         </TableCell>
                         <TableCell className="font-medium max-w-[220px]">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[lead.source] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+                                {lead.source ?? 'OLX'}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {getRelativeDate(lead.created_at)}
+                              </span>
+                            </div>
                             <span className="truncate">{cleanTitle(lead.title)}</span>
                             <div className="flex gap-1 flex-wrap">
                               {getPropertyBadge(lead.title)}
@@ -929,9 +955,25 @@ const ScraperLeads = () => {
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
                         <TableCell className="text-center">{getStatusBadge(lead.status)}</TableCell>
                         <TableCell className="text-center">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const msg = lead.whatsapp_message || 
+                                  `Bună ziua! Vă contactez referitor la "${cleanTitle(lead.title)}". Mai este disponibil?`;
+                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                              }}
+                              title="Trimite WhatsApp"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
