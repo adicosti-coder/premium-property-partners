@@ -46,6 +46,7 @@ interface ScraperLead {
   tags: string[];
   source: string;
   phone: string | null;
+  prospect_category: string | null;
 }
 
 interface StatusHistoryEntry {
@@ -223,7 +224,7 @@ const ScraperLeads = () => {
         ...d,
         listing_type: deriveListingType(d.title, d.listing_type),
         tags: d.tags || [],
-        _prospect_type: deriveProspectType(d.title),
+        _prospect_type: d.prospect_category || deriveProspectType(d.title),
       })) as (ScraperLead & { _prospect_type: string })[];
     },
     staleTime: 1000 * 60 * 2,
@@ -507,6 +508,38 @@ const ScraperLeads = () => {
     toast.success("Lead arhivat");
   };
 
+  // ── Assign Category (saves to phone_intelligence + lead) ──
+  const handleCategoryChange = async (lead: ScraperLead & { _prospect_type: string }, newCategory: string) => {
+    // Optimistic update
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.map((l: any) => l.id === lead.id ? { ...l, prospect_category: newCategory, _prospect_type: newCategory } : l) : old
+    );
+    if (selectedLead?.id === lead.id) {
+      setSelectedLead((prev) => prev ? { ...prev, prospect_category: newCategory } : null);
+    }
+
+    // Update lead's prospect_category
+    const { error } = await supabase.from("scraper_leads").update({ prospect_category: newCategory } as any).eq("id", lead.id);
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la schimbarea categoriei");
+      return;
+    }
+
+    // If lead has phone, also save to phone_intelligence for future auto-categorization
+    if (lead.phone) {
+      await supabase.from("phone_intelligence" as any).upsert({
+        phone_number: lead.phone,
+        category: newCategory,
+        is_blacklisted: false,
+        last_seen: new Date().toISOString(),
+      } as any, { onConflict: "phone_number" });
+    }
+
+    const label = PROSPECT_TYPES.find((p) => p.value === newCategory)?.label || newCategory;
+    toast.success(`Categorie: ${label}${lead.phone ? " (salvată și pentru viitoarele importuri)" : ""}`);
+  };
+
   // ── Scan (Scanează acum) ──────────────────────────
   const handleScrape = async () => {
     setIsScraping(true);
@@ -622,6 +655,25 @@ const ScraperLeads = () => {
             {getYield(selectedLead) && (
               <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 text-xs">{getYield(selectedLead)}%/an</Badge>
             )}
+          </div>
+          {/* Category Selector */}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs text-muted-foreground">Categorie:</span>
+            <Select
+              value={(selectedLead as any)._prospect_type || selectedLead.prospect_category || "proprietar"}
+              onValueChange={(val) => handleCategoryChange(selectedLead as any, val)}
+            >
+              <SelectTrigger className="h-7 w-40 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROSPECT_TYPES.map((pt) => (
+                  <SelectItem key={pt.value} value={pt.value} className="text-xs">
+                    {pt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </SheetHeader>
 
@@ -1058,7 +1110,24 @@ const ScraperLeads = () => {
                                 <Phone className="w-3 h-3" /> {lead.phone}
                               </span>
                             )}
-                            <div className="flex gap-1 flex-wrap">
+                            <div className="flex gap-1 flex-wrap items-center">
+                              <Select
+                                value={(lead as any)._prospect_type || "proprietar"}
+                                onValueChange={(val) => { handleCategoryChange(lead as any, val); }}
+                              >
+                                <SelectTrigger className="h-5 w-auto text-[10px] border-0 bg-muted/50 rounded px-1.5 py-0 focus:ring-0 gap-0.5 [&>svg]:h-2.5 [&>svg]:w-2.5" onClick={(e) => e.stopPropagation()}>
+                                  <SelectValue>
+                                    {PROSPECT_TYPES.find((p) => p.value === (lead as any)._prospect_type)?.icon || "🏠"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PROSPECT_TYPES.map((pt) => (
+                                    <SelectItem key={pt.value} value={pt.value} className="text-xs">
+                                      {pt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               {getPropertyBadge(lead.title)}
                               {lead.tags?.slice(0, 2).map((tag) => {
                                 const lbl = CONVERSATION_LABELS.find((l) => l.value === tag);
