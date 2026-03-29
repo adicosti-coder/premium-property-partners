@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
@@ -203,7 +203,7 @@ const ScraperLeads = () => {
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
-  const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
@@ -237,22 +237,33 @@ const ScraperLeads = () => {
         } else {
           toast.info(`🆕 Lead nou: ${cleanTitleStatic(newLead?.title || "")}`, { duration: 5000 });
         }
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [refetch]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Fetch Status History when lead selected ────────
+  // ── Sync editNotes when selectedLead changes ────────
   useEffect(() => {
-    if (!selectedLead) { setStatusHistory([]); return; }
-    supabase
-      .from("scraper_lead_status_history")
-      .select("*")
-      .eq("lead_id", selectedLead.id)
-      .order("changed_at", { ascending: false })
-      .then(({ data }) => setStatusHistory((data as StatusHistoryEntry[]) || []));
-  }, [selectedLead?.id]);
+    if (selectedLead) setEditNotes(selectedLead.admin_notes || "");
+  }, [selectedLead?.id, selectedLead?.admin_notes]);
+
+  // ── Status History via React Query ────────────────
+  const { data: statusHistory = [] } = useQuery({
+    queryKey: ["lead-status-history", selectedLead?.id],
+    queryFn: async () => {
+      if (!selectedLead?.id) return [];
+      const { data } = await supabase
+        .from("scraper_lead_status_history")
+        .select("*")
+        .eq("lead_id", selectedLead.id)
+        .order("changed_at", { ascending: false })
+        .limit(10);
+      return (data as StatusHistoryEntry[]) || [];
+    },
+    enabled: !!selectedLead?.id,
+    staleTime: 30_000,
+  });
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
@@ -298,7 +309,7 @@ const ScraperLeads = () => {
   const formatPrice = (price: number, suffix?: string) =>
     price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
   const getPriceSuffix = (lead: ScraperLead) => lead.listing_type === "inchiriere" ? "/lună" : "";
-  const cleanTitle = (title: string) => cleanTitleStatic(title);
+  
 
   const getPropertyBadge = (title: string) => {
     if (title.includes("🏢")) return <Badge className="bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/20 text-[10px] px-1.5 py-0">Ansamblu Nou</Badge>;
@@ -341,35 +352,48 @@ const ScraperLeads = () => {
 
   const handleWhatsApp = (lead: ScraperLead) => {
     const fallbackMsg = lead.listing_type === "inchiriere"
-      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
-      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
+      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
+      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
     const msg = encodeURIComponent(lead.whatsapp_message || fallbackMsg);
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
+    window.open(`https://wa.me/?text=${msg}`, "_blank", "noopener,noreferrer");
   };
 
-  // ── Inline Status Change ──────────────────────────
+  // ── Inline Status Change (optimistic) ──────────────
   const handleStatusChange = async (leadId: string, newStatus: string) => {
-    const { error } = await supabase.from("scraper_leads").update({ status: newStatus }).eq("id", leadId);
-    if (error) { toast.error("Eroare la schimbarea statusului"); return; }
-    toast.success(`Status: ${PIPELINE_STAGES.find((s) => s.value === newStatus)?.label || newStatus}`);
-    if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
-    refetch();
-    if (selectedLead?.id === leadId) {
-      const { data } = await supabase.from("scraper_lead_status_history").select("*").eq("lead_id", leadId).order("changed_at", { ascending: false });
-      setStatusHistory((data as StatusHistoryEntry[]) || []);
+    // Optimistic update
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, status: newStatus } : l) : old
+    );
+    if (selectedLead?.id === leadId)
+      setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
+
+    const { error } = await supabase.from("scraper_leads").update({ status: newStatus } as any).eq("id", leadId);
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la schimbarea statusului");
+      return;
     }
+    toast.success(`Status: ${PIPELINE_STAGES.find((s) => s.value === newStatus)?.label || newStatus}`);
+    queryClient.invalidateQueries({ queryKey: ["lead-status-history", leadId] });
   };
 
-  // ── Toggle Tag ────────────────────────────────────
+  // ── Toggle Tag (optimistic) ────────────────────────
   const toggleTag = async (leadId: string, tag: string) => {
     const lead = leads?.find((l) => l.id === leadId);
     if (!lead) return;
     const currentTags = lead.tags || [];
     const newTags = currentTags.includes(tag) ? currentTags.filter((t) => t !== tag) : [...currentTags, tag];
-    const { error } = await supabase.from("scraper_leads").update({ tags: newTags } as any).eq("id", leadId);
-    if (error) { toast.error("Eroare la etichete"); return; }
+    // Optimistic update
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, tags: newTags } : l) : old
+    );
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, tags: newTags } : null);
-    refetch();
+    const { error } = await supabase.from("scraper_leads").update({ tags: newTags } as any).eq("id", leadId);
+    if (error) {
+      toast.error("Eroare la etichete");
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      return;
+    }
   };
 
   // ── Save Notes ────────────────────────────────────
@@ -393,7 +417,7 @@ const ScraperLeads = () => {
     if (!filteredLeads.length) return;
     const headers = ["Titlu", "Preț", "Tip", "Profit 3Y", "Extra/lună", "Scor", "Randament %", "Status", "Tags", "URL", "Data"];
     const rows = filteredLeads.map((l) => [
-      cleanTitle(l.title), l.original_price, l.listing_type, l.extra_profit_3y, l.monthly_extra, l.lead_score,
+      cleanTitleStatic(l.title), l.original_price, l.listing_type, l.extra_profit_3y, l.monthly_extra, l.lead_score,
       getYield(l) || "N/A", l.status, (l.tags || []).join("; "), l.url, l.created_at?.slice(0, 10),
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
@@ -448,9 +472,10 @@ const ScraperLeads = () => {
     }
   };
 
-  const t = language === "ro"
+  const t = useMemo(() => language === "ro"
     ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
-    : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" };
+    : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" },
+  [language]);
 
   const statusLabel = (s: string | null) => {
     const stage = PIPELINE_STAGES.find((st) => st.value === (s || ""));
@@ -484,11 +509,11 @@ const ScraperLeads = () => {
                     <div
                       key={lead.id}
                       className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
-                      onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                      onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitle(lead.title)}</h4>
+                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitleStatic(lead.title)}</h4>
                           {getPropertyBadge(lead.title)}
                         </div>
                         <div className="flex flex-col items-end gap-1">
@@ -537,7 +562,7 @@ const ScraperLeads = () => {
     return (
       <>
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-lg font-serif leading-tight">{cleanTitle(selectedLead.title)}</SheetTitle>
+          <SheetTitle className="text-lg font-serif leading-tight">{cleanTitleStatic(selectedLead.title)}</SheetTitle>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {getPropertyBadge(selectedLead.title)}
             {getScoreBadge(selectedLead.lead_score)}
@@ -684,7 +709,7 @@ const ScraperLeads = () => {
           </Button>
 
           {/* Link to original */}
-          <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank")}>
+          <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank", "noopener,noreferrer")}>
             <ExternalLink className="w-4 h-4 mr-2" />
             Deschide anunțul original
           </Button>
@@ -709,7 +734,7 @@ const ScraperLeads = () => {
                 <tr className="border-b border-border">
                   <th className="text-left p-2 text-muted-foreground font-medium">Criteriu</th>
                   {compareLeads.map((l) => (
-                    <th key={l.id} className="text-center p-2 font-medium max-w-[200px]">{cleanTitle(l.title)}</th>
+                    <th key={l.id} className="text-center p-2 font-medium max-w-[200px]">{cleanTitleStatic(l.title)}</th>
                   ))}
                 </tr>
               </thead>
@@ -946,7 +971,7 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
@@ -961,7 +986,7 @@ const ScraperLeads = () => {
                                 {getRelativeDate(lead.created_at)}
                               </span>
                             </div>
-                            <span className="truncate">{cleanTitle(lead.title)}</span>
+                            <span className="truncate">{cleanTitleStatic(lead.title)}</span>
                             <div className="flex gap-1 flex-wrap">
                               {getPropertyBadge(lead.title)}
                               {lead.tags?.slice(0, 2).map((tag) => {
@@ -983,11 +1008,7 @@ const ScraperLeads = () => {
                         <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={lead.status}
-                            onValueChange={async (newStatus) => {
-                              await supabase.from('scraper_leads').update({ status: newStatus } as any).eq('id', lead.id);
-                              refetch();
-                              toast.success(`Status actualizat: ${PIPELINE_STAGES.find(s => s.value === newStatus)?.label ?? newStatus}`);
-                            }}
+                            onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
                           >
                             <SelectTrigger className="h-7 w-28 text-xs border-0 bg-transparent p-0 focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
                               <SelectValue>
@@ -1012,14 +1033,14 @@ const ScraperLeads = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const msg = lead.whatsapp_message || 
-                                  `Bună ziua! Vă contactez referitor la "${cleanTitle(lead.title)}". Mai este disponibil?`;
-                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                                  `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
+                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                               }}
                               title="Trimite WhatsApp"
                             >
                               <MessageCircle className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}>
                               <Eye className="w-4 h-4" />
                             </Button>
                           </div>
@@ -1042,7 +1063,7 @@ const ScraperLeads = () => {
                     : lead.lead_score >= 75 ? "border-l-4 border-l-amber-500"
                     : "border-l-4 border-l-border"
                   )}
-                  onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                  onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
@@ -1057,11 +1078,7 @@ const ScraperLeads = () => {
                       {getScoreBadge(lead.lead_score)}
                       <Select
                         value={lead.status}
-                        onValueChange={async (newStatus) => {
-                          await supabase.from('scraper_leads').update({ status: newStatus } as any).eq('id', lead.id);
-                          refetch();
-                          toast.success(`Status: ${PIPELINE_STAGES.find(s => s.value === newStatus)?.label ?? newStatus}`);
-                        }}
+                        onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
                       >
                         <SelectTrigger className="h-6 w-auto text-[10px] border-0 bg-transparent p-0 focus:ring-0 [&>svg]:h-3 [&>svg]:w-3" onClick={(e) => e.stopPropagation()}>
                           <SelectValue>{getStatusBadge(lead.status)}</SelectValue>
@@ -1091,7 +1108,7 @@ const ScraperLeads = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
-                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                       }}
                     >
                       <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
@@ -1100,7 +1117,7 @@ const ScraperLeads = () => {
                       size="sm"
                       variant="outline"
                       className="h-8 px-3 text-xs"
-                      onClick={(e) => { e.stopPropagation(); window.open(lead.url, '_blank'); }}
+                      onClick={(e) => { e.stopPropagation(); window.open(lead.url, '_blank', 'noopener,noreferrer'); }}
                     >
                       <ExternalLink className="h-3 w-3" />
                     </Button>
@@ -1108,7 +1125,7 @@ const ScraperLeads = () => {
                       size="sm"
                       variant="outline"
                       className="h-8 px-3 text-xs"
-                      onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <ChevronRight className="h-3 w-3" />
                     </Button>
