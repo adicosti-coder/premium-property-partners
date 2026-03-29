@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
@@ -203,7 +203,7 @@ const ScraperLeads = () => {
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
-  const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
@@ -237,22 +237,33 @@ const ScraperLeads = () => {
         } else {
           toast.info(`🆕 Lead nou: ${cleanTitleStatic(newLead?.title || "")}`, { duration: 5000 });
         }
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [refetch]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Fetch Status History when lead selected ────────
+  // ── Sync editNotes when selectedLead changes ────────
   useEffect(() => {
-    if (!selectedLead) { setStatusHistory([]); return; }
-    supabase
-      .from("scraper_lead_status_history")
-      .select("*")
-      .eq("lead_id", selectedLead.id)
-      .order("changed_at", { ascending: false })
-      .then(({ data }) => setStatusHistory((data as StatusHistoryEntry[]) || []));
-  }, [selectedLead?.id]);
+    if (selectedLead) setEditNotes(selectedLead.admin_notes || "");
+  }, [selectedLead?.id, selectedLead?.admin_notes]);
+
+  // ── Status History via React Query ────────────────
+  const { data: statusHistory = [] } = useQuery({
+    queryKey: ["lead-status-history", selectedLead?.id],
+    queryFn: async () => {
+      if (!selectedLead?.id) return [];
+      const { data } = await supabase
+        .from("scraper_lead_status_history")
+        .select("*")
+        .eq("lead_id", selectedLead.id)
+        .order("changed_at", { ascending: false })
+        .limit(10);
+      return (data as StatusHistoryEntry[]) || [];
+    },
+    enabled: !!selectedLead?.id,
+    staleTime: 30_000,
+  });
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
@@ -298,7 +309,7 @@ const ScraperLeads = () => {
   const formatPrice = (price: number, suffix?: string) =>
     price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
   const getPriceSuffix = (lead: ScraperLead) => lead.listing_type === "inchiriere" ? "/lună" : "";
-  const cleanTitle = (title: string) => cleanTitleStatic(title);
+  
 
   const getPropertyBadge = (title: string) => {
     if (title.includes("🏢")) return <Badge className="bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/20 text-[10px] px-1.5 py-0">Ansamblu Nou</Badge>;
@@ -347,29 +358,42 @@ const ScraperLeads = () => {
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
-  // ── Inline Status Change ──────────────────────────
+  // ── Inline Status Change (optimistic) ──────────────
   const handleStatusChange = async (leadId: string, newStatus: string) => {
-    const { error } = await supabase.from("scraper_leads").update({ status: newStatus }).eq("id", leadId);
-    if (error) { toast.error("Eroare la schimbarea statusului"); return; }
-    toast.success(`Status: ${PIPELINE_STAGES.find((s) => s.value === newStatus)?.label || newStatus}`);
-    if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
-    refetch();
-    if (selectedLead?.id === leadId) {
-      const { data } = await supabase.from("scraper_lead_status_history").select("*").eq("lead_id", leadId).order("changed_at", { ascending: false });
-      setStatusHistory((data as StatusHistoryEntry[]) || []);
+    // Optimistic update
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, status: newStatus } : l) : old
+    );
+    if (selectedLead?.id === leadId)
+      setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
+
+    const { error } = await supabase.from("scraper_leads").update({ status: newStatus } as any).eq("id", leadId);
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la schimbarea statusului");
+      return;
     }
+    toast.success(`Status: ${PIPELINE_STAGES.find((s) => s.value === newStatus)?.label || newStatus}`);
+    queryClient.invalidateQueries({ queryKey: ["lead-status-history", leadId] });
   };
 
-  // ── Toggle Tag ────────────────────────────────────
+  // ── Toggle Tag (optimistic) ────────────────────────
   const toggleTag = async (leadId: string, tag: string) => {
     const lead = leads?.find((l) => l.id === leadId);
     if (!lead) return;
     const currentTags = lead.tags || [];
     const newTags = currentTags.includes(tag) ? currentTags.filter((t) => t !== tag) : [...currentTags, tag];
-    const { error } = await supabase.from("scraper_leads").update({ tags: newTags } as any).eq("id", leadId);
-    if (error) { toast.error("Eroare la etichete"); return; }
+    // Optimistic update
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, tags: newTags } : l) : old
+    );
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, tags: newTags } : null);
-    refetch();
+    const { error } = await supabase.from("scraper_leads").update({ tags: newTags } as any).eq("id", leadId);
+    if (error) {
+      toast.error("Eroare la etichete");
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      return;
+    }
   };
 
   // ── Save Notes ────────────────────────────────────
@@ -448,9 +472,10 @@ const ScraperLeads = () => {
     }
   };
 
-  const t = language === "ro"
+  const t = useMemo(() => language === "ro"
     ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
-    : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" };
+    : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" },
+  [language]);
 
   const statusLabel = (s: string | null) => {
     const stage = PIPELINE_STAGES.find((st) => st.value === (s || ""));
