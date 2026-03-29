@@ -8,18 +8,20 @@ import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
+  Search, Loader2, Handshake, Calendar, MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -49,13 +51,23 @@ interface StatusHistoryEntry {
   changed_at: string;
 }
 
-// ── Pipeline Stages ──────────────────────────────
+// ── Pipeline Stages (extended from Bot Prospectare) ──────────
 const PIPELINE_STAGES = [
   { value: "new", label: "Nou", emoji: "🆕", color: "border-t-blue-400 bg-blue-50/50 dark:bg-blue-950/20" },
-  { value: "contacted", label: "Contactat", emoji: "📱", color: "border-t-amber-400 bg-amber-50/50 dark:bg-amber-950/20" },
-  { value: "converted", label: "Convertit", emoji: "✅", color: "border-t-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20" },
+  { value: "reviewed", label: "Revizuit", emoji: "👁️", color: "border-t-yellow-400 bg-yellow-50/50 dark:bg-yellow-950/20" },
+  { value: "contacted", label: "Contactat", emoji: "📱", color: "border-t-orange-400 bg-orange-50/50 dark:bg-orange-950/20" },
+  { value: "interested", label: "Interesat", emoji: "🤝", color: "border-t-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20" },
+  { value: "meeting", label: "Programat", emoji: "📅", color: "border-t-violet-400 bg-violet-50/50 dark:bg-violet-950/20" },
+  { value: "converted", label: "Client", emoji: "✅", color: "border-t-green-500 bg-green-50/50 dark:bg-green-950/20" },
   { value: "rejected", label: "Respins", emoji: "❌", color: "border-t-red-400 bg-red-50/50 dark:bg-red-950/20" },
 ];
+
+// ── Prospect Type Categories ─────────────────────
+const PROSPECT_TYPES = [
+  { value: "proprietar", label: "🏠 Proprietari", icon: "🏠" },
+  { value: "agentie", label: "🏢 Agenții", icon: "🏢" },
+  { value: "dezvoltator", label: "🏗️ Dezvoltatori", icon: "🏗️" },
+] as const;
 
 // ── Conversation Labels ──────────────────────────
 const CONVERSATION_LABELS = [
@@ -119,6 +131,10 @@ const QUICK_REPLY_CATEGORIES = [
         id: "agent-follow", label: "🔄 Follow-up", icon: Clock,
         getMessage: () => `Bună ziua! 😊\n\nRevenim cu propunerea de parteneriat. Comisionul de referral e 5% din venitul lunar, pe toată durata contractului.\n\nAveți 5 minute pentru o discuție? 📞`,
       },
+      {
+        id: "agent-proposal", label: "📋 Propunere formală", icon: CalendarCheck,
+        getMessage: () => `Bună ziua! 🎉\n\nMă bucur de interes! Iată ce oferim:\n\n📌 Comision referral: 5% din venitul net lunar\n📌 Plată lunară, pe toată durata contractului\n📌 Fără costuri pentru agenție\n📌 Raportare transparentă\n\nVă pot trimite contractul cadru pe email? 📧`,
+      },
     ],
   },
   {
@@ -141,6 +157,20 @@ function cleanTitleStatic(title: string) {
   return title.replace(/🏢|🏰/g, "").replace(/\|/g, "").replace(/\s{2,}/g, " ").trim();
 }
 
+function deriveListingType(title: string, dbType: string): string {
+  const upper = (title || "").toUpperCase();
+  if (upper.includes("INCHIRIERE") || upper.includes("ÎNCHIRIERE") || upper.includes("CHIRIE")) return "inchiriere";
+  if (upper.includes("VANZARE") || upper.includes("VÂNZARE")) return "vanzare";
+  return dbType || "vanzare";
+}
+
+function deriveProspectType(title: string): string {
+  const upper = (title || "").toUpperCase();
+  if (upper.includes("AGENTI") || upper.includes("AGENȚI") || upper.includes("AGENTIE") || upper.includes("AGENȚIE")) return "agentie";
+  if (upper.includes("DEZVOLTATOR") || upper.includes("ANSAMBLU") || upper.includes("COMPLEX") || upper.includes("🏢")) return "dezvoltator";
+  return "proprietar";
+}
+
 const ScraperLeads = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -154,6 +184,9 @@ const ScraperLeads = () => {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [isScraping, setIsScraping] = useState(false);
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
@@ -163,17 +196,12 @@ const ScraperLeads = () => {
         .select("*")
         .order("lead_score", { ascending: false });
       if (error) throw error;
-      return (data || []).map((d: any) => {
-        // Derive listing_type from title if DB value seems wrong
-        const title = (d.title || "").toUpperCase();
-        let derivedType = d.listing_type || "vanzare";
-        if (title.includes("INCHIRIERE") || title.includes("ÎNCHIRIERE") || title.includes("CHIRIE")) {
-          derivedType = "inchiriere";
-        } else if (title.includes("VANZARE") || title.includes("VÂNZARE")) {
-          derivedType = "vanzare";
-        }
-        return { ...d, listing_type: derivedType, tags: d.tags || [] };
-      }) as ScraperLead[];
+      return (data || []).map((d: any) => ({
+        ...d,
+        listing_type: deriveListingType(d.title, d.listing_type),
+        tags: d.tags || [],
+        _prospect_type: deriveProspectType(d.title),
+      })) as (ScraperLead & { _prospect_type: string })[];
     },
     staleTime: 1000 * 60 * 2,
   });
@@ -208,12 +236,18 @@ const ScraperLeads = () => {
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
-    let result = leads;
+    let result = leads as (ScraperLead & { _prospect_type: string })[];
     if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
+    if (filterType !== "all") result = result.filter((l) => l._prospect_type === filterType);
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
+    }
     return result;
-  }, [leads, hotOnly, listingTab]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery]);
 
+  // Stats based on filtered leads
   const profitStats = useMemo(() => {
     if (!filteredLeads || filteredLeads.length === 0) return null;
     const totalProfit3y = filteredLeads.reduce((s, l) => s + (l.extra_profit_3y || 0), 0);
@@ -228,12 +262,14 @@ const ScraperLeads = () => {
     return { totalProfit3y, totalMonthly, hotCount, chartData };
   }, [filteredLeads]);
 
+  // Pipeline stats (6 cards like Bot Prospectare)
   const pipelineStats = useMemo(() => {
-    if (!filteredLeads.length) return { total: 0, new: 0, contacted: 0, converted: 0, avgScore: 0 };
+    if (!filteredLeads.length) return { total: 0, new: 0, contacted: 0, interested: 0, converted: 0, avgScore: 0 };
     return {
       total: filteredLeads.length,
       new: filteredLeads.filter((l) => l.status === "new").length,
-      contacted: filteredLeads.filter((l) => l.status === "contacted").length,
+      contacted: filteredLeads.filter((l) => l.status === "contacted" || l.status === "reviewed").length,
+      interested: filteredLeads.filter((l) => l.status === "interested" || l.status === "meeting").length,
       converted: filteredLeads.filter((l) => l.status === "converted").length,
       avgScore: Math.round(filteredLeads.reduce((s, l) => s + l.lead_score, 0) / filteredLeads.length),
     };
@@ -269,14 +305,18 @@ const ScraperLeads = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const map: Record<string, string> = {
+    const stage = PIPELINE_STAGES.find((s) => s.value === status);
+    if (!stage) return <Badge variant="outline">{status}</Badge>;
+    const colorMap: Record<string, string> = {
       new: "bg-blue-500/15 text-blue-600 border-blue-500/20",
-      contacted: "bg-amber-500/15 text-amber-600 border-amber-500/20",
-      converted: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20",
+      reviewed: "bg-yellow-500/15 text-yellow-600 border-yellow-500/20",
+      contacted: "bg-orange-500/15 text-orange-600 border-orange-500/20",
+      interested: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20",
+      meeting: "bg-violet-500/15 text-violet-600 border-violet-500/20",
+      converted: "bg-green-500/15 text-green-600 border-green-500/20",
       rejected: "bg-red-500/15 text-red-600 border-red-500/20",
     };
-    const labels: Record<string, string> = { new: "Nou", contacted: "Contactat", converted: "Convertit", rejected: "Respins" };
-    return <Badge className={map[status] || "bg-muted text-muted-foreground"}>{labels[status] || status}</Badge>;
+    return <Badge className={colorMap[status] || "bg-muted text-muted-foreground"}>{stage.emoji} {stage.label}</Badge>;
   };
 
   const handleWhatsApp = (lead: ScraperLead) => {
@@ -291,10 +331,9 @@ const ScraperLeads = () => {
   const handleStatusChange = async (leadId: string, newStatus: string) => {
     const { error } = await supabase.from("scraper_leads").update({ status: newStatus }).eq("id", leadId);
     if (error) { toast.error("Eroare la schimbarea statusului"); return; }
-    toast.success(`Status: ${newStatus}`);
+    toast.success(`Status: ${PIPELINE_STAGES.find((s) => s.value === newStatus)?.label || newStatus}`);
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
     refetch();
-    // Refresh history
     if (selectedLead?.id === leadId) {
       const { data } = await supabase.from("scraper_lead_status_history").select("*").eq("lead_id", leadId).order("changed_at", { ascending: false });
       setStatusHistory((data as StatusHistoryEntry[]) || []);
@@ -334,17 +373,8 @@ const ScraperLeads = () => {
     if (!filteredLeads.length) return;
     const headers = ["Titlu", "Preț", "Tip", "Profit 3Y", "Extra/lună", "Scor", "Randament %", "Status", "Tags", "URL", "Data"];
     const rows = filteredLeads.map((l) => [
-      cleanTitle(l.title),
-      l.original_price,
-      l.listing_type,
-      l.extra_profit_3y,
-      l.monthly_extra,
-      l.lead_score,
-      getYield(l) || "N/A",
-      l.status,
-      (l.tags || []).join("; "),
-      l.url,
-      l.created_at?.slice(0, 10),
+      cleanTitle(l.title), l.original_price, l.listing_type, l.extra_profit_3y, l.monthly_extra, l.lead_score,
+      getYield(l) || "N/A", l.status, (l.tags || []).join("; "), l.url, l.created_at?.slice(0, 10),
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -367,7 +397,7 @@ const ScraperLeads = () => {
   // ── Export to Properties ──────────────────────────
   const exportToProperties = async (lead: ScraperLead) => {
     const { error } = await supabase.from("prospect_listings").insert({
-      prospect_type: lead.listing_type === "inchiriere" ? "inchiriere" : "vanzare",
+      prospect_type: (lead as any)._prospect_type || "proprietar",
       price: lead.original_price,
       location: "Timișoara",
       description: `Importat din Oportunități AI. Scor: ${lead.lead_score}. Randament: ${getYield(lead) || "N/A"}%/an. Profit extra 3Y: ${lead.extra_profit_3y}€`,
@@ -381,70 +411,93 @@ const ScraperLeads = () => {
     toast.success("Lead exportat cu succes în Prospect Listings!");
   };
 
+  // ── Scan (Scanează acum) ──────────────────────────
+  const handleScrape = async () => {
+    setIsScraping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-prospects", {
+        body: { max_results: 10 },
+      });
+      if (error) throw error;
+      toast.success(`Scanare completă! ${data?.new_listings || 0} anunțuri noi găsite.`);
+      refetch();
+    } catch (err: any) {
+      toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
   const t = language === "ro"
     ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
     : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" };
 
-  // ── Status label helper ───────────────────────────
   const statusLabel = (s: string | null) => {
-    const labels: Record<string, string> = { new: "Nou", contacted: "Contactat", converted: "Convertit", rejected: "Respins" };
-    return labels[s || ""] || s || "—";
+    const stage = PIPELINE_STAGES.find((st) => st.value === (s || ""));
+    return stage ? stage.label : s || "—";
   };
 
   // ── Pipeline Kanban View ──────────────────────────
-  const renderPipelineView = () => (
-    <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
-      {PIPELINE_STAGES.map((stage) => {
-        const stageLeads = filteredLeads.filter((l) => l.status === stage.value).sort((a, b) => b.lead_score - a.lead_score);
-        return (
-          <div key={stage.value} className={`min-w-[260px] max-w-[300px] flex-shrink-0 border-t-4 rounded-lg border border-border ${stage.color}`}>
-            <div className="p-3 border-b border-border/50">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm">{stage.emoji} {stage.label}</h3>
-                <Badge variant="secondary" className="text-xs">{stageLeads.length}</Badge>
+  const renderPipelineView = () => {
+    const activeStages = PIPELINE_STAGES.filter((stage) => {
+      if (["new", "contacted", "interested", "converted"].includes(stage.value)) return true;
+      return filteredLeads.some((l) => l.status === stage.value);
+    });
+
+    return (
+      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
+        {activeStages.map((stage) => {
+          const stageLeads = filteredLeads.filter((l) => l.status === stage.value).sort((a, b) => b.lead_score - a.lead_score);
+          return (
+            <div key={stage.value} className={`min-w-[260px] max-w-[300px] flex-shrink-0 border-t-4 rounded-lg border border-border ${stage.color}`}>
+              <div className="p-3 border-b border-border/50">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">{stage.emoji} {stage.label}</h3>
+                  <Badge variant="secondary" className="text-xs">{stageLeads.length}</Badge>
+                </div>
               </div>
+              <ScrollArea className="h-[500px]">
+                <div className="p-2 space-y-2">
+                  {stageLeads.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-8">Gol</p>
+                  ) : stageLeads.map((lead) => (
+                    <div
+                      key={lead.id}
+                      className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
+                      onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitle(lead.title)}</h4>
+                          {getPropertyBadge(lead.title)}
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {getScoreBadge(lead.lead_score)}
+                          {getYield(lead) && <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">{getYield(lead)}%/an</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+                        <span className="font-mono">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-mono">+{formatPrice(lead.monthly_extra)}/lu</span>
+                      </div>
+                      {lead.tags?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {lead.tags.map((tag) => {
+                            const lbl = CONVERSATION_LABELS.find((l) => l.value === tag);
+                            return lbl ? <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${lbl.color}`}>{lbl.label}</span> : null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
-            <ScrollArea className="h-[500px]">
-              <div className="p-2 space-y-2">
-                {stageLeads.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">Gol</p>
-                ) : stageLeads.map((lead) => (
-                  <div
-                    key={lead.id}
-                    className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
-                    onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm line-clamp-2">{cleanTitle(lead.title)}</h4>
-                        {getPropertyBadge(lead.title)}
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        {getScoreBadge(lead.lead_score)}
-                        {getYield(lead) && <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">{getYield(lead)}%/an</span>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
-                      <span className="font-mono">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-mono">+{formatPrice(lead.monthly_extra)}/lu</span>
-                    </div>
-                    {lead.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {lead.tags.map((tag) => {
-                          const lbl = CONVERSATION_LABELS.find((l) => l.value === tag);
-                          return lbl ? <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${lbl.color}`}>{lbl.label}</span> : null;
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        );
-      })}
-    </div>
-  );
+          );
+        })}
+      </div>
+    );
+  };
 
   const renderStatCard = (label: string, value: string | number, icon: React.ReactNode, colorClass: string) => (
     <Card className="bg-card border-border">
@@ -523,9 +576,14 @@ const ScraperLeads = () => {
                 <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-sm whitespace-pre-line leading-relaxed">
                   {generatedMessage}
                 </div>
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copyMessage(generatedMessage)}>
-                  <Copy className="w-3.5 h-3.5" /> Copiază mesajul
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copyMessage(generatedMessage)}>
+                    <Copy className="w-3.5 h-3.5" /> Copiază mesajul
+                  </Button>
+                  <Button size="sm" className="gap-1.5 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleWhatsApp(selectedLead)}>
+                    <Phone className="w-3.5 h-3.5" /> Trimite pe WhatsApp
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -670,6 +728,18 @@ const ScraperLeads = () => {
     );
   };
 
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    if (!leads) return { all: 0, proprietar: 0, agentie: 0, dezvoltator: 0 };
+    const base = listingTab === "all" ? leads : leads.filter((l) => l.listing_type === listingTab);
+    return {
+      all: base.length,
+      proprietar: base.filter((l) => (l as any)._prospect_type === "proprietar").length,
+      agentie: base.filter((l) => (l as any)._prospect_type === "agentie").length,
+      dezvoltator: base.filter((l) => (l as any)._prospect_type === "dezvoltator").length,
+    };
+  }, [leads, listingTab]);
+
   return (
     <>
       <SEOHead title={`${t.title} | RealTrust`} description={t.subtitle} noIndex />
@@ -692,7 +762,7 @@ const ScraperLeads = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* CSV Export */}
               <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1.5" disabled={!filteredLeads.length}>
                 <Download className="w-4 h-4" /> CSV
@@ -711,12 +781,17 @@ const ScraperLeads = () => {
                   <LayoutList className="w-4 h-4" /> Tabel
                 </Button>
               </div>
+              {/* Scanează acum */}
+              <Button onClick={handleScrape} disabled={isScraping} className="gap-1.5">
+                {isScraping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                {isScraping ? "Se scanează..." : "Scanează acum"}
+              </Button>
             </div>
           </div>
 
           {/* Listing Type Tabs */}
           <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
-            {([["all", "Toate", leads?.length || 0], ["vanzare", "Vânzare", leads?.filter((l) => l.listing_type === "vanzare").length || 0], ["inchiriere", "Închiriere", leads?.filter((l) => l.listing_type === "inchiriere").length || 0]] as const).map(([val, label, count]) => (
+            {([["all", "Toate", leads?.length || 0], ["vanzare", "Vânzare", leads?.filter((l) => l.listing_type === "vanzare").length || 0], ["inchiriere", "Închiriere", leads?.filter((l) => l.listing_type === "inchiriere").length || 0]] as [string, string, number][]).map(([val, label, count]) => (
               <button key={val} onClick={() => { setListingTab(val as any); setSelectedIds([]); }}
                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${listingTab === val ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                 {label}
@@ -725,18 +800,29 @@ const ScraperLeads = () => {
             ))}
           </div>
 
-          {/* Pipeline Stats */}
-          {viewMode === "pipeline" && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-              {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
-              {renderStatCard("Noi", pipelineStats.new, <Eye className="w-4 h-4 text-white" />, "bg-blue-500")}
-              {renderStatCard("Contactați", pipelineStats.contacted, <Phone className="w-4 h-4 text-white" />, "bg-amber-500")}
-              {renderStatCard("Convertiți", pipelineStats.converted, <CheckCircle className="w-4 h-4 text-white" />, "bg-emerald-500")}
-              {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
-            </div>
-          )}
+          {/* Category Filters (from Bot Prospectare) */}
+          <div className="flex items-center gap-2 flex-wrap mb-4">
+            <Button size="sm" variant={filterType === "all" ? "default" : "outline"} onClick={() => setFilterType("all")}>
+              📋 Toate ({categoryCounts.all})
+            </Button>
+            {PROSPECT_TYPES.map((pt) => (
+              <Button key={pt.value} size="sm" variant={filterType === pt.value ? "default" : "outline"} onClick={() => setFilterType(pt.value)}>
+                {pt.label} ({categoryCounts[pt.value as keyof typeof categoryCounts]})
+              </Button>
+            ))}
+          </div>
 
-          {/* Table Stats */}
+          {/* Stats (6 cards like Bot Prospectare) */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+            {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
+            {renderStatCard("Noi", pipelineStats.new, <Eye className="w-4 h-4 text-white" />, "bg-blue-500")}
+            {renderStatCard("Contactați", pipelineStats.contacted, <Phone className="w-4 h-4 text-white" />, "bg-orange-500")}
+            {renderStatCard("Interesați", pipelineStats.interested, <Handshake className="w-4 h-4 text-white" />, "bg-emerald-500")}
+            {renderStatCard("Clienți", pipelineStats.converted, <CheckCircle className="w-4 h-4 text-white" />, "bg-green-600")}
+            {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
+          </div>
+
+          {/* Table Stats (profit) */}
           {viewMode === "table" && profitStats && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card className="bg-card border-border"><CardContent className="pt-4 pb-4"><p className="text-xs text-muted-foreground mb-1">{t.totalProfit}</p><p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">+{formatPrice(profitStats.totalProfit3y)}</p></CardContent></Card>
@@ -746,10 +832,19 @@ const ScraperLeads = () => {
             </div>
           )}
 
-          {/* Filter + Bulk (table) */}
+          {/* Filter + Search + Bulk (table) */}
           {viewMode === "table" && (
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Caută după titlu..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9"
+                  />
+                </div>
                 <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
                 <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
                 {hotOnly && filteredLeads.length > 0 && <Badge variant="secondary">{filteredLeads.length}</Badge>}
@@ -761,6 +856,21 @@ const ScraperLeads = () => {
                   </Button>
                 )}
                 <ScraperBulkActions selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} onRefresh={handleRefresh} allLeads={filteredLeads} />
+              </div>
+            </div>
+          )}
+
+          {/* Pipeline search */}
+          {viewMode === "pipeline" && (
+            <div className="mb-4">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Caută după titlu..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9"
+                />
               </div>
             </div>
           )}
