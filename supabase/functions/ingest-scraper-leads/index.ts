@@ -1,36 +1,130 @@
-// ... (păstrează restul codului de Auth și validare de mai sus)
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  // --- Pregătirea datelor pentru tabel ---
-  const rows = leads.map((l: Record<string, any>) => ({
-    title: String(l.title ?? ""),
-    original_price: Number(l.original_price ?? 0),
-    // Calculăm extra_profit_3y dacă lipsește, bazat pe monthly_extra
-    extra_profit_3y: Number(l.extra_profit_3y ?? (Number(l.monthly_extra ?? 0) * 36)),
-    monthly_extra: Number(l.monthly_extra ?? 0),
-    lead_score: Number(l.lead_score ?? 0),
-    whatsapp_message: l.whatsapp_message ? String(l.whatsapp_message) : null,
-    url: String(l.url ?? ""),
-    status: String(l.status ?? "new"),
-    listing_type: String(l.listing_type ?? "vanzare"),
-    // Aici preluăm sursa (OLX, Storia, Publi24) trimisă de hostscan_scraper_v2.py
-    source: l.source ? String(l.source) : "OLX",
-    // Adăugăm timestamp-ul de ingestie
-    created_at: new Date().toISOString(),
-  }));
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-ingest-secret",
+};
 
-  // --- Upsert folosind service_role ---
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // ── Auth: validate ingest secret ──
+  const secret = req.headers.get("x-ingest-secret");
+  const expectedSecret = Deno.env.get("INGEST_SECRET");
+  if (!expectedSecret || secret !== expectedSecret) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const leads = Array.isArray(body) ? body : body.leads;
+  if (!Array.isArray(leads) || leads.length === 0) {
+    return new Response(JSON.stringify({ error: "No leads provided" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // ── Lookup phone_intelligence for category auto-assignment ──
+  const phones = leads
+    .map((l: any) => l.phone)
+    .filter((p: any) => typeof p === "string" && p.length > 0);
+
+  let phoneMap: Record<string, { category: string | null; is_blacklisted: boolean }> = {};
+  if (phones.length > 0) {
+    const { data: piData } = await supabase
+      .from("phone_intelligence")
+      .select("phone_number, category, is_blacklisted")
+      .in("phone_number", phones);
+    if (piData) {
+      for (const pi of piData) {
+        phoneMap[pi.phone_number] = {
+          category: pi.category,
+          is_blacklisted: pi.is_blacklisted,
+        };
+      }
+    }
+  }
+
+  // ── Filter out blacklisted phones ──
+  const filteredLeads = leads.filter((l: any) => {
+    if (l.phone && phoneMap[l.phone]?.is_blacklisted) {
+      console.log(`Skipping blacklisted phone: ${l.phone}`);
+      return false;
+    }
+    return true;
+  });
+
+  if (filteredLeads.length === 0) {
+    return new Response(
+      JSON.stringify({ success: true, count: 0, message: "Toate lead-urile aveau numere blocate." }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // ── Prepare rows ──
+  const rows = filteredLeads.map((l: Record<string, any>) => {
+    const phoneInfo = l.phone ? phoneMap[l.phone] : null;
+    return {
+      title: String(l.title ?? ""),
+      original_price: Number(l.original_price ?? 0),
+      extra_profit_3y: Number(l.extra_profit_3y ?? (Number(l.monthly_extra ?? 0) * 36)),
+      monthly_extra: Number(l.monthly_extra ?? 0),
+      lead_score: Number(l.lead_score ?? 0),
+      whatsapp_message: l.whatsapp_message ? String(l.whatsapp_message) : null,
+      url: String(l.url ?? ""),
+      status: String(l.status ?? "new"),
+      listing_type: String(l.listing_type ?? "vanzare"),
+      source: l.source ? String(l.source) : "OLX",
+      phone: l.phone ? String(l.phone) : null,
+      // Auto-assign category from phone_intelligence if available
+      ...(phoneInfo?.category ? { admin_notes: `[Auto] Categorie telefon: ${phoneInfo.category}` } : {}),
+      created_at: new Date().toISOString(),
+    };
+  });
+
+  // ── Also upsert phone_intelligence for new phones ──
+  const newPhones = filteredLeads
+    .filter((l: any) => l.phone && !phoneMap[l.phone])
+    .map((l: any) => ({
+      phone_number: String(l.phone),
+      category: null,
+      is_blacklisted: false,
+      last_seen: new Date().toISOString(),
+    }));
+
+  if (newPhones.length > 0) {
+    await supabase
+      .from("phone_intelligence")
+      .upsert(newPhones, { onConflict: "phone_number" });
+  }
+
+  // ── Upsert leads ──
   const { data, error } = await supabase
     .from("scraper_leads")
-    .upsert(rows, { 
-      onConflict: "url", 
-      ignoreDuplicates: false // Permite actualizarea datelor dacă URL-ul există deja
+    .upsert(rows, {
+      onConflict: "url",
+      ignoreDuplicates: false,
     })
-    .select("id, title, source, url");
+    .select("id, title, source, url, phone");
 
   if (error) {
     console.error("Supabase Upsert Error:", error.message);
@@ -40,11 +134,13 @@
     });
   }
 
+  const blacklistedCount = leads.length - filteredLeads.length;
   return new Response(
-    JSON.stringify({ 
-      success: true, 
+    JSON.stringify({
+      success: true,
       count: data?.length ?? 0,
-      message: `Ingestie reușită pentru ${data?.length ?? 0} lead-uri.` 
+      blacklisted_skipped: blacklistedCount,
+      message: `Ingestie reușită: ${data?.length ?? 0} lead-uri.${blacklistedCount > 0 ? ` ${blacklistedCount} blocate.` : ""}`,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );

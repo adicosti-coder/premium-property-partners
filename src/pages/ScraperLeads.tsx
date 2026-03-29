@@ -1093,6 +1093,25 @@ const ScraperLeads = () => {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}>
                               <Eye className="w-4 h-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                              onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
+                              title={lead.phone ? `Blacklist ${lead.phone}` : "Fără telefon"}
+                              disabled={!lead.phone}
+                            >
+                              <Ban className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                              title="Arhivează"
+                            >
+                              <Archive className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1178,6 +1197,26 @@ const ScraperLeads = () => {
                       onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <ChevronRight className="h-3 w-3" />
+                    </Button>
+                    {lead.phone && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs text-red-500 border-red-500/30 hover:bg-red-500/10"
+                        onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
+                        title={`Blacklist ${lead.phone}`}
+                      >
+                        <Ban className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                      title="Arhivează"
+                    >
+                      <Archive className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
