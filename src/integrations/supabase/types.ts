@@ -2823,6 +2823,7 @@ export type Database = {
           monthly_extra: number
           original_price: number
           phone: string | null
+          prospect_category: string | null
           source: string | null
           status: string
           tags: string[]
@@ -2841,6 +2842,7 @@ export type Database = {
           monthly_extra?: number
           original_price?: number
           phone?: string | null
+          prospect_category?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -2859,6 +2861,7 @@ export type Database = {
           monthly_extra?: number
           original_price?: number
           phone?: string | null
+          prospect_category?: string | null
           source?: string | null
           status?: string
           tags?: string[]
