@@ -12,7 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, Euro, StickyNote } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
+  Eye, CheckCircle, Phone, XCircle, LayoutList, Columns3, Star,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +37,13 @@ interface ScraperLead {
   listing_type: string;
 }
 
+const PIPELINE_STAGES = [
+  { value: "new", label: "Nou", emoji: "🆕", color: "border-t-blue-400 bg-blue-50/50 dark:bg-blue-950/20" },
+  { value: "contacted", label: "Contactat", emoji: "📱", color: "border-t-amber-400 bg-amber-50/50 dark:bg-amber-950/20" },
+  { value: "converted", label: "Convertit", emoji: "✅", color: "border-t-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20" },
+  { value: "rejected", label: "Respins", emoji: "❌", color: "border-t-red-400 bg-red-50/50 dark:bg-red-950/20" },
+];
+
 const ScraperLeads = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -40,6 +51,7 @@ const ScraperLeads = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [listingTab, setListingTab] = useState<"all" | "vanzare" | "inchiriere">("all");
+  const [viewMode, setViewMode] = useState<"table" | "pipeline">("table");
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
@@ -68,7 +80,6 @@ const ScraperLeads = () => {
     const totalMonthly = leads.reduce((s, l) => s + (l.monthly_extra || 0), 0);
     const hotCount = leads.filter((l) => l.lead_score > 80).length;
 
-    // Group by date for chart
     const byDate = new Map<string, number>();
     leads.forEach((l) => {
       const day = l.created_at?.slice(0, 10) || "N/A";
@@ -80,6 +91,17 @@ const ScraperLeads = () => {
 
     return { totalProfit3y, totalMonthly, hotCount, chartData };
   }, [leads]);
+
+  const pipelineStats = useMemo(() => {
+    if (!filteredLeads.length) return { total: 0, new: 0, contacted: 0, converted: 0, avgScore: 0 };
+    return {
+      total: filteredLeads.length,
+      new: filteredLeads.filter((l) => l.status === "new").length,
+      contacted: filteredLeads.filter((l) => l.status === "contacted").length,
+      converted: filteredLeads.filter((l) => l.status === "converted").length,
+      avgScore: Math.round(filteredLeads.reduce((s, l) => s + l.lead_score, 0) / filteredLeads.length),
+    };
+  }, [filteredLeads]);
 
   const formatPrice = (price: number, suffix?: string) =>
     price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
@@ -144,10 +166,14 @@ const ScraperLeads = () => {
       new: "bg-blue-500/15 text-blue-600 border-blue-500/20",
       contacted: "bg-amber-500/15 text-amber-600 border-amber-500/20",
       converted: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20",
+      rejected: "bg-red-500/15 text-red-600 border-red-500/20",
+    };
+    const labels: Record<string, string> = {
+      new: "Nou", contacted: "Contactat", converted: "Convertit", rejected: "Respins",
     };
     return (
       <Badge className={map[status] || "bg-muted text-muted-foreground"}>
-        {status === "new" ? "Nou" : status === "contacted" ? "Contactat" : status}
+        {labels[status] || status}
       </Badge>
     );
   };
@@ -164,6 +190,82 @@ const ScraperLeads = () => {
     ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
     : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" };
 
+  // ── Pipeline Kanban View ─────────────────────────────
+  const renderPipelineView = () => (
+    <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
+      {PIPELINE_STAGES.map((stage) => {
+        const stageLeads = filteredLeads
+          .filter((l) => l.status === stage.value)
+          .sort((a, b) => b.lead_score - a.lead_score);
+
+        return (
+          <div key={stage.value} className={`min-w-[260px] max-w-[300px] flex-shrink-0 border-t-4 rounded-lg border border-border ${stage.color}`}>
+            <div className="p-3 border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">{stage.emoji} {stage.label}</h3>
+                <Badge variant="secondary" className="text-xs">{stageLeads.length}</Badge>
+              </div>
+            </div>
+            <ScrollArea className="h-[500px]">
+              <div className="p-2 space-y-2">
+                {stageLeads.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-8">Gol</p>
+                ) : stageLeads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
+                    onClick={() => setSelectedLead(lead)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm line-clamp-2">{cleanTitle(lead.title)}</h4>
+                        {getPropertyBadge(lead.title)}
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        {getScoreBadge(lead.lead_score)}
+                        {getYield(lead) && (
+                          <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">{getYield(lead)}%/an</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+                      <span className="font-mono">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-mono">+{formatPrice(lead.monthly_extra)}/lu</span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2">
+                      <a
+                        href={lead.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors bg-muted/50 px-1.5 py-0.5 rounded"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Link
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // ── Stat Card ────────────────────────────────────────
+  const renderStatCard = (label: string, value: string | number, icon: React.ReactNode, colorClass: string) => (
+    <Card className="bg-card border-border">
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${colorClass}`}>{icon}</div>
+        <div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <>
       <SEOHead title={`${t.title} | RealTrust`} description={t.subtitle} noIndex />
@@ -171,23 +273,72 @@ const ScraperLeads = () => {
       <main className="min-h-screen bg-background pt-24 pb-16">
         <div className="container mx-auto px-4 md:px-6">
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+          <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
-                <Zap className="w-5 h-5 text-white" />
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                  <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
-                <p className="text-sm text-muted-foreground">{t.subtitle}</p>
-              </div>
+            </div>
+            {/* View Mode Toggle */}
+            <div className="flex border border-border rounded-lg overflow-hidden">
+              <Button
+                size="sm"
+                variant={viewMode === "pipeline" ? "default" : "ghost"}
+                onClick={() => setViewMode("pipeline")}
+                className="rounded-none gap-1.5"
+              >
+                <Columns3 className="w-4 h-4" /> Pipeline
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === "table" ? "default" : "ghost"}
+                onClick={() => setViewMode("table")}
+                className="rounded-none gap-1.5"
+              >
+                <LayoutList className="w-4 h-4" /> Tabel
+              </Button>
             </div>
           </div>
 
-          {/* Stats & Chart */}
-          {profitStats && (
+          {/* Listing Type Tabs */}
+          <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
+            {([["all", "Toate"], ["vanzare", "Vânzare"], ["inchiriere", "Închiriere"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => { setListingTab(val); setSelectedIds([]); }}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  listingTab === val
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Pipeline Stats Row */}
+          {viewMode === "pipeline" && (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+              {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
+              {renderStatCard("Noi", pipelineStats.new, <Eye className="w-4 h-4 text-white" />, "bg-blue-500")}
+              {renderStatCard("Contactați", pipelineStats.contacted, <Phone className="w-4 h-4 text-white" />, "bg-amber-500")}
+              {renderStatCard("Convertiți", pipelineStats.converted, <CheckCircle className="w-4 h-4 text-white" />, "bg-emerald-500")}
+              {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
+            </div>
+          )}
+
+          {/* Table Stats & Chart (only in table mode) */}
+          {viewMode === "table" && profitStats && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card className="bg-card border-border">
                 <CardContent className="pt-4 pb-4">
@@ -224,47 +375,34 @@ const ScraperLeads = () => {
             </div>
           )}
 
-          {/* Listing Type Tabs */}
-          <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
-            {([["all", "Toate"], ["vanzare", "Vânzare"], ["inchiriere", "Închiriere"]] as const).map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => { setListingTab(val); setSelectedIds([]); }}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  listingTab === val
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Filter + Bulk */}
-          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
-              <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
-              {hotOnly && filteredLeads.length > 0 && (
-                <Badge variant="secondary">{filteredLeads.length}</Badge>
-              )}
+          {/* Filter + Bulk (table mode) */}
+          {viewMode === "table" && (
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <Switch checked={hotOnly} onCheckedChange={setHotOnly} />
+                <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
+                {hotOnly && filteredLeads.length > 0 && (
+                  <Badge variant="secondary">{filteredLeads.length}</Badge>
+                )}
+              </div>
+              <ScraperBulkActions
+                selectedIds={selectedIds}
+                onClearSelection={() => setSelectedIds([])}
+                onRefresh={handleRefresh}
+                allLeads={filteredLeads}
+              />
             </div>
-            <ScraperBulkActions
-              selectedIds={selectedIds}
-              onClearSelection={() => setSelectedIds([])}
-              onRefresh={handleRefresh}
-              allLeads={filteredLeads}
-            />
-          </div>
+          )}
 
-          {/* Table */}
+          {/* Content */}
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}
             </div>
           ) : filteredLeads.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">{t.noData}</div>
+          ) : viewMode === "pipeline" ? (
+            renderPipelineView()
           ) : (
             <div className="rounded-xl border border-border overflow-hidden bg-card">
               <div className="overflow-x-auto">
