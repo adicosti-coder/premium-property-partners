@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -14,11 +14,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
-  ThumbsUp, HelpCircle,
+  ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -39,6 +40,13 @@ interface ScraperLead {
   listing_type: string;
   admin_notes: string | null;
   tags: string[];
+}
+
+interface StatusHistoryEntry {
+  id: string;
+  old_status: string | null;
+  new_status: string;
+  changed_at: string;
 }
 
 // ── Pipeline Stages ──────────────────────────────
@@ -68,50 +76,34 @@ const QUICK_REPLY_CATEGORIES = [
     label: "🏠 Proprietari",
     replies: [
       {
-        id: "prop-first",
-        label: "👋 Primul contact",
-        icon: MessageCircle,
+        id: "prop-first", label: "👋 Primul contact", icon: MessageCircle,
         getMessage: (l: ScraperLead) => {
           const title = cleanTitleStatic(l.title);
           return `Bună ziua! 👋\n\nAm văzut proprietatea dvs. "${title}".\n\nȘtiați că proprietarii din Timișoara câștigă cu 40-60% mai mult în regim hotelier decât dintr-o chirie normală? Noi ne ocupăm de tot — de la curățenie la oaspeți.\n\nDacă vă interesează o estimare gratuită, scrieți-mi „DA" și vă trimit calculul în 5 minute. Fără nicio obligație! 😊`;
         },
       },
       {
-        id: "prop-follow1",
-        label: "🔄 Follow-up #1",
-        icon: Clock,
+        id: "prop-follow1", label: "🔄 Follow-up #1", icon: Clock,
         getMessage: (l: ScraperLead) => {
           const title = cleanTitleStatic(l.title);
           return `Bună ziua! 😊\n\nV-am scris zilele trecute referitor la "${title}". Înțeleg că sunteți ocupat(ă), dar voiam să vă spun că tocmai am finalizat o analiză.\n\nProprietarii din zonă câștigă în medie ${l.monthly_extra > 0 ? l.monthly_extra.toLocaleString("ro-RO") + "€" : "1.200€"}/lună net din regim hotelier.\n\nScrieți-mi „DA" dacă vă interesează! 🏠`;
         },
       },
       {
-        id: "prop-follow2",
-        label: "⏰ Follow-up #2",
-        icon: Clock,
-        getMessage: () =>
-          `Bună ziua!\n\nÎncerc ultima oară — nu vreau să deranjez. 😊\n\nDacă v-ați gândit vreodată să câștigați mai mult din apartament fără bătăi de cap, noi facem asta de peste 2 ani.\n\nDacă nu e momentul potrivit, nicio problemă! Vă urez o zi frumoasă! 🙏`,
+        id: "prop-follow2", label: "⏰ Follow-up #2", icon: Clock,
+        getMessage: () => `Bună ziua!\n\nÎncerc ultima oară — nu vreau să deranjez. 😊\n\nDacă v-ați gândit vreodată să câștigați mai mult din apartament fără bătăi de cap, noi facem asta de peste 2 ani.\n\nDacă nu e momentul potrivit, nicio problemă! Vă urez o zi frumoasă! 🙏`,
       },
       {
-        id: "prop-meeting",
-        label: "📅 Propunere întâlnire",
-        icon: CalendarCheck,
-        getMessage: () =>
-          `Super, mă bucur că sunteți interesat(ă)! 🎉\n\nCel mai bine ar fi să ne vedem 15-20 minute la apartament.\n\nCând v-ar conveni?\n• Luni-Vineri: 10:00-18:00\n• Sâmbătă: 10:00-14:00\n\nSpuneți-mi o zi și confirm imediat! 📅`,
+        id: "prop-meeting", label: "📅 Propunere întâlnire", icon: CalendarCheck,
+        getMessage: () => `Super, mă bucur că sunteți interesat(ă)! 🎉\n\nCel mai bine ar fi să ne vedem 15-20 minute la apartament.\n\nCând v-ar conveni?\n• Luni-Vineri: 10:00-18:00\n• Sâmbătă: 10:00-14:00\n\nSpuneți-mi o zi și confirm imediat! 📅`,
       },
       {
-        id: "prop-after",
-        label: "✅ După întâlnire",
-        icon: ThumbsUp,
-        getMessage: () =>
-          `Bună ziua! 😊\n\nMultumesc pentru întâlnire! Apartamentul arată foarte bine și are potențial excelent.\n\nVă trimit contractul și detaliile pe email. Dacă aveți întrebări, sunt la dispoziție! 🙏`,
+        id: "prop-after", label: "✅ După întâlnire", icon: ThumbsUp,
+        getMessage: () => `Bună ziua! 😊\n\nMultumesc pentru întâlnire! Apartamentul arată foarte bine și are potențial excelent.\n\nVă trimit contractul și detaliile pe email. Dacă aveți întrebări, sunt la dispoziție! 🙏`,
       },
       {
-        id: "prop-objection",
-        label: "🤔 Răspuns obiecții",
-        icon: HelpCircle,
-        getMessage: () =>
-          `Înțeleg perfect! 😊\n\n✅ Contract minim 1 an, ieșire în 30 zile\n✅ Garanție chirie minimă lunară\n✅ Noi plătim utilitățile și reparațiile\n✅ Apartamentul e asigurat integral\n✅ Raport lunar detaliat\n\nProgramăm o discuție de 15 min? 🤝`,
+        id: "prop-objection", label: "🤔 Răspuns obiecții", icon: HelpCircle,
+        getMessage: () => `Înțeleg perfect! 😊\n\n✅ Contract minim 1 an, ieșire în 30 zile\n✅ Garanție chirie minimă lunară\n✅ Noi plătim utilitățile și reparațiile\n✅ Apartamentul e asigurat integral\n✅ Raport lunar detaliat\n\nProgramăm o discuție de 15 min? 🤝`,
       },
     ],
   },
@@ -120,18 +112,12 @@ const QUICK_REPLY_CATEGORIES = [
     label: "🏢 Agenții",
     replies: [
       {
-        id: "agent-intro",
-        label: "👋 Parteneriat",
-        icon: MessageCircle,
-        getMessage: () =>
-          `Bună ziua! 👋\n\nSunt de la RealTrust ApartHotel.\n\n📈 Proprietarii câștigă 40-60% mai mult\n🤝 Agenția primește comision de referral\n🔄 Parteneriat pe termen lung\n\nV-ar interesa o discuție de 10 minute? 😊`,
+        id: "agent-intro", label: "👋 Parteneriat", icon: MessageCircle,
+        getMessage: () => `Bună ziua! 👋\n\nSunt de la RealTrust ApartHotel.\n\n📈 Proprietarii câștigă 40-60% mai mult\n🤝 Agenția primește comision de referral\n🔄 Parteneriat pe termen lung\n\nV-ar interesa o discuție de 10 minute? 😊`,
       },
       {
-        id: "agent-follow",
-        label: "🔄 Follow-up",
-        icon: Clock,
-        getMessage: () =>
-          `Bună ziua! 😊\n\nRevenim cu propunerea de parteneriat. Comisionul de referral e 5% din venitul lunar, pe toată durata contractului.\n\nAveți 5 minute pentru o discuție? 📞`,
+        id: "agent-follow", label: "🔄 Follow-up", icon: Clock,
+        getMessage: () => `Bună ziua! 😊\n\nRevenim cu propunerea de parteneriat. Comisionul de referral e 5% din venitul lunar, pe toată durata contractului.\n\nAveți 5 minute pentru o discuție? 📞`,
       },
     ],
   },
@@ -140,18 +126,12 @@ const QUICK_REPLY_CATEGORIES = [
     label: "🏗️ Dezvoltatori",
     replies: [
       {
-        id: "dev-intro",
-        label: "👋 Prim contact",
-        icon: MessageCircle,
-        getMessage: () =>
-          `Bună ziua! 👋\n\nAdministrăm apartamente în regim hotelier în Timișoara.\n\n🏠 Preluăm blocuri sau apartamente individuale\n📈 ROI 8-12% anual\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis la o întâlnire de 30 min? 🏗️`,
+        id: "dev-intro", label: "👋 Prim contact", icon: MessageCircle,
+        getMessage: () => `Bună ziua! 👋\n\nAdministrăm apartamente în regim hotelier în Timișoara.\n\n🏠 Preluăm blocuri sau apartamente individuale\n📈 ROI 8-12% anual\n🤝 Parteneriat exclusiv pe complex\n\nAți fi deschis la o întâlnire de 30 min? 🏗️`,
       },
       {
-        id: "dev-bulk",
-        label: "📦 Ofertă bloc",
-        icon: CalendarCheck,
-        getMessage: () =>
-          `Bună ziua! 🎉\n\nPachet Dezvoltator:\n• Preluăm minim 10 unități\n• Comision redus 15%\n• Design & staging inclus\n• Marketing dedicat\n\nCând ne-am putea vedea? 🤝`,
+        id: "dev-bulk", label: "📦 Ofertă bloc", icon: CalendarCheck,
+        getMessage: () => `Bună ziua! 🎉\n\nPachet Dezvoltator:\n• Preluăm minim 10 unități\n• Comision redus 15%\n• Design & staging inclus\n• Marketing dedicat\n\nCând ne-am putea vedea? 🤝`,
       },
     ],
   },
@@ -171,6 +151,9 @@ const ScraperLeads = () => {
   const [viewMode, setViewMode] = useState<"table" | "pipeline">("table");
   const [editNotes, setEditNotes] = useState("");
   const [generatedMessage, setGeneratedMessage] = useState("");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
@@ -184,6 +167,34 @@ const ScraperLeads = () => {
     },
     staleTime: 1000 * 60 * 2,
   });
+
+  // ── Realtime Alerts ────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel("scraper-leads-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scraper_leads" }, (payload: any) => {
+        const newLead = payload.new;
+        if (newLead?.lead_score > 80) {
+          toast.success(`🔥 Lead NOU cu scor ${newLead.lead_score}: ${cleanTitleStatic(newLead.title)}`, { duration: 8000 });
+        } else {
+          toast.info(`🆕 Lead nou: ${cleanTitleStatic(newLead?.title || "")}`, { duration: 5000 });
+        }
+        refetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refetch]);
+
+  // ── Fetch Status History when lead selected ────────
+  useEffect(() => {
+    if (!selectedLead) { setStatusHistory([]); return; }
+    supabase
+      .from("scraper_lead_status_history")
+      .select("*")
+      .eq("lead_id", selectedLead.id)
+      .order("changed_at", { ascending: false })
+      .then(({ data }) => setStatusHistory((data as StatusHistoryEntry[]) || []));
+  }, [selectedLead?.id]);
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
@@ -273,6 +284,11 @@ const ScraperLeads = () => {
     toast.success(`Status: ${newStatus}`);
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
     refetch();
+    // Refresh history
+    if (selectedLead?.id === leadId) {
+      const { data } = await supabase.from("scraper_lead_status_history").select("*").eq("lead_id", leadId).order("changed_at", { ascending: false });
+      setStatusHistory((data as StatusHistoryEntry[]) || []);
+    }
   };
 
   // ── Toggle Tag ────────────────────────────────────
@@ -303,9 +319,67 @@ const ScraperLeads = () => {
     toast.success("Mesaj copiat! Lipește-l în WhatsApp");
   };
 
+  // ── CSV Export ─────────────────────────────────────
+  const exportCSV = () => {
+    if (!filteredLeads.length) return;
+    const headers = ["Titlu", "Preț", "Tip", "Profit 3Y", "Extra/lună", "Scor", "Randament %", "Status", "Tags", "URL", "Data"];
+    const rows = filteredLeads.map((l) => [
+      cleanTitle(l.title),
+      l.original_price,
+      l.listing_type,
+      l.extra_profit_3y,
+      l.monthly_extra,
+      l.lead_score,
+      getYield(l) || "N/A",
+      l.status,
+      (l.tags || []).join("; "),
+      l.url,
+      l.created_at?.slice(0, 10),
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `scraper-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    toast.success(`${filteredLeads.length} lead-uri exportate în CSV`);
+  };
+
+  // ── Compare Toggle ────────────────────────────────
+  const toggleCompare = (id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) { toast.error("Maxim 3 lead-uri pentru comparare"); return prev; }
+      return [...prev, id];
+    });
+  };
+
+  // ── Export to Properties ──────────────────────────
+  const exportToProperties = async (lead: ScraperLead) => {
+    const { error } = await supabase.from("prospect_listings").insert({
+      prospect_type: lead.listing_type === "inchiriere" ? "inchiriere" : "vanzare",
+      price: lead.original_price,
+      location: "Timișoara",
+      description: `Importat din Oportunități AI. Scor: ${lead.lead_score}. Randament: ${getYield(lead) || "N/A"}%/an. Profit extra 3Y: ${lead.extra_profit_3y}€`,
+      admin_notes: lead.admin_notes || `Lead importat automat din scraper. URL: ${lead.url}`,
+      is_active: true,
+    } as any);
+    if (error) {
+      toast.error("Eroare la export: " + error.message);
+      return;
+    }
+    toast.success("Lead exportat cu succes în Prospect Listings!");
+  };
+
   const t = language === "ro"
     ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
     : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" };
+
+  // ── Status label helper ───────────────────────────
+  const statusLabel = (s: string | null) => {
+    const labels: Record<string, string> = { new: "Nou", contacted: "Contactat", converted: "Convertit", rejected: "Respins" };
+    return labels[s || ""] || s || "—";
+  };
 
   // ── Pipeline Kanban View ──────────────────────────
   const renderPipelineView = () => (
@@ -485,6 +559,23 @@ const ScraperLeads = () => {
             </div>
           </div>
 
+          {/* ── Status History Timeline ────────────── */}
+          {statusHistory.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-1.5"><History className="w-4 h-4" /> Istoric statusuri</p>
+              <div className="space-y-1.5 pl-3 border-l-2 border-border">
+                {statusHistory.slice(0, 10).map((h) => (
+                  <div key={h.id} className="flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground whitespace-nowrap">{new Date(h.changed_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                    <span className="text-muted-foreground">{statusLabel(h.old_status)}</span>
+                    <span>→</span>
+                    <span className="font-medium">{statusLabel(h.new_status)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── Note Interne ──────────────────────── */}
           <div className="space-y-2">
             <p className="text-sm font-semibold flex items-center gap-1.5"><StickyNote className="w-4 h-4" /> Note interne:</p>
@@ -498,6 +589,12 @@ const ScraperLeads = () => {
             <Button size="sm" onClick={saveNotes} className="bg-primary">Salvează note</Button>
           </div>
 
+          {/* ── Export to Properties ───────────────── */}
+          <Button variant="outline" className="w-full gap-2" onClick={() => exportToProperties(selectedLead)}>
+            <ArrowRightCircle className="w-4 h-4" />
+            Exportă în Prospect Listings
+          </Button>
+
           {/* Link to original */}
           <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank")}>
             <ExternalLink className="w-4 h-4 mr-2" />
@@ -505,6 +602,61 @@ const ScraperLeads = () => {
           </Button>
         </div>
       </>
+    );
+  };
+
+  // ── Compare Dialog ────────────────────────────────
+  const renderCompareDialog = () => {
+    const compareLeads = compareIds.map((id) => leads?.find((l) => l.id === id)).filter(Boolean) as ScraperLead[];
+    if (compareLeads.length < 2) return null;
+    return (
+      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><GitCompare className="w-5 h-5" /> Comparare Lead-uri ({compareLeads.length})</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left p-2 text-muted-foreground font-medium">Criteriu</th>
+                  {compareLeads.map((l) => (
+                    <th key={l.id} className="text-center p-2 font-medium max-w-[200px]">{cleanTitle(l.title)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {([
+                  ["Preț", (l: ScraperLead) => formatPrice(l.original_price, getPriceSuffix(l))],
+                  ["Scor", (l: ScraperLead) => String(l.lead_score)],
+                  ["Randament %/an", (l: ScraperLead) => (getYield(l) || "N/A") + "%"],
+                  ["Extra/lună", (l: ScraperLead) => "+" + formatPrice(l.monthly_extra)],
+                  ["Profit 3Y", (l: ScraperLead) => "+" + formatPrice(l.extra_profit_3y)],
+                  ["Tip", (l: ScraperLead) => l.listing_type === "inchiriere" ? "Închiriere" : "Vânzare"],
+                  ["Status", (l: ScraperLead) => statusLabel(l.status)],
+                  ["Etichete", (l: ScraperLead) => (l.tags || []).map((t) => CONVERSATION_LABELS.find((c) => c.value === t)?.label || t).join(", ") || "—"],
+                ] as [string, (l: ScraperLead) => string][]).map(([label, fn]) => (
+                  <tr key={label}>
+                    <td className="p-2 text-muted-foreground font-medium">{label}</td>
+                    {compareLeads.map((l) => {
+                      const vals = compareLeads.map(fn);
+                      const val = fn(l);
+                      const isBest = label === "Scor" || label === "Randament %/an" || label === "Extra/lună" || label === "Profit 3Y";
+                      const best = isBest ? vals.reduce((a, b) => parseFloat(a.replace(/[^0-9.,\-]/g, "").replace(",", ".")) > parseFloat(b.replace(/[^0-9.,\-]/g, "").replace(",", ".")) ? a : b) : null;
+                      return (
+                        <td key={l.id} className={`p-2 text-center font-mono ${val === best ? "text-emerald-600 font-bold" : ""}`}>{val}</td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => { setCompareIds([]); setCompareOpen(false); }}>Închide</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   };
 
@@ -530,13 +682,25 @@ const ScraperLeads = () => {
                 </div>
               </div>
             </div>
-            <div className="flex border border-border rounded-lg overflow-hidden">
-              <Button size="sm" variant={viewMode === "pipeline" ? "default" : "ghost"} onClick={() => setViewMode("pipeline")} className="rounded-none gap-1.5">
-                <Columns3 className="w-4 h-4" /> Pipeline
+            <div className="flex items-center gap-2">
+              {/* CSV Export */}
+              <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1.5" disabled={!filteredLeads.length}>
+                <Download className="w-4 h-4" /> CSV
               </Button>
-              <Button size="sm" variant={viewMode === "table" ? "default" : "ghost"} onClick={() => setViewMode("table")} className="rounded-none gap-1.5">
-                <LayoutList className="w-4 h-4" /> Tabel
-              </Button>
+              {/* Compare Button */}
+              {compareIds.length >= 2 && (
+                <Button size="sm" variant="secondary" onClick={() => setCompareOpen(true)} className="gap-1.5">
+                  <GitCompare className="w-4 h-4" /> Compară ({compareIds.length})
+                </Button>
+              )}
+              <div className="flex border border-border rounded-lg overflow-hidden">
+                <Button size="sm" variant={viewMode === "pipeline" ? "default" : "ghost"} onClick={() => setViewMode("pipeline")} className="rounded-none gap-1.5">
+                  <Columns3 className="w-4 h-4" /> Pipeline
+                </Button>
+                <Button size="sm" variant={viewMode === "table" ? "default" : "ghost"} onClick={() => setViewMode("table")} className="rounded-none gap-1.5">
+                  <LayoutList className="w-4 h-4" /> Tabel
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -579,7 +743,14 @@ const ScraperLeads = () => {
                 <span className="text-sm text-muted-foreground">{t.hotFilter}</span>
                 {hotOnly && filteredLeads.length > 0 && <Badge variant="secondary">{filteredLeads.length}</Badge>}
               </div>
-              <ScraperBulkActions selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} onRefresh={handleRefresh} allLeads={filteredLeads} />
+              <div className="flex items-center gap-2">
+                {compareIds.length > 0 && (
+                  <Button size="sm" variant="ghost" onClick={() => setCompareIds([])} className="text-xs">
+                    Resetează comparare
+                  </Button>
+                )}
+                <ScraperBulkActions selectedIds={selectedIds} onClearSelection={() => setSelectedIds([])} onRefresh={handleRefresh} allLeads={filteredLeads} />
+              </div>
             </div>
           )}
 
@@ -597,6 +768,7 @@ const ScraperLeads = () => {
                   <TableHeader>
                     <TableRow className="bg-muted/50">
                       <TableHead className="w-10"><Checkbox checked={selectedIds.length === filteredLeads.length && filteredLeads.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
+                      <TableHead className="w-10 text-center" title="Compară"><GitCompare className="w-4 h-4 mx-auto text-muted-foreground" /></TableHead>
                       <TableHead className="font-semibold">{language === "ro" ? "Proprietate" : "Property"}</TableHead>
                       <TableHead className="font-semibold text-center">{t.score}</TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
@@ -608,8 +780,11 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className="hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={`hover:bg-muted/30 cursor-pointer transition-colors ${compareIds.includes(lead.id) ? "bg-primary/5 ring-1 ring-inset ring-primary/20" : ""}`} onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
+                          <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
+                        </TableCell>
                         <TableCell className="font-medium max-w-[220px]">
                           <div className="flex flex-col gap-1">
                             <span className="truncate">{cleanTitle(lead.title)}</span>
@@ -653,6 +828,9 @@ const ScraperLeads = () => {
           {renderDetailPanel()}
         </SheetContent>
       </Sheet>
+
+      {/* Compare Dialog */}
+      {renderCompareDialog()}
 
       <Footer />
     </>
