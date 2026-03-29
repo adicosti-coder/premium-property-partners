@@ -1110,7 +1110,24 @@ const ScraperLeads = () => {
                                 <Phone className="w-3 h-3" /> {lead.phone}
                               </span>
                             )}
-                            <div className="flex gap-1 flex-wrap">
+                            <div className="flex gap-1 flex-wrap items-center">
+                              <Select
+                                value={(lead as any)._prospect_type || "proprietar"}
+                                onValueChange={(val) => { handleCategoryChange(lead as any, val); }}
+                              >
+                                <SelectTrigger className="h-5 w-auto text-[10px] border-0 bg-muted/50 rounded px-1.5 py-0 focus:ring-0 gap-0.5 [&>svg]:h-2.5 [&>svg]:w-2.5" onClick={(e) => e.stopPropagation()}>
+                                  <SelectValue>
+                                    {PROSPECT_TYPES.find((p) => p.value === (lead as any)._prospect_type)?.icon || "🏠"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PROSPECT_TYPES.map((pt) => (
+                                    <SelectItem key={pt.value} value={pt.value} className="text-xs">
+                                      {pt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               {getPropertyBadge(lead.title)}
                               {lead.tags?.slice(0, 2).map((tag) => {
                                 const lbl = CONVERSATION_LABELS.find((l) => l.value === tag);
