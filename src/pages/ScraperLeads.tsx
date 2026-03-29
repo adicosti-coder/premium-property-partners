@@ -716,10 +716,11 @@ const ScraperLeads = () => {
 
           {/* Listing Type Tabs */}
           <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
-            {([["all", "Toate"], ["vanzare", "Vânzare"], ["inchiriere", "Închiriere"]] as const).map(([val, label]) => (
-              <button key={val} onClick={() => { setListingTab(val); setSelectedIds([]); }}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${listingTab === val ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+            {([["all", "Toate", leads?.length || 0], ["vanzare", "Vânzare", leads?.filter((l) => l.listing_type === "vanzare").length || 0], ["inchiriere", "Închiriere", leads?.filter((l) => l.listing_type === "inchiriere").length || 0]] as const).map(([val, label, count]) => (
+              <button key={val} onClick={() => { setListingTab(val as any); setSelectedIds([]); }}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${listingTab === val ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                 {label}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${listingTab === val ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{count}</span>
               </button>
             ))}
           </div>
