@@ -224,7 +224,7 @@ const ScraperLeads = () => {
         ...d,
         listing_type: deriveListingType(d.title, d.listing_type),
         tags: d.tags || [],
-        _prospect_type: deriveProspectType(d.title),
+        _prospect_type: d.prospect_category || deriveProspectType(d.title),
       })) as (ScraperLead & { _prospect_type: string })[];
     },
     staleTime: 1000 * 60 * 2,
