@@ -509,7 +509,7 @@ const ScraperLeads = () => {
                     <div
                       key={lead.id}
                       className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
-                      onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                      onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -971,7 +971,7 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
@@ -1040,7 +1040,7 @@ const ScraperLeads = () => {
                             >
                               <MessageCircle className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}>
                               <Eye className="w-4 h-4" />
                             </Button>
                           </div>
@@ -1063,7 +1063,7 @@ const ScraperLeads = () => {
                     : lead.lead_score >= 75 ? "border-l-4 border-l-amber-500"
                     : "border-l-4 border-l-border"
                   )}
-                  onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                  onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
@@ -1125,7 +1125,7 @@ const ScraperLeads = () => {
                       size="sm"
                       variant="outline"
                       className="h-8 px-3 text-xs"
-                      onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <ChevronRight className="h-3 w-3" />
                     </Button>
