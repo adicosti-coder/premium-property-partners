@@ -926,6 +926,7 @@ const ScraperLeads = () => {
           ) : viewMode === "pipeline" ? (
             renderPipelineView()
           ) : (
+            <>
             {/* Desktop Table */}
             <div className="hidden md:block rounded-xl border border-border overflow-hidden bg-card">
               <div className="overflow-x-auto">
