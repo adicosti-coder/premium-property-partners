@@ -46,6 +46,7 @@ interface ScraperLead {
   tags: string[];
   source: string;
   phone: string | null;
+  prospect_category: string | null;
 }
 
 interface StatusHistoryEntry {
