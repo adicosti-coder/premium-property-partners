@@ -163,7 +163,17 @@ const ScraperLeads = () => {
         .select("*")
         .order("lead_score", { ascending: false });
       if (error) throw error;
-      return (data || []).map((d: any) => ({ ...d, tags: d.tags || [] })) as ScraperLead[];
+      return (data || []).map((d: any) => {
+        // Derive listing_type from title if DB value seems wrong
+        const title = (d.title || "").toUpperCase();
+        let derivedType = d.listing_type || "vanzare";
+        if (title.includes("INCHIRIERE") || title.includes("ÎNCHIRIERE") || title.includes("CHIRIE")) {
+          derivedType = "inchiriere";
+        } else if (title.includes("VANZARE") || title.includes("VÂNZARE")) {
+          derivedType = "vanzare";
+        }
+        return { ...d, listing_type: derivedType, tags: d.tags || [] };
+      }) as ScraperLead[];
     },
     staleTime: 1000 * 60 * 2,
   });
