@@ -313,7 +313,7 @@ const ScraperLeads = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price)}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price, getPriceSuffix(lead))}</TableCell>
                         <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
                         <TableCell className="text-center">{getStatusBadge(lead.status)}</TableCell>
