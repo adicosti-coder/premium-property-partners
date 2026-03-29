@@ -1008,11 +1008,7 @@ const ScraperLeads = () => {
                         <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={lead.status}
-                            onValueChange={async (newStatus) => {
-                              await supabase.from('scraper_leads').update({ status: newStatus } as any).eq('id', lead.id);
-                              refetch();
-                              toast.success(`Status actualizat: ${PIPELINE_STAGES.find(s => s.value === newStatus)?.label ?? newStatus}`);
-                            }}
+                            onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
                           >
                             <SelectTrigger className="h-7 w-28 text-xs border-0 bg-transparent p-0 focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
                               <SelectValue>
@@ -1082,11 +1078,7 @@ const ScraperLeads = () => {
                       {getScoreBadge(lead.lead_score)}
                       <Select
                         value={lead.status}
-                        onValueChange={async (newStatus) => {
-                          await supabase.from('scraper_leads').update({ status: newStatus } as any).eq('id', lead.id);
-                          refetch();
-                          toast.success(`Status: ${PIPELINE_STAGES.find(s => s.value === newStatus)?.label ?? newStatus}`);
-                        }}
+                        onValueChange={(newStatus) => handleStatusChange(lead.id, newStatus)}
                       >
                         <SelectTrigger className="h-6 w-auto text-[10px] border-0 bg-transparent p-0 focus:ring-0 [&>svg]:h-3 [&>svg]:w-3" onClick={(e) => e.stopPropagation()}>
                           <SelectValue>{getStatusBadge(lead.status)}</SelectValue>
