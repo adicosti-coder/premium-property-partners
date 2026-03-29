@@ -1786,6 +1786,27 @@ export type Database = {
           },
         ]
       }
+      phone_intelligence: {
+        Row: {
+          category: string | null
+          is_blacklisted: boolean | null
+          last_seen: string | null
+          phone_number: string
+        }
+        Insert: {
+          category?: string | null
+          is_blacklisted?: boolean | null
+          last_seen?: string | null
+          phone_number: string
+        }
+        Update: {
+          category?: string | null
+          is_blacklisted?: boolean | null
+          last_seen?: string | null
+          phone_number?: string
+        }
+        Relationships: []
+      }
       poi_favorites: {
         Row: {
           created_at: string
@@ -2801,6 +2822,7 @@ export type Database = {
           listing_type: string
           monthly_extra: number
           original_price: number
+          phone: string | null
           source: string | null
           status: string
           tags: string[]
@@ -2818,6 +2840,7 @@ export type Database = {
           listing_type?: string
           monthly_extra?: number
           original_price?: number
+          phone?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -2835,6 +2858,7 @@ export type Database = {
           listing_type?: string
           monthly_extra?: number
           original_price?: number
+          phone?: string | null
           source?: string | null
           status?: string
           tags?: string[]
