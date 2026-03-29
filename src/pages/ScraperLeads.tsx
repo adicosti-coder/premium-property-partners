@@ -30,6 +30,7 @@ interface ScraperLead {
   url: string;
   status: string;
   created_at: string;
+  listing_type: string;
 }
 
 const ScraperLeads = () => {
@@ -38,6 +39,7 @@ const ScraperLeads = () => {
   const [selectedLead, setSelectedLead] = useState<ScraperLead | null>(null);
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [listingTab, setListingTab] = useState<"all" | "vanzare" | "inchiriere">("all");
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
@@ -54,8 +56,11 @@ const ScraperLeads = () => {
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
-    return hotOnly ? leads.filter((l) => l.lead_score > 80) : leads;
-  }, [leads, hotOnly]);
+    let result = leads;
+    if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
+    if (hotOnly) result = result.filter((l) => l.lead_score > 80);
+    return result;
+  }, [leads, hotOnly, listingTab]);
 
   const profitStats = useMemo(() => {
     if (!leads || leads.length === 0) return null;
@@ -76,8 +81,11 @@ const ScraperLeads = () => {
     return { totalProfit3y, totalMonthly, hotCount, chartData };
   }, [leads]);
 
-  const formatPrice = (price: number) =>
-    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
+  const formatPrice = (price: number, suffix?: string) =>
+    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
+
+  const getPriceSuffix = (lead: ScraperLead) =>
+    lead.listing_type === "inchiriere" ? "/lună" : "";
 
   const getPropertyType = (title: string) => {
     if (title.includes("🏢")) return "ansamblu";
@@ -145,7 +153,10 @@ const ScraperLeads = () => {
   };
 
   const handleWhatsApp = (lead: ScraperLead) => {
-    const msg = encodeURIComponent(lead.whatsapp_message || "");
+    const fallbackMsg = lead.listing_type === "inchiriere"
+      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
+      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
+    const msg = encodeURIComponent(lead.whatsapp_message || fallbackMsg);
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
@@ -212,6 +223,23 @@ const ScraperLeads = () => {
               </Card>
             </div>
           )}
+
+          {/* Listing Type Tabs */}
+          <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
+            {([["all", "Toate"], ["vanzare", "Vânzare"], ["inchiriere", "Închiriere"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => { setListingTab(val); setSelectedIds([]); }}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  listingTab === val
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
           {/* Filter + Bulk */}
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
@@ -285,7 +313,7 @@ const ScraperLeads = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price)}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price, getPriceSuffix(lead))}</TableCell>
                         <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
                         <TableCell className="text-center">{getStatusBadge(lead.status)}</TableCell>
@@ -326,7 +354,7 @@ const ScraperLeads = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
                     <p className="text-xs text-muted-foreground mb-1">{t.price}</p>
-                    <p className="text-lg font-bold font-mono">{formatPrice(selectedLead.original_price)}</p>
+                    <p className="text-lg font-bold font-mono">{formatPrice(selectedLead.original_price, getPriceSuffix(selectedLead))}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">{t.profit3y}</p>

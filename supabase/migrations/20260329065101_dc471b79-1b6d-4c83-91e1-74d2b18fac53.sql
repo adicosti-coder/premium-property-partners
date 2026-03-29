@@ -1,0 +1,1 @@
+ALTER TABLE public.scraper_leads ADD COLUMN listing_type text NOT NULL DEFAULT 'vanzare';
