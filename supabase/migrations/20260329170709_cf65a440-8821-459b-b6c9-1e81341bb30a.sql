@@ -1,0 +1,1 @@
+ALTER TABLE scraper_leads ADD COLUMN IF NOT EXISTS source text DEFAULT 'OLX';
