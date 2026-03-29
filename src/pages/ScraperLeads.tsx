@@ -354,7 +354,7 @@ const ScraperLeads = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
                     <p className="text-xs text-muted-foreground mb-1">{t.price}</p>
-                    <p className="text-lg font-bold font-mono">{formatPrice(selectedLead.original_price)}</p>
+                    <p className="text-lg font-bold font-mono">{formatPrice(selectedLead.original_price, getPriceSuffix(selectedLead))}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">{t.profit3y}</p>
