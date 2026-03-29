@@ -1116,6 +1116,7 @@ const ScraperLeads = () => {
                 </div>
               ))}
             </div>
+            </>
           )}
         </div>
       </main>
