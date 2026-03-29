@@ -21,7 +21,7 @@ import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
-  Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight,
+  Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -45,6 +45,7 @@ interface ScraperLead {
   admin_notes: string | null;
   tags: string[];
   source: string;
+  phone: string | null;
 }
 
 interface StatusHistoryEntry {
@@ -214,6 +215,7 @@ const ScraperLeads = () => {
       const { data, error } = await supabase
         .from("scraper_leads")
         .select("*")
+        .not("status", "eq", "archived")
         .order("lead_score", { ascending: false });
       if (error) throw error;
       return (data || []).map((d: any) => ({
