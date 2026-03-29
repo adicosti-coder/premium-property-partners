@@ -508,6 +508,38 @@ const ScraperLeads = () => {
     toast.success("Lead arhivat");
   };
 
+  // ── Assign Category (saves to phone_intelligence + lead) ──
+  const handleCategoryChange = async (lead: ScraperLead & { _prospect_type: string }, newCategory: string) => {
+    // Optimistic update
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.map((l: any) => l.id === lead.id ? { ...l, prospect_category: newCategory, _prospect_type: newCategory } : l) : old
+    );
+    if (selectedLead?.id === lead.id) {
+      setSelectedLead((prev) => prev ? { ...prev, prospect_category: newCategory } : null);
+    }
+
+    // Update lead's prospect_category
+    const { error } = await supabase.from("scraper_leads").update({ prospect_category: newCategory } as any).eq("id", lead.id);
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la schimbarea categoriei");
+      return;
+    }
+
+    // If lead has phone, also save to phone_intelligence for future auto-categorization
+    if (lead.phone) {
+      await supabase.from("phone_intelligence" as any).upsert({
+        phone_number: lead.phone,
+        category: newCategory,
+        is_blacklisted: false,
+        last_seen: new Date().toISOString(),
+      } as any, { onConflict: "phone_number" });
+    }
+
+    const label = PROSPECT_TYPES.find((p) => p.value === newCategory)?.label || newCategory;
+    toast.success(`Categorie: ${label}${lead.phone ? " (salvată și pentru viitoarele importuri)" : ""}`);
+  };
+
   // ── Scan (Scanează acum) ──────────────────────────
   const handleScrape = async () => {
     setIsScraping(true);
