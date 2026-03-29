@@ -21,7 +21,7 @@ import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
-  Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight,
+  Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -45,6 +45,7 @@ interface ScraperLead {
   admin_notes: string | null;
   tags: string[];
   source: string;
+  phone: string | null;
 }
 
 interface StatusHistoryEntry {
@@ -63,6 +64,7 @@ const PIPELINE_STAGES = [
   { value: "meeting", label: "Programat", emoji: "📅", color: "border-t-violet-400 bg-violet-50/50 dark:bg-violet-950/20" },
   { value: "converted", label: "Client", emoji: "✅", color: "border-t-green-500 bg-green-50/50 dark:bg-green-950/20" },
   { value: "rejected", label: "Respins", emoji: "❌", color: "border-t-red-400 bg-red-50/50 dark:bg-red-950/20" },
+  { value: "archived", label: "Arhivat", emoji: "📦", color: "border-t-gray-400 bg-gray-50/50 dark:bg-gray-950/20" },
 ];
 
 // ── Prospect Type Categories ─────────────────────
@@ -214,6 +216,7 @@ const ScraperLeads = () => {
       const { data, error } = await supabase
         .from("scraper_leads")
         .select("*")
+        .not("status", "eq", "archived")
         .order("lead_score", { ascending: false });
       if (error) throw error;
       return (data || []).map((d: any) => ({
@@ -453,6 +456,53 @@ const ScraperLeads = () => {
       return;
     }
     toast.success("Lead exportat cu succes în Prospect Listings!");
+  };
+
+  // ── Blacklist Phone ──────────────────────────────
+  const handleBlacklist = async (lead: ScraperLead) => {
+    if (!lead.phone) {
+      toast.error("Lead-ul nu are număr de telefon");
+      return;
+    }
+    // Optimistic remove from UI
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.filter((l: any) => l.id !== lead.id) : old
+    );
+    if (selectedLead?.id === lead.id) setSelectedLead(null);
+
+    // Insert into phone_intelligence
+    const { error: piError } = await supabase.from("phone_intelligence" as any).upsert({
+      phone_number: lead.phone,
+      category: (lead as any)._prospect_type || "proprietar",
+      is_blacklisted: true,
+      last_seen: new Date().toISOString(),
+    } as any, { onConflict: "phone_number" });
+
+    // Archive the lead
+    const { error } = await supabase.from("scraper_leads").update({ status: "archived" } as any).eq("id", lead.id);
+
+    if (error || piError) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la blacklist");
+      return;
+    }
+    toast.success(`☠️ ${lead.phone} adăugat pe blacklist. Lead-ul a fost arhivat.`);
+  };
+
+  // ── Archive Lead (instead of delete) ─────────────
+  const handleArchive = async (leadId: string) => {
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.filter((l: any) => l.id !== leadId) : old
+    );
+    if (selectedLead?.id === leadId) setSelectedLead(null);
+
+    const { error } = await supabase.from("scraper_leads").update({ status: "archived" } as any).eq("id", leadId);
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la arhivare");
+      return;
+    }
+    toast.success("Lead arhivat");
   };
 
   // ── Scan (Scanează acum) ──────────────────────────
@@ -707,6 +757,20 @@ const ScraperLeads = () => {
             <ArrowRightCircle className="w-4 h-4" />
             Exportă în Prospect Listings
           </Button>
+
+          {/* Blacklist + Archive */}
+          <div className="flex gap-2">
+            {selectedLead.phone && (
+              <Button variant="outline" className="flex-1 gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10" onClick={() => handleBlacklist(selectedLead)}>
+                <Ban className="w-4 h-4" />
+                Blacklist {selectedLead.phone}
+              </Button>
+            )}
+            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleArchive(selectedLead.id)}>
+              <Archive className="w-4 h-4" />
+              Arhivează
+            </Button>
+          </div>
 
           {/* Link to original */}
           <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank", "noopener,noreferrer")}>
@@ -1043,6 +1107,25 @@ const ScraperLeads = () => {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}>
                               <Eye className="w-4 h-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                              onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
+                              title={lead.phone ? `Blacklist ${lead.phone}` : "Fără telefon"}
+                              disabled={!lead.phone}
+                            >
+                              <Ban className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                              title="Arhivează"
+                            >
+                              <Archive className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1128,6 +1211,26 @@ const ScraperLeads = () => {
                       onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <ChevronRight className="h-3 w-3" />
+                    </Button>
+                    {lead.phone && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs text-red-500 border-red-500/30 hover:bg-red-500/10"
+                        onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
+                        title={`Blacklist ${lead.phone}`}
+                      >
+                        <Ban className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                      title="Arhivează"
+                    >
+                      <Archive className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
