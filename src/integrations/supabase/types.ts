@@ -2765,6 +2765,7 @@ export type Database = {
           extra_profit_3y: number
           id: string
           lead_score: number
+          listing_type: string
           monthly_extra: number
           original_price: number
           status: string
@@ -2778,6 +2779,7 @@ export type Database = {
           extra_profit_3y?: number
           id?: string
           lead_score?: number
+          listing_type?: string
           monthly_extra?: number
           original_price?: number
           status?: string
@@ -2791,6 +2793,7 @@ export type Database = {
           extra_profit_3y?: number
           id?: string
           lead_score?: number
+          listing_type?: string
           monthly_extra?: number
           original_price?: number
           status?: string
