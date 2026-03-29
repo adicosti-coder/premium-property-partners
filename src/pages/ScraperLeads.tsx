@@ -457,6 +457,53 @@ const ScraperLeads = () => {
     toast.success("Lead exportat cu succes în Prospect Listings!");
   };
 
+  // ── Blacklist Phone ──────────────────────────────
+  const handleBlacklist = async (lead: ScraperLead) => {
+    if (!lead.phone) {
+      toast.error("Lead-ul nu are număr de telefon");
+      return;
+    }
+    // Optimistic remove from UI
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.filter((l: any) => l.id !== lead.id) : old
+    );
+    if (selectedLead?.id === lead.id) setSelectedLead(null);
+
+    // Insert into phone_intelligence
+    const { error: piError } = await supabase.from("phone_intelligence" as any).upsert({
+      phone_number: lead.phone,
+      category: (lead as any)._prospect_type || "proprietar",
+      is_blacklisted: true,
+      last_seen: new Date().toISOString(),
+    } as any, { onConflict: "phone_number" });
+
+    // Archive the lead
+    const { error } = await supabase.from("scraper_leads").update({ status: "archived" } as any).eq("id", lead.id);
+
+    if (error || piError) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la blacklist");
+      return;
+    }
+    toast.success(`☠️ ${lead.phone} adăugat pe blacklist. Lead-ul a fost arhivat.`);
+  };
+
+  // ── Archive Lead (instead of delete) ─────────────
+  const handleArchive = async (leadId: string) => {
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.filter((l: any) => l.id !== leadId) : old
+    );
+    if (selectedLead?.id === leadId) setSelectedLead(null);
+
+    const { error } = await supabase.from("scraper_leads").update({ status: "archived" } as any).eq("id", leadId);
+    if (error) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error("Eroare la arhivare");
+      return;
+    }
+    toast.success("Lead arhivat");
+  };
+
   // ── Scan (Scanează acum) ──────────────────────────
   const handleScrape = async () => {
     setIsScraping(true);
