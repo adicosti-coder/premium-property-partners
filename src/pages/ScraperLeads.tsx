@@ -82,7 +82,24 @@ const CONVERSATION_LABELS = [
   { value: "urgent", label: "🚨 Urgent", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-400" },
 ];
 
-// ── Quick Reply Templates ────────────────────────
+// ── Source Colors ────────────────────────────────
+const sourceColors: Record<string, string> = {
+  "OLX": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  "OLX-Nou": "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  "Storia": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "Publi24": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+};
+
+// ── Relative Date Helper ─────────────────────────
+const getRelativeDate = (dateStr: string) => {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+  if (diff === 0) return "Azi";
+  if (diff === 1) return "Ieri";
+  if (diff < 7) return `${diff} zile`;
+  return new Date(dateStr).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' });
+};
+
+
 const QUICK_REPLY_CATEGORIES = [
   {
     id: "proprietari",
