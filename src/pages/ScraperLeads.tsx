@@ -355,7 +355,7 @@ const ScraperLeads = () => {
       ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
       : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
     const msg = encodeURIComponent(lead.whatsapp_message || fallbackMsg);
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
+    window.open(`https://wa.me/?text=${msg}`, "_blank", "noopener,noreferrer");
   };
 
   // ── Inline Status Change (optimistic) ──────────────
@@ -709,7 +709,7 @@ const ScraperLeads = () => {
           </Button>
 
           {/* Link to original */}
-          <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank")}>
+          <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank", "noopener,noreferrer")}>
             <ExternalLink className="w-4 h-4 mr-2" />
             Deschide anunțul original
           </Button>
@@ -1038,7 +1038,7 @@ const ScraperLeads = () => {
                                 e.stopPropagation();
                                 const msg = lead.whatsapp_message || 
                                   `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
-                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                               }}
                               title="Trimite WhatsApp"
                             >
@@ -1116,7 +1116,7 @@ const ScraperLeads = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
-                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                       }}
                     >
                       <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
@@ -1125,7 +1125,7 @@ const ScraperLeads = () => {
                       size="sm"
                       variant="outline"
                       className="h-8 px-3 text-xs"
-                      onClick={(e) => { e.stopPropagation(); window.open(lead.url, '_blank'); }}
+                      onClick={(e) => { e.stopPropagation(); window.open(lead.url, '_blank', 'noopener,noreferrer'); }}
                     >
                       <ExternalLink className="h-3 w-3" />
                     </Button>
