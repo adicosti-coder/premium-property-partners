@@ -656,6 +656,25 @@ const ScraperLeads = () => {
               <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 text-xs">{getYield(selectedLead)}%/an</Badge>
             )}
           </div>
+          {/* Category Selector */}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs text-muted-foreground">Categorie:</span>
+            <Select
+              value={(selectedLead as any)._prospect_type || selectedLead.prospect_category || "proprietar"}
+              onValueChange={(val) => handleCategoryChange(selectedLead as any, val)}
+            >
+              <SelectTrigger className="h-7 w-40 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROSPECT_TYPES.map((pt) => (
+                  <SelectItem key={pt.value} value={pt.value} className="text-xs">
+                    {pt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </SheetHeader>
 
         <div className="space-y-5">
