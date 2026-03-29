@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
     whatsapp_message: String(l.whatsapp_message ?? ""),
     url: String(l.url ?? ""),
     status: String(l.status ?? "new"),
+    listing_type: String(l.listing_type ?? "vanzare"),
   }));
 
   const { data, error } = await supabase
