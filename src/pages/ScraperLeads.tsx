@@ -64,6 +64,7 @@ const PIPELINE_STAGES = [
   { value: "meeting", label: "Programat", emoji: "📅", color: "border-t-violet-400 bg-violet-50/50 dark:bg-violet-950/20" },
   { value: "converted", label: "Client", emoji: "✅", color: "border-t-green-500 bg-green-50/50 dark:bg-green-950/20" },
   { value: "rejected", label: "Respins", emoji: "❌", color: "border-t-red-400 bg-red-50/50 dark:bg-red-950/20" },
+  { value: "archived", label: "Arhivat", emoji: "📦", color: "border-t-gray-400 bg-gray-50/50 dark:bg-gray-950/20" },
 ];
 
 // ── Prospect Type Categories ─────────────────────
