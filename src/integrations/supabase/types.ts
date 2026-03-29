@@ -2761,6 +2761,7 @@ export type Database = {
       }
       scraper_leads: {
         Row: {
+          admin_notes: string | null
           created_at: string
           extra_profit_3y: number
           id: string
@@ -2769,12 +2770,14 @@ export type Database = {
           monthly_extra: number
           original_price: number
           status: string
+          tags: string[]
           title: string
           updated_at: string
           url: string
           whatsapp_message: string | null
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           extra_profit_3y?: number
           id?: string
@@ -2783,12 +2786,14 @@ export type Database = {
           monthly_extra?: number
           original_price?: number
           status?: string
+          tags?: string[]
           title: string
           updated_at?: string
           url: string
           whatsapp_message?: string | null
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           extra_profit_3y?: number
           id?: string
@@ -2797,6 +2802,7 @@ export type Database = {
           monthly_extra?: number
           original_price?: number
           status?: string
+          tags?: string[]
           title?: string
           updated_at?: string
           url?: string
