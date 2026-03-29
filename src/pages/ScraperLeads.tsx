@@ -215,18 +215,18 @@ const ScraperLeads = () => {
   }, [leads, hotOnly, listingTab]);
 
   const profitStats = useMemo(() => {
-    if (!leads || leads.length === 0) return null;
-    const totalProfit3y = leads.reduce((s, l) => s + (l.extra_profit_3y || 0), 0);
-    const totalMonthly = leads.reduce((s, l) => s + (l.monthly_extra || 0), 0);
-    const hotCount = leads.filter((l) => l.lead_score > 80).length;
+    if (!filteredLeads || filteredLeads.length === 0) return null;
+    const totalProfit3y = filteredLeads.reduce((s, l) => s + (l.extra_profit_3y || 0), 0);
+    const totalMonthly = filteredLeads.reduce((s, l) => s + (l.monthly_extra || 0), 0);
+    const hotCount = filteredLeads.filter((l) => l.lead_score > 80).length;
     const byDate = new Map<string, number>();
-    leads.forEach((l) => {
+    filteredLeads.forEach((l) => {
       const day = l.created_at?.slice(0, 10) || "N/A";
       byDate.set(day, (byDate.get(day) || 0) + (l.extra_profit_3y || 0));
     });
     const chartData = Array.from(byDate.entries()).map(([date, profit]) => ({ date: date.slice(5), profit })).slice(-7);
     return { totalProfit3y, totalMonthly, hotCount, chartData };
-  }, [leads]);
+  }, [filteredLeads]);
 
   const pipelineStats = useMemo(() => {
     if (!filteredLeads.length) return { total: 0, new: 0, contacted: 0, converted: 0, avgScore: 0 };
