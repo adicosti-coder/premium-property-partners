@@ -224,6 +224,23 @@ const ScraperLeads = () => {
             </div>
           )}
 
+          {/* Listing Type Tabs */}
+          <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
+            {([["all", "Toate"], ["vanzare", "Vânzare"], ["inchiriere", "Închiriere"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => { setListingTab(val); setSelectedIds([]); }}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  listingTab === val
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* Filter + Bulk */}
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
             <div className="flex items-center gap-3">
