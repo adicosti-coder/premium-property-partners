@@ -926,7 +926,8 @@ const ScraperLeads = () => {
           ) : viewMode === "pipeline" ? (
             renderPipelineView()
           ) : (
-            <div className="rounded-xl border border-border overflow-hidden bg-card">
+            {/* Desktop Table */}
+            <div className="hidden md:block rounded-xl border border-border overflow-hidden bg-card">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -938,8 +939,8 @@ const ScraperLeads = () => {
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
                       <TableHead className="font-semibold text-right">{t.profit3y}</TableHead>
                       <TableHead className="font-semibold text-right">{t.monthlyExtra}</TableHead>
-                      <TableHead className="font-semibold text-center">{t.status}</TableHead>
-                      <TableHead className="font-semibold text-center w-10"></TableHead>
+                      <TableHead className="font-semibold text-center">Status</TableHead>
+                      <TableHead className="text-center w-24">Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1027,6 +1028,92 @@ const ScraperLeads = () => {
                   </TableBody>
                 </Table>
               </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {filteredLeads.map((lead) => (
+                <div
+                  key={lead.id}
+                  className={cn(
+                    "rounded-lg border bg-card p-3 cursor-pointer active:scale-[0.99] transition-transform",
+                    lead.lead_score >= 90 ? "border-l-4 border-l-red-500"
+                    : lead.lead_score >= 75 ? "border-l-4 border-l-amber-500"
+                    : "border-l-4 border-l-border"
+                  )}
+                  onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[lead.source] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+                        {lead.source ?? 'OLX'}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {getRelativeDate(lead.created_at)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {getScoreBadge(lead.lead_score)}
+                      <Select
+                        value={lead.status}
+                        onValueChange={async (newStatus) => {
+                          await supabase.from('scraper_leads').update({ status: newStatus } as any).eq('id', lead.id);
+                          refetch();
+                          toast.success(`Status: ${PIPELINE_STAGES.find(s => s.value === newStatus)?.label ?? newStatus}`);
+                        }}
+                      >
+                        <SelectTrigger className="h-6 w-auto text-[10px] border-0 bg-transparent p-0 focus:ring-0 [&>svg]:h-3 [&>svg]:w-3" onClick={(e) => e.stopPropagation()}>
+                          <SelectValue>{getStatusBadge(lead.status)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PIPELINE_STAGES.map(stage => (
+                            <SelectItem key={stage.value} value={stage.value} className="text-xs">
+                              {stage.emoji} {stage.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium leading-snug line-clamp-2 mb-2">
+                    {cleanTitleStatic(lead.title)}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 flex-wrap">
+                    <span className="font-medium text-foreground">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
+                    <span className="text-emerald-500">+{formatPrice(lead.monthly_extra)}/lună</span>
+                    <span className="text-amber-400">+{formatPrice(lead.extra_profit_3y)} 3Y</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 h-8 text-xs bg-green-600 hover:bg-green-500 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
+                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                      }}
+                    >
+                      <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={(e) => { e.stopPropagation(); window.open(lead.url, '_blank'); }}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
