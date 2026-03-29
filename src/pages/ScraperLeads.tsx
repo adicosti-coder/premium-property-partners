@@ -30,6 +30,7 @@ interface ScraperLead {
   url: string;
   status: string;
   created_at: string;
+  listing_type: string;
 }
 
 const ScraperLeads = () => {
@@ -38,6 +39,7 @@ const ScraperLeads = () => {
   const [selectedLead, setSelectedLead] = useState<ScraperLead | null>(null);
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [listingTab, setListingTab] = useState<"all" | "vanzare" | "inchiriere">("all");
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
@@ -54,8 +56,11 @@ const ScraperLeads = () => {
 
   const filteredLeads = useMemo(() => {
     if (!leads) return [];
-    return hotOnly ? leads.filter((l) => l.lead_score > 80) : leads;
-  }, [leads, hotOnly]);
+    let result = leads;
+    if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
+    if (hotOnly) result = result.filter((l) => l.lead_score > 80);
+    return result;
+  }, [leads, hotOnly, listingTab]);
 
   const profitStats = useMemo(() => {
     if (!leads || leads.length === 0) return null;
@@ -76,8 +81,11 @@ const ScraperLeads = () => {
     return { totalProfit3y, totalMonthly, hotCount, chartData };
   }, [leads]);
 
-  const formatPrice = (price: number) =>
-    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €";
+  const formatPrice = (price: number, suffix?: string) =>
+    price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
+
+  const getPriceSuffix = (lead: ScraperLead) =>
+    lead.listing_type === "inchiriere" ? "/lună" : "";
 
   const getPropertyType = (title: string) => {
     if (title.includes("🏢")) return "ansamblu";
@@ -145,7 +153,10 @@ const ScraperLeads = () => {
   };
 
   const handleWhatsApp = (lead: ScraperLead) => {
-    const msg = encodeURIComponent(lead.whatsapp_message || "");
+    const fallbackMsg = lead.listing_type === "inchiriere"
+      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
+      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitle(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
+    const msg = encodeURIComponent(lead.whatsapp_message || fallbackMsg);
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
