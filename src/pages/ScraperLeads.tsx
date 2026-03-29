@@ -163,7 +163,17 @@ const ScraperLeads = () => {
         .select("*")
         .order("lead_score", { ascending: false });
       if (error) throw error;
-      return (data || []).map((d: any) => ({ ...d, tags: d.tags || [] })) as ScraperLead[];
+      return (data || []).map((d: any) => {
+        // Derive listing_type from title if DB value seems wrong
+        const title = (d.title || "").toUpperCase();
+        let derivedType = d.listing_type || "vanzare";
+        if (title.includes("INCHIRIERE") || title.includes("ÎNCHIRIERE") || title.includes("CHIRIE")) {
+          derivedType = "inchiriere";
+        } else if (title.includes("VANZARE") || title.includes("VÂNZARE")) {
+          derivedType = "vanzare";
+        }
+        return { ...d, listing_type: derivedType, tags: d.tags || [] };
+      }) as ScraperLead[];
     },
     staleTime: 1000 * 60 * 2,
   });
@@ -205,18 +215,18 @@ const ScraperLeads = () => {
   }, [leads, hotOnly, listingTab]);
 
   const profitStats = useMemo(() => {
-    if (!leads || leads.length === 0) return null;
-    const totalProfit3y = leads.reduce((s, l) => s + (l.extra_profit_3y || 0), 0);
-    const totalMonthly = leads.reduce((s, l) => s + (l.monthly_extra || 0), 0);
-    const hotCount = leads.filter((l) => l.lead_score > 80).length;
+    if (!filteredLeads || filteredLeads.length === 0) return null;
+    const totalProfit3y = filteredLeads.reduce((s, l) => s + (l.extra_profit_3y || 0), 0);
+    const totalMonthly = filteredLeads.reduce((s, l) => s + (l.monthly_extra || 0), 0);
+    const hotCount = filteredLeads.filter((l) => l.lead_score > 80).length;
     const byDate = new Map<string, number>();
-    leads.forEach((l) => {
+    filteredLeads.forEach((l) => {
       const day = l.created_at?.slice(0, 10) || "N/A";
       byDate.set(day, (byDate.get(day) || 0) + (l.extra_profit_3y || 0));
     });
     const chartData = Array.from(byDate.entries()).map(([date, profit]) => ({ date: date.slice(5), profit })).slice(-7);
     return { totalProfit3y, totalMonthly, hotCount, chartData };
-  }, [leads]);
+  }, [filteredLeads]);
 
   const pipelineStats = useMemo(() => {
     if (!filteredLeads.length) return { total: 0, new: 0, contacted: 0, converted: 0, avgScore: 0 };
@@ -706,10 +716,11 @@ const ScraperLeads = () => {
 
           {/* Listing Type Tabs */}
           <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
-            {([["all", "Toate"], ["vanzare", "Vânzare"], ["inchiriere", "Închiriere"]] as const).map(([val, label]) => (
-              <button key={val} onClick={() => { setListingTab(val); setSelectedIds([]); }}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${listingTab === val ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+            {([["all", "Toate", leads?.length || 0], ["vanzare", "Vânzare", leads?.filter((l) => l.listing_type === "vanzare").length || 0], ["inchiriere", "Închiriere", leads?.filter((l) => l.listing_type === "inchiriere").length || 0]] as const).map(([val, label, count]) => (
+              <button key={val} onClick={() => { setListingTab(val as any); setSelectedIds([]); }}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${listingTab === val ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                 {label}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${listingTab === val ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{count}</span>
               </button>
             ))}
           </div>
