@@ -21,12 +21,14 @@ import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
-  Search, Loader2, Handshake, Calendar, MapPin,
+  Search, Loader2, Handshake, Calendar, MapPin, Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface ScraperLead {
   id: string;
@@ -831,7 +833,7 @@ const ScraperLeads = () => {
           </div>
 
           {/* Stats (6 cards like Bot Prospectare) */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-3">
             {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
             {renderStatCard("Noi", pipelineStats.new, <Eye className="w-4 h-4 text-white" />, "bg-blue-500")}
             {renderStatCard("Contactați", pipelineStats.contacted, <Phone className="w-4 h-4 text-white" />, "bg-orange-500")}
@@ -839,6 +841,29 @@ const ScraperLeads = () => {
             {renderStatCard("Clienți", pipelineStats.converted, <CheckCircle className="w-4 h-4 text-white" />, "bg-green-600")}
             {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
           </div>
+
+          {/* Active filters indicator */}
+          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all') && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
+              <Filter className="h-3 w-3 shrink-0" />
+              <span className="flex items-center gap-1 flex-wrap">
+                Filtre active:
+                {hotOnly && <Badge variant="outline" className="ml-1 text-[10px]">🔥 Scor &gt; 80</Badge>}
+                {listingTab !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{listingTab === 'vanzare' ? 'Vânzare' : 'Închiriere'}</Badge>}
+                {filterType !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{filterType}</Badge>}
+                {searchQuery && <Badge variant="outline" className="ml-1 text-[10px]">"{searchQuery}"</Badge>}
+              </span>
+              <button
+                className="underline hover:text-foreground ml-1"
+                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); }}
+              >
+                Resetează
+              </button>
+              <span className="text-[10px] ml-auto">
+                {filteredLeads.length} din {(leads as any[])?.length ?? 0} total
+              </span>
+            </div>
+          )}
 
           {/* Table Stats (profit) */}
           {viewMode === "table" && profitStats && (
@@ -919,7 +944,7 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className={`hover:bg-muted/30 cursor-pointer transition-colors ${compareIds.includes(lead.id) ? "bg-primary/5 ring-1 ring-inset ring-primary/20" : ""}`} onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setEditNotes(lead.admin_notes || ""); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
@@ -953,7 +978,29 @@ const ScraperLeads = () => {
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price, getPriceSuffix(lead))}</TableCell>
                         <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
-                        <TableCell className="text-center">{getStatusBadge(lead.status)}</TableCell>
+                        <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                          <Select
+                            value={lead.status}
+                            onValueChange={async (newStatus) => {
+                              await supabase.from('scraper_leads').update({ status: newStatus } as any).eq('id', lead.id);
+                              refetch();
+                              toast.success(`Status actualizat: ${PIPELINE_STAGES.find(s => s.value === newStatus)?.label ?? newStatus}`);
+                            }}
+                          >
+                            <SelectTrigger className="h-7 w-28 text-xs border-0 bg-transparent p-0 focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
+                              <SelectValue>
+                                {getStatusBadge(lead.status)}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PIPELINE_STAGES.map(stage => (
+                                <SelectItem key={stage.value} value={stage.value} className="text-xs">
+                                  {stage.emoji} {stage.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Button
