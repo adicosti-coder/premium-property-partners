@@ -758,6 +758,20 @@ const ScraperLeads = () => {
             Exportă în Prospect Listings
           </Button>
 
+          {/* Blacklist + Archive */}
+          <div className="flex gap-2">
+            {selectedLead.phone && (
+              <Button variant="outline" className="flex-1 gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10" onClick={() => handleBlacklist(selectedLead)}>
+                <Ban className="w-4 h-4" />
+                Blacklist {selectedLead.phone}
+              </Button>
+            )}
+            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleArchive(selectedLead.id)}>
+              <Archive className="w-4 h-4" />
+              Arhivează
+            </Button>
+          </div>
+
           {/* Link to original */}
           <Button variant="outline" className="w-full" onClick={() => window.open(selectedLead.url, "_blank", "noopener,noreferrer")}>
             <ExternalLink className="w-4 h-4 mr-2" />
