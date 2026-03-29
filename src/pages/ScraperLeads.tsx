@@ -354,9 +354,7 @@ const ScraperLeads = () => {
   };
 
   const handleWhatsApp = (lead: ScraperLead) => {
-    const fallbackMsg = lead.listing_type === "inchiriere"
-      ? `Bună ziua! Sunt interesat de închirierea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price, "/lună")}). ${lead.url}`
-      : `Bună ziua! Sunt interesat de cumpărarea proprietății: ${cleanTitleStatic(lead.title)} (${formatPrice(lead.original_price)}). ${lead.url}`;
+    const fallbackMsg = `Bună ziua! Vă contactez referitor la anunțul '${cleanTitleStatic(lead.title)}'. Mai este disponibil?`;
     const msg = encodeURIComponent(lead.whatsapp_message || fallbackMsg);
     window.open(`https://wa.me/?text=${msg}`, "_blank", "noopener,noreferrer");
   };
@@ -445,8 +443,12 @@ const ScraperLeads = () => {
   const exportToProperties = async (lead: ScraperLead) => {
     const { error } = await supabase.from("prospect_listings").insert({
       prospect_type: (lead as any)._prospect_type || "proprietar",
+      source_platform: lead.source || "OLX",
+      source_url: lead.url || "",
+      title: cleanTitleStatic(lead.title),
       price: lead.original_price,
       location: "Timișoara",
+      contact_phone: lead.phone || null,
       description: `Importat din Oportunități AI. Scor: ${lead.lead_score}. Randament: ${getYield(lead) || "N/A"}%/an. Profit extra 3Y: ${lead.extra_profit_3y}€`,
       admin_notes: lead.admin_notes || `Lead importat automat din scraper. URL: ${lead.url}`,
       is_active: true,
@@ -1051,6 +1053,11 @@ const ScraperLeads = () => {
                               </span>
                             </div>
                             <span className="truncate">{cleanTitleStatic(lead.title)}</span>
+                            {lead.phone && (
+                              <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                                <Phone className="w-3 h-3" /> {lead.phone}
+                              </span>
+                            )}
                             <div className="flex gap-1 flex-wrap">
                               {getPropertyBadge(lead.title)}
                               {lead.tags?.slice(0, 2).map((tag) => {
@@ -1097,7 +1104,7 @@ const ScraperLeads = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const msg = lead.whatsapp_message || 
-                                  `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
+                                  `Bună ziua! Vă contactez referitor la anunțul '${cleanTitleStatic(lead.title)}'. Mai este disponibil?`;
                                 window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                               }}
                               title="Trimite WhatsApp"
@@ -1176,9 +1183,14 @@ const ScraperLeads = () => {
                       </Select>
                     </div>
                   </div>
-                  <p className="text-sm font-medium leading-snug line-clamp-2 mb-2">
+                  <p className="text-sm font-medium leading-snug line-clamp-2 mb-1">
                     {cleanTitleStatic(lead.title)}
                   </p>
+                  {lead.phone && (
+                    <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1 mb-2">
+                      <Phone className="w-3 h-3" /> {lead.phone}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 flex-wrap">
                     <span className="font-medium text-foreground">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
                     <span className="text-emerald-500">+{formatPrice(lead.monthly_extra)}/lună</span>
@@ -1190,7 +1202,7 @@ const ScraperLeads = () => {
                       className="flex-1 h-8 text-xs bg-green-600 hover:bg-green-500 text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la "${cleanTitleStatic(lead.title)}". Mai este disponibil?`;
+                        const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la anunțul '${cleanTitleStatic(lead.title)}'. Mai este disponibil?`;
                         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                       }}
                     >
