@@ -41,6 +41,8 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.hostscan-report]
     verify_jwt = false
+  [functions.ingest-scraper-leads]
+    verify_jwt = false
   [functions.lead-webhook]
     verify_jwt = false
   [functions.live-property-availability]
