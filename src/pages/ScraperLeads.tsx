@@ -1151,6 +1151,70 @@ const ScraperLeads = () => {
             </Card>
           </div>
 
+          {/* 7-Day Trend Chart + Blacklist Button */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+            <Card className="bg-card border-border md:col-span-3">
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Lead-uri noi — Ultimele 7 zile</p>
+                <div className="h-24">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData}>
+                      <defs>
+                        <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                      <YAxis hide allowDecimals={false} />
+                      <Tooltip formatter={(v: number) => [`${v} lead-uri`, "Noi"]} />
+                      <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="url(#trendGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="flex flex-col gap-3">
+              <Button variant="outline" className="gap-2 flex-1" onClick={() => setBlacklistOpen(true)}>
+                <Shield className="w-4 h-4 text-red-500" /> Gestionare Blacklist
+              </Button>
+              {lastScanLog && (
+                <Card className="bg-card border-border">
+                  <CardContent className="p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Ultima scanare</p>
+                    <p className="text-xs font-medium">
+                      {new Date((lastScanLog as any).scanned_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {(lastScanLog as any).new_count} noi · {(lastScanLog as any).blacklisted_skipped} blocate
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Smart Filter Pills */}
+          <div className="flex items-center gap-1.5 mb-4 overflow-x-auto pb-1">
+            {SMART_FILTERS.map((sf) => (
+              <button
+                key={sf.value}
+                onClick={() => setSmartFilter(sf.value)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-full border whitespace-nowrap transition-colors",
+                  smartFilter === sf.value
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {sf.label}
+                {sf.value === "premium" && leads && (
+                  <span className="ml-1 opacity-70">({leads.filter((l) => isPremiumLead(l.title)).length})</span>
+                )}
+              </button>
+            ))}
+          </div>
+
           {/* Stats (6 cards like Bot Prospectare) */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-3">
             {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
