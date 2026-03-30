@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -22,7 +22,7 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
-  Shield, Database, Sparkles, Crown,
+  Shield, Database, Sparkles, Crown, FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
