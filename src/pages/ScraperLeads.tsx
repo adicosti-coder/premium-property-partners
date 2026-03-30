@@ -22,6 +22,7 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
+  Shield, Database, Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -210,6 +211,28 @@ const ScraperLeads = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
+  const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
+  const [recentScanPulse, setRecentScanPulse] = useState(false);
+
+  // ── Phone Intelligence Count ──────────────────────
+  const { data: phoneIntelCount = 0 } = useQuery({
+    queryKey: ["phone-intel-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("phone_intelligence").select("*", { count: "exact", head: true });
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ── Archived/Blacklisted counts ───────────────────
+  const { data: archivedCount = 0 } = useQuery({
+    queryKey: ["scraper-archived-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("scraper_leads").select("*", { count: "exact", head: true }).eq("status", "archived");
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
