@@ -2872,6 +2872,33 @@ export type Database = {
         }
         Relationships: []
       }
+      scraper_scan_logs: {
+        Row: {
+          archived_skipped: number | null
+          blacklisted_skipped: number | null
+          id: string
+          new_count: number | null
+          scanned_at: string | null
+          total_processed: number | null
+        }
+        Insert: {
+          archived_skipped?: number | null
+          blacklisted_skipped?: number | null
+          id?: string
+          new_count?: number | null
+          scanned_at?: string | null
+          total_processed?: number | null
+        }
+        Update: {
+          archived_skipped?: number | null
+          blacklisted_skipped?: number | null
+          id?: string
+          new_count?: number | null
+          scanned_at?: string | null
+          total_processed?: number | null
+        }
+        Relationships: []
+      }
       shared_poi_links: {
         Row: {
           created_at: string

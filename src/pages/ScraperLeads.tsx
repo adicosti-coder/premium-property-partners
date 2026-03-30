@@ -22,10 +22,11 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
-  Shield, Database, Sparkles,
+  Shield, Database, Sparkles, Crown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BlacklistModal } from "@/components/admin/BlacklistModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -96,7 +97,26 @@ const sourceColors: Record<string, string> = {
   "Publi24": "bg-purple-500/15 text-purple-400 border-purple-500/30",
 };
 
-// ── Relative Date Helper ─────────────────────────
+// ── Premium Zone Keywords ────────────────────────
+const PREMIUM_KEYWORDS = [
+  "Piața Unirii", "Operei", "Libertății", "Maria", "Medicină", "ISHO", "Mara",
+  "Paltim", "Monarh", "Vivalia", "Nord-One", "X-City", "Fructus", "Campeador",
+  "Denya", "Iris", "Ring", "Future Residence",
+];
+
+const isPremiumLead = (title: string): boolean => {
+  const upper = title.toUpperCase();
+  return PREMIUM_KEYWORDS.some((kw) => upper.includes(kw.toUpperCase()));
+};
+
+// ── Smart Filter Tabs ────────────────────────────
+const SMART_FILTERS = [
+  { value: "all", label: "Toate" },
+  { value: "premium", label: "✨ Ansambluri Premium" },
+  { value: "proprietari", label: "🏠 Proprietari Direcți" },
+  { value: "vanzare", label: "🏷️ Vânzări" },
+  { value: "inchiriere", label: "🔑 Închirieri" },
+] as const;
 const getRelativeDate = (dateStr: string) => {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
   if (diff === 0) return "Azi";
@@ -213,6 +233,8 @@ const ScraperLeads = () => {
   const [isScraping, setIsScraping] = useState(false);
   const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
+  const [smartFilter, setSmartFilter] = useState<string>("all");
+  const [blacklistOpen, setBlacklistOpen] = useState(false);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -232,6 +254,48 @@ const ScraperLeads = () => {
       return count || 0;
     },
     staleTime: 1000 * 60 * 5,
+  });
+
+  // ── 7-Day Trend Data ─────────────────────────────
+  const { data: trendData = [] } = useQuery({
+    queryKey: ["scraper-trend-7d"],
+    queryFn: async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const { data } = await supabase
+        .from("scraper_leads")
+        .select("created_at")
+        .gte("created_at", sevenDaysAgo)
+        .not("status", "eq", "archived");
+      if (!data) return [];
+      const byDay = new Map<string, number>();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000);
+        byDay.set(d.toISOString().slice(0, 10), 0);
+      }
+      data.forEach((row: any) => {
+        const day = row.created_at?.slice(0, 10);
+        if (day && byDay.has(day)) byDay.set(day, (byDay.get(day) || 0) + 1);
+      });
+      return Array.from(byDay.entries()).map(([date, count]) => ({
+        date: new Date(date).toLocaleDateString("ro-RO", { day: "2-digit", month: "short" }),
+        count,
+      }));
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ── Last Scan Log (persisted) ────────────────────
+  const { data: lastScanLog } = useQuery({
+    queryKey: ["last-scan-log"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("scraper_scan_logs")
+        .select("*")
+        .order("scanned_at", { ascending: false })
+        .limit(1);
+      return data?.[0] || null;
+    },
+    staleTime: 1000 * 60 * 2,
   });
 
   const { data: leads, isLoading, refetch } = useQuery({
@@ -298,12 +362,17 @@ const ScraperLeads = () => {
     if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
     if (filterType !== "all") result = result.filter((l) => l._prospect_type === filterType);
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
+    // Smart filters
+    if (smartFilter === "premium") result = result.filter((l) => isPremiumLead(l.title));
+    if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
+    if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
+    if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -572,17 +641,25 @@ const ScraperLeads = () => {
         body: { max_results: 10 },
       });
       if (error) throw error;
-      if (data) {
-        setLastIngestResult({
-          count: data.new_listings || data.count || 0,
-          blacklisted_skipped: data.blacklisted_skipped || 0,
-          archived_skipped: data.archived_skipped || 0,
-        });
-      }
-      toast.success(`Scanare completă! ${data?.new_listings || 0} anunțuri noi găsite.`);
+      const result = {
+        count: data?.new_listings || data?.count || 0,
+        blacklisted_skipped: data?.blacklisted_skipped || 0,
+        archived_skipped: data?.archived_skipped || 0,
+      };
+      setLastIngestResult(result);
+      // Persist scan log
+      await supabase.from("scraper_scan_logs").insert({
+        new_count: result.count,
+        blacklisted_skipped: result.blacklisted_skipped,
+        archived_skipped: result.archived_skipped,
+        total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
+      } as any);
+      toast.success(`Scanare completă! ${result.count} anunțuri noi găsite.`);
       refetch();
       queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
       queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+      queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
+      queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
     } catch (err: any) {
       toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
     } finally {
@@ -627,12 +704,12 @@ const ScraperLeads = () => {
                   ) : stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
+                      className={cn("border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-400/30")}
                       onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitleStatic(lead.title)}</h4>
+                          <h4 className="font-medium text-sm line-clamp-2">{isPremiumLead(lead.title) && "✨ "}{cleanTitleStatic(lead.title)}</h4>
                           {getPropertyBadge(lead.title)}
                         </div>
                         <div className="flex flex-col items-end gap-1">
@@ -1031,7 +1108,7 @@ const ScraperLeads = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Scut Anti-Spam</p>
-                  <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? archivedCount}</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? (lastScanLog as any)?.blacklisted_skipped ?? archivedCount}</p>
                   <p className="text-[10px] text-muted-foreground">lead-uri blocate</p>
                 </div>
               </CardContent>
@@ -1067,11 +1144,75 @@ const ScraperLeads = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arhivate</p>
-                  <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? archivedCount}</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? (lastScanLog as any)?.archived_skipped ?? archivedCount}</p>
                   <p className="text-[10px] text-muted-foreground">ignorate la re-import</p>
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* 7-Day Trend Chart + Blacklist Button */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+            <Card className="bg-card border-border md:col-span-3">
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Lead-uri noi — Ultimele 7 zile</p>
+                <div className="h-24">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData}>
+                      <defs>
+                        <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                      <YAxis hide allowDecimals={false} />
+                      <Tooltip formatter={(v: number) => [`${v} lead-uri`, "Noi"]} />
+                      <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="url(#trendGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="flex flex-col gap-3">
+              <Button variant="outline" className="gap-2 flex-1" onClick={() => setBlacklistOpen(true)}>
+                <Shield className="w-4 h-4 text-red-500" /> Gestionare Blacklist
+              </Button>
+              {lastScanLog && (
+                <Card className="bg-card border-border">
+                  <CardContent className="p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Ultima scanare</p>
+                    <p className="text-xs font-medium">
+                      {new Date((lastScanLog as any).scanned_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {(lastScanLog as any).new_count} noi · {(lastScanLog as any).blacklisted_skipped} blocate
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Smart Filter Pills */}
+          <div className="flex items-center gap-1.5 mb-4 overflow-x-auto pb-1">
+            {SMART_FILTERS.map((sf) => (
+              <button
+                key={sf.value}
+                onClick={() => setSmartFilter(sf.value)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-full border whitespace-nowrap transition-colors",
+                  smartFilter === sf.value
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {sf.label}
+                {sf.value === "premium" && leads && (
+                  <span className="ml-1 opacity-70">({leads.filter((l) => isPremiumLead(l.title)).length})</span>
+                )}
+              </button>
+            ))}
           </div>
 
           {/* Stats (6 cards like Bot Prospectare) */}
@@ -1085,7 +1226,7 @@ const ScraperLeads = () => {
           </div>
 
           {/* Active filters indicator */}
-          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all') && (
+          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all') && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
               <Filter className="h-3 w-3 shrink-0" />
               <span className="flex items-center gap-1 flex-wrap">
@@ -1094,10 +1235,11 @@ const ScraperLeads = () => {
                 {listingTab !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{listingTab === 'vanzare' ? 'Vânzare' : 'Închiriere'}</Badge>}
                 {filterType !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{filterType}</Badge>}
                 {searchQuery && <Badge variant="outline" className="ml-1 text-[10px]">"{searchQuery}"</Badge>}
+                {smartFilter !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{SMART_FILTERS.find(s => s.value === smartFilter)?.label}</Badge>}
               </span>
               <button
                 className="underline hover:text-foreground ml-1"
-                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); }}
+                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); }}
               >
                 Resetează
               </button>
@@ -1188,7 +1330,7 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : isPremiumLead(lead.title) ? "border-l-2 border-l-amber-400" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
@@ -1203,7 +1345,7 @@ const ScraperLeads = () => {
                                 {getRelativeDate(lead.created_at)}
                               </span>
                             </div>
-                            <span className="truncate">{cleanTitleStatic(lead.title)}</span>
+                            <span className="truncate flex items-center gap-1">{isPremiumLead(lead.title) && <span title="Ansamblu Premium">✨</span>}{cleanTitleStatic(lead.title)}</span>
                             {lead.phone && (
                               <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
                                 <Phone className="w-3 h-3" /> {lead.phone}
@@ -1317,8 +1459,10 @@ const ScraperLeads = () => {
                   key={lead.id}
                   className={cn(
                     "rounded-lg border bg-card p-3 cursor-pointer active:scale-[0.99] transition-transform",
+                    isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]",
                     lead.lead_score >= 90 ? "border-l-4 border-l-red-500"
                     : lead.lead_score >= 75 ? "border-l-4 border-l-amber-500"
+                    : isPremiumLead(lead.title) ? "border-l-4 border-l-amber-400"
                     : "border-l-4 border-l-border"
                   )}
                   onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
@@ -1352,7 +1496,7 @@ const ScraperLeads = () => {
                     </div>
                   </div>
                   <p className="text-sm font-medium leading-snug line-clamp-2 mb-1">
-                    {cleanTitleStatic(lead.title)}
+                    {isPremiumLead(lead.title) && <span className="mr-1">✨</span>}{cleanTitleStatic(lead.title)}
                   </p>
                   {lead.phone && (
                     <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1 mb-2">
@@ -1430,6 +1574,9 @@ const ScraperLeads = () => {
 
       {/* Compare Dialog */}
       {renderCompareDialog()}
+
+      {/* Blacklist Modal */}
+      <BlacklistModal open={blacklistOpen} onOpenChange={setBlacklistOpen} />
 
       <Footer />
     </>
