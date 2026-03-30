@@ -956,10 +956,16 @@ const ScraperLeads = () => {
           </div>
 
           {/* ── Export to Properties ───────────────── */}
-          <Button variant="outline" className="w-full gap-2" onClick={() => exportToProperties(selectedLead)}>
-            <ArrowRightCircle className="w-4 h-4" />
-            Exportă în Prospect Listings
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
+              <ArrowRightCircle className="w-4 h-4" />
+              Exportă în Prospect Listings
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => downloadLeadAnalysisPdf(selectedLead)}>
+              <FileText className="w-4 h-4" />
+              Export PDF
+            </Button>
+          </div>
 
           {/* Blacklist + Archive */}
           <div className="flex gap-2">
