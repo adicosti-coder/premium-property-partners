@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
+import { downloadLeadAnalysisPdf } from "@/utils/exportLeadAnalysisPdf";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,7 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
-  Shield, Database, Sparkles, Crown,
+  Shield, Database, Sparkles, Crown, FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -379,6 +380,14 @@ const ScraperLeads = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
+    // Sort: "Noi" (status=new) by created_at desc for the stat card click; default by lead_score desc
+    result = [...result].sort((a, b) => {
+      // If both are "new" status, sort by created_at desc
+      if (a.status === "new" && b.status === "new") {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      return b.lead_score - a.lead_score;
+    });
     return result;
   }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter]);
 
@@ -663,11 +672,12 @@ const ScraperLeads = () => {
         total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
       } as any);
       toast.success(`Scanare completă! ${result.count} anunțuri noi găsite.`);
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
-      queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
-      queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
-      queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
+      // Force full data refresh
+      await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
+      await queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+      await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
+      await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
     } catch (err: any) {
       toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
     } finally {
@@ -946,10 +956,16 @@ const ScraperLeads = () => {
           </div>
 
           {/* ── Export to Properties ───────────────── */}
-          <Button variant="outline" className="w-full gap-2" onClick={() => exportToProperties(selectedLead)}>
-            <ArrowRightCircle className="w-4 h-4" />
-            Exportă în Prospect Listings
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
+              <ArrowRightCircle className="w-4 h-4" />
+              Exportă în Prospect Listings
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => downloadLeadAnalysisPdf(selectedLead)}>
+              <FileText className="w-4 h-4" />
+              Export PDF
+            </Button>
+          </div>
 
           {/* Blacklist + Archive */}
           <div className="flex gap-2">
@@ -1361,7 +1377,7 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : isPremiumLead(lead.title) ? "border-l-2 border-l-amber-400" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]", lead.lead_score >= 95 && "animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.15)]", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : isPremiumLead(lead.title) ? "border-l-2 border-l-amber-400" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
@@ -1491,6 +1507,7 @@ const ScraperLeads = () => {
                   className={cn(
                     "rounded-lg border bg-card p-3 cursor-pointer active:scale-[0.99] transition-transform",
                     isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]",
+                    lead.lead_score >= 95 && "animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.15)]",
                     lead.lead_score >= 90 ? "border-l-4 border-l-red-500"
                     : lead.lead_score >= 75 ? "border-l-4 border-l-amber-500"
                     : isPremiumLead(lead.title) ? "border-l-4 border-l-amber-400"
