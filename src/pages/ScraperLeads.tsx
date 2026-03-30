@@ -1575,6 +1575,9 @@ const ScraperLeads = () => {
       {/* Compare Dialog */}
       {renderCompareDialog()}
 
+      {/* Blacklist Modal */}
+      <BlacklistModal open={blacklistOpen} onOpenChange={setBlacklistOpen} />
+
       <Footer />
     </>
   );
