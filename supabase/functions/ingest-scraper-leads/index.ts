@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   // ── Auth: validate ingest secret ──
   const secret = req.headers.get("x-ingest-secret");
-  const expectedSecret = Deno.env.get("INGEST_SECRET");
+  const expectedSecret = Deno.env.get("SCRAPER_INGEST_SECRET");
   if (!expectedSecret || secret !== expectedSecret) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
