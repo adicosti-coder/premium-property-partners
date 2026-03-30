@@ -362,12 +362,17 @@ const ScraperLeads = () => {
     if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
     if (filterType !== "all") result = result.filter((l) => l._prospect_type === filterType);
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
+    // Smart filters
+    if (smartFilter === "premium") result = result.filter((l) => isPremiumLead(l.title));
+    if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
+    if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
+    if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
