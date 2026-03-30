@@ -99,9 +99,15 @@ const sourceColors: Record<string, string> = {
 
 // ── Premium Zone Keywords ────────────────────────
 const PREMIUM_KEYWORDS = [
+  // Ansambluri existente
   "Piața Unirii", "Operei", "Libertății", "Maria", "Medicină", "ISHO", "Mara",
   "Paltim", "Monarh", "Vivalia", "Nord-One", "X-City", "Fructus", "Campeador",
   "Denya", "Iris", "Ring", "Future Residence",
+  // Ansambluri noi v3.2
+  "Ateneo", "Adora Forest", "Vivid", "Uptown", "The Riverside", "Belvedere",
+  "Greenfield", "Panoramic", "Metropolitan", "Smart City",
+  // Zone de interes
+  "UMFT", "Iulius Town", "Bastion",
 ];
 
 const isPremiumLead = (title: string): boolean => {
@@ -113,6 +119,7 @@ const isPremiumLead = (title: string): boolean => {
 const SMART_FILTERS = [
   { value: "all", label: "Toate" },
   { value: "premium", label: "✨ Ansambluri Premium" },
+  { value: "topROI", label: "🏆 Top ROI (90+)" },
   { value: "proprietari", label: "🏠 Proprietari Direcți" },
   { value: "vanzare", label: "🏷️ Vânzări" },
   { value: "inchiriere", label: "🔑 Închirieri" },
@@ -364,6 +371,7 @@ const ScraperLeads = () => {
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
     // Smart filters
     if (smartFilter === "premium") result = result.filter((l) => isPremiumLead(l.title));
+    if (smartFilter === "topROI") result = result.filter((l) => l.lead_score >= 90).sort((a, b) => b.lead_score - a.lead_score);
     if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
     if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
     if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
@@ -758,7 +766,10 @@ const ScraperLeads = () => {
     return (
       <>
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-lg font-serif leading-tight">{cleanTitleStatic(selectedLead.title)}</SheetTitle>
+          <SheetTitle className="text-lg font-serif leading-tight">
+            {isPremiumLead(selectedLead.title) && <span className="mr-1">✨</span>}
+            {cleanTitleStatic(selectedLead.title)}
+          </SheetTitle>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {getPropertyBadge(selectedLead.title)}
             {getScoreBadge(selectedLead.lead_score)}
@@ -766,6 +777,23 @@ const ScraperLeads = () => {
             {getYield(selectedLead) && (
               <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 text-xs">{getYield(selectedLead)}%/an</Badge>
             )}
+          </div>
+          {/* Phone & Source */}
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {selectedLead.phone && (
+              <a
+                href={`tel:${selectedLead.phone}`}
+                className="flex items-center gap-1.5 text-sm text-primary hover:underline font-mono"
+              >
+                <Phone className="w-3.5 h-3.5" /> {selectedLead.phone}
+              </a>
+            )}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[selectedLead.source] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+              {selectedLead.source ?? 'OLX'}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {getRelativeDate(selectedLead.created_at)}
+            </span>
           </div>
           {/* Category Selector */}
           <div className="flex items-center gap-2 mt-2">
@@ -1210,6 +1238,9 @@ const ScraperLeads = () => {
                 {sf.label}
                 {sf.value === "premium" && leads && (
                   <span className="ml-1 opacity-70">({leads.filter((l) => isPremiumLead(l.title)).length})</span>
+                )}
+                {sf.value === "topROI" && leads && (
+                  <span className="ml-1 opacity-70">({leads.filter((l) => l.lead_score >= 90).length})</span>
                 )}
               </button>
             ))}
