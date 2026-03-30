@@ -97,7 +97,26 @@ const sourceColors: Record<string, string> = {
   "Publi24": "bg-purple-500/15 text-purple-400 border-purple-500/30",
 };
 
-// ── Relative Date Helper ─────────────────────────
+// ── Premium Zone Keywords ────────────────────────
+const PREMIUM_KEYWORDS = [
+  "Piața Unirii", "Operei", "Libertății", "Maria", "Medicină", "ISHO", "Mara",
+  "Paltim", "Monarh", "Vivalia", "Nord-One", "X-City", "Fructus", "Campeador",
+  "Denya", "Iris", "Ring", "Future Residence",
+];
+
+const isPremiumLead = (title: string): boolean => {
+  const upper = title.toUpperCase();
+  return PREMIUM_KEYWORDS.some((kw) => upper.includes(kw.toUpperCase()));
+};
+
+// ── Smart Filter Tabs ────────────────────────────
+const SMART_FILTERS = [
+  { value: "all", label: "Toate" },
+  { value: "premium", label: "✨ Ansambluri Premium" },
+  { value: "proprietari", label: "🏠 Proprietari Direcți" },
+  { value: "vanzare", label: "🏷️ Vânzări" },
+  { value: "inchiriere", label: "🔑 Închirieri" },
+] as const;
 const getRelativeDate = (dateStr: string) => {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
   if (diff === 0) return "Azi";
@@ -214,6 +233,8 @@ const ScraperLeads = () => {
   const [isScraping, setIsScraping] = useState(false);
   const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
+  const [smartFilter, setSmartFilter] = useState<string>("all");
+  const [blacklistOpen, setBlacklistOpen] = useState(false);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
