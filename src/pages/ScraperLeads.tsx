@@ -641,17 +641,25 @@ const ScraperLeads = () => {
         body: { max_results: 10 },
       });
       if (error) throw error;
-      if (data) {
-        setLastIngestResult({
-          count: data.new_listings || data.count || 0,
-          blacklisted_skipped: data.blacklisted_skipped || 0,
-          archived_skipped: data.archived_skipped || 0,
-        });
-      }
-      toast.success(`Scanare completă! ${data?.new_listings || 0} anunțuri noi găsite.`);
+      const result = {
+        count: data?.new_listings || data?.count || 0,
+        blacklisted_skipped: data?.blacklisted_skipped || 0,
+        archived_skipped: data?.archived_skipped || 0,
+      };
+      setLastIngestResult(result);
+      // Persist scan log
+      await supabase.from("scraper_scan_logs").insert({
+        new_count: result.count,
+        blacklisted_skipped: result.blacklisted_skipped,
+        archived_skipped: result.archived_skipped,
+        total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
+      } as any);
+      toast.success(`Scanare completă! ${result.count} anunțuri noi găsite.`);
       refetch();
       queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
       queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+      queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
+      queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
     } catch (err: any) {
       toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
     } finally {
@@ -1100,7 +1108,7 @@ const ScraperLeads = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Scut Anti-Spam</p>
-                  <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? archivedCount}</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? (lastScanLog as any)?.blacklisted_skipped ?? archivedCount}</p>
                   <p className="text-[10px] text-muted-foreground">lead-uri blocate</p>
                 </div>
               </CardContent>
@@ -1136,7 +1144,7 @@ const ScraperLeads = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arhivate</p>
-                  <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? archivedCount}</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? (lastScanLog as any)?.archived_skipped ?? archivedCount}</p>
                   <p className="text-[10px] text-muted-foreground">ignorate la re-import</p>
                 </div>
               </CardContent>
