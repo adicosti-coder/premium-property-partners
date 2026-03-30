@@ -256,7 +256,49 @@ const ScraperLeads = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: leads, isLoading, refetch } = useQuery({
+  // ── 7-Day Trend Data ─────────────────────────────
+  const { data: trendData = [] } = useQuery({
+    queryKey: ["scraper-trend-7d"],
+    queryFn: async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const { data } = await supabase
+        .from("scraper_leads")
+        .select("created_at")
+        .gte("created_at", sevenDaysAgo)
+        .not("status", "eq", "archived");
+      if (!data) return [];
+      const byDay = new Map<string, number>();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000);
+        byDay.set(d.toISOString().slice(0, 10), 0);
+      }
+      data.forEach((row: any) => {
+        const day = row.created_at?.slice(0, 10);
+        if (day && byDay.has(day)) byDay.set(day, (byDay.get(day) || 0) + 1);
+      });
+      return Array.from(byDay.entries()).map(([date, count]) => ({
+        date: new Date(date).toLocaleDateString("ro-RO", { day: "2-digit", month: "short" }),
+        count,
+      }));
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ── Last Scan Log (persisted) ────────────────────
+  const { data: lastScanLog } = useQuery({
+    queryKey: ["last-scan-log"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("scraper_scan_logs")
+        .select("*")
+        .order("scanned_at", { ascending: false })
+        .limit(1);
+      return data?.[0] || null;
+    },
+    staleTime: 1000 * 60 * 2,
+  });
+
+
     queryKey: ["scraper-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
