@@ -704,7 +704,7 @@ const ScraperLeads = () => {
                   ) : stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      className="border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card"
+                      className={cn("border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-400/30")}
                       onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <div className="flex items-start justify-between gap-2">
