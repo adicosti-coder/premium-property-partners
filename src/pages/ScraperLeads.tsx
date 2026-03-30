@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
+import { downloadLeadAnalysisPdf } from "@/utils/exportLeadAnalysisPdf";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -379,6 +380,14 @@ const ScraperLeads = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
+    // Sort: "Noi" (status=new) by created_at desc for the stat card click; default by lead_score desc
+    result = [...result].sort((a, b) => {
+      // If both are "new" status, sort by created_at desc
+      if (a.status === "new" && b.status === "new") {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      return b.lead_score - a.lead_score;
+    });
     return result;
   }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter]);
 
@@ -663,11 +672,12 @@ const ScraperLeads = () => {
         total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
       } as any);
       toast.success(`Scanare completă! ${result.count} anunțuri noi găsite.`);
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
-      queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
-      queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
-      queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
+      // Force full data refresh
+      await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
+      await queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+      await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
+      await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
     } catch (err: any) {
       toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
     } finally {
