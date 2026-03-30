@@ -22,10 +22,11 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
-  Shield, Database, Sparkles,
+  Shield, Database, Sparkles, Crown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BlacklistModal } from "@/components/admin/BlacklistModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
