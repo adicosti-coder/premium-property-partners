@@ -1226,7 +1226,7 @@ const ScraperLeads = () => {
           </div>
 
           {/* Active filters indicator */}
-          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all') && (
+          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all') && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
               <Filter className="h-3 w-3 shrink-0" />
               <span className="flex items-center gap-1 flex-wrap">
