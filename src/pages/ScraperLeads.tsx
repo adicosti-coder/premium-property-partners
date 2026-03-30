@@ -566,17 +566,28 @@ const ScraperLeads = () => {
   // ── Scan (Scanează acum) ──────────────────────────
   const handleScrape = async () => {
     setIsScraping(true);
+    setRecentScanPulse(true);
     try {
       const { data, error } = await supabase.functions.invoke("scrape-prospects", {
         body: { max_results: 10 },
       });
       if (error) throw error;
+      if (data) {
+        setLastIngestResult({
+          count: data.new_listings || data.count || 0,
+          blacklisted_skipped: data.blacklisted_skipped || 0,
+          archived_skipped: data.archived_skipped || 0,
+        });
+      }
       toast.success(`Scanare completă! ${data?.new_listings || 0} anunțuri noi găsite.`);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
+      queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
     } catch (err: any) {
       toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
     } finally {
       setIsScraping(false);
+      setTimeout(() => setRecentScanPulse(false), 5000);
     }
   };
 
