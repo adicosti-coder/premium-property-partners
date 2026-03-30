@@ -954,7 +954,20 @@ const ScraperLeads = () => {
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                    {(isScraping || recentScanPulse) && (
+                      <Badge className={cn(
+                        "text-[10px] px-2 py-0.5 gap-1",
+                        isScraping
+                          ? "bg-amber-500/15 text-amber-600 border-amber-500/30 animate-pulse"
+                          : "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 animate-pulse"
+                      )}>
+                        <Sparkles className="w-3 h-3" />
+                        {isScraping ? "Scanare..." : "Actualizat"}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">{t.subtitle}</p>
                 </div>
               </div>
