@@ -1498,7 +1498,6 @@ const ScraperLeads = () => {
                   <p className="text-sm font-medium leading-snug line-clamp-2 mb-1">
                     {isPremiumLead(lead.title) && <span className="mr-1">✨</span>}{cleanTitleStatic(lead.title)}
                   </p>
-                  </p>
                   {lead.phone && (
                     <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1 mb-2">
                       <Phone className="w-3 h-3" /> {lead.phone}
