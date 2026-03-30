@@ -1371,7 +1371,7 @@ const ScraperLeads = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredLeads.map((lead) => (
-                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : isPremiumLead(lead.title) ? "border-l-2 border-l-amber-400" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
+                      <TableRow key={lead.id} className={cn("cursor-pointer transition-colors hover:bg-muted/30", compareIds.includes(lead.id) && "bg-primary/5 ring-1 ring-inset ring-primary/20", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]", lead.lead_score >= 95 && "animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.15)]", lead.lead_score >= 90 ? "border-l-2 border-l-red-500" : lead.lead_score >= 75 ? "border-l-2 border-l-amber-500" : isPremiumLead(lead.title) ? "border-l-2 border-l-amber-400" : "border-l-2 border-l-transparent")} onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}>
                         <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} /></TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
                           <Checkbox checked={compareIds.includes(lead.id)} onCheckedChange={() => toggleCompare(lead.id)} className="border-primary/40" />
@@ -1501,6 +1501,7 @@ const ScraperLeads = () => {
                   className={cn(
                     "rounded-lg border bg-card p-3 cursor-pointer active:scale-[0.99] transition-transform",
                     isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03]",
+                    lead.lead_score >= 95 && "animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.15)]",
                     lead.lead_score >= 90 ? "border-l-4 border-l-red-500"
                     : lead.lead_score >= 75 ? "border-l-4 border-l-amber-500"
                     : isPremiumLead(lead.title) ? "border-l-4 border-l-amber-400"
