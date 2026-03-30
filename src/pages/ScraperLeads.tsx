@@ -709,7 +709,7 @@ const ScraperLeads = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-2">{cleanTitleStatic(lead.title)}</h4>
+                          <h4 className="font-medium text-sm line-clamp-2">{isPremiumLead(lead.title) && "✨ "}{cleanTitleStatic(lead.title)}</h4>
                           {getPropertyBadge(lead.title)}
                         </div>
                         <div className="flex flex-col items-end gap-1">
