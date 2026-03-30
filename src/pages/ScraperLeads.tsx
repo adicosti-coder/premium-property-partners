@@ -417,7 +417,7 @@ const ScraperLeads = () => {
 
   const getPropertyBadge = (title: string) => {
     if (title.includes("🏢")) return <Badge className="bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/20 text-[10px] px-1.5 py-0">Ansamblu Nou</Badge>;
-    if (title.includes("🏰")) return <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/20 text-[10px] px-1.5 py-0">Istoric Premium</Badge>;
+    if (isPremiumLead(title)) return <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/20 text-[10px] px-1.5 py-0">Zonă Premium</Badge>;
     return null;
   };
 
