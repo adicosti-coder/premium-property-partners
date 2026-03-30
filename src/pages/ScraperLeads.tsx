@@ -1022,6 +1022,58 @@ const ScraperLeads = () => {
             ))}
           </div>
 
+          {/* Scraper Analytics Dashboard */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-500/15">
+                  <Shield className="w-4 h-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Scut Anti-Spam</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? archivedCount}</p>
+                  <p className="text-[10px] text-muted-foreground">lead-uri blocate</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/15">
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Anunțuri Curățate</p>
+                  <p className="text-xl font-bold font-mono">{leads?.length ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground">importate cu succes</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/15">
+                  <Database className="w-4 h-4 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Bază de Date Inteligentă</p>
+                  <p className="text-xl font-bold font-mono">{phoneIntelCount}</p>
+                  <p className="text-[10px] text-muted-foreground">telefoane în memorie</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/15">
+                  <Archive className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arhivate</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? archivedCount}</p>
+                  <p className="text-[10px] text-muted-foreground">ignorate la re-import</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Stats (6 cards like Bot Prospectare) */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-3">
             {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
