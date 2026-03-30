@@ -2,7 +2,34 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-ingest-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-ingest-secret, x-scraper-secret",
+};
+
+const getExpectedIngestSecrets = (): string[] => {
+  return [Deno.env.get("SCRAPER_INGEST_SECRET"), Deno.env.get("INGEST_SECRET")]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim());
+};
+
+const getProvidedIngestSecret = (req: Request): string => {
+  const directHeader = req.headers.get("x-ingest-secret") ?? req.headers.get("x-scraper-secret");
+  if (directHeader) return directHeader.trim();
+
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.toLowerCase().startsWith("bearer ")) {
+    return authHeader.slice(7).trim();
+  }
+
+  return "";
+};
+
+const safeEqual = (a: string, b: string): boolean => {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
 };
 
 Deno.serve(async (req) => {
@@ -11,9 +38,25 @@ Deno.serve(async (req) => {
   }
 
   // ── Auth: validate ingest secret ──
-  const secret = req.headers.get("x-ingest-secret");
-  const expectedSecret = Deno.env.get("SCRAPER_INGEST_SECRET");
-  if (!expectedSecret || secret !== expectedSecret) {
+  const expectedSecrets = getExpectedIngestSecrets();
+  const providedSecret = getProvidedIngestSecret(req);
+
+  if (expectedSecrets.length === 0) {
+    console.error("[ingest-scraper-leads] Missing ingest secret env. Expected SCRAPER_INGEST_SECRET or INGEST_SECRET.");
+    return new Response(JSON.stringify({ error: "Ingest endpoint misconfigured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const isAuthorized =
+    providedSecret.length > 0 && expectedSecrets.some((expectedSecret) => safeEqual(providedSecret, expectedSecret));
+
+  if (!isAuthorized) {
+    console.warn("[ingest-scraper-leads] Unauthorized request", {
+      hasProvidedSecret: providedSecret.length > 0,
+      expectedSecretsCount: expectedSecrets.length,
+    });
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
