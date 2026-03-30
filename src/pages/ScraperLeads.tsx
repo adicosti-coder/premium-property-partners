@@ -22,6 +22,7 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
+  Shield, Database, Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -210,6 +211,28 @@ const ScraperLeads = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
+  const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
+  const [recentScanPulse, setRecentScanPulse] = useState(false);
+
+  // ── Phone Intelligence Count ──────────────────────
+  const { data: phoneIntelCount = 0 } = useQuery({
+    queryKey: ["phone-intel-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("phone_intelligence").select("*", { count: "exact", head: true });
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // ── Archived/Blacklisted counts ───────────────────
+  const { data: archivedCount = 0 } = useQuery({
+    queryKey: ["scraper-archived-count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("scraper_leads").select("*", { count: "exact", head: true }).eq("status", "archived");
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
@@ -543,17 +566,28 @@ const ScraperLeads = () => {
   // ── Scan (Scanează acum) ──────────────────────────
   const handleScrape = async () => {
     setIsScraping(true);
+    setRecentScanPulse(true);
     try {
       const { data, error } = await supabase.functions.invoke("scrape-prospects", {
         body: { max_results: 10 },
       });
       if (error) throw error;
+      if (data) {
+        setLastIngestResult({
+          count: data.new_listings || data.count || 0,
+          blacklisted_skipped: data.blacklisted_skipped || 0,
+          archived_skipped: data.archived_skipped || 0,
+        });
+      }
       toast.success(`Scanare completă! ${data?.new_listings || 0} anunțuri noi găsite.`);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
+      queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
     } catch (err: any) {
       toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
     } finally {
       setIsScraping(false);
+      setTimeout(() => setRecentScanPulse(false), 5000);
     }
   };
 
@@ -920,7 +954,20 @@ const ScraperLeads = () => {
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                    {(isScraping || recentScanPulse) && (
+                      <Badge className={cn(
+                        "text-[10px] px-2 py-0.5 gap-1",
+                        isScraping
+                          ? "bg-amber-500/15 text-amber-600 border-amber-500/30 animate-pulse"
+                          : "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 animate-pulse"
+                      )}>
+                        <Sparkles className="w-3 h-3" />
+                        {isScraping ? "Scanare..." : "Actualizat"}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">{t.subtitle}</p>
                 </div>
               </div>
@@ -973,6 +1020,58 @@ const ScraperLeads = () => {
                 {pt.label} ({categoryCounts[pt.value as keyof typeof categoryCounts]})
               </Button>
             ))}
+          </div>
+
+          {/* Scraper Analytics Dashboard */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-500/15">
+                  <Shield className="w-4 h-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Scut Anti-Spam</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? archivedCount}</p>
+                  <p className="text-[10px] text-muted-foreground">lead-uri blocate</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/15">
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Anunțuri Curățate</p>
+                  <p className="text-xl font-bold font-mono">{leads?.length ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground">importate cu succes</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/15">
+                  <Database className="w-4 h-4 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Bază de Date Inteligentă</p>
+                  <p className="text-xl font-bold font-mono">{phoneIntelCount}</p>
+                  <p className="text-[10px] text-muted-foreground">telefoane în memorie</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/15">
+                  <Archive className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arhivate</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? archivedCount}</p>
+                  <p className="text-[10px] text-muted-foreground">ignorate la re-import</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Stats (6 cards like Bot Prospectare) */}
