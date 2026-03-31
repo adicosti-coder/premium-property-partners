@@ -223,7 +223,7 @@ const Preturi = () => {
         ? "Bună ziua! Sunt interesat de pachetele de administrare și aș dori o evaluare gratuită."
         : "Hello! I'm interested in the management packages and would like a free evaluation."
     );
-    window.open(`https://wa.me/40723154520?text=${msg}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
   const seo = {

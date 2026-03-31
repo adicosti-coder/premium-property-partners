@@ -583,7 +583,7 @@ const ListingImporter = () => {
               >
                 Import Nou
               </Button>
-              <Button variant="outline" size="sm" onClick={() => window.open(url, "_blank")}>
+              <Button variant="outline" size="sm" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
                 <ExternalLink className="w-3 h-3 mr-1" />Vezi Original
               </Button>
             </div>

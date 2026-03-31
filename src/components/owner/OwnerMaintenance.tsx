@@ -173,7 +173,7 @@ const OwnerMaintenance = ({ propertyId }: OwnerMaintenanceProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(record.image_url!, "_blank")}
+                          onClick={() => window.open(record.image_url!, '_blank', 'noopener,noreferrer')}
                         >
                           <ImageIcon className="w-4 h-4 mr-1" />
                           {t.viewImage}
@@ -184,7 +184,7 @@ const OwnerMaintenance = ({ propertyId }: OwnerMaintenanceProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(record.invoice_url!, "_blank")}
+                          onClick={() => window.open(record.invoice_url!, '_blank', 'noopener,noreferrer')}
                         >
                           <FileText className="w-4 h-4 mr-1" />
                           {t.viewInvoice}

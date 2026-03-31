@@ -1742,7 +1742,7 @@ const POIManager = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => window.open(poi.website!, '_blank')}
+                              onClick={() => window.open(poi.website!, '_blank', 'noopener,noreferrer')}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </Button>
@@ -1751,7 +1751,7 @@ const POIManager = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => window.open(`tel:${poi.phone}`, '_blank')}
+                              onClick={() => window.open(`tel:${poi.phone}`, '_blank', 'noopener,noreferrer')}
                             >
                               <Phone className="w-4 h-4" />
                             </Button>

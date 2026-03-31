@@ -277,7 +277,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     const whatsappUrl = `https://wa.me/40742000000?text=${encodedMessage}`;
 
     // Open WhatsApp
-    window.open(whatsappUrl, "_blank");
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
     trackStep("booking_form_submit", { propertyName, discountCode: discountInfo ? discountCode : undefined });
 

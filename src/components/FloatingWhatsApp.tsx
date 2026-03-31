@@ -25,7 +25,7 @@ const FloatingWhatsApp = () => {
   const handleClick = () => {
     trackWhatsApp();
     const message = encodeURIComponent(t.floatingWhatsapp.message);
-    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   return (
