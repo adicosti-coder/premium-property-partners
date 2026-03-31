@@ -32,7 +32,7 @@ const MobileCTABar = () => {
     const message = encodeURIComponent(language === 'ro' 
       ? "Bună! Sunt interesat de serviciile RealTrust." 
       : "Hello! I'm interested in RealTrust services.");
-    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const scrollToGuests = () => {

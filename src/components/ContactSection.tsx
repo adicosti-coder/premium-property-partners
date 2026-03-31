@@ -24,7 +24,7 @@ const ContactSection = () => {
   const handleWhatsApp = () => {
     trackWhatsApp();
     const message = encodeURIComponent(t.contactSection.whatsappMessage);
-    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleEmail = () => {

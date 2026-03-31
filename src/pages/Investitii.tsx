@@ -222,7 +222,7 @@ const Investitii = () => {
               <Button 
                 variant="hero" 
                 size="lg"
-                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, sunt interesat de o oportunitate de investiție." : "Hello, I'm interested in an investment opportunity.")}`, '_blank')}
+                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, sunt interesat de o oportunitate de investiție." : "Hello, I'm interested in an investment opportunity.")}`, '_blank', 'noopener,noreferrer')}
                 className="group"
               >
                 <Phone className="w-5 h-5 mr-2" />
@@ -472,7 +472,7 @@ const Investitii = () => {
               <p className="text-muted-foreground mb-6">{t.noPropertiesDesc}</p>
               <Button 
                 variant="hero"
-                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să fiu notificat despre noi oportunități de investiție." : "Hello, I want to be notified about new investment opportunities.")}`, '_blank')}
+                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să fiu notificat despre noi oportunități de investiție." : "Hello, I want to be notified about new investment opportunities.")}`, '_blank', 'noopener,noreferrer')}
               >
                 <Phone className="w-5 h-5 mr-2" />
                 {t.ctaContact}
@@ -507,7 +507,7 @@ const Investitii = () => {
               variant="hero"
               size="lg"
               className="group px-8"
-              onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să discutăm despre o oportunitate de investiție imobiliară în Timișoara." : "Hello, I'd like to discuss a real estate investment opportunity in Timișoara.")}`, '_blank')}
+              onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să discutăm despre o oportunitate de investiție imobiliară în Timișoara." : "Hello, I'd like to discuss a real estate investment opportunity in Timișoara.")}`, '_blank', 'noopener,noreferrer')}
             >
               <Phone className="w-5 h-5 mr-2" />
               {language === "ro" ? "Discută pe WhatsApp" : "Chat on WhatsApp"}

@@ -250,7 +250,7 @@ const InvestmentEngineV34 = ({
     const msg = language === "ro"
       ? `Bună Adrian! Sunt ${name}. ${propContext}Am analizat oferta RealTrust & ApArt Hotel (${yieldText}) și doresc detalii despre vizionare.`
       : `Hello Adrian! I'm ${name}. ${propContext}I analyzed the RealTrust & ApArt Hotel offer (${yieldText}) and would like viewing details.`;
-    window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   };
 
   const t = language === "ro" ? {

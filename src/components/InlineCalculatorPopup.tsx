@@ -39,7 +39,7 @@ const InlineCalculatorPopup = () => {
 
   const contactExpert = () => {
     const msg = `Bună ziua! Am folosit calculatorul de investiții de pe site.%0A%0ARezultate estimate:%0A- Randament: ${yieldAnual.toFixed(2)}%%0A- Amortizare: ${aniAmortizare.toFixed(1)} ani.%0A%0ADoresc mai multe informații!`;
-    window.open(`https://wa.me/40723154520?text=${msg}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
   if (!visible) return null;

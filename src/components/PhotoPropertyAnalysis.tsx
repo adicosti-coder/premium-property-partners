@@ -305,6 +305,7 @@ const PhotoPropertyAnalysis = () => {
                       <a
                         href="/politica-confidentialitate"
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="text-primary underline hover:no-underline"
                       >
                         {text.gdprLink}

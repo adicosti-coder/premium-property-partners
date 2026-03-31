@@ -114,7 +114,7 @@ const GuestGuideLeadMagnet = () => {
 
       // Redirect after short delay
       setTimeout(() => {
-        window.open(`/blog/${GUIDE_SLUG}`, "_blank");
+        window.open(`/blog/${GUIDE_SLUG}`, '_blank', 'noopener,noreferrer');
         setIsOpen(false);
       }, 2000);
     } catch (err) {

@@ -68,7 +68,7 @@ const StickyPropertyCTA = ({ propertyName, propertyId, price, onBookClick }: Sti
         ? `Bună! Sunt interesat de proprietatea "${propertyName}". Aș dori mai multe detalii.`
         : `Hello! I'm interested in the property "${propertyName}". I'd like more details.`
     );
-    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleBook = () => {

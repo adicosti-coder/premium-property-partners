@@ -160,7 +160,7 @@ const PropertyQualification = ({ onContact }: PropertyQualificationProps) => {
           <Button
             onClick={() => {
               const message = encodeURIComponent("Bună ziua! Sunt interesat de o evaluare gratuită pentru apartamentul meu.");
-              window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+              window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
             }}
             variant="hero"
             size="xl"

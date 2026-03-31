@@ -524,7 +524,7 @@ const AnalizaProprietate = () => {
                           className="w-full gap-2"
                           onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(
                             `Scor HostScan: ${report.scor}/${report.max_scor} | ${report.zona} | ROI: ${report.roi_estimat} | ${form.name} - ${form.phone}`
-                          )}`)}
+                          )}`, '_blank', 'noopener,noreferrer')}
                         >
                           <Phone className="w-4 h-4" />
                           {language === "ro" ? "CONTACTEAZĂ ADRIAN" : "CONTACT ADRIAN"}

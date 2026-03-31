@@ -154,7 +154,7 @@ const PentruProprietari = () => {
         ? "Bună ziua! Sunt interesat de serviciile RealTrust & ApArt Hotel pentru administrarea apartamentului meu."
         : "Hello! I'm interested in RealTrust & ApArt Hotel services for managing my apartment."
     );
-    window.open(`https://wa.me/40723154520?text=${message}`, "_blank");
+    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const seoContent = {
