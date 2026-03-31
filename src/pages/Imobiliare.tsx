@@ -153,7 +153,7 @@ const Imobiliare = () => {
               <Button 
                 variant="hero" 
                 size="lg"
-                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank')}
+                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank', 'noopener,noreferrer')}
                 className="group"
               >
                 <Phone className="w-5 h-5 mr-2" />
