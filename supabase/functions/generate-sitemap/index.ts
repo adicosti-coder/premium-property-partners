@@ -63,6 +63,11 @@ serve(async (req: Request) => {
       { url: "/pentru-oaspeti", priority: "0.7", changefreq: "weekly" },
       { url: "/preturi", priority: "0.7", changefreq: "weekly" },
       { url: "/analiza-proprietate", priority: "0.8", changefreq: "weekly" },
+      { url: "/catalog-investitii", priority: "0.7", changefreq: "weekly" },
+      // Zone landing pages
+      { url: "/zona/centru", priority: "0.7", changefreq: "weekly" },
+      { url: "/zona/iulius-town", priority: "0.7", changefreq: "weekly" },
+      { url: "/zona/fabric", priority: "0.7", changefreq: "weekly" },
     ];
 
     // Fetch published blog articles (with image for image sitemap)
