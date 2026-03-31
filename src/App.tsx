@@ -92,12 +92,8 @@ const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
 const PageLoader = () => null;
 
 // Redirect /contact → /#contact (avoid 404 noindex for Google)
-const ContactRedirect = () => {
-  useEffect(() => {
-    window.location.replace('/#contact');
-  }, []);
-  return null;
-};
+// ContactRedirect uses Navigate for proper SEO (no JS redirect)
+const ContactRedirect = () => <Navigate to="/#contact" replace />;
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
