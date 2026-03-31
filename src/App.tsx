@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigationType } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
@@ -92,12 +92,8 @@ const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
 const PageLoader = () => null;
 
 // Redirect /contact → /#contact (avoid 404 noindex for Google)
-const ContactRedirect = () => {
-  useEffect(() => {
-    window.location.replace('/#contact');
-  }, []);
-  return null;
-};
+// ContactRedirect uses Navigate for proper SEO (no JS redirect)
+const ContactRedirect = () => <Navigate to="/#contact" replace />;
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
@@ -208,13 +204,14 @@ const App = () => (
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/contact" element={<ContactRedirect />} />
-                    {/* Legacy .html redirects — server-side .htaccess not processed on this host */}
-                    <Route path="/index-en.html" element={<LegacyRedirect to="/" />} />
-                    <Route path="/index_EN.html" element={<LegacyRedirect to="/" />} />
-                    <Route path="/imobiliare-realtrust-en.html" element={<LegacyRedirect to="/" />} />
-                    <Route path="/imobiliare-realtrust.html" element={<LegacyRedirect to="/" />} />
-                    <Route path="/real-estate-en.html" element={<LegacyRedirect to="/imobiliare" />} />
-                    <Route path="/real-estate.html" element={<LegacyRedirect to="/imobiliare" />} />
+                    {/* Legacy .html redirects — use Navigate for proper 301-like behavior with crawlers */}
+                    <Route path="/index.html" element={<Navigate to="/" replace />} />
+                    <Route path="/index-en.html" element={<Navigate to="/" replace />} />
+                    <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
+                    <Route path="/imobiliare-realtrust-en.html" element={<Navigate to="/imobiliare" replace />} />
+                    <Route path="/imobiliare-realtrust.html" element={<Navigate to="/imobiliare" replace />} />
+                    <Route path="/real-estate-en.html" element={<Navigate to="/imobiliare" replace />} />
+                    <Route path="/real-estate.html" element={<Navigate to="/imobiliare" replace />} />
                     {/* Sitemap redirect to dynamic edge function */}
                     <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
