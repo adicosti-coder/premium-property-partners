@@ -954,7 +954,7 @@ const AIChatbot = () => {
                         className="w-full gap-2"
                         onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(
                           `Scor HostScan: ${propertyReport.scor}/${propertyReport.max_scor} pentru ${propertyReport.zona}. ROI estimat: ${propertyReport.roi_estimat}. Vreau o evaluare detaliată.`
-                        )}`)}
+                        )}`, '_blank', 'noopener,noreferrer')}
                       >
                         {language === "ro" ? "CONTACTEAZĂ ECHIPA" : "CONTACT TEAM"}
                       </Button>

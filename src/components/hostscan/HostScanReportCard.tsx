@@ -100,7 +100,9 @@ const HostScanReportCard = ({ report, language, onSendEmail, isSendingEmail, ema
             window.open(
               `https://wa.me/40723154520?text=${encodeURIComponent(
                 `Scor HostScan: ${report.scor}/${report.max_scor} | ${report.zona} | ROI: ${report.roi_estimat}${ownerName ? ` | ${ownerName}` : ""}${ownerPhone ? ` - ${ownerPhone}` : ""}`
-              )}`
+              )}`,
+              '_blank',
+              'noopener,noreferrer'
             )
           }
         >
