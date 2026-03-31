@@ -61,7 +61,7 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
     setIsSubmitting(true);
     try {
       const msg = `Vizionare: ${propertyName} (${propertyId})\nNume: ${name}\nTelefon: ${phone}\nInterval: ${timeSlot}`;
-      window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, '_blank');
+      window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
       setIsSuccess(true);
       toast({ title: t.success });
     } finally {

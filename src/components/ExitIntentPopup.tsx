@@ -130,7 +130,7 @@ const ExitIntentPopup = () => {
       });
 
       if (isBuyerPath) {
-        window.open(`/catalog-investitii?email=${encodeURIComponent(email)}&token=invest2026`, "_blank");
+        window.open(`/catalog-investitii?email=${encodeURIComponent(email)}&token=invest2026`, "_blank", "noopener,noreferrer");
       }
       
       setEmail("");
