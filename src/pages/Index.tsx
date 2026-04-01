@@ -25,6 +25,7 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
+const VerifiedReviewsBadges = lazy(() => import("@/components/VerifiedReviewsBadges"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -163,6 +164,11 @@ const Index = () => {
           summaryRo="RealTrust & ApArt Hotel Timișoara — Apartamente în regim hotelier aproape de Centrul istoric, de obiectivele turistice și comerciale importante din Timișoara, de Amazonia Aquapark, la Fructus Plaza, City of Mara, Ring, X-City, Ateneo și Denya Forest, etc."
           summaryEn="RealTrust & ApArt Hotel Timișoara — Short-term rental apartments near the Old Town, major tourist and commercial landmarks in Timișoara, Amazonia Aquapark, at Fructus Plaza, City of Mara, Ring, X-City, Ateneo and Denya Forest, etc."
         />
+
+        {/* Verified Reviews Badges - social proof */}
+        <Suspense fallback={null}>
+          <VerifiedReviewsBadges />
+        </Suspense>
 
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
         <NearFoldSection />

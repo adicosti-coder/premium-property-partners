@@ -160,7 +160,7 @@ const PentruProprietari = () => {
   const seoContent = {
     ro: {
       title: "Administrare Apartamente Timișoara | RealTrust",
-      description: "Transformă-ți apartamentul într-o sursă de venit pasiv cu administrare profesională. Comision 15-25%, rată ocupare 85%+, transparență totală și rapoarte lunare. Evaluare gratuită!"
+      description: "Predă apartamentul tău în administrare completă la RealTrust Timișoara. Noi ne ocupăm de oaspeți, curățenie și self check-in. Tu primești venitul lunar."
     },
     en: {
       title: "Apartment Management Timișoara | RealTrust",
@@ -176,7 +176,20 @@ const PentruProprietari = () => {
     import("@/utils/schemaGenerators").then(({ generatePropertyManagementServiceSchema, generateSpeakableSchema }) => {
       const serviceSchema = generatePropertyManagementServiceSchema();
       const speakable = generateSpeakableSchema(seo.title, "https://www.realtrust.ro/pentru-proprietari");
-      setSchemas([serviceSchema, speakable]);
+      // Fix 3B - Service schema
+      const serviceSchemaFix3B = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": "Administrare Apartamente Regim Hotelier Timișoara",
+        "provider": { "@type": "LocalBusiness", "name": "RealTrust" },
+        "description": "Preluăm apartamentul tău în administrare completă pentru regim hotelier. Venit lunar garantat, self check-in, curățenie, oaspeți gestionați integral.",
+        "areaServed": "Timișoara, România",
+        "offers": {
+          "@type": "Offer",
+          "description": "ROI 9.4% net anual verificat. Pachete: Starter 15%, Esențial 18%, Standard 20%, Premium 25%."
+        }
+      };
+      setSchemas([serviceSchema, speakable, serviceSchemaFix3B]);
     });
   }, [seo.title]);
 

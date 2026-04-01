@@ -86,7 +86,7 @@ const Investitii = () => {
   const texts = {
     ro: {
       title: "Investiții Imobiliare",
-      metaDescription: "Oportunități de investiții imobiliare în Timișoara cu randament net 9%+ verificat. Due diligence complet, administrare profesională inclusă. Noi le găsim, noi le administrăm, tu încasezi!",
+      metaDescription: "Investiții imobiliare profitabile în Timișoara cu RealTrust. ROI 9.4% net, randament garantat, ghid gratuit 2026. Descarcă analiza completă.",
       heroTitle: "Investment",
       heroTitleHighlight: "Deal Room",
       heroSubtitle: "Oportunități exclusive cu randament verificat. Noi le găsim, noi le administrăm, tu încasezi profitul.",

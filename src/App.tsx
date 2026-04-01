@@ -88,6 +88,7 @@ const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const Unsubscribe = lazyWithRetry(() => import("./pages/Unsubscribe"));
 const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
+const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
@@ -194,6 +195,7 @@ const App = () => (
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
+                    <Route path="/complexe/:slug" element={<ComplexLanding />} />
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
                     <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />

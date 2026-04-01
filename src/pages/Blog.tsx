@@ -205,7 +205,7 @@ const Blog = () => {
   const seoContent = {
     ro: {
       title: "Blog Imobiliar Timișoara | Sfaturi Proprietari",
-      description: "Articole, ghiduri și sfaturi practice pentru proprietari și oaspeți. Află cum să maximizezi randamentul proprietății tale în regim hotelier. Citește ghidurile noastre acum!"
+      description: "Blog RealTrust — articole despre investiții imobiliare, regim hotelier și randament în Timișoara. Sfaturi practice de la experți PropTech."
     },
     en: {
       title: "Real Estate Blog Timișoara | Owner Tips",
@@ -225,6 +225,17 @@ const Blog = () => {
         { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
         { name: "Blog", url: "https://www.realtrust.ro/blog" },
       ]),
+      // Fix 3C - Blog schema
+      {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "Blog RealTrust — Investiții Imobiliare Timișoara",
+        "url": "https://www.realtrust.ro/blog",
+        "publisher": {
+          "@type": "Organization",
+          "name": "RealTrust & ApArt Hotel"
+        }
+      },
     ];
     if (articles && articles.length > 0) {
       schemas.push(generateBlogCollectionSchema(articles));
