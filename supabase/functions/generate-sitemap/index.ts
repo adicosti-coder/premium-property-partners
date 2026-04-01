@@ -68,6 +68,17 @@ serve(async (req: Request) => {
       { url: "/zona/centru", priority: "0.7", changefreq: "weekly" },
       { url: "/zona/iulius-town", priority: "0.7", changefreq: "weekly" },
       { url: "/zona/fabric", priority: "0.7", changefreq: "weekly" },
+      // Complex landing pages (SEO)
+      { url: "/complexe/isho", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/ateneo", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/green-forest", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/helios", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/fructus-plaza", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/city-of-mara", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/vivalia", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/nord-one", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/xcity-towers", priority: "0.7", changefreq: "weekly" },
+      { url: "/complexe/denya-forest", priority: "0.7", changefreq: "weekly" },
     ];
 
     // Fetch published blog articles (with image for image sitemap)
