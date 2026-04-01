@@ -165,6 +165,11 @@ const Index = () => {
           summaryEn="RealTrust & ApArt Hotel Timișoara — Short-term rental apartments near the Old Town, major tourist and commercial landmarks in Timișoara, Amazonia Aquapark, at Fructus Plaza, City of Mara, Ring, X-City, Ateneo and Denya Forest, etc."
         />
 
+        {/* Verified Reviews Badges - social proof */}
+        <Suspense fallback={null}>
+          <VerifiedReviewsBadges />
+        </Suspense>
+
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
         <NearFoldSection />
 
