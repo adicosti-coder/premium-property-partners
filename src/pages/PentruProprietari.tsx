@@ -176,7 +176,20 @@ const PentruProprietari = () => {
     import("@/utils/schemaGenerators").then(({ generatePropertyManagementServiceSchema, generateSpeakableSchema }) => {
       const serviceSchema = generatePropertyManagementServiceSchema();
       const speakable = generateSpeakableSchema(seo.title, "https://www.realtrust.ro/pentru-proprietari");
-      setSchemas([serviceSchema, speakable]);
+      // Fix 3B - Service schema
+      const serviceSchemaFix3B = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": "Administrare Apartamente Regim Hotelier Timișoara",
+        "provider": { "@type": "LocalBusiness", "name": "RealTrust" },
+        "description": "Preluăm apartamentul tău în administrare completă pentru regim hotelier. Venit lunar garantat, self check-in, curățenie, oaspeți gestionați integral.",
+        "areaServed": "Timișoara, România",
+        "offers": {
+          "@type": "Offer",
+          "description": "ROI 9.4% net anual verificat. Pachete: Starter 15%, Esențial 18%, Standard 20%, Premium 25%."
+        }
+      };
+      setSchemas([serviceSchema, speakable, serviceSchemaFix3B]);
     });
   }, [seo.title]);
 
