@@ -88,6 +88,7 @@ const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const Unsubscribe = lazyWithRetry(() => import("./pages/Unsubscribe"));
 const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
+const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
