@@ -195,6 +195,7 @@ const App = () => (
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
+                    <Route path="/complexe/:slug" element={<ComplexLanding />} />
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
                     <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />
