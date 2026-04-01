@@ -25,6 +25,7 @@ const PageSummary = lazy(() => import("@/components/PageSummary"));
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
+const VerifiedReviewsBadges = lazy(() => import("@/components/VerifiedReviewsBadges"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
