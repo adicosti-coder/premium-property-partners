@@ -225,6 +225,17 @@ const Blog = () => {
         { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
         { name: "Blog", url: "https://www.realtrust.ro/blog" },
       ]),
+      // Fix 3C - Blog schema
+      {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "Blog RealTrust — Investiții Imobiliare Timișoara",
+        "url": "https://www.realtrust.ro/blog",
+        "publisher": {
+          "@type": "Organization",
+          "name": "RealTrust & ApArt Hotel"
+        }
+      },
     ];
     if (articles && articles.length > 0) {
       schemas.push(generateBlogCollectionSchema(articles));

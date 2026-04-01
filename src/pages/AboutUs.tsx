@@ -293,7 +293,7 @@ const AboutUs = () => {
   const seoContent = {
     ro: {
       title: "Despre Noi | RealTrust & ApArt Hotel Timișoara",
-      description: "Două branduri, o singură viziune. Peste 25 de ani experiență în imobiliare Timișoara. Servicii complete de vânzări, achiziții și administrare profesională în regim hotelier."
+      description: "RealTrust — echipa din spatele ApArt Hotel Timișoara. 60+ proprietăți, 10.000+ oaspeți, rating 9.7 Booking.com. Imo Business Centrum SRL."
     },
     en: {
       title: "About Us | RealTrust & ApArt Hotel Timișoara",

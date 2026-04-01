@@ -160,7 +160,7 @@ const PentruProprietari = () => {
   const seoContent = {
     ro: {
       title: "Administrare Apartamente Timișoara | RealTrust",
-      description: "Transformă-ți apartamentul într-o sursă de venit pasiv cu administrare profesională. Comision 15-25%, rată ocupare 85%+, transparență totală și rapoarte lunare. Evaluare gratuită!"
+      description: "Predă apartamentul tău în administrare completă la RealTrust Timișoara. Noi ne ocupăm de oaspeți, curățenie și self check-in. Tu primești venitul lunar."
     },
     en: {
       title: "Apartment Management Timișoara | RealTrust",

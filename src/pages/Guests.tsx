@@ -490,7 +490,7 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
   const seoContent = {
     ro: {
       title: "Apartamente Timișoara | Cazare Regim Hotelier",
-      description: "Cazare premium în regim hotelier Timișoara. Apartamente complet mobilate cu check-in automat, WiFi gratuit și curățenie profesională. Rezervă direct pe site și economisește 5%!"
+      description: "Cazare în regim hotelier Timișoara — ATENEO, GREEN FOREST, HELIOS, FullView Studio. Self check-in 24/7, parcare subterană gratuită, rating 9.7 Booking.com."
     },
     en: {
       title: "Apartments Timișoara | Short-Term Accommodation",

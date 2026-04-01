@@ -83,7 +83,7 @@ const Imobiliare = () => {
   const seoContent = {
     ro: {
       title: "Servicii Imobiliare Timișoara | RealTrust",
-      description: "Servicii imobiliare complete în Timișoara: vânzări, achiziții, închirieri și consultanță pentru investitori. Experiență de peste 25 de ani și cunoaștere profundă a pieței locale."
+      description: "Servicii imobiliare RealTrust Timișoara — vânzare, cumpărare și administrare apartamente. Calculator ROI gratuit. Recomandări în 24h."
     },
     en: {
       title: "Real Estate Services Timișoara | RealTrust",

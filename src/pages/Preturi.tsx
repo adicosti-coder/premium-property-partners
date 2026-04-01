@@ -229,7 +229,7 @@ const Preturi = () => {
   const seo = {
     ro: {
       title: "Prețuri Administrare Apartamente Timișoara | RealTrust",
-      description: "Prețuri transparente pentru administrare apartamente în regim hotelier Timișoara. Comision de la 15% fără costuri ascunse, contract flexibil și evaluare gratuită a proprietății tale!",
+      description: "Pachete administrare regim hotelier RealTrust: Starter 15%, Esențial 18%, Standard 20%, Premium 25%. Fără costuri ascunse. Comparație completă.",
     },
     en: {
       title: "Apartment Management Pricing Timișoara | RealTrust",
