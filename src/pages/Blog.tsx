@@ -205,7 +205,7 @@ const Blog = () => {
   const seoContent = {
     ro: {
       title: "Blog Imobiliar Timișoara | Sfaturi Proprietari",
-      description: "Articole, ghiduri și sfaturi practice pentru proprietari și oaspeți. Află cum să maximizezi randamentul proprietății tale în regim hotelier. Citește ghidurile noastre acum!"
+      description: "Blog RealTrust — articole despre investiții imobiliare, regim hotelier și randament în Timișoara. Sfaturi practice de la experți PropTech."
     },
     en: {
       title: "Real Estate Blog Timișoara | Owner Tips",
