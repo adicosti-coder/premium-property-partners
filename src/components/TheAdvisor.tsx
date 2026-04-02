@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";

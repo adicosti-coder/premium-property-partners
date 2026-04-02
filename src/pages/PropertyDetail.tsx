@@ -510,19 +510,7 @@ const PropertyDetail = () => {
         },
       }),
     },
-    // FAQPage Schema
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqSchemaItems.map(item => ({
-        "@type": "Question",
-        "name": item.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": item.answer,
-        },
-      })),
-    },
+    // FAQPage Schema — now handled by useFAQSchema context (no inline injection)
   ];
 
   return (
