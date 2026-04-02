@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import {
   Accordion,
   AccordionContent,
@@ -186,15 +187,11 @@ const PropertyFAQ = ({
   const faqItems = [...baseFaqItems, ...amenityFAQs];
 
   // Generate FAQ schema for SEO
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.filter(item => item.a).map(item => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-  };
+  // Register FAQ items via centralized context (single FAQPage per page)
+  useRegisterFAQs(
+    "property-faq",
+    faqItems.filter(item => item.a).map(item => ({ question: item.q, answer: item.a })),
+  );
 
   return (
     <section className="mt-8">
@@ -204,9 +201,7 @@ const PropertyFAQ = ({
           {language === "ro" ? "Întrebări Frecvente" : "Frequently Asked Questions"}
         </h2>
       </div>
-      
-      {/* FAQ Schema injected via SEOHead in PropertyDetail for proper Helmet rendering */}
-      
+
       <Accordion type="single" collapsible className="w-full">
         {faqItems.map((item, i) => (
           <AccordionItem key={i} value={`faq-${i}`}>

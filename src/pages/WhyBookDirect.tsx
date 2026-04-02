@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -201,18 +202,11 @@ const WhyBookDirect = () => {
     { label: language === 'ro' ? 'Rezervă Direct' : 'Book Direct' }
   ];
 
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map(item => ({
-      "@type": "Question",
-      "name": item.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": item.answer
-      }
-    }))
-  };
+  // Register FAQ items via centralized context
+  useRegisterFAQs("why-book-direct", faqItems.map(item => ({
+    question: item.question,
+    answer: item.answer,
+  })));
 
   return (
     <div className="min-h-screen bg-background">
@@ -222,7 +216,7 @@ const WhyBookDirect = () => {
           ? 'Economisește până la 15% rezervând direct pe site-ul ApArt Hotel. Beneficiază de prețuri mai bune decât pe Booking sau Airbnb, comunicare directă cu echipa noastră și flexibilitate maximă.'
           : 'Save up to 15% by booking direct on ApArt Hotel site. Get better prices than Booking or Airbnb, direct communication with our team and maximum flexibility.'}
         url="https://www.realtrust.ro/rezerva-direct"
-        jsonLd={faqJsonLd}
+        
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
           { name: language === "ro" ? "Oaspeți" : "Guests", url: "https://www.realtrust.ro/oaspeti" },

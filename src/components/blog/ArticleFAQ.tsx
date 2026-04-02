@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import {
   Accordion,
   AccordionContent,
@@ -73,6 +74,9 @@ const ArticleFAQ = ({ category, articleTitle }: ArticleFAQProps) => {
   const lang = language === "en" ? "en" : "ro";
 
   const items = faqData[category]?.[lang] || defaultFaq[lang];
+
+  // Register FAQ items via centralized context
+  useRegisterFAQs("article-faq", items.map(item => ({ question: item.q, answer: item.a })));
 
   return (
     <section className="my-10 p-6 rounded-xl border border-border bg-muted/20">

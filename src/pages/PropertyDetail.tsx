@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
@@ -510,20 +511,11 @@ const PropertyDetail = () => {
         },
       }),
     },
-    // FAQPage Schema
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqSchemaItems.map(item => ({
-        "@type": "Question",
-        "name": item.question,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": item.answer,
-        },
-      })),
-    },
+    // FAQPage Schema — now handled by useFAQSchema context (no inline injection)
   ];
+
+  // Register FAQ items into centralized context
+  useRegisterFAQs("property-detail", faqSchemaItems);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
