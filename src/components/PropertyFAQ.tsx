@@ -192,7 +192,16 @@ const PropertyFAQ = ({
     "property-faq",
     faqItems.filter(item => item.a).map(item => ({ question: item.q, answer: item.a })),
   );
-      
+
+  return (
+    <section className="mt-8">
+      <div className="flex items-center gap-2 mb-4">
+        <HelpCircle className="w-5 h-5 text-primary" />
+        <h2 className="text-2xl font-serif font-semibold">
+          {language === "ro" ? "Întrebări Frecvente" : "Frequently Asked Questions"}
+        </h2>
+      </div>
+
       <Accordion type="single" collapsible className="w-full">
         {faqItems.map((item, i) => (
           <AccordionItem key={i} value={`faq-${i}`}>
