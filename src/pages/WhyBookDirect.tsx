@@ -202,18 +202,11 @@ const WhyBookDirect = () => {
     { label: language === 'ro' ? 'Rezervă Direct' : 'Book Direct' }
   ];
 
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map(item => ({
-      "@type": "Question",
-      "name": item.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": item.answer
-      }
-    }))
-  };
+  // Register FAQ items via centralized context
+  useRegisterFAQs("why-book-direct", faqItems.map(item => ({
+    question: item.question,
+    answer: item.answer,
+  })));
 
   return (
     <div className="min-h-screen bg-background">
