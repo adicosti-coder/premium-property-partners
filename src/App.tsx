@@ -5,6 +5,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 
 // Defer heavy shell components that are not needed for first paint
 const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
