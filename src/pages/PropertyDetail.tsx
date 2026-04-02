@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
