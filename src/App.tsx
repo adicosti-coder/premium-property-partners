@@ -222,6 +222,7 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </DeferredShell>
+              </FAQSchemaProvider>
             </ErrorBoundary>
           </BrowserRouter>
         </LanguageProvider>
