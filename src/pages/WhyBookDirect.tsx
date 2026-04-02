@@ -1,4 +1,5 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
