@@ -153,6 +153,7 @@ const App = () => (
         <LanguageProvider>
           <BrowserRouter>
             <ErrorBoundary>
+              <FAQSchemaProvider>
               <ScrollToTop />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
