@@ -514,6 +514,9 @@ const PropertyDetail = () => {
     // FAQPage Schema — now handled by useFAQSchema context (no inline injection)
   ];
 
+  // Register FAQ items into centralized context
+  useRegisterFAQs("property-detail", faqSchemaItems);
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead 
