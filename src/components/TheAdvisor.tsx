@@ -208,21 +208,12 @@ const TheAdvisor = ({
     };
   }, [propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenitiesKey, listingType, yearBuilt, energyClass, roi, language]);
 
-  // FAQ Schema JSON-LD
-  const faqSchema = content?.faqs
-    ? {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: content.faqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.question,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: faq.answer,
-          },
-        })),
-      }
-    : null;
+  // Register FAQ items via centralized context (single FAQPage per page)
+  const advisorFaqItems = (content?.faqs || []).map((faq) => ({
+    question: faq.question,
+    answer: faq.answer,
+  }));
+  useRegisterFAQs("the-advisor", advisorFaqItems);
 
   // If error and no content, force fallback via effect
   useEffect(() => {
@@ -240,13 +231,6 @@ const TheAdvisor = ({
 
   return (
     <section className="space-y-6" aria-label="The Advisor">
-      {faqSchema && (
-        <Helmet>
-          <script type="application/ld+json">
-            {JSON.stringify(faqSchema)}
-          </script>
-        </Helmet>
-      )}
 
       {/* Section Header */}
       <div className="flex items-center gap-3">
