@@ -1,5 +1,6 @@
 import SEOHead from "@/components/SEOHead";
-import { generateHomepageSchemas, generateFAQSchema, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
+import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 
