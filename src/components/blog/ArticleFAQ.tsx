@@ -75,6 +75,9 @@ const ArticleFAQ = ({ category, articleTitle }: ArticleFAQProps) => {
 
   const items = faqData[category]?.[lang] || defaultFaq[lang];
 
+  // Register FAQ items via centralized context
+  useRegisterFAQs("article-faq", items.map(item => ({ question: item.q, answer: item.a })));
+
   return (
     <section className="my-10 p-6 rounded-xl border border-border bg-muted/20">
       <div className="flex items-center gap-2 mb-4">
