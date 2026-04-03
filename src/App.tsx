@@ -96,6 +96,7 @@ const PageLoader = () => null;
 // Redirect /contact → /#contact (avoid 404 noindex for Google)
 // ContactRedirect uses Navigate for proper SEO (no JS redirect)
 const ContactRedirect = () => <Navigate to="/#contact" replace />;
+const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
