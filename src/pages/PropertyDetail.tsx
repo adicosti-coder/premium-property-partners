@@ -16,6 +16,7 @@ import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
+import PinterestPinButton from "@/components/PinterestPinButton";
 import { useImageCaptions } from "@/hooks/useImageCaptions";
 
 const BookingForm = lazy(() => import("@/components/BookingForm"));
@@ -481,6 +482,9 @@ const PropertyDetail = () => {
       weekendPricePerNight: dbProperty?.weekend_price_per_night,
       neighborhood: dbProperty?.location || property.location,
       nearbyPois: nearbyPoisForSchema,
+      roiPercentage: dbProperty?.roi_percentage,
+      capitalNecesar: dbProperty?.capital_necesar,
+      estimatedRevenue: dbProperty?.estimated_revenue,
     }),
     // LodgingBusiness with AggregateRating + real reviews
     {
@@ -520,8 +524,26 @@ const PropertyDetail = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead 
-        title={`${property.name} | RealTrust Timișoara`}
+        title={(() => {
+          const roi = dbProperty?.roi_percentage;
+          const lt = dbProperty?.listing_type?.toLowerCase();
+          if ((lt === 'investitie' || lt === 'vanzare') && roi) {
+            return `${property.name} | Randament ${roi} ROI — Investiție Timișoara`;
+          }
+          return `${property.name} | RealTrust Timișoara`;
+        })()}
         description={(() => {
+          const roi = dbProperty?.roi_percentage;
+          const capital = dbProperty?.capital_necesar;
+          const lt = dbProperty?.listing_type?.toLowerCase();
+          // Investment-optimized description for social sharing
+          if ((lt === 'investitie' || lt === 'vanzare') && (roi || capital)) {
+            const parts: string[] = [];
+            if (roi) parts.push(`Randament estimat: ${roi} ROI net.`);
+            if (capital) parts.push(`Capital necesar: €${capital.toLocaleString('ro-RO')}.`);
+            parts.push(`${property.name} — ${property.location}, Timișoara. Administrare profesională regim hotelier RealTrust.`);
+            return parts.join(' ').slice(0, 160);
+          }
           const rawDesc = language === 'ro' ? (property.longDescription || property.description) : (property.longDescriptionEn || property.descriptionEn || property.longDescription || property.description);
           if (rawDesc && rawDesc.length > 0) {
             const clean = rawDesc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
@@ -533,7 +555,14 @@ const PropertyDetail = () => {
         })()}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
-        imageAlt={staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${property.name} — cazare regim hotelier ${property.location}, Timișoara`}
+        imageAlt={(() => {
+          const roi = dbProperty?.roi_percentage;
+          const lt = dbProperty?.listing_type?.toLowerCase();
+          if ((lt === 'investitie' || lt === 'vanzare') && roi) {
+            return `${property.name} — investiție imobiliară Timișoara, randament ${roi} ROI, property management regim hotelier`;
+          }
+          return staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${property.name} — cazare regim hotelier ${property.location}, Timișoara`;
+        })()}
         type="product"
         productPrice={property.pricePerNight || undefined}
         productCurrency="EUR"
@@ -551,8 +580,12 @@ const PropertyDetail = () => {
         {/* Galerie cu toate imaginile */}
         <div className="container mx-auto px-4 sm:px-6 mb-8">
           {/* Hero image */}
-          <div className="relative aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer mb-3" onClick={() => { setCurrentImageIndex(0); setLightboxOpen(true); }}>
-            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : `${property.name} — cazare apartament regim hotelier ${property.location}, Timișoara`} className="w-full h-full object-cover" priority={true} />
+          <div className="relative group aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer mb-3" onClick={() => { setCurrentImageIndex(0); setLightboxOpen(true); }}>
+            <PinterestPinButton
+              imageUrl={galleryImages[currentImageIndex] || galleryImages[0]}
+              description={`${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
+            />
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
             {/* Navigation arrows on hero */}
             {galleryImages.length > 1 && (
@@ -572,7 +605,7 @@ const PropertyDetail = () => {
                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
                     aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
                   >
-                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`} className="w-full h-full object-cover" />
                   </button>
                   <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{getDisplayCaption(idx)}</p>
                 </div>
