@@ -161,6 +161,10 @@ export interface PropertySchemaData {
   basePricePerNight?: number | null;
   weekendPricePerNight?: number | null;
   neighborhood?: string | null;
+  // Investment fields for GEO/AI optimization
+  roiPercentage?: string | null;
+  capitalNecesar?: number | null;
+  estimatedRevenue?: string | null;
   // Nearby POIs for structured data
   nearbyPois?: Array<{
     name: string;
