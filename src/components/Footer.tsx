@@ -181,7 +181,7 @@ const Footer = () => {
         </div>
 
         {/* Disclaimer - compact */}
-        <p className="text-[10px] text-muted-foreground/60 mt-4 text-center max-w-3xl mx-auto">
+        <p className="text-[10px] text-muted-foreground mt-4 text-center max-w-3xl mx-auto">
           {text.disclaimer}
         </p>
       </div>
