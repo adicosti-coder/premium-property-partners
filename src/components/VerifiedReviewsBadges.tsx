@@ -43,9 +43,9 @@ const VerifiedReviewsBadges = () => {
               className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-sm ${badge.color} ${badge.textColor} ${badge.border ? "border border-border" : ""} min-w-[200px]`}
             >
               <div>
-                <p className="text-xs font-semibold opacity-80">{badge.platform}</p>
+                <p className="text-xs font-semibold">{badge.platform}</p>
                 <p className="text-lg font-bold leading-tight">{badge.score}</p>
-                <p className="text-xs opacity-70">{badge.detail}</p>
+                <p className="text-xs">{badge.detail}</p>
               </div>
             </div>
           ))}
