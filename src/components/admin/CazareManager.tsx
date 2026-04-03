@@ -219,6 +219,14 @@ export default function CazareManager() {
     } else {
       setSaveSuccess(true);
       toast({ title: isNew ? "✅ Apartament adăugat cu succes!" : "✅ Apartament actualizat cu succes!" });
+
+      // Notify IndexNow
+      try {
+        const { notifyIndexNow } = await import("@/hooks/useIndexNowNotify");
+        const slug = editingProperty.slug || editingProperty.id;
+        notifyIndexNow([`/proprietati/${slug}`]);
+      } catch {}
+
       setTimeout(() => {
         setSaveSuccess(false);
         setIsEditOpen(false);

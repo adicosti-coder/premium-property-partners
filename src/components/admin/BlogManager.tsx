@@ -406,6 +406,13 @@ const BlogManager = () => {
       toast({ title: t.saveSuccess });
       setIsDialogOpen(false);
       fetchArticles();
+
+      // Notify IndexNow about the new/updated article
+      try {
+        const { notifyIndexNow } = await import("@/hooks/useIndexNowNotify");
+        notifyIndexNow([`/blog/${articleData.slug}`]);
+      } catch {}
+
     } catch (error) {
       console.error("Error saving article:", error);
       toast({
