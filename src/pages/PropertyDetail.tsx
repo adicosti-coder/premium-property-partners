@@ -481,6 +481,9 @@ const PropertyDetail = () => {
       weekendPricePerNight: dbProperty?.weekend_price_per_night,
       neighborhood: dbProperty?.location || property.location,
       nearbyPois: nearbyPoisForSchema,
+      roiPercentage: dbProperty?.roi_percentage,
+      capitalNecesar: dbProperty?.capital_necesar,
+      estimatedRevenue: dbProperty?.estimated_revenue,
     }),
     // LodgingBusiness with AggregateRating + real reviews
     {

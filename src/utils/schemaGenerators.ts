@@ -807,6 +807,76 @@ export const generateImageObjectSchemas = (property: PropertySchemaData) => {
   };
 };
 
+// Investment Opportunity Schema — AI/GEO optimized for LLM extraction
+export const generateInvestmentOpportunitySchema = (property: PropertySchemaData) => {
+  const roi = property.roiPercentage ? parseFloat(property.roiPercentage.replace(/[^0-9.]/g, "")) : null;
+  const capital = property.capitalNecesar;
+  const revenue = property.estimatedRevenue ? parseFloat(property.estimatedRevenue.replace(/[^0-9.]/g, "")) : null;
+
+  if (!roi && !capital) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "InvestmentOrFinancialProduct",
+    "name": `${property.name} — Investiție Imobiliară Timișoara`,
+    "description": `Oportunitate de investiție imobiliară în ${property.location}, Timișoara. ${roi ? `Randament net estimat: ${roi}% ROI.` : ""} ${capital ? `Capital necesar: €${capital.toLocaleString("ro-RO")}.` : ""} Administrare profesională regim hotelier.`,
+    "url": `${BASE_URL}/proprietate/${property.slug}`,
+    "image": property.image,
+    "category": "Real Estate Investment",
+    "provider": ORGANIZATION,
+    ...(roi && {
+      "annualPercentageRate": roi,
+    }),
+    "additionalProperty": [
+      ...(roi ? [{
+        "@type": "PropertyValue",
+        "name": "yield",
+        "value": `${roi}%`,
+        "description": "Net annual yield (ROI) after management fees and taxes",
+      }] : []),
+      ...(roi ? [{
+        "@type": "PropertyValue",
+        "name": "roi",
+        "value": `${roi}%`,
+        "description": "Return on Investment — net annual percentage",
+      }] : []),
+      {
+        "@type": "PropertyValue",
+        "name": "investmentOpportunity",
+        "value": true,
+        "description": "Active investment opportunity in Timișoara real estate market",
+      },
+      ...(capital ? [{
+        "@type": "PropertyValue",
+        "name": "capitalRequired",
+        "value": `€${capital.toLocaleString("ro-RO")}`,
+        "description": "Total capital required for this investment property",
+      }] : []),
+      ...(revenue ? [{
+        "@type": "PropertyValue",
+        "name": "estimatedMonthlyRevenue",
+        "value": `€${revenue.toLocaleString("ro-RO")}`,
+        "description": "Estimated gross monthly revenue from short-term rental",
+      }] : []),
+      {
+        "@type": "PropertyValue",
+        "name": "managementType",
+        "value": "Professional short-term rental management",
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "location",
+        "value": `${property.location}, Timișoara, Romania`,
+      },
+    ],
+    "areaServed": {
+      "@type": "City",
+      "name": "Timișoara",
+      "containedInPlace": { "@type": "Country", "name": "Romania" },
+    },
+  };
+};
+
 // Combined schema for property pages
 export const generatePropertyPageSchemas = (
   property: PropertySchemaData,
@@ -820,6 +890,12 @@ export const generatePropertyPageSchemas = (
     generateImageObjectSchemas(property),
     generateHotelRoomOfferSchema(property),
   ];
+
+  // Add Investment schema if property has ROI/capital data
+  const investmentSchema = generateInvestmentOpportunitySchema(property);
+  if (investmentSchema) {
+    schemas.push(investmentSchema);
+  }
 
   if (property.rating > 0 && property.reviewCount > 0) {
     schemas.push(
