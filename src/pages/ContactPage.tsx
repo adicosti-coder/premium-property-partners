@@ -164,7 +164,7 @@ const ContactPage = () => {
           <section className="grid lg:grid-cols-2 gap-8 mb-16">
             <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2783.456!2d21.2065!3d45.7489!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47455d84bdc00001%3A0x1234567890abcdef!2sStrada+Samuel+Clain+Micu+14%2C+Timi%C8%99oara!5e0!3m2!1sro!2sro!4v1700000000000"
+                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Strada+Samuel+Clain+Micu+14,+Timișoara,+Romania&zoom=16"
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: 300 }}
