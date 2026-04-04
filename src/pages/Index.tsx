@@ -71,26 +71,21 @@ const MidFoldSection = () => (
   </div>
 );
 
-// Visibility-gated teaser sections
-const TeaserSections = () => {
-  const [ref, visible] = useLazyVisible("400px");
-  return (
-    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
-      {visible && (
-        <Suspense fallback={null}>
-          <section id="beneficii">
-            <OwnersTeaser />
-          </section>
-          <DIYvsProfessional />
-          <ROICaseStudySection />
-          <section id="oaspeti-preview">
-            <GuestsTeaser />
-          </section>
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// Teaser sections — always rendered with Suspense only
+const TeaserSections = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <section id="beneficii">
+        <OwnersTeaser />
+      </section>
+      <DIYvsProfessional />
+      <ROICaseStudySection />
+      <section id="oaspeti-preview">
+        <GuestsTeaser />
+      </section>
+    </Suspense>
+  </div>
+);
 
 // Visibility-gated bottom fold (simplified - fewer sections)
 const BottomFoldSection = ({ language }: { language: string }) => {
