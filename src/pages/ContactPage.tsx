@@ -199,14 +199,14 @@ const ContactPage = () => {
                 </Button>
               </a>
               <a
-                href="https://g.page/r/realtrust-timisoara"
+                href="https://share.google/oNmn1ltr7L0OEiHet"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex"
               >
                 <Button variant="outline" className="gap-2">
                   <Star className="w-4 h-4" />
-                  {isRo ? "Vezi Profilul Google Business" : "View Google Business Profile"}
+                  {isRo ? "Lasă o recenzie pe Google" : "Leave a Google Review"}
                 </Button>
               </a>
             </div>
