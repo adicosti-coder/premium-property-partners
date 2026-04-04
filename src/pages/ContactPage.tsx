@@ -164,7 +164,7 @@ const ContactPage = () => {
           <section className="grid lg:grid-cols-2 gap-8 mb-16">
             <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2783.456!2d21.2065!3d45.7489!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDXCsDQ0JzU2LjAiTiAyMcKwMTInMzEuMiJF!5e0!3m2!1sro!2sro!4v1700000000000"
+                src="https://maps.google.com/maps?q=45.7489,21.2087&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: 300 }}
@@ -199,14 +199,14 @@ const ContactPage = () => {
                 </Button>
               </a>
               <a
-                href="https://g.page/r/realtrust-timisoara"
+                href="https://share.google/oNmn1ltr7L0OEiHet"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex"
               >
                 <Button variant="outline" className="gap-2">
                   <Star className="w-4 h-4" />
-                  {isRo ? "Vezi Profilul Google Business" : "View Google Business Profile"}
+                  {isRo ? "Lasă o recenzie pe Google" : "Leave a Google Review"}
                 </Button>
               </a>
             </div>
