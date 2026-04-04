@@ -61,20 +61,15 @@ const NearFoldSection = () => {
   );
 };
 
-// Visibility-gated mid-fold section (simplified - removed redundant trust sections)
-const MidFoldSection = () => {
-  const [ref, visible] = useLazyVisible("400px");
-  return (
-    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
-      {visible && (
-        <Suspense fallback={null}>
-          <DualServicePaths />
-          <ChannelLogos />
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// Mid-fold section — always rendered with Suspense only
+const MidFoldSection = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <DualServicePaths />
+      <ChannelLogos />
+    </Suspense>
+  </div>
+);
 
 // Visibility-gated teaser sections
 const TeaserSections = () => {
