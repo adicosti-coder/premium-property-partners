@@ -61,58 +61,43 @@ const NearFoldSection = () => {
   );
 };
 
-// Visibility-gated mid-fold section (simplified - removed redundant trust sections)
-const MidFoldSection = () => {
-  const [ref, visible] = useLazyVisible("400px");
-  return (
-    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
-      {visible && (
-        <Suspense fallback={null}>
-          <DualServicePaths />
-          <ChannelLogos />
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// Mid-fold section — always rendered with Suspense only
+const MidFoldSection = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <DualServicePaths />
+      <ChannelLogos />
+    </Suspense>
+  </div>
+);
 
-// Visibility-gated teaser sections
-const TeaserSections = () => {
-  const [ref, visible] = useLazyVisible("400px");
-  return (
-    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
-      {visible && (
-        <Suspense fallback={null}>
-          <section id="beneficii">
-            <OwnersTeaser />
-          </section>
-          <DIYvsProfessional />
-          <ROICaseStudySection />
-          <section id="oaspeti-preview">
-            <GuestsTeaser />
-          </section>
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// Teaser sections — always rendered with Suspense only
+const TeaserSections = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <section id="beneficii">
+        <OwnersTeaser />
+      </section>
+      <DIYvsProfessional />
+      <ROICaseStudySection />
+      <section id="oaspeti-preview">
+        <GuestsTeaser />
+      </section>
+    </Suspense>
+  </div>
+);
 
-// Visibility-gated bottom fold (simplified - fewer sections)
-const BottomFoldSection = ({ language }: { language: string }) => {
-  const [ref, visible] = useLazyVisible("200px");
-  return (
-    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
-      {visible && (
-        <Suspense fallback={null}>
-          <BlogPreview />
-          <FAQ />
-          <ContactSection />
-          <CTA />
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// Bottom fold — always rendered with Suspense only
+const BottomFoldSection = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <BlogPreview />
+      <FAQ />
+      <ContactSection />
+      <CTA />
+    </Suspense>
+  </div>
+);
 
 // Deferred SEO — loaded after first paint to avoid blocking render
 const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
@@ -120,8 +105,6 @@ const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
 const Index = () => {
   const { language } = useLanguage();
   
-  // Visibility gates for heavy sections
-  const [heavyRef, heavyVisible] = useLazyVisible("200px");
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
@@ -180,20 +163,18 @@ const Index = () => {
         <TeaserSections />
 
         {/* Property gallery + testimonials */}
-        <div ref={heavyRef} className="cv-auto" style={{ minHeight: heavyVisible ? undefined : '100px' }}>
-          {heavyVisible && (
-            <Suspense fallback={<div className="min-h-[400px]" />}>
-              <section id="portofoliu">
-                <PropertyGallery />
-              </section>
-              <InteractiveMapWithPOI />
-              <Testimonials />
-            </Suspense>
-          )}
+        <div className="cv-auto">
+          <Suspense fallback={<div className="min-h-[400px]" />}>
+            <section id="portofoliu">
+              <PropertyGallery />
+            </section>
+            <InteractiveMapWithPOI />
+            <Testimonials />
+          </Suspense>
         </div>
         
         {/* Bottom-fold: deferred until scroll */}
-        <BottomFoldSection language={language} />
+        <BottomFoldSection />
       </main>
       <Suspense fallback={null}>
         <Footer />
