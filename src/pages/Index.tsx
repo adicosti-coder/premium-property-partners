@@ -87,22 +87,17 @@ const TeaserSections = () => (
   </div>
 );
 
-// Visibility-gated bottom fold (simplified - fewer sections)
-const BottomFoldSection = ({ language }: { language: string }) => {
-  const [ref, visible] = useLazyVisible("200px");
-  return (
-    <div ref={ref} className="cv-auto" style={{ minHeight: visible ? undefined : '100px' }}>
-      {visible && (
-        <Suspense fallback={null}>
-          <BlogPreview />
-          <FAQ />
-          <ContactSection />
-          <CTA />
-        </Suspense>
-      )}
-    </div>
-  );
-};
+// Bottom fold — always rendered with Suspense only
+const BottomFoldSection = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <BlogPreview />
+      <FAQ />
+      <ContactSection />
+      <CTA />
+    </Suspense>
+  </div>
+);
 
 // Deferred SEO — loaded after first paint to avoid blocking render
 const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
