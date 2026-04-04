@@ -178,7 +178,7 @@ const Index = () => {
         </div>
         
         {/* Bottom-fold: deferred until scroll */}
-        <BottomFoldSection language={language} />
+        <BottomFoldSection />
       </main>
       <Suspense fallback={null}>
         <Footer />
