@@ -406,16 +406,16 @@ const ScraperLeads = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
-    // Sort: "Noi" (status=new) by created_at desc for the stat card click; default by lead_score desc
+    // Sort based on user selection
+    const dir = sortDir === "desc" ? -1 : 1;
     result = [...result].sort((a, b) => {
-      // If both are "new" status, sort by created_at desc
-      if (a.status === "new" && b.status === "new") {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === "date") {
+        return dir * (new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       }
-      return b.lead_score - a.lead_score;
+      return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
