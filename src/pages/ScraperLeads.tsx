@@ -252,6 +252,11 @@ const ScraperLeads = () => {
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>("all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"score" | "date">("score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [newPlatform, setNewPlatform] = useState("General");
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
