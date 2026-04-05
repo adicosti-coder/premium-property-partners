@@ -23,7 +23,8 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
-  Shield, Database, Sparkles, Crown, FileText,
+  Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
+  ChevronDown, ChevronUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -50,6 +51,14 @@ interface ScraperLead {
   source: string;
   phone: string | null;
   prospect_category: string | null;
+  search_keyword: string | null;
+}
+
+interface SearchKeyword {
+  id: string;
+  keyword: string;
+  platform: string;
+  is_active: boolean;
 }
 
 interface StatusHistoryEntry {
@@ -243,6 +252,11 @@ const ScraperLeads = () => {
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>("all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"score" | "date">("score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [newPlatform, setNewPlatform] = useState("General");
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -304,6 +318,18 @@ const ScraperLeads = () => {
       return data?.[0] || null;
     },
     staleTime: 1000 * 60 * 2,
+  });
+  // ── Search Keywords ────────────────────────────────
+  const { data: searchKeywords = [], refetch: refetchKeywords } = useQuery({
+    queryKey: ["scraper-search-keywords"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("scraper_search_keywords")
+        .select("*")
+        .order("created_at", { ascending: true });
+      return (data || []) as SearchKeyword[];
+    },
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: leads, isLoading, refetch } = useQuery({
@@ -380,16 +406,16 @@ const ScraperLeads = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
-    // Sort: "Noi" (status=new) by created_at desc for the stat card click; default by lead_score desc
+    // Sort based on user selection
+    const dir = sortDir === "desc" ? -1 : 1;
     result = [...result].sort((a, b) => {
-      // If both are "new" status, sort by created_at desc
-      if (a.status === "new" && b.status === "new") {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortBy === "date") {
+        return dir * (new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       }
-      return b.lead_score - a.lead_score;
+      return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -683,6 +709,38 @@ const ScraperLeads = () => {
     } finally {
       setIsScraping(false);
       setTimeout(() => setRecentScanPulse(false), 5000);
+    }
+  };
+
+  // ── Keyword CRUD ──────────────────────────────────
+  const handleAddKeyword = async () => {
+    const kw = newKeyword.trim();
+    if (!kw) return;
+    const { error } = await supabase.from("scraper_search_keywords").insert({ keyword: kw, platform: newPlatform } as any);
+    if (error) { toast.error("Eroare la adăugare"); return; }
+    setNewKeyword("");
+    setNewPlatform("General");
+    refetchKeywords();
+    toast.success("Cuvânt cheie adăugat");
+  };
+
+  const handleToggleKeyword = async (id: string, isActive: boolean) => {
+    await supabase.from("scraper_search_keywords").update({ is_active: !isActive } as any).eq("id", id);
+    refetchKeywords();
+  };
+
+  const handleDeleteKeyword = async (id: string) => {
+    await supabase.from("scraper_search_keywords").delete().eq("id", id);
+    refetchKeywords();
+    toast.success("Cuvânt cheie șters");
+  };
+
+  const toggleSort = (col: "score" | "date") => {
+    if (sortBy === col) {
+      setSortDir(d => d === "desc" ? "asc" : "desc");
+    } else {
+      setSortBy(col);
+      setSortDir("desc");
     }
   };
 
@@ -1349,7 +1407,81 @@ const ScraperLeads = () => {
             </div>
           )}
 
-          {/* Content */}
+          {/* ── Cuvinte Cheie Scraper ──────────────────────── */}
+          <div className="mb-4">
+            <button
+              onClick={() => setKeywordsOpen(!keywordsOpen)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Tags className="w-4 h-4" />
+              Cuvinte cheie căutare ({searchKeywords.filter(k => k.is_active).length} active)
+              {keywordsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {keywordsOpen && (
+              <Card className="mt-2 bg-card border-border">
+                <CardContent className="p-4 space-y-3">
+                  {/* Add new keyword */}
+                  <div className="flex gap-2 items-end flex-wrap">
+                    <div className="flex-1 min-w-[200px]">
+                      <label className="text-xs text-muted-foreground mb-1 block">Cuvânt cheie nou</label>
+                      <Input
+                        value={newKeyword}
+                        onChange={(e) => setNewKeyword(e.target.value)}
+                        placeholder="ex: garsonieră centru timișoara site:olx.ro"
+                        className="h-8 text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && handleAddKeyword()}
+                      />
+                    </div>
+                    <div className="w-40">
+                      <label className="text-xs text-muted-foreground mb-1 block">Platformă</label>
+                      <Input
+                        value={newPlatform}
+                        onChange={(e) => setNewPlatform(e.target.value)}
+                        placeholder="General"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <Button size="sm" onClick={handleAddKeyword} className="h-8 gap-1">
+                      <Plus className="w-3 h-3" /> Adaugă
+                    </Button>
+                  </div>
+
+                  {/* Keywords list */}
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+                    {searchKeywords.map((kw) => (
+                      <div key={kw.id} className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors",
+                        kw.is_active ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-60"
+                      )}>
+                        <Switch
+                          checked={kw.is_active}
+                          onCheckedChange={() => handleToggleKeyword(kw.id, kw.is_active)}
+                          className="scale-75"
+                        />
+                        <span className="flex-1 font-mono text-xs truncate">{kw.keyword}</span>
+                        <Badge variant="outline" className="text-[10px] shrink-0">{kw.platform}</Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                          onClick={() => handleDeleteKeyword(kw.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                    {searchKeywords.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-4">Niciun cuvânt cheie configurat.</p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    💡 Aceste cuvinte cheie sunt folosite la scanare. Dezactivează sau șterge cele pe care nu le mai dorești.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {isLoading ? (
             <div className="space-y-3">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
           ) : filteredLeads.length === 0 ? (
@@ -1367,10 +1499,15 @@ const ScraperLeads = () => {
                       <TableHead className="w-10"><Checkbox checked={selectedIds.length === filteredLeads.length && filteredLeads.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
                       <TableHead className="w-10 text-center" title="Compară"><GitCompare className="w-4 h-4 mx-auto text-muted-foreground" /></TableHead>
                       <TableHead className="font-semibold">{language === "ro" ? "Proprietate" : "Property"}</TableHead>
-                      <TableHead className="font-semibold text-center">{t.score}</TableHead>
+                      <TableHead className="font-semibold text-center cursor-pointer select-none" onClick={() => toggleSort("score")}>
+                        <span className="inline-flex items-center gap-1">{t.score} <ArrowUpDown className="w-3 h-3 text-muted-foreground" /></span>
+                      </TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
                       <TableHead className="font-semibold text-right">{t.profit3y}</TableHead>
                       <TableHead className="font-semibold text-right">{t.monthlyExtra}</TableHead>
+                      <TableHead className="font-semibold text-center cursor-pointer select-none" onClick={() => toggleSort("date")}>
+                        <span className="inline-flex items-center gap-1">Data <ArrowUpDown className="w-3 h-3 text-muted-foreground" /></span>
+                      </TableHead>
                       <TableHead className="font-semibold text-center">Status</TableHead>
                       <TableHead className="text-center w-24">Acțiuni</TableHead>
                     </TableRow>
@@ -1433,6 +1570,9 @@ const ScraperLeads = () => {
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price, getPriceSuffix(lead))}</TableCell>
                         <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
                         <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
+                        <TableCell className="text-center text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(lead.created_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "2-digit" })}
+                        </TableCell>
                         <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={lead.status}

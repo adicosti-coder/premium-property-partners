@@ -111,7 +111,7 @@ function scoreListing(data: {
   return { score: Math.min(score, 100), breakdown };
 }
 
-const SEARCH_QUERIES = [
+const DEFAULT_SEARCH_QUERIES = [
   { platform: 'imobiliare.ro', query: 'apartament vanzare timisoara site:imobiliare.ro' },
   { platform: 'OLX', query: 'apartament vanzare timisoara site:olx.ro' },
   { platform: 'Storia.ro', query: 'apartament vanzare timisoara site:storia.ro' },
@@ -165,9 +165,20 @@ Deno.serve(async (req) => {
 
     const results: any[] = [];
     const errors: string[] = [];
-    const queries = customQuery 
-      ? [{ platform: 'Custom', query: customQuery }]
-      : SEARCH_QUERIES;
+
+    // Load keywords from DB, fallback to hardcoded defaults
+    let queries: { platform: string; query: string }[];
+    if (customQuery) {
+      queries = [{ platform: 'Custom', query: customQuery }];
+    } else {
+      const { data: dbKeywords } = await supabase
+        .from('scraper_search_keywords')
+        .select('keyword, platform')
+        .eq('is_active', true);
+      queries = (dbKeywords && dbKeywords.length > 0)
+        ? dbKeywords.map((k: any) => ({ platform: k.platform, query: k.keyword }))
+        : DEFAULT_SEARCH_QUERIES;
+    }
 
     for (const { platform, query } of queries) {
       console.log(`Searching ${platform}: ${query}`);
