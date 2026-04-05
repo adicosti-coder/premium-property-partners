@@ -111,7 +111,7 @@ function scoreListing(data: {
   return { score: Math.min(score, 100), breakdown };
 }
 
-const SEARCH_QUERIES = [
+const DEFAULT_SEARCH_QUERIES = [
   { platform: 'imobiliare.ro', query: 'apartament vanzare timisoara site:imobiliare.ro' },
   { platform: 'OLX', query: 'apartament vanzare timisoara site:olx.ro' },
   { platform: 'Storia.ro', query: 'apartament vanzare timisoara site:storia.ro' },
