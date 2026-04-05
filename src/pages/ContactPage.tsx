@@ -11,6 +11,9 @@ import { lazy, Suspense } from "react";
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const BASE_URL = "https://www.realtrust.ro";
+const GOOGLE_BUSINESS_URL = "https://share.google/oNmn1ltr7L0OEiHet";
+const GOOGLE_MAPS_QUERY = encodeURIComponent("Strada Samuil Micu 14, Timișoara");
+const GOOGLE_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${GOOGLE_MAPS_QUERY}`;
 
 const ContactPage = () => {
   const { language } = useLanguage();
@@ -20,28 +23,23 @@ const ContactPage = () => {
     {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
-      "@id": `${BASE_URL}/contact-locatie`,
+      "@id": `${BASE_URL}/contact`,
       "name": "RealTrust & ApArt Hotel Timișoara",
       "alternateName": "RealTrust Property Management",
       "description": isRo
-        ? "Management profesional de proprietăți în Timișoara. Administrare apartamente regim hotelier cu randament net 9.4% ROI. Sediu: Str. Samuel Clain Micu Nr.14."
-        : "Professional property management in Timișoara. Short-term rental management with 9.4% net ROI. Office: Str. Samuel Clain Micu Nr.14.",
-      "url": `${BASE_URL}/contact-locatie`,
+        ? "Management profesional de proprietăți în Timișoara. Administrare apartamente regim hotelier cu randament net 9.4% ROI. Sediu: Str. Samuil Micu Nr.14."
+        : "Professional property management in Timișoara. Short-term rental management with 9.4% net ROI. Office: Str. Samuil Micu Nr.14.",
+      "url": `${BASE_URL}/contact`,
       "telephone": "+40723154520",
       "email": "info@realtrust.ro",
       "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+        "streetAddress": "Strada Samuil Micu Nr.14",
         "addressLocality": "Timișoara",
         "addressRegion": "Timiș",
         "postalCode": "300125",
         "addressCountry": "RO",
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 45.7489,
-        "longitude": 21.2087,
       },
       "openingHoursSpecification": [
         {
@@ -66,15 +64,16 @@ const ContactPage = () => {
       "sameAs": [
         "https://www.facebook.com/realtrust.ro",
         "https://www.instagram.com/realtrust_timisoara",
+        GOOGLE_BUSINESS_URL,
       ],
-      "hasMap": "https://www.google.com/maps?q=45.7672,21.2495",
+      "hasMap": GOOGLE_MAPS_URL,
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": isRo ? "Acasă" : "Home", "item": BASE_URL },
-        { "@type": "ListItem", "position": 2, "name": isRo ? "Contact & Locație" : "Contact & Location", "item": `${BASE_URL}/contact-locatie` },
+        { "@type": "ListItem", "position": 2, "name": isRo ? "Contact & Locație" : "Contact & Location", "item": `${BASE_URL}/contact` },
       ],
     },
   ];
@@ -108,9 +107,9 @@ const ContactPage = () => {
       <SEOHead
         title={isRo ? "Contact & Locație | Management Proprietăți Timișoara — RealTrust" : "Contact & Location | Property Management Timișoara — RealTrust"}
         description={isRo
-          ? "Contactează RealTrust pentru management profesional de proprietăți în Timișoara. Sediul nostru: Str. Samuel Clain Micu Nr.14. Telefon: +40723154520. Randament 9.4% ROI."
-          : "Contact RealTrust for professional property management in Timișoara. Office: Str. Samuel Clain Micu Nr.14. Phone: +40723154520. 9.4% ROI yield."}
-        url={`${BASE_URL}/contact-locatie`}
+          ? "Contactează RealTrust pentru management profesional de proprietăți în Timișoara. Sediul nostru: Str. Samuil Micu Nr.14. Telefon: +40723154520. Randament 9.4% ROI."
+          : "Contact RealTrust for professional property management in Timișoara. Office: Str. Samuil Micu Nr.14. Phone: +40723154520. 9.4% ROI yield."}
+        url={`${BASE_URL}/contact`}
         jsonLd={jsonLdSchemas}
       />
       <Header />
@@ -164,7 +163,7 @@ const ContactPage = () => {
           <section className="grid lg:grid-cols-2 gap-8 mb-16">
             <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
               <iframe
-                src="https://maps.google.com/maps?q=45.7672,21.2495&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                src={`https://maps.google.com/maps?q=${GOOGLE_MAPS_QUERY}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: 300 }}
@@ -182,13 +181,13 @@ const ContactPage = () => {
                 </h2>
                 <address className="not-italic text-muted-foreground space-y-1">
                   <p className="font-medium text-foreground">RealTrust & ApArt Hotel</p>
-                  <p>Strada Samuel Clain Micu Nr.14, ap.4</p>
+                  <p>Strada Samuil Micu Nr.14</p>
                   <p>Timișoara, Timiș 300125</p>
                   <p>România</p>
                 </address>
               </div>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=45.7672,21.2495"
+                href={GOOGLE_MAPS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex"
@@ -199,14 +198,14 @@ const ContactPage = () => {
                 </Button>
               </a>
               <a
-                href="https://share.google/oNmn1ltr7L0OEiHet"
+                href={GOOGLE_BUSINESS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex"
               >
                 <Button variant="outline" className="gap-2">
                   <Star className="w-4 h-4" />
-                  {isRo ? "Lasă o recenzie pe Google" : "Leave a Google Review"}
+                  {isRo ? "Profil Google Business" : "Google Business Profile"}
                 </Button>
               </a>
             </div>
@@ -242,7 +241,7 @@ const ContactPage = () => {
                   Echipa noastră locală gestionează întregul proces: de la listing-ul profesional pe Airbnb, Booking.com și alte platforme, la self check-in cu smart lock, curățenie profesională între sejururi, mentenanță preventivă și raportare financiară lunară transparentă.
                 </p>
                 <p>
-                  Fie că ești proprietar și vrei să maximizezi venitul din proprietatea ta, fie că ești investitor și cauți oportunități imobiliare cu randament ridicat în Timișoara, te invităm la sediul nostru din Strada Samuel Clain Micu Nr.14 sau ne poți contacta telefonic la +40 723 154 520.
+                  Fie că ești proprietar și vrei să maximizezi venitul din proprietatea ta, fie că ești investitor și cauți oportunități imobiliare cu randament ridicat în Timișoara, te invităm la sediul nostru din Strada Samuil Micu Nr.14 sau ne poți contacta telefonic la +40 723 154 520.
                 </p>
               </>
             ) : (
@@ -254,7 +253,7 @@ const ContactPage = () => {
                   Our local team manages the entire process: from professional listing on Airbnb, Booking.com and other platforms, to smart-lock self check-in, professional cleaning between stays, preventive maintenance, and transparent monthly financial reporting.
                 </p>
                 <p>
-                  Whether you're a property owner looking to maximize your income, or an investor seeking high-yield real estate opportunities in Timișoara, visit our office at Strada Samuel Clain Micu Nr.14 or call us at +40 723 154 520.
+                  Whether you're a property owner looking to maximize your income, or an investor seeking high-yield real estate opportunities in Timișoara, visit our office at Strada Samuil Micu Nr.14 or call us at +40 723 154 520.
                 </p>
               </>
             )}
