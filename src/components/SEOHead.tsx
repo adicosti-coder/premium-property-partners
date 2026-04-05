@@ -100,19 +100,8 @@ const generateProductJsonLd = (
   // AggregateRating removed — injected dynamically with real DB values when available
 });
 
-// Helper to generate FAQ JSON-LD
-const generateFaqJsonLd = (faqItems: Array<{ question: string; answer: string }>) => ({
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqItems.map((item) => ({
-    "@type": "Question",
-    "name": item.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": item.answer,
-    },
-  })),
-});
+// FAQ schema is now handled centrally by FAQSchemaProvider (useFAQSchema.tsx)
+// generateFaqJsonLd was removed to prevent duplicate FAQPage blocks
 
 // Helper to generate Breadcrumb JSON-LD
 const generateBreadcrumbJsonLd = (items: Array<{ name: string; url: string }>) => ({
