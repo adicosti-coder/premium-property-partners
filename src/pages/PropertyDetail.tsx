@@ -487,8 +487,7 @@ const PropertyDetail = () => {
     // FAQPage Schema — now handled by useFAQSchema context (no inline injection)
   ];
 
-  // Register FAQ items into centralized context
-  useRegisterFAQs("property-detail", faqSchemaItems);
+  // FAQ items are registered by PropertyFAQ component only
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
