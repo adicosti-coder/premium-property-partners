@@ -190,7 +190,7 @@ const ContactSection = () => {
         {/* Embedded Google Map */}
         <div className="mt-12 rounded-2xl overflow-hidden border border-border shadow-lg">
           <iframe
-            src="https://maps.google.com/maps?q=45.7489,21.2087&t=&z=16&ie=UTF8&iwloc=&output=embed"
+            src="https://maps.google.com/maps?q=45.7672,21.2495&t=&z=16&ie=UTF8&iwloc=&output=embed"
             width="100%"
             height="350"
             style={{ border: 0 }}

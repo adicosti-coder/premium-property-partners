@@ -67,7 +67,7 @@ const ContactPage = () => {
         "https://www.facebook.com/realtrust.ro",
         "https://www.instagram.com/realtrust_timisoara",
       ],
-      "hasMap": "https://www.google.com/maps?q=45.7489,21.2087",
+      "hasMap": "https://www.google.com/maps?q=45.7672,21.2495",
     },
     {
       "@context": "https://schema.org",
@@ -164,7 +164,7 @@ const ContactPage = () => {
           <section className="grid lg:grid-cols-2 gap-8 mb-16">
             <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
               <iframe
-                src="https://maps.google.com/maps?q=45.7489,21.2087&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=45.7672,21.2495&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: 300 }}
@@ -188,7 +188,7 @@ const ContactPage = () => {
                 </address>
               </div>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=45.7489,21.2087"
+                href="https://www.google.com/maps/search/?api=1&query=45.7672,21.2495"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex"
