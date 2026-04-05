@@ -303,7 +303,11 @@ const Investitii = () => {
             </div>
           ) : properties && properties.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {properties.map((property) => {
+              {[...properties].sort((a, b) => {
+                const roiA = parseFloat(a.roi_percentage || "0");
+                const roiB = parseFloat(b.roi_percentage || "0");
+                return roiB - roiA;
+              }).map((property) => {
                 const propertyPath = `/proprietate/${property.slug ?? property.id}`;
 
                 return (
