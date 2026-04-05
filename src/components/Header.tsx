@@ -325,16 +325,15 @@ const Header = () => {
         {/* Mobile Navigation */}
         {/* Mobile Navigation — CSS transitions only */}
         <nav
-          className={`py-4 px-4 border-t border-border origin-top overflow-auto bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0'}`}
+          className={`px-4 border-t border-border origin-top overflow-auto bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100 py-4' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0 pointer-events-none'}`}
           style={{ transformOrigin: 'top' }}
+          aria-hidden={!mobileMenuOpen}
         >
-          {mobileMenuOpen && (
-              <Suspense fallback={null}>
               <div className="flex flex-col gap-2">
                 
                 {/* Property Code Search - Mobile */}
                 <div className="pb-3 border-b border-border/50">
-                  <PropertyCodeSearch className="w-full" />
+                  <Suspense fallback={null}><PropertyCodeSearch className="w-full" /></Suspense>
                 </div>
 
                 {navGroups.map((group, gi) => (
@@ -395,14 +394,12 @@ const Header = () => {
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
-                  {isAuthenticated === true && <NotificationBell />}
-                  <AnimationToggle />
+                  {isAuthenticated === true && <Suspense fallback={null}><NotificationBell /></Suspense>}
+                  <Suspense fallback={null}><AnimationToggle /></Suspense>
                   <ThemeToggle />
                   <LanguageSwitcher />
                 </div>
               </div>
-              </Suspense>
-          )}
         </nav>
       </div>
       
