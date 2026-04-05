@@ -434,6 +434,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         new_listings: results.length,
+        count: results.length,
+        blacklisted_skipped: blacklistedSkipped,
         listings: results,
         errors: errors.length > 0 ? errors : undefined,
       }),
