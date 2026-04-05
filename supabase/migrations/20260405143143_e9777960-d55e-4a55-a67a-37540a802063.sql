@@ -1,0 +1,1 @@
+CREATE POLICY "Authenticated users can read keywords" ON public.scraper_search_keywords FOR SELECT TO authenticated USING (true);
