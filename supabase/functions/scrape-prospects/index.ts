@@ -165,9 +165,20 @@ Deno.serve(async (req) => {
 
     const results: any[] = [];
     const errors: string[] = [];
-    const queries = customQuery 
-      ? [{ platform: 'Custom', query: customQuery }]
-      : SEARCH_QUERIES;
+
+    // Load keywords from DB, fallback to hardcoded defaults
+    let queries: { platform: string; query: string }[];
+    if (customQuery) {
+      queries = [{ platform: 'Custom', query: customQuery }];
+    } else {
+      const { data: dbKeywords } = await supabase
+        .from('scraper_search_keywords')
+        .select('keyword, platform')
+        .eq('is_active', true);
+      queries = (dbKeywords && dbKeywords.length > 0)
+        ? dbKeywords.map((k: any) => ({ platform: k.platform, query: k.keyword }))
+        : DEFAULT_SEARCH_QUERIES;
+    }
 
     for (const { platform, query } of queries) {
       console.log(`Searching ${platform}: ${query}`);
