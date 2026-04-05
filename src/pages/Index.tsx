@@ -90,7 +90,7 @@ const TeaserSections = () => (
 // Gallery + Map section — map is deferred via IntersectionObserver to avoid loading
 // mapbox-gl (457KB + 1.7s CPU) until the user scrolls near it
 const GalleryMapSection = () => {
-  const [mapRef, mapVisible] = useLazyVisible("400px");
+  const [mapRef, mapVisible] = useLazyVisible("400px", 15000);
 
   return (
     <div className="cv-auto">
