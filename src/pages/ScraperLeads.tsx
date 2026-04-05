@@ -712,7 +712,38 @@ const ScraperLeads = () => {
     }
   };
 
-  const t = useMemo(() => language === "ro"
+  // ── Keyword CRUD ──────────────────────────────────
+  const handleAddKeyword = async () => {
+    const kw = newKeyword.trim();
+    if (!kw) return;
+    const { error } = await supabase.from("scraper_search_keywords").insert({ keyword: kw, platform: newPlatform } as any);
+    if (error) { toast.error("Eroare la adăugare"); return; }
+    setNewKeyword("");
+    setNewPlatform("General");
+    refetchKeywords();
+    toast.success("Cuvânt cheie adăugat");
+  };
+
+  const handleToggleKeyword = async (id: string, isActive: boolean) => {
+    await supabase.from("scraper_search_keywords").update({ is_active: !isActive } as any).eq("id", id);
+    refetchKeywords();
+  };
+
+  const handleDeleteKeyword = async (id: string) => {
+    await supabase.from("scraper_search_keywords").delete().eq("id", id);
+    refetchKeywords();
+    toast.success("Cuvânt cheie șters");
+  };
+
+  const toggleSort = (col: "score" | "date") => {
+    if (sortBy === col) {
+      setSortDir(d => d === "desc" ? "asc" : "desc");
+    } else {
+      setSortBy(col);
+      setSortDir("desc");
+    }
+  };
+
     ? { title: "Oportunități AI", subtitle: "Oportunități de investiții detectate automat", back: "Înapoi", details: "Detalii", send: "Trimite pe WhatsApp", score: "Scor", price: "Preț", profit3y: "Profit Extra 3 ani", monthlyExtra: "Extra/lună", status: "Status", noData: "Niciun lead disponibil.", hotFilter: "Doar 🔥 > 80", totalProfit: "Profit total 3Y", monthlyTotal: "Extra lunar total", hotLeads: "Lead-uri fierbinți" }
     : { title: "AI Opportunities", subtitle: "Automatically detected investment opportunities", back: "Back", details: "Details", send: "Send via WhatsApp", score: "Score", price: "Price", profit3y: "Extra Profit 3Y", monthlyExtra: "Extra/month", status: "Status", noData: "No leads available.", hotFilter: "Only 🔥 > 80", totalProfit: "Total 3Y Profit", monthlyTotal: "Total monthly extra", hotLeads: "Hot leads" },
   [language]);
