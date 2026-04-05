@@ -154,20 +154,92 @@ function expandKeywordsWithoutDiacritics(
   return expanded;
 }
 
-const EXTRACTION_PROMPT = `Extract property listing details from this real estate page. Return JSON:
-- title: listing title (string)
-- price: numeric price, no currency (number or null)
-- currency: "EUR" or "RON" (string)
-- location: address or neighborhood (string or null)  
-- size: sqm number only (number or null)
-- rooms: number of rooms (number or null)
-- floor: floor text (string or null)
-- year_built: construction year (number or null)
-- features: array of amenities (string[])
-- contact_phone: phone number if visible (string or null)
-- contact_name: contact name if visible (string or null)
-- images: array of property photo URLs (string[])
-For missing fields return null.`;
+/** Extract property data from markdown text using regex patterns */
+function extractFromMarkdown(markdown: string, title: string, _url: string): {
+  title: string; description: string | null; price: number | null; currency: string;
+  location: string | null; size: number | null; rooms: number | null;
+  floor: string | null; yearBuilt: number | null; features: string[];
+  contactPhone: string | null; contactName: string | null; images: string[];
+} {
+  const text = markdown || '';
+  
+  // Price extraction
+  let price: number | null = null;
+  let currency = 'EUR';
+  const priceMatch = text.match(/(\d[\d\s.,]*)\s*€/) || text.match(/preț[:\s]*(\d[\d\s.,]*)/i);
+  const ronMatch = text.match(/(\d[\d\s.,]*)\s*(?:RON|lei)/i);
+  if (priceMatch) {
+    price = parseFloat(priceMatch[1].replace(/[\s.]/g, '').replace(',', '.'));
+  } else if (ronMatch) {
+    price = parseFloat(ronMatch[1].replace(/[\s.]/g, '').replace(',', '.'));
+    currency = 'RON';
+  }
+
+  // Size extraction
+  let size: number | null = null;
+  const sizeMatch = text.match(/(\d+)\s*mp/i) || text.match(/(\d+)\s*m²/i) || text.match(/suprafață[:\s]*(\d+)/i);
+  if (sizeMatch) size = parseInt(sizeMatch[1]);
+
+  // Rooms
+  let rooms: number | null = null;
+  const roomsMatch = text.match(/(\d+)\s*camer/i) || text.match(/(\d+)\s*room/i);
+  if (roomsMatch) rooms = parseInt(roomsMatch[1]);
+  if (!rooms && /garsonier/i.test(text)) rooms = 1;
+
+  // Floor
+  let floor: string | null = null;
+  const floorMatch = text.match(/etaj[:\s]*(\d+)/i) || text.match(/etajul?\s+(\d+)/i);
+  if (floorMatch) floor = floorMatch[1];
+
+  // Year built
+  let yearBuilt: number | null = null;
+  const yearMatch = text.match(/an\s*(?:construc[tț]ie|constru[iî]re)?[:\s]*(\d{4})/i) ||
+    text.match(/constru(?:it|cție)[:\s]*(?:în\s*)?(\d{4})/i);
+  if (yearMatch) {
+    const y = parseInt(yearMatch[1]);
+    if (y >= 1900 && y <= 2030) yearBuilt = y;
+  }
+
+  // Features
+  const features: string[] = [];
+  const featurePatterns = [
+    'centrală', 'aer condiționat', 'parcare', 'balcon', 'lift', 'mobilat', 'utilat',
+    'terasă', 'garaj', 'boxa', 'pod', 'piscină', 'grădină',
+  ];
+  for (const f of featurePatterns) {
+    const clean = removeDiacritics(f);
+    if (removeDiacritics(text.toLowerCase()).includes(clean)) features.push(f);
+  }
+
+  // Contact
+  let contactPhone: string | null = null;
+  const phoneMatch = text.match(/(?:tel|telefon|contact)[.:\s]*([\d\s+()-]{7,})/i) ||
+    text.match(/(07\d{2}[\s.-]?\d{3}[\s.-]?\d{3})/);
+  if (phoneMatch) contactPhone = phoneMatch[1].trim();
+
+  // Images from markdown
+  const images: string[] = [];
+  const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
+  let m;
+  while ((m = imgRegex.exec(text)) !== null) {
+    if (!images.includes(m[1])) images.push(m[1]);
+  }
+
+  // Location
+  let location: string | null = null;
+  const locMatch = text.match(/(?:locație|adresă|zonă|zona|cartier)[:\s]*([^\n,]{3,40})/i);
+  if (locMatch) location = locMatch[1].trim();
+
+  // Description: first 300 chars
+  const desc = text.replace(/[#*\[\]()!]/g, '').trim().substring(0, 300) || null;
+
+  return {
+    title: title || 'Anunț fără titlu',
+    description: desc,
+    price, currency, location, size, rooms, floor, yearBuilt,
+    features, contactPhone, contactName: null, images,
+  };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
