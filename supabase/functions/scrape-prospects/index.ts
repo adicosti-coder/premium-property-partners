@@ -289,117 +289,107 @@ Deno.serve(async (req) => {
     queries = expandKeywordsWithoutDiacritics(queries);
     console.log(`Expanded to ${queries.length} search queries (with diacritics-free variants)`);
 
-    for (const { platform, query } of queries) {
-      console.log(`Searching ${platform}: ${query}`);
-
-      try {
-        // Step 1: Search for listings
-        const searchResp = await fetch('https://api.firecrawl.dev/v1/search', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query,
-            limit: maxResults,
-            lang: 'ro',
-            country: 'ro',
-            scrapeOptions: { formats: ['markdown'] },
-          }),
-        });
-
-        const searchData = await searchResp.json();
-        const searchResults = searchData?.data || [];
-        console.log(`Found ${searchResults.length} results from ${platform}`);
-
-        // Step 2: Process each result (extract from markdown, no individual scrape)
-        for (const result of searchResults) {
-          const url = result.url;
-          if (!url) continue;
-
-          // Skip if already in DB
-          const { data: existing } = await supabase
-            .from('prospect_listings')
-            .select('id')
-            .eq('source_url', url)
-            .maybeSingle();
-
-          if (existing) {
-            await supabase.from('prospect_listings')
-              .update({ last_seen_at: new Date().toISOString() })
-              .eq('id', existing.id);
-            continue;
-          }
-
-          // Extract data from search result markdown (no extra API call)
-          const markdown = result.markdown || result.description || '';
-          const extracted = extractFromMarkdown(markdown, result.title || '', url);
-
-          // Normalize price to EUR
-          let price = extracted.price;
-          if (price && extracted.currency === 'RON') {
-            price = Math.round(price * 0.2);
-          }
-
-          const size = extracted.size;
-          const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
-
-          const locationText = extracted.location || result.title || '';
-          const zone = detectZone(locationText + ' ' + (result.title || ''));
-          const features = extracted.features;
-
-          const { score, breakdown } = scoreListing({
-            zone,
-            size,
-            rooms: extracted.rooms,
-            price,
-            pricePerSqm,
-            floor: extracted.floor,
-            yearBuilt: extracted.yearBuilt,
-            features,
+    // Process queries in parallel batches of 5 to avoid timeout
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < queries.length; i += BATCH_SIZE) {
+      const batch = queries.slice(i, i + BATCH_SIZE);
+      
+      const batchPromises = batch.map(async ({ platform, query }) => {
+        console.log(`Searching ${platform}: ${query}`);
+        try {
+          const searchResp = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query,
+              limit: maxResults,
+              lang: 'ro',
+              country: 'ro',
+              scrapeOptions: { formats: ['markdown'] },
+            }),
           });
 
-          const { data: inserted, error: insertErr } = await supabase
-            .from('prospect_listings')
-            .insert({
-              source_platform: platform,
-              source_url: url,
-              title: extracted.title || result.title || 'Anunț fără titlu',
-              description: extracted.description || result.description || null,
-              price,
-              currency: 'EUR',
-              price_per_sqm: pricePerSqm,
-              location: extracted.location || null,
-              zone,
-              size,
-              rooms: extracted.rooms,
-              floor: extracted.floor,
-              year_built: extracted.yearBuilt,
-              features,
-              images: extracted.images.slice(0, 10),
-              contact_phone: extracted.contactPhone,
-              contact_name: extracted.contactName,
-              score,
-              score_breakdown: breakdown,
-            })
-            .select('id, title, score, zone')
-            .single();
+          const searchData = await searchResp.json();
+          const searchResults = searchData?.data || [];
+          console.log(`Found ${searchResults.length} results from ${platform}`);
 
-          if (insertErr) {
-            console.error(`Insert error for ${url}:`, insertErr.message);
-            errors.push(`${url}: ${insertErr.message}`);
-          } else {
-            results.push(inserted);
+          for (const result of searchResults) {
+            const url = result.url;
+            if (!url) continue;
+
+            const { data: existing } = await supabase
+              .from('prospect_listings')
+              .select('id')
+              .eq('source_url', url)
+              .maybeSingle();
+
+            if (existing) {
+              await supabase.from('prospect_listings')
+                .update({ last_seen_at: new Date().toISOString() })
+                .eq('id', existing.id);
+              continue;
+            }
+
+            const markdown = result.markdown || result.description || '';
+            const extracted = extractFromMarkdown(markdown, result.title || '', url);
+
+            let price = extracted.price;
+            if (price && extracted.currency === 'RON') {
+              price = Math.round(price * 0.2);
+            }
+
+            const size = extracted.size;
+            const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
+
+            const locationText = extracted.location || result.title || '';
+            const zone = detectZone(locationText + ' ' + (result.title || ''));
+            const features = extracted.features;
+
+            const { score, breakdown } = scoreListing({
+              zone, size, rooms: extracted.rooms, price, pricePerSqm,
+              floor: extracted.floor, yearBuilt: extracted.yearBuilt, features,
+            });
+
+            const { data: inserted, error: insertErr } = await supabase
+              .from('prospect_listings')
+              .insert({
+                source_platform: platform,
+                source_url: url,
+                title: extracted.title || result.title || 'Anunț fără titlu',
+                description: extracted.description || result.description || null,
+                price, currency: 'EUR', price_per_sqm: pricePerSqm,
+                location: extracted.location || null, zone, size,
+                rooms: extracted.rooms, floor: extracted.floor,
+                year_built: extracted.yearBuilt, features,
+                images: extracted.images.slice(0, 10),
+                contact_phone: extracted.contactPhone,
+                contact_name: extracted.contactName,
+                score, score_breakdown: breakdown,
+              })
+              .select('id, title, score, zone')
+              .single();
+
+            if (insertErr) {
+              console.error(`Insert error for ${url}:`, insertErr.message);
+              errors.push(`${url}: ${insertErr.message}`);
+            } else {
+              results.push(inserted);
+            }
           }
+        } catch (err: any) {
+          console.error(`Platform ${platform} error:`, err);
+          errors.push(`${platform}: ${err.message}`);
         }
-      } catch (err: any) {
-        console.error(`Platform ${platform} error:`, err);
-        errors.push(`${platform}: ${err.message}`);
-      }
+      });
 
-      // Brief pause between keyword groups
-      await new Promise(r => setTimeout(r, 500));
+      await Promise.all(batchPromises);
+      // Brief pause between batches
+      if (i + BATCH_SIZE < queries.length) {
+        await new Promise(r => setTimeout(r, 300));
+      }
     }
 
     return new Response(
