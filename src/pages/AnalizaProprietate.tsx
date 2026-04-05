@@ -261,6 +261,28 @@ const AnalizaProprietate = () => {
     setWizardImages([]);
   };
 
+  // Register FAQ items via centralized context
+  useRegisterFAQs("analiza-proprietate", [
+    {
+      question: language === "ro" ? "Ce este HostScan AI?" : "What is HostScan AI?",
+      answer: language === "ro"
+        ? "HostScan AI este un instrument gratuit care analizează potențialul apartamentului tău pentru regim hotelier în Timișoara, oferind un scor din 140 de puncte, ROI estimat și recomandări personalizate."
+        : "HostScan AI is a free tool that analyzes your apartment's potential for short-term rental in Timișoara, providing a score out of 140 points, estimated ROI and personalized recommendations.",
+    },
+    {
+      question: language === "ro" ? "Cât costă analiza AI?" : "How much does the AI analysis cost?",
+      answer: language === "ro"
+        ? "Analiza HostScan AI este complet gratuită și confidențială. Nu este nevoie de cont sau card de plată."
+        : "The HostScan AI analysis is completely free and confidential. No account or payment card required.",
+    },
+    {
+      question: language === "ro" ? "Cât durează analiza?" : "How long does the analysis take?",
+      answer: language === "ro"
+        ? "Analiza durează aproximativ 2 minute. Primești scorul proprietății, estimarea randamentului lunar și recomandări concrete de optimizare."
+        : "The analysis takes approximately 2 minutes. You receive the property score, monthly yield estimate and concrete optimization recommendations.",
+    },
+  ]);
+
   return (
     <>
       <SEOHead

@@ -14,6 +14,7 @@ const AISearchBar = lazy(() => import("@/components/AISearchBar"));
 const CityGuideSection = lazy(() => import("@/components/CityGuideSection"));
 import SEOHead from "@/components/SEOHead";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import PageSummary from "@/components/PageSummary";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
