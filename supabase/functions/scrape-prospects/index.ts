@@ -270,6 +270,7 @@ Deno.serve(async (req) => {
 
     const results: any[] = [];
     const errors: string[] = [];
+    let blacklistedSkipped = 0;
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string }[];
