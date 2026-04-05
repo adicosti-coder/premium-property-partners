@@ -23,7 +23,8 @@ import {
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
-  Shield, Database, Sparkles, Crown, FileText,
+  Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
+  ChevronDown, ChevronUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -50,6 +51,14 @@ interface ScraperLead {
   source: string;
   phone: string | null;
   prospect_category: string | null;
+  search_keyword: string | null;
+}
+
+interface SearchKeyword {
+  id: string;
+  keyword: string;
+  platform: string;
+  is_active: boolean;
 }
 
 interface StatusHistoryEntry {
