@@ -1407,7 +1407,81 @@ const ScraperLeads = () => {
             </div>
           )}
 
-          {/* Content */}
+          {/* ── Cuvinte Cheie Scraper ──────────────────────── */}
+          <div className="mb-4">
+            <button
+              onClick={() => setKeywordsOpen(!keywordsOpen)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Tags className="w-4 h-4" />
+              Cuvinte cheie căutare ({searchKeywords.filter(k => k.is_active).length} active)
+              {keywordsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {keywordsOpen && (
+              <Card className="mt-2 bg-card border-border">
+                <CardContent className="p-4 space-y-3">
+                  {/* Add new keyword */}
+                  <div className="flex gap-2 items-end flex-wrap">
+                    <div className="flex-1 min-w-[200px]">
+                      <label className="text-xs text-muted-foreground mb-1 block">Cuvânt cheie nou</label>
+                      <Input
+                        value={newKeyword}
+                        onChange={(e) => setNewKeyword(e.target.value)}
+                        placeholder="ex: garsonieră centru timișoara site:olx.ro"
+                        className="h-8 text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && handleAddKeyword()}
+                      />
+                    </div>
+                    <div className="w-40">
+                      <label className="text-xs text-muted-foreground mb-1 block">Platformă</label>
+                      <Input
+                        value={newPlatform}
+                        onChange={(e) => setNewPlatform(e.target.value)}
+                        placeholder="General"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <Button size="sm" onClick={handleAddKeyword} className="h-8 gap-1">
+                      <Plus className="w-3 h-3" /> Adaugă
+                    </Button>
+                  </div>
+
+                  {/* Keywords list */}
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+                    {searchKeywords.map((kw) => (
+                      <div key={kw.id} className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors",
+                        kw.is_active ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-60"
+                      )}>
+                        <Switch
+                          checked={kw.is_active}
+                          onCheckedChange={() => handleToggleKeyword(kw.id, kw.is_active)}
+                          className="scale-75"
+                        />
+                        <span className="flex-1 font-mono text-xs truncate">{kw.keyword}</span>
+                        <Badge variant="outline" className="text-[10px] shrink-0">{kw.platform}</Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                          onClick={() => handleDeleteKeyword(kw.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                    {searchKeywords.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-4">Niciun cuvânt cheie configurat.</p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    💡 Aceste cuvinte cheie sunt folosite la scanare. Dezactivează sau șterge cele pe care nu le mai dorești.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {isLoading ? (
             <div className="space-y-3">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
           ) : filteredLeads.length === 0 ? (
