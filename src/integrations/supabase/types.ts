@@ -2824,6 +2824,7 @@ export type Database = {
           original_price: number
           phone: string | null
           prospect_category: string | null
+          search_keyword: string | null
           source: string | null
           status: string
           tags: string[]
@@ -2843,6 +2844,7 @@ export type Database = {
           original_price?: number
           phone?: string | null
           prospect_category?: string | null
+          search_keyword?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -2862,6 +2864,7 @@ export type Database = {
           original_price?: number
           phone?: string | null
           prospect_category?: string | null
+          search_keyword?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -2896,6 +2899,33 @@ export type Database = {
           new_count?: number | null
           scanned_at?: string | null
           total_processed?: number | null
+        }
+        Relationships: []
+      }
+      scraper_search_keywords: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          keyword: string
+          platform: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword: string
+          platform?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string
+          platform?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
