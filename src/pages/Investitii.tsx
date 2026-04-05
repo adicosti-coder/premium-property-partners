@@ -303,7 +303,11 @@ const Investitii = () => {
             </div>
           ) : properties && properties.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {properties.map((property) => {
+              {[...properties].sort((a, b) => {
+                const roiA = parseFloat(a.roi_percentage || "0");
+                const roiB = parseFloat(b.roi_percentage || "0");
+                return roiB - roiA;
+              }).map((property) => {
                 const propertyPath = `/proprietate/${property.slug ?? property.id}`;
 
                 return (
@@ -371,7 +375,11 @@ const Investitii = () => {
                       {/* Property name on image */}
                       <div className="absolute bottom-3 left-4 right-4">
                         <h3 className="text-xl font-serif font-bold text-white drop-shadow-lg group-hover:text-amber-300 transition-colors leading-tight">
-                          {property.name}
+                          {property.name
+                            .replace(/[,|·\-–—]\s*(Randament|Yield|ROI)\s*\+?\d+[\.,]?\d*%?\s*(Net)?\s*/gi, '')
+                            .replace(/\s*(Randament|Yield|ROI)\s*\+?\d+[\.,]?\d*%?\s*(Net)?\s*/gi, '')
+                            .replace(/\s*[|·\-–—]\s*$/, '')
+                            .trim()}
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-slate-300 mt-1">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
