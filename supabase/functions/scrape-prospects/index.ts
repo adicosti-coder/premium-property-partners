@@ -121,6 +121,39 @@ const DEFAULT_SEARCH_QUERIES = [
   { platform: 'BursaImobiliara.ro', query: 'apartament vanzare timisoara site:bursaimobiliara.ro' },
 ];
 
+/**
+ * Remove diacritics from a string (ă→a, ș→s, ț→t, î→i, â→a).
+ */
+function removeDiacritics(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Expand keyword list with diacritics-free variants for fuzzy matching.
+ * Deduplicates by normalized form to avoid double-searching.
+ */
+function expandKeywordsWithoutDiacritics(
+  queries: { platform: string; query: string }[]
+): { platform: string; query: string }[] {
+  const seen = new Set<string>();
+  const expanded: { platform: string; query: string }[] = [];
+
+  for (const q of queries) {
+    const key = removeDiacritics(q.query).toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      const clean = removeDiacritics(q.query);
+      // Always push diacritics-free version first (broadest match)
+      expanded.push({ platform: q.platform, query: clean });
+      // If original had diacritics, also keep it for exact-match ranking
+      if (clean !== q.query) {
+        expanded.push({ platform: q.platform, query: q.query });
+      }
+    }
+  }
+  return expanded;
+}
+
 const EXTRACTION_PROMPT = `Extract property listing details from this real estate page. Return JSON:
 - title: listing title (string)
 - price: numeric price, no currency (number or null)
