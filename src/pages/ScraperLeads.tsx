@@ -332,7 +332,7 @@ const ScraperLeads = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-
+  const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
