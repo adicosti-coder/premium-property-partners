@@ -398,8 +398,8 @@ Deno.serve(async (req) => {
         errors.push(`${platform}: ${err.message}`);
       }
 
-      // Pause between platforms
-      await new Promise(r => setTimeout(r, 2000));
+      // Brief pause between keyword groups
+      await new Promise(r => setTimeout(r, 500));
     }
 
     return new Response(
