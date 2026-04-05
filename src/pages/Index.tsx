@@ -132,11 +132,18 @@ const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
 
 const Index = () => {
   const { language } = useLanguage();
-  
+
+  // Phase 1: above-fold renders immediately
+  // Phase 2: below-fold sections rendered via startTransition to yield main thread
+  const [belowFoldReady, setBelowFoldReady] = useState(false);
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // Render below-fold in a low-priority transition so the browser
+    // can paint the hero & above-fold content without a 440ms long task
+    startTransition(() => setBelowFoldReady(true));
+
     const id = requestIdleCallback?.(() => setMounted(true)) ?? setTimeout(() => setMounted(true), 100);
     return () => { if (typeof id === 'number') cancelIdleCallback?.(id) ?? clearTimeout(id); };
   }, []);
