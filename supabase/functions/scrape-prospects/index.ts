@@ -154,20 +154,92 @@ function expandKeywordsWithoutDiacritics(
   return expanded;
 }
 
-const EXTRACTION_PROMPT = `Extract property listing details from this real estate page. Return JSON:
-- title: listing title (string)
-- price: numeric price, no currency (number or null)
-- currency: "EUR" or "RON" (string)
-- location: address or neighborhood (string or null)  
-- size: sqm number only (number or null)
-- rooms: number of rooms (number or null)
-- floor: floor text (string or null)
-- year_built: construction year (number or null)
-- features: array of amenities (string[])
-- contact_phone: phone number if visible (string or null)
-- contact_name: contact name if visible (string or null)
-- images: array of property photo URLs (string[])
-For missing fields return null.`;
+/** Extract property data from markdown text using regex patterns */
+function extractFromMarkdown(markdown: string, title: string, _url: string): {
+  title: string; description: string | null; price: number | null; currency: string;
+  location: string | null; size: number | null; rooms: number | null;
+  floor: string | null; yearBuilt: number | null; features: string[];
+  contactPhone: string | null; contactName: string | null; images: string[];
+} {
+  const text = markdown || '';
+  
+  // Price extraction
+  let price: number | null = null;
+  let currency = 'EUR';
+  const priceMatch = text.match(/(\d[\d\s.,]*)\s*€/) || text.match(/preț[:\s]*(\d[\d\s.,]*)/i);
+  const ronMatch = text.match(/(\d[\d\s.,]*)\s*(?:RON|lei)/i);
+  if (priceMatch) {
+    price = parseFloat(priceMatch[1].replace(/[\s.]/g, '').replace(',', '.'));
+  } else if (ronMatch) {
+    price = parseFloat(ronMatch[1].replace(/[\s.]/g, '').replace(',', '.'));
+    currency = 'RON';
+  }
+
+  // Size extraction
+  let size: number | null = null;
+  const sizeMatch = text.match(/(\d+)\s*mp/i) || text.match(/(\d+)\s*m²/i) || text.match(/suprafață[:\s]*(\d+)/i);
+  if (sizeMatch) size = parseInt(sizeMatch[1]);
+
+  // Rooms
+  let rooms: number | null = null;
+  const roomsMatch = text.match(/(\d+)\s*camer/i) || text.match(/(\d+)\s*room/i);
+  if (roomsMatch) rooms = parseInt(roomsMatch[1]);
+  if (!rooms && /garsonier/i.test(text)) rooms = 1;
+
+  // Floor
+  let floor: string | null = null;
+  const floorMatch = text.match(/etaj[:\s]*(\d+)/i) || text.match(/etajul?\s+(\d+)/i);
+  if (floorMatch) floor = floorMatch[1];
+
+  // Year built
+  let yearBuilt: number | null = null;
+  const yearMatch = text.match(/an\s*(?:construc[tț]ie|constru[iî]re)?[:\s]*(\d{4})/i) ||
+    text.match(/constru(?:it|cție)[:\s]*(?:în\s*)?(\d{4})/i);
+  if (yearMatch) {
+    const y = parseInt(yearMatch[1]);
+    if (y >= 1900 && y <= 2030) yearBuilt = y;
+  }
+
+  // Features
+  const features: string[] = [];
+  const featurePatterns = [
+    'centrală', 'aer condiționat', 'parcare', 'balcon', 'lift', 'mobilat', 'utilat',
+    'terasă', 'garaj', 'boxa', 'pod', 'piscină', 'grădină',
+  ];
+  for (const f of featurePatterns) {
+    const clean = removeDiacritics(f);
+    if (removeDiacritics(text.toLowerCase()).includes(clean)) features.push(f);
+  }
+
+  // Contact
+  let contactPhone: string | null = null;
+  const phoneMatch = text.match(/(?:tel|telefon|contact)[.:\s]*([\d\s+()-]{7,})/i) ||
+    text.match(/(07\d{2}[\s.-]?\d{3}[\s.-]?\d{3})/);
+  if (phoneMatch) contactPhone = phoneMatch[1].trim();
+
+  // Images from markdown
+  const images: string[] = [];
+  const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
+  let m;
+  while ((m = imgRegex.exec(text)) !== null) {
+    if (!images.includes(m[1])) images.push(m[1]);
+  }
+
+  // Location
+  let location: string | null = null;
+  const locMatch = text.match(/(?:locație|adresă|zonă|zona|cartier)[:\s]*([^\n,]{3,40})/i);
+  if (locMatch) location = locMatch[1].trim();
+
+  // Description: first 300 chars
+  const desc = text.replace(/[#*\[\]()!]/g, '').trim().substring(0, 300) || null;
+
+  return {
+    title: title || 'Anunț fără titlu',
+    description: desc,
+    price, currency, location, size, rooms, floor, yearBuilt,
+    features, contactPhone, contactName: null, images,
+  };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -241,7 +313,7 @@ Deno.serve(async (req) => {
         const searchResults = searchData?.data || [];
         console.log(`Found ${searchResults.length} results from ${platform}`);
 
-        // Step 2: Process each result
+        // Step 2: Process each result (extract from markdown, no individual scrape)
         for (const result of searchResults) {
           const url = result.url;
           if (!url) continue;
@@ -254,64 +326,40 @@ Deno.serve(async (req) => {
             .maybeSingle();
 
           if (existing) {
-            // Update last_seen_at
             await supabase.from('prospect_listings')
               .update({ last_seen_at: new Date().toISOString() })
               .eq('id', existing.id);
             continue;
           }
 
-          // Step 3: Extract structured data from the page
-          let extracted: any = {};
-          try {
-            const scrapeResp = await fetch('https://api.firecrawl.dev/v1/scrape', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${firecrawlKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                url,
-                formats: [{ type: 'json', prompt: EXTRACTION_PROMPT }, 'links'],
-                waitFor: 3000,
-              }),
-            });
-
-            const scrapeData = await scrapeResp.json();
-            extracted = scrapeData?.data?.json || scrapeData?.json || {};
-          } catch (e) {
-            console.error(`Failed to scrape ${url}:`, e);
-            // Use basic info from search result
-            extracted = { title: result.title, description: result.description };
-          }
+          // Extract data from search result markdown (no extra API call)
+          const markdown = result.markdown || result.description || '';
+          const extracted = extractFromMarkdown(markdown, result.title || '', url);
 
           // Normalize price to EUR
-          let price = extracted.price ? Number(extracted.price) : null;
-          const currency = extracted.currency || 'EUR';
-          if (price && currency === 'RON') {
-            price = Math.round(price * 0.2); // RON -> EUR
+          let price = extracted.price;
+          if (price && extracted.currency === 'RON') {
+            price = Math.round(price * 0.2);
           }
 
-          const size = extracted.size ? Number(extracted.size) : null;
+          const size = extracted.size;
           const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
 
           const locationText = extracted.location || result.title || '';
           const zone = detectZone(locationText + ' ' + (result.title || ''));
-          const features = Array.isArray(extracted.features) ? extracted.features : [];
+          const features = extracted.features;
 
-          // Score the listing
           const { score, breakdown } = scoreListing({
             zone,
             size,
-            rooms: extracted.rooms ? Number(extracted.rooms) : null,
+            rooms: extracted.rooms,
             price,
             pricePerSqm,
-            floor: extracted.floor || null,
-            yearBuilt: extracted.year_built ? Number(extracted.year_built) : null,
+            floor: extracted.floor,
+            yearBuilt: extracted.yearBuilt,
             features,
           });
 
-          // Insert into DB
           const { data: inserted, error: insertErr } = await supabase
             .from('prospect_listings')
             .insert({
@@ -325,13 +373,13 @@ Deno.serve(async (req) => {
               location: extracted.location || null,
               zone,
               size,
-              rooms: extracted.rooms ? Number(extracted.rooms) : null,
-              floor: extracted.floor || null,
-              year_built: extracted.year_built ? Number(extracted.year_built) : null,
+              rooms: extracted.rooms,
+              floor: extracted.floor,
+              year_built: extracted.yearBuilt,
               features,
-              images: Array.isArray(extracted.images) ? extracted.images.slice(0, 10) : [],
-              contact_phone: extracted.contact_phone || null,
-              contact_name: extracted.contact_name || null,
+              images: extracted.images.slice(0, 10),
+              contact_phone: extracted.contactPhone,
+              contact_name: extracted.contactName,
               score,
               score_breakdown: breakdown,
             })
@@ -344,17 +392,14 @@ Deno.serve(async (req) => {
           } else {
             results.push(inserted);
           }
-
-          // Rate limit pause
-          await new Promise(r => setTimeout(r, 1500));
         }
       } catch (err: any) {
         console.error(`Platform ${platform} error:`, err);
         errors.push(`${platform}: ${err.message}`);
       }
 
-      // Pause between platforms
-      await new Promise(r => setTimeout(r, 2000));
+      // Brief pause between keyword groups
+      await new Promise(r => setTimeout(r, 500));
     }
 
     return new Response(
