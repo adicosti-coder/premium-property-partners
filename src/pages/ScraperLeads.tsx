@@ -1356,11 +1356,8 @@ const ScraperLeads = () => {
 
           {/* Table Stats (profit) */}
           {viewMode === "table" && profitStats && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="bg-card border-border"><CardContent className="pt-4 pb-4"><p className="text-xs text-muted-foreground mb-1">{t.totalProfit}</p><p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">+{formatPrice(profitStats.totalProfit3y)}</p></CardContent></Card>
-              <Card className="bg-card border-border"><CardContent className="pt-4 pb-4"><p className="text-xs text-muted-foreground mb-1">{t.monthlyTotal}</p><p className="text-xl font-bold font-mono">+{formatPrice(profitStats.totalMonthly)}</p></CardContent></Card>
-              <Card className="bg-card border-border"><CardContent className="pt-4 pb-4"><p className="text-xs text-muted-foreground mb-1">{t.hotLeads}</p><p className="text-xl font-bold font-mono flex items-center gap-1"><Flame className="w-5 h-5 text-red-500" /> {profitStats.hotCount}</p></CardContent></Card>
-              <Card className="bg-card border-border"><CardContent className="pt-4 pb-4"><p className="text-xs text-muted-foreground mb-2">{t.profit3y}</p><div className="h-16"><ResponsiveContainer width="100%" height="100%"><BarChart data={profitStats.chartData}><Bar dataKey="profit" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} /><XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} /><Tooltip formatter={(v: number) => formatPrice(v)} /></BarChart></ResponsiveContainer></div></CardContent></Card>
+            <div className="mb-6">
+              <Card className="bg-card border-border max-w-xs"><CardContent className="pt-4 pb-4"><p className="text-xs text-muted-foreground mb-1">{t.hotLeads}</p><p className="text-xl font-bold font-mono flex items-center gap-1"><Flame className="w-5 h-5 text-red-500" /> {profitStats.hotCount}</p></CardContent></Card>
             </div>
           )}
 
