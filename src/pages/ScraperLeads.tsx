@@ -319,8 +319,20 @@ const ScraperLeads = () => {
     },
     staleTime: 1000 * 60 * 2,
   });
+  // ── Search Keywords ────────────────────────────────
+  const { data: searchKeywords = [], refetch: refetchKeywords } = useQuery({
+    queryKey: ["scraper-search-keywords"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("scraper_search_keywords")
+        .select("*")
+        .order("created_at", { ascending: true });
+      return (data || []) as SearchKeyword[];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const { data: leads, isLoading, refetch } = useQuery({
+
     queryKey: ["scraper-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
