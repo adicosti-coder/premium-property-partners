@@ -1499,17 +1499,15 @@ const ScraperLeads = () => {
                       <TableHead className="w-10"><Checkbox checked={selectedIds.length === filteredLeads.length && filteredLeads.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
                       <TableHead className="w-10 text-center" title="Compară"><GitCompare className="w-4 h-4 mx-auto text-muted-foreground" /></TableHead>
                       <TableHead className="font-semibold">{language === "ro" ? "Proprietate" : "Property"}</TableHead>
+                      <TableHead className="font-semibold text-center cursor-pointer select-none" onClick={() => toggleSort("date")}>
+                        <span className="inline-flex items-center gap-1">Data <ArrowUpDown className="w-3 h-3 text-muted-foreground" /></span>
+                      </TableHead>
                       <TableHead className="font-semibold text-center cursor-pointer select-none" onClick={() => toggleSort("score")}>
                         <span className="inline-flex items-center gap-1">{t.score} <ArrowUpDown className="w-3 h-3 text-muted-foreground" /></span>
                       </TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
-                      <TableHead className="font-semibold text-right">{t.profit3y}</TableHead>
-                      <TableHead className="font-semibold text-right">{t.monthlyExtra}</TableHead>
-                      <TableHead className="font-semibold text-center cursor-pointer select-none" onClick={() => toggleSort("date")}>
-                        <span className="inline-flex items-center gap-1">Data <ArrowUpDown className="w-3 h-3 text-muted-foreground" /></span>
-                      </TableHead>
                       <TableHead className="font-semibold text-center">Status</TableHead>
-                      <TableHead className="text-center w-24">Acțiuni</TableHead>
+                      <TableHead className="text-center w-32">Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1561,6 +1559,9 @@ const ScraperLeads = () => {
                             </div>
                           </div>
                         </TableCell>
+                        <TableCell className="text-center text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(lead.created_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "2-digit" })}
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
                             {getScoreBadge(lead.lead_score)}
@@ -1568,11 +1569,6 @@ const ScraperLeads = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price, getPriceSuffix(lead))}</TableCell>
-                        <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
-                        <TableCell className="text-center text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(lead.created_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "2-digit" })}
-                        </TableCell>
                         <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={lead.status}
@@ -1593,11 +1589,11 @@ const ScraperLeads = () => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10"
+                              className="h-8 w-8 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const msg = lead.whatsapp_message || 
@@ -1614,7 +1610,7 @@ const ScraperLeads = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
                               onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
                               title={lead.phone ? `Blacklist ${lead.phone}` : "Fără telefon"}
                               disabled={!lead.phone}
@@ -1624,7 +1620,7 @@ const ScraperLeads = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                               onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
                               title="Arhivează"
                             >
