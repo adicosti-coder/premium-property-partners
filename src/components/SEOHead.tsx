@@ -22,6 +22,7 @@ interface SEOHeadProps {
   productCurrency?: string;
   productAvailability?: "InStock" | "OutOfStock" | "PreOrder";
   // FAQ specific
+  /** @deprecated Use useRegisterFAQs() hook instead — kept for backward compat, items are ignored */
   faqItems?: Array<{ question: string; answer: string }>;
   // Breadcrumb
   breadcrumbItems?: Array<{ name: string; url: string }>;
@@ -251,10 +252,8 @@ const SEOHead = ({
       );
     }
     
-    // Add FAQ schema if faqItems provided
-    if (faqItems && faqItems.length > 0) {
-      schemas.push(generateFaqJsonLd(faqItems));
-    }
+    // FAQ schema is now handled by the centralized FAQSchemaProvider (useFAQSchema.tsx)
+    // Do NOT inject inline FAQPage here — it causes duplicate structured data
     
     // Add Breadcrumb schema if breadcrumbItems provided
     if (breadcrumbItems && breadcrumbItems.length > 0) {
