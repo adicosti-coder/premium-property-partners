@@ -748,7 +748,7 @@ const PropertyDetail = () => {
               </Suspense>
 
               {/* ═══════════════════════════════════════════════════════
-                  3. LOCAȚIE — Proximitate & Hartă (important pentru oaspeți)
+                  5. LOCAȚIE — Proximitate & Hartă
                   ═══════════════════════════════════════════════════════ */}
               <PropertyProximity
                 propertySlug={property.slug}
