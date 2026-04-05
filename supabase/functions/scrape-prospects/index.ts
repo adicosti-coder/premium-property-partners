@@ -213,6 +213,10 @@ Deno.serve(async (req) => {
         : DEFAULT_SEARCH_QUERIES;
     }
 
+    // Expand keywords with diacritics-free variants for fuzzy matching
+    queries = expandKeywordsWithoutDiacritics(queries);
+    console.log(`Expanded to ${queries.length} search queries (with diacritics-free variants)`);
+
     for (const { platform, query } of queries) {
       console.log(`Searching ${platform}: ${query}`);
 
