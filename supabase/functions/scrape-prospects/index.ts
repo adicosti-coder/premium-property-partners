@@ -320,15 +320,16 @@ Deno.serve(async (req) => {
             const url = result.url;
             if (!url) continue;
 
+            // Dedup by URL in scraper_leads
             const { data: existing } = await supabase
-              .from('prospect_listings')
+              .from('scraper_leads')
               .select('id')
-              .eq('source_url', url)
+              .eq('url', url)
               .maybeSingle();
 
             if (existing) {
-              await supabase.from('prospect_listings')
-                .update({ last_seen_at: new Date().toISOString() })
+              await supabase.from('scraper_leads')
+                .update({ updated_at: new Date().toISOString() })
                 .eq('id', existing.id);
               continue;
             }
@@ -353,23 +354,59 @@ Deno.serve(async (req) => {
               floor: extracted.floor, yearBuilt: extracted.yearBuilt, features,
             });
 
+            // Compute profit estimates
+            const isRental = /inchiriere|chirie/i.test(extracted.title || result.title || '');
+            let monthlyExtra: number | null = null;
+            let extraProfit3Y: number | null = null;
+            
+            if (isRental && price) {
+              // For rentals, price is monthly rent; estimate STR uplift ~70%
+              monthlyExtra = Math.round(price * 0.7);
+              extraProfit3Y = monthlyExtra * 36;
+            } else if (!isRental && price && size) {
+              // For sales, estimate monthly rental income based on price/sqm
+              const estimatedMonthlyRent = Math.round(price * 0.004); // ~0.4% of price
+              monthlyExtra = Math.round(estimatedMonthlyRent * 0.7);
+              extraProfit3Y = monthlyExtra * 36;
+            }
+
+            // Check phone blacklist
+            let skipBlacklist = false;
+            if (extracted.contactPhone) {
+              const { data: phoneData } = await supabase
+                .from('phone_intelligence')
+                .select('is_blacklisted')
+                .eq('phone_number', extracted.contactPhone)
+                .maybeSingle();
+              if (phoneData?.is_blacklisted) {
+                skipBlacklist = true;
+              }
+            }
+
+            if (skipBlacklist) {
+              blacklistedSkipped++;
+              continue;
+            }
+
+            // Derive listing_type
+            const listingType = isRental ? 'rent' : 'sale';
+
             const { data: inserted, error: insertErr } = await supabase
-              .from('prospect_listings')
+              .from('scraper_leads')
               .insert({
-                source_platform: platform,
-                source_url: url,
                 title: extracted.title || result.title || 'Anunț fără titlu',
-                description: extracted.description || result.description || null,
-                price, currency: 'EUR', price_per_sqm: pricePerSqm,
-                location: extracted.location || null, zone, size,
-                rooms: extracted.rooms, floor: extracted.floor,
-                year_built: extracted.yearBuilt, features,
-                images: extracted.images.slice(0, 10),
-                contact_phone: extracted.contactPhone,
-                contact_name: extracted.contactName,
-                score, score_breakdown: breakdown,
+                url,
+                source: platform,
+                original_price: price,
+                lead_score: score,
+                monthly_extra: monthlyExtra,
+                extra_profit_3y: extraProfit3Y,
+                listing_type: listingType,
+                phone: extracted.contactPhone,
+                search_keyword: query,
+                status: 'new',
               })
-              .select('id, title, score, zone')
+              .select('id, title, lead_score')
               .single();
 
             if (insertErr) {
