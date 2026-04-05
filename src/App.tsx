@@ -93,9 +93,6 @@ const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
-// Redirect /contact → /#contact (avoid 404 noindex for Google)
-// ContactRedirect uses Navigate for proper SEO (no JS redirect)
-const ContactRedirect = () => <Navigate to="/#contact" replace />;
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
@@ -208,8 +205,8 @@ const App = () => (
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
-                    <Route path="/contact" element={<ContactRedirect />} />
-                    <Route path="/contact-locatie" element={<ContactPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     {/* Legacy .html redirects — use Navigate for proper 301-like behavior with crawlers */}
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
                     <Route path="/index-en.html" element={<Navigate to="/" replace />} />

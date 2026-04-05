@@ -2,9 +2,12 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
-// Build/prerender safety: publishing can execute parts of the bundle in a non-browser environment.
-if (typeof document !== "undefined") {
+import {
+  isPreviewServiceWorkerDisabledHost,
+  resetPreviewServiceWorkers,
+} from "@/utils/serviceWorkerEnvironment";
 
+const mountApp = () => {
   // Defer ALL non-critical scripts to first user interaction (scroll/click/touch)
   // This frees the main thread entirely for the initial render & LCP.
   const loadNonCritical = () => {
@@ -45,4 +48,32 @@ if (typeof document !== "undefined") {
       console.error('[main.tsx] React mount failed:', e);
     }
   }
+};
+
+// Build/prerender safety: publishing can execute parts of the bundle in a non-browser environment.
+if (typeof document !== "undefined") {
+  const bootstrap = async () => {
+    if (isPreviewServiceWorkerDisabledHost()) {
+      try {
+        const reloadKey = "__rt_preview_sw_reset__";
+        const didReset = await resetPreviewServiceWorkers();
+
+        if (didReset && typeof sessionStorage !== "undefined" && !sessionStorage.getItem(reloadKey)) {
+          sessionStorage.setItem(reloadKey, "1");
+          window.location.replace(window.location.href);
+          return;
+        }
+
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.removeItem(reloadKey);
+        }
+      } catch {
+        // Ignore preview SW cleanup failures and continue mounting the app
+      }
+    }
+
+    mountApp();
+  };
+
+  void bootstrap();
 }

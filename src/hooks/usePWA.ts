@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { isBrowser } from "@/utils/browserStorage";
+import {
+  isPreviewServiceWorkerDisabledHost,
+  resetPreviewServiceWorkers,
+} from "@/utils/serviceWorkerEnvironment";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -103,6 +107,15 @@ export async function registerServiceWorker() {
   if (!isBrowser() || typeof navigator === "undefined") return null;
 
   if ("serviceWorker" in navigator) {
+    if (isPreviewServiceWorkerDisabledHost()) {
+      try {
+        await resetPreviewServiceWorkers();
+      } catch {
+        // ignore preview cleanup errors
+      }
+      return null;
+    }
+
     try {
       const registration = await navigator.serviceWorker.register("/pwa-sw.js", {
         scope: "/",

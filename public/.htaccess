@@ -17,7 +17,7 @@
   RewriteRule ^imobiliare-realtrust\.html$ / [R=301,L]
   RewriteRule ^real-estate-en\.html$ /imobiliare [R=301,L]
   RewriteRule ^real-estate\.html$ /imobiliare [R=301,L]
-  RewriteRule ^contact$ /#contact [R=301,NE,L]
+  RewriteRule ^contact-locatie/?$ /contact [R=301,L]
 
   # Redirect private/utility pages to homepage if accessed directly (avoid Google indexing)
   RewriteRule ^profil$ / [R=301,L]
