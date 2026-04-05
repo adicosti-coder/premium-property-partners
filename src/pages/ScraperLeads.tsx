@@ -1589,11 +1589,11 @@ const ScraperLeads = () => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10"
+                              className="h-8 w-8 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const msg = lead.whatsapp_message || 
@@ -1610,7 +1610,7 @@ const ScraperLeads = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
                               onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
                               title={lead.phone ? `Blacklist ${lead.phone}` : "Fără telefon"}
                               disabled={!lead.phone}
@@ -1620,7 +1620,7 @@ const ScraperLeads = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                               onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
                               title="Arhivează"
                             >
