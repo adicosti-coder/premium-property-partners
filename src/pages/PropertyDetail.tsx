@@ -656,8 +656,8 @@ const PropertyDetail = () => {
                     {dbProperty.property_code}
                   </Badge>
                 )}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
-                
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
+
                 <Suspense fallback={null}>
                   <PropertyAIScore
                     propertyName={property.name}
