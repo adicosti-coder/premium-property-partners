@@ -1559,6 +1559,9 @@ const ScraperLeads = () => {
                             </div>
                           </div>
                         </TableCell>
+                        <TableCell className="text-center text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(lead.created_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "2-digit" })}
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
                             {getScoreBadge(lead.lead_score)}
@@ -1566,11 +1569,6 @@ const ScraperLeads = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm">{formatPrice(lead.original_price, getPriceSuffix(lead))}</TableCell>
-                        <TableCell className="text-right font-mono text-sm text-emerald-600 dark:text-emerald-400">+{formatPrice(lead.extra_profit_3y)}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">+{formatPrice(lead.monthly_extra)}</TableCell>
-                        <TableCell className="text-center text-xs text-muted-foreground whitespace-nowrap">
-                          {new Date(lead.created_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "2-digit" })}
-                        </TableCell>
                         <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={lead.status}
