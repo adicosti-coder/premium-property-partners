@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from "react";
-import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+
 import { useParams, Link, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
@@ -400,39 +400,8 @@ const PropertyDetail = () => {
     : staticProperty?.rating ? (staticProperty.rating / 2).toFixed(1) : "4.9";
   const reviewCount = dbReviews.length > 0 ? dbReviews.length : (staticProperty?.reviews || 50);
 
-  // Generate FAQ items for SEO FAQPage schema
-  const faqSchemaItems: Array<{ question: string; answer: string }> = [];
-  const lt = dbProperty?.listing_type || "";
-  const pName = property.name;
-  const pLoc = property.location;
-  const pPrice = property.pricePerNight;
-  const pCap = property.capacity;
-  const pBed = property.bedrooms;
-  if (language === "ro") {
-    faqSchemaItems.push({ question: `Unde este situat ${pName}?`, answer: `${pName} este situat în ${pLoc}, Timișoara, într-o zonă cu acces facil la transport public, restaurante și atracții turistice.` });
-    if (lt === "vanzare" && pPrice) {
-      faqSchemaItems.push({ question: `Care este prețul de vânzare?`, answer: `Prețul solicitat este de €${pPrice.toLocaleString('ro-RO')}.` });
-    } else if (lt === "investitie" && pPrice) {
-      faqSchemaItems.push({ question: `Care este randamentul net?`, answer: `Proprietățile administrate de RealTrust generează un randament net de 9-10% pe an.` });
-    } else if (pPrice) {
-      faqSchemaItems.push({ question: `Care este prețul pe noapte?`, answer: `Tariful pornește de la €${pPrice}/noapte.` });
-    }
-    if (pCap) faqSchemaItems.push({ question: `Câți oaspeți pot fi cazați?`, answer: `Apartamentul poate găzdui până la ${pCap} oaspeți, cu ${pBed || 1} dormitoare.` });
-    faqSchemaItems.push({ question: `Cum funcționează check-in-ul?`, answer: `Oferim self check-in cu smart lock — primești codul de acces automat pe WhatsApp cu 24h înainte de sosire.` });
-    faqSchemaItems.push({ question: `Pot anula rezervarea gratuit?`, answer: `Da, oferim anulare gratuită cu până la 48 de ore înainte de check-in pentru majoritatea proprietăților.` });
-  } else {
-    faqSchemaItems.push({ question: `Where is ${pName} located?`, answer: `${pName} is located in ${pLoc}, Timișoara, in an area with easy access to public transport, restaurants, and tourist attractions.` });
-    if (lt === "vanzare" && pPrice) {
-      faqSchemaItems.push({ question: `What is the sale price?`, answer: `The asking price is €${pPrice.toLocaleString('en-US')}.` });
-    } else if (lt === "investitie" && pPrice) {
-      faqSchemaItems.push({ question: `What net yield can I expect?`, answer: `Properties managed by RealTrust generate 9-10% net yield per year.` });
-    } else if (pPrice) {
-      faqSchemaItems.push({ question: `What is the price per night?`, answer: `Rates start from €${pPrice}/night.` });
-    }
-    if (pCap) faqSchemaItems.push({ question: `How many guests can stay?`, answer: `The apartment can accommodate up to ${pCap} guests, with ${pBed || 1} bedrooms.` });
-    faqSchemaItems.push({ question: `How does check-in work?`, answer: `We offer self check-in with smart lock — you'll receive the access code automatically via WhatsApp 24h before arrival.` });
-    faqSchemaItems.push({ question: `Can I cancel for free?`, answer: `Yes, we offer free cancellation up to 48 hours before check-in for most properties.` });
-  }
+  // FAQ items are now registered ONLY by PropertyFAQ component via useRegisterFAQs
+  // Do NOT register here to avoid duplicate FAQPage schemas
 
   // Get nearby POIs for structured data
   const nearbyPoisForSchema = getPropertyPois({
@@ -518,8 +487,7 @@ const PropertyDetail = () => {
     // FAQPage Schema — now handled by useFAQSchema context (no inline injection)
   ];
 
-  // Register FAQ items into centralized context
-  useRegisterFAQs("property-detail", faqSchemaItems);
+  // FAQ items are registered by PropertyFAQ component only
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
