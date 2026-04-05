@@ -280,6 +280,11 @@ const PentruOaspeti = () => {
 
   const t = content[language as keyof typeof content] || content.ro;
   const topProperties = getActiveProperties().slice(0, 3);
+  // Register FAQ items via centralized context (single FAQPage per page)
+  useRegisterFAQs("pentru-oaspeti", t.faqItems.map((item: { question: string; answer: string }) => ({
+    question: item.question,
+    answer: item.answer,
+  })));
 
   return (
     <div className="min-h-screen bg-background">
