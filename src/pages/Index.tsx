@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense, useState } from "react";
+import { useEffect, lazy, Suspense, useState, useRef } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
@@ -87,6 +87,34 @@ const TeaserSections = () => (
   </div>
 );
 
+// Gallery + Map section — map is deferred via IntersectionObserver to avoid loading
+// mapbox-gl (457KB + 1.7s CPU) until the user scrolls near it
+const GalleryMapSection = () => {
+  const [mapRef, mapVisible] = useLazyVisible("400px", 15000);
+
+  return (
+    <div className="cv-auto">
+      <Suspense fallback={<div className="min-h-[400px]" />}>
+        <section id="portofoliu">
+          <PropertyGallery />
+        </section>
+      </Suspense>
+      <div ref={mapRef}>
+        {mapVisible ? (
+          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
+            <InteractiveMapWithPOI />
+          </Suspense>
+        ) : (
+          <div style={{ minHeight: '400px' }} />
+        )}
+      </div>
+      <Suspense fallback={<div style={{ minHeight: '300px' }} />}>
+        <Testimonials />
+      </Suspense>
+    </div>
+  );
+};
+
 // Bottom fold — always rendered with Suspense only
 const BottomFoldSection = () => (
   <div className="cv-auto">
@@ -162,16 +190,8 @@ const Index = () => {
         {/* Owners & Guests teasers - gated by visibility */}
         <TeaserSections />
 
-        {/* Property gallery + testimonials */}
-        <div className="cv-auto">
-          <Suspense fallback={<div className="min-h-[400px]" />}>
-            <section id="portofoliu">
-              <PropertyGallery />
-            </section>
-            <InteractiveMapWithPOI />
-            <Testimonials />
-          </Suspense>
-        </div>
+        {/* Property gallery + map + testimonials — map deferred until scrolled into view */}
+        <GalleryMapSection />
         
         {/* Bottom-fold: deferred until scroll */}
         <BottomFoldSection />

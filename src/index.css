@@ -384,10 +384,10 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px hsl(45 93% 58% / 0.3);
+    filter: drop-shadow(0 0 20px hsl(45 93% 58% / 0.3));
   }
   50% {
-    box-shadow: 0 0 40px hsl(45 93% 58% / 0.5);
+    filter: drop-shadow(0 0 40px hsl(45 93% 58% / 0.5));
   }
 }
 
