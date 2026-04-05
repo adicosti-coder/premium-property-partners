@@ -122,6 +122,30 @@ const isUUID = (str: string): boolean => {
   return uuidRegex.test(str);
 };
 
+const stripYieldFromPropertyTitle = (title: string) => {
+  return title
+    .replace(/\s*[,|·\-–—]?\s*(Randament|Yield|ROI)\s*\+?\d+(?:[.,]\d+)?%?\+?\s*(Net)?\s*/gi, " ")
+    .replace(/\s*[|·\-–—]\s*$/g, "")
+    .replace(/\s+,/g, ",")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+};
+
+const syncInvestmentCopyWithRoi = (text: string, roi?: string | null) => {
+  if (!text || !roi) return text;
+
+  return text
+    .replace(
+      /randament\s+net(?:\s+estimat)?\s+(?:de\s+)?(?:peste\s+|aproximativ\s+|circa\s+)?\d+(?:[.,]\d+)?%\+?/gi,
+      `randament net estimat de ${roi}`
+    )
+    .replace(
+      /\bROI\s*(?:net\s*)?(?:de\s+)?(?:peste\s+|aproximativ\s+|circa\s+)?\d+(?:[.,]\d+)?%\+?/gi,
+      `ROI ${roi}`
+    )
+    .replace(/randament\s+\d+(?:[.,]\d+)?%\+?/gi, `randament ${roi}`);
+};
+
 const PropertyDetail = () => {
   const { slug: paramSlug } = useParams<{ slug: string }>();
   const location = useLocation();
@@ -367,6 +391,21 @@ const PropertyDetail = () => {
 
   if (!property) return null;
 
+  const isInvestmentListing = normalizedListingType === "investitie" || normalizedListingType === "vanzare";
+  const displayRoi = dbProperty?.roi_percentage
+    ? (dbProperty.roi_percentage.includes("%") ? dbProperty.roi_percentage : `${dbProperty.roi_percentage}%`)
+    : null;
+  const displayName = isInvestmentListing ? stripYieldFromPropertyTitle(property.name) : property.name;
+  const displayDescription = (() => {
+    const baseDescription = language === 'en'
+      ? (property.longDescriptionEn || property.descriptionEn || property.longDescription || property.description)
+      : (property.longDescription || property.description);
+
+    return isInvestmentListing
+      ? syncInvestmentCopyWithRoi(baseDescription, displayRoi)
+      : baseDescription;
+  })();
+
   const propertyForLightbox: Property = staticProperty || {
     ...property,
     featuresEn: [],
@@ -420,9 +459,9 @@ const PropertyDetail = () => {
 
   const propertySchemas = [
     ...generatePropertyPageSchemas({
-      name: property.name,
+      name: displayName,
       slug: slug || "",
-      description: language === 'ro' ? property.longDescription : (property.longDescriptionEn || property.longDescription),
+      description: displayDescription,
       image: galleryImages[0] || "",
       images: galleryImages,
       location: property.location,
@@ -459,7 +498,7 @@ const PropertyDetail = () => {
     {
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
-      "name": property.name,
+      "name": displayName,
       "url": `https://www.realtrust.ro/proprietate/${slug}`,
       "image": galleryImages[0] || "",
       "aggregateRating": {
@@ -493,15 +532,15 @@ const PropertyDetail = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead 
         title={(() => {
-          const roi = dbProperty?.roi_percentage;
+          const roi = displayRoi;
           const lt = dbProperty?.listing_type?.toLowerCase();
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
-            return `${property.name} | Randament ${roi} ROI — Investiție Timișoara`;
+            return `${displayName} | Randament ${roi} ROI — Investiție Timișoara`;
           }
-          return `${property.name} | RealTrust Timișoara`;
+          return `${displayName} | RealTrust Timișoara`;
         })()}
         description={(() => {
-          const roi = dbProperty?.roi_percentage;
+          const roi = displayRoi;
           const capital = dbProperty?.capital_necesar;
           const lt = dbProperty?.listing_type?.toLowerCase();
           // Investment-optimized description for social sharing
@@ -509,27 +548,27 @@ const PropertyDetail = () => {
             const parts: string[] = [];
             if (roi) parts.push(`Randament estimat: ${roi} ROI net.`);
             if (capital) parts.push(`Capital necesar: €${capital.toLocaleString('ro-RO')}.`);
-            parts.push(`${property.name} — ${property.location}, Timișoara. Administrare profesională regim hotelier RealTrust.`);
+            parts.push(`${displayName} — ${property.location}, Timișoara. Administrare profesională regim hotelier RealTrust.`);
             return parts.join(' ').slice(0, 160);
           }
-          const rawDesc = language === 'ro' ? (property.longDescription || property.description) : (property.longDescriptionEn || property.descriptionEn || property.longDescription || property.description);
+          const rawDesc = displayDescription;
           if (rawDesc && rawDesc.length > 0) {
             const clean = rawDesc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
             return clean.length > 150 ? clean.slice(0, 147) + '...' : clean;
           }
           return language === 'ro'
-            ? `${property.name} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
-            : `${property.name} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
+            ? `${displayName} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
+            : `${displayName} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
         })()}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
         imageAlt={(() => {
-          const roi = dbProperty?.roi_percentage;
+          const roi = displayRoi;
           const lt = dbProperty?.listing_type?.toLowerCase();
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
-            return `${property.name} — investiție imobiliară Timișoara, randament ${roi} ROI, property management regim hotelier`;
+            return `${displayName} — investiție imobiliară Timișoara, randament ${roi} ROI, property management regim hotelier`;
           }
-          return staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${property.name} — cazare regim hotelier ${property.location}, Timișoara`;
+          return staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${displayName} — cazare regim hotelier ${property.location}, Timișoara`;
         })()}
         type="product"
         productPrice={property.pricePerNight || undefined}
@@ -618,6 +657,7 @@ const PropertyDetail = () => {
                   </Badge>
                 )}
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{property.name}</h1>
+                
                 <Suspense fallback={null}>
                   <PropertyAIScore
                     propertyName={property.name}
@@ -697,7 +737,7 @@ const PropertyDetail = () => {
               {property.longDescription && (
                 <div>
                   <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
-                  <p className="text-muted-foreground leading-relaxed">{language === 'en' ? property.longDescriptionEn : property.longDescription}</p>
+                  <p className="text-muted-foreground leading-relaxed">{displayDescription}</p>
                 </div>
               )}
 
