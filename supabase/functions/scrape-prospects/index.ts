@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
         const searchResults = searchData?.data || [];
         console.log(`Found ${searchResults.length} results from ${platform}`);
 
-        // Step 2: Process each result
+        // Step 2: Process each result (extract from markdown, no individual scrape)
         for (const result of searchResults) {
           const url = result.url;
           if (!url) continue;
@@ -254,64 +254,40 @@ Deno.serve(async (req) => {
             .maybeSingle();
 
           if (existing) {
-            // Update last_seen_at
             await supabase.from('prospect_listings')
               .update({ last_seen_at: new Date().toISOString() })
               .eq('id', existing.id);
             continue;
           }
 
-          // Step 3: Extract structured data from the page
-          let extracted: any = {};
-          try {
-            const scrapeResp = await fetch('https://api.firecrawl.dev/v1/scrape', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${firecrawlKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                url,
-                formats: [{ type: 'json', prompt: EXTRACTION_PROMPT }, 'links'],
-                waitFor: 3000,
-              }),
-            });
-
-            const scrapeData = await scrapeResp.json();
-            extracted = scrapeData?.data?.json || scrapeData?.json || {};
-          } catch (e) {
-            console.error(`Failed to scrape ${url}:`, e);
-            // Use basic info from search result
-            extracted = { title: result.title, description: result.description };
-          }
+          // Extract data from search result markdown (no extra API call)
+          const markdown = result.markdown || result.description || '';
+          const extracted = extractFromMarkdown(markdown, result.title || '', url);
 
           // Normalize price to EUR
-          let price = extracted.price ? Number(extracted.price) : null;
-          const currency = extracted.currency || 'EUR';
-          if (price && currency === 'RON') {
-            price = Math.round(price * 0.2); // RON -> EUR
+          let price = extracted.price;
+          if (price && extracted.currency === 'RON') {
+            price = Math.round(price * 0.2);
           }
 
-          const size = extracted.size ? Number(extracted.size) : null;
+          const size = extracted.size;
           const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
 
           const locationText = extracted.location || result.title || '';
           const zone = detectZone(locationText + ' ' + (result.title || ''));
-          const features = Array.isArray(extracted.features) ? extracted.features : [];
+          const features = extracted.features;
 
-          // Score the listing
           const { score, breakdown } = scoreListing({
             zone,
             size,
-            rooms: extracted.rooms ? Number(extracted.rooms) : null,
+            rooms: extracted.rooms,
             price,
             pricePerSqm,
-            floor: extracted.floor || null,
-            yearBuilt: extracted.year_built ? Number(extracted.year_built) : null,
+            floor: extracted.floor,
+            yearBuilt: extracted.yearBuilt,
             features,
           });
 
-          // Insert into DB
           const { data: inserted, error: insertErr } = await supabase
             .from('prospect_listings')
             .insert({
@@ -325,13 +301,13 @@ Deno.serve(async (req) => {
               location: extracted.location || null,
               zone,
               size,
-              rooms: extracted.rooms ? Number(extracted.rooms) : null,
-              floor: extracted.floor || null,
-              year_built: extracted.year_built ? Number(extracted.year_built) : null,
+              rooms: extracted.rooms,
+              floor: extracted.floor,
+              year_built: extracted.yearBuilt,
               features,
-              images: Array.isArray(extracted.images) ? extracted.images.slice(0, 10) : [],
-              contact_phone: extracted.contact_phone || null,
-              contact_name: extracted.contact_name || null,
+              images: extracted.images.slice(0, 10),
+              contact_phone: extracted.contactPhone,
+              contact_name: extracted.contactName,
               score,
               score_breakdown: breakdown,
             })
@@ -344,9 +320,6 @@ Deno.serve(async (req) => {
           } else {
             results.push(inserted);
           }
-
-          // Rate limit pause
-          await new Promise(r => setTimeout(r, 1500));
         }
       } catch (err: any) {
         console.error(`Platform ${platform} error:`, err);
