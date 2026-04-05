@@ -623,83 +623,67 @@ const PropertyDetail = () => {
           <p className="text-xs text-muted-foreground italic text-center mt-1">{getDisplayCaption(currentImageIndex)}</p>
         </div>
 
-        {/* ═══ THE ADVISOR — AI Content Module ═══ */}
+        {/* ═══ HEADER — Titlu, Score, Locație (PRIMA SECȚIUNE după galerie) ═══ */}
         <div className="container mx-auto px-4 sm:px-6 mb-8">
+          <div className="min-w-0">
+            {dbProperty?.property_code && (
+              <Badge variant="secondary" className="font-mono text-sm bg-muted mb-2 inline-block">
+                {dbProperty.property_code}
+              </Badge>
+            )}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
+
+            <Suspense fallback={null}>
+              <PropertyAIScore
+                propertyName={property.name}
+                propertySlug={property.slug}
+                location={property.location}
+                latitude={resolvedCoordinates?.[1] ?? null}
+                longitude={resolvedCoordinates?.[0] ?? null}
+                listingType={normalizedListingType}
+                roi={dbProperty?.roi_percentage}
+                basePrice={dbProperty?.base_price_per_night ?? null}
+                bookingRating={dbProperty?.booking_rating ?? null}
+                reviewCount={dbProperty?.booking_review_count ?? null}
+                bedrooms={property.bedrooms}
+                capacity={property.capacity}
+                amenities={(property as any).amenities ?? null}
+                size={(property as any).size ?? null}
+                tag={(property as any).tag ?? undefined}
+                className="my-2"
+              />
+            </Suspense>
+            <p className="text-muted-foreground flex items-center gap-1 min-w-0 flex-wrap">
+              <MapPin className="w-4 h-4 shrink-0" />
+              <span className="break-all truncate">{displayLocation}</span>
+              <span className="text-muted-foreground/50">·</span>
+              <a
+                href={resolvedCoordinates
+                  ? `https://www.google.com/maps/search/?api=1&query=${resolvedCoordinates[1]},${resolvedCoordinates[0]}`
+                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.name + ', ' + displayLocation)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium whitespace-nowrap"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                {language === 'ro' ? 'Poziția pe hartă' : 'View on map'}
+              </a>
+            </p>
+          </div>
+
+          {/* Live Activity */}
           <Suspense fallback={null}>
-            <TheAdvisor
-              propertyName={property.name}
-              propertySlug={property.slug}
-              location={property.location}
-              size={dbProperty?.size || property.size}
-              bedrooms={property.bedrooms}
-              bathrooms={property.bathrooms}
-              capacity={property.capacity}
-              floor={dbProperty?.floor}
-              pricePerNight={dbProperty?.base_price_per_night || property.pricePerNight}
-              amenities={property.amenities}
-              listingType={dbProperty?.listing_type}
-              yearBuilt={dbProperty?.year_built}
-              energyClass={dbProperty?.energy_class}
-              roi={dbProperty?.roi_percentage}
-            />
+            <LiveActivityTracker propertyId={dbProperty?.id} />
           </Suspense>
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 pb-24 overflow-hidden">
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8 min-w-0">
-              
-              {/* Header Info */}
-              <div className="min-w-0">
-                {dbProperty?.property_code && (
-                  <Badge variant="secondary" className="font-mono text-sm bg-muted mb-2 inline-block">
-                    {dbProperty.property_code}
-                  </Badge>
-                )}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
 
-                <Suspense fallback={null}>
-                  <PropertyAIScore
-                    propertyName={property.name}
-                      propertySlug={property.slug}
-                    location={property.location}
-                      latitude={resolvedCoordinates?.[1] ?? null}
-                      longitude={resolvedCoordinates?.[0] ?? null}
-                    listingType={normalizedListingType}
-                    roi={dbProperty?.roi_percentage}
-                      basePrice={dbProperty?.base_price_per_night ?? null}
-                      bookingRating={dbProperty?.booking_rating ?? null}
-                      reviewCount={dbProperty?.booking_review_count ?? null}
-                    bedrooms={property.bedrooms}
-                    capacity={property.capacity}
-                    amenities={(property as any).amenities ?? null}
-                    size={(property as any).size ?? null}
-                    tag={(property as any).tag ?? undefined}
-                    className="my-2"
-                  />
-                </Suspense>
-                <p className="text-muted-foreground flex items-center gap-1 min-w-0 flex-wrap">
-                  <MapPin className="w-4 h-4 shrink-0" />
-                  <span className="break-all truncate">{displayLocation}</span>
-                  <span className="text-muted-foreground/50">·</span>
-                  <a
-                    href={resolvedCoordinates
-                      ? `https://www.google.com/maps/search/?api=1&query=${resolvedCoordinates[1]},${resolvedCoordinates[0]}`
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.name + ', ' + displayLocation)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium whitespace-nowrap"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    {language === 'ro' ? 'Poziția pe hartă' : 'View on map'}
-                  </a>
-                </p>
-              </div>
-
-              {/* Live Activity Tracker & Neighborhood Score */}
-              <Suspense fallback={null}>
-                <LiveActivityTracker propertyId={dbProperty?.id} />
-              </Suspense>
+              {/* ═══════════════════════════════════════════════════════
+                  1. SCOR CARTIER — Validare vizuală rapidă
+                  ═══════════════════════════════════════════════════════ */}
               <Suspense fallback={null}>
                 <NeighborhoodScore
                   location={property.location}
@@ -711,7 +695,7 @@ const PropertyDetail = () => {
               </Suspense>
 
               {/* ═══════════════════════════════════════════════════════
-                  1. SPECIFICAȚII PROPRIETATE — Ce este proprietatea
+                  2. SPECIFICAȚII PROPRIETATE — Ce este proprietatea
                   ═══════════════════════════════════════════════════════ */}
 
               {/* Specificații Premium — pentru toate proprietățile din DB */}
@@ -732,7 +716,7 @@ const PropertyDetail = () => {
               )}
 
               {/* ═══════════════════════════════════════════════════════
-                  2. DESPRE PROPRIETATE — Descriere detaliată
+                  3. DESPRE PROPRIETATE — Descriere detaliată
                   ═══════════════════════════════════════════════════════ */}
               {property.longDescription && (
                 <div>
@@ -742,7 +726,29 @@ const PropertyDetail = () => {
               )}
 
               {/* ═══════════════════════════════════════════════════════
-                  3. LOCAȚIE — Proximitate & Hartă (important pentru oaspeți)
+                  4. THE ADVISOR — Analiză AI (după ce utilizatorul cunoaște baza)
+                  ═══════════════════════════════════════════════════════ */}
+              <Suspense fallback={null}>
+                <TheAdvisor
+                  propertyName={property.name}
+                  propertySlug={property.slug}
+                  location={property.location}
+                  size={dbProperty?.size || property.size}
+                  bedrooms={property.bedrooms}
+                  bathrooms={property.bathrooms}
+                  capacity={property.capacity}
+                  floor={dbProperty?.floor}
+                  pricePerNight={dbProperty?.base_price_per_night || property.pricePerNight}
+                  amenities={property.amenities}
+                  listingType={dbProperty?.listing_type}
+                  yearBuilt={dbProperty?.year_built}
+                  energyClass={dbProperty?.energy_class}
+                  roi={dbProperty?.roi_percentage}
+                />
+              </Suspense>
+
+              {/* ═══════════════════════════════════════════════════════
+                  5. LOCAȚIE — Proximitate & Hartă
                   ═══════════════════════════════════════════════════════ */}
               <PropertyProximity
                 propertySlug={property.slug}
