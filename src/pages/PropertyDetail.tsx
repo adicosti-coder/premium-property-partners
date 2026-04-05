@@ -633,6 +633,50 @@ const PropertyDetail = () => {
             )}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
 
+            {/* ═══ PREȚ PROMINENT ═══ */}
+            {(() => {
+              const capital = dbProperty?.capital_necesar;
+              const nightlyPrice = dbProperty?.base_price_per_night ?? (staticProperty as any)?.price;
+              const weekendPrice = dbProperty?.weekend_price_per_night;
+              const roi = displayRoi;
+
+              if (isInvestmentListing && capital) {
+                return (
+                  <div className="flex flex-wrap items-center gap-3 mt-3">
+                    <span className="text-2xl sm:text-3xl font-bold text-primary">
+                      €{capital.toLocaleString('ro-RO')}
+                    </span>
+                    {roi && (
+                      <Badge className="bg-primary/10 text-primary border-primary/20 text-sm font-semibold px-3 py-1">
+                        <TrendingUp className="w-4 h-4 mr-1" />
+                        ROI {roi}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              }
+
+              if (nightlyPrice) {
+                return (
+                  <div className="flex flex-wrap items-center gap-3 mt-3">
+                    <span className="text-2xl sm:text-3xl font-bold text-primary">
+                      €{nightlyPrice}
+                      <span className="text-base font-normal text-muted-foreground">
+                        /{language === 'ro' ? 'noapte' : 'night'}
+                      </span>
+                    </span>
+                    {weekendPrice && weekendPrice !== nightlyPrice && (
+                      <span className="text-sm text-muted-foreground">
+                        ({language === 'ro' ? 'weekend' : 'weekend'}: €{weekendPrice}/{language === 'ro' ? 'noapte' : 'night'})
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+
+              return null;
+            })()}
+
             <Suspense fallback={null}>
               <PropertyAIScore
                 propertyName={property.name}
