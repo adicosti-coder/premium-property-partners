@@ -68,14 +68,15 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            // Only split core vendor libs loaded on every page
+            // Core vendor libs loaded on every page — kept together
+            // because react-router-dom depends on react/react-dom
             "vendor-react": ["react", "react-dom", "react-router-dom"],
             "vendor-query": ["@tanstack/react-query"],
-            // Supabase removed from manualChunks — it's dynamically imported in Hero/Header
-            // so Rollup will only load it when those dynamic imports execute (after LCP)
-            // Heavy libs loaded lazily — let Rollup tree-shake & split naturally
-            // framer-motion, recharts, mapbox-gl are NOT in manualChunks
-            // so they only load when their lazy component is rendered
+            // Embla carousel isolated — causes forced reflow (60ms);
+            // separate chunk allows browser to parse it in its own task
+            "vendor-embla": ["embla-carousel-react", "embla-carousel-autoplay"],
+            // Heavy libs (framer-motion, recharts, mapbox-gl, supabase)
+            // split naturally via lazy() imports — NOT listed here
           },
         },
       },
