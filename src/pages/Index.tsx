@@ -191,21 +191,26 @@ const Index = () => {
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
         <NearFoldSection />
 
-        {/* Mid-fold: trust + service sections - gated by visibility */}
-        <MidFoldSection />
+        {/* Below-fold: rendered via startTransition to avoid blocking LCP */}
+        {belowFoldReady && (
+          <>
+            {/* Mid-fold: trust + service sections */}
+            <MidFoldSection />
 
-        {/* Owners & Guests teasers - gated by visibility */}
-        <TeaserSections />
+            {/* Owners & Guests teasers */}
+            <TeaserSections />
 
-        {/* Property gallery + map + testimonials — map deferred until scrolled into view */}
-        <GalleryMapSection />
-        
-        {/* Bottom-fold: deferred until scroll */}
-        <BottomFoldSection />
+            {/* Property gallery + map + testimonials */}
+            <GalleryMapSection />
+
+            {/* Bottom-fold: blog, FAQ, contact, CTA */}
+            <BottomFoldSection />
+          </>
+        )}
       </main>
       <Suspense fallback={null}>
         <Footer />
-        <GlobalConversionWidgets />
+        {belowFoldReady && <GlobalConversionWidgets />}
       </Suspense>
     </div>
   );
