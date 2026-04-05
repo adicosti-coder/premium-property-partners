@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense, useState } from "react";
+import { useEffect, lazy, Suspense, useState, useRef } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
@@ -162,16 +162,8 @@ const Index = () => {
         {/* Owners & Guests teasers - gated by visibility */}
         <TeaserSections />
 
-        {/* Property gallery + testimonials */}
-        <div className="cv-auto">
-          <Suspense fallback={<div className="min-h-[400px]" />}>
-            <section id="portofoliu">
-              <PropertyGallery />
-            </section>
-            <InteractiveMapWithPOI />
-            <Testimonials />
-          </Suspense>
-        </div>
+        {/* Property gallery + map + testimonials — map deferred until scrolled into view */}
+        <GalleryMapSection />
         
         {/* Bottom-fold: deferred until scroll */}
         <BottomFoldSection />
