@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 /**
  * Notify IndexNow about new/updated URLs so search engines index them faster.
