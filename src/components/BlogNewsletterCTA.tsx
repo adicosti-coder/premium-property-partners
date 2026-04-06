@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Mail, CheckCircle, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const emailSchema = z.string().trim().email().max(255);
 

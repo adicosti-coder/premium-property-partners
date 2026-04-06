@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useMemo } from "react";
 import { Copy, Check, Phone, Wifi, Key, MapPin, Clock, Video, MessageCircle, Shield, ChevronDown, ChevronUp, Home } from "lucide-react";

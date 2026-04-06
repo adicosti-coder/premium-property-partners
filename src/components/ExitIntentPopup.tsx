@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const ExitIntentPopup = () => {
   const { language } = useLanguage();

@@ -3,7 +3,7 @@ import { X, MessageSquarePlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 
 const DISMISSED_KEY = "feedback_banner_dismissed";
