@@ -118,10 +118,15 @@
 
     <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->
 
-    
-    
-    
-    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-JXDGWL3G6V');
+    </script>
+
 </head>
 
   <body>
