@@ -280,8 +280,9 @@ const SEOHead = ({
       <meta property="og:image" content={image} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:image:alt" content={imageAlt || finalDescription} />
+      <meta property="og:image:alt" content={imageAlt || finalTitle} />
       <meta property="og:locale" content={language === "ro" ? "ro_RO" : "en_US"} />
+      <meta property="og:locale:alternate" content={language === "ro" ? "en_US" : "ro_RO"} />
       <meta property="og:site_name" content="RealTrust & ApArt Hotel" />
       
       {/* Twitter */}
@@ -290,7 +291,7 @@ const SEOHead = ({
       <meta name="twitter:title" content={finalTitle} />
       <meta name="twitter:description" content={finalDescription} />
       <meta name="twitter:image" content={image} />
-      <meta name="twitter:image:alt" content={imageAlt || finalDescription} />
+      <meta name="twitter:image:alt" content={imageAlt || finalTitle} />
       
       {/* Article specific */}
       {type === "article" && publishedTime && (
