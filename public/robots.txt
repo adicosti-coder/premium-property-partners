@@ -13,5 +13,7 @@ Disallow: /comunitate/trimite
 Disallow: /comunitate/editeaza/
 Disallow: /termeni-si-conditii
 Disallow: /politica-confidentialitate
+Disallow: /guide/
+Disallow: /unsubscribe
 
 Sitemap: https://www.realtrust.ro/sitemap.xml

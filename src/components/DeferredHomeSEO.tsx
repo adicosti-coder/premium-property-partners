@@ -72,43 +72,20 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     };
   }
 
-  // Add LodgingBusiness + LocalBusiness combined schema (Fix 3A)
-  const lodgingBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": ["LodgingBusiness", "LocalBusiness"],
-    "name": "RealTrust & ApArt Hotel Timișoara",
-    "description": "Administrare apartamente în regim hotelier în Timișoara. ROI 9.4% net verificat, 60+ proprietăți, rating 9.7 Booking.com.",
-    "url": "https://www.realtrust.ro",
-    "telephone": "+40723154520",
-    "email": "info@realtrust.ro",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-      "addressLocality": "Timișoara",
-      "postalCode": "300125",
-      "addressCountry": "RO"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 45.7489,
-      "longitude": 21.2087
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "9.7",
-      "reviewCount": "500",
-      "bestRating": "10"
-    },
-    "priceRange": "€€",
-    "currenciesAccepted": "EUR",
-    "openingHours": "Mo-Su 00:00-24:00",
-    "sameAs": [
+  // LodgingBusiness data is already in homepageSchemas[0] via generateHomepageSchemas
+  // Add sameAs and openingHours to the main schema instead of duplicating
+  if (homepageSchemas.length > 0) {
+    const mainSchema = homepageSchemas[0] as Record<string, unknown>;
+    mainSchema.sameAs = [
       "https://www.facebook.com/realtrust.ro",
       "https://www.booking.com"
-    ]
-  };
+    ];
+    mainSchema.openingHours = "Mo-Su 00:00-24:00";
+    mainSchema.currenciesAccepted = "EUR";
+    mainSchema.priceRange = "€€";
+  }
 
-  const allSchemas = [...homepageSchemas, lodgingBusinessSchema];
+  const allSchemas = [...homepageSchemas];
 
   return (
     <SEOHead
