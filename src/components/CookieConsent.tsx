@@ -9,19 +9,31 @@ type ConsentChoice = "all" | "analytics_only" | "declined" | null;
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
+    dataLayer?: Record<string, unknown>[];
   }
 }
 
 const updateConsent = (choice: ConsentChoice) => {
-  if (!window.gtag) return;
   const granted = choice === "all";
   const analyticsOnly = choice === "analytics_only";
-  window.gtag("consent", "update", {
-    analytics_storage: granted || analyticsOnly ? "granted" : "denied",
-    ad_storage: granted ? "granted" : "denied",
-    ad_user_data: granted ? "granted" : "denied",
-    ad_personalization: granted ? "granted" : "denied",
-  });
+
+  // Update Google Consent Mode v2 via gtag
+  if (window.gtag) {
+    window.gtag("consent", "update", {
+      analytics_storage: granted || analyticsOnly ? "granted" : "denied",
+      ad_storage: granted ? "granted" : "denied",
+      ad_user_data: granted ? "granted" : "denied",
+      ad_personalization: granted ? "granted" : "denied",
+    });
+  }
+
+  // Push dataLayer event for GTM (GTM-T82W3H2) to unblock tags
+  window.dataLayer = window.dataLayer || [];
+  if (choice === "all" || choice === "analytics_only") {
+    window.dataLayer.push({ event: "cookie_consent_accepted" });
+  } else {
+    window.dataLayer.push({ event: "cookie_consent_declined" });
+  }
 };
 
 const CookieConsent = () => {
