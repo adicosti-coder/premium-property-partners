@@ -17,7 +17,6 @@ const updateConsent = (choice: ConsentChoice) => {
   const granted = choice === "all";
   const analyticsOnly = choice === "analytics_only";
 
-  // Update Google Consent Mode v2 via gtag
   if (window.gtag) {
     window.gtag("consent", "update", {
       analytics_storage: granted || analyticsOnly ? "granted" : "denied",
@@ -25,14 +24,6 @@ const updateConsent = (choice: ConsentChoice) => {
       ad_user_data: granted ? "granted" : "denied",
       ad_personalization: granted ? "granted" : "denied",
     });
-  }
-
-  // Push dataLayer event for GTM (GTM-T82W3H2) to unblock tags
-  window.dataLayer = window.dataLayer || [];
-  if (choice === "all" || choice === "analytics_only") {
-    window.dataLayer.push({ event: "cookie_consent_accepted", consent_level: choice });
-  } else {
-    window.dataLayer.push({ event: "cookie_consent_declined", consent_level: "declined" });
   }
 };
 
