@@ -4,6 +4,27 @@ import { isBrowser, getSessionStorage, setSessionStorage } from "@/utils/browser
 
 export type CtaType = "call" | "whatsapp" | "booking" | "airbnb" | "email" | "form_submit";
 
+/** Returns true if the user has accepted analytics cookies */
+const hasAnalyticsConsent = (): boolean => {
+  if (!isBrowser()) return false;
+  try {
+    const raw = localStorage.getItem("cookie_consent_v2");
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return parsed === "all" || parsed === "analytics_only";
+  } catch {
+    return false;
+  }
+};
+
+/** Fire a GA4 event via gtag – only when consent is granted */
+const fireGtagEvent = (eventName: string, params?: Record<string, string | undefined>) => {
+  if (!isBrowser() || !hasAnalyticsConsent()) return;
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, params);
+  }
+};
+
 interface TrackCtaOptions {
   ctaType: CtaType;
   propertyId?: string;
