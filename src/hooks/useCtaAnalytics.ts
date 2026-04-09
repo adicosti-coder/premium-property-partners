@@ -55,8 +55,22 @@ export const useCtaAnalytics = () => {
 
       const { ctaType, propertyId, propertyName, metadata = {} } = options;
 
+      // Fire GA4 event (consent-gated)
+      const gtagEventMap: Record<CtaType, string> = {
+        whatsapp: "click_whatsapp",
+        call: "click_phone",
+        form_submit: "generate_lead",
+        email: "click_email",
+        booking: "click_booking",
+        airbnb: "click_airbnb",
+      };
+      fireGtagEvent(gtagEventMap[ctaType], {
+        page_path: getCurrentPath(),
+        property_id: propertyId,
+        property_name: propertyName,
+      });
+
       try {
-        // Get current user if authenticated
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -77,7 +91,6 @@ export const useCtaAnalytics = () => {
           },
         });
       } catch (error) {
-        // Silent fail - don't block user action for analytics
         console.error("CTA tracking error:", error);
       }
     },
