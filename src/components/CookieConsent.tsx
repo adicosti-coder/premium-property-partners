@@ -30,9 +30,9 @@ const updateConsent = (choice: ConsentChoice) => {
   // Push dataLayer event for GTM (GTM-T82W3H2) to unblock tags
   window.dataLayer = window.dataLayer || [];
   if (choice === "all" || choice === "analytics_only") {
-    window.dataLayer.push({ event: "cookie_consent_accepted" });
+    window.dataLayer.push({ event: "cookie_consent_accepted", consent_level: choice });
   } else {
-    window.dataLayer.push({ event: "cookie_consent_declined" });
+    window.dataLayer.push({ event: "cookie_consent_declined", consent_level: "declined" });
   }
 };
 
