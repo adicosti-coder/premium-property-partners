@@ -62,6 +62,14 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
     try {
       const msg = `Vizionare: ${propertyName} (${propertyId})\nNume: ${name}\nTelefon: ${phone}\nInterval: ${timeSlot}`;
       window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+      // GA4 lead event (consent-gated)
+      try {
+        const consent = localStorage.getItem("cookie_consent_v2");
+        const hasConsent = consent === '"all"' || consent === '"analytics_only"' || consent === 'all' || consent === 'analytics_only';
+        if (hasConsent && typeof window.gtag === "function") {
+          window.gtag("event", "generate_lead", { property_name: propertyName, property_id: propertyId });
+        }
+      } catch {}
       setIsSuccess(true);
       toast({ title: t.success });
     } finally {
