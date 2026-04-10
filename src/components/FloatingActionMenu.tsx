@@ -280,7 +280,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
               aria-label={isOpen ? (language === 'ro' ? "Închide meniu" : "Close menu") : (language === 'ro' ? "Meniu rapid" : "Quick menu")}
             >
               <motion.div
-                animate={{ rotate: isOpen ? 135 : 0 }}
+                animate={{ rotate: isOpen ? 180 : 0 }}
                 transition={{ duration: 0.25, type: "spring", stiffness: 400 }}
               >
                 {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
