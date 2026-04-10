@@ -278,36 +278,62 @@ const AIChatbot = () => {
   }, [sharedContext]);
 
   // --- ElevenLabs Voice ---
+  const voiceRetryCount = useRef(0);
   const conversation = useConversation({
     onConnect: () => {
+      console.log("[AIChatbot] Voice connected successfully");
+      voiceRetryCount.current = 0;
       setIsConnectingVoice(false);
       toast.success(language === "ro" ? "Mod vocal activat!" : "Voice mode activated!");
     },
-    onDisconnect: () => { setVoiceMode(false); setIsConnectingVoice(false); },
-    onMessage: (payload) => {
-      if (payload.role === "user") addMessage("user", payload.message, "voice");
-      else if (payload.role === "agent") addMessage("assistant", payload.message, "voice");
+    onDisconnect: () => {
+      console.log("[AIChatbot] Voice disconnected");
+      setVoiceMode(false);
+      setIsConnectingVoice(false);
     },
-    onError: () => {
-      setVoiceMode(false); setIsConnectingVoice(false);
-      toast.error(language === "ro" ? "Eroare la conexiunea vocală" : "Voice connection error");
+    onMessage: (payload: any) => {
+      // Support both old format (role/message) and new format (type-based events)
+      if (payload.type === "user_transcript" && payload.user_transcription_event?.user_transcript) {
+        addMessage("user", payload.user_transcription_event.user_transcript, "voice");
+      } else if (payload.type === "agent_response" && payload.agent_response_event?.agent_response) {
+        addMessage("assistant", payload.agent_response_event.agent_response, "voice");
+      } else if (payload.role === "user" && payload.message) {
+        addMessage("user", payload.message, "voice");
+      } else if (payload.role === "agent" && payload.message) {
+        addMessage("assistant", payload.message, "voice");
+      }
+    },
+    onError: (error: any) => {
+      console.error("[AIChatbot] Voice error:", error);
+      setVoiceMode(false);
+      setIsConnectingVoice(false);
+      toast.error(language === "ro" ? "Eroare la conexiunea vocală. Încercați din nou." : "Voice connection error. Try again.");
     },
   });
 
   const startVoiceMode = async () => {
     setIsConnectingVoice(true);
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const { data, error } = await supabase.functions.invoke("elevenlabs-conversation-token", { body: { language } });
-      if (error || !data?.token) throw new Error("Failed to get voice token");
+
+      if (error || !data?.token) {
+        console.error("[AIChatbot] Token error:", error, "data:", data);
+        stream.getTracks().forEach(t => t.stop());
+        throw new Error("Failed to get voice token");
+      }
+
+      console.log("[AIChatbot] Token received, starting WebRTC for agent:", data.agentId);
       await conversation.startSession({ conversationToken: data.token, connectionType: "webrtc" });
+      stream.getTracks().forEach(t => t.stop());
       setVoiceMode(true);
     } catch (error: any) {
+      console.error("[AIChatbot] startVoiceMode error:", error?.message || error);
       setIsConnectingVoice(false);
       if (error.name === "NotAllowedError") {
         toast.error(language === "ro" ? "Permite accesul la microfon" : "Allow microphone access");
       } else {
-        toast.error(language === "ro" ? "Nu s-a putut activa modul vocal" : "Could not activate voice mode");
+        toast.error(language === "ro" ? "Nu s-a putut activa modul vocal. Încercați din nou." : "Could not activate voice mode. Try again.");
       }
     }
   };
