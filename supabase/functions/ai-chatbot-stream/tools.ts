@@ -51,6 +51,7 @@ export async function checkAvailability(args: {
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      console.log(`[checkAvailability] v2 — calling live-property-availability for ${livePayload.length} properties, ${checkIn} to ${checkOut}`);
       const liveRes = await fetch(`${supabaseUrl}/functions/v1/live-property-availability`, {
         method: "POST",
         headers: {
@@ -66,10 +67,16 @@ export async function checkAvailability(args: {
 
       if (liveRes.ok) {
         const liveData = await liveRes.json();
+        console.log(`[checkAvailability] Live response:`, JSON.stringify(liveData));
         if (liveData.unavailableSlugs) {
           unavailableSlugs = new Set(liveData.unavailableSlugs);
           liveCheckWorked = true;
+          console.log(`[checkAvailability] Unavailable: ${liveData.unavailableSlugs.join(', ')}`);
         }
+      } else {
+        const errText = await liveRes.text();
+        console.error(`[checkAvailability] Live check failed: ${liveRes.status} ${errText}`);
+      }
         // Also mark unresolved lookups — check bookings fallback for those
         const unresolvedSlugs = new Set<string>();
         if (liveData.lookupStatusBySlug) {
