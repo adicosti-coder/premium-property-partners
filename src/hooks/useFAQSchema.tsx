@@ -22,34 +22,50 @@ const FAQSchemaContext = createContext<FAQSchemaContextValue | null>(null);
 export const FAQSchemaProvider = ({ children }: { children: ReactNode }) => {
   const sourcesRef = useRef<Map<string, FAQItem[]>>(new Map());
   const [allItems, setAllItems] = useState<FAQItem[]>([]);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flush = useCallback(() => {
-    const merged: FAQItem[] = [];
-    const seen = new Set<string>();
-    for (const items of sourcesRef.current.values()) {
-      for (const item of items) {
-        // Deduplicate by question text (case-insensitive)
-        const key = item.question.toLowerCase().trim();
-        if (!seen.has(key)) {
-          seen.add(key);
-          merged.push(item);
+    // Debounce to prevent multiple synchronous setState calls
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+    flushTimerRef.current = setTimeout(() => {
+      const merged: FAQItem[] = [];
+      const seen = new Set<string>();
+      for (const items of sourcesRef.current.values()) {
+        for (const item of items) {
+          const key = item.question.toLowerCase().trim();
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(item);
+          }
         }
       }
-    }
-    setAllItems(merged);
+      setAllItems(merged);
+    }, 0);
   }, []);
 
-  const registerFAQs = useCallback(
-    (sourceId: string, items: FAQItem[]) => {
-      sourcesRef.current.set(sourceId, items);
+  const registerFAQsRef = useRef((sourceId: string, items: FAQItem[]) => {
+    sourcesRef.current.set(sourceId, items);
+    flush();
+    return () => {
+      sourcesRef.current.delete(sourceId);
       flush();
-      return () => {
-        sourcesRef.current.delete(sourceId);
-        flush();
-      };
-    },
-    [flush],
+    };
+  });
+  registerFAQsRef.current = (sourceId: string, items: FAQItem[]) => {
+    sourcesRef.current.set(sourceId, items);
+    flush();
+    return () => {
+      sourcesRef.current.delete(sourceId);
+      flush();
+    };
+  };
+
+  const stableRegisterFAQs = useCallback(
+    (sourceId: string, items: FAQItem[]) => registerFAQsRef.current(sourceId, items),
+    [],
   );
+
+  const contextValue = useRef<FAQSchemaContextValue>({ registerFAQs: stableRegisterFAQs }).current;
 
   return (
     <FAQSchemaContext.Provider value={{ registerFAQs }}>
