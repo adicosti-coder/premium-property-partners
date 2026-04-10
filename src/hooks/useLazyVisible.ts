@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
  * enters the viewport (with a generous rootMargin so components start
  * loading before the user scrolls to them). Once true it never reverts.
  */
-export function useLazyVisible(rootMargin = "400px", timeoutMs = 3000) {
+export function useLazyVisible(rootMargin = "400px", timeoutMs = 15000) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
