@@ -117,10 +117,10 @@ const GalleryMapSection = () => {
             <div className="text-center p-6">
               <div className="text-4xl mb-3">🗺️</div>
               <p className="text-lg font-semibold text-foreground/80">
-                {t === 'ro' ? 'Apasă pentru a încărca harta interactivă' : 'Tap to load interactive map'}
+                {language === 'ro' ? 'Apasă pentru a încărca harta interactivă' : 'Tap to load interactive map'}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {t === 'ro' ? 'Descoperă locațiile proprietăților noastre' : 'Discover our property locations'}
+                {language === 'ro' ? 'Descoperă locațiile proprietăților noastre' : 'Discover our property locations'}
               </p>
             </div>
           </div>
