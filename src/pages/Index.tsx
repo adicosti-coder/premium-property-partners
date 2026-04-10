@@ -90,7 +90,7 @@ const TeaserSections = () => (
 // Gallery + Map section — map is deferred via IntersectionObserver to avoid loading
 // mapbox-gl (457KB + 1.7s CPU) until the user scrolls near it
 const GalleryMapSection = () => {
-  const [mapRef, mapVisible] = useLazyVisible("400px", 15000);
+  const [mapRef, mapVisible] = useLazyVisible("400px", 45000);
 
   return (
     <div className="cv-auto">
@@ -156,7 +156,7 @@ const Index = () => {
     };
     document.addEventListener("scroll", loadAnalytics, { once: true, passive: true });
     // Fallback after 12s if no scroll
-    const t = setTimeout(loadAnalytics, 12000);
+    const t = setTimeout(loadAnalytics, 30000);
     return () => { clearTimeout(t); document.removeEventListener("scroll", loadAnalytics); };
   }, []);
 
