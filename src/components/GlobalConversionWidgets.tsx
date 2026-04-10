@@ -61,6 +61,25 @@ const GlobalConversionWidgets = ({
     };
   }, []);
 
+  // Remove the external ElevenLabs embed widget so only the in-app assistant remains.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const removeExternalWidget = () => {
+      document.querySelectorAll("elevenlabs-convai").forEach((node) => node.remove());
+      document
+        .querySelectorAll('script[src*="@elevenlabs/convai-widget-embed"]')
+        .forEach((node) => node.remove());
+    };
+
+    removeExternalWidget();
+
+    const observer = new MutationObserver(() => removeExternalWidget());
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
       {/* Phase 1: essential chrome after 1.5s */}
