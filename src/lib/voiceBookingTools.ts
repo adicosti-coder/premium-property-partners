@@ -21,9 +21,9 @@ function formatToISO(dateStr: string): string {
 async function findPropertyByName(name: string) {
   const { data: properties } = await supabase
     .from("properties")
-    .select("id, name, slug, capacity, base_price_per_night, weekend_price_per_night, location")
+    .select("id, name, slug, capacity, base_price_per_night, weekend_price_per_night, location, booking_url")
     .eq("is_active", true)
-    .eq("tag", "Cazare");
+    .eq("listing_type", "cazare");
 
   if (!properties?.length) return null;
 
@@ -39,16 +39,56 @@ async function findPropertyByName(name: string) {
   );
 }
 
+function getLegacyBookingPropertyId(propertyId: string) {
+  const compactId = propertyId.replace(/-/g, "").slice(0, 8);
+  const parsed = Number.parseInt(compactId, 16);
+  return Number.isNaN(parsed) ? null : parsed % 1000000;
+}
+
 async function checkConflicts(propertyId: string, checkIn: string, checkOut: string) {
+  const legacyPropertyId = getLegacyBookingPropertyId(propertyId);
+  if (legacyPropertyId === null) return [];
+
   const { data: conflicts } = await supabase
     .from("bookings")
-    .select("id, check_in, check_out, guest_name")
-    .eq("property_id", propertyId as any)
+    .select("id, property_id, check_in, check_out, guest_name")
     .neq("status", "cancelled")
     .lt("check_in", checkOut)
     .gt("check_out", checkIn);
 
-  return conflicts || [];
+  return (conflicts || []).filter((conflict) => Number(conflict.property_id) === legacyPropertyId);
+}
+
+async function checkLiveAvailability(
+  property: { id: string; slug: string | null; booking_url: string | null },
+  checkIn: string,
+  checkOut: string
+): Promise<boolean | null> {
+  const slugKey = property.slug || property.id;
+
+  if (!property.booking_url || property.booking_url === "#") {
+    return null;
+  }
+
+  const { data, error } = await supabase.functions.invoke("live-property-availability", {
+    body: {
+      checkIn,
+      checkOut,
+      properties: [{ slug: slugKey, bookingUrl: property.booking_url }],
+    },
+  });
+
+  if (error) {
+    console.error("[VoiceBooking] Live availability error:", error);
+    return null;
+  }
+
+  if (data?.lookupStatusBySlug?.[slugKey] !== "live") {
+    return null;
+  }
+
+  const unavailableSlugs = Array.isArray(data?.unavailableSlugs) ? data.unavailableSlugs : [];
+  return !unavailableSlugs.includes(slugKey);
 }
 
 // ── Booking Tools ────────────────────────────────────────
@@ -59,7 +99,7 @@ const list_properties = async (params: { guest_count?: number }) => {
       .from("properties")
       .select("name, capacity, base_price_per_night, location")
       .eq("is_active", true)
-      .eq("tag", "Cazare")
+      .eq("listing_type", "cazare")
       .order("display_order");
 
     if (params.guest_count) {
@@ -90,10 +130,10 @@ const check_availability = async (params: { property_name: string; check_in: str
       return `Nu am găsit proprietatea "${params.property_name}". Puteți cere lista proprietăților disponibile.`;
     }
 
-    const conflicts = await checkConflicts(property.id, checkIn, checkOut);
+    const liveAvailable = await checkLiveAvailability(property, checkIn, checkOut);
 
-    if (conflicts.length > 0) {
-      return `Proprietatea "${property.name}" NU este disponibilă în perioada ${checkIn} – ${checkOut}. Există ${conflicts.length} rezervare(i) care se suprapune. Doriți să verificăm altă proprietate sau altă perioadă?`;
+    if (liveAvailable === false) {
+      return `Proprietatea "${property.name}" NU este disponibilă în perioada ${checkIn} – ${checkOut}. Verificarea a fost făcută live în Pynbooking. Doriți să verificăm altă proprietate sau altă perioadă?`;
     }
 
     const nights = Math.ceil(
@@ -103,7 +143,17 @@ const check_availability = async (params: { property_name: string; check_in: str
       ? `Preț estimat: ${nights * property.base_price_per_night} € (${nights} nopți × ${property.base_price_per_night} €).`
       : "";
 
-    return `Proprietatea "${property.name}" este DISPONIBILĂ în perioada ${checkIn} – ${checkOut}. Capacitate: ${property.capacity} persoane. ${price} Doriți să fac rezervarea?`;
+    if (liveAvailable === true) {
+      return `Proprietatea "${property.name}" este DISPONIBILĂ în perioada ${checkIn} – ${checkOut}. Verificarea a fost făcută live în Pynbooking. Capacitate: ${property.capacity} persoane. ${price} Doriți să fac rezervarea?`;
+    }
+
+    const conflicts = await checkConflicts(property.id, checkIn, checkOut);
+
+    if (conflicts.length > 0) {
+      return `Proprietatea "${property.name}" NU este disponibilă în perioada ${checkIn} – ${checkOut}. Confirmarea vine din sincronizarea locală de rezervări. Doriți să verificăm altă proprietate sau altă perioadă?`;
+    }
+
+    return `Proprietatea "${property.name}" este DISPONIBILĂ în perioada ${checkIn} – ${checkOut}. Verificarea live nu a răspuns, dar sincronizarea locală nu arată conflicte. Capacitate: ${property.capacity} persoane. ${price} Doriți să fac rezervarea?`;
   } catch (e: any) {
     return `Eroare la verificarea disponibilității: ${e.message}`;
   }
@@ -121,13 +171,25 @@ const create_booking = async (params: { property_name: string; check_in: string;
       return `Proprietatea "${property.name}" are capacitate maximă de ${property.capacity} persoane, dar ați solicitat ${params.guest_count}. Doriți să vedem altă proprietate?`;
     }
 
-    const conflicts = await checkConflicts(property.id, checkIn, checkOut);
-    if (conflicts.length > 0) {
-      return `Din păcate, proprietatea "${property.name}" a fost între timp rezervată pentru perioada ${checkIn} – ${checkOut}. Doriți altă perioadă?`;
+    const liveAvailable = await checkLiveAvailability(property, checkIn, checkOut);
+    if (liveAvailable === false) {
+      return `Din păcate, proprietatea "${property.name}" nu este disponibilă în perioada ${checkIn} – ${checkOut}. Doriți altă perioadă?`;
+    }
+
+    if (liveAvailable === null) {
+      const conflicts = await checkConflicts(property.id, checkIn, checkOut);
+      if (conflicts.length > 0) {
+        return `Din păcate, proprietatea "${property.name}" a fost între timp rezervată pentru perioada ${checkIn} – ${checkOut}. Doriți altă perioadă?`;
+      }
+    }
+
+    const legacyPropertyId = getLegacyBookingPropertyId(property.id);
+    if (legacyPropertyId === null) {
+      return `Eroare la crearea rezervării: proprietatea nu are un identificator compatibil.`;
     }
 
     const { data, error } = await supabase.from("bookings").insert({
-      property_id: property.id as any,
+      property_id: legacyPropertyId,
       check_in: checkIn,
       check_out: checkOut,
       guest_name: params.guest_name,
