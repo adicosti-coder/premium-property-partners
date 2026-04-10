@@ -130,11 +130,23 @@
         'wait_for_update': 500
       });
     </script>
-    <!-- Google tag (gtag.js) — G-JXDGWL3G6V -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V"></script>
+    <!-- Google tag (gtag.js) — deferred after LCP to avoid 292ms long task -->
     <script>
-      gtag('js', new Date());
-      gtag('config', 'G-JXDGWL3G6V');
+      (function(){
+        function loadGTM(){
+          var s=document.createElement('script');
+          s.src='https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V';
+          s.async=true;
+          document.head.appendChild(s);
+          gtag('js',new Date());
+          gtag('config','G-JXDGWL3G6V');
+        }
+        if('requestIdleCallback' in window){
+          requestIdleCallback(loadGTM,{timeout:3500});
+        } else {
+          setTimeout(loadGTM,3500);
+        }
+      })();
     </script>
 
 </head>
