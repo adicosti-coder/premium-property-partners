@@ -65,17 +65,25 @@ export function useElevenLabsVoice() {
       sharedContext?.setVoiceTranscript("");
       sharedContext?.setIsVoiceSpeaking(false);
     },
-    onMessage: (message) => {
-      console.log("[ElevenLabs] Message:", message);
-      if (message.role === "user" && message.message) {
+    onMessage: (message: any) => {
+      console.log("[ElevenLabs] Message:", JSON.stringify(message).slice(0, 300));
+      // Support both old format (role/message) and new SDK format (type-based events)
+      if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
+        const text = message.user_transcription_event.user_transcript;
+        sharedContext?.addMessage("user", text, "voice");
+        sharedContext?.setVoiceTranscript("");
+      } else if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
+        const text = message.agent_response_event.agent_response;
+        sharedContext?.addMessage("assistant", text, "voice");
+      } else if (message.role === "user" && message.message) {
         sharedContext?.addMessage("user", message.message, "voice");
         sharedContext?.setVoiceTranscript("");
       } else if (message.role === "agent" && message.message) {
         sharedContext?.addMessage("assistant", message.message, "voice");
       }
     },
-    onError: (error) => {
-      console.error("[ElevenLabs] Error:", error);
+    onError: (error: any) => {
+      console.error("[ElevenLabs] Connection error:", error, "type:", typeof error, "keys:", error ? Object.keys(error) : "null");
       toast.error(
         language === "ro"
           ? "Eroare la conexiune. Vă rugăm încercați din nou."
