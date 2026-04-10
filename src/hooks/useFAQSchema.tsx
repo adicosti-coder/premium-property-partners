@@ -68,7 +68,7 @@ export const FAQSchemaProvider = ({ children }: { children: ReactNode }) => {
   const contextValue = useRef<FAQSchemaContextValue>({ registerFAQs: stableRegisterFAQs }).current;
 
   return (
-    <FAQSchemaContext.Provider value={{ registerFAQs }}>
+    <FAQSchemaContext.Provider value={contextValue}>
       {children}
       {allItems.length > 0 && (
         <Helmet>
