@@ -20,7 +20,7 @@ export async function checkAvailability(args: {
   const checkIn = args.check_in || new Date().toISOString().split("T")[0];
   const checkOut = args.check_out || new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0];
 
-  // Get active properties
+  // Get active accommodation properties
   let query = sb
     .from("properties")
     .select("id, name, slug, capacity, base_price_per_night, booking_url, property_code, tag, location, bedrooms, bathrooms, size")
@@ -39,20 +39,65 @@ export async function checkAvailability(args: {
     return JSON.stringify({ available: [], message: "Nu am găsit proprietăți care să corespundă criteriilor." });
   }
 
-  // Check bookings for conflicts
-  const propIds = properties.map((p: any) => p.id);
-  const { data: bookings } = await sb
-    .from("bookings")
-    .select("property_id, check_in, check_out, status")
-    .in("property_id", propIds)
-    .neq("status", "cancelled")
-    .lte("check_in", checkOut)
-    .gte("check_out", checkIn);
+  // --- Live availability check via Pynbooking ---
+  const livePayload = properties
+    .filter((p: any) => p.booking_url && p.booking_url !== "#")
+    .map((p: any) => ({ slug: p.slug || p.id, bookingUrl: p.booking_url }));
 
-  const bookedPropIds = new Set((bookings || []).map((b: any) => String(b.property_id)));
+  let unavailableSlugs = new Set<string>();
+  let liveCheckWorked = false;
+
+  if (livePayload.length > 0) {
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const liveRes = await fetch(`${supabaseUrl}/functions/v1/live-property-availability`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({
+          checkIn,
+          checkOut,
+          properties: livePayload,
+        }),
+      });
+
+      if (liveRes.ok) {
+        const liveData = await liveRes.json();
+        if (liveData.unavailableSlugs) {
+          unavailableSlugs = new Set(liveData.unavailableSlugs);
+          liveCheckWorked = true;
+        }
+        // Also mark unresolved lookups — check bookings fallback for those
+        const unresolvedSlugs = new Set<string>();
+        if (liveData.lookupStatusBySlug) {
+          for (const [slug, status] of Object.entries(liveData.lookupStatusBySlug)) {
+            if (status === "unresolved") unresolvedSlugs.add(slug);
+          }
+        }
+
+        // Fallback: check local bookings for unresolved properties
+        if (unresolvedSlugs.size > 0) {
+          const unresolvedProps = properties.filter((p: any) => unresolvedSlugs.has(p.slug || p.id));
+          const localUnavailable = await checkBookingsLocal(sb, unresolvedProps, checkIn, checkOut);
+          for (const slug of localUnavailable) unavailableSlugs.add(slug);
+        }
+      }
+    } catch (e) {
+      console.error("Live availability check failed, falling back to bookings:", e);
+    }
+  }
+
+  // Fallback: if live check didn't work at all, use local bookings
+  if (!liveCheckWorked) {
+    const localUnavailable = await checkBookingsLocal(sb, properties, checkIn, checkOut);
+    for (const slug of localUnavailable) unavailableSlugs.add(slug);
+  }
 
   const available = properties
-    .filter((p: any) => !bookedPropIds.has(String(p.id)))
+    .filter((p: any) => !unavailableSlugs.has(p.slug || p.id))
     .map((p: any) => ({
       name: p.name,
       code: p.property_code,
@@ -66,7 +111,7 @@ export async function checkAvailability(args: {
     }));
 
   const unavailable = properties
-    .filter((p: any) => bookedPropIds.has(String(p.id)))
+    .filter((p: any) => unavailableSlugs.has(p.slug || p.id))
     .map((p: any) => p.name);
 
   return JSON.stringify({
@@ -76,7 +121,65 @@ export async function checkAvailability(args: {
     available,
     unavailable,
     total_properties: properties.length,
+    source: liveCheckWorked ? "live" : "bookings_fallback",
   });
+}
+
+/** Fallback: check local bookings table for conflicts (handles property_id as numeric property_code) */
+async function checkBookingsLocal(
+  sb: ReturnType<typeof getSupabase>,
+  properties: any[],
+  checkIn: string,
+  checkOut: string
+): Promise<Set<string>> {
+  // bookings.property_id is numeric — derived from property UUID
+  // We need to map property_code or compute the numeric ID to match
+  const unavailableSlugs = new Set<string>();
+
+  // Get all bookings in the date range
+  const { data: bookings } = await sb
+    .from("bookings")
+    .select("property_id, check_in, check_out, status, ical_source_id")
+    .neq("status", "cancelled")
+    .lte("check_in", checkOut)
+    .gte("check_out", checkIn);
+
+  if (!bookings?.length) return unavailableSlugs;
+
+  // Also check via ical_sources to map bookings back to properties by UUID
+  const { data: icalSources } = await sb
+    .from("ical_sources")
+    .select("id, property_id");
+
+  const icalPropertyMap = new Map<string, string>();
+  for (const src of icalSources || []) {
+    icalPropertyMap.set(src.id, src.property_id);
+  }
+
+  // Build a set of property UUIDs that have booking conflicts
+  const bookedPropertyUUIDs = new Set<string>();
+
+  for (const b of bookings) {
+    // Try matching via ical_source_id -> property UUID
+    if (b.ical_source_id && icalPropertyMap.has(b.ical_source_id)) {
+      bookedPropertyUUIDs.add(icalPropertyMap.get(b.ical_source_id)!);
+    }
+    // Also try matching via numeric property_id to property_code
+    for (const p of properties) {
+      const numericId = parseInt(p.id.replace(/-/g, "").substring(0, 8), 16) % 1000000;
+      if (numericId === b.property_id) {
+        bookedPropertyUUIDs.add(p.id);
+      }
+    }
+  }
+
+  for (const p of properties) {
+    if (bookedPropertyUUIDs.has(p.id)) {
+      unavailableSlugs.add(p.slug || p.id);
+    }
+  }
+
+  return unavailableSlugs;
 }
 
 // ─── TOOL: Calculate ROI ────────────────────────────────────
