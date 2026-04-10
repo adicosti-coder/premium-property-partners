@@ -10,9 +10,6 @@ import {
   Mic,
   MicOff,
   Loader2,
-  Calculator,
-  Download,
-  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -47,11 +44,6 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
     window.addEventListener('elevenlabs-voice-state', handleVoiceState as EventListener);
     return () => window.removeEventListener('elevenlabs-voice-state', handleVoiceState as EventListener);
   }, []);
-
-  const referralText = {
-    ro: "Weekend gratuit",
-    en: "Free weekend",
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -135,7 +127,9 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
     setIsOpen(!isOpen);
   };
 
+  // Streamlined menu — only high-value actions, grouped logically
   const menuItems = [
+    // Primary: WhatsApp (conversion)
     {
       id: "whatsapp",
       icon: MessageCircle,
@@ -144,14 +138,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       bgColor: "bg-whatsapp",
       textColor: "text-whatsapp-foreground",
     },
-    {
-      id: "scroll-top",
-      icon: ChevronUp,
-      label: language === 'ro' ? "Sus" : "Top",
-      onClick: handleScrollToTop,
-      bgColor: "bg-primary",
-      textColor: "text-primary-foreground",
-    },
+    // AI features
     ...(showVoice ? [{
       id: "voice",
       icon: voiceConnecting ? Loader2 : (voiceConnected ? MicOff : Mic),
@@ -159,16 +146,16 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
         ? (voiceSpeaking 
             ? (language === 'ro' ? "Vorbește..." : "Speaking...") 
             : (language === 'ro' ? "Oprește" : "Stop"))
-        : (language === 'ro' ? "Voce AI" : "AI Voice"),
+        : (language === 'ro' ? "Concierge Vocal" : "Voice Concierge"),
       onClick: handleVoiceClick,
-      bgColor: voiceConnected ? "bg-red-500" : "bg-gradient-to-br from-purple-600 to-primary",
+      bgColor: voiceConnected ? "bg-destructive" : "bg-gradient-to-br from-purple-600 to-primary",
       textColor: "text-white",
       isAnimating: voiceConnecting,
     }] : []),
     ...(showChatbot ? [{
       id: "chatbot",
       icon: Bot,
-      label: "AI Chat",
+      label: language === 'ro' ? "Concierge AI" : "AI Concierge",
       onClick: () => {
         lightTap();
         window.dispatchEvent(new CustomEvent('open-ai-chatbot'));
@@ -177,40 +164,17 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       bgColor: "bg-gradient-to-br from-primary to-primary/80",
       textColor: "text-primary-foreground",
     }] : []),
+    // Utilities
     {
-      id: "calculator",
-      icon: Calculator,
-      label: language === 'ro' ? "Calculator ROI" : "ROI Calculator",
+      id: "referral",
+      icon: Gift,
+      label: language === 'ro' ? "Weekend Gratuit" : "Free Weekend",
       onClick: () => {
         lightTap();
-        window.dispatchEvent(new CustomEvent('open-inline-calculator'));
+        window.dispatchEvent(new CustomEvent('open-referral-popup'));
         setIsOpen(false);
       },
-      bgColor: "bg-gradient-to-br from-amber-500 to-orange-600",
-      textColor: "text-white",
-    },
-    {
-      id: "exit-offer",
-      icon: Sparkles,
-      label: language === 'ro' ? "Ofertă Specială" : "Special Offer",
-      onClick: () => {
-        lightTap();
-        window.dispatchEvent(new CustomEvent('open-exit-intent'));
-        setIsOpen(false);
-      },
-      bgColor: "bg-gradient-to-br from-emerald-500 to-teal-600",
-      textColor: "text-white",
-    },
-    {
-      id: "pwa-install",
-      icon: Download,
-      label: language === 'ro' ? "Instalează App" : "Install App",
-      onClick: () => {
-        lightTap();
-        window.dispatchEvent(new CustomEvent('open-pwa-prompt'));
-        setIsOpen(false);
-      },
-      bgColor: "bg-gradient-to-br from-blue-500 to-indigo-600",
+      bgColor: "bg-gradient-to-r from-amber-500 to-orange-500",
       textColor: "text-white",
     },
     {
@@ -225,22 +189,19 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       bgColor: "bg-primary",
       textColor: "text-primary-foreground",
     },
+    // Scroll to top — always last
     {
-      id: "referral",
-      icon: Gift,
-      label: referralText[language as keyof typeof referralText] || referralText.ro,
-      onClick: () => {
-        lightTap();
-        window.dispatchEvent(new CustomEvent('open-referral-popup'));
-        setIsOpen(false);
-      },
-      bgColor: "bg-gradient-to-r from-amber-500 to-orange-500",
-      textColor: "text-white",
+      id: "scroll-top",
+      icon: ChevronUp,
+      label: language === 'ro' ? "Sus" : "Top",
+      onClick: handleScrollToTop,
+      bgColor: "bg-muted",
+      textColor: "text-foreground",
     },
   ];
 
   return (
-    <div className="floating-action-menu fixed bottom-20 right-4 z-50 md:bottom-6 md:hidden">
+    <div className="floating-action-menu fixed bottom-20 right-3 z-50 md:hidden">
       <AnimatePresence>
         {isVisible && (
           <>
@@ -251,32 +212,32 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute bottom-16 right-0 flex flex-col-reverse gap-3 items-end"
+                  className="absolute bottom-16 right-0 flex flex-col-reverse gap-2.5 items-end"
                 >
                   {menuItems.map((item, index) => (
                     <motion.div
                       key={item.id}
-                      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                      initial={{ opacity: 0, y: 16, scale: 0.85 }}
                       animate={{ 
                         opacity: 1, 
                         y: 0, 
                         scale: 1,
-                        transition: { delay: index * 0.05 }
+                        transition: { delay: index * 0.04, type: "spring", stiffness: 400, damping: 25 }
                       }}
                       exit={{ 
                         opacity: 0, 
-                        y: 20, 
-                        scale: 0.8,
-                        transition: { delay: (menuItems.length - index - 1) * 0.03 }
+                        y: 12, 
+                        scale: 0.85,
+                        transition: { delay: (menuItems.length - index - 1) * 0.02, duration: 0.15 }
                       }}
                       className="flex items-center gap-2"
                     >
                       {/* Label */}
                       <motion.span
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0, transition: { delay: index * 0.05 + 0.1 } }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className="px-3 py-1.5 bg-card border border-border rounded-full text-sm font-medium text-foreground shadow-lg whitespace-nowrap"
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0, transition: { delay: index * 0.04 + 0.08 } }}
+                        exit={{ opacity: 0, x: 8, transition: { duration: 0.1 } }}
+                        className="px-3 py-1.5 bg-card/95 backdrop-blur-md border border-border/50 rounded-full text-xs font-medium text-foreground shadow-md whitespace-nowrap"
                       >
                         {item.label}
                       </motion.span>
@@ -286,12 +247,13 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                         onClick={item.onClick}
                         aria-label={item.label}
                         className={cn(
-                          "w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
+                          "w-11 h-11 rounded-full flex items-center justify-center shadow-md",
+                          "hover:scale-105 active:scale-95 transition-transform duration-150",
                           item.bgColor,
                           item.textColor
                         )}
                       >
-                        <item.icon className={cn("w-5 h-5", (item as any).isAnimating && "animate-spin")} />
+                        <item.icon className={cn("w-[18px] h-[18px]", (item as any).isAnimating && "animate-spin")} />
                       </button>
                     </motion.div>
                   ))}
@@ -299,35 +261,30 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
               )}
             </AnimatePresence>
 
-            {/* Main FAB Button — clear label, no misleading notification badge */}
+            {/* Main FAB Button */}
             <motion.button
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              initial={{ opacity: 0, scale: 0.8, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              exit={{ opacity: 0, scale: 0.8, y: 16 }}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleMenu();
               }}
               className={cn(
-                "relative w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
+                "relative w-12 h-12 rounded-full shadow-lg flex items-center justify-center",
+                "transition-all duration-300 active:scale-95",
                 isOpen 
-                  ? "bg-muted text-foreground" 
-                  : "bg-primary text-primary-foreground"
+                  ? "bg-card border border-border text-foreground" 
+                  : "bg-primary text-primary-foreground shadow-primary/25"
               )}
               aria-label={isOpen ? (language === 'ro' ? "Închide meniu" : "Close menu") : (language === 'ro' ? "Meniu rapid" : "Quick menu")}
             >
               <motion.div
                 animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.25, type: "spring", stiffness: 400 }}
               >
-                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </motion.div>
-              {/* Subtle text label under FAB when closed */}
-              {!isOpen && (
-                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-foreground/60 whitespace-nowrap">
-                  {language === 'ro' ? 'Meniu' : 'Menu'}
-                </span>
-              )}
             </motion.button>
 
             {/* Backdrop */}
@@ -337,7 +294,7 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/20 backdrop-blur-sm -z-10"
+                  className="fixed inset-0 bg-black/30 backdrop-blur-[2px] -z-10"
                   onClick={() => setIsOpen(false)}
                 />
               )}
