@@ -51,6 +51,7 @@ export async function checkAvailability(args: {
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      console.log(`[checkAvailability] v2 — calling live-property-availability for ${livePayload.length} properties, ${checkIn} to ${checkOut}`);
       const liveRes = await fetch(`${supabaseUrl}/functions/v1/live-property-availability`, {
         method: "POST",
         headers: {
