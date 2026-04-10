@@ -67,10 +67,16 @@ export async function checkAvailability(args: {
 
       if (liveRes.ok) {
         const liveData = await liveRes.json();
+        console.log(`[checkAvailability] Live response:`, JSON.stringify(liveData));
         if (liveData.unavailableSlugs) {
           unavailableSlugs = new Set(liveData.unavailableSlugs);
           liveCheckWorked = true;
+          console.log(`[checkAvailability] Unavailable: ${liveData.unavailableSlugs.join(', ')}`);
         }
+      } else {
+        const errText = await liveRes.text();
+        console.error(`[checkAvailability] Live check failed: ${liveRes.status} ${errText}`);
+      }
         // Also mark unresolved lookups — check bookings fallback for those
         const unresolvedSlugs = new Set<string>();
         if (liveData.lookupStatusBySlug) {
