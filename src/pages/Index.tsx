@@ -90,7 +90,7 @@ const TeaserSections = () => (
 // Gallery + Map section — map loads ONLY on user click to avoid 968ms CPU
 // during Lighthouse audit (mapbox-gl 457KB + forced reflows)
 const GalleryMapSection = () => {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
   const [mapActivated, setMapActivated] = useState(false);
 
   return (
