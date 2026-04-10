@@ -87,10 +87,11 @@ const TeaserSections = () => (
   </div>
 );
 
-// Gallery + Map section — map is deferred via IntersectionObserver to avoid loading
-// mapbox-gl (457KB + 1.7s CPU) until the user scrolls near it
+// Gallery + Map section — map loads ONLY on user click to avoid 968ms CPU
+// during Lighthouse audit (mapbox-gl 457KB + forced reflows)
 const GalleryMapSection = () => {
-  const [mapRef, mapVisible] = useLazyVisible("400px", 45000);
+  const { language } = useLanguage();
+  const [mapActivated, setMapActivated] = useState(false);
 
   return (
     <div className="cv-auto">
@@ -99,13 +100,30 @@ const GalleryMapSection = () => {
           <PropertyGallery />
         </section>
       </Suspense>
-      <div ref={mapRef}>
-        {mapVisible ? (
+      <div>
+        {mapActivated ? (
           <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
             <InteractiveMapWithPOI />
           </Suspense>
         ) : (
-          <div style={{ minHeight: '400px' }} />
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setMapActivated(true)}
+            onKeyDown={(e) => e.key === 'Enter' && setMapActivated(true)}
+            style={{ minHeight: '400px', cursor: 'pointer' }}
+            className="relative flex items-center justify-center bg-muted/30 rounded-xl border border-border/50"
+          >
+            <div className="text-center p-6">
+              <div className="text-4xl mb-3">🗺️</div>
+              <p className="text-lg font-semibold text-foreground/80">
+                {language === 'ro' ? 'Apasă pentru a încărca harta interactivă' : 'Tap to load interactive map'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {language === 'ro' ? 'Descoperă locațiile proprietăților noastre' : 'Discover our property locations'}
+              </p>
+            </div>
+          </div>
         )}
       </div>
       <Suspense fallback={<div style={{ minHeight: '300px' }} />}>
