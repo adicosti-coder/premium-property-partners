@@ -10,6 +10,8 @@ import {
   Mic,
   MicOff,
   Loader2,
+  Calculator,
+  Download,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -28,6 +30,8 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
   const { lightTap, mediumTap } = useHapticFeedback();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [pwaInstallable, setPwaInstallable] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   // Voice state from ElevenLabsWidget via custom events
   const [voiceConnecting, setVoiceConnecting] = useState(false);
