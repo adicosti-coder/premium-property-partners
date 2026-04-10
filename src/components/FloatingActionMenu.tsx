@@ -10,6 +10,8 @@ import {
   Mic,
   MicOff,
   Loader2,
+  Calculator,
+  Download,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -28,6 +30,8 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
   const { lightTap, mediumTap } = useHapticFeedback();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [pwaInstallable, setPwaInstallable] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   // Voice state from ElevenLabsWidget via custom events
   const [voiceConnecting, setVoiceConnecting] = useState(false);
@@ -54,6 +58,17 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // PWA install prompt
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setPwaInstallable(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   // Close menu when clicking outside
@@ -177,6 +192,39 @@ const FloatingActionMenu = ({ showChatbot = true, showVoice = true }: FloatingAc
       bgColor: "bg-gradient-to-r from-amber-500 to-orange-500",
       textColor: "text-white",
     },
+    // Calculator ROI
+    {
+      id: "calculator",
+      icon: Calculator,
+      label: language === 'ro' ? "Calculator ROI" : "ROI Calculator",
+      onClick: () => {
+        lightTap();
+        window.dispatchEvent(new CustomEvent('open-inline-calculator'));
+        setIsOpen(false);
+      },
+      bgColor: "bg-gradient-to-br from-emerald-600 to-emerald-500",
+      textColor: "text-white",
+    },
+    // PWA Install (only when available)
+    ...(pwaInstallable ? [{
+      id: "pwa-install",
+      icon: Download,
+      label: language === 'ro' ? "Instalează App" : "Install App",
+      onClick: async () => {
+        lightTap();
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            setPwaInstallable(false);
+            setDeferredPrompt(null);
+          }
+        }
+        setIsOpen(false);
+      },
+      bgColor: "bg-gradient-to-br from-blue-600 to-blue-500",
+      textColor: "text-white",
+    }] : []),
     {
       id: "accessibility",
       icon: Accessibility,
