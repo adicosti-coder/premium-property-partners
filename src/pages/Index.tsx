@@ -156,7 +156,7 @@ const Index = () => {
     };
     document.addEventListener("scroll", loadAnalytics, { once: true, passive: true });
     // Fallback after 12s if no scroll
-    const t = setTimeout(loadAnalytics, 12000);
+    const t = setTimeout(loadAnalytics, 30000);
     return () => { clearTimeout(t); document.removeEventListener("scroll", loadAnalytics); };
   }, []);
 
