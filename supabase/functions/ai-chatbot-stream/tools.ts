@@ -73,10 +73,6 @@ export async function checkAvailability(args: {
           liveCheckWorked = true;
           console.log(`[checkAvailability] Unavailable: ${liveData.unavailableSlugs.join(', ')}`);
         }
-      } else {
-        const errText = await liveRes.text();
-        console.error(`[checkAvailability] Live check failed: ${liveRes.status} ${errText}`);
-      }
         // Also mark unresolved lookups — check bookings fallback for those
         const unresolvedSlugs = new Set<string>();
         if (liveData.lookupStatusBySlug) {
@@ -84,13 +80,15 @@ export async function checkAvailability(args: {
             if (status === "unresolved") unresolvedSlugs.add(slug);
           }
         }
-
         // Fallback: check local bookings for unresolved properties
         if (unresolvedSlugs.size > 0) {
           const unresolvedProps = properties.filter((p: any) => unresolvedSlugs.has(p.slug || p.id));
           const localUnavailable = await checkBookingsLocal(sb, unresolvedProps, checkIn, checkOut);
           for (const slug of localUnavailable) unavailableSlugs.add(slug);
         }
+      } else {
+        const errText = await liveRes.text();
+        console.error(`[checkAvailability] Live check failed: ${liveRes.status} ${errText}`);
       }
     } catch (e) {
       console.error("Live availability check failed, falling back to bookings:", e);
