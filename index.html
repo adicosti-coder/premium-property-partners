@@ -69,6 +69,8 @@
       /* Hide skeleton once React hydrates */
       #root:not(:empty) ~ #hero-skeleton,
       #root:not(:empty) + #hero-skeleton{display:none}
+      /* CSS containment — isolates layout/paint per section to reduce reflow cost */
+      .cv-auto{contain:content}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
@@ -168,7 +170,7 @@
         ['scroll','click','touchstart','keydown'].forEach(function(e){
           document.addEventListener(e,loadGTM,{once:true,passive:true,capture:true});
         });
-        setTimeout(loadGTM,8000);
+        setTimeout(loadGTM,12000);
       })();
     </script>
     <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
