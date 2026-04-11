@@ -7,8 +7,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useLanguage } from "@/contexts/LanguageContext";
-import Navbar from "@/components/Navbar";
+import { useLanguage } from "@/i18n/LanguageContext";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const MAX_IMAGES = 15;
