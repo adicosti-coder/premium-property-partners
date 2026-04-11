@@ -1,8 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn } from "lucide-react";
+import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabaseClient";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +27,7 @@ interface AIAnalysis {
   condition: string;
   style: string;
   score: number;
+  improvements?: string[];
 }
 
 const AdaugaAnunt = () => {
@@ -32,6 +38,7 @@ const AdaugaAnunt = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [propertyType, setPropertyType] = useState("apartament");
