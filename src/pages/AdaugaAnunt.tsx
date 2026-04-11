@@ -174,6 +174,42 @@ const AdaugaAnunt = () => {
     importSuccess: "Date extrase! Câmpurile au fost completate automat.",
   };
 
+  const handleImportFromUrl = async () => {
+    if (!importUrl.trim()) return;
+    setImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-listing", {
+        body: { url: importUrl.trim(), listing_type: listingCategory, mode: "preview" },
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error || "Extraction failed");
+
+      const ext = data.extracted;
+      if (ext.title) setTitle(ext.title);
+      if (ext.description_short || ext.description_full) setDescription(ext.description_short || ext.description_full || "");
+      if (ext.location) setLocation(ext.location);
+      if (ext.size) setSize(String(ext.size));
+      if (ext.rooms) setRooms(String(ext.rooms));
+      if (ext.bathrooms) setBathrooms(String(ext.bathrooms));
+      if (ext.price) setPrice(String(ext.price));
+      // Import images (limited to MAX_IMAGES)
+      if (ext.images?.length) {
+        setImages(ext.images.slice(0, MAX_IMAGES));
+      }
+      // Auto-detect listing type hint
+      if (ext.listing_type_hint === "inchiriere") setListingCategory("inchiriere");
+      else if (ext.listing_type_hint === "cazare") setListingCategory("regim_hotelier");
+      else if (ext.listing_type_hint === "vanzare") setListingCategory("vanzare");
+
+      toast.success(t.importSuccess);
+    } catch (err: any) {
+      console.error("Import error:", err);
+      toast.error(err.message || "Import failed");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
     const remaining = MAX_IMAGES - images.length;
