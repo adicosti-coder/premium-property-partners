@@ -286,7 +286,7 @@ const AdaugaAnunt = () => {
                     analyzing
                       ? "bg-muted text-muted-foreground cursor-wait"
                       : analysis
-                        ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                        ? "bg-accent text-accent-foreground border border-border hover:bg-accent/80"
                         : "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:shadow-lg hover:scale-[1.01]"
                   )}
                 >
