@@ -93,6 +93,7 @@ const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const PageLoader = () => null;
 
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
+const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
