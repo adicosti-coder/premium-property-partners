@@ -296,6 +296,9 @@ const PropertyDetail = () => {
     longitude: dbProperty.longitude || null,
   } : null);
 
+  // Track dwell time for 'lux' and 'gradina' tagged properties
+  useListingDwellTracker(dbProperty?.id, dbProperty?.tag);
+
   const resolvedCoordinates = property
     ? resolvePropertyCoordinates({
         slug: property.slug,
