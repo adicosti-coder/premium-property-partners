@@ -281,6 +281,9 @@ const AdaugaAnunt = () => {
       setRooms("");
       setBathrooms("");
       setPrice("");
+      setEstimatedMonthlyRevenue("");
+      setAnnualOperatingCosts("");
+      setInitialSetupCost("");
     } catch (err: any) {
       console.error("Submit error:", err);
       toast.error(language === "ro" ? "Eroare la trimitere. Încearcă din nou." : "Submit error. Try again.");
