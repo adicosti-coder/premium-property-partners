@@ -594,7 +594,41 @@ const AdaugaAnunt = () => {
                 <div className="space-y-1.5">
                   <Label htmlFor="price" className="text-xs flex items-center gap-1"><Euro className="w-3 h-3" /> {t.priceLabel}</Label>
                   <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="rounded-xl" />
-                </div>
+              </div>
+
+              {/* Financial Fields - only for regim_hotelier */}
+              {listingCategory === "regim_hotelier" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    {t.financialSection}
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground -mt-1">
+                    {language === "en"
+                      ? "Fill in financial data to auto-calculate ROI. Listings with ROI ≥ 70% are auto-tagged as excellent investment opportunities."
+                      : "Completează datele financiare pentru calculul automat al ROI. Anunțurile cu ROI ≥ 70% primesc automat tag-ul ROI_EXCELENT."}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="revenue" className="text-xs flex items-center gap-1"><Euro className="w-3 h-3" /> {t.revenueLabel}</Label>
+                      <Input id="revenue" type="number" min="0" value={estimatedMonthlyRevenue} onChange={(e) => setEstimatedMonthlyRevenue(e.target.value)} placeholder="ex. 2500" className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="opCosts" className="text-xs flex items-center gap-1"><Wrench className="w-3 h-3" /> {t.operatingCostsLabel}</Label>
+                      <Input id="opCosts" type="number" min="0" value={annualOperatingCosts} onChange={(e) => setAnnualOperatingCosts(e.target.value)} placeholder="ex. 5000" className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="setupCost" className="text-xs flex items-center gap-1"><Wallet className="w-3 h-3" /> {t.setupCostLabel}</Label>
+                      <Input id="setupCost" type="number" min="0" value={initialSetupCost} onChange={(e) => setInitialSetupCost(e.target.value)} placeholder="ex. 35000" className="rounded-xl" />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
               </div>
             </section>
 
