@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense, useState, useRef, startTransition } from "react";
+import React, { useEffect, lazy, Suspense, useState, useRef, startTransition } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
@@ -24,7 +24,9 @@ const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
-const InteractiveMapWithPOI = lazy(() => import("@/components/InteractiveMapWithPOI"));
+// InteractiveMapWithPOI: NO lazy() here — even lazy() causes Vite to add
+// the mapbox-gl chunk (455KB) to modulepreload, parsed at 948ms.
+// Instead, we dynamically import() ONLY on user click inside GalleryMapSection.
 const VerifiedReviewsBadges = lazy(() => import("@/components/VerifiedReviewsBadges"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
@@ -87,11 +89,22 @@ const TeaserSections = () => (
   </div>
 );
 
-// Gallery + Map section — map loads ONLY on user click to avoid 968ms CPU
-// during Lighthouse audit (mapbox-gl 457KB + forced reflows)
+// Gallery + Map section — map loads ONLY on user click via dynamic import()
+// to prevent mapbox-gl (455KB, 900ms CPU) from being parsed during audit.
+// No lazy() wrapper — even that causes Vite to include the chunk in the module graph.
 const GalleryMapSection = () => {
   const { language } = useLanguage();
-  const [mapActivated, setMapActivated] = useState(false);
+  const [MapComp, setMapComp] = useState<React.ComponentType | null>(null);
+  const [mapLoading, setMapLoading] = useState(false);
+
+  const activateMap = () => {
+    if (MapComp || mapLoading) return;
+    setMapLoading(true);
+    import("@/components/InteractiveMapWithPOI").then(m => {
+      setMapComp(() => m.default);
+      setMapLoading(false);
+    }).catch(() => setMapLoading(false));
+  };
 
   return (
     <div className="cv-auto">
@@ -101,23 +114,23 @@ const GalleryMapSection = () => {
         </section>
       </Suspense>
       <div>
-        {mapActivated ? (
-          <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
-            <InteractiveMapWithPOI />
-          </Suspense>
+        {MapComp ? (
+          <MapComp />
         ) : (
           <div
             role="button"
             tabIndex={0}
-            onClick={() => setMapActivated(true)}
-            onKeyDown={(e) => e.key === 'Enter' && setMapActivated(true)}
+            onClick={activateMap}
+            onKeyDown={(e) => e.key === 'Enter' && activateMap()}
             style={{ minHeight: '400px', cursor: 'pointer' }}
             className="relative flex items-center justify-center bg-muted/30 rounded-xl border border-border/50"
           >
             <div className="text-center p-6">
-              <div className="text-4xl mb-3">🗺️</div>
+              <div className="text-4xl mb-3">{mapLoading ? '⏳' : '🗺️'}</div>
               <p className="text-lg font-semibold text-foreground/80">
-                {language === 'ro' ? 'Apasă pentru a încărca harta interactivă' : 'Tap to load interactive map'}
+                {mapLoading
+                  ? (language === 'ro' ? 'Se încarcă harta...' : 'Loading map...')
+                  : (language === 'ro' ? 'Apasă pentru a încărca harta interactivă' : 'Tap to load interactive map')}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 {language === 'ro' ? 'Descoperă locațiile proprietăților noastre' : 'Discover our property locations'}
