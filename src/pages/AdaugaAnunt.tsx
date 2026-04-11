@@ -209,6 +209,9 @@ const AdaugaAnunt = () => {
         if (data.title) setTitle(data.title);
         if (data.description) setDescription(data.description);
         toast.success(t.autoFilled);
+        if (data.score < 70 && data.improvements?.length > 0) {
+          setShowSuggestions(true);
+        }
       } else {
         throw new Error(data?.error || "Analysis failed");
       }
