@@ -106,6 +106,10 @@ const AdaugaAnunt = () => {
     aiSuggestionsTitle: "AI Suggestions for Improvement",
     aiSuggestionsDesc: "Your listing score is below 70. Here are AI-powered suggestions to improve it:",
     aiSuggestionsClose: "Got it, I'll improve",
+    revenueLabel: "Est. Monthly Revenue (€)",
+    operatingCostsLabel: "Annual Operating Costs (€)",
+    setupCostLabel: "Initial Setup Cost (€)",
+    financialSection: "Financial Data (ROI Auto-Calculation)",
   } : {
     pageTitle: "Adaugă Anunț",
     pageSubtitle: "Încarcă fotografii și lasă AI-ul să genereze anunțul. După trimitere, echipa noastră va programa o inspecție înainte de publicare.",
@@ -150,6 +154,10 @@ const AdaugaAnunt = () => {
     aiSuggestionsTitle: "Sugestii AI pentru Îmbunătățire",
     aiSuggestionsDesc: "Scorul anunțului tău este sub 70. Iată sugestiile AI pentru a-l îmbunătăți:",
     aiSuggestionsClose: "Am înțeles, voi îmbunătăți",
+    revenueLabel: "Venit Lunar Estimat (€)",
+    operatingCostsLabel: "Cheltuieli Operare Anuale (€)",
+    setupCostLabel: "Cost Amenajare Inițial (€)",
+    financialSection: "Date Financiare (Calcul ROI Automat)",
   };
 
   const handleFiles = useCallback((files: FileList | null) => {
