@@ -44,6 +44,9 @@ const AdaugaAnunt = () => {
   const [bathrooms, setBathrooms] = useState("");
   const [price, setPrice] = useState("");
   const [listingCategory, setListingCategory] = useState<"vanzare" | "inchiriere" | "regim_hotelier">("inchiriere");
+  const [estimatedMonthlyRevenue, setEstimatedMonthlyRevenue] = useState("");
+  const [annualOperatingCosts, setAnnualOperatingCosts] = useState("");
+  const [initialSetupCost, setInitialSetupCost] = useState("");
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
