@@ -200,7 +200,6 @@ const Header = () => {
         { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
         { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
         { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
-        { href: "/adauga-anunt", label: language === "ro" ? "Adaugă Anunț" : "Add Listing", isPage: true, icon: <HomeIcon /> },
       ],
     },
     {
@@ -312,6 +311,18 @@ const Header = () => {
               <span className="mr-1.5">🏠</span>
               {t.nav.listProperty || 'Proprietari: Listează'}
             </Button>
+
+            {/* Add Listing CTA - prominent pill button */}
+            <Link to="/adauga-anunt" className="hidden lg:inline-flex">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md shadow-primary/30 border-0 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40 gap-1.5 px-4"
+              >
+                <PlusCircleIcon />
+                {language === "ro" ? "Adaugă Anunțul Tău" : "Add Your Listing"}
+              </Button>
+            </Link>
             
             {/* Mobile menu button */}
             <button
@@ -333,6 +344,18 @@ const Header = () => {
         >
               <div className="flex flex-col gap-2">
                 
+                {/* Add Listing CTA - prominent at top of mobile menu */}
+                <div className="pb-3 border-b border-border/50">
+                  <Link 
+                    to="/adauga-anunt" 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/30 transition-all duration-200 hover:bg-primary/90 hover:shadow-lg"
+                  >
+                    <PlusCircleIcon />
+                    {language === "ro" ? "Adaugă Anunțul Tău" : "Add Your Listing"}
+                  </Link>
+                </div>
+
                 {/* Property Code Search - Mobile */}
                 <div className="pb-3 border-b border-border/50">
                   <Suspense fallback={null}><PropertyCodeSearch className="w-full" /></Suspense>
