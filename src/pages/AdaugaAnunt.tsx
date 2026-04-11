@@ -196,7 +196,7 @@ const AdaugaAnunt = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Header />
       <main className="max-w-3xl mx-auto px-4 py-8 pt-24">
         {/* Header */}
         <div className="text-center mb-8">
