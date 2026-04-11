@@ -3304,6 +3304,39 @@ export type Database = {
           },
         ]
       }
+      user_interactions: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          property_id: string | null
+          property_tag: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          property_id?: string | null
+          property_tag?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          property_id?: string | null
+          property_tag?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           action_label: string | null
