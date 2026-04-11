@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn } from "lucide-react";
+import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -22,6 +23,7 @@ interface AIAnalysis {
   condition: string;
   style: string;
   score: number;
+  improvements?: string[];
 }
 
 const AdaugaAnunt = () => {
@@ -32,6 +34,7 @@ const AdaugaAnunt = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [propertyType, setPropertyType] = useState("apartament");
@@ -97,6 +100,9 @@ const AdaugaAnunt = () => {
     loginRequired: "You need to be logged in to add a listing.",
     loginBtn: "Log In / Sign Up",
     pendingNote: "After submission, our team will schedule an on-site inspection before your listing goes live.",
+    aiSuggestionsTitle: "AI Suggestions for Improvement",
+    aiSuggestionsDesc: "Your listing score is below 70. Here are AI-powered suggestions to improve it:",
+    aiSuggestionsClose: "Got it, I'll improve",
   } : {
     pageTitle: "Adaugă Anunț",
     pageSubtitle: "Încarcă fotografii și lasă AI-ul să genereze anunțul. După trimitere, echipa noastră va programa o inspecție înainte de publicare.",
@@ -138,6 +144,9 @@ const AdaugaAnunt = () => {
     loginRequired: "Trebuie să fii autentificat pentru a adăuga un anunț.",
     loginBtn: "Autentifică-te / Creează Cont",
     pendingNote: "După trimitere, echipa noastră va programa o inspecție la fața locului înainte de publicarea anunțului.",
+    aiSuggestionsTitle: "Sugestii AI pentru Îmbunătățire",
+    aiSuggestionsDesc: "Scorul anunțului tău este sub 70. Iată sugestiile AI pentru a-l îmbunătăți:",
+    aiSuggestionsClose: "Am înțeles, voi îmbunătăți",
   };
 
   const handleFiles = useCallback((files: FileList | null) => {
@@ -200,6 +209,9 @@ const AdaugaAnunt = () => {
         if (data.title) setTitle(data.title);
         if (data.description) setDescription(data.description);
         toast.success(t.autoFilled);
+        if (data.score < 70 && data.improvements?.length > 0) {
+          setShowSuggestions(true);
+        }
       } else {
         throw new Error(data?.error || "Analysis failed");
       }
@@ -603,6 +615,45 @@ const AdaugaAnunt = () => {
           </form>
         )}
       </main>
+
+      {/* AI Suggestions Dialog - shows when score < 70 */}
+      <Dialog open={showSuggestions} onOpenChange={setShowSuggestions}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="w-5 h-5" />
+              {t.aiSuggestionsTitle}
+            </DialogTitle>
+            <DialogDescription>{t.aiSuggestionsDesc}</DialogDescription>
+          </DialogHeader>
+
+          {analysis && (
+            <div className="space-y-3">
+              <div className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-bold", scoreColor(analysis.score))}>
+                {t.score}: {analysis.score}/100
+              </div>
+
+              <ul className="space-y-2">
+                {analysis.improvements?.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                    <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={() => setShowSuggestions(false)}
+                className="w-full mt-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all"
+              >
+                {t.aiSuggestionsClose}
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
