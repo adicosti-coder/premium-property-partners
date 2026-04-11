@@ -13,10 +13,12 @@ import { template as welcomeEmail } from './welcome.tsx'
 import { template as bookingConfirmation } from './booking-confirmation.tsx'
 import { template as contactConfirmation } from './contact-confirmation.tsx'
 import { template as leadConverted } from './lead-converted.tsx'
+import { template as listingSubmitted } from './listing-submitted.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
   'booking-confirmation': bookingConfirmation,
   'contact-confirmation': contactConfirmation,
   'lead-converted': leadConverted,
+  'listing-submitted': listingSubmitted,
 }
