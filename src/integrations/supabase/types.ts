@@ -2239,6 +2239,72 @@ export type Database = {
           },
         ]
       }
+      property_listings: {
+        Row: {
+          admin_notes: string | null
+          ai_analysis: Json | null
+          bathrooms: number | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          listing_category: Database["public"]["Enums"]["listing_category"]
+          location: string | null
+          price: number | null
+          property_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rooms: number | null
+          size: number | null
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          ai_analysis?: Json | null
+          bathrooms?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          listing_category?: Database["public"]["Enums"]["listing_category"]
+          location?: string | null
+          price?: number | null
+          property_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rooms?: number | null
+          size?: number | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          ai_analysis?: Json | null
+          bathrooms?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          listing_category?: Database["public"]["Enums"]["listing_category"]
+          location?: string | null
+          price?: number | null
+          property_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          rooms?: number | null
+          size?: number | null
+          status?: Database["public"]["Enums"]["listing_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       property_live_data: {
         Row: {
           booking_com_url: string | null
@@ -3522,6 +3588,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "owner"
+      listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
+      listing_status: "pending_inspection" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3650,6 +3718,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user", "owner"],
+      listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
+      listing_status: ["pending_inspection", "approved", "rejected"],
     },
   },
 } as const
