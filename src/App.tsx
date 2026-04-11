@@ -93,6 +93,7 @@ const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const PageLoader = () => null;
 
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
+const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
@@ -204,6 +205,7 @@ const App = () => (
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     {/* Legacy .html redirects — use Navigate for proper 301-like behavior with crawlers */}
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
