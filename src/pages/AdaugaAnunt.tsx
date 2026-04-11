@@ -398,6 +398,44 @@ const AdaugaAnunt = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* URL Pre-fill Section */}
+            <section className="space-y-3">
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <Globe className="w-4 h-4" /> {t.importUrlLabel}
+              </Label>
+              <p className="text-xs text-muted-foreground -mt-1">{t.importUrlHint}</p>
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder={t.importUrlPlaceholder}
+                  disabled={importing}
+                  className="rounded-xl flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={handleImportFromUrl}
+                  disabled={importing || !importUrl.trim()}
+                  className={cn(
+                    "px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all",
+                    importing
+                      ? "bg-muted text-muted-foreground cursor-wait"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  {importing ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />{language === "ro" ? "Se extrage..." : "Extracting..."}</>
+                  ) : (
+                    <><LinkIcon className="w-4 h-4" />{t.importUrlBtn}</>
+                  )}
+                </button>
+              </div>
+              {importing && (
+                <p className="text-xs text-muted-foreground animate-pulse">{t.importingText}</p>
+              )}
+            </section>
+
             {/* Image Upload Section */}
             <section className="space-y-3">
               <Label className="text-base font-semibold flex items-center gap-2">
