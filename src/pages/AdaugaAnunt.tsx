@@ -100,6 +100,9 @@ const AdaugaAnunt = () => {
     loginRequired: "You need to be logged in to add a listing.",
     loginBtn: "Log In / Sign Up",
     pendingNote: "After submission, our team will schedule an on-site inspection before your listing goes live.",
+    aiSuggestionsTitle: "AI Suggestions for Improvement",
+    aiSuggestionsDesc: "Your listing score is below 70. Here are AI-powered suggestions to improve it:",
+    aiSuggestionsClose: "Got it, I'll improve",
   } : {
     pageTitle: "Adaugă Anunț",
     pageSubtitle: "Încarcă fotografii și lasă AI-ul să genereze anunțul. După trimitere, echipa noastră va programa o inspecție înainte de publicare.",
