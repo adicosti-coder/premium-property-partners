@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb, TrendingUp, Wallet, Wrench } from "lucide-react";
+import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb, TrendingUp, Wallet, Wrench, LinkIcon, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -49,6 +49,8 @@ const AdaugaAnunt = () => {
   const [initialSetupCost, setInitialSetupCost] = useState("");
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -110,6 +112,12 @@ const AdaugaAnunt = () => {
     operatingCostsLabel: "Annual Operating Costs (€)",
     setupCostLabel: "Initial Setup Cost (€)",
     financialSection: "Financial Data (ROI Auto-Calculation)",
+    importUrlLabel: "Pre-fill from URL",
+    importUrlPlaceholder: "Paste an OLX, Imobiliare.ro or Storia link...",
+    importUrlBtn: "Extract Data",
+    importUrlHint: "Paste a listing URL and we'll auto-fill the form for you.",
+    importingText: "Extracting data... (30-60s)",
+    importSuccess: "Data extracted! Fields have been auto-filled.",
   } : {
     pageTitle: "Adaugă Anunț",
     pageSubtitle: "Încarcă fotografii și lasă AI-ul să genereze anunțul. După trimitere, echipa noastră va programa o inspecție înainte de publicare.",
@@ -158,6 +166,48 @@ const AdaugaAnunt = () => {
     operatingCostsLabel: "Cheltuieli Operare Anuale (€)",
     setupCostLabel: "Cost Amenajare Inițial (€)",
     financialSection: "Date Financiare (Calcul ROI Automat)",
+    importUrlLabel: "Completare automată din URL",
+    importUrlPlaceholder: "Lipește un link de pe OLX, Imobiliare.ro sau Storia...",
+    importUrlBtn: "Extrage Date",
+    importUrlHint: "Lipește un link de anunț și completăm automat formularul.",
+    importingText: "Se extrag datele... (30-60s)",
+    importSuccess: "Date extrase! Câmpurile au fost completate automat.",
+  };
+
+  const handleImportFromUrl = async () => {
+    if (!importUrl.trim()) return;
+    setImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-listing", {
+        body: { url: importUrl.trim(), listing_type: listingCategory, mode: "preview" },
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error || "Extraction failed");
+
+      const ext = data.extracted;
+      if (ext.title) setTitle(ext.title);
+      if (ext.description_short || ext.description_full) setDescription(ext.description_short || ext.description_full || "");
+      if (ext.location) setLocation(ext.location);
+      if (ext.size) setSize(String(ext.size));
+      if (ext.rooms) setRooms(String(ext.rooms));
+      if (ext.bathrooms) setBathrooms(String(ext.bathrooms));
+      if (ext.price) setPrice(String(ext.price));
+      // Import images (limited to MAX_IMAGES)
+      if (ext.images?.length) {
+        setImages(ext.images.slice(0, MAX_IMAGES));
+      }
+      // Auto-detect listing type hint
+      if (ext.listing_type_hint === "inchiriere") setListingCategory("inchiriere");
+      else if (ext.listing_type_hint === "cazare") setListingCategory("regim_hotelier");
+      else if (ext.listing_type_hint === "vanzare") setListingCategory("vanzare");
+
+      toast.success(t.importSuccess);
+    } catch (err: any) {
+      console.error("Import error:", err);
+      toast.error(err.message || "Import failed");
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleFiles = useCallback((files: FileList | null) => {
@@ -348,6 +398,44 @@ const AdaugaAnunt = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* URL Pre-fill Section */}
+            <section className="space-y-3">
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <Globe className="w-4 h-4" /> {t.importUrlLabel}
+              </Label>
+              <p className="text-xs text-muted-foreground -mt-1">{t.importUrlHint}</p>
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder={t.importUrlPlaceholder}
+                  disabled={importing}
+                  className="rounded-xl flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={handleImportFromUrl}
+                  disabled={importing || !importUrl.trim()}
+                  className={cn(
+                    "px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition-all",
+                    importing
+                      ? "bg-muted text-muted-foreground cursor-wait"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  {importing ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />{language === "ro" ? "Se extrage..." : "Extracting..."}</>
+                  ) : (
+                    <><LinkIcon className="w-4 h-4" />{t.importUrlBtn}</>
+                  )}
+                </button>
+              </div>
+              {importing && (
+                <p className="text-xs text-muted-foreground animate-pulse">{t.importingText}</p>
+              )}
+            </section>
+
             {/* Image Upload Section */}
             <section className="space-y-3">
               <Label className="text-base font-semibold flex items-center gap-2">
