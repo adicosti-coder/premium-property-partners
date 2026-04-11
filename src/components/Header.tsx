@@ -4,6 +4,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 // Inline SVG icons to avoid loading lucide-react in critical path (~25KB saving)
 const MenuIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>;
 const XIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+const PlusCircleIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>;
 const ShieldIcon = ({ className = "w-5 h-5" }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>;
 const HeartIcon = ({ className = "w-5 h-5" }: { className?: string }) => <svg className={className} fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
 const HomeIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
@@ -199,7 +200,6 @@ const Header = () => {
         { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
         { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
         { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
-        { href: "/adauga-anunt", label: language === "ro" ? "Adaugă Anunț" : "Add Listing", isPage: true, icon: <HomeIcon /> },
       ],
     },
     {
@@ -311,6 +311,18 @@ const Header = () => {
               <span className="mr-1.5">🏠</span>
               {t.nav.listProperty || 'Proprietari: Listează'}
             </Button>
+
+            {/* Add Listing CTA - prominent pill button */}
+            <Link to="/adauga-anunt" className="hidden lg:inline-flex">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md shadow-primary/30 border-0 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40 gap-1.5 px-4"
+              >
+                <PlusCircleIcon />
+                {language === "ro" ? "Adaugă Anunțul Tău" : "Add Your Listing"}
+              </Button>
+            </Link>
             
             {/* Mobile menu button */}
             <button
@@ -332,6 +344,18 @@ const Header = () => {
         >
               <div className="flex flex-col gap-2">
                 
+                {/* Add Listing CTA - prominent at top of mobile menu */}
+                <div className="pb-3 border-b border-border/50">
+                  <Link 
+                    to="/adauga-anunt" 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md shadow-primary/30 transition-all duration-200 hover:bg-primary/90 hover:shadow-lg"
+                  >
+                    <PlusCircleIcon />
+                    {language === "ro" ? "Adaugă Anunțul Tău" : "Add Your Listing"}
+                  </Link>
+                </div>
+
                 {/* Property Code Search - Mobile */}
                 <div className="pb-3 border-b border-border/50">
                   <Suspense fallback={null}><PropertyCodeSearch className="w-full" /></Suspense>
