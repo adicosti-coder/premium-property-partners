@@ -144,6 +144,9 @@ const AdaugaAnunt = () => {
     loginRequired: "Trebuie să fii autentificat pentru a adăuga un anunț.",
     loginBtn: "Autentifică-te / Creează Cont",
     pendingNote: "După trimitere, echipa noastră va programa o inspecție la fața locului înainte de publicarea anunțului.",
+    aiSuggestionsTitle: "Sugestii AI pentru Îmbunătățire",
+    aiSuggestionsDesc: "Scorul anunțului tău este sub 70. Iată sugestiile AI pentru a-l îmbunătăți:",
+    aiSuggestionsClose: "Am înțeles, voi îmbunătăți",
   };
 
   const handleFiles = useCallback((files: FileList | null) => {
