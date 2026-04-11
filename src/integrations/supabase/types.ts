@@ -2243,20 +2243,26 @@ export type Database = {
         Row: {
           admin_notes: string | null
           ai_analysis: Json | null
+          annual_operating_costs: number | null
           bathrooms: number | null
           created_at: string
           description: string | null
+          estimated_monthly_revenue: number | null
           id: string
           images: string[] | null
+          initial_setup_cost: number | null
+          investment_score: number | null
           listing_category: Database["public"]["Enums"]["listing_category"]
           location: string | null
           price: number | null
           property_type: string
           reviewed_at: string | null
           reviewed_by: string | null
+          roi_percentage: number | null
           rooms: number | null
           size: number | null
           status: Database["public"]["Enums"]["listing_status"]
+          tags: string[] | null
           title: string
           updated_at: string
           user_id: string
@@ -2264,20 +2270,26 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           ai_analysis?: Json | null
+          annual_operating_costs?: number | null
           bathrooms?: number | null
           created_at?: string
           description?: string | null
+          estimated_monthly_revenue?: number | null
           id?: string
           images?: string[] | null
+          initial_setup_cost?: number | null
+          investment_score?: number | null
           listing_category?: Database["public"]["Enums"]["listing_category"]
           location?: string | null
           price?: number | null
           property_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          roi_percentage?: number | null
           rooms?: number | null
           size?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
+          tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
@@ -2285,20 +2297,26 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           ai_analysis?: Json | null
+          annual_operating_costs?: number | null
           bathrooms?: number | null
           created_at?: string
           description?: string | null
+          estimated_monthly_revenue?: number | null
           id?: string
           images?: string[] | null
+          initial_setup_cost?: number | null
+          investment_score?: number | null
           listing_category?: Database["public"]["Enums"]["listing_category"]
           location?: string | null
           price?: number | null
           property_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          roi_percentage?: number | null
           rooms?: number | null
           size?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
+          tags?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
