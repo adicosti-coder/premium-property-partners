@@ -45,9 +45,11 @@ serve(async (req) => {
   "features_detected": ["list of notable features like balcony, modern kitchen, hardwood floors, etc."],
   "condition": "new/renovated/good/needs_work",
   "style": "modern/classic/minimalist/luxury/industrial",
-  "score": 85
+  "score": 85,
+  "improvements": ["specific actionable suggestions to improve the listing score, e.g. 'Add a photo of the bathroom', 'The living room photo has poor lighting - retake with natural light', 'Add an exterior/building photo', 'Kitchen photo is too dark, open blinds and retake']
 }
-The score (0-100) reflects overall property appeal based on the photos. Be accurate and professional.`,
+The score (0-100) reflects overall property appeal based on the photos. Be accurate and professional.
+IMPORTANT: The "improvements" array should contain 3-5 specific, actionable suggestions in ${langLabel}. Focus on: missing room photos (bathroom, kitchen, bedroom, exterior), lighting issues, photo quality, angles, staging suggestions. Always provide improvements, but be especially detailed when score is below 70.`,
           },
           {
             role: "user",
@@ -86,7 +88,7 @@ The score (0-100) reflects overall property appeal based on the photos. Be accur
       const jsonStr = rawContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(jsonStr);
     } catch {
-      parsed = { title: "", description: rawContent, rooms_detected: [], features_detected: [], condition: "good", style: "modern", score: 70 };
+      parsed = { title: "", description: rawContent, rooms_detected: [], features_detected: [], condition: "good", style: "modern", score: 70, improvements: [] };
     }
 
     return new Response(JSON.stringify(parsed), {
