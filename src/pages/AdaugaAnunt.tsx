@@ -112,6 +112,12 @@ const AdaugaAnunt = () => {
     operatingCostsLabel: "Annual Operating Costs (€)",
     setupCostLabel: "Initial Setup Cost (€)",
     financialSection: "Financial Data (ROI Auto-Calculation)",
+    importUrlLabel: "Pre-fill from URL",
+    importUrlPlaceholder: "Paste an OLX, Imobiliare.ro or Storia link...",
+    importUrlBtn: "Extract Data",
+    importUrlHint: "Paste a listing URL and we'll auto-fill the form for you.",
+    importingText: "Extracting data... (30-60s)",
+    importSuccess: "Data extracted! Fields have been auto-filled.",
   } : {
     pageTitle: "Adaugă Anunț",
     pageSubtitle: "Încarcă fotografii și lasă AI-ul să genereze anunțul. După trimitere, echipa noastră va programa o inspecție înainte de publicare.",
@@ -160,6 +166,12 @@ const AdaugaAnunt = () => {
     operatingCostsLabel: "Cheltuieli Operare Anuale (€)",
     setupCostLabel: "Cost Amenajare Inițial (€)",
     financialSection: "Date Financiare (Calcul ROI Automat)",
+    importUrlLabel: "Completare automată din URL",
+    importUrlPlaceholder: "Lipește un link de pe OLX, Imobiliare.ro sau Storia...",
+    importUrlBtn: "Extrage Date",
+    importUrlHint: "Lipește un link de anunț și completăm automat formularul.",
+    importingText: "Se extrag datele... (30-60s)",
+    importSuccess: "Date extrase! Câmpurile au fost completate automat.",
   };
 
   const handleFiles = useCallback((files: FileList | null) => {
