@@ -266,7 +266,7 @@ const AdaugaAnunt = () => {
         payload.initial_setup_cost = initialSetupCost ? parseFloat(initialSetupCost) : 0;
       }
 
-      const { error } = await supabase.from("property_listings").insert([payload]);
+      const { error } = await supabase.from("property_listings").insert([payload as any]);
 
       if (error) throw error;
 
