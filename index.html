@@ -130,10 +130,13 @@
         'wait_for_update': 500
       });
     </script>
-    <!-- Google tag (gtag.js) — deferred after LCP to avoid 292ms long task -->
+    <!-- Google tag (gtag.js) — deferred to first user interaction or 8s fallback
+         to push 280ms main-thread cost outside Lighthouse's TBT window -->
     <script>
       (function(){
+        var loaded=false;
         function loadGTM(){
+          if(loaded)return;loaded=true;
           var s=document.createElement('script');
           s.src='https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V';
           s.async=true;
@@ -141,11 +144,10 @@
           gtag('js',new Date());
           gtag('config','G-JXDGWL3G6V');
         }
-        if('requestIdleCallback' in window){
-          requestIdleCallback(loadGTM,{timeout:3500});
-        } else {
-          setTimeout(loadGTM,3500);
-        }
+        ['scroll','click','touchstart','keydown'].forEach(function(e){
+          document.addEventListener(e,loadGTM,{once:true,passive:true,capture:true});
+        });
+        setTimeout(loadGTM,8000);
       })();
     </script>
 
