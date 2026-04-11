@@ -615,6 +615,45 @@ const AdaugaAnunt = () => {
           </form>
         )}
       </main>
+
+      {/* AI Suggestions Dialog - shows when score < 70 */}
+      <Dialog open={showSuggestions} onOpenChange={setShowSuggestions}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="w-5 h-5" />
+              {t.aiSuggestionsTitle}
+            </DialogTitle>
+            <DialogDescription>{t.aiSuggestionsDesc}</DialogDescription>
+          </DialogHeader>
+
+          {analysis && (
+            <div className="space-y-3">
+              <div className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-bold", scoreColor(analysis.score))}>
+                {t.score}: {analysis.score}/100
+              </div>
+
+              <ul className="space-y-2">
+                {analysis.improvements?.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                    <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={() => setShowSuggestions(false)}
+                className="w-full mt-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all"
+              >
+                {t.aiSuggestionsClose}
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
