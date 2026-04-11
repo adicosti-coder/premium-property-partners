@@ -64,6 +64,8 @@ serve(async (req: Request) => {
       { url: "/preturi", priority: "0.7", changefreq: "weekly" },
       { url: "/analiza-proprietate", priority: "0.8", changefreq: "weekly" },
       { url: "/catalog-investitii", priority: "0.7", changefreq: "weekly" },
+      { url: "/contact", priority: "0.7", changefreq: "monthly" },
+      { url: "/adauga-anunt", priority: "0.6", changefreq: "monthly" },
       // Zone landing pages
       { url: "/zona/centru", priority: "0.7", changefreq: "weekly" },
       { url: "/zona/iulius-town", priority: "0.7", changefreq: "weekly" },

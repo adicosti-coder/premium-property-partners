@@ -13,7 +13,8 @@ export const useCountAnimation = ({
   delay = 0,
   decimals = 0
 }: UseCountAnimationProps) => {
-  const [count, setCount] = useState(0);
+  // Start with the final value so crawlers/SSR see real numbers, not zeros
+  const [count, setCount] = useState(end);
   const [hasStarted, setHasStarted] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -21,6 +22,7 @@ export const useCountAnimation = ({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !hasStarted) {
+          setCount(0); // Reset to 0 before animating up
           setHasStarted(true);
         }
       },
