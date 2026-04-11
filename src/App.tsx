@@ -205,6 +205,7 @@ const App = () => (
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     {/* Legacy .html redirects — use Navigate for proper 301-like behavior with crawlers */}
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
