@@ -244,7 +244,7 @@ const AdaugaAnunt = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("property_listings").insert([{
+      const payload: Record<string, any> = {
         user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
@@ -257,7 +257,16 @@ const AdaugaAnunt = () => {
         price: price ? parseFloat(price) : null,
         images,
         ai_analysis: analysis as any || null,
-      }]);
+      };
+
+      // Add financial fields for regim_hotelier
+      if (listingCategory === "regim_hotelier") {
+        payload.estimated_monthly_revenue = estimatedMonthlyRevenue ? parseFloat(estimatedMonthlyRevenue) : 0;
+        payload.annual_operating_costs = annualOperatingCosts ? parseFloat(annualOperatingCosts) : 0;
+        payload.initial_setup_cost = initialSetupCost ? parseFloat(initialSetupCost) : 0;
+      }
+
+      const { error } = await supabase.from("property_listings").insert([payload]);
 
       if (error) throw error;
 
