@@ -270,6 +270,21 @@ const AdaugaAnunt = () => {
 
       if (error) throw error;
 
+      // Send confirmation email to the user
+      const listingId = crypto.randomUUID();
+      supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "listing-submitted",
+          recipientEmail: user.email,
+          idempotencyKey: `listing-submitted-${listingId}`,
+          templateData: {
+            name: user.user_metadata?.full_name || user.email?.split("@")[0],
+            listingTitle: title.trim(),
+            category: listingCategory,
+          },
+        },
+      }).catch((err: any) => console.error("Email send error:", err));
+
       toast.success(t.success);
       // Reset form
       setTitle("");
