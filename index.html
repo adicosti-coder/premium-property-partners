@@ -117,39 +117,7 @@
     </script>
 
     <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->
-
-    <!-- Google Consent Mode v2 — default denied until user accepts -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('consent', 'default', {
-        'analytics_storage': 'denied',
-        'ad_storage': 'denied',
-        'ad_user_data': 'denied',
-        'ad_personalization': 'denied',
-        'wait_for_update': 500
-      });
-    </script>
-    <!-- Google tag (gtag.js) — deferred to first user interaction or 8s fallback
-         to push 280ms main-thread cost outside Lighthouse's TBT window -->
-    <script>
-      (function(){
-        var loaded=false;
-        function loadGTM(){
-          if(loaded)return;loaded=true;
-          var s=document.createElement('script');
-          s.src='https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V';
-          s.async=true;
-          document.head.appendChild(s);
-          gtag('js',new Date());
-          gtag('config','G-JXDGWL3G6V');
-        }
-        ['scroll','click','touchstart','keydown'].forEach(function(e){
-          document.addEventListener(e,loadGTM,{once:true,passive:true,capture:true});
-        });
-        setTimeout(loadGTM,8000);
-      })();
-    </script>
+    <!-- Consent + analytics scripts moved to body to avoid blocking first paint -->
 
 </head>
 
