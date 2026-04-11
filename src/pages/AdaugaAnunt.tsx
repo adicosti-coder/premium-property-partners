@@ -221,7 +221,7 @@ const AdaugaAnunt = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("property_listings").insert({
+      const { error } = await supabase.from("property_listings").insert([{
         user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
@@ -233,9 +233,8 @@ const AdaugaAnunt = () => {
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
         price: price ? parseFloat(price) : null,
         images,
-        ai_analysis: analysis || null,
-        status: "pending_inspection" as any,
-      });
+        ai_analysis: analysis as any || null,
+      }]);
 
       if (error) throw error;
 
