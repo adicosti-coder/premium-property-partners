@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb } from "lucide-react";
+import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb, TrendingUp, Wallet, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -44,6 +44,9 @@ const AdaugaAnunt = () => {
   const [bathrooms, setBathrooms] = useState("");
   const [price, setPrice] = useState("");
   const [listingCategory, setListingCategory] = useState<"vanzare" | "inchiriere" | "regim_hotelier">("inchiriere");
+  const [estimatedMonthlyRevenue, setEstimatedMonthlyRevenue] = useState("");
+  const [annualOperatingCosts, setAnnualOperatingCosts] = useState("");
+  const [initialSetupCost, setInitialSetupCost] = useState("");
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -103,6 +106,10 @@ const AdaugaAnunt = () => {
     aiSuggestionsTitle: "AI Suggestions for Improvement",
     aiSuggestionsDesc: "Your listing score is below 70. Here are AI-powered suggestions to improve it:",
     aiSuggestionsClose: "Got it, I'll improve",
+    revenueLabel: "Est. Monthly Revenue (€)",
+    operatingCostsLabel: "Annual Operating Costs (€)",
+    setupCostLabel: "Initial Setup Cost (€)",
+    financialSection: "Financial Data (ROI Auto-Calculation)",
   } : {
     pageTitle: "Adaugă Anunț",
     pageSubtitle: "Încarcă fotografii și lasă AI-ul să genereze anunțul. După trimitere, echipa noastră va programa o inspecție înainte de publicare.",
@@ -147,6 +154,10 @@ const AdaugaAnunt = () => {
     aiSuggestionsTitle: "Sugestii AI pentru Îmbunătățire",
     aiSuggestionsDesc: "Scorul anunțului tău este sub 70. Iată sugestiile AI pentru a-l îmbunătăți:",
     aiSuggestionsClose: "Am înțeles, voi îmbunătăți",
+    revenueLabel: "Venit Lunar Estimat (€)",
+    operatingCostsLabel: "Cheltuieli Operare Anuale (€)",
+    setupCostLabel: "Cost Amenajare Inițial (€)",
+    financialSection: "Date Financiare (Calcul ROI Automat)",
   };
 
   const handleFiles = useCallback((files: FileList | null) => {
@@ -233,7 +244,7 @@ const AdaugaAnunt = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("property_listings").insert([{
+      const payload: Record<string, any> = {
         user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
@@ -246,7 +257,16 @@ const AdaugaAnunt = () => {
         price: price ? parseFloat(price) : null,
         images,
         ai_analysis: analysis as any || null,
-      }]);
+      };
+
+      // Add financial fields for regim_hotelier
+      if (listingCategory === "regim_hotelier") {
+        payload.estimated_monthly_revenue = estimatedMonthlyRevenue ? parseFloat(estimatedMonthlyRevenue) : 0;
+        payload.annual_operating_costs = annualOperatingCosts ? parseFloat(annualOperatingCosts) : 0;
+        payload.initial_setup_cost = initialSetupCost ? parseFloat(initialSetupCost) : 0;
+      }
+
+      const { error } = await supabase.from("property_listings").insert([payload as any]);
 
       if (error) throw error;
 
@@ -261,6 +281,9 @@ const AdaugaAnunt = () => {
       setRooms("");
       setBathrooms("");
       setPrice("");
+      setEstimatedMonthlyRevenue("");
+      setAnnualOperatingCosts("");
+      setInitialSetupCost("");
     } catch (err: any) {
       console.error("Submit error:", err);
       toast.error(language === "ro" ? "Eroare la trimitere. Încearcă din nou." : "Submit error. Try again.");
@@ -583,7 +606,41 @@ const AdaugaAnunt = () => {
                 <div className="space-y-1.5">
                   <Label htmlFor="price" className="text-xs flex items-center gap-1"><Euro className="w-3 h-3" /> {t.priceLabel}</Label>
                   <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="rounded-xl" />
-                </div>
+              </div>
+
+              {/* Financial Fields - only for regim_hotelier */}
+              {listingCategory === "regim_hotelier" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    {t.financialSection}
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground -mt-1">
+                    {language === "en"
+                      ? "Fill in financial data to auto-calculate ROI. Listings with ROI ≥ 70% are auto-tagged as excellent investment opportunities."
+                      : "Completează datele financiare pentru calculul automat al ROI. Anunțurile cu ROI ≥ 70% primesc automat tag-ul ROI_EXCELENT."}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="revenue" className="text-xs flex items-center gap-1"><Euro className="w-3 h-3" /> {t.revenueLabel}</Label>
+                      <Input id="revenue" type="number" min="0" value={estimatedMonthlyRevenue} onChange={(e) => setEstimatedMonthlyRevenue(e.target.value)} placeholder="ex. 2500" className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="opCosts" className="text-xs flex items-center gap-1"><Wrench className="w-3 h-3" /> {t.operatingCostsLabel}</Label>
+                      <Input id="opCosts" type="number" min="0" value={annualOperatingCosts} onChange={(e) => setAnnualOperatingCosts(e.target.value)} placeholder="ex. 5000" className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="setupCost" className="text-xs flex items-center gap-1"><Wallet className="w-3 h-3" /> {t.setupCostLabel}</Label>
+                      <Input id="setupCost" type="number" min="0" value={initialSetupCost} onChange={(e) => setInitialSetupCost(e.target.value)} placeholder="ex. 35000" className="rounded-xl" />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
               </div>
             </section>
 
