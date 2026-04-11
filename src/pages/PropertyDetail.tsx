@@ -18,6 +18,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import PinterestPinButton from "@/components/PinterestPinButton";
 import { useImageCaptions } from "@/hooks/useImageCaptions";
+import { useListingDwellTracker } from "@/hooks/useListingDwellTracker";
 
 const BookingForm = lazy(() => import("@/components/BookingForm"));
 const StayCalculator = lazy(() => import("@/components/StayCalculator"));
@@ -294,6 +295,9 @@ const PropertyDetail = () => {
     latitude: dbProperty.latitude || null,
     longitude: dbProperty.longitude || null,
   } : null);
+
+  // Track dwell time for 'lux' and 'gradina' tagged properties
+  useListingDwellTracker(dbProperty?.id, dbProperty?.tag);
 
   const resolvedCoordinates = property
     ? resolvePropertyCoordinates({
