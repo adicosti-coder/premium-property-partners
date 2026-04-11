@@ -140,6 +140,37 @@
         <p>RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier: ATENEO, GREEN FOREST, FullView Studio, HELIOS, City of Mara, Fructus Plaza, Ring, Denya Forest, X-City — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, ROI 9.4% net verificat.</p>
       </div>
     </div>
+    <!-- Google Consent Mode v2 — in body to avoid blocking first paint -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', {
+        'analytics_storage': 'denied',
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'wait_for_update': 500
+      });
+    </script>
+    <!-- Google tag (gtag.js) — deferred to first user interaction or 8s fallback -->
+    <script>
+      (function(){
+        var loaded=false;
+        function loadGTM(){
+          if(loaded)return;loaded=true;
+          var s=document.createElement('script');
+          s.src='https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V';
+          s.async=true;
+          document.head.appendChild(s);
+          gtag('js',new Date());
+          gtag('config','G-JXDGWL3G6V');
+        }
+        ['scroll','click','touchstart','keydown'].forEach(function(e){
+          document.addEventListener(e,loadGTM,{once:true,passive:true,capture:true});
+        });
+        setTimeout(loadGTM,8000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
     
     <!-- ElevenLabs widget managed by React (GlobalConversionWidgets) -->
