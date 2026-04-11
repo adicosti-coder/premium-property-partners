@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb } from "lucide-react";
+import { Camera, X, ImagePlus, Sparkles, Loader2, CheckCircle2, Home, MapPin, Ruler, BedDouble, Bath, Euro, FileText, LogIn, AlertTriangle, Lightbulb, TrendingUp, Wallet, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
