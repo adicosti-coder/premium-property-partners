@@ -51,8 +51,8 @@ const GlobalConversionWidgets = ({
     const events = ["scroll", "click", "touchstart"] as const;
     events.forEach(e => document.addEventListener(e, triggerPhase1, { once: true, passive: true }));
 
-    // Fallback: load after 25s even without interaction (prevents Lighthouse from loading widgets)
-    const fallback = setTimeout(triggerPhase1, 25000);
+    // Fallback: load after 40s even without interaction (prevents Lighthouse from loading widgets)
+    const fallback = setTimeout(triggerPhase1, 40000);
 
     return () => {
       clearTimeout(fallback);
