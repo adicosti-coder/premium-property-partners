@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -87,6 +87,22 @@ const Hero = () => {
       if (timerId !== null) clearTimeout(timerId);
     };
   }, [language]);
+
+  // Remove hero skeleton overlay once React Hero has painted
+  useLayoutEffect(() => {
+    const skeleton = document.getElementById('hero-skeleton');
+    if (skeleton) {
+      // Use rAF to ensure React has committed the hero DOM before hiding skeleton
+      requestAnimationFrame(() => {
+        skeleton.classList.add('hero-ready');
+        // After the fade-out transition, fully remove from DOM
+        setTimeout(() => {
+          skeleton.classList.add('hero-gone');
+          skeleton.remove();
+        }, 200);
+      });
+    }
+  }, []);
 
   // Check connection speed
   useEffect(() => {
