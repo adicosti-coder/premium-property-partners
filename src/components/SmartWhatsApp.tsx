@@ -27,9 +27,9 @@ const SmartWhatsApp = () => {
   }, [isExpanded]);
 
   const isOfficeHours = () => {
-    const now = new Date();
-    const day = now.getDay(); // 0=Sun
-    const hour = now.getHours();
+    const bucharestNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest" }));
+    const day = bucharestNow.getDay(); // 0=Sun
+    const hour = bucharestNow.getHours();
     return day >= 1 && day <= 5 && hour >= 10 && hour < 18;
   };
 

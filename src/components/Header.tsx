@@ -200,6 +200,7 @@ const Header = () => {
         { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
         { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
         { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
+        { href: "/imobiliare-timisoara", label: language === "ro" ? "Cartiere Timișoara" : "Timișoara Neighborhoods", isPage: true, icon: <BuildingIcon /> },
       ],
     },
     {

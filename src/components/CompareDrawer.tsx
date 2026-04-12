@@ -55,6 +55,7 @@ const CompareDrawer = () => {
       {/* Drawer */}
       {items.length >= 2 && (
         <div className="fixed inset-x-0 bottom-0 z-40 bg-card border-t border-border shadow-2xl rounded-t-2xl max-h-[60vh] overflow-auto animate-in slide-in-from-bottom duration-300">
+          <div className="overflow-x-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-foreground text-lg">
