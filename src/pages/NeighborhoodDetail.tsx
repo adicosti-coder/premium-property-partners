@@ -1,0 +1,122 @@
+import { useParams, Link, Navigate } from "react-router-dom";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
+import NeighborhoodPropertyCard from "@/components/NeighborhoodPropertyCard";
+import { getNeighborhoodBySlug } from "@/data/neighborhoods";
+import { MapPin, TrendingUp, Home, Phone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { lazy, Suspense } from "react";
+
+const MarketPulse = lazy(() => import("@/components/MarketPulse"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+
+const NeighborhoodDetail = () => {
+  const { zona } = useParams<{ zona: string }>();
+  const neighborhood = zona ? getNeighborhoodBySlug(zona) : undefined;
+
+  if (!neighborhood) {
+    return <Navigate to="/imobiliare-timisoara" replace />;
+  }
+
+  const breadcrumbItems = [
+    { label: "Acasă", href: "/" },
+    { label: "Imobiliare Timișoara", href: "/imobiliare-timisoara" },
+    { label: neighborhood.fullName },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead
+        title={neighborhood.metaTitle}
+        description={neighborhood.metaDescription}
+        canonicalUrl={`https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
+      />
+      <Header />
+
+      <main className="pt-24 pb-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <PageBreadcrumb items={breadcrumbItems} />
+
+          {/* Hero */}
+          <div className="mb-10">
+            <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
+              Apartamente de vânzare în {neighborhood.fullName}, Timișoara
+            </h1>
+
+            {/* Stats bar */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
+                <TrendingUp className="w-4 h-4" />
+                {neighborhood.avgPricePerSqm.toLocaleString('ro-RO')} €/mp medie
+              </div>
+              <div className="flex items-center gap-2 bg-muted text-muted-foreground px-4 py-2 rounded-full text-sm">
+                <Home className="w-4 h-4" />
+                {neighborhood.listingsCount} proprietăți disponibile
+              </div>
+              <div className="flex items-center gap-2 bg-muted text-muted-foreground px-4 py-2 rounded-full text-sm">
+                <MapPin className="w-4 h-4" />
+                Timișoara, Timiș
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
+              {neighborhood.description}
+            </p>
+          </div>
+
+          {/* Property Grid */}
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold text-foreground mb-6">
+              Proprietăți disponibile în {neighborhood.fullName}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {neighborhood.listings.map((listing) => (
+                <NeighborhoodPropertyCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 text-center mb-12">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Cauți altceva în {neighborhood.fullName}?
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Contactează un consultant RealTrust pentru proprietăți exclusive care nu sunt listate public.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button asChild>
+                <a href="tel:+40723154520">
+                  <Phone className="w-4 h-4 mr-2" />
+                  Sună acum: 0723 154 520
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/evaluare-gratuita">
+                  Evaluare gratuită
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Market Pulse */}
+          <Suspense fallback={<div className="min-h-[300px]" />}>
+            <MarketPulse />
+          </Suspense>
+        </div>
+      </main>
+
+      <Suspense fallback={null}>
+        <Footer />
+        <GlobalConversionWidgets />
+      </Suspense>
+      <BackToTop />
+    </div>
+  );
+};
+
+export default NeighborhoodDetail;
