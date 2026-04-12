@@ -100,6 +100,7 @@ const ROICalculatorWidget = () => {
               max={500000}
               step={5000}
               className="w-full"
+              aria-label="Valoarea proprietății"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>50.000 €</span>
@@ -120,6 +121,7 @@ const ROICalculatorWidget = () => {
               max={150}
               step={5}
               className="w-full"
+              aria-label="Suprafață proprietate"
             />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span>30 mp</span>
