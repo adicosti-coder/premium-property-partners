@@ -5,10 +5,11 @@ import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const CTA = () => {
   const { t, language } = useLanguage();
-  const { trackFormSubmit } = useCtaAnalytics();
+  const { trackFormSubmit, trackManagement, trackInvestment } = useCtaAnalytics();
 
   const handlePrimaryCta = () => {
     trackFormSubmit("cta_primary");
+    trackManagement();
     document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -33,7 +34,7 @@ const CTA = () => {
               {language === "ro" ? "Află cât poate produce apartamentul tău" : "Find out how much your apartment can earn"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <a href="/investitii">
+            <a href="/investitii" onClick={() => trackInvestment()}>
               <Button 
                 variant="outline" 
                 size="xl" 

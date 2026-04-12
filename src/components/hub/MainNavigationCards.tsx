@@ -267,7 +267,7 @@ const MainNavigationCards = () => {
     }
 
     return (
-      <Link key={index} to={card.link} className="block h-full">
+      <Link key={index} to={card.link} onClick={() => handleClick(card.link)} className="block h-full">
         {inner}
       </Link>
     );
