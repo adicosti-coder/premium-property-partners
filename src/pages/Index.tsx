@@ -28,6 +28,7 @@ const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 // the mapbox-gl chunk (455KB) to modulepreload, parsed at 948ms.
 // Instead, we dynamically import() ONLY on user click inside GalleryMapSection.
 const VerifiedReviewsBadges = lazy(() => import("@/components/VerifiedReviewsBadges"));
+const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -69,6 +70,7 @@ const MidFoldSection = () => (
     <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
       <DualServicePaths />
       <ChannelLogos />
+      <MarketPulse />
     </Suspense>
   </div>
 );

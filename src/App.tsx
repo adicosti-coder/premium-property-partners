@@ -88,6 +88,10 @@ const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const Unsubscribe = lazyWithRetry(() => import("./pages/Unsubscribe"));
 const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
+const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimisoara"));
+const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
+const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
+const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
@@ -200,6 +204,10 @@ const App = () => (
                     <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />
                     <Route path="/guide/:bookingId" element={<GuestGuide />} />
                     <Route path="/catalog-investitii" element={<CatalogInvestitii />} />
+                    <Route path="/imobiliare-timisoara" element={<ImobiliareTimisoara />} />
+                    <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
+                    <Route path="/calculator-roi" element={<CalculatorROI />} />
+                    <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
