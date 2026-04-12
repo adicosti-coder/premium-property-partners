@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const DualServicePaths = () => {
   const { language } = useLanguage();
+  const { trackManagement, trackInvestment } = useCtaAnalytics();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: cardsRef, isVisible: cardsVisible } = useScrollAnimation({ threshold: 0.1 });
 
@@ -155,7 +157,10 @@ const DualServicePaths = () => {
 
                   {/* CTA */}
                   <Button asChild variant="hero" size="lg" className="w-full group/btn">
-                    <Link to={path.link}>
+                    <Link to={path.link} onClick={() => {
+                      if (path.link.includes("proprietari")) trackManagement();
+                      else if (path.link.includes("investitii")) trackInvestment();
+                    }}>
                       {path.cta}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                     </Link>

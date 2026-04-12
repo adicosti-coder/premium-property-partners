@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect, useLayoutEffect } from "react";
-
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Hero image served from public/ — optimized compressed versions
@@ -256,6 +256,7 @@ const HeroContent = ({
   isMobile: boolean;
   language: string;
 }) => {
+  const { trackManagement, trackInvestment } = useCtaAnalytics();
   return (
     <>
       <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
@@ -270,12 +271,13 @@ const HeroContent = ({
           variant="hero" 
           size="xl" 
           className="relative animate-glow-pulse btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3"
-          onClick={() => window.dispatchEvent(new Event("force-show-calculator"))}
+          onClick={() => { trackManagement(); window.dispatchEvent(new Event("force-show-calculator")); }}
         >
           {ctaPrimary}
         </Button>
          <a
            href="/investitii"
+           onClick={() => trackInvestment()}
            className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 px-10 text-base rounded-xl inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 bg-foreground text-background border border-foreground"
          >
            {ctaSecondary}

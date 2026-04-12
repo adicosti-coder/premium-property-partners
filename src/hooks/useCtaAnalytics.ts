@@ -134,6 +134,30 @@ export const useCtaAnalytics = () => {
     [trackCta]
   );
 
+  /** Custom GA4 events for main CTA categories */
+  const trackInvestment = useCallback(() => {
+    fireGtagEvent("interes_imobiliar", {
+      interes_imobil: "investitie",
+      buget_client: "estimat",
+      page_path: getCurrentPath(),
+    });
+  }, []);
+
+  const trackAccommodation = useCallback(() => {
+    fireGtagEvent("vizualizare_cazare", {
+      interes_imobil: "regim_hotelier",
+      capacitate_apartament: "4_persoane",
+      page_path: getCurrentPath(),
+    });
+  }, []);
+
+  const trackManagement = useCallback(() => {
+    fireGtagEvent("lead_administrare", {
+      tip_proprietar: "colaborare",
+      page_path: getCurrentPath(),
+    });
+  }, []);
+
   return {
     trackCta,
     trackCall,
@@ -142,5 +166,8 @@ export const useCtaAnalytics = () => {
     trackAirbnb,
     trackEmail,
     trackFormSubmit,
+    trackInvestment,
+    trackAccommodation,
+    trackManagement,
   };
 };
