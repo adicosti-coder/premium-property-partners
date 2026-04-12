@@ -26,6 +26,7 @@ interface NavCard {
 
 const MainNavigationCards = () => {
   const { language } = useLanguage();
+  const { trackManagement, trackInvestment, trackAccommodation } = useCtaAnalytics();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.05 });
   const { ref: grid2Ref, isVisible: grid2Visible } = useScrollAnimation({ threshold: 0.05 });
@@ -184,6 +185,11 @@ const MainNavigationCards = () => {
   const t = content[language as keyof typeof content] || content.ro;
 
   const handleClick = (link: string) => {
+    // Fire GA4 events based on link category
+    if (link.includes("proprietari")) trackManagement();
+    else if (link.includes("investitii")) trackInvestment();
+    else if (link.includes("oaspeti") || link.includes("cazare")) trackAccommodation();
+
     if (link.includes("#")) {
       const hash = link.split("#")[1];
       const el = document.getElementById(hash);
