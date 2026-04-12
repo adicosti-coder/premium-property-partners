@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
-import { Helmet } from "react-helmet-async";
 import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,10 +74,11 @@ const EvaluareGratuita = () => {
 
   return (
     <Suspense fallback={null}>
-      <Helmet>
-        <title>Evaluare Gratuită Proprietate Timișoara | RealTrust</title>
-        <meta name="description" content="Solicită o evaluare gratuită pentru proprietatea ta din Timișoara. Răspundem în maxim 24 de ore cu o estimare personalizată." />
-      </Helmet>
+      <SEOHead
+        title="Evaluare Gratuită Proprietate Timișoara | RealTrust"
+        description="Solicită o evaluare gratuită pentru proprietatea ta din Timișoara. Răspundem în maxim 24 de ore cu o estimare personalizată."
+        url="https://www.realtrust.ro/evaluare-gratuita"
+      />
       <Header />
       <main className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-lg">

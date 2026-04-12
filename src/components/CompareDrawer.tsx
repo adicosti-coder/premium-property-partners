@@ -68,7 +68,7 @@ const CompareDrawer = () => {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-4 px-4">
               <Table>
                 <TableHeader>
                   <TableRow>
