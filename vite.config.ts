@@ -56,6 +56,7 @@ export default defineConfig(({ mode }) => {
         webp: { quality: 35, effort: 6 },
         avif: { quality: 30, effort: 6 },
       }),
+      mode === "production" && vitePrerenderSeo(),
     ].filter(Boolean),
     resolve: {
       alias: {
