@@ -32,7 +32,7 @@ const NeighborhoodDetail = () => {
       <SEOHead
         title={neighborhood.metaTitle}
         description={neighborhood.metaDescription}
-        canonicalUrl={`https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
+        url={`https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
       />
       <Header />
 
