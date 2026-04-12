@@ -70,6 +70,7 @@ const MidFoldSection = () => (
     <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
       <DualServicePaths />
       <ChannelLogos />
+      <MarketPulse />
     </Suspense>
   </div>
 );
