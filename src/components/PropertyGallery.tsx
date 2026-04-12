@@ -13,7 +13,54 @@ import PropertyCard from "./PropertyCard";
 import { properties, Property, getActiveProperties, getImageAlt } from "@/data/properties";
 import { toast } from "sonner";
 const PropertyCompareModal = lazy(() => import("./PropertyCompareModal"));
-const PropertyMap = lazy(() => import("./PropertyMap"));
+
+/** Click-to-load map wrapper — prevents mapbox-gl (461KB) from loading on page init */
+const GalleryMapPlaceholder = ({ language }: { language: string }) => {
+  const [MapComp, setMapComp] = useState<React.ComponentType<any> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const activate = () => {
+    if (MapComp || loading) return;
+    setLoading(true);
+    import("./PropertyMap").then(m => {
+      setMapComp(() => m.default);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  };
+
+  return (
+    <div className="mb-12">
+      <div className="flex items-center gap-2 mb-4">
+        <Map className="w-5 h-5 text-primary" />
+        <h3 className="text-lg font-serif font-semibold text-foreground">
+          {language === 'ro' ? 'Hartă Proprietăți' : 'Properties Map'}
+        </h3>
+      </div>
+      {MapComp ? (
+        <Suspense fallback={<div className="w-full h-[400px] rounded-xl bg-muted/30 animate-pulse" />}>
+          <MapComp className="w-full h-[400px] rounded-xl" />
+        </Suspense>
+      ) : (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={activate}
+          onKeyDown={(e) => e.key === 'Enter' && activate()}
+          className="w-full h-[400px] rounded-xl border border-border/50 bg-muted/30 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+        >
+          <div className="text-center p-6">
+            <div className="text-4xl mb-3">{loading ? '⏳' : '🗺️'}</div>
+            <p className="text-lg font-semibold text-foreground/80">
+              {loading
+                ? (language === 'ro' ? 'Se încarcă harta...' : 'Loading map...')
+                : (language === 'ro' ? 'Apasă pentru a vedea harta' : 'Tap to view map')}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /** Lightbox with touch swipe for mobile */
 const LightboxOverlay = ({
@@ -339,17 +386,9 @@ const PropertyGallery = () => {
           </div>
         )}
 
-        {/* Interactive Map */}
+        {/* Interactive Map — click-to-load to avoid mapbox-gl (461KB, 959ms CPU) on initial render */}
         {!isLoading && (
-          <div className="mb-12">
-            <div className="flex items-center gap-2 mb-4">
-              <Map className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-serif font-semibold text-foreground">
-                {language === 'ro' ? 'Hartă Proprietăți' : 'Properties Map'}
-              </h3>
-            </div>
-            <PropertyMap className="w-full h-[400px] rounded-xl" />
-          </div>
+          <GalleryMapPlaceholder language={language} />
         )}
 
         {/* Property Grid */}
