@@ -30,6 +30,7 @@ const NeighborhoodDetail = () => {
   ];
 
   return (
+    <CompareProvider>
     <div className="min-h-screen bg-background">
       <SEOHead
         title={neighborhood.metaTitle}
@@ -117,7 +118,9 @@ const NeighborhoodDetail = () => {
         <GlobalConversionWidgets />
       </Suspense>
       <BackToTop />
+      <CompareDrawer />
     </div>
+    </CompareProvider>
   );
 };
 
