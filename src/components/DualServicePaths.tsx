@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/button";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const DualServicePaths = () => {
   const { language } = useLanguage();

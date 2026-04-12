@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 interface NavCard {
   icon: React.ElementType;
