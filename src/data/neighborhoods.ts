@@ -10,6 +10,11 @@ export interface MockListing {
   imageAlt: string;
 }
 
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
 export interface NeighborhoodData {
   slug: string;
   name: string;
@@ -20,6 +25,7 @@ export interface NeighborhoodData {
   metaTitle: string;
   metaDescription: string;
   listings: MockListing[];
+  faq: FAQItem[];
 }
 
 export const neighborhoods: NeighborhoodData[] = [
