@@ -88,6 +88,22 @@ const Hero = () => {
     };
   }, [language]);
 
+  // Remove hero skeleton overlay once React Hero has painted
+  useLayoutEffect(() => {
+    const skeleton = document.getElementById('hero-skeleton');
+    if (skeleton) {
+      // Use rAF to ensure React has committed the hero DOM before hiding skeleton
+      requestAnimationFrame(() => {
+        skeleton.classList.add('hero-ready');
+        // After the fade-out transition, fully remove from DOM
+        setTimeout(() => {
+          skeleton.classList.add('hero-gone');
+          skeleton.remove();
+        }, 200);
+      });
+    }
+  }, []);
+
   // Check connection speed
   useEffect(() => {
     const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
