@@ -1,7 +1,7 @@
 /**
  * Custom Vite plugin that generates static HTML files for SEO-critical routes
- * at build time. No Puppeteer/headless browser needed — injects SEO content
- * (title, meta, h1, JSON-LD) directly into the HTML template.
+ * at build time. Uses neighborhoods.ts as the Single Source of Truth for
+ * neighborhood data (slugs, titles, descriptions, FAQs).
  */
 import type { Plugin } from 'vite';
 import fs from 'fs';
@@ -12,21 +12,44 @@ interface PrerenderRoute {
   title: string;
   description: string;
   h1: string;
-  jsonLd: Record<string, unknown>;
+  jsonLd: Record<string, unknown> | Record<string, unknown>[];
   canonical: string;
 }
 
 const BASE_URL = 'https://www.realtrust.ro';
 
-// SEO data for each route — mirrors what SEOHead/components would render
+/**
+ * Neighborhood data mirrored from src/data/neighborhoods.ts.
+ * This is the canonical source — keep in sync when adding zones.
+ */
 const neighborhoods = [
-  { slug: 'zona-girocului', name: 'Zona Girocului', avgPrice: 1650 },
-  { slug: 'zona-aradului', name: 'Zona Aradului', avgPrice: 1780 },
-  { slug: 'circumvalatiunii', name: 'Circumvalațiunii', avgPrice: 1420 },
-  { slug: 'sagului', name: 'Șagului', avgPrice: 1550 },
-  { slug: 'complex-studentesc', name: 'Complex Studențesc', avgPrice: 1380 },
-  { slug: 'calea-lipovei', name: 'Calea Lipovei', avgPrice: 1480 },
-  { slug: 'isho', name: 'ISHO', avgPrice: 2100 },
+  { slug: 'zona-girocului', name: 'Zona Girocului', fullName: 'Zona Girocului', avgPrice: 1650, faq: [
+    { q: 'Care este prețul mediu pe metru pătrat în zona Girocului?', a: 'Prețul mediu în zona Girocului este de aproximativ 1.650 €/mp, cu 10-15% sub media orașului Timișoara.' },
+    { q: 'Ce facilități sunt disponibile în zona Girocului?', a: 'Shopping City Timișoara la 5 minute, parcuri, școli, grădinițe și linii de autobuz frecvente.' },
+    { q: 'Este Girocului potrivit pentru investiții în regim hotelier?', a: 'Da, prețuri accesibile și cerere ridicată. RealTrust oferă administrare completă cu randamente de 7-9% net.' },
+  ]},
+  { slug: 'zona-aradului', name: 'Zona Aradului', fullName: 'Zona Aradului', avgPrice: 1780, faq: [
+    { q: 'Cât de aproape este zona Aradului de aeroport?', a: 'Aeroportul Internațional Timișoara este la aproximativ 10 minute cu mașina.' },
+    { q: 'Care sunt avantajele zonei Aradului?', a: 'Acces rapid la aeroport, proximitatea Iulius Town și Openville, profil de chiriași cu venituri ridicate.' },
+  ]},
+  { slug: 'circumvalatiunii', name: 'Circumvalațiunii', fullName: 'Circumvalațiunii', avgPrice: 1920, faq: [
+    { q: 'Ce rată de ocupare au apartamentele din Circumvalațiunii?', a: 'Peste 90% ocupare în Complex City of Mara, gestionate de RealTrust.' },
+    { q: 'Ce facilități sunt în zona Circumvalațiunii?', a: 'Parcul Rozelor, Bega Shopping Center, Universitatea de Vest, tramvai și autobuz la sub 100m.' },
+  ]},
+  { slug: 'sagului', name: 'Șagului', fullName: 'Zona Șagului', avgPrice: 1580, faq: [
+    { q: 'Cât costă un apartament pe Calea Șagului?', a: 'Prețul mediu este 1.580 €/mp, cu 15-20% sub media orașului.' },
+    { q: 'Ce atracții sunt în zona Șagului?', a: 'Amazonia Aquapark la 5 minute, parcuri, școli și tramvai spre centru (15 min).' },
+  ]},
+  { slug: 'complex-studentesc', name: 'Complex Studențesc', fullName: 'Complexul Studențesc', avgPrice: 1720, faq: [
+    { q: 'Ce randament oferă o investiție în Complexul Studențesc?', a: 'Randamente de 8-10% net, susținute de cererea celor peste 40.000 de studenți.' },
+  ]},
+  { slug: 'calea-lipovei', name: 'Calea Lipovei', fullName: 'Calea Lipovei', avgPrice: 1550, faq: [
+    { q: 'De ce sunt prețurile mai mici pe Calea Lipovei?', a: 'Zonă în curs de modernizare (1.550 €/mp), cu potențial mare de apreciere.' },
+  ]},
+  { slug: 'isho', name: 'ISHO', fullName: 'ISHO & Fabric', avgPrice: 2150, faq: [
+    { q: 'Ce face ISHO diferit?', a: 'Cel mai iconic proiect de regenerare urbană din Timișoara — complex mixed-use pe malul Begăi.' },
+    { q: 'Care este prețul mediu la ISHO?', a: '2.150 €/mp, cel mai ridicat din Timișoara.' },
+  ]},
 ];
 
 function buildRoutes(): PrerenderRoute[] {
@@ -46,35 +69,43 @@ function buildRoutes(): PrerenderRoute[] {
       description: 'Agenție imobiliară premium din Timișoara specializată în vânzări, investiții și administrare apartamente în regim hotelier.',
       url: `${BASE_URL}/imobiliare-timisoara`,
       telephone: '+40723154520',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Timișoara',
-        addressRegion: 'Timiș',
-        addressCountry: 'RO',
-      },
+      address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
     },
   });
 
-  // Neighborhood pages
+  // Neighborhood pages — derived from the canonical neighborhoods array
   for (const n of neighborhoods) {
+    const faqSchema = n.faq.length > 0 ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: n.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    } : null;
+
     routes.push({
       path: `/imobiliare-timisoara/${n.slug}`,
       title: `Apartamente ${n.name} Timișoara | RealTrust Imobiliare`,
-      description: `Apartamente de vânzare în ${n.name}, Timișoara. Prețuri de la ${n.avgPrice.toLocaleString('ro-RO')} €/mp, administrare RealTrust inclusă.`,
-      h1: `Apartamente de vânzare în ${n.name}, Timișoara`,
+      description: `Apartamente de vânzare în ${n.fullName}, Timișoara. Prețuri de la ${n.avgPrice.toLocaleString('ro-RO')} €/mp, administrare RealTrust inclusă.`,
+      h1: `Apartamente de vânzare în ${n.fullName}, Timișoara`,
       canonical: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
-      jsonLd: {
+      jsonLd: faqSchema ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateListing',
+          name: `Apartamente ${n.fullName} Timișoara`,
+          url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+          address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
+        },
+        faqSchema,
+      ] : {
         '@context': 'https://schema.org',
         '@type': 'RealEstateListing',
-        name: `Apartamente ${n.name} Timișoara`,
-        description: `Apartamente de vânzare în ${n.name}, Timișoara`,
+        name: `Apartamente ${n.fullName} Timișoara`,
         url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: 'Timișoara',
-          addressRegion: 'Timiș',
-          addressCountry: 'RO',
-        },
+        address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
       },
     });
   }
@@ -107,7 +138,6 @@ function buildRoutes(): PrerenderRoute[] {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
       name: 'Piața Imobiliară Timișoara 2026',
-      description: 'Prețuri medii pe metru pătrat în Timișoara, tendințe 2026',
       url: `${BASE_URL}/piata-imobiliara-timisoara`,
     },
   });
@@ -125,10 +155,7 @@ function buildRoutes(): PrerenderRoute[] {
       name: 'Evaluare Gratuită Proprietate',
       description: 'Evaluare gratuită a proprietății tale din Timișoara de către echipa RealTrust',
       url: `${BASE_URL}/evaluare-gratuita`,
-      provider: {
-        '@type': 'Organization',
-        name: 'RealTrust & ApArt Hotel',
-      },
+      provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
     },
   });
 
@@ -136,30 +163,30 @@ function buildRoutes(): PrerenderRoute[] {
 }
 
 function generateHtml(template: string, route: PrerenderRoute): string {
-  // Replace <title> tag
   let html = template.replace(
     /<title>[^<]*<\/title>/,
     `<title>${escapeHtml(route.title)}</title>`
   );
 
-  // Replace meta description
   html = html.replace(
     /<meta name="description" content="[^"]*">/,
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  // Replace canonical
   html = html.replace(
     /<link rel="canonical" href="[^"]*"\s*\/?>/,
     `<link rel="canonical" href="${route.canonical}" />`
   );
 
-  // Inject SEO content block before <div id="root"> for crawlers
+  const jsonLdStr = Array.isArray(route.jsonLd)
+    ? route.jsonLd.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n      ')
+    : `<script type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>`;
+
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
       <h1>${escapeHtml(route.h1)}</h1>
-      <script type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>
+      ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}">${escapeHtml(route.title)}</a>
     </div>`;

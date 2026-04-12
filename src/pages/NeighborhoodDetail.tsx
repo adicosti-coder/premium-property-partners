@@ -36,6 +36,25 @@ const NeighborhoodDetail = () => {
         title={neighborhood.metaTitle}
         description={neighborhood.metaDescription}
         url={`https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "RealEstateListing",
+            name: `Apartamente ${neighborhood.fullName} Timișoara`,
+            description: neighborhood.metaDescription,
+            url: `https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
+            address: { "@type": "PostalAddress", addressLocality: "Timișoara", addressRegion: "Timiș", addressCountry: "RO" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: neighborhood.faq.map((f) => ({
+              "@type": "Question",
+              name: f.question,
+              acceptedAnswer: { "@type": "Answer", text: f.answer },
+            })),
+          },
+        ]}
       />
       <Header />
 
