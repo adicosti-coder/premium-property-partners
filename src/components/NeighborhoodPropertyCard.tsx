@@ -1,8 +1,12 @@
-import { Building2, Layers, Maximize, MapPin } from "lucide-react";
+import { Building2, Layers, Maximize, MapPin, GitCompareArrows } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useCompare } from "@/contexts/CompareContext";
+import { cn } from "@/lib/utils";
 import type { MockListing } from "@/data/neighborhoods";
 
 const NeighborhoodPropertyCard = ({ listing }: { listing: MockListing }) => {
+  const { add, remove, has } = useCompare();
+  const isCompared = has(listing.id);
   const floorLabel = listing.floor === 0 ? 'Parter' : `Etaj ${listing.floor}`;
 
   return (
@@ -52,6 +56,22 @@ const NeighborhoodPropertyCard = ({ listing }: { listing: MockListing }) => {
             {listing.surface} mp
           </span>
         </div>
+      </div>
+
+      {/* Compare button */}
+      <div className="px-5 pb-4">
+        <button
+          onClick={() => (isCompared ? remove(listing.id) : add(listing))}
+          className={cn(
+            "w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all border",
+            isCompared
+              ? "bg-primary/10 border-primary text-primary"
+              : "border-border text-muted-foreground hover:border-primary/30 hover:text-primary"
+          )}
+        >
+          <GitCompareArrows className="w-3.5 h-3.5" />
+          {isCompared ? "Adăugat ✓" : "Compară"}
+        </button>
       </div>
 
       {/* JSON-LD for each listing */}

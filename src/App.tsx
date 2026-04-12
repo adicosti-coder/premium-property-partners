@@ -92,6 +92,7 @@ const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimiso
 const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
 const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
+const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
@@ -208,6 +209,7 @@ const App = () => (
                     <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
                     <Route path="/calculator-roi" element={<CalculatorROI />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
+                    <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />

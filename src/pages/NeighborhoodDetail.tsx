@@ -5,6 +5,8 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import NeighborhoodPropertyCard from "@/components/NeighborhoodPropertyCard";
+import CompareDrawer from "@/components/CompareDrawer";
+import { CompareProvider } from "@/contexts/CompareContext";
 import { getNeighborhoodBySlug } from "@/data/neighborhoods";
 import { MapPin, TrendingUp, Home, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ const NeighborhoodDetail = () => {
   ];
 
   return (
+    <CompareProvider>
     <div className="min-h-screen bg-background">
       <SEOHead
         title={neighborhood.metaTitle}
@@ -115,7 +118,9 @@ const NeighborhoodDetail = () => {
         <GlobalConversionWidgets />
       </Suspense>
       <BackToTop />
+      <CompareDrawer />
     </div>
+    </CompareProvider>
   );
 };
 
