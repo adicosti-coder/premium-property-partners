@@ -89,7 +89,6 @@ const GlobalConversionWidgets = ({
           {showMobileCTA && <MobileCTABar />}
           <DesktopStickyContactBar />
           <AccessibilityPanel />
-          <FloatingActionMenu showChatbot={showChatbot} />
         </Suspense>
       )}
 
