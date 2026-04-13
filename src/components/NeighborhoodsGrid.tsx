@@ -28,9 +28,11 @@ export function NeighborhoodsGrid() {
           </p>
         </div>
 
-        {/* Grid */}
+        {/* Grid - sortat după ROI descrescător (preț/mp ascendent) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-          {neighborhoods.map((n) => {
+          {[...neighborhoods]
+            .sort((a, b) => a.avgPricePerSqm - b.avgPricePerSqm)
+            .map((n) => {
             const liveCount = countsBySlug[n.slug] || 0;
             const totalCount = liveCount + n.listingsCount;
 
