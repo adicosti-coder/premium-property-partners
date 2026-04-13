@@ -26,19 +26,25 @@ const ORGANIZATION = {
   },
 };
 
-// LocalBusiness Schema for homepage - enhanced for AI visibility
+// LocalBusiness Schema for homepage - enhanced for AI/GEO visibility
 export const generateLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
   "@id": `${BASE_URL}/#organization`,
   "name": "RealTrust & ApArt Hotel Timișoara",
-  "alternateName": "ApArt Hotel Timișoara",
+  "alternateName": ["ApArt Hotel Timișoara", "RealTrust Imobiliare"],
   "description": "Administrare profesională de apartamente în regim hotelier în Timișoara. Maximizează venitul proprietății tale cu 98% rată de ocupare și randament net 9.2-9.4% ROI.",
   "url": BASE_URL,
   "telephone": "+40723154520",
   "email": "info@realtrust.ro",
   "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
   "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,
+  "foundingDate": "2001",
+  "numberOfEmployees": {
+    "@type": "QuantitativeValue",
+    "minValue": 10,
+    "maxValue": 25,
+  },
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
@@ -54,13 +60,21 @@ export const generateLocalBusinessSchema = () => ({
   },
   // Enhanced PriceRange for AI matching with user budgets
   "priceRange": "€50-€150 per night",
-  // AggregateRating - critical for AI recommendations
-  // AggregateRating injected dynamically from DeferredHomeSEO with real DB values
-  // AreaServed - clearly marked for Timișoara
+  // GeoCircle — defines exact service radius for AI/local search
   "areaServed": [
+    {
+      "@type": "GeoCircle",
+      "geoMidpoint": {
+        "@type": "GeoCoordinates",
+        "latitude": 45.7489,
+        "longitude": 21.2087,
+      },
+      "geoRadius": "25000",
+    },
     {
       "@type": "City",
       "name": "Timișoara",
+      "sameAs": "https://en.wikipedia.org/wiki/Timi%C8%99oara",
       "containedInPlace": {
         "@type": "AdministrativeArea",
         "name": "Timiș County",
@@ -70,11 +84,23 @@ export const generateLocalBusinessSchema = () => ({
         },
       },
     },
-    {
-      "@type": "AdministrativeArea",
-      "name": "Județul Timiș",
-    },
   ],
+  // E-E-A-T: knowsAbout signals for GEO/LLM discoverability
+  "knowsAbout": [
+    "property management Timișoara",
+    "short-term rental management Romania",
+    "Airbnb management Timișoara",
+    "Booking.com management",
+    "regim hotelier Timișoara",
+    "investiții imobiliare Timișoara",
+    "ROI apartamente Timișoara",
+    "administrare apartamente",
+    "real estate investment Romania",
+    "vacation rental management",
+  ],
+  // Keywords for AI citation
+  "keywords": "apartamente regim hotelier Timișoara, Airbnb management, Booking management, investiții imobiliare, ROI 9.4%, administrare proprietăți",
+  "slogan": "Tu încasezi, noi ne ocupăm de tot.",
   "openingHoursSpecification": {
     "@type": "OpeningHoursSpecification",
     "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -125,6 +151,8 @@ export const generateLocalBusinessSchema = () => ({
       },
     ],
   },
+  // Payment methods accepted
+  "paymentAccepted": "Cash, Credit Card, Bank Transfer",
 });
 
 // Apartment/Property Schema
