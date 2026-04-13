@@ -108,10 +108,9 @@ const ImobiliareTimisoara = () => {
             </section>
           )}
 
-          {/* Neighborhood Grid - sortat după ROI descrescător */}
+          {/* Neighborhood Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {[...neighborhoods]
-              .sort((a, b) => a.avgPricePerSqm - b.avgPricePerSqm)
+            {neighborhoods
               .map((zone) => {
                 const liveCount = countsBySlug[zone.slug] || 0;
                 const totalCount = liveCount + zone.listingsCount;
