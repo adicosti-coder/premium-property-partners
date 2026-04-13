@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState, useEffect, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 
