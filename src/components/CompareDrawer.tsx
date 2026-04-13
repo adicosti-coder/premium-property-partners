@@ -29,14 +29,21 @@ const floorNumber = (floor: number | string): number => {
   return isNaN(n) ? 0 : n;
 };
 
-/** Estimate monthly rent based on room count (market averages for Timișoara) */
+/** Estimate monthly rent (classic) based on room count */
 const estimateMonthlyRent = (item: ComparableItem): number => {
-  if (item.badge === "administrare" || item.badge === "investitie") {
-    const map: Record<number, number> = { 1: 450, 2: 600, 3: 750 };
-    return map[item.rooms] ?? 500;
-  }
   const map: Record<number, number> = { 1: 300, 2: 400, 3: 520 };
   return map[item.rooms] ?? 350;
+};
+
+/** Estimate monthly revenue in hotel regime based on room count */
+const estimateHotelRevenue = (item: ComparableItem): number => {
+  if (item.estimatedRevenue) {
+    const parsed = parseInt(item.estimatedRevenue.replace(/[^\d]/g, ""), 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  // Fallback: Timișoara market averages
+  const map: Record<number, number> = { 1: 1350, 2: 1800, 3: 2250 };
+  return map[item.rooms] ?? 1500;
 };
 
 /** Find the best (min or max) value index among items */
