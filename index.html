@@ -100,7 +100,23 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static hero shell — painted instantly as LCP before React hydrates -->
+      <div id="hero-shell" style="position:relative;min-height:100dvh;display:flex;align-items:center;overflow:hidden;padding-top:7rem;background:#f7f5f0">
+        <img src="/images/hero-optimized-800w.webp" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" fetchpriority="high" decoding="sync" width="800" height="450" />
+        <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(247,245,240,0.85),rgba(247,245,240,0.45),transparent);z-index:1"></div>
+        <div style="position:relative;z-index:10;max-width:56rem;margin:0 auto;padding:5rem 1.5rem">
+          <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2.25rem,5vw,3.75rem);font-weight:600;color:#1e293b;line-height:1.1;margin-bottom:1.5rem">
+            Investești în imobiliare<br>
+            <span style="font-size:0.65em;font-style:italic;font-weight:400;opacity:0.9;display:block;margin:0.5rem 0">— noi îți construim o afacere la cheie, prin</span>
+            <span style="background:linear-gradient(135deg,#b8860b,#daa520);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">RealTrust & ApArt Hotel</span>
+          </h1>
+          <p style="font-family:'NotoSans',system-ui,sans-serif;font-size:clamp(1rem,2.5vw,1.25rem);color:#1e293b;max-width:42rem;margin-bottom:2rem;line-height:1.6">
+            De la achiziție la venit hotelier — 1 sistem complet, orientat spre randament
+          </p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
     
     <!-- GA4 deferred — loads after first paint to avoid blocking LCP/SI -->
@@ -118,9 +134,9 @@
           gtag('config', 'G-JXDGWL3G6V');
         }
         if ('requestIdleCallback' in window) {
-          requestIdleCallback(loadGA4, { timeout: 4000 });
+          requestIdleCallback(loadGA4, { timeout: 8000 });
         } else {
-          setTimeout(loadGA4, 3000);
+          setTimeout(loadGA4, 6000);
         }
       })();
     </script>
