@@ -47,7 +47,7 @@ const SmartWhatsApp = () => {
     <div
       ref={ref}
       className={cn(
-        "fixed bottom-6 right-4 z-40 transition-all duration-500 ease-out",
+        "fixed bottom-6 right-4 z-40 hidden md:block transition-all duration-500 ease-out",
         isVisible
           ? "opacity-100 translate-y-0 scale-100"
           : "opacity-0 translate-y-8 scale-75 pointer-events-none"
