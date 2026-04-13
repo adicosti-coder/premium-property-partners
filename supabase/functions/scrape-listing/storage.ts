@@ -15,7 +15,10 @@ export async function downloadAndUploadImage(
     const response = await fetch(imageUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RealTrust/1.0)' },
     });
-    if (!response.ok) return { storagePath: null, originalUrl: imageUrl };
+    if (!response.ok) {
+      console.warn(`Image fetch returned ${response.status} for ${imageUrl}; using original URL as fallback.`);
+      return { storagePath: imageUrl, originalUrl: imageUrl };
+    }
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
@@ -31,7 +34,7 @@ export async function downloadAndUploadImage(
 
     if (error) {
       console.error(`Upload error for image ${index}:`, error.message);
-      return { storagePath: null, originalUrl: imageUrl };
+      return { storagePath: imageUrl, originalUrl: imageUrl };
     }
 
     const { data: publicUrl } = supabase.storage
@@ -41,7 +44,7 @@ export async function downloadAndUploadImage(
     return { storagePath: publicUrl?.publicUrl || null, originalUrl: imageUrl };
   } catch (err) {
     console.error(`Failed to download/upload image ${index}:`, err);
-    return { storagePath: null, originalUrl: imageUrl };
+    return { storagePath: imageUrl, originalUrl: imageUrl };
   }
 }
 
