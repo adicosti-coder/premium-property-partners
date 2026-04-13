@@ -320,7 +320,7 @@ const CompareDrawer = () => {
 
       {/* Comparison Table Drawer */}
       {expanded && canCompare && (
-        <div className="fixed inset-x-0 bottom-0 z-[55] bg-card border-t border-border shadow-2xl rounded-t-2xl max-h-[60vh] overflow-auto animate-in slide-in-from-bottom duration-300 pb-[70px] md:pb-0">
+        <div className="fixed inset-x-0 bottom-0 z-[55] bg-card border-t border-border shadow-2xl rounded-t-2xl max-h-[60vh] overflow-y-auto overflow-x-hidden animate-in slide-in-from-bottom duration-300 pb-[70px] md:pb-0">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h3 className="font-semibold text-foreground text-lg">
