@@ -81,9 +81,9 @@ const ImobiliareTimisoara = () => {
                 {/* Image placeholder */}
                 <div className="h-40 bg-gradient-to-br from-primary/10 via-muted/30 to-muted/50 flex items-center justify-center relative">
                   <Building2 className="w-12 h-12 text-primary/30" />
-                  <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground">
-                    {zone.listingsCount} anunțuri
-                  </div>
+                    <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground">
+                      {(countsBySlug[zone.slug] || 0) + zone.listingsCount} anunțuri
+                    </div>
                 </div>
 
                 <div className="p-5 space-y-3">
