@@ -533,7 +533,25 @@ const PropertyDetail = () => {
         },
       }),
     },
-    // FAQPage Schema — now handled by useFAQSchema context (no inline injection)
+    // RealEstateListing schema from generatePropertySEO utility
+    ...(dbProperty ? generatePropertySEO({
+      name: displayName,
+      slug: slug || "",
+      location: dbProperty.location || property.location,
+      bedrooms: dbProperty.bedrooms ?? property.bedrooms,
+      size: dbProperty.size ?? property.size,
+      floor: dbProperty.floor,
+      roi_percentage: dbProperty.roi_percentage,
+      capital_necesar: dbProperty.capital_necesar,
+      listing_type: dbProperty.listing_type,
+      year_built: dbProperty.year_built,
+      base_price_per_night: dbProperty.base_price_per_night,
+      capacity: property.capacity,
+      latitude: resolvedCoordinates?.[1],
+      longitude: resolvedCoordinates?.[0],
+      booking_rating: dbProperty.booking_rating,
+      booking_review_count: dbProperty.booking_review_count,
+    }).jsonLd : []),
   ];
 
   // FAQ items are registered by PropertyFAQ component only
