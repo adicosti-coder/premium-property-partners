@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 import { useImagePreload } from "@/hooks/useImagePreload";
 import { Property, getImageAlt } from "@/data/properties";
+import { generatePropertyImageAlt } from "@/utils/generatePropertySEO";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface PropertyImageCarouselProps {
@@ -112,7 +113,7 @@ const PropertyImageCarousel = ({ images, propertyName, property, className = "" 
               )}
               <OptimizedImage
                 src={image}
-                alt={property ? getImageAlt(property, index, language as 'ro' | 'en') : `${propertyName} — fotografie ${index + 1}, cazare regim hotelier Timișoara`}
+                alt={property ? getImageAlt(property, index, language as 'ro' | 'en') : generatePropertyImageAlt(propertyName, propertyName, index, displayImages.length)}
                 className="w-full h-56"
                 aspectRatio="16/9"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
