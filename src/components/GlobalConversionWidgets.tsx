@@ -13,7 +13,7 @@ const AIChatbot = lazy(() => import("@/components/AIChatbot"));
 const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
 const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
 const ReferralPopup = lazy(() => import("@/components/ReferralPopup"));
-const FloatingWhatsApp = lazy(() => import("@/components/SmartWhatsApp"));
+
 const InlineCalculatorPopup = lazy(() => import("@/components/InlineCalculatorPopup"));
 const FeedbackBanner = lazy(() => import("@/components/FeedbackBanner"));
 
@@ -95,7 +95,7 @@ const GlobalConversionWidgets = ({
       {/* Phase 2: engagement widgets after 4s */}
       {phase2Ready && (
         <Suspense fallback={null}>
-          <FloatingWhatsApp />
+          
           <PWAInstallPrompt />
           {showChatbot && <AIChatbot />}
           {showVoiceWidget && <ElevenLabsWidgetLazy />}
