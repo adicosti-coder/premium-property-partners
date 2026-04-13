@@ -1,9 +1,27 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import type { MockListing } from "@/data/neighborhoods";
+
+/**
+ * Unified comparable item – works for both static MockListings
+ * and real DB properties (NeighborhoodProperty).
+ */
+export interface ComparableItem {
+  id: string;
+  title: string;
+  price: number;
+  pricePerSqm: number;
+  rooms: number;
+  floor: number | string;
+  surface: number;
+  badge: "administrare" | "vanzare" | "investitie";
+  imageAlt: string;
+  slug?: string | null;
+  roi?: string | null;
+  estimatedRevenue?: string | null;
+}
 
 interface CompareContextType {
-  items: MockListing[];
-  add: (listing: MockListing) => void;
+  items: ComparableItem[];
+  add: (item: ComparableItem) => void;
   remove: (id: string) => void;
   clear: () => void;
   has: (id: string) => boolean;
@@ -12,12 +30,12 @@ interface CompareContextType {
 const CompareContext = createContext<CompareContextType | null>(null);
 
 export const CompareProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<MockListing[]>([]);
+  const [items, setItems] = useState<ComparableItem[]>([]);
 
-  const add = useCallback((listing: MockListing) => {
+  const add = useCallback((item: ComparableItem) => {
     setItems((prev) => {
-      if (prev.length >= 3 || prev.some((p) => p.id === listing.id)) return prev;
-      return [...prev, listing];
+      if (prev.length >= 3 || prev.some((p) => p.id === item.id)) return prev;
+      return [...prev, item];
     });
   }, []);
 

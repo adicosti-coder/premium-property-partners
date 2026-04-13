@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useCompare } from "@/contexts/CompareContext";
+import { useCompare, type ComparableItem } from "@/contexts/CompareContext";
 import { X, GitCompareArrows, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -12,17 +12,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { MockListing } from "@/data/neighborhoods";
+
+/** Parse floor to display string */
+const parseFloor = (floor: number | string): string => {
+  if (typeof floor === "string") {
+    if (floor === "0" || floor.toLowerCase() === "parter") return "Parter";
+    return `Etaj ${floor}`;
+  }
+  return floor === 0 ? "Parter" : `Etaj ${floor}`;
+};
+
+/** Parse floor to number for comparison */
+const floorNumber = (floor: number | string): number => {
+  if (typeof floor === "number") return floor;
+  const n = parseInt(floor, 10);
+  return isNaN(n) ? 0 : n;
+};
 
 /** Estimate monthly rent based on room count (market averages for Timișoara) */
-const estimateMonthlyRent = (listing: MockListing): number => {
-  if (listing.badge === "administrare") {
-    // RealTrust-managed → higher yields via hotel regime
+const estimateMonthlyRent = (item: ComparableItem): number => {
+  if (item.badge === "administrare" || item.badge === "investitie") {
     const map: Record<number, number> = { 1: 450, 2: 600, 3: 750 };
-    return map[listing.rooms] ?? 500;
+    return map[item.rooms] ?? 500;
   }
   const map: Record<number, number> = { 1: 300, 2: 400, 3: 520 };
-  return map[listing.rooms] ?? 350;
+  return map[item.rooms] ?? 350;
 };
 
 /** Find the best (min or max) value index among items */
@@ -61,15 +75,15 @@ const CompareDrawer = () => {
   const rents = items.map(estimateMonthlyRent);
   const rois = items.map((l, i) => ((rents[i] * 12) / l.price) * 100);
 
-  const openWhatsApp = (listing: MockListing) => {
+  const openWhatsApp = (item: ComparableItem) => {
     const msg = encodeURIComponent(
-      `Bună ziua, sunt interesat de proprietatea "${listing.title}" văzută pe realtrust.ro`
+      `Bună ziua, sunt interesat de proprietatea "${item.title}" văzută pe realtrust.ro`
     );
     window.open(`https://wa.me/40744488844?text=${msg}`, "_blank");
     if (typeof window.gtag === "function") {
       window.gtag("event", "contact_click", {
         method: "whatsapp",
-        property_name: listing.title,
+        property_name: item.title,
         page_path: window.location.pathname,
       });
     }
@@ -88,7 +102,7 @@ const CompareDrawer = () => {
   const rows = [
     {
       label: "Preț",
-      render: (l: MockListing, idx: number) => (
+      render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, priceBest)}>
           {l.price.toLocaleString("ro-RO")} €
         </span>
@@ -96,7 +110,7 @@ const CompareDrawer = () => {
     },
     {
       label: "Preț/mp",
-      render: (l: MockListing, idx: number) => (
+      render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, priceSqmBest)}>
           {l.pricePerSqm.toLocaleString("ro-RO")} €/mp
         </span>
@@ -104,18 +118,18 @@ const CompareDrawer = () => {
     },
     {
       label: "Suprafață",
-      render: (l: MockListing, idx: number) => (
+      render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, surfaceBest)}>{l.surface} mp</span>
       ),
     },
     {
       label: "Etaj",
-      render: (l: MockListing) => (l.floor === 0 ? "Parter" : `Etaj ${l.floor}`),
+      render: (l: ComparableItem) => parseFloor(l.floor),
     },
-    { label: "Camere", render: (l: MockListing) => `${l.rooms}` },
+    { label: "Camere", render: (l: ComparableItem) => `${l.rooms}` },
     {
       label: "Venit lunar estimat",
-      render: (_l: MockListing, idx: number) => (
+      render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, rentBest))}>
           {rents[idx]} € / lună
         </span>
@@ -123,7 +137,7 @@ const CompareDrawer = () => {
     },
     {
       label: "Randament anual (ROI)",
-      render: (_l: MockListing, idx: number) => (
+      render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, roiBest))}>
           {rois[idx].toFixed(1)}%
         </span>
@@ -131,8 +145,8 @@ const CompareDrawer = () => {
     },
     {
       label: "Administrare RealTrust",
-      render: (l: MockListing) =>
-        l.badge === "administrare" ? (
+      render: (l: ComparableItem) =>
+        l.badge === "administrare" || l.badge === "investitie" ? (
           <div>
             <div className="flex items-center gap-1">
               <span className="text-amber-500">✓</span>

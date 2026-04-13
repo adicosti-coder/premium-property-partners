@@ -1,8 +1,21 @@
 import { Building2, Layers, Maximize, MapPin, GitCompareArrows } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useCompare } from "@/contexts/CompareContext";
+import { useCompare, type ComparableItem } from "@/contexts/CompareContext";
 import { cn } from "@/lib/utils";
 import type { MockListing } from "@/data/neighborhoods";
+
+/** Convert MockListing → ComparableItem */
+const toComparable = (listing: MockListing): ComparableItem => ({
+  id: listing.id,
+  title: listing.title,
+  price: listing.price,
+  pricePerSqm: listing.pricePerSqm,
+  rooms: listing.rooms,
+  floor: listing.floor,
+  surface: listing.surface,
+  badge: listing.badge,
+  imageAlt: listing.imageAlt,
+});
 
 const NeighborhoodPropertyCard = ({ listing }: { listing: MockListing }) => {
   const { add, remove, has } = useCompare();
@@ -61,7 +74,7 @@ const NeighborhoodPropertyCard = ({ listing }: { listing: MockListing }) => {
       {/* Compare button */}
       <div className="px-5 pb-4">
         <button
-          onClick={() => (isCompared ? remove(listing.id) : add(listing))}
+          onClick={() => (isCompared ? remove(listing.id) : add(toComparable(listing)))}
           className={cn(
             "w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all border",
             isCompared
