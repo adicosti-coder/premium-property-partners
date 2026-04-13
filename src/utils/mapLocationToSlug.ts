@@ -4,8 +4,8 @@
  */
 
 const KEYWORD_MAP: { keywords: string[]; slug: string }[] = [
-  { keywords: ["isho", "i should have one"], slug: "isho" },
-  { keywords: ["aradului", "iulius", "torontalului", "openville", "vivalia", "zimbrului", "vox park", "take ionescu", "take-ionescu", "bucuresti"], slug: "zona-aradului" },
+  { keywords: ["isho", "i should have one", "vivalia", "take ionescu", "take-ionescu", "bucuresti", "fabric"], slug: "isho" },
+  { keywords: ["aradului", "iulius", "torontalului", "openville", "zimbrului", "vox park"], slug: "zona-aradului" },
   { keywords: ["girocului", "soarelui", "martirilor", "urseni"], slug: "zona-girocului" },
   { keywords: ["complex", "studentesc", "studențesc", "uvt", "politehnica", "universitate", "medicina", "dambovita"], slug: "complex-studentesc" },
   { keywords: ["sagului", "șagului", "steaua", "europa"], slug: "sagului" },
