@@ -403,7 +403,7 @@ const CompareDrawer = () => {
                       <TableCell className="font-medium text-muted-foreground text-sm sticky left-0 z-10 bg-card">
                         {row.label}
                       </TableCell>
-                      {items.map((item, idx) => (
+                      {effectiveItems.map((item, idx) => (
                         <TableCell key={item.id} className="text-sm">
                           {row.render(item, idx)}
                         </TableCell>
