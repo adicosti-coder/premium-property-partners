@@ -32,10 +32,16 @@ const estimateMonthlyRent = (item: ComparableItem): number => {
   return map[item.rooms] ?? 350;
 };
 
+/** Parse Romanian-formatted number like "1.314,18" or "1.350 €" */
+const parseRomanianNumber = (str: string): number => {
+  const cleaned = str.replace(/[€\s]/g, "").replace(/\./g, "").replace(",", ".");
+  return parseFloat(cleaned) || 0;
+};
+
 const estimateHotelRevenue = (item: ComparableItem): number => {
   if (item.estimatedRevenue) {
-    const parsed = parseInt(item.estimatedRevenue.replace(/[^\d]/g, ""), 10);
-    if (!isNaN(parsed) && parsed > 0) return parsed;
+    const parsed = parseRomanianNumber(item.estimatedRevenue);
+    if (parsed > 0 && parsed < 100000) return Math.round(parsed);
   }
   const map: Record<number, number> = { 1: 1350, 2: 1800, 3: 2250 };
   return map[item.rooms] ?? 1500;
