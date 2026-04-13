@@ -1,84 +1,123 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, TrendingUp, ArrowRight } from "lucide-react";
+import { MapPin, TrendingUp, ArrowRight, Building2, Star } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
+import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
   const { language } = useLanguage();
+  const { countsBySlug, isLoading } = useNeighborhoodProperties();
 
   return (
-    <section className="w-full bg-background py-8 md:py-12 lg:py-16">
+    <section className="w-full bg-gradient-to-b from-background to-muted/30 py-10 md:py-16 lg:py-20">
       <div className="container mx-auto px-4 md:px-6 lg:px-8 xl:px-12">
         {/* Section Header */}
-        <div className="text-center mb-6 md:mb-8">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-2">
-            {language === "ro" 
-              ? "Apartamente pe cartiere în Timișoara" 
-              : "Apartments by Neighborhood in Timișoara"}
+        <div className="text-center mb-8 md:mb-12">
+          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary mb-2">
+            {language === "ro" ? "Explorează Timișoara" : "Explore Timișoara"}
+          </span>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-foreground mb-3">
+            {language === "ro"
+              ? "Apartamente pe Cartiere"
+              : "Apartments by Neighborhood"}
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             {language === "ro"
-              ? "Explorează proprietățile disponibile în cele mai căutate zone"
-              : "Explore properties available in the most sought-after areas"}
+              ? "Prețuri actualizate, proprietăți verificate și randamente estimate pentru cele mai căutate zone din Timișoara."
+              : "Updated prices, verified properties, and estimated yields for the most sought-after areas in Timișoara."}
           </p>
         </div>
 
-        {/* Grid of 7 Neighborhood Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-          {neighborhoods.map((neighborhood) => (
-            <Link
-              key={neighborhood.slug}
-              to={`/imobiliare-timisoara/${neighborhood.slug}`}
-              className="group block"
-              aria-label={`${neighborhood.fullName} - ${neighborhood.avgPricePerSqm} €/mp`}
-            >
-              <Card className="h-full transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:-translate-y-0.5 bg-card border-border">
-                <CardContent className="p-3 md:p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                        <h3 className="font-semibold text-sm md:text-base text-foreground truncate">
-                          {neighborhood.fullName}
-                        </h3>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                        <TrendingUp className="w-3 h-3" />
-                        <span>
-                          {neighborhood.avgPricePerSqm.toLocaleString()} €/mp
-                        </span>
-                        <span className="mx-1">·</span>
-                        <span>
-                          {neighborhood.listingsCount} {language === "ro" ? "proprietăți" : "properties"}
-                        </span>
-                      </div>
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+          {neighborhoods.map((n) => {
+            const realCount = countsBySlug[n.slug] || 0;
+            const displayCount = realCount > 0 ? realCount : n.listingsCount;
 
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                        {neighborhood.description.slice(0, 80)}...
-                      </p>
+            return (
+              <Link
+                key={n.slug}
+                to={`/imobiliare-timisoara/${n.slug}`}
+                className="group relative block rounded-2xl overflow-hidden border border-border bg-card hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                aria-label={`${n.fullName} — ${n.avgPricePerSqm} €/mp`}
+              >
+                {/* Top gradient banner */}
+                <div className="h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center justify-center relative">
+                  <Building2 className="w-10 h-10 text-primary/20" />
 
-                      <div className="flex items-center text-xs font-medium text-primary group-hover:text-primary/80 transition-colors">
-                        <span>{language === "ro" ? "Vezi apartamente" : "View apartments"}</span>
-                        <ArrowRight className="w-3 h-3 ml-1 transition-transform group-hover:translate-x-0.5" />
-                      </div>
-                    </div>
+                  {/* Live count badge */}
+                  <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-[10px] font-bold text-primary border border-primary/20">
+                    {isLoading ? "..." : displayCount}{" "}
+                    {language === "ro" ? "anunțuri" : "listings"}
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+
+                  {/* ROI indicator for premium zones */}
+                  {n.avgPricePerSqm >= 1900 && (
+                    <div className="absolute top-3 left-3 bg-amber-500/90 text-white rounded-full px-2.5 py-1 text-[10px] font-bold flex items-center gap-1">
+                      <Star className="w-3 h-3" />
+                      Premium
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                    <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">
+                      {n.fullName}
+                    </h3>
+                  </div>
+
+                  {/* Price bar */}
+                  <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-sm font-bold text-foreground">
+                        {n.avgPricePerSqm.toLocaleString("ro-RO")} €/mp
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
+                      {language === "ro" ? "Preț mediu" : "Avg. price"}
+                    </span>
+                  </div>
+
+                  {/* Description snippet */}
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    {n.description.slice(0, 90)}...
+                  </p>
+
+                  {/* CTA */}
+                  <div className="flex items-center text-xs font-semibold text-primary pt-1 group-hover:gap-2 transition-all">
+                    <span>
+                      {language === "ro"
+                        ? "Vezi apartamente"
+                        : "View apartments"}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
-        {/* View All Link */}
-        <div className="text-center mt-6">
+        {/* View All */}
+        <div className="text-center mt-8">
           <Link
             to="/imobiliare-timisoara"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-            aria-label={language === "ro" ? "Vezi toate cartierele" : "View all neighborhoods"}
+            className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm px-6 py-3 rounded-full transition-colors"
+            aria-label={
+              language === "ro"
+                ? "Vezi toate cartierele"
+                : "View all neighborhoods"
+            }
           >
-            <span>{language === "ro" ? "Vezi toate cartierele" : "View all neighborhoods"}</span>
+            <span>
+              {language === "ro"
+                ? "Toate cartierele din Timișoara"
+                : "All neighborhoods"}
+            </span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
