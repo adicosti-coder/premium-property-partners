@@ -7,13 +7,21 @@ const DesktopStickyContactBar = () => {
   const { t } = useLanguage();
   const { trackCall, trackWhatsApp, trackEmail } = useCtaAnalytics();
 
+  const fireContactClick = (method: string) => {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "contact_click", { method, page_path: window.location.pathname });
+    }
+  };
+
   const handleCall = () => {
     trackCall();
+    fireContactClick("phone");
     window.location.href = "tel:+40723154520";
   };
 
   const handleWhatsApp = () => {
     trackWhatsApp();
+    fireContactClick("whatsapp");
     const message = encodeURIComponent(t.floatingWhatsapp.message);
     window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
   };

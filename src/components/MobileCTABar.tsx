@@ -20,15 +20,23 @@ const MobileCTABar = () => {
   
   const t = translations[language as keyof typeof translations] || translations.ro;
 
+  const fireContactClick = (method: string) => {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "contact_click", { method, page_path: window.location.pathname });
+    }
+  };
+
   const handleCall = () => {
     lightTap();
     trackCall();
+    fireContactClick("phone");
     window.location.href = "tel:+40723154520";
   };
 
   const handleWhatsApp = () => {
     lightTap();
     trackWhatsApp();
+    fireContactClick("whatsapp");
     const message = encodeURIComponent(language === 'ro' 
       ? "Bună! Sunt interesat de serviciile RealTrust." 
       : "Hello! I'm interested in RealTrust services.");
