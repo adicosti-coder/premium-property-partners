@@ -2,6 +2,9 @@
  * Custom Vite plugin that generates static HTML files for SEO-critical routes
  * at build time. Uses neighborhoods.ts as the Single Source of Truth for
  * neighborhood data (slugs, titles, descriptions, FAQs).
+ * 
+ * Also fetches active property listings from the database to generate
+ * individual static HTML files for each property URL.
  */
 import type { Plugin } from 'vite';
 import fs from 'fs';
@@ -17,6 +20,8 @@ interface PrerenderRoute {
 }
 
 const BASE_URL = 'https://www.realtrust.ro';
+const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8';
 
 /**
  * Neighborhood data mirrored from src/data/neighborhoods.ts.
@@ -52,7 +57,130 @@ const neighborhoods = [
   ]},
 ];
 
-function buildRoutes(): PrerenderRoute[] {
+interface DbProperty {
+  slug: string;
+  name: string;
+  location: string;
+  bedrooms: number | null;
+  size: number | null;
+  floor: string | null;
+  roi_percentage: string | null;
+  capital_necesar: number | null;
+  listing_type: string | null;
+  year_built: number | null;
+  base_price_per_night: number | null;
+}
+
+/**
+ * Fetches active properties with slugs from the database at build time.
+ */
+async function fetchActiveProperties(): Promise<DbProperty[]> {
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night&order=display_order.asc`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    if (!res.ok) {
+      console.warn(`[prerender-seo] Failed to fetch properties: ${res.status}`);
+      return [];
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[prerender-seo] Could not fetch properties from DB:', err);
+    return [];
+  }
+}
+
+/**
+ * Extracts a clean zone from location.
+ */
+function extractZone(location: string): string {
+  if (!location || location.startsWith('http')) return 'Timișoara';
+  return location.replace(/,?\s*(Timișoara|Timisoara|Timiș|Timis)\s*/gi, '').replace(/^Strada\s+/i, 'Str. ').trim() || 'Timișoara';
+}
+
+function getPropertyType(bedrooms: number | null): string {
+  if (bedrooms === 1) return 'Garsonieră';
+  if (bedrooms && bedrooms >= 2) return `Apartament ${bedrooms} camere`;
+  return 'Apartament';
+}
+
+function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
+  return properties.map((p) => {
+    const zone = extractZone(p.location);
+    const type = getPropertyType(p.bedrooms);
+    const rooms = p.bedrooms || 1;
+    const pricePart = p.capital_necesar
+      ? `${p.capital_necesar.toLocaleString('ro-RO')}€`
+      : p.base_price_per_night
+      ? `${p.base_price_per_night}€/noapte`
+      : '';
+
+    const title = pricePart
+      ? `${type} în ${zone}, Timișoara | ${pricePart} | RealTrust`
+      : `${type} în ${zone}, Timișoara | RealTrust`;
+
+    const descParts: string[] = [];
+    descParts.push(`Descoperă acest ${type.toLowerCase()} situat în ${zone}`);
+    if (p.floor) descParts[0] += `, etaj ${p.floor}`;
+    descParts[0] += '.';
+    if (p.roi_percentage) {
+      descParts.push(`Ideal pentru investiție cu un randament estimat de ${p.roi_percentage}.`);
+    }
+    descParts.push('Administrare prin RealTrust inclusă.');
+    const description = descParts.join(' ').slice(0, 160);
+
+    const canonical = `${BASE_URL}/proprietate/${p.slug}`;
+
+    return {
+      path: `/proprietate/${p.slug}`,
+      title,
+      description,
+      h1: `${type} de vânzare în ${zone}, Timișoara`,
+      canonical,
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateListing',
+          name: p.name,
+          url: canonical,
+          description,
+          ...(p.capital_necesar && { price: p.capital_necesar, priceCurrency: 'EUR' }),
+          numberOfRooms: rooms,
+          ...(p.size && { floorSize: { '@type': 'QuantitativeValue', value: p.size, unitCode: 'MTK' } }),
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Timișoara',
+            addressRegion: 'Timiș',
+            addressCountry: 'RO',
+            ...(zone !== 'Timișoara' && { streetAddress: zone }),
+          },
+          ...(p.year_built && { yearBuilt: p.year_built }),
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: p.name,
+          description,
+          url: canonical,
+          brand: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'EUR',
+            price: p.capital_necesar || p.base_price_per_night || 0,
+            availability: 'https://schema.org/InStock',
+            url: canonical,
+          },
+        },
+      ],
+    };
+  });
+}
+
+function buildStaticRoutes(): PrerenderRoute[] {
   const routes: PrerenderRoute[] = [];
 
   // Index page
@@ -73,7 +201,7 @@ function buildRoutes(): PrerenderRoute[] {
     },
   });
 
-  // Neighborhood pages — derived from the canonical neighborhoods array
+  // Neighborhood pages
   for (const n of neighborhoods) {
     const faqSchema = n.faq.length > 0 ? {
       '@context': 'https://schema.org',
@@ -225,11 +353,21 @@ export default function vitePrerenderSeo(): Plugin {
         }
 
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const routes = buildRoutes();
+        
+        // Build static routes (neighborhoods, calculators, etc.)
+        const staticRoutes = buildStaticRoutes();
+        
+        // Fetch property routes from database
+        console.log('[prerender-seo] Fetching active properties from database...');
+        const properties = await fetchActiveProperties();
+        const propertyRoutes = buildPropertyRoutes(properties);
+        console.log(`[prerender-seo] Found ${properties.length} active properties with slugs`);
+        
+        const allRoutes = [...staticRoutes, ...propertyRoutes];
 
-        console.log(`[prerender-seo] Generating ${routes.length} static HTML files...`);
+        console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
 
-        for (const route of routes) {
+        for (const route of allRoutes) {
           const dirPath = path.join(outDir, route.path);
           fs.mkdirSync(dirPath, { recursive: true });
 
@@ -240,7 +378,7 @@ export default function vitePrerenderSeo(): Plugin {
           console.log(`  ✓ ${route.path}/index.html`);
         }
 
-        console.log(`[prerender-seo] Done — ${routes.length} pages prerendered`);
+        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} properties)`);
       },
     },
   };
