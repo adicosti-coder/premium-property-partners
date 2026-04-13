@@ -29,14 +29,21 @@ const floorNumber = (floor: number | string): number => {
   return isNaN(n) ? 0 : n;
 };
 
-/** Estimate monthly rent based on room count (market averages for Timișoara) */
+/** Estimate monthly rent (classic) based on room count */
 const estimateMonthlyRent = (item: ComparableItem): number => {
-  if (item.badge === "administrare" || item.badge === "investitie") {
-    const map: Record<number, number> = { 1: 450, 2: 600, 3: 750 };
-    return map[item.rooms] ?? 500;
-  }
   const map: Record<number, number> = { 1: 300, 2: 400, 3: 520 };
   return map[item.rooms] ?? 350;
+};
+
+/** Estimate monthly revenue in hotel regime based on room count */
+const estimateHotelRevenue = (item: ComparableItem): number => {
+  if (item.estimatedRevenue) {
+    const parsed = parseInt(item.estimatedRevenue.replace(/[^\d]/g, ""), 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  // Fallback: Timișoara market averages
+  const map: Record<number, number> = { 1: 1350, 2: 1800, 3: 2250 };
+  return map[item.rooms] ?? 1500;
 };
 
 /** Find the best (min or max) value index among items */
@@ -74,6 +81,8 @@ const CompareDrawer = () => {
 
   const rents = items.map(estimateMonthlyRent);
   const rois = items.map((l, i) => ((rents[i] * 12) / l.price) * 100);
+  const hotelRevs = items.map(estimateHotelRevenue);
+  const hotelRois = items.map((l, i) => ((hotelRevs[i] * 12) / l.price) * 100);
 
   const openWhatsApp = (item: ComparableItem) => {
     const msg = encodeURIComponent(
@@ -95,6 +104,9 @@ const CompareDrawer = () => {
   const roiBest = bestIndex(rois, "max");
   const rentBest = bestIndex(rents, "max");
   const surfaceBest = bestIndex(items.map((l) => l.surface), "max");
+
+  const hotelRevBest = bestIndex(hotelRevs, "max");
+  const hotelRoiBest = bestIndex(hotelRois, "max");
 
   const highlight = (idx: number, bestIdx: number) =>
     idx === bestIdx ? "text-green-600 font-bold" : "";
@@ -128,7 +140,7 @@ const CompareDrawer = () => {
     },
     { label: "Camere", render: (l: ComparableItem) => `${l.rooms}` },
     {
-      label: "Venit lunar estimat",
+      label: "Chirie clasică estimată",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, rentBest))}>
           {rents[idx]} € / lună
@@ -136,7 +148,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Randament anual (ROI)",
+      label: "ROI chirie clasică",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, roiBest))}>
           {rois[idx].toFixed(1)}%
@@ -144,20 +156,35 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Administrare RealTrust",
+      label: "Chirie regim hotelier",
+      render: (_l: ComparableItem, idx: number) => (
+        <span className={cn("font-semibold text-primary", highlight(idx, hotelRevBest))}>
+          {hotelRevs[idx].toLocaleString("ro-RO")} € / lună
+        </span>
+      ),
+    },
+    {
+      label: "ROI regim hotelier",
+      render: (_l: ComparableItem, idx: number) => (
+        <span className={cn("font-bold text-primary", highlight(idx, hotelRoiBest))}>
+          {hotelRois[idx].toFixed(1)}%
+        </span>
+      ),
+    },
+    {
+      label: "Recomandat",
       render: (l: ComparableItem) =>
         l.badge === "administrare" || l.badge === "investitie" ? (
           <div>
             <div className="flex items-center gap-1">
               <span className="text-amber-500">✓</span>
-              <Badge className="bg-amber-500/15 text-amber-700 border-amber-300 text-xs">Da</Badge>
+              <Badge className="bg-primary/15 text-primary border-primary/30 text-[10px] leading-tight whitespace-normal">
+                Administrare RealTrust‑ApArt Hotel
+              </Badge>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
-              Management Complet Inclus
-            </p>
           </div>
         ) : (
-          <Badge variant="secondary" className="text-xs">Nu</Badge>
+          <Badge variant="secondary" className="text-xs">Standard</Badge>
         ),
     },
   ];
