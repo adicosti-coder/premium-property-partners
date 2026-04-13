@@ -951,6 +951,56 @@ export const generatePropertyPageSchemas = (
   return schemas;
 };
 
+// Standalone Organization schema for E-E-A-T signals
+export const generateOrganizationSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${BASE_URL}/#org`,
+  "name": "RealTrust & ApArt Hotel Timișoara",
+  "alternateName": ["RealTrust Imobiliare", "ApArt Hotel"],
+  "url": BASE_URL,
+  "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,
+  "foundingDate": "2001",
+  "description": "Agenție imobiliară și companie de administrare apartamente în regim hotelier din Timișoara, cu 25+ ani experiență și 60+ proprietăți gestionate.",
+  "sameAs": [
+    "https://www.facebook.com/realtrust.ro",
+    "https://www.instagram.com/realtrust_timisoara",
+    "https://www.booking.com",
+  ],
+  "contactPoint": [
+    {
+      "@type": "ContactPoint",
+      "telephone": "+40723154520",
+      "contactType": "customer service",
+      "availableLanguage": ["Romanian", "English"],
+      "areaServed": "RO",
+    },
+    {
+      "@type": "ContactPoint",
+      "telephone": "+40744488844",
+      "contactType": "sales",
+      "availableLanguage": ["Romanian", "English"],
+      "areaServed": "RO",
+    },
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+    "addressLocality": "Timișoara",
+    "addressRegion": "Timiș",
+    "postalCode": "300125",
+    "addressCountry": "RO",
+  },
+  "knowsAbout": [
+    "property management",
+    "short-term rentals",
+    "real estate investment",
+    "Airbnb management",
+    "Booking.com management",
+    "vacation rental ROI",
+  ],
+});
+
 // Homepage combined schema with reviews from database
 export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
   const lodgingBusiness = generateLocalBusinessSchema();
@@ -970,6 +1020,7 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
 
   const schemas: Record<string, unknown>[] = [
     lodgingBusiness,
+    generateOrganizationSchema(),
     generateWebSiteSchema(),
   ];
 
