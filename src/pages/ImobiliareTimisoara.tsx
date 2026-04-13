@@ -6,12 +6,14 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { neighborhoods } from "@/data/neighborhoods";
+import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { lazy, Suspense } from "react";
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const ImobiliareTimisoara = () => {
+  const { countsBySlug } = useNeighborhoodProperties();
   const breadcrumbItems = [
     { label: "Acasă", href: "/" },
     { label: "Imobiliare Timișoara" },
@@ -79,9 +81,9 @@ const ImobiliareTimisoara = () => {
                 {/* Image placeholder */}
                 <div className="h-40 bg-gradient-to-br from-primary/10 via-muted/30 to-muted/50 flex items-center justify-center relative">
                   <Building2 className="w-12 h-12 text-primary/30" />
-                  <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground">
-                    {zone.listingsCount} anunțuri
-                  </div>
+                    <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground">
+                      {(countsBySlug[zone.slug] || 0) + zone.listingsCount} anunțuri
+                    </div>
                 </div>
 
                 <div className="p-5 space-y-3">
