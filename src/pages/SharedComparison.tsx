@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import Navbar from "@/components/Navbar";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const parseFloor = (floor: number | string): string => {
@@ -59,8 +59,6 @@ const SharedComparison = () => {
         .single();
       if (data?.items) {
         setItems(data.items as unknown as ComparableItem[]);
-        // increment view count
-        await supabase.rpc("increment_comparison_views" as any, { p_code: shareCode }).catch(() => {});
       } else {
         setError(true);
       }
@@ -139,7 +137,7 @@ const SharedComparison = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Header />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center gap-3 mb-6">
           <GitCompareArrows className="w-6 h-6 text-primary" />
