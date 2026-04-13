@@ -97,6 +97,7 @@ const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
+const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
@@ -168,10 +169,10 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
+              <CompareProvider>
               <ScrollToTop />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
-                  <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/admin" element={<Admin />} />
