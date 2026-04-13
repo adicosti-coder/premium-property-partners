@@ -210,11 +210,11 @@ const CompareDrawer = () => {
     }
   };
 
-  const priceBest = bestIndex(items.map((l) => l.price), "min");
-  const priceSqmBest = bestIndex(items.map((l) => l.pricePerSqm), "min");
+  const priceBest = bestIndex(effectiveItems.map((l) => l.price), "min");
+  const priceSqmBest = bestIndex(effectiveItems.map((l) => l.pricePerSqm), "min");
   const roiBest = bestIndex(rois, "max");
   const rentBest = bestIndex(rents, "max");
-  const surfaceBest = bestIndex(items.map((l) => l.surface), "max");
+  const surfaceBest = bestIndex(effectiveItems.map((l) => l.surface), "max");
   const hotelRevBest = bestIndex(hotelRevs, "max");
   const hotelRoiBest = bestIndex(hotelRois, "max");
 
