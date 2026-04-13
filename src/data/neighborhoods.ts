@@ -29,6 +29,58 @@ export interface NeighborhoodData {
 }
 
 export const neighborhoods: NeighborhoodData[] = [
+  // ═══════════════════════════════════════════════════════════════
+  // ZONE PREMIUM (avgPricePerSqm >= 1900€) — apar primele
+  // ═══════════════════════════════════════════════════════════════
+  {
+    slug: 'isho',
+    name: 'ISHO',
+    fullName: 'ISHO & Fabric',
+    avgPricePerSqm: 2150,
+    listingsCount: 5,
+    description:
+      'ISHO (I Should Have One) este cel mai iconic proiect de regenerare urbană din Timișoara, dezvoltat pe fosta platformă industrială din cartierul Fabric. Complexul mixed-use include apartamente premium, birouri, spații comerciale și restaurante, toate proiectate de arhitecți de renume. Zona Fabric, cu atmosfera sa boemiană și proximitatea de malul Begăi, atrage profesioniști creativi, expați și investitori care caută proprietăți cu apreciere rapidă. Accesul pietonal spre centrul vechi durează 10 minute. Prețurile sunt cele mai ridicate din Timișoara, reflectând calitatea construcției și locația unică. Profilul rezidenților: profesioniști IT, manageri, artiști și turiști premium.',
+    metaTitle: 'Apartamente ISHO Timișoara | RealTrust Imobiliare',
+    metaDescription: 'Apartamente premium ISHO Fabric, Timișoara. Cel mai exclusivist complex — 2.150 €/mp, design urban premium. Administrare profesională RealTrust.',
+    faq: [
+      { question: 'Ce face ISHO diferit față de alte complexuri din Timișoara?', answer: 'ISHO este cel mai iconic proiect de regenerare urbană din Timișoara — un complex mixed-use cu apartamente premium, birouri, restaurante și spații comerciale, proiectat de arhitecți de renume pe malul Begăi.' },
+      { question: 'Care este prețul mediu la ISHO?', answer: 'Prețul mediu la ISHO este de 2.150 €/mp, cel mai ridicat din Timișoara, reflectând calitatea construcției, designul arhitectural și locația premium lângă centrul vechi.' },
+      { question: 'Este ISHO potrivit pentru investiții pe termen lung?', answer: 'Da, ISHO atrage chiriași premium (profesioniști IT, expați, turiști de business) și are un potențial ridicat de apreciere datorită locației unice și brandului puternic.' },
+    ],
+    listings: [
+      { id: 'ish-1', title: 'Apartament 2 camere ISHO Living', price: 129000, pricePerSqm: 2150, rooms: 2, floor: 8, surface: 60, badge: 'administrare', imageAlt: 'Apartament ISHO Living Timișoara' },
+      { id: 'ish-2', title: 'Studio premium cu vedere la Bega', price: 84000, pricePerSqm: 2200, rooms: 1, floor: 6, surface: 38, badge: 'administrare', imageAlt: 'Studio ISHO vedere Bega' },
+      { id: 'ish-3', title: 'Apartament 3 camere penthouse', price: 236500, pricePerSqm: 2200, rooms: 3, floor: 12, surface: 108, badge: 'vanzare', imageAlt: 'Penthouse ISHO Timișoara' },
+      { id: 'ish-4', title: 'Garsonieră ISHO — investiție', price: 72000, pricePerSqm: 2120, rooms: 1, floor: 3, surface: 34, badge: 'administrare', imageAlt: 'Garsonieră ISHO investiție' },
+      { id: 'ish-5', title: 'Duplex 4 camere premium', price: 290000, pricePerSqm: 2230, rooms: 4, floor: 10, surface: 130, badge: 'vanzare', imageAlt: 'Duplex ISHO Timișoara' },
+    ],
+  },
+  {
+    slug: 'circumvalatiunii',
+    name: 'Circumvalațiunii',
+    fullName: 'Circumvalațiunii',
+    avgPricePerSqm: 1920,
+    listingsCount: 5,
+    description:
+      'Calea Circumvalațiunii este una dintre cele mai căutate zone din Timișoara pentru investiții în regim hotelier. Complexul City of Mara, situat pe această arteră, găzduiește deja multiple apartamente gestionate de RealTrust cu rate de ocupare de peste 90%. Zona beneficiază de proximitatea parcului Rozelor, a centrului comercial Bega Shopping Center și a Universității de Vest. Transportul este excelent — tramvai și autobuz la mai puțin de 100m. Rezidenții tipici sunt studenți, tineri profesioniști și turiști de business. Infrastructura matură și cererea constantă fac din Circumvalațiunii un punct fierbinte al pieței imobiliare timișorene.',
+    metaTitle: 'Apartamente Circumvalațiunii Timișoara | RealTrust Imobiliare',
+    metaDescription: 'Apartamente în zona Circumvalațiunii, Timișoara. Complex City of Mara, ocupare 90%+, preț mediu 1.920 €/mp. Management profesional RealTrust.',
+    faq: [
+      { question: 'Ce rată de ocupare au apartamentele din Circumvalațiunii?', answer: 'Apartamentele gestionate de RealTrust în zona Circumvalațiunii (Complex City of Mara) au o rată de ocupare de peste 90%, datorită cererii constante din partea studenților și turiștilor de business.' },
+      { question: 'Ce facilități sunt în zona Circumvalațiunii?', answer: 'Zona include Parcul Rozelor, Bega Shopping Center, Universitatea de Vest, tramvai și autobuz la sub 100m, plus restaurante și cafenele.' },
+      { question: 'Care este profilul chiriașilor din Circumvalațiunii?', answer: 'Chiriașii tipici sunt studenți ai universităților din Timișoara, tineri profesioniști și turiști de business care caută cazare pe termen scurt.' },
+    ],
+    listings: [
+      { id: 'cir-1', title: 'Apartament 2 camere City of Mara', price: 110400, pricePerSqm: 1920, rooms: 2, floor: 5, surface: 58, badge: 'administrare', imageAlt: 'Apartament City of Mara Timișoara' },
+      { id: 'cir-2', title: 'Studio DeLuxe — regim hotelier', price: 72000, pricePerSqm: 1950, rooms: 1, floor: 3, surface: 37, badge: 'administrare', imageAlt: 'Studio DeLuxe Circumvalațiunii' },
+      { id: 'cir-3', title: 'Apartament 3 camere decomandat', price: 153600, pricePerSqm: 1920, rooms: 3, floor: 4, surface: 80, badge: 'vanzare', imageAlt: 'Apartament 3 camere Circumvalațiunii' },
+      { id: 'cir-4', title: 'Garsonieră investiție cu randament', price: 59800, pricePerSqm: 1880, rooms: 1, floor: 2, surface: 32, badge: 'administrare', imageAlt: 'Garsonieră investiție Circumvalațiunii' },
+      { id: 'cir-5', title: 'Apartament 2 camere — mobilat complet', price: 105600, pricePerSqm: 1960, rooms: 2, floor: 6, surface: 54, badge: 'administrare', imageAlt: 'Apartament mobilat Circumvalațiunii' },
+    ],
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // ZONE NON-PREMIUM — sortate descrescător după numărul de anunțuri
+  // ═══════════════════════════════════════════════════════════════
   {
     slug: 'zona-girocului',
     name: 'Girocului',
@@ -77,29 +129,6 @@ export const neighborhoods: NeighborhoodData[] = [
     ],
   },
   {
-    slug: 'circumvalatiunii',
-    name: 'Circumvalațiunii',
-    fullName: 'Circumvalațiunii',
-    avgPricePerSqm: 1920,
-    listingsCount: 5,
-    description:
-      'Calea Circumvalațiunii este una dintre cele mai căutate zone din Timișoara pentru investiții în regim hotelier. Complexul City of Mara, situat pe această arteră, găzduiește deja multiple apartamente gestionate de RealTrust cu rate de ocupare de peste 90%. Zona beneficiază de proximitatea parcului Rozelor, a centrului comercial Bega Shopping Center și a Universității de Vest. Transportul este excelent — tramvai și autobuz la mai puțin de 100m. Rezidenții tipici sunt studenți, tineri profesioniști și turiști de business. Infrastructura matură și cererea constantă fac din Circumvalațiunii un punct fierbinte al pieței imobiliare timișorene.',
-    metaTitle: 'Apartamente Circumvalațiunii Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente în zona Circumvalațiunii, Timișoara. Complex City of Mara, ocupare 90%+, preț mediu 1.920 €/mp. Management profesional RealTrust.',
-    faq: [
-      { question: 'Ce rată de ocupare au apartamentele din Circumvalațiunii?', answer: 'Apartamentele gestionate de RealTrust în zona Circumvalațiunii (Complex City of Mara) au o rată de ocupare de peste 90%, datorită cererii constante din partea studenților și turiștilor de business.' },
-      { question: 'Ce facilități sunt în zona Circumvalațiunii?', answer: 'Zona include Parcul Rozelor, Bega Shopping Center, Universitatea de Vest, tramvai și autobuz la sub 100m, plus restaurante și cafenele.' },
-      { question: 'Care este profilul chiriașilor din Circumvalațiunii?', answer: 'Chiriașii tipici sunt studenți ai universităților din Timișoara, tineri profesioniști și turiști de business care caută cazare pe termen scurt.' },
-    ],
-    listings: [
-      { id: 'cir-1', title: 'Apartament 2 camere City of Mara', price: 110400, pricePerSqm: 1920, rooms: 2, floor: 5, surface: 58, badge: 'administrare', imageAlt: 'Apartament City of Mara Timișoara' },
-      { id: 'cir-2', title: 'Studio DeLuxe — regim hotelier', price: 72000, pricePerSqm: 1950, rooms: 1, floor: 3, surface: 37, badge: 'administrare', imageAlt: 'Studio DeLuxe Circumvalațiunii' },
-      { id: 'cir-3', title: 'Apartament 3 camere decomandat', price: 153600, pricePerSqm: 1920, rooms: 3, floor: 4, surface: 80, badge: 'vanzare', imageAlt: 'Apartament 3 camere Circumvalațiunii' },
-      { id: 'cir-4', title: 'Garsonieră investiție cu randament', price: 59800, pricePerSqm: 1880, rooms: 1, floor: 2, surface: 32, badge: 'administrare', imageAlt: 'Garsonieră investiție Circumvalațiunii' },
-      { id: 'cir-5', title: 'Apartament 2 camere — mobilat complet', price: 105600, pricePerSqm: 1960, rooms: 2, floor: 6, surface: 54, badge: 'administrare', imageAlt: 'Apartament mobilat Circumvalațiunii' },
-    ],
-  },
-  {
     slug: 'sagului',
     name: 'Șagului',
     fullName: 'Zona Șagului',
@@ -120,28 +149,6 @@ export const neighborhoods: NeighborhoodData[] = [
       { id: 'sag-3', title: 'Apartament 3 camere cu parcare', price: 126400, pricePerSqm: 1600, rooms: 3, floor: 1, surface: 79, badge: 'vanzare', imageAlt: 'Apartament 3 camere Șagului' },
       { id: 'sag-4', title: 'Garsonieră renovată complet', price: 48000, pricePerSqm: 1500, rooms: 1, floor: 3, surface: 32, badge: 'vanzare', imageAlt: 'Garsonieră Șagului Timișoara' },
       { id: 'sag-5', title: 'Apartament 2 camere — investiție', price: 88200, pricePerSqm: 1620, rooms: 2, floor: 5, surface: 55, badge: 'administrare', imageAlt: 'Apartament investiție Șagului' },
-    ],
-  },
-  {
-    slug: 'complex-studentesc',
-    name: 'Complexul Studențesc',
-    fullName: 'Complexul Studențesc',
-    avgPricePerSqm: 1720,
-    listingsCount: 4,
-    description:
-      'Complexul Studențesc din Timișoara este o zonă vibrantă, dominată de campusurile Universității Politehnica și ale Universității de Vest. Cererea de cazare este constantă datorită populației studențești de peste 40.000 de persoane și a fluxului continuu de profesori, cercetători și participanți la conferințe. Zona dispune de facilități moderne — cantină, librării, terenuri sportive — și este conectată excelent la centrul orașului prin tramvai (10 minute). Investițiile în garsoniere și studiouri din această zonă generează randamente de 8-10% net, susținute de cererea ridicată pe tot parcursul anului universitar. Profilul rezidenților: studenți, cadre didactice și tineri profesioniști.',
-    metaTitle: 'Apartamente Complex Studențesc Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente în Complexul Studențesc Timișoara. Cerere constantă, randament 8-10%, preț mediu 1.720 €/mp. Ideal investiții cu management RealTrust.',
-    faq: [
-      { question: 'Ce randament oferă o investiție în Complexul Studențesc?', answer: 'Garsonierele și studiourile din Complexul Studențesc generează randamente de 8-10% net, susținute de cererea constantă a celor peste 40.000 de studenți.' },
-      { question: 'Cât de aproape este Complexul Studențesc de centrul orașului?', answer: 'Complexul Studențesc este conectat la centrul Timișoarei prin tramvai, cu o călătorie de aproximativ 10 minute.' },
-      { question: 'Ce tip de proprietăți sunt cele mai căutate în Complex Studențesc?', answer: 'Garsonierele și apartamentele cu 2 camere sunt cele mai căutate, atât de studenți pentru închiriere pe termen lung, cât și de turiștii care vizitează universitățile.' },
-    ],
-    listings: [
-      { id: 'stu-1', title: 'Garsonieră lângă UPT', price: 55000, pricePerSqm: 1720, rooms: 1, floor: 2, surface: 32, badge: 'administrare', imageAlt: 'Garsonieră Complex Studențesc Timișoara' },
-      { id: 'stu-2', title: 'Apartament 2 camere — campus', price: 86000, pricePerSqm: 1720, rooms: 2, floor: 3, surface: 50, badge: 'administrare', imageAlt: 'Apartament 2 camere Complex Studențesc' },
-      { id: 'stu-3', title: 'Studio modern ultracentral', price: 67000, pricePerSqm: 1750, rooms: 1, floor: 4, surface: 38, badge: 'vanzare', imageAlt: 'Studio ultracentral Complex Studențesc' },
-      { id: 'stu-4', title: 'Apartament 2 camere renovat', price: 93500, pricePerSqm: 1700, rooms: 2, floor: 1, surface: 55, badge: 'vanzare', imageAlt: 'Apartament renovat Complex Studențesc' },
     ],
   },
   {
@@ -168,26 +175,25 @@ export const neighborhoods: NeighborhoodData[] = [
     ],
   },
   {
-    slug: 'isho',
-    name: 'ISHO',
-    fullName: 'ISHO & Fabric',
-    avgPricePerSqm: 2150,
-    listingsCount: 5,
+    slug: 'complex-studentesc',
+    name: 'Complexul Studențesc',
+    fullName: 'Complexul Studențesc',
+    avgPricePerSqm: 1720,
+    listingsCount: 4,
     description:
-      'ISHO (I Should Have One) este cel mai iconic proiect de regenerare urbană din Timișoara, dezvoltat pe fosta platformă industrială din cartierul Fabric. Complexul mixed-use include apartamente premium, birouri, spații comerciale și restaurante, toate proiectate de arhitecți de renume. Zona Fabric, cu atmosfera sa boemiană și proximitatea de malul Begăi, atrage profesioniști creativi, expați și investitori care caută proprietăți cu apreciere rapidă. Accesul pietonal spre centrul vechi durează 10 minute. Prețurile sunt cele mai ridicate din Timișoara, reflectând calitatea construcției și locația unică. Profilul rezidenților: profesioniști IT, manageri, artiști și turiști premium.',
-    metaTitle: 'Apartamente ISHO Timișoara | RealTrust Imobiliare',
-    metaDescription: 'Apartamente premium ISHO Fabric, Timișoara. Cel mai exclusivist complex — 2.150 €/mp, design urban premium. Administrare profesională RealTrust.',
+      'Complexul Studențesc din Timișoara este o zonă vibrantă, dominată de campusurile Universității Politehnica și ale Universității de Vest. Cererea de cazare este constantă datorită populației studențești de peste 40.000 de persoane și a fluxului continuu de profesori, cercetători și participanți la conferințe. Zona dispune de facilități moderne — cantină, librării, terenuri sportive — și este conectată excelent la centrul orașului prin tramvai (10 minute). Investițiile în garsoniere și studiouri din această zonă generează randamente de 8-10% net, susținute de cererea ridicată pe tot parcursul anului universitar. Profilul rezidenților: studenți, cadre didactice și tineri profesioniști.',
+    metaTitle: 'Apartamente Complex Studențesc Timișoara | RealTrust Imobiliare',
+    metaDescription: 'Apartamente în Complexul Studențesc Timișoara. Cerere constantă, randament 8-10%, preț mediu 1.720 €/mp. Ideal investiții cu management RealTrust.',
     faq: [
-      { question: 'Ce face ISHO diferit față de alte complexuri din Timișoara?', answer: 'ISHO este cel mai iconic proiect de regenerare urbană din Timișoara — un complex mixed-use cu apartamente premium, birouri, restaurante și spații comerciale, proiectat de arhitecți de renume pe malul Begăi.' },
-      { question: 'Care este prețul mediu la ISHO?', answer: 'Prețul mediu la ISHO este de 2.150 €/mp, cel mai ridicat din Timișoara, reflectând calitatea construcției, designul arhitectural și locația premium lângă centrul vechi.' },
-      { question: 'Este ISHO potrivit pentru investiții pe termen lung?', answer: 'Da, ISHO atrage chiriași premium (profesioniști IT, expați, turiști de business) și are un potențial ridicat de apreciere datorită locației unice și brandului puternic.' },
+      { question: 'Ce randament oferă o investiție în Complexul Studențesc?', answer: 'Garsonierele și studiourile din Complexul Studențesc generează randamente de 8-10% net, susținute de cererea constantă a celor peste 40.000 de studenți.' },
+      { question: 'Cât de aproape este Complexul Studențesc de centrul orașului?', answer: 'Complexul Studențesc este conectat la centrul Timișoarei prin tramvai, cu o călătorie de aproximativ 10 minute.' },
+      { question: 'Ce tip de proprietăți sunt cele mai căutate în Complex Studențesc?', answer: 'Garsonierele și apartamentele cu 2 camere sunt cele mai căutate, atât de studenți pentru închiriere pe termen lung, cât și de turiștii care vizitează universitățile.' },
     ],
     listings: [
-      { id: 'ish-1', title: 'Apartament 2 camere ISHO Living', price: 129000, pricePerSqm: 2150, rooms: 2, floor: 8, surface: 60, badge: 'administrare', imageAlt: 'Apartament ISHO Living Timișoara' },
-      { id: 'ish-2', title: 'Studio premium cu vedere la Bega', price: 84000, pricePerSqm: 2200, rooms: 1, floor: 6, surface: 38, badge: 'administrare', imageAlt: 'Studio ISHO vedere Bega' },
-      { id: 'ish-3', title: 'Apartament 3 camere penthouse', price: 236500, pricePerSqm: 2200, rooms: 3, floor: 12, surface: 108, badge: 'vanzare', imageAlt: 'Penthouse ISHO Timișoara' },
-      { id: 'ish-4', title: 'Garsonieră ISHO — investiție', price: 72000, pricePerSqm: 2120, rooms: 1, floor: 3, surface: 34, badge: 'administrare', imageAlt: 'Garsonieră ISHO investiție' },
-      { id: 'ish-5', title: 'Duplex 4 camere premium', price: 290000, pricePerSqm: 2230, rooms: 4, floor: 10, surface: 130, badge: 'vanzare', imageAlt: 'Duplex ISHO Timișoara' },
+      { id: 'stu-1', title: 'Garsonieră lângă UPT', price: 55000, pricePerSqm: 1720, rooms: 1, floor: 2, surface: 32, badge: 'administrare', imageAlt: 'Garsonieră Complex Studențesc Timișoara' },
+      { id: 'stu-2', title: 'Apartament 2 camere — campus', price: 86000, pricePerSqm: 1720, rooms: 2, floor: 3, surface: 50, badge: 'administrare', imageAlt: 'Apartament 2 camere Complex Studențesc' },
+      { id: 'stu-3', title: 'Studio modern ultracentral', price: 67000, pricePerSqm: 1750, rooms: 1, floor: 4, surface: 38, badge: 'vanzare', imageAlt: 'Studio ultracentral Complex Studențesc' },
+      { id: 'stu-4', title: 'Apartament 2 camere renovat', price: 93500, pricePerSqm: 1700, rooms: 2, floor: 1, surface: 55, badge: 'vanzare', imageAlt: 'Apartament renovat Complex Studențesc' },
     ],
   },
 ];
