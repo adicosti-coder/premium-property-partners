@@ -49,7 +49,7 @@ const PiataImobiliara = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {neighborhoods
-                .sort((a, b) => a.avgPricePerSqm - b.avgPricePerSqm) // ROI descrescător = preț ascendent
+                .sort((a, b) => b.avgPricePerSqm - a.avgPricePerSqm)
                 .map((zone) => (
                   <Link
                     key={zone.slug}
