@@ -172,7 +172,8 @@ const App = () => (
               <CompareProvider>
               <ScrollToTop />
               <DeferredShell>
-                <Routes>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/admin" element={<Admin />} />
@@ -184,7 +185,6 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-                    {/* SEO landing pages — each property has its own top-level route */}
                     <Route path="/ring-apart-hotel-spacious-deluxe" element={<PropertyDetail />} />
                     <Route path="/green-forest-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/fructus-plaza-ultracentral-apart-hotel" element={<PropertyDetail />} />
@@ -228,8 +228,8 @@ const App = () => (
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
+                    <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
-                    {/* Legacy .html redirects — use Navigate for proper 301-like behavior with crawlers */}
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
                     <Route path="/index-en.html" element={<Navigate to="/" replace />} />
                     <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
@@ -237,15 +237,13 @@ const App = () => (
                     <Route path="/imobiliare-realtrust.html" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/real-estate-en.html" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/real-estate.html" element={<Navigate to="/imobiliare" replace />} />
-                    {/* Sitemap redirect to dynamic edge function */}
                     <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />
-                    <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
               </DeferredShell>
               </CompareProvider>
+              </FAQSchemaProvider>
             </ErrorBoundary>
           </BrowserRouter>
         </LanguageProvider>
