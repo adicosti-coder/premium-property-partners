@@ -326,7 +326,7 @@ const CompareDrawer = () => {
               <h3 className="font-semibold text-foreground text-lg">
                 Analiză comparativă investiții
               </h3>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap" style={{ touchAction: "manipulation" }}>
                 {/* Save */}
                 <Button
                   size="sm"
