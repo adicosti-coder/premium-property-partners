@@ -571,12 +571,13 @@ const PropertyDetail = () => {
           const roi = displayRoi;
           const capital = dbProperty?.capital_necesar;
           const lt = dbProperty?.listing_type?.toLowerCase();
-          // Investment-optimized description for social sharing
+          // Smart meta description: "Descoperă acest apartament în [Zonă]. Ideal pentru investiție cu ROI de [X]%."
           if ((lt === 'investitie' || lt === 'vanzare') && (roi || capital)) {
-            const parts: string[] = [];
-            if (roi) parts.push(`Randament estimat: ${roi} ROI net.`);
+            const zone = property.location?.replace(/,?\s*(Timișoara|Timisoara)\s*/gi, '').trim() || 'Timișoara';
+            const parts: string[] = [`Descoperă acest apartament în ${zone}, Timișoara.`];
+            if (roi) parts.push(`Ideal pentru investiție cu ROI de ${roi}.`);
             if (capital) parts.push(`Capital necesar: €${capital.toLocaleString('ro-RO')}.`);
-            parts.push(`${displayName} — ${property.location}, Timișoara. Administrare profesională regim hotelier RealTrust.`);
+            parts.push('Vezi detalii și randament estimat.');
             return parts.join(' ').slice(0, 160);
           }
           const rawDesc = displayDescription;
@@ -585,8 +586,8 @@ const PropertyDetail = () => {
             return clean.length > 150 ? clean.slice(0, 147) + '...' : clean;
           }
           return language === 'ro'
-            ? `${displayName} - Cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
-            : `${displayName} - Premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
+            ? `Descoperă ${displayName} — cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
+            : `Discover ${displayName} — premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
         })()}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
@@ -794,6 +795,50 @@ const PropertyDetail = () => {
                 <div>
                   <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
                   <p className="text-muted-foreground leading-relaxed">{displayDescription}</p>
+                </div>
+              )}
+
+              {/* ═══════════════════════════════════════════════════════
+                  3.5 INVESTIȚIE LA CHEIE — Beneficii administrare RealTrust
+                  ═══════════════════════════════════════════════════════ */}
+              {(normalizedListingType === 'investitie' || normalizedListingType === 'vanzare' || normalizedListingType === 'cazare') && (
+                <div className="bg-gradient-to-br from-amber-500/5 to-primary/5 border border-amber-500/20 p-5 sm:p-6 rounded-2xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">🔑</span>
+                    <h2 className="text-lg sm:text-xl font-serif font-bold">
+                      {language === 'ro' ? 'Investiție la Cheie — Administrare RealTrust' : 'Turnkey Investment — RealTrust Management'}
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {language === 'ro'
+                      ? 'Această proprietate beneficiază de administrare completă în regim hotelier. Tu investești, noi ne ocupăm de tot.'
+                      : 'This property benefits from complete short-term rental management. You invest, we handle everything.'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(language === 'ro' ? [
+                      { icon: '🧹', title: 'Curățenie Profesională', desc: 'După fiecare sejur' },
+                      { icon: '🔧', title: 'Mentenanță Non-Stop', desc: 'Intervenții rapide 24/7' },
+                      { icon: '💬', title: 'Guest Support 24/7', desc: 'Comunicare cu oaspeții' },
+                      { icon: '📊', title: 'Raportare Lunară', desc: 'Transparență totală' },
+                      { icon: '📈', title: 'Dynamic Pricing', desc: 'Prețuri optimizate AI' },
+                      { icon: '🛡️', title: 'Asigurare 3M EUR', desc: 'Proprietate protejată' },
+                    ] : [
+                      { icon: '🧹', title: 'Professional Cleaning', desc: 'After every stay' },
+                      { icon: '🔧', title: '24/7 Maintenance', desc: 'Rapid interventions' },
+                      { icon: '💬', title: '24/7 Guest Support', desc: 'Full guest communication' },
+                      { icon: '📊', title: 'Monthly Reports', desc: 'Full transparency' },
+                      { icon: '📈', title: 'Dynamic Pricing', desc: 'AI-optimized rates' },
+                      { icon: '🛡️', title: '€3M Insurance', desc: 'Property protected' },
+                    ]).map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm">
+                        <span className="text-base shrink-0">{item.icon}</span>
+                        <div>
+                          <p className="font-semibold text-foreground text-xs">{item.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1155,6 +1200,42 @@ const PropertyDetail = () => {
                   <h3 className="text-xl font-semibold">
                     {language === 'ro' ? 'Interesat?' : 'Interested?'}
                   </h3>
+
+                  {/* Price + ROI visible near CTA */}
+                  {dbProperty?.capital_necesar && (
+                    <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                          {language === 'ro' ? 'Preț vânzare' : 'Sale price'}
+                        </span>
+                        <span className="text-lg font-bold text-primary">
+                          €{dbProperty.capital_necesar.toLocaleString('ro-RO')}
+                        </span>
+                      </div>
+                      {displayRoi && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                            {language === 'ro' ? 'Randament estimat' : 'Estimated ROI'}
+                          </span>
+                          <Badge className="bg-primary/10 text-primary border-primary/20 text-sm font-bold">
+                            <TrendingUp className="w-3.5 h-3.5 mr-1" />
+                            {displayRoi}
+                          </Badge>
+                        </div>
+                      )}
+                      {dbProperty.estimated_revenue && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                            {language === 'ro' ? 'Venit lunar est.' : 'Est. monthly income'}
+                          </span>
+                          <span className="text-sm font-semibold text-foreground">
+                            €{dbProperty.estimated_revenue}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-muted-foreground text-sm">
                     {language === 'ro' 
                       ? 'Contactează-ne pentru mai multe detalii despre această oportunitate.'

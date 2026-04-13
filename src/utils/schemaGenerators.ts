@@ -911,6 +911,7 @@ export const generatePropertyPageSchemas = (
   reviews?: ReviewData[]
 ) => {
   const schemas: Record<string, unknown>[] = [
+    generateApartmentSchema(property),
     generateAccommodationSchema(property),
     generateRealEstateListingSchema(property),
     generatePlaceSchema(property),
