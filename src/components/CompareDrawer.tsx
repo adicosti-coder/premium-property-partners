@@ -305,8 +305,8 @@ const CompareDrawer = () => {
       <button
         onClick={handleToggle}
         className={cn(
-          "fixed left-1/2 -translate-x-1/2 z-[60] transition-all",
-          expanded ? "bottom-[calc(60vh+8px)] md:bottom-[calc(60vh+8px)]" : "bottom-[70px] md:bottom-6",
+          "fixed left-1/2 -translate-x-1/2 transition-all",
+          expanded ? "z-[56] bottom-[calc(60vh+8px)] md:bottom-[calc(60vh+8px)]" : "z-[60] bottom-[70px] md:bottom-6",
           "bg-primary text-primary-foreground px-5 py-2.5 rounded-full shadow-lg",
           "flex items-center gap-2 text-sm font-medium",
           !canCompare && "opacity-70 cursor-default"
@@ -320,13 +320,13 @@ const CompareDrawer = () => {
 
       {/* Comparison Table Drawer */}
       {expanded && canCompare && (
-        <div className="fixed inset-x-0 bottom-0 z-[55] bg-card border-t border-border shadow-2xl rounded-t-2xl max-h-[60vh] overflow-auto animate-in slide-in-from-bottom duration-300 pb-[70px] md:pb-0">
+        <div className="fixed inset-x-0 bottom-0 z-[58] bg-card border-t border-border shadow-2xl rounded-t-2xl max-h-[60vh] overflow-y-auto overflow-x-hidden animate-in slide-in-from-bottom duration-300 pb-[70px] md:pb-0">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h3 className="font-semibold text-foreground text-lg">
                 Analiză comparativă investiții
               </h3>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap" style={{ touchAction: "manipulation" }}>
                 {/* Save */}
                 <Button
                   size="sm"
