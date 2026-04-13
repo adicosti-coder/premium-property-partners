@@ -9,7 +9,7 @@ import RealPropertyCard from "@/components/RealPropertyCard";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { lazy, Suspense } from "react";
-import { CompareProvider } from "@/contexts/CompareContext";
+
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -48,7 +48,6 @@ const ImobiliareTimisoara = () => {
   };
 
   return (
-    <CompareProvider>
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Imobiliare Timișoara — Apartamente pe Zone | RealTrust"
@@ -181,7 +180,6 @@ const ImobiliareTimisoara = () => {
       </Suspense>
       <BackToTop />
     </div>
-    </CompareProvider>
   );
 };
 
