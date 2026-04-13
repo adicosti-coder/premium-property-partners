@@ -171,6 +171,27 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Neighborhood Links for SEO */}
+        <div className="border-t border-border/50 pt-6 mb-6">
+          <h3 className="text-foreground font-semibold mb-3 text-sm uppercase tracking-wider">
+            {language === "ro" ? "Zone de interes" : "Areas of Interest"}
+          </h3>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link to="/imobiliare-timisoara" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {language === "ro" ? "Toate zonele" : "All areas"}
+            </Link>
+            {neighborhoods.map((n) => (
+              <Link
+                key={n.slug}
+                to={`/imobiliare-timisoara/${n.slug}`}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {n.fullName}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
         {/* Compact bottom bar */}
         <div className="border-t border-border/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
