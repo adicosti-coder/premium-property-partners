@@ -32,10 +32,16 @@ const estimateMonthlyRent = (item: ComparableItem): number => {
   return map[item.rooms] ?? 350;
 };
 
+/** Parse Romanian-formatted number like "1.314,18" or "1.350 €" */
+const parseRomanianNumber = (str: string): number => {
+  const cleaned = str.replace(/[€\s]/g, "").replace(/\./g, "").replace(",", ".");
+  return parseFloat(cleaned) || 0;
+};
+
 const estimateHotelRevenue = (item: ComparableItem): number => {
   if (item.estimatedRevenue) {
-    const parsed = parseInt(item.estimatedRevenue.replace(/[^\d]/g, ""), 10);
-    if (!isNaN(parsed) && parsed > 0) return parsed;
+    const parsed = parseRomanianNumber(item.estimatedRevenue);
+    if (parsed > 0 && parsed < 100000) return Math.round(parsed);
   }
   const map: Record<number, number> = { 1: 1350, 2: 1800, 3: 2250 };
   return map[item.rooms] ?? 1500;
@@ -180,10 +186,15 @@ const CompareDrawer = () => {
     }
   };
 
-  const rents = items.map(estimateMonthlyRent);
-  const rois = items.map((l, i) => ((rents[i] * 12) / l.price) * 100);
-  const hotelRevs = items.map(estimateHotelRevenue);
-  const hotelRois = items.map((l, i) => ((hotelRevs[i] * 12) / l.price) * 100);
+  const effectiveItems = items.map((item) => ({
+    ...item,
+    pricePerSqm: item.pricePerSqm > 0 ? item.pricePerSqm : (item.surface > 0 ? Math.round(item.price / item.surface) : 0),
+  }));
+
+  const rents = effectiveItems.map(estimateMonthlyRent);
+  const rois = effectiveItems.map((l, i) => ((rents[i] * 12) / l.price) * 100);
+  const hotelRevs = effectiveItems.map(estimateHotelRevenue);
+  const hotelRois = effectiveItems.map((l, i) => ((hotelRevs[i] * 12) / l.price) * 100);
 
   const openWhatsApp = (item: ComparableItem) => {
     const msg = encodeURIComponent(
@@ -199,11 +210,11 @@ const CompareDrawer = () => {
     }
   };
 
-  const priceBest = bestIndex(items.map((l) => l.price), "min");
-  const priceSqmBest = bestIndex(items.map((l) => l.pricePerSqm), "min");
+  const priceBest = bestIndex(effectiveItems.map((l) => l.price), "min");
+  const priceSqmBest = bestIndex(effectiveItems.map((l) => l.pricePerSqm), "min");
   const roiBest = bestIndex(rois, "max");
   const rentBest = bestIndex(rents, "max");
-  const surfaceBest = bestIndex(items.map((l) => l.surface), "max");
+  const surfaceBest = bestIndex(effectiveItems.map((l) => l.surface), "max");
   const hotelRevBest = bestIndex(hotelRevs, "max");
   const hotelRoiBest = bestIndex(hotelRois, "max");
 
@@ -392,7 +403,7 @@ const CompareDrawer = () => {
                       <TableCell className="font-medium text-muted-foreground text-sm sticky left-0 z-10 bg-card">
                         {row.label}
                       </TableCell>
-                      {items.map((item, idx) => (
+                      {effectiveItems.map((item, idx) => (
                         <TableCell key={item.id} className="text-sm">
                           {row.render(item, idx)}
                         </TableCell>

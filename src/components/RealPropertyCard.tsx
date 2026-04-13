@@ -41,14 +41,16 @@ function parseFloor(floor: string | null): string {
 /** Convert NeighborhoodProperty → ComparableItem for the Compare drawer */
 function toComparable(property: NeighborhoodProperty): ComparableItem {
   const price = property.capital_necesar || (property.price_per_sqm && property.size ? property.price_per_sqm * property.size : 0);
+  const surface = property.size ?? 0;
+  const pricePerSqm = property.price_per_sqm ?? (surface > 0 && price > 0 ? Math.round(price / surface) : 0);
   return {
     id: property.id,
     title: property.name,
     price,
-    pricePerSqm: property.price_per_sqm ?? 0,
+    pricePerSqm,
     rooms: property.bedrooms ?? 0,
     floor: property.floor ?? 0,
-    surface: property.size ?? 0,
+    surface,
     badge: property.listing_type === "investitie" ? "investitie" : "vanzare",
     imageAlt: property.name,
     slug: property.slug,
