@@ -1,20 +1,32 @@
 import { Building2, Layers, Maximize, MapPin, TrendingUp, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import type { NeighborhoodProperty } from "@/hooks/useNeighborhoodProperties";
-
-const SUPABASE_URL = "https://mvzssjyzbwccioqvhjpo.supabase.co";
+import { resolvePropertyImageUrl } from "@/utils/resolvePropertyImageUrl";
 
 function getImageUrl(property: NeighborhoodProperty): string | null {
-  if (property.images && property.images.length > 0) {
-    const img = property.images[0];
-    if (img.startsWith("http")) return img;
-    return `${SUPABASE_URL}/storage/v1/object/public/property-images/${img}`;
+  const propertyImages = [...(property.property_images ?? [])]
+    .filter((image): image is NonNullable<NeighborhoodProperty["property_images"]>[number] & { image_path: string } => Boolean(image.image_path?.trim()))
+    .sort(
+      (a, b) =>
+        Number(Boolean(b.is_primary)) - Number(Boolean(a.is_primary)) ||
+        (a.display_order ?? Number.MAX_SAFE_INTEGER) - (b.display_order ?? Number.MAX_SAFE_INTEGER)
+    )
+    .map((image) => image.image_path.trim());
+
+  const candidates = [...propertyImages, ...(property.images ?? []), property.image_path]
+    .filter((image): image is string => Boolean(image && image.trim()))
+    .map((image) => image.trim())
+    .filter((image, index, array) => array.indexOf(image) === index);
+
+  for (const candidate of candidates) {
+    const resolved = resolvePropertyImageUrl(candidate);
+    if (resolved) {
+      return resolved;
+    }
   }
-  if (property.image_path) {
-    if (property.image_path.startsWith("http")) return property.image_path;
-    return `${SUPABASE_URL}/storage/v1/object/public/property-images/${property.image_path}`;
-  }
+
   return null;
 }
 
@@ -38,11 +50,12 @@ export default function RealPropertyCard({ property }: { property: NeighborhoodP
         {/* Image */}
         <div className="relative h-48 bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60 overflow-hidden">
           {imageUrl ? (
-            <img
+            <ImageWithFallback
               src={imageUrl}
               alt={property.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
+              className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+              fallbackType="gradient"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
