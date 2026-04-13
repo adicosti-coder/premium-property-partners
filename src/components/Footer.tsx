@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { neighborhoods } from "@/data/neighborhoods";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -168,6 +169,27 @@ const Footer = () => {
               </form>
             )}
           </div>
+        </div>
+
+        {/* Neighborhood Links for SEO */}
+        <div className="border-t border-border/50 pt-6 mb-6">
+          <h3 className="text-foreground font-semibold mb-3 text-sm uppercase tracking-wider">
+            {language === "ro" ? "Zone de interes" : "Areas of Interest"}
+          </h3>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link to="/imobiliare-timisoara" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {language === "ro" ? "Toate zonele" : "All areas"}
+            </Link>
+            {neighborhoods.map((n) => (
+              <Link
+                key={n.slug}
+                to={`/imobiliare-timisoara/${n.slug}`}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {n.fullName}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         {/* Compact bottom bar */}
