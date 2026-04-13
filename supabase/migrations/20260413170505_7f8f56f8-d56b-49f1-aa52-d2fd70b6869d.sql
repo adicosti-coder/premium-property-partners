@@ -1,0 +1,1 @@
+UPDATE properties SET location = 'Calea Circumvalațiunii, Timișoara' WHERE id = '88250dac-6655-4e9c-9850-a7e2c5c8e376' AND location LIKE 'https://maps.app.goo.gl%';
