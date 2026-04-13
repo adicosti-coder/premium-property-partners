@@ -87,7 +87,7 @@ async function fetchActiveProperties(): Promise<DbProperty[]> {
       console.warn(`[prerender-seo] Failed to fetch properties: ${res.status}`);
       return [];
     }
-    return await res.json();
+    return await res.json() as DbProperty[];
   } catch (err) {
     console.warn('[prerender-seo] Could not fetch properties from DB:', err);
     return [];
