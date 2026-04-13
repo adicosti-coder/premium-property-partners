@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { neighborhoods } from "@/data/neighborhoods";
 
 const emailSchema = z.string().trim().email().max(255);
 
