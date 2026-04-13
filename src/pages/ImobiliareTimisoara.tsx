@@ -48,6 +48,7 @@ const ImobiliareTimisoara = () => {
   };
 
   return (
+    <CompareProvider>
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Imobiliare Timișoara — Apartamente pe Zone | RealTrust"
