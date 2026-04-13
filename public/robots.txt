@@ -13,7 +13,9 @@ Disallow: /comunitate/trimite
 Disallow: /comunitate/editeaza/
 Disallow: /termeni-si-conditii
 Disallow: /politica-confidentialitate
-Disallow: /guide/
 Disallow: /unsubscribe
+
+# Allow guest guides for SEO (unique per booking)
+Allow: /guide/
 
 Sitemap: https://www.realtrust.ro/sitemap.xml
