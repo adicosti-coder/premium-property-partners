@@ -134,9 +134,12 @@ const CompareDrawer = () => {
       render: (l: MockListing) =>
         l.badge === "administrare" ? (
           <div>
-            <Badge className="bg-primary text-primary-foreground text-xs">Da</Badge>
+            <div className="flex items-center gap-1">
+              <span className="text-amber-500">✓</span>
+              <Badge className="bg-amber-500/15 text-amber-700 border-amber-300 text-xs">Da</Badge>
+            </div>
             <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
-              Include management tehnic și juridic
+              Management Complet Inclus
             </p>
           </div>
         ) : (
@@ -184,7 +187,7 @@ const CompareDrawer = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[110px]">Criteriu</TableHead>
+                    <TableHead className="min-w-[110px] sticky left-0 z-10 bg-card">Criteriu</TableHead>
                     {items.map((item) => (
                       <TableHead key={item.id} className="min-w-[140px]">
                         <div className="flex items-center justify-between gap-2">
@@ -203,7 +206,7 @@ const CompareDrawer = () => {
                 <TableBody>
                   {rows.map((row) => (
                     <TableRow key={row.label}>
-                      <TableCell className="font-medium text-muted-foreground text-sm">
+                      <TableCell className="font-medium text-muted-foreground text-sm sticky left-0 z-10 bg-card">
                         {row.label}
                       </TableCell>
                       {items.map((item, idx) => (
@@ -215,7 +218,7 @@ const CompareDrawer = () => {
                   ))}
                   {/* CTA Row */}
                   <TableRow>
-                    <TableCell />
+                    <TableCell className="sticky left-0 z-10 bg-card" />
                     {items.map((item) => (
                       <TableCell key={item.id}>
                         <Button
@@ -224,7 +227,7 @@ const CompareDrawer = () => {
                           onClick={() => openWhatsApp(item)}
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
-                          Vreau oferta
+                          Rezervă Vizionare
                         </Button>
                       </TableCell>
                     ))}
