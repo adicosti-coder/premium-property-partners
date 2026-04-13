@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
@@ -215,6 +216,9 @@ const Index = () => {
           summaryRo="RealTrust & ApArt Hotel Timișoara — Apartamente în regim hotelier aproape de Centrul istoric, de obiectivele turistice și comerciale importante din Timișoara, de Amazonia Aquapark, la Fructus Plaza, City of Mara, Ring, X-City, Ateneo și Denya Forest, etc."
           summaryEn="RealTrust & ApArt Hotel Timișoara — Short-term rental apartments near the Old Town, major tourist and commercial landmarks in Timișoara, Amazonia Aquapark, at Fructus Plaza, City of Mara, Ring, X-City, Ateneo and Denya Forest, etc."
         />
+
+        {/* Neighborhoods Grid - Critical for SEO internal linking */}
+        <NeighborhoodsGrid />
 
         {/* Verified Reviews Badges - social proof */}
         <Suspense fallback={null}>
