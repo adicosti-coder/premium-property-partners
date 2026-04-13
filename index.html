@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ro">
+<html lang="ro" xml:lang="ro">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,19 +15,6 @@
     <link rel="alternate" hreflang="ro" href="https://www.realtrust.ro" />
     <link rel="alternate" hreflang="en" href="https://www.realtrust.ro?lang=en" />
     <link rel="alternate" hreflang="x-default" href="https://www.realtrust.ro" />
-
-    <!-- OG/Twitter meta tags are injected dynamically by SEOHead.tsx via react-helmet-async -->
-
-    <!-- GA4 Global Site Tag -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){window.dataLayer.push(arguments);}
-      window.gtag = window.gtag || gtag;
-      gtag('js', new Date());
-      gtag('config', 'G-JXDGWL3G6V');
-    </script>
-    <!-- /GA4 Global Site Tag -->
 
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -61,27 +48,12 @@
     <!-- Preload Inter fonts — prevents 3.3s critical chain via CSS discovery -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
-    <!-- Inter fonts: not critical for LCP, loaded via CSS font-display:swap -->
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
     <style>
-      /* Hero section layout — renders before external CSS loads */
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
       body{font-family:'NotoSans',system-ui,-apple-system,sans-serif;background:#f7f5f0;color:#1e293b}
       .dark body{background:#0f172a;color:#e2e8f0}
-      #hero-skeleton{position:fixed;inset:0;z-index:9999;min-height:100dvh;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding-top:7rem}
-      #hero-skeleton .hero-bg{position:absolute;inset:0}
-      #hero-skeleton .hero-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-      #hero-skeleton .hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(247,245,240,0.85),rgba(247,245,240,0.45),transparent)}
-      .dark #hero-skeleton .hero-overlay{background:linear-gradient(to right,rgba(15,23,42,0.7),rgba(15,23,42,0.3),transparent)}
-      #hero-skeleton .hero-content{position:relative;z-index:10;max-width:56rem;padding:5rem 1.5rem}
-      #hero-skeleton .hero-content h1{font-family:'Playfair Display','Playfair Display Fallback','Times New Roman',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;line-height:1.1;margin-bottom:1.5rem;color:#1e293b}
-      #hero-skeleton .hero-content p{font-family:'NotoSans',system-ui,sans-serif;font-size:1.125rem;line-height:1.625;max-width:42rem;margin-bottom:2rem;opacity:.85;color:#1e293b}
-      .dark #hero-skeleton .hero-content h1,.dark #hero-skeleton .hero-content p{color:#e2e8f0}
-      /* Skeleton hidden by React Hero component via JS for optimal LCP */
-      #hero-skeleton.hero-ready{opacity:0;pointer-events:none;transition:opacity .15s ease-out}
-      #hero-skeleton.hero-gone{display:none}
-      /* CSS containment — isolates layout/paint per section to reduce reflow cost */
       .cv-auto{contain:content}
     </style>
 
@@ -89,15 +61,12 @@
     <style>
       @font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/PlayfairDisplay-SemiBold-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
       @font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/PlayfairDisplay-SemiBold-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-      /* Inter fonts moved to index.css — not needed for LCP, avoids critical chain */
     </style>
     
     <meta name="geo.region" content="RO-TM" />
     <meta name="geo.placename" content="Timișoara" />
     <meta name="geo.position" content="45.7489;21.2087" />
     <meta name="ICBM" content="45.7489, 21.2087" />
-
-    <!-- JSON-LD injected dynamically by SEOHead.tsx with correct address data -->
     
     <script>
       (function () {
@@ -106,13 +75,10 @@
           var stored = window.localStorage && window.localStorage.getItem("theme");
           var theme = stored || "light";
           document.documentElement.classList.add(theme);
-          // Ensure lang attribute survives any HTML rewriting (Cloudflare Rocket Loader etc.)
-          if (!document.documentElement.lang) document.documentElement.lang = "ro";
+          document.documentElement.setAttribute("lang", "ro");
+          document.documentElement.setAttribute("xml:lang", "ro");
         } catch (_) {}
       })();
-      // Convert Vite-injected render-blocking CSS to async loading.
-      // Critical styles are already inlined above, so the full stylesheet
-      // can load without blocking first paint / LCP.
       (function () {
         try {
           var observer = new MutationObserver(function (mutations) {
@@ -126,39 +92,38 @@
             });
           });
           observer.observe(document.head, { childList: true });
-          // Stop observing after 5s — all links will be injected by then
           setTimeout(function () { observer.disconnect(); }, 5000);
         } catch (_) {}
       })();
     </script>
 
-    <!-- Sentry loaded lazily via src/lib/sentry.ts – no blocking script needed -->
-    <!-- Consent + analytics scripts moved to body to avoid blocking first paint -->
-
 </head>
 
   <body>
     <div id="root"></div>
-    <!-- Pre-rendered hero skeleton — shows instantly before JS loads, hidden once React mounts -->
-    <!-- Skeleton removed: was loading hero image twice (1.3MB duplicate). React Hero handles the image. -->
-    <div id="hero-skeleton" aria-hidden="true">
-      <div class="hero-bg">
-        <img src="/images/hero-optimized-800w.webp"
-             srcset="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
-             sizes="100vw" type="image/webp"
-             alt="RealTrust ApArt Hotel Timișoara — Apartamente regim hotelier" width="1920" height="1080"
-             fetchpriority="high" decoding="sync" loading="eager"
-             style="width:100%;height:100%;object-fit:cover" />
-        <div class="hero-overlay"></div>
-      </div>
-      <div class="hero-content">
-        <p class="hero-skeleton-title" style="font-family:'Playfair Display','Times New Roman',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;line-height:1.1;margin-bottom:1.5rem;">RealTrust & ApArt Hotel Timișoara — Imobiliare & Regim Hotelier</p>
-        <p>Administrare completă apartamente regim hotelier în Timișoara. ROI 9.4% net verificat, 50+ proprietăți gestionate, rating 9.7 Booking.com.</p>
-      </div>
-    </div>
     <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
     
-    <!-- ElevenLabs widget managed by React (GlobalConversionWidgets) -->
+    <!-- GA4 deferred — loads after first paint to avoid blocking LCP/SI -->
+    <script>
+      (function() {
+        function loadGA4() {
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V';
+          s.async = true;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){window.dataLayer.push(arguments);}
+          window.gtag = window.gtag || gtag;
+          gtag('js', new Date());
+          gtag('config', 'G-JXDGWL3G6V');
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(loadGA4, { timeout: 4000 });
+        } else {
+          setTimeout(loadGA4, 3000);
+        }
+      })();
+    </script>
   </body>
 
 </html>

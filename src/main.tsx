@@ -8,12 +8,6 @@ import {
 } from "@/utils/serviceWorkerEnvironment";
 
 const mountApp = () => {
-  // Remove hero skeleton on non-homepage routes immediately
-  // (Hero.tsx handles delayed removal on homepage for LCP optimization)
-  if (window.location.pathname !== '/') {
-    const skeleton = document.getElementById('hero-skeleton');
-    if (skeleton) skeleton.remove();
-  }
   // Defer ALL non-critical scripts to first user interaction (scroll/click/touch)
   // This frees the main thread entirely for the initial render & LCP.
   const loadNonCritical = () => {
