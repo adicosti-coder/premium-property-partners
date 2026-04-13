@@ -239,12 +239,13 @@ const App = () => (
                     <Route path="/real-estate.html" element={<Navigate to="/imobiliare" replace />} />
                     {/* Sitemap redirect to dynamic edge function */}
                     <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />
+                    <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
               </DeferredShell>
-              </FAQSchemaProvider>
+              </CompareProvider>
             </ErrorBoundary>
           </BrowserRouter>
         </LanguageProvider>
