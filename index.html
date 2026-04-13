@@ -42,14 +42,12 @@
           imagesrcset="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
           imagesizes="100vw" />
 
-    <!-- Preload hero font (Playfair Display) — used in above-fold H1 -->
+    <!-- Preload hero fonts (Playfair Display) — H1 uses Romanian chars (latin-ext) -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin-ext.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
-    <!-- Preload Inter-SemiBold — used in hero subtitle (LCP text element), avoids 3s font chain -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
-    <!-- Preload Inter-Regular — breaks 3100ms font chain (CSS→font dependency) -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
-    <!-- Preload NotoSans-Regular — body font, used everywhere including LCP text -->
+    <!-- Preload NotoSans-Regular — body/subtitle font (LCP text element) -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/NotoSans-Regular.woff2" crossorigin />
+    <!-- Inter fonts: not critical for LCP, loaded via CSS font-display:swap -->
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
     <style>
