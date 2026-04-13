@@ -5,10 +5,12 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import NeighborhoodPropertyCard from "@/components/NeighborhoodPropertyCard";
+import RealPropertyCard from "@/components/RealPropertyCard";
 import CompareDrawer from "@/components/CompareDrawer";
 import { CompareProvider } from "@/contexts/CompareContext";
 import { getNeighborhoodBySlug } from "@/data/neighborhoods";
-import { MapPin, TrendingUp, Home, Phone } from "lucide-react";
+import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
+import { MapPin, TrendingUp, Home, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lazy, Suspense } from "react";
 
@@ -18,6 +20,7 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 const NeighborhoodDetail = () => {
   const { zona } = useParams<{ zona: string }>();
   const neighborhood = zona ? getNeighborhoodBySlug(zona) : undefined;
+  const { properties, isLoading } = useNeighborhoodProperties(zona);
 
   if (!neighborhood) {
     return <Navigate to="/imobiliare-timisoara" replace />;
@@ -27,6 +30,8 @@ const NeighborhoodDetail = () => {
     { label: "Imobiliare Timișoara", href: "/imobiliare-timisoara" },
     { label: neighborhood.fullName },
   ];
+
+  const totalCount = properties.length + neighborhood.listings.length;
 
   return (
     <CompareProvider>
@@ -75,7 +80,7 @@ const NeighborhoodDetail = () => {
               </div>
               <div className="flex items-center gap-2 bg-muted text-muted-foreground px-4 py-2 rounded-full text-sm">
                 <Home className="w-4 h-4" />
-                {neighborhood.listingsCount} proprietăți disponibile
+                {totalCount} proprietăți disponibile
               </div>
               <div className="flex items-center gap-2 bg-muted text-muted-foreground px-4 py-2 rounded-full text-sm">
                 <MapPin className="w-4 h-4" />
@@ -89,10 +94,37 @@ const NeighborhoodDetail = () => {
             </p>
           </div>
 
-          {/* Property Grid */}
+          {/* Real DB Properties */}
+          {(isLoading || properties.length > 0) && (
+            <div className="mb-12">
+              <h2 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Anunțuri active — verificate RealTrust
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Proprietăți reale din portofoliul nostru de investiții și vânzări.
+              </p>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {properties.map((p) => (
+                    <RealPropertyCard key={p.id} property={p} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Static Listings */}
           <div className="mb-12">
             <h2 className="text-xl font-semibold text-foreground mb-6">
-              Proprietăți disponibile în {neighborhood.fullName}
+              {properties.length > 0
+                ? `Mai multe proprietăți în ${neighborhood.fullName}`
+                : `Proprietăți disponibile în ${neighborhood.fullName}`}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {neighborhood.listings.map((listing) => (
@@ -123,6 +155,31 @@ const NeighborhoodDetail = () => {
               </Button>
             </div>
           </div>
+
+          {/* FAQ */}
+          {neighborhood.faq.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-xl font-semibold text-foreground mb-6">
+                Întrebări frecvente — {neighborhood.fullName}
+              </h2>
+              <div className="space-y-4">
+                {neighborhood.faq.map((f, i) => (
+                  <details
+                    key={i}
+                    className="group bg-card border border-border rounded-xl overflow-hidden"
+                  >
+                    <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-foreground hover:text-primary transition-colors list-none flex items-center justify-between">
+                      {f.question}
+                      <span className="text-muted-foreground group-open:rotate-180 transition-transform">▾</span>
+                    </summary>
+                    <div className="px-5 pb-4 text-sm text-muted-foreground leading-relaxed">
+                      {f.answer}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Market Pulse */}
           <Suspense fallback={<div className="min-h-[300px]" />}>
