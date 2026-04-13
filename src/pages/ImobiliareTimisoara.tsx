@@ -176,8 +176,12 @@ const ImobiliareTimisoara = () => {
         <Footer />
         <GlobalConversionWidgets />
       </Suspense>
+      <Suspense fallback={null}>
+        <CompareDrawer />
+      </Suspense>
       <BackToTop />
     </div>
+    </CompareProvider>
   );
 };
 
