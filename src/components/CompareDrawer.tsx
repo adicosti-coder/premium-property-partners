@@ -193,8 +193,8 @@ const CompareDrawer = () => {
 
   const rents = effectiveItems.map(estimateMonthlyRent);
   const rois = effectiveItems.map((l, i) => ((rents[i] * 12) / l.price) * 100);
-  const hotelRevs = items.map(estimateHotelRevenue);
-  const hotelRois = items.map((l, i) => ((hotelRevs[i] * 12) / l.price) * 100);
+  const hotelRevs = effectiveItems.map(estimateHotelRevenue);
+  const hotelRois = effectiveItems.map((l, i) => ((hotelRevs[i] * 12) / l.price) * 100);
 
   const openWhatsApp = (item: ComparableItem) => {
     const msg = encodeURIComponent(
