@@ -4,12 +4,12 @@
  */
 
 const KEYWORD_MAP: { keywords: string[]; slug: string }[] = [
-  { keywords: ["isho", "i should have one", "vivalia", "take ionescu", "take-ionescu", "bucuresti", "fabric", "revolutiei", "revoluției"], slug: "isho" },
+  { keywords: ["isho", "i should have one", "vivalia", "take ionescu", "take-ionescu", "bucuresti", "fabric", "revolutiei", "revoluției", "traian"], slug: "isho" },
   { keywords: ["aradului", "iulius", "torontalului", "openville", "zimbrului", "vox park"], slug: "zona-aradului" },
   { keywords: ["girocului", "soarelui", "martirilor", "urseni"], slug: "zona-girocului" },
   { keywords: ["complex", "studentesc", "studențesc", "uvt", "politehnica", "universitate", "medicina", "dambovita"], slug: "complex-studentesc" },
   { keywords: ["sagului", "șagului", "steaua", "europa"], slug: "sagului" },
-  { keywords: ["mara", "circumvalatiunii", "circumvalațiunii", "bega", "unirii", "traian", "ultra-central", "ultracentral", "gh. lazar", "gh lazar", "piata unirii"], slug: "circumvalatiunii" },
+  { keywords: ["mara", "circumvalatiunii", "circumvalațiunii", "bega", "unirii", "ultra-central", "ultracentral", "gh. lazar", "gh lazar", "piata unirii"], slug: "circumvalatiunii" },
   { keywords: ["lipovei", "ionescu de la brad"], slug: "calea-lipovei" },
 ];
 
