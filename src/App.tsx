@@ -108,6 +108,21 @@ const LegacyRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
+// Track SPA page views in GA4 on every route change
+const GtagPageTracker = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "page_view", {
+        page_path: pathname,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    }
+  }, [pathname]);
+  return null;
+};
+
 // Scroll to top on route change
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -158,6 +173,7 @@ const App = () => (
             <ErrorBoundary>
               <FAQSchemaProvider>
               <ScrollToTop />
+              <GtagPageTracker />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
