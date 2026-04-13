@@ -110,9 +110,15 @@ const NeighborhoodDetail = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {properties.map((p) => (
-                    <RealPropertyCard key={p.id} property={p} />
-                  ))}
+                  {[...properties]
+                    .sort((a, b) => {
+                      const roiA = parseFloat(a.roi_percentage ?? "0") || 0;
+                      const roiB = parseFloat(b.roi_percentage ?? "0") || 0;
+                      return roiB - roiA;
+                    })
+                    .map((p) => (
+                      <RealPropertyCard key={p.id} property={p} />
+                    ))}
                 </div>
               )}
             </div>
