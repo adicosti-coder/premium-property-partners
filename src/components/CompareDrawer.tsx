@@ -186,8 +186,13 @@ const CompareDrawer = () => {
     }
   };
 
-  const rents = items.map(estimateMonthlyRent);
-  const rois = items.map((l, i) => ((rents[i] * 12) / l.price) * 100);
+  const effectiveItems = items.map((item) => ({
+    ...item,
+    pricePerSqm: item.pricePerSqm > 0 ? item.pricePerSqm : (item.surface > 0 ? Math.round(item.price / item.surface) : 0),
+  }));
+
+  const rents = effectiveItems.map(estimateMonthlyRent);
+  const rois = effectiveItems.map((l, i) => ((rents[i] * 12) / l.price) * 100);
   const hotelRevs = items.map(estimateHotelRevenue);
   const hotelRois = items.map((l, i) => ((hotelRevs[i] * 12) / l.price) * 100);
 
