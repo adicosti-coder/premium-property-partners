@@ -50,6 +50,7 @@ import {
   generateBreadcrumbSchema,
   type PropertySchemaData 
 } from "@/utils/schemaGenerators";
+import { generatePropertySEO } from "@/utils/generatePropertySEO";
 import { getDisplayLocation, resolvePropertyCoordinates, getPropertyPois } from "@/utils/propertyGeo";
 
 // Extindem interfața pentru a include noile câmpuri de investiție
