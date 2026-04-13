@@ -24,7 +24,6 @@ const NeighborhoodDetail = () => {
   }
 
   const breadcrumbItems = [
-    { label: "Acasă", href: "/" },
     { label: "Imobiliare Timișoara", href: "/imobiliare-timisoara" },
     { label: neighborhood.fullName },
   ];
