@@ -51,6 +51,7 @@ import ProspectManager from "@/components/admin/ProspectManager";
 import CatalogManager from "@/components/admin/CatalogManager";
 import GuestGuideManager from "@/components/admin/GuestGuideManager";
 import AICacheManager from "@/components/admin/AICacheManager";
+import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -358,6 +359,10 @@ const Admin = () => {
               <MessageSquare className="w-4 h-4" />
               Reviews
             </TabsTrigger>
+            <TabsTrigger value="scraper-status" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Scraper Status
+            </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" />
               Securitate
@@ -425,6 +430,7 @@ const Admin = () => {
           <TabsContent value="listing-import"><ListingImporter /></TabsContent>
           <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
           <TabsContent value="catalogs"><CatalogManager /></TabsContent>
+          <TabsContent value="scraper-status"><ScraperStatusDashboard /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
