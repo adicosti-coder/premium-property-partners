@@ -88,21 +88,7 @@ const Hero = () => {
     };
   }, [language]);
 
-  // Remove hero skeleton overlay — short delay so skeleton text stays as LCP element
-  // but doesn't tank Speed Index (which penalizes long visual stagnation)
-  useLayoutEffect(() => {
-    const skeleton = document.getElementById('hero-skeleton');
-    if (skeleton) {
-      const timer = setTimeout(() => {
-        skeleton.classList.add('hero-ready');
-        setTimeout(() => {
-          skeleton.classList.add('hero-gone');
-          skeleton.remove();
-        }, 150);
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  // No skeleton delay — React Hero renders directly as LCP element
 
   // Check connection speed
   useEffect(() => {
