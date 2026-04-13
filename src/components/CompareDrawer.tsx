@@ -105,6 +105,9 @@ const CompareDrawer = () => {
   const rentBest = bestIndex(rents, "max");
   const surfaceBest = bestIndex(items.map((l) => l.surface), "max");
 
+  const hotelRevBest = bestIndex(hotelRevs, "max");
+  const hotelRoiBest = bestIndex(hotelRois, "max");
+
   const highlight = (idx: number, bestIdx: number) =>
     idx === bestIdx ? "text-green-600 font-bold" : "";
 
@@ -137,7 +140,7 @@ const CompareDrawer = () => {
     },
     { label: "Camere", render: (l: ComparableItem) => `${l.rooms}` },
     {
-      label: "Venit lunar estimat",
+      label: "Chirie clasică estimată",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, rentBest))}>
           {rents[idx]} € / lună
@@ -145,7 +148,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Randament anual (ROI)",
+      label: "ROI chirie clasică",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, roiBest))}>
           {rois[idx].toFixed(1)}%
@@ -153,20 +156,35 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Administrare RealTrust",
+      label: "Chirie regim hotelier",
+      render: (_l: ComparableItem, idx: number) => (
+        <span className={cn("font-semibold text-primary", highlight(idx, hotelRevBest))}>
+          {hotelRevs[idx].toLocaleString("ro-RO")} € / lună
+        </span>
+      ),
+    },
+    {
+      label: "ROI regim hotelier",
+      render: (_l: ComparableItem, idx: number) => (
+        <span className={cn("font-bold text-primary", highlight(idx, hotelRoiBest))}>
+          {hotelRois[idx].toFixed(1)}%
+        </span>
+      ),
+    },
+    {
+      label: "Recomandat",
       render: (l: ComparableItem) =>
         l.badge === "administrare" || l.badge === "investitie" ? (
           <div>
             <div className="flex items-center gap-1">
               <span className="text-amber-500">✓</span>
-              <Badge className="bg-amber-500/15 text-amber-700 border-amber-300 text-xs">Da</Badge>
+              <Badge className="bg-primary/15 text-primary border-primary/30 text-[10px] leading-tight whitespace-normal">
+                Administrare RealTrust‑ApArt Hotel
+              </Badge>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
-              Management Complet Inclus
-            </p>
           </div>
         ) : (
-          <Badge variant="secondary" className="text-xs">Nu</Badge>
+          <Badge variant="secondary" className="text-xs">Standard</Badge>
         ),
     },
   ];
