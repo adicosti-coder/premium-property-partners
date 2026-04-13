@@ -57,7 +57,7 @@ const CompareDrawer = () => {
         onClick={handleToggle}
         className={cn(
           "fixed left-1/2 -translate-x-1/2 z-[60] transition-all",
-          "bottom-[70px] md:bottom-6",
+          expanded ? "bottom-[calc(60vh+8px)] md:bottom-[calc(60vh+8px)]" : "bottom-[70px] md:bottom-6",
           "bg-primary text-primary-foreground px-5 py-2.5 rounded-full shadow-lg",
           "flex items-center gap-2 text-sm font-medium",
           !canCompare && "opacity-70 cursor-default"
