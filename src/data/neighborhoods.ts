@@ -151,7 +151,7 @@ export const neighborhoods: NeighborhoodData[] = [
     avgPricePerSqm: 1550,
     listingsCount: 5,
     description:
-      'Calea Lipovei traversează estul Timișoarei, conectând zona centrală de cartierele Fratelia și Freidorf. Este un bulevard cu tradiție, apreciat pentru accesul la piețe agroalimentare, școli și parcuri. Dezvoltările recente au adus blocuri noi cu finisaje premium, iar prețurile rămân printre cele mai accesibile din Timișoara. Zona beneficiază de tramvai direct spre centru (12 minute), magazine de proximitate și facilități medicale. Profilul rezidenților include familii cu venituri medii, pensionari și tineri la primul apartament. Investitorii apreciază raportul preț-randament excelent, cu chirii stabile și cerere constantă din partea lucrătorilor locali.',
+      'Calea Lipovei este unul dintre bulevardele principale din estul Timișoarei, cu acces direct spre centrul orașului. Este o zonă cu tradiție, apreciată pentru accesul la piețe agroalimentare, școli și parcuri. Dezvoltările recente au adus blocuri noi cu finisaje premium, iar prețurile rămân printre cele mai accesibile din Timișoara. Zona beneficiază de tramvai direct spre centru (12 minute), magazine de proximitate și facilități medicale. Profilul rezidenților include familii cu venituri medii, pensionari și tineri la primul apartament. Investitorii apreciază raportul preț-randament excelent, cu chirii stabile și cerere constantă din partea lucrătorilor locali.',
     metaTitle: 'Apartamente Calea Lipovei Timișoara | RealTrust Imobiliare',
     metaDescription: 'Apartamente de vânzare pe Calea Lipovei, Timișoara. Cele mai accesibile prețuri din oraș — 1.550 €/mp. Randament excelent cu administrare RealTrust.',
     faq: [
