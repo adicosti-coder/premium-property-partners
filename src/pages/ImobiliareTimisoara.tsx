@@ -91,10 +91,16 @@ const ImobiliareTimisoara = () => {
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {liveNeighborhoodProperties.map((property) => (
-                    <RealPropertyCard key={property.id} property={property} />
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...liveNeighborhoodProperties]
+                    .sort((a, b) => {
+                      const roiA = parseFloat(a.roi_percentage ?? "0") || 0;
+                      const roiB = parseFloat(b.roi_percentage ?? "0") || 0;
+                      return roiB - roiA;
+                    })
+                    .map((property) => (
+                      <RealPropertyCard key={property.id} property={property} />
+                    ))}
                 </div>
               )}
             </section>
