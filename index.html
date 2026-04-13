@@ -58,6 +58,9 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
     <!-- Preload NotoSans-Regular — body/subtitle font (LCP text element) -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/NotoSans-Regular.woff2" crossorigin />
+    <!-- Preload Inter fonts — prevents 3.3s critical chain via CSS discovery -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
     <!-- Inter fonts: not critical for LCP, loaded via CSS font-display:swap -->
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
@@ -103,6 +106,8 @@
           var stored = window.localStorage && window.localStorage.getItem("theme");
           var theme = stored || "light";
           document.documentElement.classList.add(theme);
+          // Ensure lang attribute survives any HTML rewriting (Cloudflare Rocket Loader etc.)
+          if (!document.documentElement.lang) document.documentElement.lang = "ro";
         } catch (_) {}
       })();
       // Convert Vite-injected render-blocking CSS to async loading.

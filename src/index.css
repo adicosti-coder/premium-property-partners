@@ -10,6 +10,16 @@
   line-gap-override: 0%;
 }
 
+/* Fallback font matched to Inter metrics to prevent CLS during font swap */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  size-adjust: 107%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 /* Local NotoSans fonts — WOFF2 subsetted (~80KB each vs 560KB TTF) */
 @font-face {
   font-family: 'NotoSans';
