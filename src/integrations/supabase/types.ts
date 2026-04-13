@@ -2900,15 +2900,19 @@ export type Database = {
         Row: {
           admin_notes: string | null
           created_at: string
+          estimated_roi: number | null
           extra_profit_3y: number
           id: string
+          is_priority: boolean | null
           lead_score: number
           listing_type: string
           monthly_extra: number
+          neighborhood_slug: string | null
           original_price: number
           phone: string | null
           prospect_category: string | null
           search_keyword: string | null
+          seo_description: string | null
           source: string | null
           status: string
           tags: string[]
@@ -2920,15 +2924,19 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           created_at?: string
+          estimated_roi?: number | null
           extra_profit_3y?: number
           id?: string
+          is_priority?: boolean | null
           lead_score?: number
           listing_type?: string
           monthly_extra?: number
+          neighborhood_slug?: string | null
           original_price?: number
           phone?: string | null
           prospect_category?: string | null
           search_keyword?: string | null
+          seo_description?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -2940,15 +2948,19 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           created_at?: string
+          estimated_roi?: number | null
           extra_profit_3y?: number
           id?: string
+          is_priority?: boolean | null
           lead_score?: number
           listing_type?: string
           monthly_extra?: number
+          neighborhood_slug?: string | null
           original_price?: number
           phone?: string | null
           prospect_category?: string | null
           search_keyword?: string | null
+          seo_description?: string | null
           source?: string | null
           status?: string
           tags?: string[]
