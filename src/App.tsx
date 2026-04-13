@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
+import { CompareProvider } from "@/contexts/CompareContext";
 
 // Defer heavy shell components that are not needed for first paint
 const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -96,6 +97,7 @@ const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
+const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
@@ -167,6 +169,7 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
+              <CompareProvider>
               <ScrollToTop />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
@@ -182,7 +185,6 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-                    {/* SEO landing pages — each property has its own top-level route */}
                     <Route path="/ring-apart-hotel-spacious-deluxe" element={<PropertyDetail />} />
                     <Route path="/green-forest-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/fructus-plaza-ultracentral-apart-hotel" element={<PropertyDetail />} />
@@ -226,8 +228,8 @@ const App = () => (
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
+                    <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
-                    {/* Legacy .html redirects — use Navigate for proper 301-like behavior with crawlers */}
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
                     <Route path="/index-en.html" element={<Navigate to="/" replace />} />
                     <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
@@ -235,13 +237,12 @@ const App = () => (
                     <Route path="/imobiliare-realtrust.html" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/real-estate-en.html" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/real-estate.html" element={<Navigate to="/imobiliare" replace />} />
-                    {/* Sitemap redirect to dynamic edge function */}
                     <Route path="/sitemap.xml" element={<LegacyRedirect to={`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap`} />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
               </DeferredShell>
+              </CompareProvider>
               </FAQSchemaProvider>
             </ErrorBoundary>
           </BrowserRouter>

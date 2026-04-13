@@ -7,7 +7,7 @@ import BackToTop from "@/components/BackToTop";
 import NeighborhoodPropertyCard from "@/components/NeighborhoodPropertyCard";
 import RealPropertyCard from "@/components/RealPropertyCard";
 import CompareDrawer from "@/components/CompareDrawer";
-import { CompareProvider } from "@/contexts/CompareContext";
+
 import { getNeighborhoodBySlug } from "@/data/neighborhoods";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { MapPin, TrendingUp, Home, Phone, Loader2 } from "lucide-react";
@@ -34,7 +34,6 @@ const NeighborhoodDetail = () => {
   const totalCount = properties.length + neighborhood.listings.length;
 
   return (
-    <CompareProvider>
     <div className="min-h-screen bg-background">
       <SEOHead
         title={neighborhood.metaTitle}
@@ -195,7 +194,6 @@ const NeighborhoodDetail = () => {
       <BackToTop />
       <CompareDrawer />
     </div>
-    </CompareProvider>
   );
 };
 
