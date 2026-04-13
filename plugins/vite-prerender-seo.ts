@@ -22,6 +22,10 @@ interface PrerenderRoute {
 const BASE_URL = 'https://www.realtrust.ro';
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8';
+const PROTECTED_HEAD_PATTERNS = [
+  /<!-- GA4 Global Site Tag -->[\s\S]*?<!-- \/GA4 Global Site Tag -->/i,
+  /<meta name="google-site-verification" content="[^"]*"\s*\/?>/i,
+];
 
 /**
  * Neighborhood data mirrored from src/data/neighborhoods.ts.
@@ -290,7 +294,26 @@ function buildStaticRoutes(): PrerenderRoute[] {
   return routes;
 }
 
-function generateHtml(template: string, route: PrerenderRoute): string {
+function collectProtectedHeadNodes(template: string): string[] {
+  return PROTECTED_HEAD_PATTERNS
+    .map((pattern) => template.match(pattern)?.[0] ?? null)
+    .filter((node): node is string => Boolean(node));
+}
+
+function ensureProtectedHeadNodes(html: string, protectedHeadNodes: string[]): string {
+  const missingNodes = protectedHeadNodes.filter((node) => !html.includes(node));
+
+  if (missingNodes.length === 0) {
+    return html;
+  }
+
+  return html.replace(
+    '</head>',
+    `  ${missingNodes.join('\n  ')}\n</head>`
+  );
+}
+
+function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
   let html = template.replace(
     /<title>[^<]*<\/title>/,
     `<title>${escapeHtml(route.title)}</title>`
@@ -324,7 +347,7 @@ function generateHtml(template: string, route: PrerenderRoute): string {
     `${seoBlock}\n    <div id="root">`
   );
 
-  return html;
+  return ensureProtectedHeadNodes(html, protectedHeadNodes);
 }
 
 function escapeHtml(str: string): string {
@@ -353,6 +376,7 @@ export default function vitePrerenderSeo(): Plugin {
         }
 
         const template = fs.readFileSync(templatePath, 'utf-8');
+        const protectedHeadNodes = collectProtectedHeadNodes(template);
         
         // Build static routes (neighborhoods, calculators, etc.)
         const staticRoutes = buildStaticRoutes();
@@ -371,7 +395,7 @@ export default function vitePrerenderSeo(): Plugin {
           const dirPath = path.join(outDir, route.path);
           fs.mkdirSync(dirPath, { recursive: true });
 
-          const htmlContent = generateHtml(template, route);
+          const htmlContent = generateHtml(template, route, protectedHeadNodes);
           const filePath = path.join(dirPath, 'index.html');
           fs.writeFileSync(filePath, htmlContent, 'utf-8');
 

@@ -49,6 +49,8 @@ const queryClient = new QueryClient({
   },
 });
 
+const GA_MEASUREMENT_ID = "G-JXDGWL3G6V";
+
 // Index loaded eagerly — it's the landing page and LCP depends on it rendering fast
 import Index from "./pages/Index";
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
@@ -108,25 +110,18 @@ const LegacyRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
-// Track SPA page views in GA4 on every route change
-const GtagPageTracker = () => {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    if (typeof window.gtag === "function") {
-      window.gtag("event", "page_view", {
-        page_path: pathname,
-        page_location: window.location.href,
-        page_title: document.title,
-      });
-    }
-  }, [pathname]);
-  return null;
-};
-
 // Scroll to top on route change
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const navType = useNavigationType();
+
+  useEffect(() => {
+    if (typeof window.gtag === "function") {
+      window.gtag("config", GA_MEASUREMENT_ID, { page_path: location.pathname });
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     // Only scroll to top on PUSH navigation (new page), not on POP (back/forward)
     if (navType === "PUSH") {
@@ -173,7 +168,6 @@ const App = () => (
             <ErrorBoundary>
               <FAQSchemaProvider>
               <ScrollToTop />
-              <GtagPageTracker />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
