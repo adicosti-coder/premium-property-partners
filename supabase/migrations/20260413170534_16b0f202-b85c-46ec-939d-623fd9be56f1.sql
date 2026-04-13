@@ -1,0 +1,1 @@
+UPDATE properties SET location = 'Ansamblul Rezidențial RING, Timișoara' WHERE id = 'a00d6eff-9ce5-467f-8a40-a19ebd040104' AND location LIKE 'https://maps.app.goo.gl%';
