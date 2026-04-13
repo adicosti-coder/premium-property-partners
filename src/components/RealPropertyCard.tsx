@@ -1,9 +1,11 @@
-import { Building2, Layers, Maximize, MapPin, TrendingUp, ExternalLink } from "lucide-react";
+import { Building2, Layers, Maximize, MapPin, TrendingUp, ExternalLink, GitCompareArrows } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import ImageWithFallback from "@/components/ImageWithFallback";
 import type { NeighborhoodProperty } from "@/hooks/useNeighborhoodProperties";
 import { resolvePropertyImageUrl } from "@/utils/resolvePropertyImageUrl";
+import { useCompare, type ComparableItem } from "@/contexts/CompareContext";
+import { cn } from "@/lib/utils";
 
 function getImageUrl(property: NeighborhoodProperty): string | null {
   const propertyImages = [...(property.property_images ?? [])]
@@ -36,6 +38,25 @@ function parseFloor(floor: string | null): string {
   return `Etaj ${floor}`;
 }
 
+/** Convert NeighborhoodProperty → ComparableItem for the Compare drawer */
+function toComparable(property: NeighborhoodProperty): ComparableItem {
+  const price = property.capital_necesar || (property.price_per_sqm && property.size ? property.price_per_sqm * property.size : 0);
+  return {
+    id: property.id,
+    title: property.name,
+    price,
+    pricePerSqm: property.price_per_sqm ?? 0,
+    rooms: property.bedrooms ?? 0,
+    floor: property.floor ?? 0,
+    surface: property.size ?? 0,
+    badge: property.listing_type === "investitie" ? "investitie" : "vanzare",
+    imageAlt: property.name,
+    slug: property.slug,
+    roi: property.roi_percentage,
+    estimatedRevenue: property.estimated_revenue,
+  };
+}
+
 export default function RealPropertyCard({ property }: { property: NeighborhoodProperty }) {
   const imageUrl = getImageUrl(property);
   const floorLabel = parseFloor(property.floor);
@@ -43,6 +64,19 @@ export default function RealPropertyCard({ property }: { property: NeighborhoodP
   const isInvestment = property.listing_type === "investitie";
   const roi = property.roi_percentage;
   const detailUrl = property.slug ? `/proprietate/${property.slug}` : `/proprietate/${property.id}`;
+
+  const { add, remove, has } = useCompare();
+  const isCompared = has(property.id);
+
+  const handleCompare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isCompared) {
+      remove(property.id);
+    } else {
+      add(toComparable(property));
+    }
+  };
 
   return (
     <Link to={detailUrl} className="group block">
@@ -144,6 +178,22 @@ export default function RealPropertyCard({ property }: { property: NeighborhoodP
             <ExternalLink className="w-3 h-3" />
             Vezi detalii complete
           </div>
+        </div>
+
+        {/* Compare button */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={handleCompare}
+            className={cn(
+              "w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all border",
+              isCompared
+                ? "bg-primary/10 border-primary text-primary"
+                : "border-border text-muted-foreground hover:border-primary/30 hover:text-primary"
+            )}
+          >
+            <GitCompareArrows className="w-3.5 h-3.5" />
+            {isCompared ? "Adăugat ✓" : "Compară"}
+          </button>
         </div>
       </article>
     </Link>
