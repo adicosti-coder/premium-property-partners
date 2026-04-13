@@ -31,8 +31,8 @@ export function NeighborhoodsGrid() {
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
           {neighborhoods.map((n) => {
-            const realCount = countsBySlug[n.slug] || 0;
-            const displayCount = realCount > 0 ? realCount : n.listingsCount;
+            const liveCount = countsBySlug[n.slug] || 0;
+            const totalCount = liveCount + n.listingsCount;
 
             return (
               <Link
@@ -47,9 +47,15 @@ export function NeighborhoodsGrid() {
 
                   {/* Live count badge */}
                   <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-[10px] font-bold text-primary border border-primary/20">
-                    {isLoading ? "..." : displayCount}{" "}
+                    {isLoading ? "..." : totalCount}{" "}
                     {language === "ro" ? "anunțuri" : "listings"}
                   </div>
+
+                  {liveCount > 0 && !isLoading && (
+                    <div className="absolute bottom-3 left-3 bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-1 text-[10px] font-bold">
+                      {liveCount} live
+                    </div>
+                  )}
 
                   {/* ROI indicator for premium zones */}
                   {n.avgPricePerSqm >= 1900 && (
