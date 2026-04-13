@@ -2864,6 +2864,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_comparisons: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          session_id: string | null
+          share_code: string
+          shared_via: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items: Json
+          session_id?: string | null
+          share_code?: string
+          shared_via?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          session_id?: string | null
+          share_code?: string
+          shared_via?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       scraper_lead_status_history: {
         Row: {
           changed_at: string
