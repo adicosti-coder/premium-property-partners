@@ -6,6 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { neighborhoods } from "@/data/neighborhoods";
+import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { lazy, Suspense } from "react";
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
