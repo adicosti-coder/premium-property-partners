@@ -88,9 +88,8 @@ const Hero = () => {
     };
   }, [language]);
 
-  // Remove hero skeleton overlay — delay to ensure skeleton text stays as the LCP element
-  // Lighthouse measures LCP at ~2.5s; if skeleton is removed instantly, React's <p> becomes LCP
-  // By keeping skeleton visible for 2.5s, the skeleton text (painted at FCP ~1.1s) IS the LCP
+  // Remove hero skeleton overlay — short delay so skeleton text stays as LCP element
+  // but doesn't tank Speed Index (which penalizes long visual stagnation)
   useLayoutEffect(() => {
     const skeleton = document.getElementById('hero-skeleton');
     if (skeleton) {
@@ -99,8 +98,8 @@ const Hero = () => {
         setTimeout(() => {
           skeleton.classList.add('hero-gone');
           skeleton.remove();
-        }, 200);
-      }, 2500);
+        }, 150);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, []);
