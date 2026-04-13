@@ -93,6 +93,8 @@ const SimilarProperties = ({
   const getImageUrl = (path: string | null) => {
     if (!path) return "/placeholder.svg";
     if (path.startsWith("http")) return path;
+    // Local asset paths like /assets/apt-03.webp are in src/assets, not storage
+    if (path.startsWith("/assets/")) return path;
     const { data } = supabase.storage.from("property-images").getPublicUrl(path);
     return data.publicUrl;
   };
@@ -132,12 +134,17 @@ const SimilarProperties = ({
           const href = prop.slug
             ? `/proprietate/${prop.slug}`
             : `/proprietate/${prop.id}`;
-          const price = prop.base_price_per_night || prop.capital_necesar;
-          const priceLabel = prop.listing_type === "vanzare" || prop.listing_type === "investitie"
-            ? `€${price?.toLocaleString("ro-RO")}`
-            : price
-              ? `€${price}/noapte`
-              : null;
+          const isRental = prop.listing_type === "inchiriere";
+          const isSaleOrInvest = prop.listing_type === "vanzare" || prop.listing_type === "investitie";
+          const price = isSaleOrInvest
+            ? (prop.capital_necesar || prop.base_price_per_night)
+            : isRental
+              ? prop.capital_necesar
+              : prop.base_price_per_night;
+          const priceSuffix = isSaleOrInvest ? "" : isRental ? "/lună" : "/noapte";
+          const priceLabel = price
+            ? `€${price.toLocaleString("ro-RO")}${priceSuffix}`
+            : null;
 
           return (
             <Link key={prop.id} to={href} className="group">
