@@ -3,7 +3,7 @@ import { lazy, Suspense, useState, useEffect } from "react";
 // ALL widgets deferred — nothing loads eagerly to cut initial JS execution
 const AccessibilityPanel = lazy(() => import("@/components/AccessibilityPanel"));
 const MobileCTABar = lazy(() => import("@/components/MobileCTABar"));
-const FloatingActionMenu = lazy(() => import("@/components/FloatingActionMenu"));
+
 const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator"));
 const DesktopStickyContactBar = lazy(() => import("@/components/DesktopStickyContactBar"));
 
@@ -89,7 +89,6 @@ const GlobalConversionWidgets = ({
           {showMobileCTA && <MobileCTABar />}
           <DesktopStickyContactBar />
           <AccessibilityPanel />
-          <FloatingActionMenu showChatbot={showChatbot} />
         </Suspense>
       )}
 
