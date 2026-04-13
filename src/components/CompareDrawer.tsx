@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { useCompare, type ComparableItem } from "@/contexts/CompareContext";
-import { X, GitCompareArrows, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
+import { X, GitCompareArrows, ChevronDown, ChevronUp, MessageCircle, Save, Share2, Link2, Mail, Facebook, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-/** Parse floor to display string */
 const parseFloor = (floor: number | string): string => {
   if (typeof floor === "string") {
     if (floor === "0" || floor.toLowerCase() === "parter") return "Parter";
@@ -22,45 +21,72 @@ const parseFloor = (floor: number | string): string => {
   return floor === 0 ? "Parter" : `Etaj ${floor}`;
 };
 
-/** Parse floor to number for comparison */
 const floorNumber = (floor: number | string): number => {
   if (typeof floor === "number") return floor;
   const n = parseInt(floor, 10);
   return isNaN(n) ? 0 : n;
 };
 
-/** Estimate monthly rent (classic) based on room count */
 const estimateMonthlyRent = (item: ComparableItem): number => {
   const map: Record<number, number> = { 1: 300, 2: 400, 3: 520 };
   return map[item.rooms] ?? 350;
 };
 
-/** Estimate monthly revenue in hotel regime based on room count */
 const estimateHotelRevenue = (item: ComparableItem): number => {
   if (item.estimatedRevenue) {
     const parsed = parseInt(item.estimatedRevenue.replace(/[^\d]/g, ""), 10);
     if (!isNaN(parsed) && parsed > 0) return parsed;
   }
-  // Fallback: Timișoara market averages
   const map: Record<number, number> = { 1: 1350, 2: 1800, 3: 2250 };
   return map[item.rooms] ?? 1500;
 };
 
-/** Find the best (min or max) value index among items */
 const bestIndex = (values: number[], mode: "min" | "max"): number => {
   if (values.length === 0) return -1;
   let bestIdx = 0;
   for (let i = 1; i < values.length; i++) {
-    if (mode === "min" ? values[i] < values[bestIdx] : values[i] > values[bestIdx]) {
-      bestIdx = i;
-    }
+    if (mode === "min" ? values[i] < values[bestIdx] : values[i] > values[bestIdx]) bestIdx = i;
   }
   return bestIdx;
+};
+
+/** Save comparison to DB and return share code */
+const saveComparison = async (items: ComparableItem[], sharedVia: string): Promise<string | null> => {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    const sessionId = window.sessionStorage.getItem("compare_session") || crypto.randomUUID();
+    window.sessionStorage.setItem("compare_session", sessionId);
+
+    const { data, error } = await supabase
+      .from("saved_comparisons")
+      .insert({
+        items: items as any,
+        user_id: user?.user?.id || null,
+        session_id: sessionId,
+        shared_via: [sharedVia],
+      })
+      .select("share_code")
+      .single();
+
+    if (error) throw error;
+    return data?.share_code || null;
+  } catch (err) {
+    console.error("Failed to save comparison:", err);
+    return null;
+  }
+};
+
+const getShareUrl = (code: string) => {
+  const base = window.location.origin;
+  return `${base}/comparatie/${code}`;
 };
 
 const CompareDrawer = () => {
   const { items, remove, clear } = useCompare();
   const [expanded, setExpanded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedCode, setSavedCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const isOpen = items.length > 0;
 
   if (!isOpen) return null;
@@ -76,6 +102,81 @@ const CompareDrawer = () => {
         items_count: items.length,
         page_path: window.location.pathname,
       });
+    }
+  };
+
+  const ensureSaved = async (via: string): Promise<string | null> => {
+    if (savedCode) return savedCode;
+    setSaving(true);
+    const code = await saveComparison(items, via);
+    setSaving(false);
+    if (code) {
+      setSavedCode(code);
+      return code;
+    }
+    toast.error("Nu s-a putut salva comparația");
+    return null;
+  };
+
+  const handleSave = async () => {
+    const code = await ensureSaved("saved");
+    if (code) {
+      toast.success("Comparație salvată!", { description: "Linkul a fost generat." });
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "save_comparison", { share_code: code });
+      }
+    }
+  };
+
+  const handleCopyLink = async () => {
+    const code = await ensureSaved("link");
+    if (!code) return;
+    const url = getShareUrl(code);
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success("Link copiat!");
+    setTimeout(() => setCopied(false), 2000);
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "share_comparison", { method: "copy_link", share_code: code });
+    }
+  };
+
+  const handleWhatsAppShare = async () => {
+    const code = await ensureSaved("whatsapp");
+    if (!code) return;
+    const url = getShareUrl(code);
+    const titles = items.map((i) => i.title).join(", ");
+    const msg = encodeURIComponent(
+      `Comparație proprietăți RealTrust: ${titles}\n${url}`
+    );
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "share_comparison", { method: "whatsapp", share_code: code });
+    }
+  };
+
+  const handleFacebookShare = async () => {
+    const code = await ensureSaved("facebook");
+    if (!code) return;
+    const url = getShareUrl(code);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank", "width=600,height=400");
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "share_comparison", { method: "facebook", share_code: code });
+    }
+  };
+
+  const handleEmailShare = async () => {
+    const code = await ensureSaved("email");
+    if (!code) return;
+    const url = getShareUrl(code);
+    const titles = items.map((i) => i.title).join(", ");
+    const subject = encodeURIComponent("Comparație proprietăți - RealTrust");
+    const body = encodeURIComponent(
+      `Am comparat aceste proprietăți pe RealTrust:\n\n${titles}\n\nVezi comparația: ${url}`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "share_comparison", { method: "email", share_code: code });
     }
   };
 
@@ -98,13 +199,11 @@ const CompareDrawer = () => {
     }
   };
 
-  // Highlight helpers per row
   const priceBest = bestIndex(items.map((l) => l.price), "min");
   const priceSqmBest = bestIndex(items.map((l) => l.pricePerSqm), "min");
   const roiBest = bestIndex(rois, "max");
   const rentBest = bestIndex(rents, "max");
   const surfaceBest = bestIndex(items.map((l) => l.surface), "max");
-
   const hotelRevBest = bestIndex(hotelRevs, "max");
   const hotelRoiBest = bestIndex(hotelRois, "max");
 
@@ -212,16 +311,59 @@ const CompareDrawer = () => {
       {expanded && canCompare && (
         <div className="fixed inset-x-0 bottom-0 z-[55] bg-card border-t border-border shadow-2xl rounded-t-2xl max-h-[60vh] overflow-auto animate-in slide-in-from-bottom duration-300 pb-[70px] md:pb-0">
           <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h3 className="font-semibold text-foreground text-lg">
                 Analiză comparativă investiții
               </h3>
-              <button
-                onClick={() => { clear(); setExpanded(false); }}
-                className="text-muted-foreground hover:text-foreground transition-colors text-sm flex items-center gap-1"
-              >
-                <X className="w-4 h-4" /> Șterge tot
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Save */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="gap-1.5 text-xs"
+                >
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedCode ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Save className="w-3.5 h-3.5" />}
+                  {savedCode ? "Salvat" : "Salvează"}
+                </Button>
+
+                {/* Share dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={saving}>
+                      <Share2 className="w-3.5 h-3.5" />
+                      Partajează
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={handleCopyLink} className="gap-2">
+                      {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
+                      Copiază linkul
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleWhatsAppShare} className="gap-2">
+                      <MessageCircle className="w-4 h-4 text-green-600" />
+                      WhatsApp
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleFacebookShare} className="gap-2">
+                      <Facebook className="w-4 h-4 text-blue-600" />
+                      Facebook
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleEmailShare} className="gap-2">
+                      <Mail className="w-4 h-4 text-orange-500" />
+                      Email
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Clear */}
+                <button
+                  onClick={() => { clear(); setExpanded(false); setSavedCode(null); }}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm flex items-center gap-1"
+                >
+                  <X className="w-4 h-4" /> Șterge tot
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto -mx-4 px-4">
@@ -234,7 +376,7 @@ const CompareDrawer = () => {
                         <div className="flex items-center justify-between gap-2">
                           <span className="line-clamp-1 text-xs">{item.title}</span>
                           <button
-                            onClick={() => remove(item.id)}
+                            onClick={() => { remove(item.id); setSavedCode(null); }}
                             className="text-muted-foreground hover:text-destructive shrink-0"
                           >
                             <X className="w-3.5 h-3.5" />
