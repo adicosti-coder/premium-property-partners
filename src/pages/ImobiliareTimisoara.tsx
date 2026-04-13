@@ -13,6 +13,7 @@ import { CompareProvider } from "@/contexts/CompareContext";
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const CompareDrawer = lazy(() => import("@/components/CompareDrawer"));
 
 const ImobiliareTimisoara = () => {
   const { properties, countsBySlug, isLoading } = useNeighborhoodProperties();
