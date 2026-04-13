@@ -13,6 +13,7 @@ const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const ImobiliareTimisoara = () => {
+  const { countsBySlug } = useNeighborhoodProperties();
   const breadcrumbItems = [
     { label: "Acasă", href: "/" },
     { label: "Imobiliare Timișoara" },
