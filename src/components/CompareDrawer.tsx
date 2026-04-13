@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useCompare } from "@/contexts/CompareContext";
-import { X, GitCompareArrows, ChevronDown, ChevronUp } from "lucide-react";
+import { X, GitCompareArrows, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,6 +12,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { MockListing } from "@/data/neighborhoods";
+
+/** Estimate monthly rent based on room count (market averages for Timișoara) */
+const estimateMonthlyRent = (listing: MockListing): number => {
+  if (listing.badge === "administrare") {
+    // RealTrust-managed → higher yields via hotel regime
+    const map: Record<number, number> = { 1: 450, 2: 600, 3: 750 };
+    return map[listing.rooms] ?? 500;
+  }
+  const map: Record<number, number> = { 1: 300, 2: 400, 3: 520 };
+  return map[listing.rooms] ?? 350;
+};
+
+/** Find the best (min or max) value index among items */
+const bestIndex = (values: number[], mode: "min" | "max"): number => {
+  if (values.length === 0) return -1;
+  let bestIdx = 0;
+  for (let i = 1; i < values.length; i++) {
+    if (mode === "min" ? values[i] < values[bestIdx] : values[i] > values[bestIdx]) {
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+};
 
 const CompareDrawer = () => {
   const { items, remove, clear } = useCompare();
@@ -33,17 +58,87 @@ const CompareDrawer = () => {
     }
   };
 
+  const rents = items.map(estimateMonthlyRent);
+  const rois = items.map((l, i) => ((rents[i] * 12) / l.price) * 100);
+
+  const openWhatsApp = (listing: MockListing) => {
+    const msg = encodeURIComponent(
+      `Bună ziua, sunt interesat de proprietatea "${listing.title}" văzută pe realtrust.ro`
+    );
+    window.open(`https://wa.me/40744488844?text=${msg}`, "_blank");
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "contact_click", {
+        method: "whatsapp",
+        property_name: listing.title,
+        page_path: window.location.pathname,
+      });
+    }
+  };
+
+  // Highlight helpers per row
+  const priceBest = bestIndex(items.map((l) => l.price), "min");
+  const priceSqmBest = bestIndex(items.map((l) => l.pricePerSqm), "min");
+  const roiBest = bestIndex(rois, "max");
+  const rentBest = bestIndex(rents, "max");
+  const surfaceBest = bestIndex(items.map((l) => l.surface), "max");
+
+  const highlight = (idx: number, bestIdx: number) =>
+    idx === bestIdx ? "text-green-600 font-bold" : "";
+
   const rows = [
-    { label: "Preț", render: (l: typeof items[0]) => `${l.price.toLocaleString("ro-RO")} €` },
-    { label: "Preț/mp", render: (l: typeof items[0]) => `${l.pricePerSqm.toLocaleString("ro-RO")} €/mp` },
-    { label: "Suprafață", render: (l: typeof items[0]) => `${l.surface} mp` },
-    { label: "Etaj", render: (l: typeof items[0]) => l.floor === 0 ? "Parter" : `Etaj ${l.floor}` },
-    { label: "Camere", render: (l: typeof items[0]) => `${l.rooms}` },
+    {
+      label: "Preț",
+      render: (l: MockListing, idx: number) => (
+        <span className={highlight(idx, priceBest)}>
+          {l.price.toLocaleString("ro-RO")} €
+        </span>
+      ),
+    },
+    {
+      label: "Preț/mp",
+      render: (l: MockListing, idx: number) => (
+        <span className={highlight(idx, priceSqmBest)}>
+          {l.pricePerSqm.toLocaleString("ro-RO")} €/mp
+        </span>
+      ),
+    },
+    {
+      label: "Suprafață",
+      render: (l: MockListing, idx: number) => (
+        <span className={highlight(idx, surfaceBest)}>{l.surface} mp</span>
+      ),
+    },
+    {
+      label: "Etaj",
+      render: (l: MockListing) => (l.floor === 0 ? "Parter" : `Etaj ${l.floor}`),
+    },
+    { label: "Camere", render: (l: MockListing) => `${l.rooms}` },
+    {
+      label: "Venit lunar estimat",
+      render: (_l: MockListing, idx: number) => (
+        <span className={cn("font-semibold", highlight(idx, rentBest))}>
+          {rents[idx]} € / lună
+        </span>
+      ),
+    },
+    {
+      label: "Randament anual (ROI)",
+      render: (_l: MockListing, idx: number) => (
+        <span className={cn("font-semibold", highlight(idx, roiBest))}>
+          {rois[idx].toFixed(1)}%
+        </span>
+      ),
+    },
     {
       label: "Administrare RealTrust",
-      render: (l: typeof items[0]) =>
+      render: (l: MockListing) =>
         l.badge === "administrare" ? (
-          <Badge className="bg-primary text-primary-foreground text-xs">Da</Badge>
+          <div>
+            <Badge className="bg-primary text-primary-foreground text-xs">Da</Badge>
+            <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+              Include management tehnic și juridic
+            </p>
+          </div>
         ) : (
           <Badge variant="secondary" className="text-xs">Nu</Badge>
         ),
@@ -52,7 +147,7 @@ const CompareDrawer = () => {
 
   return (
     <>
-      {/* Sticky pill — clickable to toggle comparison table */}
+      {/* Sticky pill */}
       <button
         onClick={handleToggle}
         className={cn(
@@ -75,7 +170,7 @@ const CompareDrawer = () => {
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-foreground text-lg">
-                Comparație proprietăți
+                Analiză comparativă investiții
               </h3>
               <button
                 onClick={() => { clear(); setExpanded(false); }}
@@ -89,9 +184,9 @@ const CompareDrawer = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[120px]">Criteriu</TableHead>
+                    <TableHead className="min-w-[110px]">Criteriu</TableHead>
                     {items.map((item) => (
-                      <TableHead key={item.id} className="min-w-[150px]">
+                      <TableHead key={item.id} className="min-w-[140px]">
                         <div className="flex items-center justify-between gap-2">
                           <span className="line-clamp-1 text-xs">{item.title}</span>
                           <button
@@ -111,13 +206,29 @@ const CompareDrawer = () => {
                       <TableCell className="font-medium text-muted-foreground text-sm">
                         {row.label}
                       </TableCell>
-                      {items.map((item) => (
+                      {items.map((item, idx) => (
                         <TableCell key={item.id} className="text-sm">
-                          {row.render(item)}
+                          {row.render(item, idx)}
                         </TableCell>
                       ))}
                     </TableRow>
                   ))}
+                  {/* CTA Row */}
+                  <TableRow>
+                    <TableCell />
+                    {items.map((item) => (
+                      <TableCell key={item.id}>
+                        <Button
+                          size="sm"
+                          className="w-full gap-1.5 text-xs"
+                          onClick={() => openWhatsApp(item)}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          Vreau oferta
+                        </Button>
+                      </TableCell>
+                    ))}
+                  </TableRow>
                 </TableBody>
               </Table>
             </div>
