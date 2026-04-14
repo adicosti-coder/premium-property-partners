@@ -1487,7 +1487,7 @@ const ScraperLeads = () => {
               </span>
               <button
                 className="underline hover:text-foreground ml-1"
-                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); }}
+                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); }}
               >
                 Resetează
               </button>
