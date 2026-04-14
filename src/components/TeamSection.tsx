@@ -30,36 +30,12 @@ const TeamSection = () => {
       subtitle: "O echipă dedicată care transformă viziunea în realitate, zi de zi.",
       team: [
         {
-          name: "Adrian Costea",
+          name: "Adrian Costi",
           role: "Fondator & CEO",
           description: "Cu peste 10 ani de experiență în imobiliare, Adrian a fondat RealTrust & ApArt Hotel cu viziunea de a aduce standarde internaționale în piața din Timișoara.",
           image: ceoImage,
-          linkedin: "#",
+          linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
-        },
-        {
-          name: "Maria Popescu",
-          role: "Manager Proprietăți",
-          description: "Maria coordonează toate proprietățile din portofoliu, asigurând că fiecare apartament întrunește standardele noastre de excelență.",
-          image: propertyManagerImage,
-          linkedin: "#",
-          email: "maria@realtrust.ro"
-        },
-        {
-          name: "Andrei Mureșan",
-          role: "Coordonator Operațiuni",
-          description: "Andrei supervizează operațiunile zilnice, de la curățenie la mentenanță, garantând experiențe impecabile pentru fiecare oaspete.",
-          image: operationsImage,
-          linkedin: "#",
-          email: "andrei@realtrust.ro"
-        },
-        {
-          name: "Elena Ionescu",
-          role: "Specialist Relații Oaspeți",
-          description: "Elena este primul punct de contact pentru oaspeți, oferind suport 24/7 și asigurând că fiecare ședere este memorabilă.",
-          image: guestRelationsImage,
-          linkedin: "#",
-          email: "elena@realtrust.ro"
         }
       ]
     },
@@ -70,36 +46,12 @@ const TeamSection = () => {
       subtitle: "A dedicated team that transforms vision into reality, day by day.",
       team: [
         {
-          name: "Adrian Costea",
+          name: "Adrian Costi",
           role: "Founder & CEO",
           description: "With over 10 years of real estate experience, Adrian founded RealTrust & ApArt Hotel with the vision of bringing international standards to the Timișoara market.",
           image: ceoImage,
-          linkedin: "#",
+          linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
-        },
-        {
-          name: "Maria Popescu",
-          role: "Property Manager",
-          description: "Maria coordinates all properties in the portfolio, ensuring that each apartment meets our standards of excellence.",
-          image: propertyManagerImage,
-          linkedin: "#",
-          email: "maria@realtrust.ro"
-        },
-        {
-          name: "Andrei Mureșan",
-          role: "Operations Coordinator",
-          description: "Andrei oversees daily operations, from cleaning to maintenance, guaranteeing impeccable experiences for every guest.",
-          image: operationsImage,
-          linkedin: "#",
-          email: "andrei@realtrust.ro"
-        },
-        {
-          name: "Elena Ionescu",
-          role: "Guest Relations Specialist",
-          description: "Elena is the first point of contact for guests, providing 24/7 support and ensuring every stay is memorable.",
-          image: guestRelationsImage,
-          linkedin: "#",
-          email: "elena@realtrust.ro"
         }
       ]
     }
