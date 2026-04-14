@@ -729,6 +729,21 @@ const ScraperLeads = () => {
       return;
     }
     toast.success("Lead arhivat");
+    queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads-archived"] });
+  };
+
+  // ── Restore Lead from archive ────────────────────
+  const handleRestore = async (leadId: string) => {
+    const { error } = await supabase.from("scraper_leads").update({ status: "new" } as any).eq("id", leadId);
+    if (error) {
+      toast.error("Eroare la restaurare");
+      return;
+    }
+    toast.success("Lead restaurat cu succes");
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads-archived"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
   };
 
   // ── Assign Category (saves to phone_intelligence + lead) ──
