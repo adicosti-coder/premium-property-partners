@@ -24,7 +24,7 @@ const ExpertSignature = ({ authorName, className = "" }: ExpertSignatureProps) =
 
   // Show the signature only when the article author matches or use default
   const displayName = authorName || expert.name;
-  const isMainExpert = !authorName || authorName.toLowerCase().includes("realtrust") || authorName.toLowerCase().includes("cristian");
+  const isMainExpert = !authorName || authorName.toLowerCase().includes("realtrust") || authorName.toLowerCase().includes("adrian");
 
   // E-E-A-T Person Schema
   const personSchema = {
