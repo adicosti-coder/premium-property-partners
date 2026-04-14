@@ -20,6 +20,7 @@ const PRIORITY_SLUGS = [
 
 export default function ScraperStatusDashboard() {
   const [syncing, setSyncing] = useState(false);
+  const navigate = useNavigate();
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
