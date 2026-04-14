@@ -1,0 +1,1 @@
+ALTER TABLE public.scraper_leads ADD COLUMN IF NOT EXISTS agency_name text DEFAULT NULL;

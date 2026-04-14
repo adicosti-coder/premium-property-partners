@@ -2935,6 +2935,7 @@ export type Database = {
       scraper_leads: {
         Row: {
           admin_notes: string | null
+          agency_name: string | null
           created_at: string
           estimated_roi: number | null
           extra_profit_3y: number
@@ -2959,6 +2960,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          agency_name?: string | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
@@ -2983,6 +2985,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          agency_name?: string | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
