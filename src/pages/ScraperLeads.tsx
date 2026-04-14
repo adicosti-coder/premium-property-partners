@@ -289,6 +289,27 @@ const ScraperLeads = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // ── Archived leads query ─────────────────────────
+  const { data: archivedLeads = [], isLoading: isLoadingArchived, refetch: refetchArchived } = useQuery({
+    queryKey: ["scraper-leads-archived"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("scraper_leads")
+        .select("*")
+        .eq("status", "archived")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map((d: any) => ({
+        ...d,
+        listing_type: deriveListingType(d.title, d.listing_type),
+        tags: d.tags || [],
+        _prospect_type: d.prospect_category || deriveProspectType(d.title),
+      })) as (ScraperLead & { _prospect_type: string })[];
+    },
+    enabled: showArchived,
+    staleTime: 1000 * 60 * 2,
+  });
+
   // ── 7-Day Trend Data ─────────────────────────────
   const { data: trendData = [] } = useQuery({
     queryKey: ["scraper-trend-7d"],
