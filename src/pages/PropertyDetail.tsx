@@ -811,7 +811,7 @@ const PropertyDetail = () => {
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
                     {language === 'ro'
-                      ? 'Această proprietate beneficiază de administrare completă în regim hotelier. Tu investești, noi ne ocupăm de tot.'
+                      ? 'Această proprietate poate beneficia de administrare completă în regim hotelier. Tu investești, noi ne ocupăm de tot.'
                       : 'This property benefits from complete short-term rental management. You invest, we handle everything.'}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
