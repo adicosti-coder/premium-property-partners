@@ -24,7 +24,7 @@ import {
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
   Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Pencil, Building2, Check, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -52,6 +52,7 @@ interface ScraperLead {
   phone: string | null;
   prospect_category: string | null;
   search_keyword: string | null;
+  agency_name: string | null;
 }
 
 interface SearchKeyword {
@@ -140,7 +141,8 @@ const getRelativeDate = (dateStr: string) => {
   if (diff === 1) return "Ieri";
   if (diff < 7) return `${diff} zile`;
   return new Date(dateStr).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' });
-};
+  };
+
 
 
 const QUICK_REPLY_CATEGORIES = [
@@ -257,6 +259,10 @@ const ScraperLeads = () => {
   const [keywordsOpen, setKeywordsOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newPlatform, setNewPlatform] = useState("General");
+  const [editingKeywordId, setEditingKeywordId] = useState<string | null>(null);
+  const [editingKeywordText, setEditingKeywordText] = useState("");
+  const [editingAgencyName, setEditingAgencyName] = useState(false);
+  const [agencyNameValue, setAgencyNameValue] = useState("");
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -368,9 +374,14 @@ const ScraperLeads = () => {
     return () => { supabase.removeChannel(channel); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Sync editNotes when selectedLead changes ────────
+  // ── Sync editNotes & agencyName when selectedLead changes ────────
   useEffect(() => {
-    if (selectedLead) setEditNotes(selectedLead.admin_notes || "");
+    if (selectedLead) {
+      setEditNotes(selectedLead.admin_notes || "");
+      const derived = selectedLead.agency_name || deriveAgencyName(selectedLead.title);
+      setAgencyNameValue(derived);
+      setEditingAgencyName(false);
+    }
   }, [selectedLead?.id, selectedLead?.admin_notes]);
 
   // ── Status History via React Query ────────────────
@@ -735,6 +746,36 @@ const ScraperLeads = () => {
     toast.success("Cuvânt cheie șters");
   };
 
+  const handleEditKeyword = async (id: string, newText: string) => {
+    const trimmed = newText.trim();
+    if (!trimmed) return;
+    await supabase.from("scraper_search_keywords").update({ keyword: trimmed } as any).eq("id", id);
+    setEditingKeywordId(null);
+    refetchKeywords();
+    toast.success("Cuvânt cheie actualizat");
+  };
+
+  // ── Agency Name helpers ────────────────────────────
+  function deriveAgencyName(title: string): string {
+    const agencyPatterns = [
+      /(?:prin|de la|oferit de|publicat de|agent(?:ie)?|imobiliare?)\s*[:\-–]?\s*(.{3,50}?)(?:\s*[-–|,]|$)/i,
+    ];
+    for (const p of agencyPatterns) {
+      const m = title.match(p);
+      if (m?.[1]?.trim()) return m[1].trim();
+    }
+    return "";
+  }
+
+  const saveAgencyName = async (leadId: string, name: string) => {
+    const { error } = await supabase.from("scraper_leads").update({ agency_name: name.trim() || null } as any).eq("id", leadId);
+    if (error) { toast.error("Eroare la salvare"); return; }
+    setEditingAgencyName(false);
+    setSelectedLead((prev) => prev ? { ...prev, agency_name: name.trim() || null } : null);
+    refetch();
+    toast.success("Nume agenție salvat");
+  };
+
   const toggleSort = (col: "score" | "date") => {
     if (sortBy === col) {
       setSortDir(d => d === "desc" ? "asc" : "desc");
@@ -881,6 +922,44 @@ const ScraperLeads = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          {/* Agency Name */}
+          <div className="flex items-center gap-2 mt-2">
+            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Agenție:</span>
+            {editingAgencyName ? (
+              <div className="flex items-center gap-1 flex-1">
+                <Input
+                  value={agencyNameValue}
+                  onChange={(e) => setAgencyNameValue(e.target.value)}
+                  className="h-7 text-xs flex-1"
+                  placeholder="Nume agenție imobiliară..."
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveAgencyName(selectedLead.id, agencyNameValue);
+                    if (e.key === "Escape") setEditingAgencyName(false);
+                  }}
+                />
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-500" onClick={() => saveAgencyName(selectedLead.id, agencyNameValue)}>
+                  <Check className="w-3 h-3" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground" onClick={() => setEditingAgencyName(false)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-medium">{agencyNameValue || "—"}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => setEditingAgencyName(true)}
+                >
+                  <Pencil className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
           </div>
         </SheetHeader>
 
@@ -1455,8 +1534,44 @@ const ScraperLeads = () => {
                           onCheckedChange={() => handleToggleKeyword(kw.id, kw.is_active)}
                           className="scale-75"
                         />
-                        <span className="flex-1 font-mono text-xs truncate">{kw.keyword}</span>
+                        {editingKeywordId === kw.id ? (
+                          <div className="flex-1 flex items-center gap-1">
+                            <Input
+                              value={editingKeywordText}
+                              onChange={(e) => setEditingKeywordText(e.target.value)}
+                              className="h-6 text-xs font-mono flex-1"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleEditKeyword(kw.id, editingKeywordText);
+                                if (e.key === "Escape") setEditingKeywordId(null);
+                              }}
+                            />
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-500" onClick={() => handleEditKeyword(kw.id, editingKeywordText)}>
+                              <Check className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground" onClick={() => setEditingKeywordId(null)}>
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span
+                            className="flex-1 font-mono text-xs truncate cursor-pointer hover:text-primary transition-colors"
+                            onDoubleClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                          >
+                            {kw.keyword}
+                          </span>
+                        )}
                         <Badge variant="outline" className="text-[10px] shrink-0">{kw.platform}</Badge>
+                        {editingKeywordId !== kw.id && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                            onClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
@@ -1472,7 +1587,7 @@ const ScraperLeads = () => {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    💡 Aceste cuvinte cheie sunt folosite la scanare. Dezactivează sau șterge cele pe care nu le mai dorești.
+                    💡 Dublu-click pe un cuvânt cheie sau apasă ✏️ pentru a-l edita. Dezactivează sau șterge cele pe care nu le mai dorești.
                   </p>
                 </CardContent>
               </Card>
