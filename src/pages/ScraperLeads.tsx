@@ -266,6 +266,7 @@ const ScraperLeads = () => {
   const [editingAgencyName, setEditingAgencyName] = useState(false);
   const [agencyNameValue, setAgencyNameValue] = useState("");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
+  const [appliedFilters, setAppliedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -422,7 +423,7 @@ const ScraperLeads = () => {
     }
 
     // ── Advanced filters ──
-    const af = advancedFilters;
+    const af = appliedFilters;
     if (af.priceMin) {
       const min = parseFloat(af.priceMin);
       if (!isNaN(min)) result = result.filter((l) => l.original_price >= min);
@@ -461,6 +462,15 @@ const ScraperLeads = () => {
     if (af.zone !== "all") {
       result = result.filter((l) => (l as any).neighborhood_slug === af.zone);
     }
+    if (af.dateFrom) {
+      const from = new Date(af.dateFrom);
+      result = result.filter((l) => new Date(l.created_at) >= from);
+    }
+    if (af.dateTo) {
+      const to = new Date(af.dateTo);
+      to.setHours(23, 59, 59, 999);
+      result = result.filter((l) => new Date(l.created_at) <= to);
+    }
 
     // Sort based on user selection
     const dir = sortDir === "desc" ? -1 : 1;
@@ -471,7 +481,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir, advancedFilters]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir, appliedFilters]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -1448,7 +1458,8 @@ const ScraperLeads = () => {
           <ScraperAdvancedFilters
             filters={advancedFilters}
             onChange={setAdvancedFilters}
-            activeCount={countActiveFilters(advancedFilters)}
+            onApply={() => setAppliedFilters({ ...advancedFilters })}
+            activeCount={countActiveFilters(appliedFilters)}
           />
 
           {/* Stats (6 cards like Bot Prospectare) */}
@@ -1476,7 +1487,7 @@ const ScraperLeads = () => {
               </span>
               <button
                 className="underline hover:text-foreground ml-1"
-                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); }}
+                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); }}
               >
                 Resetează
               </button>
