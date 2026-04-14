@@ -143,38 +143,6 @@ const getRelativeDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' });
   };
 
-  const handleEditKeyword = async (id: string, newText: string) => {
-    const trimmed = newText.trim();
-    if (!trimmed) return;
-    await supabase.from("scraper_search_keywords").update({ keyword: trimmed } as any).eq("id", id);
-    setEditingKeywordId(null);
-    refetchKeywords();
-    toast.success("Cuvânt cheie actualizat");
-  };
-
-  // ── Agency Name helpers ────────────────────────────
-  function deriveAgencyName(title: string): string {
-    const upper = (title || "").toUpperCase();
-    // Common Romanian agency patterns
-    const agencyPatterns = [
-      /(?:prin|de la|oferit de|publicat de|agent(?:ie)?|imobiliare?)\s*[:\-–]?\s*(.{3,50}?)(?:\s*[-–|,]|$)/i,
-    ];
-    for (const p of agencyPatterns) {
-      const m = title.match(p);
-      if (m?.[1]?.trim()) return m[1].trim();
-    }
-    // Check if source itself hints at agency
-    return "";
-  }
-
-  const saveAgencyName = async (leadId: string, name: string) => {
-    const { error } = await supabase.from("scraper_leads").update({ agency_name: name.trim() || null } as any).eq("id", leadId);
-    if (error) { toast.error("Eroare la salvare"); return; }
-    setEditingAgencyName(false);
-    setSelectedLead((prev) => prev ? { ...prev, agency_name: name.trim() || null } : null);
-    refetch();
-    toast.success("Nume agenție salvat");
-  };
 
 
 const QUICK_REPLY_CATEGORIES = [
