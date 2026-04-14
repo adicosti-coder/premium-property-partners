@@ -1451,6 +1451,13 @@ const ScraperLeads = () => {
               <Button variant="outline" className="gap-2 flex-1" onClick={() => setBlacklistOpen(true)}>
                 <Shield className="w-4 h-4 text-red-500" /> Gestionare Blacklist
               </Button>
+              <Button
+                variant={showArchived ? "default" : "outline"}
+                className="gap-2 flex-1"
+                onClick={() => setShowArchived(!showArchived)}
+              >
+                <Archive className="w-4 h-4" /> Arhivă ({archivedCount})
+              </Button>
               {lastScanLog && (
                 <Card className="bg-card border-border">
                   <CardContent className="p-3">
