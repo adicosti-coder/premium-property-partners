@@ -267,6 +267,7 @@ const ScraperLeads = () => {
   const [agencyNameValue, setAgencyNameValue] = useState("");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
+  const [showArchived, setShowArchived] = useState(false);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
