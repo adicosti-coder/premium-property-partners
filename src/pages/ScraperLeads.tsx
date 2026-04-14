@@ -54,6 +54,7 @@ interface ScraperLead {
   prospect_category: string | null;
   search_keyword: string | null;
   agency_name: string | null;
+  neighborhood_slug: string | null;
 }
 
 interface SearchKeyword {
