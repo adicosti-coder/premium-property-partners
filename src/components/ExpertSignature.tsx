@@ -11,15 +11,15 @@ const ExpertSignature = ({ authorName, className = "" }: ExpertSignatureProps) =
   const { language } = useLanguage();
 
   const expert = {
-    name: "Cristian Fițoiu",
+    name: "Adrian Costi",
     title: language === "ro" ? "Fondator & CEO, RealTrust" : "Founder & CEO, RealTrust",
     certification: language === "ro"
       ? "Consultant Imobiliar Autorizat · Expert în Investiții Regim Hotelier"
       : "Certified Real Estate Consultant · Short-Term Rental Investment Expert",
-    linkedin: "https://www.linkedin.com/in/cristian-fitoiu/",
+    linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
     bio: language === "ro"
-      ? "Cu peste 8 ani de experiență în administrarea proprietăților în regim hotelier și un portofoliu gestionat cu randament mediu de 9.4%, Cristian oferă consultanță bazată pe date reale de piață din Timișoara."
-      : "With over 8 years of experience managing short-term rental properties and a managed portfolio averaging 9.4% yields, Cristian provides consulting based on real market data from Timișoara.",
+      ? "Cu peste 8 ani de experiență în administrarea proprietăților în regim hotelier și un portofoliu gestionat cu randament mediu de 9.4%, Adrian oferă consultanță bazată pe date reale de piață din Timișoara."
+      : "With over 8 years of experience managing short-term rental properties and a managed portfolio averaging 9.4% yields, Adrian provides consulting based on real market data from Timișoara.",
   };
 
   // Show the signature only when the article author matches or use default
