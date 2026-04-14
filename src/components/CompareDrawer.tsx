@@ -10,7 +10,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 const parseFloor = (floor: number | string): string => {
@@ -56,18 +56,67 @@ const bestIndex = (values: number[], mode: "min" | "max"): number => {
   return bestIdx;
 };
 
+const getComparisonSessionId = (): string => {
+  try {
+    const existing = window.sessionStorage.getItem("compare_session");
+    if (existing) return existing;
+
+    const next = crypto.randomUUID();
+    window.sessionStorage.setItem("compare_session", next);
+    return next;
+  } catch {
+    return crypto.randomUUID();
+  }
+};
+
+const getCurrentUserId = async (): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) return null;
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall back below for browser contexts that block async clipboard access.
+  }
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return copied;
+  } catch {
+    return false;
+  }
+};
+
 /** Save comparison to DB and return share code */
 const saveComparison = async (items: ComparableItem[], sharedVia: string): Promise<string | null> => {
   try {
-    const { data: user } = await supabase.auth.getUser();
-    const sessionId = window.sessionStorage.getItem("compare_session") || crypto.randomUUID();
-    window.sessionStorage.setItem("compare_session", sessionId);
+    const userId = await getCurrentUserId();
+    const sessionId = getComparisonSessionId();
 
     const { data, error } = await supabase
       .from("saved_comparisons")
       .insert({
         items: items as any,
-        user_id: user?.user?.id || null,
+        user_id: userId,
         session_id: sessionId,
         shared_via: [sharedVia],
       })
@@ -138,7 +187,13 @@ const CompareDrawer = () => {
     const code = await ensureSaved("link");
     if (!code) return;
     const url = getShareUrl(code);
-    await navigator.clipboard.writeText(url);
+
+    const copiedOk = await copyTextToClipboard(url);
+    if (!copiedOk) {
+      toast.error("Nu s-a putut copia linkul");
+      return;
+    }
+
     setCopied(true);
     toast.success("Link copiat!");
     setTimeout(() => setCopied(false), 2000);
@@ -340,27 +395,27 @@ const CompareDrawer = () => {
                 </Button>
 
                 {/* Share dropdown */}
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={saving}>
                       <Share2 className="w-3.5 h-3.5" />
                       Partajează
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={handleCopyLink} className="gap-2">
+                  <DropdownMenuContent align="end" sideOffset={8} className="z-[70] w-48">
+                    <DropdownMenuItem onSelect={() => { void handleCopyLink(); }} className="gap-2">
                       {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
                       Copiază linkul
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleWhatsAppShare} className="gap-2">
+                    <DropdownMenuItem onSelect={() => { void handleWhatsAppShare(); }} className="gap-2">
                       <MessageCircle className="w-4 h-4 text-green-600" />
                       WhatsApp
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleFacebookShare} className="gap-2">
+                    <DropdownMenuItem onSelect={() => { void handleFacebookShare(); }} className="gap-2">
                       <Facebook className="w-4 h-4 text-blue-600" />
                       Facebook
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleEmailShare} className="gap-2">
+                    <DropdownMenuItem onSelect={() => { void handleEmailShare(); }} className="gap-2">
                       <Mail className="w-4 h-4 text-orange-500" />
                       Email
                     </DropdownMenuItem>
