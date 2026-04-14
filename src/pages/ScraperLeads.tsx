@@ -419,6 +419,48 @@ const ScraperLeads = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
+
+    // ── Advanced filters ──
+    const af = advancedFilters;
+    if (af.priceMin) {
+      const min = parseFloat(af.priceMin);
+      if (!isNaN(min)) result = result.filter((l) => l.original_price >= min);
+    }
+    if (af.priceMax) {
+      const max = parseFloat(af.priceMax);
+      if (!isNaN(max)) result = result.filter((l) => l.original_price <= max);
+    }
+    if (af.surfaceMin) {
+      const min = parseFloat(af.surfaceMin);
+      if (!isNaN(min)) result = result.filter((l) => { const s = parseSurface(l.title); return s !== null && s >= min; });
+    }
+    if (af.surfaceMax) {
+      const max = parseFloat(af.surfaceMax);
+      if (!isNaN(max)) result = result.filter((l) => { const s = parseSurface(l.title); return s !== null && s <= max; });
+    }
+    if (af.rooms !== "all") {
+      const target = parseInt(af.rooms, 10);
+      result = result.filter((l) => {
+        const r = parseRooms(l.title);
+        if (r === null) return false;
+        return target >= 4 ? r >= 4 : r === target;
+      });
+    }
+    if (af.floor !== "all") {
+      const target = parseInt(af.floor, 10);
+      result = result.filter((l) => {
+        const f = parseFloor(l.title);
+        if (f === null) return false;
+        return target >= 4 ? f >= 4 : f === target;
+      });
+    }
+    if (af.ownerType !== "all") {
+      result = result.filter((l) => l._prospect_type === af.ownerType);
+    }
+    if (af.zone !== "all") {
+      result = result.filter((l) => (l as any).neighborhood_slug === af.zone);
+    }
+
     // Sort based on user selection
     const dir = sortDir === "desc" ? -1 : 1;
     result = [...result].sort((a, b) => {
@@ -428,7 +470,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir, advancedFilters]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
