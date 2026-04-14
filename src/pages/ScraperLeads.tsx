@@ -1443,6 +1443,13 @@ const ScraperLeads = () => {
             ))}
           </div>
 
+          {/* Advanced Filters */}
+          <ScraperAdvancedFilters
+            filters={advancedFilters}
+            onChange={setAdvancedFilters}
+            activeCount={countActiveFilters(advancedFilters)}
+          />
+
           {/* Stats (6 cards like Bot Prospectare) */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-3">
             {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
