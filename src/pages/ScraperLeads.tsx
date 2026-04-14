@@ -1461,7 +1461,7 @@ const ScraperLeads = () => {
           </div>
 
           {/* Active filters indicator */}
-          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all') && (
+          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all' || countActiveFilters(advancedFilters) > 0) && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
               <Filter className="h-3 w-3 shrink-0" />
               <span className="flex items-center gap-1 flex-wrap">
@@ -1471,10 +1471,11 @@ const ScraperLeads = () => {
                 {filterType !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{filterType}</Badge>}
                 {searchQuery && <Badge variant="outline" className="ml-1 text-[10px]">"{searchQuery}"</Badge>}
                 {smartFilter !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{SMART_FILTERS.find(s => s.value === smartFilter)?.label}</Badge>}
+                {countActiveFilters(advancedFilters) > 0 && <Badge variant="outline" className="ml-1 text-[10px]">🔍 Filtre avansate ({countActiveFilters(advancedFilters)})</Badge>}
               </span>
               <button
                 className="underline hover:text-foreground ml-1"
-                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); }}
+                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); }}
               >
                 Resetează
               </button>
