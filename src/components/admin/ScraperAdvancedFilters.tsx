@@ -16,11 +16,14 @@ export interface AdvancedFilters {
   floor: string;
   ownerType: string; // "all" | "proprietar" | "agentie" | "dezvoltator"
   zone: string;
+  dateFrom: string;
+  dateTo: string;
 }
 
 export const EMPTY_FILTERS: AdvancedFilters = {
   priceMin: "", priceMax: "", surfaceMin: "", surfaceMax: "",
   rooms: "all", floor: "all", ownerType: "all", zone: "all",
+  dateFrom: "", dateTo: "",
 };
 
 const ZONE_OPTIONS = [
@@ -54,10 +57,11 @@ const FLOOR_OPTIONS = [
 interface Props {
   filters: AdvancedFilters;
   onChange: (filters: AdvancedFilters) => void;
+  onApply: () => void;
   activeCount: number;
 }
 
-export function ScraperAdvancedFilters({ filters, onChange, activeCount }: Props) {
+export function ScraperAdvancedFilters({ filters, onChange, onApply, activeCount }: Props) {
   const [open, setOpen] = useState(false);
 
   const update = (key: keyof AdvancedFilters, value: string) => {
@@ -193,15 +197,40 @@ export function ScraperAdvancedFilters({ filters, onChange, activeCount }: Props
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Date from */}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Data de la</label>
+                <Input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => update("dateFrom", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Date to */}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Data până la</label>
+                <Input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => update("dateTo", e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
             </div>
 
-            {hasActive && (
-              <div className="flex justify-end mt-3">
+            <div className="flex justify-between items-center mt-3">
+              {hasActive ? (
                 <Button size="sm" variant="ghost" onClick={reset} className="gap-1.5 text-xs text-muted-foreground">
                   <X className="w-3 h-3" /> Resetează filtre
                 </Button>
-              </div>
-            )}
+              ) : <div />}
+              <Button size="sm" onClick={onApply} className="gap-1.5 text-xs">
+                <Filter className="w-3 h-3" /> Filtrează
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -253,5 +282,7 @@ export function countActiveFilters(f: AdvancedFilters): number {
   if (f.floor !== "all") c++;
   if (f.ownerType !== "all") c++;
   if (f.zone !== "all") c++;
+  if (f.dateFrom) c++;
+  if (f.dateTo) c++;
   return c;
 }
