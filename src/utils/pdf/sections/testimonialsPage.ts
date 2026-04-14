@@ -29,7 +29,7 @@ export const drawTestimonialsPage = (ctx: PdfContext) => {
           months: 11,
         },
         {
-          name: "Adrian C.",
+          name: "Cristian D.",
           role: "Proprietar — 3 apartamente",
           stars: 5,
           text: "Echipa RealTrust gestionează totul impecabil — de la curățenie la comunicarea cu oaspeții. Rating-ul meu pe Booking.com este constant peste 9.5.",
@@ -52,7 +52,7 @@ export const drawTestimonialsPage = (ctx: PdfContext) => {
           months: 11,
         },
         {
-          name: "Adrian C.",
+          name: "Cristian D.",
           role: "Owner — 3 apartments",
           stars: 5,
           text: "The RealTrust team manages everything impeccably — from cleaning to guest communication. My Booking.com rating is consistently above 9.5.",
