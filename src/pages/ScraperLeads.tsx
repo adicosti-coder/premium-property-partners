@@ -33,6 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ScraperAdvancedFilters, AdvancedFilters, EMPTY_FILTERS, countActiveFilters, parseSurface, parseRooms, parseFloor } from "@/components/admin/ScraperAdvancedFilters";
 
 interface ScraperLead {
   id: string;
@@ -53,6 +54,7 @@ interface ScraperLead {
   prospect_category: string | null;
   search_keyword: string | null;
   agency_name: string | null;
+  neighborhood_slug: string | null;
 }
 
 interface SearchKeyword {
@@ -263,6 +265,7 @@ const ScraperLeads = () => {
   const [editingKeywordText, setEditingKeywordText] = useState("");
   const [editingAgencyName, setEditingAgencyName] = useState(false);
   const [agencyNameValue, setAgencyNameValue] = useState("");
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -417,6 +420,48 @@ const ScraperLeads = () => {
       const q = searchQuery.toLowerCase();
       result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
     }
+
+    // ── Advanced filters ──
+    const af = advancedFilters;
+    if (af.priceMin) {
+      const min = parseFloat(af.priceMin);
+      if (!isNaN(min)) result = result.filter((l) => l.original_price >= min);
+    }
+    if (af.priceMax) {
+      const max = parseFloat(af.priceMax);
+      if (!isNaN(max)) result = result.filter((l) => l.original_price <= max);
+    }
+    if (af.surfaceMin) {
+      const min = parseFloat(af.surfaceMin);
+      if (!isNaN(min)) result = result.filter((l) => { const s = parseSurface(l.title); return s !== null && s >= min; });
+    }
+    if (af.surfaceMax) {
+      const max = parseFloat(af.surfaceMax);
+      if (!isNaN(max)) result = result.filter((l) => { const s = parseSurface(l.title); return s !== null && s <= max; });
+    }
+    if (af.rooms !== "all") {
+      const target = parseInt(af.rooms, 10);
+      result = result.filter((l) => {
+        const r = parseRooms(l.title);
+        if (r === null) return false;
+        return target >= 4 ? r >= 4 : r === target;
+      });
+    }
+    if (af.floor !== "all") {
+      const target = parseInt(af.floor, 10);
+      result = result.filter((l) => {
+        const f = parseFloor(l.title);
+        if (f === null) return false;
+        return target >= 4 ? f >= 4 : f === target;
+      });
+    }
+    if (af.ownerType !== "all") {
+      result = result.filter((l) => l._prospect_type === af.ownerType);
+    }
+    if (af.zone !== "all") {
+      result = result.filter((l) => (l as any).neighborhood_slug === af.zone);
+    }
+
     // Sort based on user selection
     const dir = sortDir === "desc" ? -1 : 1;
     result = [...result].sort((a, b) => {
@@ -426,7 +471,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir]);
+  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir, advancedFilters]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -1399,6 +1444,13 @@ const ScraperLeads = () => {
             ))}
           </div>
 
+          {/* Advanced Filters */}
+          <ScraperAdvancedFilters
+            filters={advancedFilters}
+            onChange={setAdvancedFilters}
+            activeCount={countActiveFilters(advancedFilters)}
+          />
+
           {/* Stats (6 cards like Bot Prospectare) */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-3">
             {renderStatCard("Total", pipelineStats.total, <TrendingUp className="w-4 h-4 text-white" />, "bg-primary")}
@@ -1410,7 +1462,7 @@ const ScraperLeads = () => {
           </div>
 
           {/* Active filters indicator */}
-          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all') && (
+          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all' || countActiveFilters(advancedFilters) > 0) && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
               <Filter className="h-3 w-3 shrink-0" />
               <span className="flex items-center gap-1 flex-wrap">
@@ -1420,10 +1472,11 @@ const ScraperLeads = () => {
                 {filterType !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{filterType}</Badge>}
                 {searchQuery && <Badge variant="outline" className="ml-1 text-[10px]">"{searchQuery}"</Badge>}
                 {smartFilter !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{SMART_FILTERS.find(s => s.value === smartFilter)?.label}</Badge>}
+                {countActiveFilters(advancedFilters) > 0 && <Badge variant="outline" className="ml-1 text-[10px]">🔍 Filtre avansate ({countActiveFilters(advancedFilters)})</Badge>}
               </span>
               <button
                 className="underline hover:text-foreground ml-1"
-                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); }}
+                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); }}
               >
                 Resetează
               </button>
