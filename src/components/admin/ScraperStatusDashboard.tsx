@@ -195,7 +195,11 @@ export default function ScraperStatusDashboard() {
           ) : (
             <div className="space-y-2">
               {recentPriority.map((lead: any) => (
-                <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 gap-2">
+                <div
+                  key={lead.id}
+                  onClick={() => navigate(`/scraper-leads?search=${encodeURIComponent(lead.title?.substring(0, 30) || '')}`)}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30 gap-2 cursor-pointer hover:bg-muted/60 transition-colors"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{lead.title}</p>
                     <div className="flex items-center gap-2 mt-1">
