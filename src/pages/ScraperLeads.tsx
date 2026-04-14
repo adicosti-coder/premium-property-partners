@@ -267,6 +267,7 @@ const ScraperLeads = () => {
   const [agencyNameValue, setAgencyNameValue] = useState("");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
+  const [showArchived, setShowArchived] = useState(false);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -286,6 +287,27 @@ const ScraperLeads = () => {
       return count || 0;
     },
     staleTime: 1000 * 60 * 5,
+  });
+
+  // ── Archived leads query ─────────────────────────
+  const { data: archivedLeads = [], isLoading: isLoadingArchived, refetch: refetchArchived } = useQuery({
+    queryKey: ["scraper-leads-archived"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("scraper_leads")
+        .select("*")
+        .eq("status", "archived")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map((d: any) => ({
+        ...d,
+        listing_type: deriveListingType(d.title, d.listing_type),
+        tags: d.tags || [],
+        _prospect_type: d.prospect_category || deriveProspectType(d.title),
+      })) as (ScraperLead & { _prospect_type: string })[];
+    },
+    enabled: showArchived,
+    staleTime: 1000 * 60 * 2,
   });
 
   // ── 7-Day Trend Data ─────────────────────────────
@@ -707,6 +729,21 @@ const ScraperLeads = () => {
       return;
     }
     toast.success("Lead arhivat");
+    queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads-archived"] });
+  };
+
+  // ── Restore Lead from archive ────────────────────
+  const handleRestore = async (leadId: string) => {
+    const { error } = await supabase.from("scraper_leads").update({ status: "new" } as any).eq("id", leadId);
+    if (error) {
+      toast.error("Eroare la restaurare");
+      return;
+    }
+    toast.success("Lead restaurat cu succes");
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads-archived"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
   };
 
   // ── Assign Category (saves to phone_intelligence + lead) ──
@@ -1414,6 +1451,13 @@ const ScraperLeads = () => {
               <Button variant="outline" className="gap-2 flex-1" onClick={() => setBlacklistOpen(true)}>
                 <Shield className="w-4 h-4 text-red-500" /> Gestionare Blacklist
               </Button>
+              <Button
+                variant={showArchived ? "default" : "outline"}
+                className="gap-2 flex-1"
+                onClick={() => setShowArchived(!showArchived)}
+              >
+                <Archive className="w-4 h-4" /> Arhivă ({archivedCount})
+              </Button>
               {lastScanLog && (
                 <Card className="bg-card border-border">
                   <CardContent className="p-3">
@@ -1495,6 +1539,61 @@ const ScraperLeads = () => {
                 {filteredLeads.length} din {(leads as any[])?.length ?? 0} total
               </span>
             </div>
+          )}
+
+          {/* Archive View */}
+          {showArchived && (
+            <Card className="mb-4 border-dashed border-muted-foreground/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Archive className="w-4 h-4" /> Lead-uri arhivate ({archivedLeads.length})
+                  <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs" onClick={() => setShowArchived(false)}>
+                    <X className="w-3 h-3 mr-1" /> Închide
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2">
+                {isLoadingArchived ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : archivedLeads.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">Niciun lead arhivat.</p>
+                ) : (
+                  <ScrollArea className="max-h-[400px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Titlu</TableHead>
+                          <TableHead className="text-xs">Preț</TableHead>
+                          <TableHead className="text-xs">Scor</TableHead>
+                          <TableHead className="text-xs">Data</TableHead>
+                          <TableHead className="text-xs text-right">Acțiuni</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {archivedLeads.map((lead) => (
+                          <TableRow key={lead.id} className="text-xs">
+                            <TableCell className="max-w-[200px] truncate font-medium">{lead.title}</TableCell>
+                            <TableCell className="font-mono">{lead.original_price?.toLocaleString("ro-RO")} €</TableCell>
+                            <TableCell>{lead.lead_score}</TableCell>
+                            <TableCell className="text-muted-foreground">{new Date(lead.created_at).toLocaleDateString("ro-RO")}</TableCell>
+                            <TableCell className="text-right space-x-1">
+                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleRestore(lead.id)}>
+                                <History className="w-3 h-3" /> Restaurează
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setSelectedLead(lead as any); setShowArchived(false); }}>
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {/* Table Stats (profit) */}
