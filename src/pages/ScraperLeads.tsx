@@ -258,6 +258,10 @@ const ScraperLeads = () => {
   const [keywordsOpen, setKeywordsOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newPlatform, setNewPlatform] = useState("General");
+  const [editingKeywordId, setEditingKeywordId] = useState<string | null>(null);
+  const [editingKeywordText, setEditingKeywordText] = useState("");
+  const [editingAgencyName, setEditingAgencyName] = useState(false);
+  const [agencyNameValue, setAgencyNameValue] = useState("");
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
