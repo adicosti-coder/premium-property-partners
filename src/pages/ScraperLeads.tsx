@@ -1587,7 +1587,7 @@ const ScraperLeads = () => {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    💡 Aceste cuvinte cheie sunt folosite la scanare. Dezactivează sau șterge cele pe care nu le mai dorești.
+                    💡 Dublu-click pe un cuvânt cheie sau apasă ✏️ pentru a-l edita. Dezactivează sau șterge cele pe care nu le mai dorești.
                   </p>
                 </CardContent>
               </Card>
