@@ -1496,8 +1496,44 @@ const ScraperLeads = () => {
                           onCheckedChange={() => handleToggleKeyword(kw.id, kw.is_active)}
                           className="scale-75"
                         />
-                        <span className="flex-1 font-mono text-xs truncate">{kw.keyword}</span>
+                        {editingKeywordId === kw.id ? (
+                          <div className="flex-1 flex items-center gap-1">
+                            <Input
+                              value={editingKeywordText}
+                              onChange={(e) => setEditingKeywordText(e.target.value)}
+                              className="h-6 text-xs font-mono flex-1"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleEditKeyword(kw.id, editingKeywordText);
+                                if (e.key === "Escape") setEditingKeywordId(null);
+                              }}
+                            />
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-500" onClick={() => handleEditKeyword(kw.id, editingKeywordText)}>
+                              <Check className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground" onClick={() => setEditingKeywordId(null)}>
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span
+                            className="flex-1 font-mono text-xs truncate cursor-pointer hover:text-primary transition-colors"
+                            onDoubleClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                          >
+                            {kw.keyword}
+                          </span>
+                        )}
                         <Badge variant="outline" className="text-[10px] shrink-0">{kw.platform}</Badge>
+                        {editingKeywordId !== kw.id && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                            onClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
