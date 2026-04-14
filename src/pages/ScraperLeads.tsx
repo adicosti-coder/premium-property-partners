@@ -771,7 +771,7 @@ const ScraperLeads = () => {
     toast.success("Nume agenție salvat");
   };
 
-
+  const toggleSort = (col: "score" | "date") => {
     if (sortBy === col) {
       setSortDir(d => d === "desc" ? "asc" : "desc");
     } else {
