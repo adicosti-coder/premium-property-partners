@@ -923,6 +923,44 @@ const ScraperLeads = () => {
               </SelectContent>
             </Select>
           </div>
+          {/* Agency Name */}
+          <div className="flex items-center gap-2 mt-2">
+            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Agenție:</span>
+            {editingAgencyName ? (
+              <div className="flex items-center gap-1 flex-1">
+                <Input
+                  value={agencyNameValue}
+                  onChange={(e) => setAgencyNameValue(e.target.value)}
+                  className="h-7 text-xs flex-1"
+                  placeholder="Nume agenție imobiliară..."
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveAgencyName(selectedLead.id, agencyNameValue);
+                    if (e.key === "Escape") setEditingAgencyName(false);
+                  }}
+                />
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-500" onClick={() => saveAgencyName(selectedLead.id, agencyNameValue)}>
+                  <Check className="w-3 h-3" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground" onClick={() => setEditingAgencyName(false)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-medium">{agencyNameValue || "—"}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => setEditingAgencyName(true)}
+                >
+                  <Pencil className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="space-y-5">
