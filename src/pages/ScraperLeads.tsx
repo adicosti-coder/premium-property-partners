@@ -374,9 +374,14 @@ const ScraperLeads = () => {
     return () => { supabase.removeChannel(channel); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Sync editNotes when selectedLead changes ────────
+  // ── Sync editNotes & agencyName when selectedLead changes ────────
   useEffect(() => {
-    if (selectedLead) setEditNotes(selectedLead.admin_notes || "");
+    if (selectedLead) {
+      setEditNotes(selectedLead.admin_notes || "");
+      const derived = selectedLead.agency_name || deriveAgencyName(selectedLead.title);
+      setAgencyNameValue(derived);
+      setEditingAgencyName(false);
+    }
   }, [selectedLead?.id, selectedLead?.admin_notes]);
 
   // ── Status History via React Query ────────────────
