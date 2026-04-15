@@ -825,7 +825,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   3.5 INVESTIȚIE LA CHEIE — Beneficii administrare RealTrust
                   ═══════════════════════════════════════════════════════ */}
-              {(normalizedListingType === 'investitie' || normalizedListingType === 'vanzare' || normalizedListingType === 'cazare') && (
+              {(normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (
                 <div className="bg-gradient-to-br from-amber-500/5 to-primary/5 border border-amber-500/20 p-5 sm:p-6 rounded-2xl">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xl">🔑</span>
@@ -955,7 +955,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   6. INVESTIȚIE & ANALIZĂ (pentru investitori/proprietari)
                   ═══════════════════════════════════════════════════════ */}
-              {dbProperty && dbProperty.capital_necesar && normalizedListingType !== 'inchiriere' && (
+              {dbProperty && dbProperty.capital_necesar && (normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (
                 (() => {
                   const price = dbProperty.capital_necesar!;
                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
@@ -1076,7 +1076,7 @@ const PropertyDetail = () => {
               )}
 
               {/* Calculator Investiție detaliat */}
-              {!staticProperty && normalizedListingType !== 'inchiriere' && (() => {
+              {!staticProperty && (normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                 const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
