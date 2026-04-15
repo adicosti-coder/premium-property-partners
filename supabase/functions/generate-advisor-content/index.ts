@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Ești un consultant imobiliar premium din Timișoara, cu ton de "High-End Investment Advisor". 
+const SYSTEM_PROMPT_DEFAULT = `Ești un consultant imobiliar premium din Timișoara, cu ton de "High-End Investment Advisor". 
 Vei genera conținut în limba română, profesionist, de încredere, cu date concrete.
 
 REGULI:
@@ -29,6 +29,33 @@ Vei primi date despre o proprietate și vei genera un JSON cu exact această str
 
 Generează exact 5 FAQ-uri relevante pentru un cumpărător premium.
 Pentru investmentMetrics: dacă primești un câmp "roi" în datele proprietății, folosește EXACT acea valoare pentru "netYield". Nu estima un ROI diferit — folosește valoarea oficială din baza de date.
+IMPORTANT: Răspunde DOAR cu JSON valid, fără markdown, fără backticks, fără explicații.`;
+
+const SYSTEM_PROMPT_RENTAL = `Ești un consultant imobiliar premium din Timișoara, specializat în închirieri pe termen lung.
+Vei genera conținut profesionist, de încredere.
+
+REGULI STRICTE:
+- NU menționa regim hotelier, Booking, Airbnb, dynamic pricing, smart lock, sau venit pasiv.
+- NU menționa randament investițional, ROI, sau potențial investițional.
+- Focusul este EXCLUSIV pe închiriere pe termen lung: confort, locație, facilități, stil de viață.
+- Folosește un ton elegant, de expert, fără exagerări.
+- Include NATURAL entități locale din Timișoara relevante pentru viața de zi cu zi.
+
+Vei primi date despre o proprietate și vei genera un JSON cu exact această structură:
+{
+  "expertInsight": "Text de ~400 cuvinte despre calitatea locuirii, avantajele zonei pentru chiriași, confort și stil de viață.",
+  "investmentMetrics": {
+    "netYield": "",
+    "rentMultiplier": "",
+    "zoneSafetyScore": ""
+  },
+  "faqs": [
+    { "question": "Întrebare relevantă pentru chiriași?", "answer": "Răspuns concis." }
+  ]
+}
+
+Generează exact 5 FAQ-uri relevante pentru un potențial chiriaș (tipuri de chiriași, facilități, zonă, condiții contract, administrare).
+investmentMetrics trebuie lăsat gol (string-uri goale) — NU genera metrici de investiție.
 IMPORTANT: Răspunde DOAR cu JSON valid, fără markdown, fără backticks, fără explicații.`;
 
 serve(async (req) => {
@@ -125,7 +152,7 @@ Răspunde DOAR cu JSON valid.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL : SYSTEM_PROMPT_DEFAULT },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },

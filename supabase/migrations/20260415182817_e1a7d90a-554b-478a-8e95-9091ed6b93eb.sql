@@ -1,0 +1,1 @@
+DELETE FROM advisor_cache WHERE property_slug IN ('garsoniera-moderna-in-zona-steaua-eficienta-energetica-langa-shopping-city', 'studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust');
