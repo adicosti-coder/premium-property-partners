@@ -1069,7 +1069,10 @@ const PropertyDetail = () => {
 
               {/* ═══════════════════════════════════════════════════════
                   7. MARKETING — De ce Regim Hotelier & RealTrust (la final)
+                  Only show for cazare/investitie listings, not vanzare/inchiriere
                   ═══════════════════════════════════════════════════════ */}
+              {(normalizedListingType === 'cazare' || normalizedListingType === 'investitie' || normalizedListingType === '' || !!staticProperty) && (
+              <>
               <div className="bg-gradient-to-br from-primary/5 to-accent/10 border border-primary/15 p-5 sm:p-8 rounded-2xl">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-2xl">🏨</span>
@@ -1163,6 +1166,8 @@ const PropertyDetail = () => {
                   </Button>
                 </div>
               </div>
+              </>
+              )}
             </div>
 
             {/* Bara Laterală — CTA & Contact */}
