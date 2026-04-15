@@ -1235,7 +1235,9 @@ const PropertyDetail = () => {
                     <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                          {language === 'ro' ? 'Preț vânzare' : 'Sale price'}
+                          {language === 'ro' 
+                            ? (normalizedListingType === 'investitie' ? 'Capital necesar' : 'Preț') 
+                            : (normalizedListingType === 'investitie' ? 'Investment required' : 'Price')}
                         </span>
                         <span className="text-lg font-bold text-primary">
                           €{dbProperty.capital_necesar.toLocaleString('ro-RO')}
