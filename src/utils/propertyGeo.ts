@@ -363,6 +363,8 @@ export const getDisplayLocation = (input: GeoInput) => {
       return 'Zona Medicina / Universitate, Timișoara';
     case 'unirii':
       return 'Piața Unirii, Timișoara';
+    case 'sagului':
+      return 'Calea Șagului, Timișoara';
     default:
       return 'Timișoara';
   }
