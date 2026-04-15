@@ -1266,9 +1266,13 @@ const PropertyDetail = () => {
                   )}
 
                   <p className="text-muted-foreground text-sm">
-                    {language === 'ro' 
-                      ? 'Contactează-ne pentru mai multe detalii despre această oportunitate.'
-                      : 'Contact us for more details about this opportunity.'}
+                    {normalizedListingType === 'inchiriere'
+                      ? (language === 'ro' 
+                        ? 'Contactează-ne pentru mai multe detalii despre această proprietate.'
+                        : 'Contact us for more details about this property.')
+                      : (language === 'ro' 
+                        ? 'Contactează-ne pentru mai multe detalii despre această oportunitate.'
+                        : 'Contact us for more details about this opportunity.')}
                   </p>
                   <Button 
                     variant="hero" 
@@ -1293,7 +1297,8 @@ const PropertyDetail = () => {
           </Suspense>
         </div>
 
-        {/* Investor Box */}
+        {/* Investor Box — only for investment/cazare/vanzare, not rentals */}
+        {normalizedListingType !== 'inchiriere' && (
         <section className="py-12 bg-muted/40 border-t border-border">
           <div className="container mx-auto px-6">
             <div className="max-w-3xl mx-auto bg-card border border-primary/20 rounded-2xl p-6 sm:p-8 text-center shadow-sm">
@@ -1324,6 +1329,7 @@ const PropertyDetail = () => {
             </div>
           </div>
         </section>
+        )}
         {/* Related Blog Guides */}
         <Suspense fallback={null}>
           <RelatedBlogGuides
