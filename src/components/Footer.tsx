@@ -125,9 +125,16 @@ const Footer = () => {
             <h3 className="text-foreground font-semibold mb-4 text-sm uppercase tracking-wider">{text.servicesTitle}</h3>
             <nav className="flex flex-col gap-2.5">
               {serviceLinks.map((link) => (
-                <Link key={link.href} to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {link.label}
-                </Link>
+                link.isRequestModal ? (
+                  <button key="request-modal" onClick={() => setRequestOpen(true)} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left inline-flex items-center gap-1.5">
+                    <Search className="w-3.5 h-3.5" />
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link key={link.href} to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </Link>
+                )
               ))}
             </nav>
           </div>
