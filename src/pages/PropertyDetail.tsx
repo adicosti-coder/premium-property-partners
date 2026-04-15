@@ -701,15 +701,24 @@ const PropertyDetail = () => {
               }
 
               if (nightlyPrice) {
+                const isRental = normalizedListingType === 'inchiriere';
+                const isSale = normalizedListingType === 'vanzare';
+                const priceLabel = isRental
+                  ? (language === 'ro' ? '/lună' : '/month')
+                  : isSale
+                    ? ''
+                    : (language === 'ro' ? '/noapte' : '/night');
                 return (
                   <div className="flex flex-wrap items-center gap-3 mt-3">
                     <span className="text-2xl sm:text-3xl font-bold text-primary">
-                      €{nightlyPrice}
-                      <span className="text-base font-normal text-muted-foreground">
-                        /{language === 'ro' ? 'noapte' : 'night'}
-                      </span>
+                      €{isRental || isSale ? nightlyPrice.toLocaleString('ro-RO') : nightlyPrice}
+                      {priceLabel && (
+                        <span className="text-base font-normal text-muted-foreground">
+                          {priceLabel}
+                        </span>
+                      )}
                     </span>
-                    {weekendPrice && weekendPrice !== nightlyPrice && (
+                    {!isRental && !isSale && weekendPrice && weekendPrice !== nightlyPrice && (
                       <span className="text-sm text-muted-foreground">
                         ({language === 'ro' ? 'weekend' : 'weekend'}: €{weekendPrice}/{language === 'ro' ? 'noapte' : 'night'})
                       </span>
