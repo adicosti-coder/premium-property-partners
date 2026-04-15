@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
   const { language } = useLanguage();
-  const { countsBySlug, isLoading } = useNeighborhoodProperties();
+  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties();
 
   return (
     <section className="w-full bg-gradient-to-b from-background to-muted/30 py-10 md:py-16 lg:py-20">
