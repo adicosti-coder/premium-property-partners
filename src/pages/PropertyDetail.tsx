@@ -407,9 +407,24 @@ const PropertyDetail = () => {
     : null;
   const displayName = isInvestmentListing ? stripYieldFromPropertyTitle(property.name) : property.name;
   const displayDescription = (() => {
-    const baseDescription = language === 'en'
+    let baseDescription = language === 'en'
       ? (property.longDescriptionEn || property.descriptionEn || property.longDescription || property.description)
       : (property.longDescription || property.description);
+
+    // Strip hotel regime / RealTrust collaboration marketing sections from inchiriere listings
+    if (normalizedListingType === 'inchiriere' && baseDescription) {
+      // Remove "🏨 Regim Hotelier" section and everything after it until next major section or end
+      baseDescription = baseDescription.replace(/###?\s*🏨\s*Regim Hotelier[\s\S]*?(?=###?\s*📞|###?\s*🏠|###?\s*Contactează|$)/gi, '');
+      // Remove "🤝 Avantajele Colaborării" section
+      baseDescription = baseDescription.replace(/###?\s*🤝\s*Avantajele Colabor[ăa]rii[\s\S]*?(?=###?\s*📞|###?\s*🏠|###?\s*Contactează|$)/gi, '');
+      // Remove "📞 Contactează-ne pentru Vizionare" that references hotel regime
+      baseDescription = baseDescription.replace(/###?\s*📞?\s*Contactează-ne pentru Vizionare[\s\S]*?(?=###|$)/gi, '');
+      // Remove sentences about "investiție" and "venit pasiv" that don't belong in rental
+      baseDescription = baseDescription.replace(/Această investiție nu vizează doar o proprietate[^.]*\./g, '');
+      baseDescription = baseDescription.replace(/[^.]*sursă de venit pasiv[^.]*\./g, '');
+      // Clean up multiple blank lines
+      baseDescription = baseDescription.replace(/\n{3,}/g, '\n\n').trim();
+    }
 
     return isInvestmentListing
       ? syncInvestmentCopyWithRoi(baseDescription, displayRoi)
@@ -1071,7 +1086,7 @@ const PropertyDetail = () => {
                   7. MARKETING — De ce Regim Hotelier & RealTrust (la final)
                   Only show for cazare/investitie listings, not vanzare/inchiriere
                   ═══════════════════════════════════════════════════════ */}
-              {(normalizedListingType === 'cazare' || normalizedListingType === 'investitie' || normalizedListingType === '' || !!staticProperty) && (
+              {(normalizedListingType === 'cazare' || normalizedListingType === 'investitie' || !!staticProperty) && (
               <>
               <div className="bg-gradient-to-br from-primary/5 to-accent/10 border border-primary/15 p-5 sm:p-8 rounded-2xl">
                 <div className="flex items-center gap-2 mb-4">

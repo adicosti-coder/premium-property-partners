@@ -40,7 +40,7 @@ export function buildPrompt(data: PropertyData, listingType: string, tone: strin
   const typeContextMap: Record<string, string> = {
     vanzare: `CONTEXT VÂNZARE:\nEști copywriter imobiliar specializat în vânzări rezidențiale premium. Scopul tău este să convingi un potențial cumpărător să solicite o vizionare.\nACCENT PE: potențialul de investiție, randamentul estimat (ROI), aprecierea valorii pe termen mediu-lung, infrastructura din zonă, calitatea construcției, eficiența energetică, costurile reduse de întreținere, proximitatea față de centre de afaceri, universități, spitale.\nINCLUDE: o secțiune scurtă "💰 Potențial de investiție" care estimează randamentul chiriei (ex: "Cu o chirie lunară estimată de X €/lună, randamentul brut anual ajunge la Y%"). Menționează cum RealTrust poate administra proprietatea pentru maximizarea veniturilor.\nLIMBAJ: profesional, încrezător, orientat spre valoare. Folosește termeni ca: "randament", "apreciere", "cash-flow pozitiv", "activ imobiliar", "eficiență energetică", "amortizare", "lichiditate".`,
 
-    inchiriere: `CONTEXT ÎNCHIRIERE TERMEN LUNG:\nEști copywriter imobiliar specializat în închirieri premium. Scopul tău este să atragi chiriași de calitate.\nACCENT PE: confortul locuirii, dotări premium, siguranța zonei, accesibilitate transport, proximitate magazine/restaurante, raport calitate-preț, flexibilitatea contractului.\nINCLUDE: o secțiune "🏠 De ce să alegi această proprietate?" care evidențiază avantajele vs alternative. Menționează cum RealTrust oferă management profesionist și suport continuu.\nLIMBAJ: cald dar profesional, orientat spre experiența de locuire. Termeni: "standard de locuire", "randament locativ", "finisaje premium", "costuri de operare", "utilități incluse/excluse".`,
+    inchiriere: `CONTEXT ÎNCHIRIERE TERMEN LUNG:\nEști copywriter imobiliar specializat în închirieri premium. Scopul tău este să atragi chiriași de calitate.\nACCENT PE: confortul locuirii, dotări premium, siguranța zonei, accesibilitate transport, proximitate magazine/restaurante, raport calitate-preț, flexibilitatea contractului.\nINCLUDE: o secțiune "🏠 De ce să alegi această proprietate?" care evidențiază avantajele vs alternative. Menționează cum RealTrust oferă management profesionist și suport continuu.\nLIMBAJ: cald dar profesional, orientat spre experiența de locuire. Termeni: "standard de locuire", "randament locativ", "finisaje premium", "costuri de operare", "utilități incluse/excluse".\nIMPORTANT: NU include secțiuni despre regim hotelier, randament din short-term rental, Booking/Airbnb, dynamic pricing, self check-in cu smart lock, sau comparații cu închirierea clasică. Această proprietate este pentru ÎNCHIRIERE PE TERMEN LUNG, nu regim hotelier.`,
 
     cazare: `CONTEXT CAZARE REGIM HOTELIER:\nEști copywriter premium pentru proprietăți short-term rental. Scopul tău este să maximizezi rata de ocupare și valoarea percepută.\nACCENT PE: experiența oaspetelui, locația strategică pentru turism/business, echipamente premium (smart lock, Netflix, WiFi rapid), curățenie profesionistă, self check-in, flexibilitate.\nINCLUDE: o secțiune "✨ Experiența ApArt Hotel" care subliniază standardul hotelier la preț de apartament. Menționează rating-ul 4.9/5 și ocuparea de 98%.\nLIMBAJ: ospitalier, entuziast dar elegant. Termeni: "experiență premium", "concierge digital", "cazare boutique", "raport preț-confort", "destinație urbană".`,
 
@@ -52,6 +52,13 @@ export function buildPrompt(data: PropertyData, listingType: string, tone: strin
     persuasiv: "Ton persuasiv: orientat spre acțiune, cu apeluri la acțiune clare, urgență subtilă, beneficii concrete cuantificate.",
     informativ: "Ton informativ: detaliat, factual, structurat cu bullet points, tabele conceptuale, ideal pentru publicul analitic.",
   };
+
+  // Hotel regime and RealTrust collaboration sections only for cazare/investitie/vanzare
+  const hotelRegimeInstructions = (listingType === 'cazare' || listingType === 'investitie' || listingType === 'vanzare')
+    ? `6. OBLIGATORIU: Include o secțiune dedicată "🏨 Regim Hotelier — Randament Superior" care explică avantajele administrării în regim hotelier vs. închiriere clasică: ocupare optimizată, dynamic pricing, vizibilitate pe Booking/Airbnb, self check-in cu smart lock, curățenie profesionistă după fiecare sejur, rating-uri ridicate. Menționează randamentul net de 9%+ vs 3-4% închiriere clasică.
+7. OBLIGATORIU: Include o secțiune "🤝 Avantajele Colaborării cu RealTrust" care detaliază: management complet (fotografii profesionale, guest relations, dynamic pricing), comision transparent 15-25%, raportare lunară detaliată, asigurare 3M EUR, echipă dedicată, 180+ recenzii cu scor 9.4/10, ocupare 98%, proprietarul doar încasează profitul.`
+    : `6. NU include secțiuni despre regim hotelier, Booking/Airbnb, dynamic pricing, sau avantajele colaborării cu RealTrust pentru administrare în regim hotelier. Focusul este exclusiv pe închirierea pe termen lung.
+7. Menționează doar că RealTrust oferă suport profesionist pentru administrarea închirierii pe termen lung.`;
 
   return `${typeContextMap[listingType] || typeContextMap.vanzare}
 
@@ -71,8 +78,7 @@ INSTRUCȚIUNI DE SCRIERE:
 3. Folosește ortografie și gramatică impecabilă în limba română, cu diacritice corecte (ă, â, î, ș, ț).
 4. Include termeni economici și imobiliari de specialitate, potriviți contextului.
 5. Evidențiază USP-uri (Unique Selling Points) — ce face proprietatea specială.
-6. OBLIGATORIU: Include o secțiune dedicată "🏨 Regim Hotelier — Randament Superior" care explică avantajele administrării în regim hotelier vs. închiriere clasică: ocupare optimizată, dynamic pricing, vizibilitate pe Booking/Airbnb, self check-in cu smart lock, curățenie profesionistă după fiecare sejur, rating-uri ridicate. Menționează randamentul net de 9%+ vs 3-4% închiriere clasică.
-7. OBLIGATORIU: Include o secțiune "🤝 Avantajele Colaborării cu RealTrust" care detaliază: management complet (fotografii profesionale, guest relations, dynamic pricing), comision transparent 15-25%, raportare lunară detaliată, asigurare 3M EUR, echipă dedicată, 180+ recenzii cu scor 9.4/10, ocupare 98%, proprietarul doar încasează profitul.
+${hotelRegimeInstructions}
 8. Ultimul paragraf: call-to-action clar care menționează RealTrust ca partener de încredere.
 9. Generează și un TITLU optimizat SEO (max 80 caractere) și o DESCRIERE SCURTĂ (max 200 caractere).
 
