@@ -379,27 +379,29 @@ const TheAdvisor = ({
                 </div>
               )}
 
-              {/* ─── FAQ Concierge ─── */}
-              <div className="faq-section">
-                <div className="flex items-center gap-2 mb-4">
-                  <HelpCircle className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-serif font-semibold text-foreground">
-                    {t.faqTitle}
-                  </h3>
+              {/* ─── FAQ Concierge (hidden for rentals — PropertyFAQ handles it) ─── */}
+              {!isRental && (
+                <div className="faq-section">
+                  <div className="flex items-center gap-2 mb-4">
+                    <HelpCircle className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-serif font-semibold text-foreground">
+                      {t.faqTitle}
+                    </h3>
+                  </div>
+                  <Accordion type="single" collapsible className="w-full">
+                    {content.faqs.map((faq, index) => (
+                      <AccordionItem key={index} value={`faq-${index}`}>
+                        <AccordionTrigger className="text-left text-foreground hover:text-primary font-medium">
+                          {faq.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground leading-relaxed">
+                          {faq.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
-                <Accordion type="single" collapsible className="w-full">
-                  {content.faqs.map((faq, index) => (
-                    <AccordionItem key={index} value={`faq-${index}`}>
-                      <AccordionTrigger className="text-left text-foreground hover:text-primary font-medium">
-                        {faq.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground leading-relaxed">
-                        {faq.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </div>
+              )}
             </div>
           );
         })()

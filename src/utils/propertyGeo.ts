@@ -66,6 +66,7 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'apartament-3-camere-gh-lazar-investitie-premium-randament-9-net': [21.220902, 45.7595474],
   'city-of-mara-apartament-cu-2-camere': [21.2148126, 45.753754],
   'ultra-central-piata-unirii-ideal-investitie': [21.2298369, 45.7579403],
+  'studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust': [21.2402, 45.7293],
 };
 
 const profiles: GeoProfile[] = [
