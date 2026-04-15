@@ -45,14 +45,30 @@ function generateFallbackContent(
 ): AdvisorContent {
   const { propertyName, location, size, bedrooms, bathrooms, capacity, pricePerNight, listingType, yearBuilt, roi, amenities } = props;
   const isInvestment = listingType === "investitie" || listingType === "investment";
+  const isRental = listingType === "inchiriere";
   const estimatedYield = roi || "9.4%";
   const sizeText = size ? `${size} mp` : "";
   const bedsText = bedrooms ? `${bedrooms}` : "N/A";
   const amenitiesText = amenities?.slice(0, 5).join(", ") || "";
 
   if (lang === "ro") {
+    // Rental-specific content
+    if (isRental) {
+      return {
+        expertInsight: `${propertyName} este situată în zona ${location}, Timișoara — una dintre cele mai căutate zone pentru închiriere din vestul României. ${sizeText ? `Cu o suprafață de ${sizeText}` : "Proprietatea"}${bedrooms ? ` și ${bedsText} dormitoare` : ""}, această proprietate oferă un echilibru excelent între confort și accesibilitate.\n\nZona ${location} beneficiază de acces facil la transportul public, zone comerciale și universități, ceea ce o face ideală pentru chiriași — de la profesioniști la studenți. ${yearBuilt ? `Construită în ${yearBuilt}, proprietatea` : "Proprietatea"} respectă standarde moderne de calitate și eficiență energetică.\n\nAdministrată profesionist, proprietatea este pregătită pentru o închiriere pe termen lung fără griji. ${amenitiesText ? `Printre dotări se numără: ${amenitiesText}.` : ""}`,
+        investmentMetrics: { netYield: "", rentMultiplier: "", zoneSafetyScore: "" },
+        faqs: [
+          { question: "Ce tipuri de chiriași sunt potriviți pentru această proprietate?", answer: `${propertyName} este ideală pentru profesioniști, cupluri sau studenți care caută o locuință modernă și bine poziționată în zona ${location}.` },
+          { question: "Ce facilități sunt incluse în chirie?", answer: `Proprietatea include dotări moderne${amenitiesText ? ` precum ${amenitiesText}` : ""}, asigurând un confort de zi cu zi la standarde ridicate.` },
+          { question: "Care sunt avantajele zonei pentru locuit?", answer: `Zona ${location} din Timișoara oferă acces rapid la transport public, supermarketuri, restaurante și zone verzi, fiind una dintre cele mai căutate zone rezidențiale.` },
+          { question: "Care sunt condițiile contractuale de închiriere?", answer: "Contractul de închiriere este pe termen lung (minim 12 luni), cu posibilitate de prelungire. Detalii suplimentare sunt disponibile la cerere." },
+          { question: "Ce servicii oferă RealTrust pentru proprietari?", answer: "RealTrust oferă servicii de administrare completă: selecția chiriașilor, contracte, întreținere și suport continuu pentru proprietar." },
+        ],
+      };
+    }
+
     return {
-      expertInsight: `${propertyName} este situată în zona ${location}, Timișoara — una dintre cele mai dinamice piețe imobiliare din vestul României. ${sizeText ? `Cu o suprafață de ${sizeText}` : "Proprietatea"}${bedrooms ? ` și ${bedsText} dormitoare` : ""}, această proprietate oferă un echilibru excelent între confort și potențial investițional.\n\nZona ${location} beneficiază de acces facil la transportul public, zone comerciale și universități, ceea ce asigură o cerere constantă atât din partea turiștilor, cât și a profesioniștilor în deplasare. ${yearBuilt ? `Construită în ${yearBuilt}, proprietatea` : "Proprietatea"} respectă standarde moderne de calitate și eficiență energetică.\n\n${isInvestment ? "Ca investiție, proprietatea se remarcă prin potențialul de randament ridicat și lichiditatea zonei." : "Gestionată profesional de RealTrust, proprietatea oferă oaspeților o experiență premium — de la check-in digital la curățenie profesională."} ${amenitiesText ? `Printre dotări se numără: ${amenitiesText}.` : ""}`,
+      expertInsight: `${propertyName} este situată în zona ${location}, Timișoara — una dintre cele mai dinamice piețe imobiliare din vestul României. ${sizeText ? `Cu o suprafață de ${sizeText}` : "Proprietatea"}${bedrooms ? ` și ${bedsText} dormitoare` : ""}, această proprietate oferă un echilibru excelent între confort și potențial investițional.\n\nZona ${location} beneficiază de acces facil la transportul public, zone comerciale și universități, ceea ce asigură o cerere constantă atât din partea turiștilor, cât și a profesioniștilor în deplasare. ${yearBuilt ? `Construită în ${yearBuilt}, proprietatea` : "Proprietatea"} respectă standarde moderne de calitate și eficiență energetică.\n\n${isInvestment ? "Ca investiție, proprietatea se remarcă prin potențialul de randament ridicat și lichiditatea zonei." : "Gestionată profesionist de RealTrust, proprietatea oferă oaspeților o experiență premium — de la check-in digital la curățenie profesională."} ${amenitiesText ? `Printre dotări se numără: ${amenitiesText}.` : ""}`,
       investmentMetrics: {
         netYield: estimatedYield,
         rentMultiplier: pricePerNight ? `${Math.round((pricePerNight * 30) / (pricePerNight * 10))}x` : "18x",
@@ -64,6 +80,21 @@ function generateFallbackContent(
         { question: "Proprietatea este potrivită pentru închiriere pe termen scurt?", answer: `Da, ${propertyName} este ideală pentru regim hotelier sau Airbnb, având ${capacity ? `capacitate de ${capacity} oaspeți` : "dotări moderne"} și acces la facilități premium.` },
         { question: "Ce servicii oferă RealTrust pentru această proprietate?", answer: "RealTrust oferă management complet: listare pe platforme (Booking, Airbnb), optimizare prețuri, curățenie profesională, check-in digital și suport 24/7 pentru oaspeți." },
         { question: "Cum se compară cu alte investiții din zonă?", answer: `Proprietatea se poziționează competitiv în segmentul premium din ${location}, cu un raport preț-calitate excelent și potențial de apreciere pe termen mediu.` },
+      ],
+    };
+  }
+
+  // English rental
+  if (isRental) {
+    return {
+      expertInsight: `${propertyName} is located in the ${location} area of Timișoara — one of the most sought-after rental neighborhoods in western Romania. ${sizeText ? `With a surface area of ${sizeText}` : "The property"}${bedrooms ? ` and ${bedsText} bedrooms` : ""}, this property offers an excellent balance between comfort and accessibility.\n\nThe ${location} area benefits from easy access to public transport, commercial zones, and universities, making it ideal for tenants — from professionals to students. ${yearBuilt ? `Built in ${yearBuilt}, the property` : "The property"} meets modern quality and energy efficiency standards.\n\nProfessionally managed, the property is ready for hassle-free long-term rental. ${amenitiesText ? `Amenities include: ${amenitiesText}.` : ""}`,
+      investmentMetrics: { netYield: "", rentMultiplier: "", zoneSafetyScore: "" },
+      faqs: [
+        { question: "What types of tenants are suitable for this property?", answer: `${propertyName} is ideal for professionals, couples, or students looking for a modern, well-located home in the ${location} area.` },
+        { question: "What amenities are included in the rent?", answer: `The property includes modern amenities${amenitiesText ? ` such as ${amenitiesText}` : ""}, ensuring high daily comfort standards.` },
+        { question: "What are the advantages of the area for living?", answer: `The ${location} area in Timișoara offers quick access to public transport, supermarkets, restaurants, and green spaces, making it one of the most desirable residential areas.` },
+        { question: "What are the rental contract terms?", answer: "The rental contract is long-term (minimum 12 months), with the possibility of extension. Additional details are available upon request." },
+        { question: "What services does RealTrust offer for landlords?", answer: "RealTrust offers complete management services: tenant selection, contracts, maintenance, and ongoing support for property owners." },
       ],
     };
   }
@@ -261,95 +292,117 @@ const TheAdvisor = ({
           </p>
         </div>
       ) : content ? (
-        <div className="space-y-8">
-          {/* ─── Expert Insight ─── */}
-          <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/[0.03]">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-serif font-semibold text-foreground">
-                  {t.expertTitle}
-                </h3>
-              </div>
-              <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
-                {content.expertInsight.split("\n").map((paragraph, i) =>
-                  paragraph.trim() ? (
-                    <p key={i} className="mb-3 last:mb-0">
-                      {paragraph}
-                    </p>
-                  ) : null
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        (() => {
+          const isRental = listingType === "inchiriere";
+          // Clean investment phrases from AI-generated expert insight for rentals
+          let expertText = content.expertInsight;
+          if (isRental) {
+            expertText = expertText
+              .replace(/Această investiție nu vizează doar o proprietate[^.]*\./gi, '')
+              .replace(/[^.]*sursă de venit pasiv[^.]*\./gi, '')
+              .replace(/[^.]*randament[^.]*regim hotelier[^.]*\./gi, '')
+              .replace(/[^.]*Booking[^.]*Airbnb[^.]*\./gi, '')
+              .replace(/[^.]*dynamic pricing[^.]*\./gi, '')
+              .replace(/[^.]*smart lock[^.]*\./gi, '')
+              .replace(/[^.]*potențial investițional[^.]*\./gi, '')
+              .replace(/[^.]*investment potential[^.]*\./gi, '')
+              .replace(/\n{3,}/g, '\n\n')
+              .trim();
+          }
+          return (
+            <div className="space-y-8">
+              {/* ─── Expert Insight ─── */}
+              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/[0.03]">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-serif font-semibold text-foreground">
+                      {t.expertTitle}
+                    </h3>
+                  </div>
+                  <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
+                    {expertText.split("\n").map((paragraph, i) =>
+                      paragraph.trim() ? (
+                        <p key={i} className="mb-3 last:mb-0">
+                          {paragraph}
+                        </p>
+                      ) : null
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* ─── Investment Table ─── */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Calculator className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-serif font-semibold text-foreground">
-                {t.investmentTitle}
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
-                <CardContent className="p-5">
-                  <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-foreground">
-                    {roi ? (roi.includes('%') ? roi : `${roi}%`) : (content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
-                    {t.netYield}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
-                <CardContent className="p-5">
-                  <Calculator className="w-6 h-6 text-primary mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-foreground">
-                    {content.investmentMetrics.rentMultiplier}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
-                    {t.rentMultiplier}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
-                <CardContent className="p-5">
-                  <Shield className="w-6 h-6 text-primary mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-foreground">
-                    {content.investmentMetrics.zoneSafetyScore}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
-                    {t.safetyScore}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+              {/* ─── Investment Table (hidden for rentals) ─── */}
+              {!isRental && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calculator className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-serif font-semibold text-foreground">
+                      {t.investmentTitle}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
+                      <CardContent className="p-5">
+                        <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-foreground">
+                          {roi ? (roi.includes('%') ? roi : `${roi}%`) : (content.investmentMetrics.netYield || "").replace(/[^0-9.,%-]/g, "").trim() || content.investmentMetrics.netYield}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
+                          {t.netYield}
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
+                      <CardContent className="p-5">
+                        <Calculator className="w-6 h-6 text-primary mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-foreground">
+                          {content.investmentMetrics.rentMultiplier}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
+                          {t.rentMultiplier}
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="text-center border-primary/10 hover:border-primary/30 transition-colors">
+                      <CardContent className="p-5">
+                        <Shield className="w-6 h-6 text-primary mx-auto mb-2" />
+                        <p className="text-2xl font-bold text-foreground">
+                          {content.investmentMetrics.zoneSafetyScore}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
+                          {t.safetyScore}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
 
-          {/* ─── FAQ Concierge ─── */}
-          <div className="faq-section">
-            <div className="flex items-center gap-2 mb-4">
-              <HelpCircle className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-serif font-semibold text-foreground">
-                {t.faqTitle}
-              </h3>
+              {/* ─── FAQ Concierge ─── */}
+              <div className="faq-section">
+                <div className="flex items-center gap-2 mb-4">
+                  <HelpCircle className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-serif font-semibold text-foreground">
+                    {t.faqTitle}
+                  </h3>
+                </div>
+                <Accordion type="single" collapsible className="w-full">
+                  {content.faqs.map((faq, index) => (
+                    <AccordionItem key={index} value={`faq-${index}`}>
+                      <AccordionTrigger className="text-left text-foreground hover:text-primary font-medium">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground leading-relaxed">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
             </div>
-            <Accordion type="single" collapsible className="w-full">
-              {content.faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`faq-${index}`}>
-                  <AccordionTrigger className="text-left text-foreground hover:text-primary font-medium">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </div>
+          );
+        })()
       ) : null}
     </section>
   );
