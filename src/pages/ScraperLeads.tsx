@@ -1561,35 +1561,26 @@ const ScraperLeads = () => {
                   <p className="text-sm text-muted-foreground text-center py-6">Niciun lead arhivat.</p>
                 ) : (
                   <ScrollArea className="max-h-[400px]">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-xs">Titlu</TableHead>
-                          <TableHead className="text-xs">Preț</TableHead>
-                          <TableHead className="text-xs">Scor</TableHead>
-                          <TableHead className="text-xs">Data</TableHead>
-                          <TableHead className="text-xs text-right">Acțiuni</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {archivedLeads.map((lead) => (
-                          <TableRow key={lead.id} className="text-xs">
-                            <TableCell className="max-w-[200px] truncate font-medium">{lead.title}</TableCell>
-                            <TableCell className="font-mono">{lead.original_price?.toLocaleString("ro-RO")} €</TableCell>
-                            <TableCell>{lead.lead_score}</TableCell>
-                            <TableCell className="text-muted-foreground">{new Date(lead.created_at).toLocaleDateString("ro-RO")}</TableCell>
-                            <TableCell className="text-right space-x-1">
-                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleRestore(lead.id)}>
-                                <History className="w-3 h-3" /> Restaurează
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setSelectedLead(lead as any); setShowArchived(false); }}>
-                                <Eye className="w-3 h-3" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <div className="flex flex-col gap-2">
+                      {archivedLeads.map((lead) => (
+                        <div key={lead.id} className="flex flex-col gap-1.5 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                          <p className="text-sm font-medium leading-snug line-clamp-2">{lead.title}</p>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                            <span className="font-mono font-medium text-foreground">{lead.original_price?.toLocaleString("ro-RO")} €</span>
+                            <span>Scor: {lead.lead_score}</span>
+                            <span>{new Date(lead.created_at).toLocaleDateString("ro-RO")}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={() => handleRestore(lead.id)}>
+                              <History className="w-3 h-3" /> Restaurează
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => { setSelectedLead(lead as any); setShowArchived(false); }}>
+                              <Eye className="w-3 h-3" /> Detalii
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </ScrollArea>
                 )}
               </CardContent>
