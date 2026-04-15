@@ -151,7 +151,7 @@ const PropertyFAQ = ({
         { q: `Care este durata minimă a contractului de închiriere?`, a: `Durata minimă a contractului este de 12 luni, cu posibilitate de prelungire. Contractul se încheie conform legislației în vigoare.` },
         ...(pricePerNight ? [{ q: `Care este chiria lunară?`, a: `Chiria lunară este de €${pricePerNight}. Prețul nu include utilitățile (apă, curent, gaz, internet), care sunt în sarcina chiriașului.` }] : []),
         { q: `Ce documente sunt necesare pentru închiriere?`, a: `Pentru încheierea contractului aveți nevoie de: act de identitate valabil, dovada veniturilor (fluturași de salariu sau contract de muncă) și garanția echivalentă a unei chirii lunare.` },
-        { q: `Pot rezilia contractul înainte de termen?`, a: `Da, contractul poate fi reziliat cu un preaviz de 30 de zile, conform clauzelor stabilite. Garanția se returnează integral la predarea apartamentului în stare bună.` },
+        { q: `Pot rezilia contractul înainte de termen?`, a: `Contractul poate fi reziliat, conform clauzelor stabilite. Garanția se returnează integral la predarea apartamentului în stare bună.` },
       ] : [
         locationItem,
         ...(capacity ? [{ q: `How many rooms does the apartment have?`, a: `The apartment has ${bedrooms || 1} room${(bedrooms || 1) > 1 ? "s" : ""} and can accommodate up to ${capacity} people.` }] : []),
