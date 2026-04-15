@@ -40,6 +40,7 @@ const LiveActivityTracker = lazy(() => import("@/components/LiveActivityTracker"
 const SimilarProperties = lazy(() => import("@/components/SimilarProperties"));
 const RelatedBlogGuides = lazy(() => import("@/components/RelatedBlogGuides"));
 const PropertyPremiumSpecs = lazy(() => import("@/components/PropertyPremiumSpecs"));
+import PropertyRequestCTA from "@/components/PropertyRequestCTA";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
@@ -1346,6 +1347,8 @@ const PropertyDetail = () => {
           </div>
         </section>
         )}
+        {/* Property Request CTA */}
+        <PropertyRequestCTA sourceProperty={property.slug || paramSlug} />
         {/* Related Blog Guides */}
         <Suspense fallback={null}>
           <RelatedBlogGuides

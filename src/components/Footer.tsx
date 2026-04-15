@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Phone, Mail, Send, Lock, ShieldCheck } from "lucide-react";
+import { Phone, Mail, Send, Lock, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { neighborhoods } from "@/data/neighborhoods";
+import PropertyRequestModal from "@/components/PropertyRequestModal";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -16,6 +17,7 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
 
   const tr = {
     ro: {
@@ -75,6 +77,7 @@ const Footer = () => {
     { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages" },
     { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments" },
     { href: "/complexe", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes" },
+    { href: "#", label: language === "ro" ? "Caută pentru mine" : "Search for me", isRequestModal: true },
   ];
 
   const infoLinks = [
@@ -122,9 +125,16 @@ const Footer = () => {
             <h3 className="text-foreground font-semibold mb-4 text-sm uppercase tracking-wider">{text.servicesTitle}</h3>
             <nav className="flex flex-col gap-2.5">
               {serviceLinks.map((link) => (
-                <Link key={link.href} to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {link.label}
-                </Link>
+                link.isRequestModal ? (
+                  <button key="request-modal" onClick={() => setRequestOpen(true)} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left inline-flex items-center gap-1.5">
+                    <Search className="w-3.5 h-3.5" />
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link key={link.href} to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </Link>
+                )
               ))}
             </nav>
           </div>
@@ -210,6 +220,7 @@ const Footer = () => {
           {text.disclaimer}
         </p>
       </div>
+      <PropertyRequestModal open={requestOpen} onOpenChange={setRequestOpen} sourcePage="footer" />
     </footer>
   );
 };
