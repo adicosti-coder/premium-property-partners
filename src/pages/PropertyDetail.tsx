@@ -1346,6 +1346,8 @@ const PropertyDetail = () => {
           </div>
         </section>
         )}
+        {/* Property Request CTA */}
+        <PropertyRequestCTA sourceProperty={property.slug || paramSlug} />
         {/* Related Blog Guides */}
         <Suspense fallback={null}>
           <RelatedBlogGuides
