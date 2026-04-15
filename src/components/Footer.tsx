@@ -75,6 +75,7 @@ const Footer = () => {
     { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages" },
     { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments" },
     { href: "/complexe", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes" },
+    { href: "#", label: language === "ro" ? "Caută pentru mine" : "Search for me", isRequestModal: true },
   ];
 
   const infoLinks = [
