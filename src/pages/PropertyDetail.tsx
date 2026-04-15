@@ -955,7 +955,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   6. INVESTIȚIE & ANALIZĂ (pentru investitori/proprietari)
                   ═══════════════════════════════════════════════════════ */}
-              {dbProperty && dbProperty.capital_necesar && (
+              {dbProperty && dbProperty.capital_necesar && normalizedListingType !== 'inchiriere' && (
                 (() => {
                   const price = dbProperty.capital_necesar!;
                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
@@ -1076,7 +1076,7 @@ const PropertyDetail = () => {
               )}
 
               {/* Calculator Investiție detaliat */}
-              {!staticProperty && (() => {
+              {!staticProperty && normalizedListingType !== 'inchiriere' && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                 const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
@@ -1231,7 +1231,7 @@ const PropertyDetail = () => {
                   </h3>
 
                   {/* Price + ROI visible near CTA */}
-                  {dbProperty?.capital_necesar && (
+                  {dbProperty?.capital_necesar && normalizedListingType !== 'inchiriere' && (
                     <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
