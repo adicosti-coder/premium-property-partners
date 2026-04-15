@@ -2409,6 +2409,54 @@ export type Database = {
           },
         ]
       }
+      property_requests: {
+        Row: {
+          bedrooms: string | null
+          budget_range: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_read: boolean
+          message: string | null
+          name: string
+          phone: string
+          preferred_area: string | null
+          property_type: string | null
+          source_page: string | null
+          source_property_slug: string | null
+        }
+        Insert: {
+          bedrooms?: string | null
+          budget_range?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          name: string
+          phone: string
+          preferred_area?: string | null
+          property_type?: string | null
+          source_page?: string | null
+          source_property_slug?: string | null
+        }
+        Update: {
+          bedrooms?: string | null
+          budget_range?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          name?: string
+          phone?: string
+          preferred_area?: string | null
+          property_type?: string | null
+          source_page?: string | null
+          source_property_slug?: string | null
+        }
+        Relationships: []
+      }
       property_reviews: {
         Row: {
           admin_reply: string | null
