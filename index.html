@@ -119,10 +119,15 @@
     </div>
     <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
     
-    <!-- GA4 deferred — loads after first paint to avoid blocking LCP/SI -->
+    <!-- GA4 deferred — loads on first user interaction to avoid TBT impact -->
     <script>
       (function() {
+        var loaded = false;
         function loadGA4() {
+          if (loaded) return;
+          loaded = true;
+          events.forEach(function(e) { document.removeEventListener(e, loadGA4); });
+          clearTimeout(fallback);
           var s = document.createElement('script');
           s.src = 'https://www.googletagmanager.com/gtag/js?id=G-JXDGWL3G6V';
           s.async = true;
@@ -133,11 +138,9 @@
           gtag('js', new Date());
           gtag('config', 'G-JXDGWL3G6V');
         }
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(loadGA4, { timeout: 8000 });
-        } else {
-          setTimeout(loadGA4, 6000);
-        }
+        var events = ['scroll', 'click', 'touchstart', 'keydown'];
+        events.forEach(function(e) { document.addEventListener(e, loadGA4, { once: true, passive: true }); });
+        var fallback = setTimeout(loadGA4, 45000);
       })();
     </script>
   </body>
