@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
   const { language } = useLanguage();
-  const { countsBySlug, isLoading } = useNeighborhoodProperties();
+  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties();
 
   return (
     <section className="w-full bg-gradient-to-b from-background to-muted/30 py-10 md:py-16 lg:py-20">
@@ -33,6 +33,13 @@ export function NeighborhoodsGrid() {
           {neighborhoods.map((n) => {
             const liveCount = countsBySlug[n.slug] || 0;
             const totalCount = liveCount + n.listingsCount;
+            const neighborhoodProperties = (allProperties || []).filter(
+              (p) => p.neighborhood_slug === n.slug
+            );
+            const mosaicImages = neighborhoodProperties
+              .flatMap((p) => p.images || [])
+              .filter(Boolean)
+              .slice(0, 4);
 
             return (
               <Link
@@ -41,9 +48,32 @@ export function NeighborhoodsGrid() {
                 className="group relative block rounded-2xl overflow-hidden border border-border bg-card hover:border-primary/40 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 aria-label={`${n.fullName} — ${n.avgPricePerSqm} €/mp`}
               >
-                {/* Top gradient banner */}
-                <div className="h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center justify-center relative">
-                  <Building2 className="w-10 h-10 text-primary/20" />
+                {/* Image mosaic or fallback gradient */}
+                <div className="h-32 relative overflow-hidden">
+                  {mosaicImages.length > 0 ? (
+                    <div className="grid grid-cols-2 grid-rows-2 w-full h-full gap-[1px]">
+                      {[0, 1, 2, 3].map((idx) => {
+                        const img = mosaicImages[idx] || mosaicImages[0];
+                        return (
+                          <div key={idx} className="overflow-hidden">
+                            <img
+                              src={img}
+                              alt={`${n.fullName} ${idx + 1}`}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              loading="lazy"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center justify-center">
+                      <Building2 className="w-10 h-10 text-primary/20" />
+                    </div>
+                  )}
+
+                  {/* Overlay gradient for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/20 pointer-events-none" />
 
                   {/* Live count badge */}
                   <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-[10px] font-bold text-primary border border-primary/20">
@@ -52,12 +82,11 @@ export function NeighborhoodsGrid() {
                   </div>
 
                   {liveCount > 0 && !isLoading && (
-                    <div className="absolute bottom-3 left-3 bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-1 text-[10px] font-bold">
+                    <div className="absolute bottom-3 left-3 bg-primary/10 backdrop-blur-sm text-primary border border-primary/20 rounded-full px-2.5 py-1 text-[10px] font-bold">
                       {liveCount} live
                     </div>
                   )}
 
-                  {/* ROI indicator for premium zones */}
                   {n.avgPricePerSqm >= 1900 && (
                     <div className="absolute top-3 left-3 bg-amber-500/90 text-white rounded-full px-2.5 py-1 text-[10px] font-bold flex items-center gap-1">
                       <Star className="w-3 h-3" />
