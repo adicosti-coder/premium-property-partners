@@ -1230,7 +1230,21 @@ const PropertyDetail = () => {
                     {language === 'ro' ? 'Interesat?' : 'Interested?'}
                   </h3>
 
-                  {/* Price + ROI visible near CTA */}
+                  {/* Rental price in sidebar */}
+                  {normalizedListingType === 'inchiriere' && dbProperty?.base_price_per_night && (
+                    <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                          {language === 'ro' ? 'Chirie lunară' : 'Monthly rent'}
+                        </span>
+                        <span className="text-lg font-bold text-primary">
+                          €{dbProperty.base_price_per_night.toLocaleString('ro-RO')}/{language === 'ro' ? 'lună' : 'month'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Price + ROI for investment/sale */}
                   {dbProperty?.capital_necesar && normalizedListingType !== 'inchiriere' && (
                     <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 space-y-2">
                       <div className="flex items-center justify-between">
