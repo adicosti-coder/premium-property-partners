@@ -1426,10 +1426,10 @@ const ScraperLeads = () => {
 
           {/* 7-Day Trend Chart + Blacklist Button */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-            <Card className="bg-card border-border md:col-span-3">
+            <Card className="bg-card border-border md:col-span-3 overflow-hidden">
               <CardContent className="p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Lead-uri noi — Ultimele 7 zile</p>
-                <div className="h-24">
+                <div className="h-24 pointer-events-none">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
                       <defs>
@@ -1447,7 +1447,7 @@ const ScraperLeads = () => {
                 </div>
               </CardContent>
             </Card>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 relative z-10">
               <Button variant="outline" className="gap-2 flex-1" onClick={() => setBlacklistOpen(true)}>
                 <Shield className="w-4 h-4 text-red-500" /> Gestionare Blacklist
               </Button>
