@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Phone, Mail, Send, Lock, ShieldCheck } from "lucide-react";
+import { Phone, Mail, Send, Lock, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { neighborhoods } from "@/data/neighborhoods";
+import PropertyRequestModal from "@/components/PropertyRequestModal";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -16,6 +17,7 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
 
   const tr = {
     ro: {
