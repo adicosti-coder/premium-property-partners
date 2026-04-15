@@ -224,6 +224,20 @@ const profiles: GeoProfile[] = [
       { name: 'Transport central', nameEn: 'Central transport', lng: 21.2284, lat: 45.7574, category: 'transport', emoji: '🚋', minutes: 3, mode: 'walk' },
     ],
   },
+  {
+    key: 'sagului',
+    aliases: ['sagului', 'calea sagului', 'zona sagului', 'studio premium 2025 zona sagului'],
+    center: { lng: 21.2402, lat: 45.7293 },
+    scores: { transport: 8.2, education: 7.8, lifestyle: 8.0, overallLabelRo: 'Foarte Bun', overallLabelEn: 'Very Good' },
+    pois: [
+      { name: 'Shopping City Timișoara', nameEn: 'Shopping City Timișoara', lng: 21.2468, lat: 45.7188, category: 'mall', emoji: '🛍️', minutes: 5, mode: 'drive' },
+      { name: 'Kaufland Calea Șagului', nameEn: 'Kaufland Calea Șagului', lng: 21.2385, lat: 45.7310, category: 'supermarket', emoji: '🛒', minutes: 3, mode: 'walk' },
+      { name: 'Amazonia Aquapark', nameEn: 'Amazonia Aquapark', lng: 21.257, lat: 45.772, category: 'tourist', emoji: '🏊', minutes: 10, mode: 'drive' },
+      { name: 'Stații tramvai Calea Șagului', nameEn: 'Calea Șagului tram stops', lng: 21.2395, lat: 45.7300, category: 'transport', emoji: '🚋', minutes: 3, mode: 'walk' },
+      { name: 'Restaurante & cafenele', nameEn: 'Restaurants & cafés', lng: 21.2410, lat: 45.7285, category: 'restaurant', emoji: '🍽️', minutes: 4, mode: 'walk' },
+      { name: 'Centrul Vechi', nameEn: 'Old Town Center', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️', minutes: 10, mode: 'drive' },
+    ],
+  },
 ];
 
 const fallbackProfile: GeoProfile = {
