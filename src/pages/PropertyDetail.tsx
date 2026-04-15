@@ -634,9 +634,9 @@ const PropertyDetail = () => {
           <div className="relative group aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer mb-3" onClick={() => { setCurrentImageIndex(0); setLightboxOpen(true); }}>
             <PinterestPinButton
               imageUrl={galleryImages[currentImageIndex] || galleryImages[0]}
-              description={`${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
+              description={normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat Timișoara | RealTrust` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
             />
-            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
             {/* Navigation arrows on hero */}
             {galleryImages.length > 1 && (
@@ -656,7 +656,7 @@ const PropertyDetail = () => {
                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
                     aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
                   >
-                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat foto ${idx + 1}` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`} className="w-full h-full object-cover" />
                   </button>
                   <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{getDisplayCaption(idx)}</p>
                 </div>
