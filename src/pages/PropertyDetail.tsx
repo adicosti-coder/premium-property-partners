@@ -634,9 +634,9 @@ const PropertyDetail = () => {
           <div className="relative group aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden cursor-pointer mb-3" onClick={() => { setCurrentImageIndex(0); setLightboxOpen(true); }}>
             <PinterestPinButton
               imageUrl={galleryImages[currentImageIndex] || galleryImages[0]}
-              description={`${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
+              description={normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat Timișoara | RealTrust` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
             />
-            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
             {/* Navigation arrows on hero */}
             {galleryImages.length > 1 && (
@@ -656,7 +656,7 @@ const PropertyDetail = () => {
                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
                     aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
                   >
-                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat foto ${idx + 1}` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`} className="w-full h-full object-cover" />
                   </button>
                   <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{getDisplayCaption(idx)}</p>
                 </div>
@@ -825,7 +825,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   3.5 INVESTIȚIE LA CHEIE — Beneficii administrare RealTrust
                   ═══════════════════════════════════════════════════════ */}
-              {(normalizedListingType === 'investitie' || normalizedListingType === 'vanzare' || normalizedListingType === 'cazare') && (
+              {(normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (
                 <div className="bg-gradient-to-br from-amber-500/5 to-primary/5 border border-amber-500/20 p-5 sm:p-6 rounded-2xl">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xl">🔑</span>
@@ -955,7 +955,7 @@ const PropertyDetail = () => {
               {/* ═══════════════════════════════════════════════════════
                   6. INVESTIȚIE & ANALIZĂ (pentru investitori/proprietari)
                   ═══════════════════════════════════════════════════════ */}
-              {dbProperty && dbProperty.capital_necesar && normalizedListingType !== 'inchiriere' && (
+              {dbProperty && dbProperty.capital_necesar && (normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (
                 (() => {
                   const price = dbProperty.capital_necesar!;
                   const baseRent = dbProperty.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
@@ -1076,7 +1076,7 @@ const PropertyDetail = () => {
               )}
 
               {/* Calculator Investiție detaliat */}
-              {!staticProperty && normalizedListingType !== 'inchiriere' && (() => {
+              {!staticProperty && (normalizedListingType === 'investitie' || normalizedListingType === 'cazare') && (() => {
                 const baseRentForEngine = dbProperty?.estimated_revenue ? parseFloat(dbProperty.estimated_revenue.replace(/[^0-9.]/g, "")) || 550 : 550;
                 const estNightly = dbProperty?.base_price_per_night || Math.max(Math.round(baseRentForEngine / 10), 40);
                 return (
@@ -1230,12 +1230,28 @@ const PropertyDetail = () => {
                     {language === 'ro' ? 'Interesat?' : 'Interested?'}
                   </h3>
 
-                  {/* Price + ROI visible near CTA */}
+                  {/* Rental price in sidebar */}
+                  {normalizedListingType === 'inchiriere' && dbProperty?.base_price_per_night && (
+                    <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                          {language === 'ro' ? 'Chirie lunară' : 'Monthly rent'}
+                        </span>
+                        <span className="text-lg font-bold text-primary">
+                          €{dbProperty.base_price_per_night.toLocaleString('ro-RO')}/{language === 'ro' ? 'lună' : 'month'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Price + ROI for investment/sale */}
                   {dbProperty?.capital_necesar && normalizedListingType !== 'inchiriere' && (
                     <div className="bg-primary/5 border border-primary/15 rounded-xl p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                          {language === 'ro' ? 'Preț vânzare' : 'Sale price'}
+                          {language === 'ro' 
+                            ? (normalizedListingType === 'investitie' ? 'Capital necesar' : 'Preț') 
+                            : (normalizedListingType === 'investitie' ? 'Investment required' : 'Price')}
                         </span>
                         <span className="text-lg font-bold text-primary">
                           €{dbProperty.capital_necesar.toLocaleString('ro-RO')}
@@ -1266,9 +1282,13 @@ const PropertyDetail = () => {
                   )}
 
                   <p className="text-muted-foreground text-sm">
-                    {language === 'ro' 
-                      ? 'Contactează-ne pentru mai multe detalii despre această oportunitate.'
-                      : 'Contact us for more details about this opportunity.'}
+                    {normalizedListingType === 'inchiriere'
+                      ? (language === 'ro' 
+                        ? 'Contactează-ne pentru mai multe detalii despre această proprietate.'
+                        : 'Contact us for more details about this property.')
+                      : (language === 'ro' 
+                        ? 'Contactează-ne pentru mai multe detalii despre această oportunitate.'
+                        : 'Contact us for more details about this opportunity.')}
                   </p>
                   <Button 
                     variant="hero" 
@@ -1293,7 +1313,8 @@ const PropertyDetail = () => {
           </Suspense>
         </div>
 
-        {/* Investor Box */}
+        {/* Investor Box — only for investment/cazare/vanzare, not rentals */}
+        {normalizedListingType !== 'inchiriere' && (
         <section className="py-12 bg-muted/40 border-t border-border">
           <div className="container mx-auto px-6">
             <div className="max-w-3xl mx-auto bg-card border border-primary/20 rounded-2xl p-6 sm:p-8 text-center shadow-sm">
@@ -1324,6 +1345,7 @@ const PropertyDetail = () => {
             </div>
           </div>
         </section>
+        )}
         {/* Related Blog Guides */}
         <Suspense fallback={null}>
           <RelatedBlogGuides
