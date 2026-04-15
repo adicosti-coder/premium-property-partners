@@ -220,6 +220,7 @@ const Footer = () => {
           {text.disclaimer}
         </p>
       </div>
+      <PropertyRequestModal open={requestOpen} onOpenChange={setRequestOpen} sourcePage="footer" />
     </footer>
   );
 };
