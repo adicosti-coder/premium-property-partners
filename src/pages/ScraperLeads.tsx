@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { ScraperAdvancedFilters, AdvancedFilters, EMPTY_FILTERS, countActiveFilters, parseSurface, parseRooms, parseFloor } from "@/components/admin/ScraperAdvancedFilters";
 import { AIInsightButton, DailyBriefingButton } from "@/components/admin/ScraperAIInsight";
+import { PredictiveDetailCard, PredictiveBatchButton, UndervaluedLeadsWidget } from "@/components/admin/ScraperPredictive";
 import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/admin/ScraperFollowUp";
 import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
 import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
@@ -1278,6 +1279,12 @@ const ScraperLeads = () => {
             />
           </div>
 
+          {/* Predictive Analytics — conversion probability + undervaluation */}
+          <PredictiveDetailCard
+            lead={selectedLead}
+            onUpdate={() => queryClient.invalidateQueries({ queryKey: ["scraper-leads"] })}
+          />
+
           {/* ── Export to Properties ───────────────── */}
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
@@ -1418,6 +1425,7 @@ const ScraperLeads = () => {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <DailyBriefingButton />
+              <PredictiveBatchButton />
               <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setShortcutsOpen(true)} title="Shortcuts (?)">
                 <Keyboard className="w-4 h-4" /> Shortcuts
               </Button>

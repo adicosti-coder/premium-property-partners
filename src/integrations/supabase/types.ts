@@ -3010,6 +3010,7 @@ export type Database = {
           agency_name: string | null
           ai_insight: Json | null
           ai_insight_generated_at: string | null
+          conversion_probability: number | null
           created_at: string
           estimated_roi: number | null
           extra_profit_3y: number
@@ -3022,6 +3023,9 @@ export type Database = {
           neighborhood_slug: string | null
           original_price: number
           phone: string | null
+          predicted_market_value: number | null
+          prediction_generated_at: string | null
+          prediction_reasoning: string | null
           prospect_category: string | null
           search_keyword: string | null
           seo_description: string | null
@@ -3030,6 +3034,7 @@ export type Database = {
           status: string
           tags: string[]
           title: string
+          undervaluation_percent: number | null
           updated_at: string
           url: string
           whatsapp_message: string | null
@@ -3039,6 +3044,7 @@ export type Database = {
           agency_name?: string | null
           ai_insight?: Json | null
           ai_insight_generated_at?: string | null
+          conversion_probability?: number | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
@@ -3051,6 +3057,9 @@ export type Database = {
           neighborhood_slug?: string | null
           original_price?: number
           phone?: string | null
+          predicted_market_value?: number | null
+          prediction_generated_at?: string | null
+          prediction_reasoning?: string | null
           prospect_category?: string | null
           search_keyword?: string | null
           seo_description?: string | null
@@ -3059,6 +3068,7 @@ export type Database = {
           status?: string
           tags?: string[]
           title: string
+          undervaluation_percent?: number | null
           updated_at?: string
           url: string
           whatsapp_message?: string | null
@@ -3068,6 +3078,7 @@ export type Database = {
           agency_name?: string | null
           ai_insight?: Json | null
           ai_insight_generated_at?: string | null
+          conversion_probability?: number | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
@@ -3080,6 +3091,9 @@ export type Database = {
           neighborhood_slug?: string | null
           original_price?: number
           phone?: string | null
+          predicted_market_value?: number | null
+          prediction_generated_at?: string | null
+          prediction_reasoning?: string | null
           prospect_category?: string | null
           search_keyword?: string | null
           seo_description?: string | null
@@ -3088,6 +3102,7 @@ export type Database = {
           status?: string
           tags?: string[]
           title?: string
+          undervaluation_percent?: number | null
           updated_at?: string
           url?: string
           whatsapp_message?: string | null
