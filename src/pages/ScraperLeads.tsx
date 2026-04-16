@@ -1851,10 +1851,17 @@ const ScraperLeads = () => {
 
           {isLoading ? (
             <div className="space-y-3">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
+          ) : viewMode === "analytics" ? (
+            <ScraperAnalyticsDashboard leads={(leads || []) as any} />
           ) : filteredLeads.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">{t.noData}</div>
           ) : viewMode === "pipeline" ? (
-            renderPipelineView()
+            <>
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+                💡 <span>Trage-și-plasează card-urile între coloane pentru a schimba statusul instant.</span>
+              </p>
+              {renderPipelineView()}
+            </>
           ) : (
             <>
             {/* Desktop Table */}
