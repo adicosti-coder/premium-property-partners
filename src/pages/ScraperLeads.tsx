@@ -1425,6 +1425,7 @@ const ScraperLeads = () => {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <DailyBriefingButton />
+              <PredictiveBatchButton />
               <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setShortcutsOpen(true)} title="Shortcuts (?)">
                 <Keyboard className="w-4 h-4" /> Shortcuts
               </Button>
