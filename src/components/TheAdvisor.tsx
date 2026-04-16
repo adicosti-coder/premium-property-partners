@@ -27,6 +27,7 @@ interface TheAdvisorProps {
   yearBuilt?: number | null;
   energyClass?: string | null;
   roi?: string | null;
+  expertInsightOverride?: string | null;
 }
 
 interface AdvisorContent {
