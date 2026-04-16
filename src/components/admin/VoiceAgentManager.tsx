@@ -136,12 +136,12 @@ export default function VoiceAgentManager() {
   return (
     <div className="space-y-6">
       {/* AUTO-DIAL SETTINGS */}
-      <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-amber-600" />
+            <Bot className="h-5 w-5 text-primary" />
             Auto-Dial Inteligent
-            {autoSettings?.auto_dial_enabled && <Badge className="bg-green-100 text-green-800 animate-pulse">ACTIV</Badge>}
+            {autoSettings?.auto_dial_enabled && <Badge className="bg-primary/15 text-primary border border-primary/30 animate-pulse">ACTIV</Badge>}
           </CardTitle>
           <CardDescription>
             Sună automat lead-urile cu scor ≥ {autoSettings?.min_lead_score ?? 90} în intervalul orar permis. Cron rulează la 15 min, max 1 apel/rulare.
