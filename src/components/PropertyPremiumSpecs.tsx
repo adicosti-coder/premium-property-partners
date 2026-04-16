@@ -39,6 +39,12 @@ interface DbPropertySpecs {
   furnished?: string | null;
   construction_type?: string | null;
   compartimentare?: string | null;
+  rooms?: number | null;
+  kitchens?: number | null;
+  comfort_level?: string | null;
+  property_subtype?: string | null;
+  height_regime?: string | null;
+  destination?: string | null;
 }
 
 interface PropertyPremiumSpecsProps {
@@ -104,10 +110,15 @@ const PropertyPremiumSpecs = ({ specs, className }: PropertyPremiumSpecsProps) =
   if (specs.land_area) items.push({ icon: <Grid3X3 className="w-4 h-4" />, label: isRo ? "Suprafață teren" : "Land area", value: `${specs.land_area} m²` });
 
   // Camere
+  if (specs.rooms) items.push({ icon: <Layers className="w-4 h-4" />, label: isRo ? "Nr. camere" : "Rooms", value: String(specs.rooms) });
   if (specs.bedrooms) items.push({ icon: <BedDouble className="w-4 h-4" />, label: isRo ? "Dormitoare" : "Bedrooms", value: String(specs.bedrooms) });
   if (specs.bathrooms) items.push({ icon: <Bath className="w-4 h-4" />, label: isRo ? "Băi" : "Bathrooms", value: String(specs.bathrooms) });
+  if (specs.kitchens) items.push({ icon: <Home className="w-4 h-4" />, label: isRo ? "Bucătării" : "Kitchens", value: String(specs.kitchens) });
   if (specs.capacity) items.push({ icon: <Users className="w-4 h-4" />, label: isRo ? "Capacitate" : "Capacity", value: `${specs.capacity} ${isRo ? "pers." : "pers."}` });
   if (specs.compartimentare) items.push({ icon: <Layers className="w-4 h-4" />, label: isRo ? "Compartimentare" : "Layout", value: specs.compartimentare });
+  if (specs.comfort_level) items.push({ icon: <Armchair className="w-4 h-4" />, label: isRo ? "Confort" : "Comfort", value: specs.comfort_level });
+  if (specs.property_subtype) items.push({ icon: <Building2 className="w-4 h-4" />, label: isRo ? "Tip imobil" : "Property type", value: specs.property_subtype });
+  if (specs.destination) items.push({ icon: <Home className="w-4 h-4" />, label: isRo ? "Destinație" : "Destination", value: specs.destination });
 
   // Balcoane, terasă, boxă, pivniță
   if (specs.balconies && specs.balconies > 0) items.push({ icon: <Home className="w-4 h-4" />, label: isRo ? "Balcoane" : "Balconies", value: String(specs.balconies) });
@@ -117,6 +128,7 @@ const PropertyPremiumSpecs = ({ specs, className }: PropertyPremiumSpecsProps) =
 
   // Etaj, lift, bloc
   if (specs.floor) items.push({ icon: <Building2 className="w-4 h-4" />, label: isRo ? "Etaj" : "Floor", value: specs.total_building_floors ? `${specs.floor} / ${specs.total_building_floors}` : specs.floor });
+  if (specs.height_regime) items.push({ icon: <Building className="w-4 h-4" />, label: isRo ? "Regim înălțime" : "Height regime", value: specs.height_regime });
   if (specs.has_elevator != null) items.push({ icon: <Building className="w-4 h-4" />, label: isRo ? "Lift" : "Elevator", value: specs.has_elevator ? "✓" : "✗" });
   if (specs.apartments_in_building) items.push({ icon: <Building2 className="w-4 h-4" />, label: isRo ? "Ap. în bloc" : "Apts in building", value: String(specs.apartments_in_building) });
 
