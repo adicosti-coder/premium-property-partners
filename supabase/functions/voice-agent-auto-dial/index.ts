@@ -2,8 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 /* ──────────────────────────────────────────────────────────────
-   Auto-Dial cron — rulează periodic (ex: la 15 min) și sună
-   automat lead-urile cu scor mare care n-au fost încă apelate.
+   Auto-Dial — reads from prospect_listings (lead_score>80, status=new).
+   Can be triggered by:
+     - cron (no body) → dials top 1 eligible lead per run
+     - DB trigger ({triggered_prospect_id}) → dials specific prospect immediately
+     - Manual UI ({prospect_id, manual: true}) → bypasses some quota checks
 ─────────────────────────────────────────────────────────────── */
 
 const corsHeaders = {
@@ -23,6 +26,10 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    const body = await req.json().catch(() => ({}));
+    const triggeredId: string | undefined = body.triggered_prospect_id || body.prospect_id;
+    const manual = body.manual === true;
+
     // Load settings
     const { data: settings } = await supabase
       .from("voice_agent_settings")
@@ -30,95 +37,113 @@ serve(async (req) => {
       .eq("id", 1)
       .maybeSingle();
 
-    if (!settings || !settings.auto_dial_enabled) {
+    if (!manual && (!settings || !settings.auto_dial_enabled)) {
       return new Response(JSON.stringify({ skipped: "auto_dial disabled" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Time window check (Romania timezone: UTC+2/+3, simplified UTC+2)
-    const nowUtc = new Date();
-    const hourRo = (nowUtc.getUTCHours() + 2) % 24;
-    if (hourRo < settings.allowed_hours_start || hourRo >= settings.allowed_hours_end) {
-      return new Response(JSON.stringify({ skipped: `outside hours (RO hour ${hourRo})` }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Time window check (Romania UTC+2)
+    if (!manual && settings) {
+      const nowUtc = new Date();
+      const hourRo = (nowUtc.getUTCHours() + 2) % 24;
+      if (hourRo < settings.allowed_hours_start || hourRo >= settings.allowed_hours_end) {
+        return new Response(JSON.stringify({ skipped: `outside hours (RO hour ${hourRo})` }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (!LOVABLE_API_KEY || !TWILIO_API_KEY || !TWILIO_FROM_NUMBER) {
-      return new Response(JSON.stringify({ error: "Twilio not configured" }), {
+      return new Response(JSON.stringify({
+        error: "Twilio not configured",
+        missing: { LOVABLE_API_KEY: !LOVABLE_API_KEY, TWILIO_API_KEY: !TWILIO_API_KEY, TWILIO_FROM_NUMBER: !TWILIO_FROM_NUMBER },
+      }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Daily quota check
-    const startOfDay = new Date(); startOfDay.setUTCHours(0, 0, 0, 0);
-    const { count: callsToday } = await supabase
-      .from("voice_call_sessions")
-      .select("*", { count: "exact", head: true })
-      .eq("direction", "outbound")
-      .gte("created_at", startOfDay.toISOString());
+    if (!manual && settings) {
+      const startOfDay = new Date(); startOfDay.setUTCHours(0, 0, 0, 0);
+      const { count: callsToday } = await supabase
+        .from("voice_call_sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("direction", "outbound")
+        .gte("created_at", startOfDay.toISOString());
+      if ((callsToday || 0) >= settings.max_calls_per_day) {
+        return new Response(JSON.stringify({ skipped: `daily quota reached (${callsToday})` }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
-    if ((callsToday || 0) >= settings.max_calls_per_day) {
-      return new Response(JSON.stringify({ skipped: `daily quota reached (${callsToday})` }), {
+    // Resolve prospect to call
+    let prospect: any = null;
+    if (triggeredId) {
+      const { data } = await supabase
+        .from("prospect_listings")
+        .select("id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown")
+        .eq("id", triggeredId)
+        .maybeSingle();
+      prospect = data;
+    } else {
+      // Find top eligible
+      const minScore = (settings?.min_lead_score ?? 81);
+      const { data: leads } = await supabase
+        .from("prospect_listings")
+        .select("id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown")
+        .gt("lead_score", Math.max(80, minScore - 1))
+        .eq("lifecycle_status", "new")
+        .not("phone_normalized", "is", null)
+        .is("auto_call_triggered_at", null)
+        .order("lead_score", { ascending: false })
+        .limit(1);
+      prospect = leads?.[0];
+    }
+
+    if (!prospect) {
+      return new Response(JSON.stringify({ skipped: "no eligible prospect" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Find eligible leads: high score, has phone, not yet called
-    const { data: leads } = await supabase
-      .from("scraper_leads")
-      .select("id, title, listing_type, prospect_category, agency_name, phone, original_price, city, lead_score")
-      .gte("lead_score", settings.min_lead_score)
-      .not("phone", "is", null)
-      .order("lead_score", { ascending: false })
-      .limit(10);
-
-    if (!leads || leads.length === 0) {
-      return new Response(JSON.stringify({ skipped: "no eligible leads" }), {
+    const toNumber = prospect.phone_normalized || prospect.contact_phone;
+    if (!toNumber || !/^\+[1-9]\d{6,14}$/.test(toNumber)) {
+      await supabase.from("prospect_listings").update({
+        lifecycle_status: "rejected",
+        admin_notes: `Auto-dial: invalid phone "${prospect.contact_phone}"`,
+      }).eq("id", prospect.id);
+      return new Response(JSON.stringify({ skipped: `invalid phone: ${prospect.contact_phone}` }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Filter out already-called leads
-    const leadIds = leads.map((l: any) => l.id);
-    const { data: already } = await supabase
-      .from("voice_call_sessions")
-      .select("scraper_lead_id")
-      .in("scraper_lead_id", leadIds);
-    const calledSet = new Set((already || []).map((a: any) => a.scraper_lead_id));
-    const fresh = leads.filter((l: any) => !calledSet.has(l.id));
+    // Mark prospect as calling (idempotent)
+    await supabase.from("prospect_listings").update({
+      lifecycle_status: "calling",
+      auto_call_triggered_at: new Date().toISOString(),
+    }).eq("id", prospect.id);
 
-    if (fresh.length === 0) {
-      return new Response(JSON.stringify({ skipped: "all top leads already called" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Take 1 lead per cron run (gentle pacing)
-    const lead = fresh[0];
-    const phoneRaw = (lead.phone || "").replace(/[\s\-()]/g, "");
-    const toNumber = phoneRaw.startsWith("+") ? phoneRaw : phoneRaw.startsWith("0") ? "+4" + phoneRaw : "+40" + phoneRaw;
-    if (!/^\+[1-9]\d{6,14}$/.test(toNumber)) {
-      return new Response(JSON.stringify({ skipped: `invalid phone for lead ${lead.id}: ${lead.phone}` }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Create session
+    // Create voice session
     const { data: session, error: sessErr } = await supabase
       .from("voice_call_sessions")
       .insert({
         to_number: toNumber,
         from_number: TWILIO_FROM_NUMBER,
-        scraper_lead_id: lead.id,
+        prospect_listing_id: prospect.id,
         status: "initiating",
-        call_objective: settings.default_objective,
+        call_objective: settings?.default_objective || "qualify",
         direction: "outbound",
       })
       .select()
       .single();
     if (sessErr || !session) throw new Error(`DB insert: ${sessErr?.message}`);
+
+    // Link back
+    await supabase.from("prospect_listings").update({
+      voice_call_session_id: session.id,
+    }).eq("id", prospect.id);
 
     const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}`;
     const statusUrl = `${SUPABASE_URL}/functions/v1/voice-agent-status?sessionId=${session.id}`;
@@ -131,10 +156,13 @@ serve(async (req) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        To: toNumber, From: TWILIO_FROM_NUMBER, Url: twimlUrl,
+        To: toNumber,
+        From: TWILIO_FROM_NUMBER,
+        Url: twimlUrl,
         StatusCallback: statusUrl,
         StatusCallbackEvent: "initiated ringing answered completed",
-        Record: "true", RecordingStatusCallback: statusUrl,
+        Record: "true",
+        RecordingStatusCallback: statusUrl,
       }),
     });
     const twData = await twRes.json();
@@ -145,6 +173,12 @@ serve(async (req) => {
         error_message: `Twilio ${twRes.status}: ${JSON.stringify(twData).slice(0, 500)}`,
         ended_at: new Date().toISOString(),
       }).eq("id", session.id);
+      // Re-open prospect for retry
+      await supabase.from("prospect_listings").update({
+        lifecycle_status: "new",
+        auto_call_triggered_at: null,
+        admin_notes: `Twilio failed: ${JSON.stringify(twData).slice(0, 200)}`,
+      }).eq("id", prospect.id);
       return new Response(JSON.stringify({ error: "Twilio failed", details: twData }), {
         status: twRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -158,11 +192,11 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      called_lead_id: lead.id,
-      lead_score: lead.lead_score,
+      prospect_id: prospect.id,
+      lead_score: prospect.lead_score,
+      category: prospect.category,
       to: toNumber,
       session_id: session.id,
-      remaining_quota: settings.max_calls_per_day - (callsToday || 0) - 1,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("voice-agent-auto-dial error:", e);

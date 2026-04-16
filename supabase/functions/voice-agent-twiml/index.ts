@@ -83,7 +83,26 @@ serve(async (req) => {
     let contextSummary = "";
     let leadContext = "";
 
-    if (session.scraper_lead_id) {
+    // Priority 1: prospect_listings (new pipeline)
+    if (session.prospect_listing_id) {
+      const { data: prospect } = await supabase
+        .from("prospect_listings")
+        .select("title, category, prospect_type, contact_name, price, currency, location, zone, ai_score_breakdown")
+        .eq("id", session.prospect_listing_id)
+        .maybeSingle();
+      if (prospect) {
+        // Map our 'hotelier' category → 'cazare' for the existing branch detector
+        if (prospect.category === "hotelier") branch = "cazare";
+        else if (prospect.category === "inchiriere") branch = "inchiriere";
+        else if (prospect.category === "vanzare") branch = "vanzare";
+        else branch = detectBranch(prospect.prospect_type);
+
+        const ownerLabel = prospect.contact_name ? `dl/dna ${prospect.contact_name}` : "stimat proprietar";
+        contextSummary = `${prospect.title || "anunțul dvs"}${prospect.location ? ", " + prospect.location : ""}`;
+        const pitch = (prospect.ai_score_breakdown as any)?.recommended_pitch || "";
+        leadContext = `Vorbești cu ${ownerLabel}. Context lead: ${prospect.title || ""} — ${prospect.location || ""} ${prospect.zone || ""} — preț listat ${prospect.price || "?"} ${prospect.currency || "EUR"} — categorie: ${prospect.category || "?"}.${pitch ? " Sugestie pitch: " + pitch : ""}`;
+      }
+    } else if (session.scraper_lead_id) {
       const { data: lead } = await supabase
         .from("scraper_leads")
         .select("title, listing_type, prospect_category, agency_name, original_price, city")
