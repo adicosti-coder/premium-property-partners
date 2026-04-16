@@ -55,6 +55,7 @@ import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
+import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -406,6 +407,10 @@ const Admin = () => {
               <Sparkles className="w-4 h-4" />
               Studio Foto AI
             </TabsTrigger>
+            <TabsTrigger value="voice-agent" className="flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              Voice Agent
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
@@ -464,6 +469,7 @@ const Admin = () => {
             </div>
           </TabsContent>
           <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
+          <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
