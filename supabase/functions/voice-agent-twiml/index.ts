@@ -41,10 +41,27 @@ function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary
 }
 
 /**
+ * Adaptează tonul în funcție de sentimentul proprietarului.
+ */
+function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
+  const u = typeof urgency === "number" ? urgency : 0;
+  switch (sentiment) {
+    case "presat":
+      return `\n\nSEMNAL EMOȚIONAL: Proprietarul pare PRESAT să vândă/închirieze (urgență ${u}/10). Folosește un ton EMPATIC și RAPID. Recunoaște-i situația ("înțeleg că aveți nevoie de o soluție rapidă"). Propune imediat o vizionare în 24-48h. NU presa cu detalii financiare la început.`;
+    case "deschis":
+      return `\n\nSEMNAL EMOȚIONAL: Proprietarul pare DESCHIS la colaborări (urgență ${u}/10). Poți fi mai DETALIAT și CONSULTATIV. Menționează beneficiile pe termen lung (ROI, parteneriat, regim hotelier). Propune o întâlnire de analiză.`;
+    case "agentie":
+      return `\n\nATENȚIE: Anunțul pare postat de o AGENȚIE imobiliară (nu proprietar direct). Adaptează-te: propune colaborare B2B / split comision / portofoliu comun. Evită pitch-ul de end-customer.`;
+    default:
+      return `\n\nSEMNAL EMOȚIONAL: Sentiment neutru (urgență ${u}/10). Folosește un ton PROFESIONAL și NEUTRU, descoperă nevoia prin întrebări deschise.`;
+  }
+}
+
+/**
  * System prompt-ul AI pentru fiecare ramură.
  */
-function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", leadContext: string, objective: string): string {
-  const common = `Ești Ana, asistent vocal al RealTrust, agenție de imobiliare premium din Timișoara. Vorbești NUMAI în limba română, scurt, natural, cu maxim 2-3 propoziții per replică. ${leadContext}\n\nObiectiv principal: ${objective === "qualify" ? "calificare interes (buget, timeline, urgență)" : objective === "schedule" ? "programare vizionare/întâlnire la birou" : "follow-up amabil"}. Dacă persoana pare deranjată sau spune că nu este interesată, închizi politicos cu „Mulțumesc pentru timp, vă doresc o zi bună. La revedere."`;
+function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", leadContext: string, objective: string, sentimentBlock: string): string {
+  const common = `Ești Ana, asistent vocal al RealTrust, agenție de imobiliare premium din Timișoara. Vorbești NUMAI în limba română, scurt, natural, cu maxim 2-3 propoziții per replică. ${leadContext}${sentimentBlock}\n\nObiectiv principal: ${objective === "qualify" ? "calificare interes (buget, timeline, urgență)" : objective === "schedule" ? "programare vizionare/întâlnire la birou" : "follow-up amabil"}. Dacă persoana pare deranjată sau spune că nu este interesată, închizi politicos cu „Mulțumesc pentru timp, vă doresc o zi bună. La revedere."`;
 
   if (branch === "vanzare") {
     return `${common}\n\nRAMURĂ: VÂNZARE. Întrebări cheie: (1) Mai este disponibilă proprietatea? (2) Ce preț ferm aveți în minte? (3) Aveți deja cumpărători interesați? (4) Acceptați colaborare cu o agenție pentru găsire cumpărători calificați? Dacă da, propune o vizionare a proprietății pentru evaluare profesională în 2-3 zile.`;
@@ -82,36 +99,29 @@ serve(async (req) => {
     let branch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
     let contextSummary = "";
     let leadContext = "";
+    let ownerSentiment: string | null = null;
+    let urgencyLevel: number | null = null;
 
     // Priority 1: prospect_listings (new pipeline)
     if (session.prospect_listing_id) {
       const { data: prospect } = await supabase
         .from("prospect_listings")
-        .select("title, category, prospect_type, contact_name, price, currency, location, zone, ai_score_breakdown")
+        .select("title, category, prospect_type, contact_name, price, currency, location, zone, ai_score_breakdown, owner_sentiment, urgency_level")
         .eq("id", session.prospect_listing_id)
         .maybeSingle();
       if (prospect) {
-        // Map our 'hotelier' category → 'cazare' for the existing branch detector
         if (prospect.category === "hotelier") branch = "cazare";
         else if (prospect.category === "inchiriere") branch = "inchiriere";
         else if (prospect.category === "vanzare") branch = "vanzare";
         else branch = detectBranch(prospect.prospect_type);
 
+        ownerSentiment = prospect.owner_sentiment || (prospect.ai_score_breakdown as any)?.owner_sentiment || null;
+        urgencyLevel = prospect.urgency_level ?? (prospect.ai_score_breakdown as any)?.urgency_level ?? null;
+
         const ownerLabel = prospect.contact_name ? `dl/dna ${prospect.contact_name}` : "stimat proprietar";
         contextSummary = `${prospect.title || "anunțul dvs"}${prospect.location ? ", " + prospect.location : ""}`;
         const pitch = (prospect.ai_score_breakdown as any)?.recommended_pitch || "";
         leadContext = `Vorbești cu ${ownerLabel}. Context lead: ${prospect.title || ""} — ${prospect.location || ""} ${prospect.zone || ""} — preț listat ${prospect.price || "?"} ${prospect.currency || "EUR"} — categorie: ${prospect.category || "?"}.${pitch ? " Sugestie pitch: " + pitch : ""}`;
-      }
-    } else if (session.scraper_lead_id) {
-      const { data: lead } = await supabase
-        .from("scraper_leads")
-        .select("title, listing_type, prospect_category, agency_name, original_price, city")
-        .eq("id", session.scraper_lead_id)
-        .maybeSingle();
-      if (lead) {
-        branch = detectBranch(lead.listing_type);
-        contextSummary = `${lead.title || "anunțul dvs"}${lead.city ? ", " + lead.city : ""}`;
-        leadContext = `Context lead: ${lead.title || ""} — ${lead.city || ""} — preț listat ${lead.original_price || "?"} EUR — tip: ${lead.listing_type || "?"} — prospect: ${lead.prospect_category || "?"}.`;
       }
     } else if (session.lead_id) {
       const { data: lead } = await supabase
@@ -146,7 +156,8 @@ serve(async (req) => {
     if (turn === 0) {
       aiReply = openingLine(branch, contextSummary);
     } else if (LOVABLE_API_KEY) {
-      const systemPrompt = session.voice_agent_prompt || systemPromptForBranch(branch, leadContext, objective);
+      const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
+      const systemPrompt = session.voice_agent_prompt || systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
