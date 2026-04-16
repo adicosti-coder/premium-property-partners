@@ -294,8 +294,8 @@ const TheAdvisor = ({
       ) : content ? (
         (() => {
           const isRental = listingType === "inchiriere";
-          // Clean investment phrases from AI-generated expert insight for rentals
-          let expertText = content.expertInsight;
+          // Use manual override if available, otherwise use AI-generated text
+          let expertText = expertInsightOverride?.trim() || content.expertInsight;
           if (isRental) {
             expertText = expertText
               .replace(/Această investiție nu vizează doar o proprietate[^.]*\./gi, '')
