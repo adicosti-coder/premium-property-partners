@@ -2005,6 +2005,8 @@ export type Database = {
           display_order: number
           energy_class: string | null
           estimated_revenue: string | null
+          expert_insight_en: string | null
+          expert_insight_ro: string | null
           features: string[]
           floor: string | null
           furnished: string | null
@@ -2078,6 +2080,8 @@ export type Database = {
           display_order?: number
           energy_class?: string | null
           estimated_revenue?: string | null
+          expert_insight_en?: string | null
+          expert_insight_ro?: string | null
           features?: string[]
           floor?: string | null
           furnished?: string | null
@@ -2151,6 +2155,8 @@ export type Database = {
           display_order?: number
           energy_class?: string | null
           estimated_revenue?: string | null
+          expert_insight_en?: string | null
+          expert_insight_ro?: string | null
           features?: string[]
           floor?: string | null
           furnished?: string | null
