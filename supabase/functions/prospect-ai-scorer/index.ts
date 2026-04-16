@@ -101,10 +101,12 @@ Returnează prin tool calling.`;
                 is_owner_direct: { type: "boolean", description: "True dacă pare proprietar direct, false dacă e agenție" },
                 hotel_potential: { type: "integer", minimum: 0, maximum: 100, description: "Potențial regim hotelier 0-100" },
                 urgency_signals: { type: "array", items: { type: "string" }, description: "Cuvinte cheie de urgență detectate" },
+                owner_sentiment: { type: "string", enum: ["presat", "deschis", "agentie", "neutru"], description: "Sentimentul proprietarului: 'presat' (vrea să vândă rapid, semnale de urgență/discount), 'deschis' (deschis la colaborare/regim hotelier/agenție), 'agentie' (este agenție imobiliară), 'neutru' (nu se poate determina)" },
+                urgency_level: { type: "integer", minimum: 0, maximum: 10, description: "Nivel urgență 0-10 bazat pe limbaj (0=fără urgență, 10=extrem de presat)" },
                 reasoning: { type: "string", description: "Explicație 1-2 propoziții" },
-                recommended_pitch: { type: "string", description: "Sugestie de abordare pentru apel (1 propoziție)" },
+                recommended_pitch: { type: "string", description: "Sugestie de abordare pentru apel (1 propoziție, adaptată sentimentului)" },
               },
-              required: ["lead_score", "category", "is_owner_direct", "hotel_potential", "reasoning", "recommended_pitch"],
+              required: ["lead_score", "category", "is_owner_direct", "hotel_potential", "owner_sentiment", "urgency_level", "reasoning", "recommended_pitch"],
               additionalProperties: false,
             },
           },
@@ -142,16 +144,24 @@ Returnează prin tool calling.`;
 
     const leadScore = Math.max(0, Math.min(100, parseInt(parsed.lead_score) || 0));
 
+    const ownerSentiment = ["presat", "deschis", "agentie", "neutru"].includes(parsed.owner_sentiment)
+      ? parsed.owner_sentiment : "neutru";
+    const urgencyLevel = Math.max(0, Math.min(10, parseInt(parsed.urgency_level) || 0));
+
     const { error: updErr } = await supabase
       .from("prospect_listings")
       .update({
         lead_score: leadScore,
         score: leadScore, // mirror to legacy column
         category: parsed.category,
+        owner_sentiment: ownerSentiment,
+        urgency_level: urgencyLevel,
         ai_score_breakdown: {
           is_owner_direct: parsed.is_owner_direct,
           hotel_potential: parsed.hotel_potential,
           urgency_signals: parsed.urgency_signals || [],
+          owner_sentiment: ownerSentiment,
+          urgency_level: urgencyLevel,
           reasoning: parsed.reasoning,
           recommended_pitch: parsed.recommended_pitch,
           model: "google/gemini-2.5-flash",

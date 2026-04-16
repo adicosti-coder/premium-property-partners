@@ -101,7 +101,7 @@ const ListingImporter = () => {
     queryKey: ["scraper-leads-for-import"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("scraper_leads" as any)
+        .from("scraper_leads_archive_2026" as any)
         .select("id, title, source_url, location, price, rooms, size, lead_score, source_platform")
         .eq("status", "new")
         .order("lead_score", { ascending: false })

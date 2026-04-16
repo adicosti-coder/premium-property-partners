@@ -30,12 +30,12 @@ export default function ScraperStatusDashboard() {
     queryKey: ["scraper-today-stats"],
     queryFn: async () => {
       const { count: totalToday } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("*", { count: "exact", head: true })
         .gte("created_at", todayISO);
 
       const { count: priorityToday } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("*", { count: "exact", head: true })
         .gte("created_at", todayISO)
         .eq("is_priority", true);
@@ -51,7 +51,7 @@ export default function ScraperStatusDashboard() {
       const results: Record<string, number> = {};
       for (const zone of PRIORITY_SLUGS) {
         const { count } = await supabase
-          .from("scraper_leads")
+          .from("scraper_leads_archive_2026" as any)
           .select("*", { count: "exact", head: true })
           .eq("neighborhood_slug", zone.slug)
           .not("status", "eq", "archived");
@@ -66,7 +66,7 @@ export default function ScraperStatusDashboard() {
     queryKey: ["scraper-recent-priority"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("id, title, neighborhood_slug, estimated_roi, original_price, created_at")
         .eq("is_priority", true)
         .order("created_at", { ascending: false })

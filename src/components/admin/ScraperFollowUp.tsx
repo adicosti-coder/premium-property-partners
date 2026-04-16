@@ -33,7 +33,7 @@ export const FollowUpManager = ({ leadId, followUpAt, snoozedUntil, onUpdated }:
       ? { follow_up_at: date.toISOString() }
       : { snoozed_until: date.toISOString() };
 
-    const { error } = await supabase.from("scraper_leads").update(update as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update(update as any).eq("id", leadId);
     if (error) {
       toast.error("Eroare la setare");
       return;
@@ -46,7 +46,7 @@ export const FollowUpManager = ({ leadId, followUpAt, snoozedUntil, onUpdated }:
 
   const clearReminder = async (type: "follow_up" | "snooze") => {
     const update = type === "follow_up" ? { follow_up_at: null } : { snoozed_until: null };
-    const { error } = await supabase.from("scraper_leads").update(update as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update(update as any).eq("id", leadId);
     if (error) { toast.error("Eroare"); return; }
     toast.success("Șters");
     queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });

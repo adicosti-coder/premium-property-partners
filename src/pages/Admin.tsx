@@ -100,7 +100,7 @@ const Admin = () => {
     queryKey: ["scraper-leads-new-count"],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("*", { count: "exact", head: true })
         .eq("status", "new");
       if (error) return 0;
@@ -410,6 +410,10 @@ const Admin = () => {
             <TabsTrigger value="voice-agent" className="flex items-center gap-2">
               <Phone className="w-4 h-4" />
               Voice Agent
+            </TabsTrigger>
+            <TabsTrigger value="prospect-listings" className="flex items-center gap-2" onClick={() => navigate("/admin/prospect-listings")}>
+              <Phone className="w-4 h-4" />
+              Prospect Listings
             </TabsTrigger>
           </TabsList>
 
