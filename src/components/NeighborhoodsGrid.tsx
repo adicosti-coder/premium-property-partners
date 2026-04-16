@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, TrendingUp, ArrowRight, Building2, Star } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
+import { resolvePropertyThumbnailUrl } from "@/utils/resolvePropertyImageUrl";
 import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
@@ -38,6 +39,7 @@ export function NeighborhoodsGrid() {
             );
             const mosaicImages = neighborhoodProperties
               .flatMap((p) => p.images || [])
+              .map((img) => resolvePropertyThumbnailUrl(img, 200, 200, 50))
               .filter(Boolean)
               .slice(0, 4);
 
@@ -61,6 +63,8 @@ export function NeighborhoodsGrid() {
                               alt={`${n.fullName} ${idx + 1}`}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
+                              width={200}
+                              height={200}
                             />
                           </div>
                         );
