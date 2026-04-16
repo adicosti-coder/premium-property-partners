@@ -18,13 +18,13 @@ import SEOHead from "@/components/SEOHead";
 import type { User } from "@supabase/supabase-js";
 
 const lifecycleColors: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800 border-blue-300",
-  scoring: "bg-purple-100 text-purple-800 border-purple-300",
-  calling: "bg-amber-100 text-amber-800 border-amber-300",
-  interested: "bg-green-100 text-green-800 border-green-300",
-  callback: "bg-orange-100 text-orange-800 border-orange-300",
-  rejected: "bg-red-100 text-red-800 border-red-300",
-  posted: "bg-slate-100 text-slate-800 border-slate-300",
+  new: "border-primary/40 text-primary",
+  scoring: "border-purple-400 text-purple-700 dark:text-purple-300",
+  calling: "border-amber-400 text-amber-700 dark:text-amber-300",
+  interested: "border-green-400 text-green-700 dark:text-green-300",
+  callback: "border-orange-400 text-orange-700 dark:text-orange-300",
+  rejected: "border-destructive/40 text-destructive",
+  posted: "border-muted-foreground/40 text-muted-foreground",
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
