@@ -17,6 +17,11 @@ export interface PropertyData {
   construction_type?: string;
   compartimentare?: string;
   features?: string[];
+  kitchens?: number;
+  comfort_level?: string;
+  property_subtype?: string;
+  height_regime?: string;
+  destination?: string;
 }
 
 export function buildPrompt(data: PropertyData, listingType: string, tone: string): string {
@@ -32,6 +37,11 @@ export function buildPrompt(data: PropertyData, listingType: string, tone: strin
     data.furnished || null,
     data.construction_type || null,
     data.compartimentare || null,
+    data.kitchens ? `${data.kitchens} bucătării` : null,
+    data.comfort_level ? `confort ${data.comfort_level}` : null,
+    data.property_subtype ? `tip imobil: ${data.property_subtype}` : null,
+    data.height_regime ? `regim înălțime: ${data.height_regime}` : null,
+    data.destination ? `destinație: ${data.destination}` : null,
   ].filter(Boolean).join(", ");
 
   const featuresList = data.features?.length ? data.features.join(", ") : "N/A";
