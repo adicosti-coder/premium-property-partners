@@ -130,6 +130,8 @@ interface PropertyFormData {
   bedrooms: string;
   latitude: string;
   longitude: string;
+  expert_insight_ro: string;
+  expert_insight_en: string;
 }
 
 const initialFormData: PropertyFormData = {
@@ -160,6 +162,8 @@ const initialFormData: PropertyFormData = {
   bedrooms: "",
   latitude: "",
   longitude: "",
+  expert_insight_ro: "",
+  expert_insight_en: "",
 };
 
 export default function PropertyManager() {
@@ -370,6 +374,8 @@ export default function PropertyManager() {
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        expert_insight_ro: formData.expert_insight_ro || null,
+        expert_insight_en: formData.expert_insight_en || null,
         ...premiumFields,
       });
 
@@ -449,6 +455,8 @@ export default function PropertyManager() {
           source_platform: formData.source_platform || null,
           capacity: formData.capacity ? parseInt(formData.capacity) : null,
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+          expert_insight_ro: formData.expert_insight_ro || null,
+          expert_insight_en: formData.expert_insight_en || null,
           ...premiumFields,
         })
         .eq("id", editingProperty.id);
@@ -555,6 +563,8 @@ export default function PropertyManager() {
       bedrooms: property.bedrooms?.toString() || "",
       latitude: (property as any).latitude?.toString() || "",
       longitude: (property as any).longitude?.toString() || "",
+      expert_insight_ro: (property as any).expert_insight_ro || "",
+      expert_insight_en: (property as any).expert_insight_en || "",
     });
     setPremiumFields({
       long_description_ro: property.long_description_ro,
@@ -797,6 +807,33 @@ export default function PropertyManager() {
           placeholder="WiFi, AC, Parking (separate prin virgulă)"
         />
         <p className="text-xs text-muted-foreground">Separă facilitățile prin virgulă</p>
+      </div>
+
+      {/* Expert Insight Override */}
+      <div className="p-4 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🧠</span>
+          <h4 className="font-semibold text-foreground">Expert Insight (opțional)</h4>
+        </div>
+        <p className="text-xs text-muted-foreground">Dacă este completat, înlocuiește textul generat automat de AI în secțiunea The Advisor.</p>
+        <div className="space-y-2">
+          <Label>Expert Insight (RO)</Label>
+          <Textarea
+            value={formData.expert_insight_ro}
+            onChange={(e) => setFormData({ ...formData, expert_insight_ro: e.target.value })}
+            placeholder="Text personalizat pentru Expert Insight în română..."
+            rows={4}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Expert Insight (EN)</Label>
+          <Textarea
+            value={formData.expert_insight_en}
+            onChange={(e) => setFormData({ ...formData, expert_insight_en: e.target.value })}
+            placeholder="Custom Expert Insight text in English..."
+            rows={4}
+          />
+        </div>
       </div>
 
       {/* === CAZARE: Booking URL + Rating + Pricing === */}
