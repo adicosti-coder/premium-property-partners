@@ -463,6 +463,7 @@ const Admin = () => {
               </div>
             </div>
           </TabsContent>
+          <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
