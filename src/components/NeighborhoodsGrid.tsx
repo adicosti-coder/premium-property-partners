@@ -63,6 +63,10 @@ export function NeighborhoodsGrid() {
                               alt={`${n.fullName} ${idx + 1}`}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
+                              width={200}
+                              height={200}
+                              decoding="async"
+                            />
                             />
                           </div>
                         );
