@@ -433,14 +433,21 @@
 }
 
 .animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     90deg,
     hsl(45 93% 58% / 0) 0%,
     hsl(45 93% 58% / 0.3) 50%,
     hsl(45 93% 58% / 0) 100%
   );
-  background-size: 200% 100%;
   animation: shimmer 3s infinite;
+  will-change: transform;
 }
 
 .animate-float {
