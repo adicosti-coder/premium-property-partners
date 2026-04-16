@@ -131,6 +131,7 @@ const TheAdvisor = ({
   yearBuilt,
   energyClass,
   roi,
+  expertInsightOverride,
 }: TheAdvisorProps) => {
   const { language } = useLanguage();
   const [content, setContent] = useState<AdvisorContent | null>(null);

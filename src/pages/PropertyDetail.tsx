@@ -886,6 +886,7 @@ const PropertyDetail = () => {
                   yearBuilt={dbProperty?.year_built}
                   energyClass={dbProperty?.energy_class}
                   roi={dbProperty?.roi_percentage}
+                  expertInsightOverride={language === "en" ? (dbProperty as any)?.expert_insight_en : (dbProperty as any)?.expert_insight_ro}
                 />
               </Suspense>
 
