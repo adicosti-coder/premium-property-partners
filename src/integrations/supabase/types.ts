@@ -3820,6 +3820,42 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_settings: {
+        Row: {
+          allowed_hours_end: number
+          allowed_hours_start: number
+          auto_dial_enabled: boolean
+          default_objective: string
+          id: number
+          max_calls_per_day: number
+          min_lead_score: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed_hours_end?: number
+          allowed_hours_start?: number
+          auto_dial_enabled?: boolean
+          default_objective?: string
+          id?: number
+          max_calls_per_day?: number
+          min_lead_score?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed_hours_end?: number
+          allowed_hours_start?: number
+          auto_dial_enabled?: boolean
+          default_objective?: string
+          id?: number
+          max_calls_per_day?: number
+          min_lead_score?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       voice_call_sessions: {
         Row: {
           ai_outcome: string | null

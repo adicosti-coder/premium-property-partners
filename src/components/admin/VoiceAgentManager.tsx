@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, PhoneCall, PhoneOff, Loader2, Mic, Sparkles, Clock, AlertTriangle } from "lucide-react";
+import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 interface VoiceCall {
   id: string;
@@ -49,6 +50,34 @@ export default function VoiceAgentManager() {
   const [objective, setObjective] = useState("qualify");
   const [customPrompt, setCustomPrompt] = useState("");
   const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null);
+  const [autoSettings, setAutoSettings] = useState<any>(null);
+  const [testingAuto, setTestingAuto] = useState(false);
+
+  const loadSettings = async () => {
+    const { data } = await supabase.from("voice_agent_settings" as any).select("*").eq("id", 1).maybeSingle();
+    if (data) setAutoSettings(data);
+  };
+
+  const saveSettings = async (patch: any) => {
+    const next = { ...autoSettings, ...patch };
+    setAutoSettings(next);
+    const { error } = await supabase.from("voice_agent_settings" as any).update(patch).eq("id", 1);
+    if (error) toast({ title: "Eroare", description: error.message, variant: "destructive" });
+    else toast({ title: "Setări salvate ✓" });
+  };
+
+  const triggerAutoDialNow = async () => {
+    setTestingAuto(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-auto-dial", { body: {} });
+      if (error) toast({ title: "Eroare", description: error.message, variant: "destructive" });
+      else toast({
+        title: "Auto-dial rulat",
+        description: data?.success ? `Sunat lead ${data.called_lead_id} (scor ${data.lead_score})` : (data?.skipped || data?.error || "OK"),
+      });
+      loadCalls();
+    } finally { setTestingAuto(false); }
+  };
 
   const loadCalls = async () => {
     const { data } = await supabase
@@ -62,6 +91,7 @@ export default function VoiceAgentManager() {
 
   useEffect(() => {
     loadCalls();
+    loadSettings();
     const channel = supabase
       .channel("voice-calls-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "voice_call_sessions" }, () => loadCalls())
@@ -105,6 +135,76 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      {/* AUTO-DIAL SETTINGS */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            Auto-Dial Inteligent
+            {autoSettings?.auto_dial_enabled && <Badge className="bg-primary/15 text-primary border border-primary/30 animate-pulse">ACTIV</Badge>}
+          </CardTitle>
+          <CardDescription>
+            Sună automat lead-urile cu scor ≥ {autoSettings?.min_lead_score ?? 90} în intervalul orar permis. Cron rulează la 15 min, max 1 apel/rulare.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
+            <div>
+              <div className="font-medium text-sm">Activează auto-dial pentru lead-urile cu scor maxim</div>
+              <div className="text-xs text-muted-foreground">Când e activ, nu mai trebuie să apeși manual butonul.</div>
+            </div>
+            <Switch
+              checked={!!autoSettings?.auto_dial_enabled}
+              onCheckedChange={(v) => saveSettings({ auto_dial_enabled: v })}
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Scor minim lead</label>
+              <Input
+                type="number" min={50} max={100}
+                value={autoSettings?.min_lead_score ?? 90}
+                onChange={(e) => setAutoSettings({ ...autoSettings, min_lead_score: parseInt(e.target.value) || 90 })}
+                onBlur={(e) => saveSettings({ min_lead_score: parseInt(e.target.value) || 90 })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Ora start (RO)</label>
+              <Input
+                type="number" min={0} max={23}
+                value={autoSettings?.allowed_hours_start ?? 10}
+                onChange={(e) => setAutoSettings({ ...autoSettings, allowed_hours_start: parseInt(e.target.value) || 10 })}
+                onBlur={(e) => saveSettings({ allowed_hours_start: parseInt(e.target.value) || 10 })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Ora stop (RO)</label>
+              <Input
+                type="number" min={0} max={23}
+                value={autoSettings?.allowed_hours_end ?? 18}
+                onChange={(e) => setAutoSettings({ ...autoSettings, allowed_hours_end: parseInt(e.target.value) || 18 })}
+                onBlur={(e) => saveSettings({ allowed_hours_end: parseInt(e.target.value) || 18 })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Max apeluri / zi</label>
+              <Input
+                type="number" min={1} max={500}
+                value={autoSettings?.max_calls_per_day ?? 20}
+                onChange={(e) => setAutoSettings({ ...autoSettings, max_calls_per_day: parseInt(e.target.value) || 20 })}
+                onBlur={(e) => saveSettings({ max_calls_per_day: parseInt(e.target.value) || 20 })}
+              />
+            </div>
+          </div>
+
+          <Button onClick={triggerAutoDialNow} disabled={testingAuto} variant="outline" className="w-full">
+            {testingAuto ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+            Rulează Auto-Dial Acum (test)
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

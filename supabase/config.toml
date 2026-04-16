@@ -119,3 +119,5 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.voice-agent-status]
     verify_jwt = false
+  [functions.voice-agent-auto-dial]
+    verify_jwt = false
