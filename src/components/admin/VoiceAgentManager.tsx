@@ -153,7 +153,7 @@ export default function VoiceAgentManager() {
       <div className="grid gap-3 md:grid-cols-5">
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Total apeluri</div><div className="text-2xl font-bold">{stats.total}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Finalizate</div><div className="text-2xl font-bold">{stats.completed}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Interesați</div><div className="text-2xl font-bold text-green-600">{stats.interested}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Interesați</div><div className="text-2xl font-bold text-primary">{stats.interested}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Durata medie</div><div className="text-2xl font-bold">{stats.avgDuration}s</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Cost total</div><div className="text-2xl font-bold">${stats.totalCost.toFixed(2)}</div></CardContent></Card>
       </div>
