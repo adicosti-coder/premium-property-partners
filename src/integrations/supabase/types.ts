@@ -2631,6 +2631,8 @@ export type Database = {
           lead_score: number | null
           lifecycle_status: Database["public"]["Enums"]["lead_lifecycle_status"]
           location: string | null
+          migrated_from_scraper_id: string | null
+          owner_sentiment: string | null
           phone_normalized: string | null
           price: number | null
           price_per_sqm: number | null
@@ -2648,6 +2650,7 @@ export type Database = {
           tags: string[]
           title: string | null
           updated_at: string | null
+          urgency_level: number | null
           voice_call_session_id: string | null
           year_built: number | null
           zone: string | null
@@ -2675,6 +2678,8 @@ export type Database = {
           lead_score?: number | null
           lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
           location?: string | null
+          migrated_from_scraper_id?: string | null
+          owner_sentiment?: string | null
           phone_normalized?: string | null
           price?: number | null
           price_per_sqm?: number | null
@@ -2692,6 +2697,7 @@ export type Database = {
           tags?: string[]
           title?: string | null
           updated_at?: string | null
+          urgency_level?: number | null
           voice_call_session_id?: string | null
           year_built?: number | null
           zone?: string | null
@@ -2719,6 +2725,8 @@ export type Database = {
           lead_score?: number | null
           lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
           location?: string | null
+          migrated_from_scraper_id?: string | null
+          owner_sentiment?: string | null
           phone_normalized?: string | null
           price?: number | null
           price_per_sqm?: number | null
@@ -2736,6 +2744,7 @@ export type Database = {
           tags?: string[]
           title?: string | null
           updated_at?: string | null
+          urgency_level?: number | null
           voice_call_session_id?: string | null
           year_built?: number | null
           zone?: string | null
@@ -3029,12 +3038,12 @@ export type Database = {
             foreignKeyName: "scraper_lead_status_history_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
-            referencedRelation: "scraper_leads"
+            referencedRelation: "scraper_leads_archive_2026"
             referencedColumns: ["id"]
           },
         ]
       }
-      scraper_leads: {
+      scraper_leads_archive_2026: {
         Row: {
           admin_notes: string | null
           agency_name: string | null
@@ -4008,7 +4017,7 @@ export type Database = {
             foreignKeyName: "voice_call_sessions_scraper_lead_id_fkey"
             columns: ["scraper_lead_id"]
             isOneToOne: false
-            referencedRelation: "scraper_leads"
+            referencedRelation: "scraper_leads_archive_2026"
             referencedColumns: ["id"]
           },
         ]
