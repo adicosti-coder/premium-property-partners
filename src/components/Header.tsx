@@ -420,8 +420,8 @@ const Header = () => {
                   </div>
                 ))}
                 
-                {/* Admin link in mobile menu - only for authenticated */}
-                {isAuthenticated === true && (
+                {/* Admin links in mobile menu - only for users with admin role */}
+                {isAuthenticated === true && isAdmin && (
                   <>
                     <div className="h-px bg-border/50 my-1" />
                     <Link
@@ -432,16 +432,14 @@ const Header = () => {
                       <span className="text-primary/70"><ShieldIcon className="w-4 h-4" /></span>
                       Admin
                     </Link>
-                    {isAdmin && (
-                      <Link
-                        to="/admin/prospect-listings"
-                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <span className="text-primary/70">📞</span>
-                        Prospect Listings (AI Calls)
-                      </Link>
-                    )}
+                    <Link
+                      to="/admin/prospect-listings"
+                      className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span className="text-primary/70">📞</span>
+                      Prospect Listings (AI Calls)
+                    </Link>
                   </>
                 )}
 
