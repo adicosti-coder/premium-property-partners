@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, PhoneCall, PhoneOff, Loader2, Mic, Sparkles, Clock, AlertTriangle } from "lucide-react";
+import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 interface VoiceCall {
   id: string;
@@ -49,6 +50,34 @@ export default function VoiceAgentManager() {
   const [objective, setObjective] = useState("qualify");
   const [customPrompt, setCustomPrompt] = useState("");
   const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null);
+  const [autoSettings, setAutoSettings] = useState<any>(null);
+  const [testingAuto, setTestingAuto] = useState(false);
+
+  const loadSettings = async () => {
+    const { data } = await supabase.from("voice_agent_settings" as any).select("*").eq("id", 1).maybeSingle();
+    if (data) setAutoSettings(data);
+  };
+
+  const saveSettings = async (patch: any) => {
+    const next = { ...autoSettings, ...patch };
+    setAutoSettings(next);
+    const { error } = await supabase.from("voice_agent_settings" as any).update(patch).eq("id", 1);
+    if (error) toast({ title: "Eroare", description: error.message, variant: "destructive" });
+    else toast({ title: "Setări salvate ✓" });
+  };
+
+  const triggerAutoDialNow = async () => {
+    setTestingAuto(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-auto-dial", { body: {} });
+      if (error) toast({ title: "Eroare", description: error.message, variant: "destructive" });
+      else toast({
+        title: "Auto-dial rulat",
+        description: data?.success ? `Sunat lead ${data.called_lead_id} (scor ${data.lead_score})` : (data?.skipped || data?.error || "OK"),
+      });
+      loadCalls();
+    } finally { setTestingAuto(false); }
+  };
 
   const loadCalls = async () => {
     const { data } = await supabase
@@ -62,6 +91,7 @@ export default function VoiceAgentManager() {
 
   useEffect(() => {
     loadCalls();
+    loadSettings();
     const channel = supabase
       .channel("voice-calls-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "voice_call_sessions" }, () => loadCalls())
