@@ -14,6 +14,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
+import NotFound from "@/pages/NotFound";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import PinterestPinButton from "@/components/PinterestPinButton";
