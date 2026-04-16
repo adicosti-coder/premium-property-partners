@@ -3010,15 +3010,21 @@ export type Database = {
           agency_name: string | null
           ai_insight: Json | null
           ai_insight_generated_at: string | null
+          auto_call_triggered_at: string | null
+          call_summary: string | null
+          category: Database["public"]["Enums"]["scraper_lead_category"] | null
           conversion_probability: number | null
           created_at: string
           estimated_roi: number | null
           extra_profit_3y: number
           follow_up_at: string | null
+          followup_sent_at: string | null
           id: string
           is_priority: boolean | null
           lead_score: number
+          lifecycle_status: Database["public"]["Enums"]["scraper_lead_status"]
           listing_type: string
+          location: string | null
           monthly_extra: number
           neighborhood_slug: string | null
           original_price: number
@@ -3044,15 +3050,21 @@ export type Database = {
           agency_name?: string | null
           ai_insight?: Json | null
           ai_insight_generated_at?: string | null
+          auto_call_triggered_at?: string | null
+          call_summary?: string | null
+          category?: Database["public"]["Enums"]["scraper_lead_category"] | null
           conversion_probability?: number | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
           follow_up_at?: string | null
+          followup_sent_at?: string | null
           id?: string
           is_priority?: boolean | null
           lead_score?: number
+          lifecycle_status?: Database["public"]["Enums"]["scraper_lead_status"]
           listing_type?: string
+          location?: string | null
           monthly_extra?: number
           neighborhood_slug?: string | null
           original_price?: number
@@ -3078,15 +3090,21 @@ export type Database = {
           agency_name?: string | null
           ai_insight?: Json | null
           ai_insight_generated_at?: string | null
+          auto_call_triggered_at?: string | null
+          call_summary?: string | null
+          category?: Database["public"]["Enums"]["scraper_lead_category"] | null
           conversion_probability?: number | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
           follow_up_at?: string | null
+          followup_sent_at?: string | null
           id?: string
           is_priority?: boolean | null
           lead_score?: number
+          lifecycle_status?: Database["public"]["Enums"]["scraper_lead_status"]
           listing_type?: string
+          location?: string | null
           monthly_extra?: number
           neighborhood_slug?: string | null
           original_price?: number
@@ -4085,6 +4103,13 @@ export type Database = {
       app_role: "admin" | "moderator" | "user" | "owner"
       listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
       listing_status: "pending_inspection" | "approved" | "rejected"
+      scraper_lead_category: "sale" | "rent" | "hotel_management"
+      scraper_lead_status:
+        | "new"
+        | "calling"
+        | "interested"
+        | "rejected"
+        | "posted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4215,6 +4240,14 @@ export const Constants = {
       app_role: ["admin", "moderator", "user", "owner"],
       listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
       listing_status: ["pending_inspection", "approved", "rejected"],
+      scraper_lead_category: ["sale", "rent", "hotel_management"],
+      scraper_lead_status: [
+        "new",
+        "calling",
+        "interested",
+        "rejected",
+        "posted",
+      ],
     },
   },
 } as const
