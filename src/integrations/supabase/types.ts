@@ -2610,7 +2610,12 @@ export type Database = {
       prospect_listings: {
         Row: {
           admin_notes: string | null
+          ai_score_breakdown: Json | null
+          ai_scored_at: string | null
           assigned_to: string | null
+          auto_call_triggered_at: string | null
+          call_summary: string | null
+          category: Database["public"]["Enums"]["offer_category"] | null
           contact_name: string | null
           contact_phone: string | null
           created_at: string | null
@@ -2618,11 +2623,15 @@ export type Database = {
           description: string | null
           features: string[] | null
           floor: string | null
+          followup_sent_at: string | null
           id: string
           images: string[] | null
           is_active: boolean | null
           last_seen_at: string | null
+          lead_score: number | null
+          lifecycle_status: Database["public"]["Enums"]["lead_lifecycle_status"]
           location: string | null
+          phone_normalized: string | null
           price: number | null
           price_per_sqm: number | null
           prospect_type: string
@@ -2639,12 +2648,18 @@ export type Database = {
           tags: string[]
           title: string | null
           updated_at: string | null
+          voice_call_session_id: string | null
           year_built: number | null
           zone: string | null
         }
         Insert: {
           admin_notes?: string | null
+          ai_score_breakdown?: Json | null
+          ai_scored_at?: string | null
           assigned_to?: string | null
+          auto_call_triggered_at?: string | null
+          call_summary?: string | null
+          category?: Database["public"]["Enums"]["offer_category"] | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
@@ -2652,11 +2667,15 @@ export type Database = {
           description?: string | null
           features?: string[] | null
           floor?: string | null
+          followup_sent_at?: string | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
           last_seen_at?: string | null
+          lead_score?: number | null
+          lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
           location?: string | null
+          phone_normalized?: string | null
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
@@ -2673,12 +2692,18 @@ export type Database = {
           tags?: string[]
           title?: string | null
           updated_at?: string | null
+          voice_call_session_id?: string | null
           year_built?: number | null
           zone?: string | null
         }
         Update: {
           admin_notes?: string | null
+          ai_score_breakdown?: Json | null
+          ai_scored_at?: string | null
           assigned_to?: string | null
+          auto_call_triggered_at?: string | null
+          call_summary?: string | null
+          category?: Database["public"]["Enums"]["offer_category"] | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
@@ -2686,11 +2711,15 @@ export type Database = {
           description?: string | null
           features?: string[] | null
           floor?: string | null
+          followup_sent_at?: string | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
           last_seen_at?: string | null
+          lead_score?: number | null
+          lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
           location?: string | null
+          phone_normalized?: string | null
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
@@ -2707,6 +2736,7 @@ export type Database = {
           tags?: string[]
           title?: string | null
           updated_at?: string | null
+          voice_call_session_id?: string | null
           year_built?: number | null
           zone?: string | null
         }
@@ -3892,6 +3922,7 @@ export type Database = {
           initiated_by: string | null
           lead_id: string | null
           next_action: string | null
+          prospect_listing_id: string | null
           recording_url: string | null
           scraper_lead_id: string | null
           started_at: string | null
@@ -3919,6 +3950,7 @@ export type Database = {
           initiated_by?: string | null
           lead_id?: string | null
           next_action?: string | null
+          prospect_listing_id?: string | null
           recording_url?: string | null
           scraper_lead_id?: string | null
           started_at?: string | null
@@ -3946,6 +3978,7 @@ export type Database = {
           initiated_by?: string | null
           lead_id?: string | null
           next_action?: string | null
+          prospect_listing_id?: string | null
           recording_url?: string | null
           scraper_lead_id?: string | null
           started_at?: string | null
@@ -3962,6 +3995,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_call_sessions_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
             referencedColumns: ["id"]
           },
           {
@@ -4086,6 +4126,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_ro_phone: { Args: { p: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -4101,8 +4142,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "owner"
+      lead_lifecycle_status:
+        | "new"
+        | "scoring"
+        | "calling"
+        | "interested"
+        | "rejected"
+        | "posted"
+        | "callback"
       listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
       listing_status: "pending_inspection" | "approved" | "rejected"
+      offer_category: "vanzare" | "inchiriere" | "hotelier"
       scraper_lead_category: "sale" | "rent" | "hotel_management"
       scraper_lead_status:
         | "new"
@@ -4238,8 +4288,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user", "owner"],
+      lead_lifecycle_status: [
+        "new",
+        "scoring",
+        "calling",
+        "interested",
+        "rejected",
+        "posted",
+        "callback",
+      ],
       listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
       listing_status: ["pending_inspection", "approved", "rejected"],
+      offer_category: ["vanzare", "inchiriere", "hotelier"],
       scraper_lead_category: ["sale", "rent", "hotel_management"],
       scraper_lead_status: [
         "new",
