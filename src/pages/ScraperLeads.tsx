@@ -1206,6 +1206,22 @@ const ScraperLeads = () => {
             <Button size="sm" onClick={saveNotes} className="bg-primary">Salvează note</Button>
           </div>
 
+          {/* AI Insight + Follow-up reminder */}
+          <div className="flex gap-2 flex-wrap">
+            <AIInsightButton
+              leadId={selectedLead.id}
+              leadTitle={cleanTitleStatic(selectedLead.title)}
+              leadPhone={selectedLead.phone}
+              cachedInsight={(selectedLead as any).ai_insight}
+              onMessageSelected={(msg) => setGeneratedMessage(msg)}
+            />
+            <FollowUpManager
+              leadId={selectedLead.id}
+              followUpAt={(selectedLead as any).follow_up_at}
+              snoozedUntil={(selectedLead as any).snoozed_until}
+            />
+          </div>
+
           {/* ── Export to Properties ───────────────── */}
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
