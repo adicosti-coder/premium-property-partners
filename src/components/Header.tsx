@@ -53,9 +53,28 @@ const Header = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!cancelled) setIsAuthenticated(!!session);
 
+      // Check admin role
+      if (session?.user) {
+        const { data: roleData } = await supabase.rpc("has_role", {
+          _user_id: session.user.id,
+          _role: "admin",
+        });
+        if (!cancelled) setIsAdmin(!!roleData);
+      }
+
       // Listen for auth changes
-      const { data } = supabase.auth.onAuthStateChange((_, session) => {
-        if (!cancelled) setIsAuthenticated(!!session);
+      const { data } = supabase.auth.onAuthStateChange(async (_, session) => {
+        if (cancelled) return;
+        setIsAuthenticated(!!session);
+        if (session?.user) {
+          const { data: roleData } = await supabase.rpc("has_role", {
+            _user_id: session.user.id,
+            _role: "admin",
+          });
+          if (!cancelled) setIsAdmin(!!roleData);
+        } else {
+          setIsAdmin(false);
+        }
       });
       subscription = data.subscription;
     };
