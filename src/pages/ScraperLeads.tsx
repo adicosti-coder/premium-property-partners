@@ -305,7 +305,7 @@ const ScraperLeads = () => {
   const { data: archivedCount = 0 } = useQuery({
     queryKey: ["scraper-archived-count"],
     queryFn: async () => {
-      const { count } = await supabase.from("scraper_leads").select("*", { count: "exact", head: true }).eq("status", "archived");
+      const { count } = await supabase.from("scraper_leads_archive_2026" as any).select("*", { count: "exact", head: true }).eq("status", "archived");
       return count || 0;
     },
     staleTime: 1000 * 60 * 5,
@@ -316,7 +316,7 @@ const ScraperLeads = () => {
     queryKey: ["scraper-leads-archived"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("*")
         .eq("status", "archived")
         .order("created_at", { ascending: false });
@@ -338,7 +338,7 @@ const ScraperLeads = () => {
     queryFn: async () => {
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
       const { data } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("created_at")
         .gte("created_at", sevenDaysAgo)
         .not("status", "eq", "archived");
@@ -390,7 +390,7 @@ const ScraperLeads = () => {
     queryKey: ["scraper-leads"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("*")
         .not("status", "eq", "archived")
         .order("lead_score", { ascending: false });
@@ -409,7 +409,7 @@ const ScraperLeads = () => {
   useEffect(() => {
     const channel = supabase
       .channel("scraper-leads-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scraper_leads" }, (payload: any) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scraper_leads_archive_2026" }, (payload: any) => {
         const newLead = payload.new;
         if (newLead?.lead_score > 80) {
           toast.success(`🔥 Lead NOU cu scor ${newLead.lead_score}: ${cleanTitleStatic(newLead.title)}`, { duration: 8000 });
@@ -619,7 +619,7 @@ const ScraperLeads = () => {
     if (selectedLead?.id === leadId)
       setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
 
-    const { error } = await supabase.from("scraper_leads").update({ status: newStatus } as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: newStatus } as any).eq("id", leadId);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la schimbarea statusului");
@@ -640,7 +640,7 @@ const ScraperLeads = () => {
       Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, tags: newTags } : l) : old
     );
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, tags: newTags } : null);
-    const { error } = await supabase.from("scraper_leads").update({ tags: newTags } as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ tags: newTags } as any).eq("id", leadId);
     if (error) {
       toast.error("Eroare la etichete");
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
@@ -651,7 +651,7 @@ const ScraperLeads = () => {
   // ── Save Notes ────────────────────────────────────
   const saveNotes = async () => {
     if (!selectedLead) return;
-    const { error } = await supabase.from("scraper_leads").update({ admin_notes: editNotes } as any).eq("id", selectedLead.id);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id);
     if (error) { toast.error("Eroare la salvare"); return; }
     toast.success("Note salvate");
     setSelectedLead((prev) => prev ? { ...prev, admin_notes: editNotes } : null);
@@ -732,7 +732,7 @@ const ScraperLeads = () => {
     } as any, { onConflict: "phone_number" });
 
     // Archive the lead
-    const { error } = await supabase.from("scraper_leads").update({ status: "archived" } as any).eq("id", lead.id);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: "archived" } as any).eq("id", lead.id);
 
     if (error || piError) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
@@ -749,7 +749,7 @@ const ScraperLeads = () => {
     );
     if (selectedLead?.id === leadId) setSelectedLead(null);
 
-    const { error } = await supabase.from("scraper_leads").update({ status: "archived" } as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: "archived" } as any).eq("id", leadId);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la arhivare");
@@ -762,7 +762,7 @@ const ScraperLeads = () => {
 
   // ── Restore Lead from archive ────────────────────
   const handleRestore = async (leadId: string) => {
-    const { error } = await supabase.from("scraper_leads").update({ status: "new" } as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: "new" } as any).eq("id", leadId);
     if (error) {
       toast.error("Eroare la restaurare");
       return;
@@ -784,7 +784,7 @@ const ScraperLeads = () => {
     }
 
     // Update lead's prospect_category
-    const { error } = await supabase.from("scraper_leads").update({ prospect_category: newCategory } as any).eq("id", lead.id);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: newCategory } as any).eq("id", lead.id);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la schimbarea categoriei");
@@ -907,7 +907,7 @@ const ScraperLeads = () => {
   }
 
   const saveAgencyName = async (leadId: string, name: string) => {
-    const { error } = await supabase.from("scraper_leads").update({ agency_name: name.trim() || null } as any).eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ agency_name: name.trim() || null } as any).eq("id", leadId);
     if (error) { toast.error("Eroare la salvare"); return; }
     setEditingAgencyName(false);
     setSelectedLead((prev) => prev ? { ...prev, agency_name: name.trim() || null } : null);

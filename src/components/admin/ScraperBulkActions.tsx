@@ -14,7 +14,7 @@ interface ScraperBulkActionsProps {
 export const ScraperBulkActions = ({ selectedIds, onClearSelection, onRefresh, allLeads }: ScraperBulkActionsProps) => {
   const handleBulkStatus = async (status: string) => {
     const { error } = await supabase
-      .from("scraper_leads")
+      .from("scraper_leads_archive_2026" as any)
       .update({ status })
       .in("id", selectedIds);
     if (error) {
@@ -28,7 +28,7 @@ export const ScraperBulkActions = ({ selectedIds, onClearSelection, onRefresh, a
 
   const handleBulkDelete = async () => {
     const { error } = await supabase
-      .from("scraper_leads")
+      .from("scraper_leads_archive_2026" as any)
       .delete()
       .in("id", selectedIds);
     if (error) {

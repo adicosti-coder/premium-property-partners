@@ -42,7 +42,7 @@ export const ScraperLeadActions = ({ leadId, currentStatus, leadData, onRefresh,
 
   const handleStatusChange = async (newStatus: string) => {
     const { error } = await supabase
-      .from("scraper_leads")
+      .from("scraper_leads_archive_2026" as any)
       .update({ status: newStatus })
       .eq("id", leadId);
     if (error) {
@@ -83,7 +83,7 @@ export const ScraperLeadActions = ({ leadId, currentStatus, leadData, onRefresh,
 
   const handleDelete = async () => {
     setLoading(true);
-    const { error } = await supabase.from("scraper_leads").delete().eq("id", leadId);
+    const { error } = await supabase.from("scraper_leads_archive_2026" as any).delete().eq("id", leadId);
     setLoading(false);
     setDeleteConfirmOpen(false);
     if (error) {

@@ -210,7 +210,7 @@ export function UndervaluedLeadsWidget({ onSelect }: { onSelect?: (lead: any) =>
     queryKey: ["undervalued-leads"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("scraper_leads")
+        .from("scraper_leads_archive_2026" as any)
         .select("id, title, original_price, predicted_market_value, undervaluation_percent, conversion_probability, neighborhood_slug, listing_type")
         .neq("status", "archived")
         .neq("status", "rejected")
