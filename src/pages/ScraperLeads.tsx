@@ -940,12 +940,33 @@ const ScraperLeads = () => {
       return filteredLeads.some((l) => l.status === stage.value);
     });
 
+    const handleDrop = (e: React.DragEvent, stageValue: string) => {
+      e.preventDefault();
+      setDragOverStage(null);
+      const id = e.dataTransfer.getData("text/plain") || draggedLeadId;
+      setDraggedLeadId(null);
+      if (!id) return;
+      const lead = filteredLeads.find((l) => l.id === id);
+      if (!lead || lead.status === stageValue) return;
+      handleStatusChange(id, stageValue);
+    };
+
     return (
       <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
         {activeStages.map((stage) => {
           const stageLeads = filteredLeads.filter((l) => l.status === stage.value).sort((a, b) => b.lead_score - a.lead_score);
+          const isDragOver = dragOverStage === stage.value;
           return (
-            <div key={stage.value} className={`min-w-[260px] max-w-[300px] flex-shrink-0 border-t-4 rounded-lg border border-border ${stage.color}`}>
+            <div
+              key={stage.value}
+              className={cn(
+                `min-w-[260px] max-w-[300px] flex-shrink-0 border-t-4 rounded-lg border border-border ${stage.color} transition-all`,
+                isDragOver && "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.01]"
+              )}
+              onDragOver={(e) => { e.preventDefault(); setDragOverStage(stage.value); }}
+              onDragLeave={() => setDragOverStage((cur) => cur === stage.value ? null : cur)}
+              onDrop={(e) => handleDrop(e, stage.value)}
+            >
               <div className="p-3 border-b border-border/50">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">{stage.emoji} {stage.label}</h3>
@@ -953,13 +974,24 @@ const ScraperLeads = () => {
                 </div>
               </div>
               <ScrollArea className="h-[500px]">
-                <div className="p-2 space-y-2">
+                <div className="p-2 space-y-2 min-h-[100px]">
                   {stageLeads.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-8">Gol</p>
+                    <p className="text-xs text-muted-foreground text-center py-8">{isDragOver ? "↓ Plasează aici" : "Gol"}</p>
                   ) : stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      className={cn("border border-border rounded-lg p-3 hover:bg-background/80 transition-colors cursor-pointer bg-card", isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-400/30")}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("text/plain", lead.id);
+                        e.dataTransfer.effectAllowed = "move";
+                        setDraggedLeadId(lead.id);
+                      }}
+                      onDragEnd={() => { setDraggedLeadId(null); setDragOverStage(null); }}
+                      className={cn(
+                        "border border-border rounded-lg p-3 hover:bg-background/80 transition-all cursor-grab active:cursor-grabbing bg-card",
+                        isPremiumLead(lead.title) && "bg-amber-500/5 dark:bg-amber-500/[0.03] border-amber-400/30",
+                        draggedLeadId === lead.id && "opacity-40 scale-95"
+                      )}
                       onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                     >
                       <div className="flex items-start justify-between gap-2">
