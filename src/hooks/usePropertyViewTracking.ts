@@ -35,6 +35,21 @@ export const usePropertyViewTracking = (propertyId: string | undefined) => {
           page_path: window.location.pathname,
         });
 
+        // Also feed into AI Memory (cross-function visitor tracker)
+        let memorySessionId = window.localStorage.getItem("rt_visitor_session_id");
+        if (!memorySessionId) {
+          memorySessionId = (crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+          window.localStorage.setItem("rt_visitor_session_id", memorySessionId);
+        }
+        supabase.functions.invoke("visitor-memory", {
+          body: {
+            action: "track",
+            sessionId: memorySessionId,
+            userId: user?.id || null,
+            event: { type: "view", data: { propertyId } },
+          },
+        }).catch(() => {});
+
         hasTracked.current = true;
       } catch (error) {
         console.error("Property view tracking error:", error);
