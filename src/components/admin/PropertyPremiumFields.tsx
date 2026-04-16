@@ -37,6 +37,12 @@ export interface PremiumFieldsData {
   furnished: string | null;
   construction_type: string | null;
   compartimentare: string | null;
+  rooms: number | null;
+  kitchens: number | null;
+  comfort_level: string | null;
+  property_subtype: string | null;
+  height_regime: string | null;
+  destination: string | null;
 }
 
 export const defaultPremiumFields: PremiumFieldsData = {
@@ -68,6 +74,12 @@ export const defaultPremiumFields: PremiumFieldsData = {
   furnished: null,
   construction_type: null,
   compartimentare: null,
+  rooms: null,
+  kitchens: null,
+  comfort_level: null,
+  property_subtype: null,
+  height_regime: null,
+  destination: null,
 };
 
 interface Props {
