@@ -456,9 +456,14 @@ const ScraperLeads = () => {
     if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
     if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
     if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q) || l.phone?.toLowerCase().includes(q));
+    }
+    // Hide snoozed leads (those with snoozed_until in the future)
+    if (hideSnoozed) {
+      const now = Date.now();
+      result = result.filter((l) => !l.snoozed_until || new Date(l.snoozed_until).getTime() <= now);
     }
 
     // ── Advanced filters ──
