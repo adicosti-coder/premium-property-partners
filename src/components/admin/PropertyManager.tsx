@@ -815,10 +815,91 @@ export default function PropertyManager() {
       {/* Expert Insight Override */}
       <div className="p-4 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-4">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">🧠</span>
-          <h4 className="font-semibold text-foreground">Expert Insight (opțional)</h4>
+          <Brain className="w-5 h-5 text-purple-600" />
+          <h4 className="font-semibold text-foreground">Expert Insight</h4>
         </div>
-        <p className="text-xs text-muted-foreground">Dacă este completat, înlocuiește textul generat automat de AI în secțiunea The Advisor.</p>
+        <p className="text-xs text-muted-foreground">Generează automat sau completează manual textul Expert Insight (The Advisor).</p>
+
+        <Button
+          type="button"
+          onClick={async () => {
+            if (!formData.name) {
+              toast({ title: "Completează numele proprietății", variant: "destructive" });
+              return;
+            }
+            setIsGeneratingInsight(true);
+            try {
+              // Generate RO
+              const { data: roData, error: roErr } = await supabase.functions.invoke("generate-advisor-content", {
+                body: {
+                  propertyName: formData.name,
+                  propertySlug: editingProperty?.slug || formData.name,
+                  location: formData.location,
+                  size: premiumFields.size || premiumFields.usable_area,
+                  bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+                  bathrooms: premiumFields.bathrooms,
+                  capacity: formData.capacity ? parseInt(formData.capacity) : null,
+                  floor: premiumFields.floor,
+                  pricePerNight: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
+                  amenities: formData.features ? formData.features.split(",").map(f => f.trim()) : [],
+                  listingType: formData.listing_type || "cazare",
+                  yearBuilt: premiumFields.year_built,
+                  energyClass: premiumFields.energy_class,
+                  roi: formData.roi_percentage,
+                  language: "ro",
+                },
+              });
+              if (roErr) throw roErr;
+
+              // Generate EN
+              const { data: enData, error: enErr } = await supabase.functions.invoke("generate-advisor-content", {
+                body: {
+                  propertyName: formData.name,
+                  propertySlug: editingProperty?.slug || formData.name,
+                  location: formData.location,
+                  size: premiumFields.size || premiumFields.usable_area,
+                  bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+                  bathrooms: premiumFields.bathrooms,
+                  capacity: formData.capacity ? parseInt(formData.capacity) : null,
+                  floor: premiumFields.floor,
+                  pricePerNight: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
+                  amenities: formData.features ? formData.features.split(",").map(f => f.trim()) : [],
+                  listingType: formData.listing_type || "cazare",
+                  yearBuilt: premiumFields.year_built,
+                  energyClass: premiumFields.energy_class,
+                  roi: formData.roi_percentage,
+                  language: "en",
+                },
+              });
+              if (enErr) throw enErr;
+
+              const roInsight = roData?.expertInsight || "";
+              const enInsight = enData?.expertInsight || "";
+
+              setFormData(prev => ({
+                ...prev,
+                expert_insight_ro: roInsight,
+                expert_insight_en: enInsight,
+              }));
+
+              toast({ title: "✅ Expert Insight generat cu succes!" });
+            } catch (err: any) {
+              console.error("Expert Insight generation error:", err);
+              toast({ title: "Eroare la generare", description: err.message, variant: "destructive" });
+            } finally {
+              setIsGeneratingInsight(false);
+            }
+          }}
+          disabled={isGeneratingInsight}
+          className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
+        >
+          {isGeneratingInsight ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează Expert Insight...</>
+          ) : (
+            <><Sparkles className="w-4 h-4 mr-2" />Generează Expert Insight AI</>
+          )}
+        </Button>
+
         <div className="space-y-2">
           <Label>Expert Insight (RO)</Label>
           <Textarea
