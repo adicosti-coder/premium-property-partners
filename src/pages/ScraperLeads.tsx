@@ -37,7 +37,8 @@ import { ScraperAdvancedFilters, AdvancedFilters, EMPTY_FILTERS, countActiveFilt
 import { AIInsightButton, DailyBriefingButton } from "@/components/admin/ScraperAIInsight";
 import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/admin/ScraperFollowUp";
 import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
-import { Keyboard } from "lucide-react";
+import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
+import { Keyboard, BarChart3 } from "lucide-react";
 
 interface ScraperLead {
   id: string;
