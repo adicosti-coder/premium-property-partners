@@ -598,6 +598,12 @@ export default function PropertyManager() {
       furnished: property.furnished,
       construction_type: property.construction_type,
       compartimentare: property.compartimentare,
+      rooms: (property as any).rooms,
+      kitchens: (property as any).kitchens,
+      comfort_level: (property as any).comfort_level,
+      property_subtype: (property as any).property_subtype,
+      height_regime: (property as any).height_regime,
+      destination: (property as any).destination,
     });
     await fetchPropertyImages(property.id);
     setIsEditOpen(true);
