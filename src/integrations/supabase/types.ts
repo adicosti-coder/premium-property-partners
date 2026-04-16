@@ -3760,6 +3760,66 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_memory: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          chatbot_summary: string | null
+          first_seen_at: string
+          id: string
+          last_intent: string | null
+          last_seen_at: string
+          lead_score: number | null
+          metadata: Json
+          preferred_listing_type: string | null
+          preferred_neighborhoods: string[] | null
+          preferred_rooms: number | null
+          search_history: Json
+          session_id: string
+          updated_at: string
+          user_id: string | null
+          viewed_properties: Json
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          chatbot_summary?: string | null
+          first_seen_at?: string
+          id?: string
+          last_intent?: string | null
+          last_seen_at?: string
+          lead_score?: number | null
+          metadata?: Json
+          preferred_listing_type?: string | null
+          preferred_neighborhoods?: string[] | null
+          preferred_rooms?: number | null
+          search_history?: Json
+          session_id: string
+          updated_at?: string
+          user_id?: string | null
+          viewed_properties?: Json
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          chatbot_summary?: string | null
+          first_seen_at?: string
+          id?: string
+          last_intent?: string | null
+          last_seen_at?: string
+          lead_score?: number | null
+          metadata?: Json
+          preferred_listing_type?: string | null
+          preferred_neighborhoods?: string[] | null
+          preferred_rooms?: number | null
+          search_history?: Json
+          session_id?: string
+          updated_at?: string
+          user_id?: string | null
+          viewed_properties?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_availability: {
