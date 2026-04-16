@@ -375,6 +375,41 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      {/* 🔥 Hot Prospects AI - Quick Access Card */}
+      <Card className="border-2 border-destructive/30 bg-gradient-to-r from-destructive/5 via-amber-500/5 to-transparent">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-destructive/10 relative">
+                <Flame className="w-6 h-6 text-destructive" />
+                {(hotProspects?.hot ?? 0) > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-ping" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  Prospect Listings — Oportunități AI
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-bold text-destructive text-base">{hotProspects?.hot ?? 0}</span> prospecți fierbinți (score &gt; 80, status = new) ·{" "}
+                  <span className="font-medium text-amber-600 dark:text-amber-400">{hotProspects?.calling ?? 0}</span> în apelare ·{" "}
+                  <span className="font-medium text-green-600 dark:text-green-400">{hotProspects?.interested ?? 0}</span> interesați
+                </p>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              variant={hotProspects?.hot ? "destructive" : "outline"}
+              onClick={() => navigate("/admin/prospect-listings")}
+              className="w-full sm:w-auto"
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              {language === "ro" ? "Deschide Prospect Listings" : "Open Prospect Listings"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
