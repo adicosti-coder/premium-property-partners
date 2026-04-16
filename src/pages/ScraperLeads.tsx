@@ -525,7 +525,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir, appliedFilters]);
+  }, [leads, hotOnly, listingTab, filterType, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
