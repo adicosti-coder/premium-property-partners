@@ -52,6 +52,8 @@ import {
   Search,
   Filter,
   RotateCcw,
+  Sparkles,
+  Brain,
 } from "lucide-react";
 import PropertyImageGallery from "./PropertyImageGallery";
 import PropertyPricingManager from "./PropertyPricingManager";
@@ -181,6 +183,7 @@ export default function PropertyManager() {
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
   const [premiumFields, setPremiumFields] = useState<PremiumFieldsData>({ ...defaultPremiumFields });
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
