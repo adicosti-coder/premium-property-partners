@@ -407,6 +407,10 @@ const Admin = () => {
               <Sparkles className="w-4 h-4" />
               Studio Foto AI
             </TabsTrigger>
+            <TabsTrigger value="voice-agent" className="flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              Voice Agent
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
@@ -465,6 +469,7 @@ const Admin = () => {
             </div>
           </TabsContent>
           <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
+          <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
