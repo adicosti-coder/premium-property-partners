@@ -59,6 +59,9 @@ interface ScraperLead {
   search_keyword: string | null;
   agency_name: string | null;
   neighborhood_slug: string | null;
+  follow_up_at?: string | null;
+  snoozed_until?: string | null;
+  ai_insight?: any;
 }
 
 interface SearchKeyword {
