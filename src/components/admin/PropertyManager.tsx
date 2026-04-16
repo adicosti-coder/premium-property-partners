@@ -374,6 +374,8 @@ export default function PropertyManager() {
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        expert_insight_ro: formData.expert_insight_ro || null,
+        expert_insight_en: formData.expert_insight_en || null,
         ...premiumFields,
       });
 
