@@ -411,6 +411,10 @@ const Admin = () => {
               <Phone className="w-4 h-4" />
               Voice Agent
             </TabsTrigger>
+            <TabsTrigger value="prospect-listings" className="flex items-center gap-2" onClick={() => navigate("/admin/prospect-listings")}>
+              <Phone className="w-4 h-4" />
+              Prospect Listings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
