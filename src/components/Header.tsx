@@ -32,6 +32,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
   const { t, language } = useLanguage();
   const { favorites } = useFavorites();
@@ -52,9 +53,28 @@ const Header = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!cancelled) setIsAuthenticated(!!session);
 
+      // Check admin role
+      if (session?.user) {
+        const { data: roleData } = await supabase.rpc("has_role", {
+          _user_id: session.user.id,
+          _role: "admin",
+        });
+        if (!cancelled) setIsAdmin(!!roleData);
+      }
+
       // Listen for auth changes
-      const { data } = supabase.auth.onAuthStateChange((_, session) => {
-        if (!cancelled) setIsAuthenticated(!!session);
+      const { data } = supabase.auth.onAuthStateChange(async (_, session) => {
+        if (cancelled) return;
+        setIsAuthenticated(!!session);
+        if (session?.user) {
+          const { data: roleData } = await supabase.rpc("has_role", {
+            _user_id: session.user.id,
+            _role: "admin",
+          });
+          if (!cancelled) setIsAdmin(!!roleData);
+        } else {
+          setIsAdmin(false);
+        }
       });
       subscription = data.subscription;
     };
@@ -412,14 +432,16 @@ const Header = () => {
                       <span className="text-primary/70"><ShieldIcon className="w-4 h-4" /></span>
                       Admin
                     </Link>
-                    <Link
-                      to="/admin/prospect-listings"
-                      className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="text-primary/70">📞</span>
-                      Prospect Listings (AI Calls)
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin/prospect-listings"
+                        className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <span className="text-primary/70">📞</span>
+                        Prospect Listings (AI Calls)
+                      </Link>
+                    )}
                   </>
                 )}
 
