@@ -251,7 +251,9 @@ const ScraperLeads = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [listingTab, setListingTab] = useState<"all" | "vanzare" | "inchiriere">("all");
-  const [viewMode, setViewMode] = useState<"table" | "pipeline">("table");
+  const [viewMode, setViewMode] = useState<"table" | "pipeline" | "analytics">(() => (localStorage.getItem("scraper:viewMode") as any) || "table");
+  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -286,6 +288,7 @@ const ScraperLeads = () => {
   useEffect(() => { localStorage.setItem("scraper:smartFilter", smartFilter); }, [smartFilter]);
   useEffect(() => { localStorage.setItem("scraper:sortBy", sortBy); }, [sortBy]);
   useEffect(() => { localStorage.setItem("scraper:sortDir", sortDir); }, [sortDir]);
+  useEffect(() => { localStorage.setItem("scraper:viewMode", viewMode); }, [viewMode]);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -1402,6 +1405,9 @@ const ScraperLeads = () => {
                 </Button>
                 <Button size="sm" variant={viewMode === "table" ? "default" : "ghost"} onClick={() => setViewMode("table")} className="rounded-none gap-1.5">
                   <LayoutList className="w-4 h-4" /> Tabel
+                </Button>
+                <Button size="sm" variant={viewMode === "analytics" ? "default" : "ghost"} onClick={() => setViewMode("analytics")} className="rounded-none gap-1.5">
+                  <BarChart3 className="w-4 h-4" /> Analiză
                 </Button>
               </div>
               {/* Scanează acum */}
