@@ -3820,6 +3820,105 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_call_sessions: {
+        Row: {
+          ai_outcome: string | null
+          ai_sentiment: string | null
+          ai_summary: string | null
+          appointment_scheduled_at: string | null
+          call_duration_seconds: number | null
+          call_objective: string | null
+          cost_estimate_usd: number | null
+          created_at: string
+          direction: string
+          ended_at: string | null
+          error_message: string | null
+          from_number: string | null
+          id: string
+          initiated_by: string | null
+          lead_id: string | null
+          next_action: string | null
+          recording_url: string | null
+          scraper_lead_id: string | null
+          started_at: string | null
+          status: string
+          to_number: string
+          transcript: Json | null
+          twilio_call_sid: string | null
+          updated_at: string
+          voice_agent_prompt: string | null
+        }
+        Insert: {
+          ai_outcome?: string | null
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          appointment_scheduled_at?: string | null
+          call_duration_seconds?: number | null
+          call_objective?: string | null
+          cost_estimate_usd?: number | null
+          created_at?: string
+          direction?: string
+          ended_at?: string | null
+          error_message?: string | null
+          from_number?: string | null
+          id?: string
+          initiated_by?: string | null
+          lead_id?: string | null
+          next_action?: string | null
+          recording_url?: string | null
+          scraper_lead_id?: string | null
+          started_at?: string | null
+          status?: string
+          to_number: string
+          transcript?: Json | null
+          twilio_call_sid?: string | null
+          updated_at?: string
+          voice_agent_prompt?: string | null
+        }
+        Update: {
+          ai_outcome?: string | null
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          appointment_scheduled_at?: string | null
+          call_duration_seconds?: number | null
+          call_objective?: string | null
+          cost_estimate_usd?: number | null
+          created_at?: string
+          direction?: string
+          ended_at?: string | null
+          error_message?: string | null
+          from_number?: string | null
+          id?: string
+          initiated_by?: string | null
+          lead_id?: string | null
+          next_action?: string | null
+          recording_url?: string | null
+          scraper_lead_id?: string | null
+          started_at?: string | null
+          status?: string
+          to_number?: string
+          transcript?: Json | null
+          twilio_call_sid?: string | null
+          updated_at?: string
+          voice_agent_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_sessions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_call_sessions_scraper_lead_id_fkey"
+            columns: ["scraper_lead_id"]
+            isOneToOne: false
+            referencedRelation: "scraper_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       booking_availability: {
