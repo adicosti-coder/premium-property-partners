@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare } from "lucide-react";
+import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -43,6 +45,7 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3
 
 const AdminDashboard = () => {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const dateLocale = language === 'ro' ? ro : enUS;
   
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -51,6 +54,28 @@ const AdminDashboard = () => {
   const [syncingPrices, setSyncingPrices] = useState(false);
   const [syncingReviews, setSyncingReviews] = useState(false);
   const [syncingDetails, setSyncingDetails] = useState(false);
+
+  // 🔥 Hot prospects: status=new + lead_score>80 (eligibili pentru auto-dial AI)
+  const { data: hotProspects } = useQuery({
+    queryKey: ["admin-dashboard-hot-prospects"],
+    queryFn: async () => {
+      const [hotRes, callingRes, interestedRes] = await Promise.all([
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true })
+          .eq("lifecycle_status", "new").gt("lead_score", 80),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true })
+          .eq("lifecycle_status", "calling"),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true })
+          .eq("lifecycle_status", "interested"),
+      ]);
+      return {
+        hot: hotRes.count ?? 0,
+        calling: callingRes.count ?? 0,
+        interested: interestedRes.count ?? 0,
+      };
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+  });
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
