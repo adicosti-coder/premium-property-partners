@@ -3181,6 +3181,72 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_audits: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          h1_count: number | null
+          id: string
+          issues: Json | null
+          keyword_gaps: Json | null
+          language: string
+          meta_description: string | null
+          opportunities: Json | null
+          overall_score: number | null
+          page_type: string | null
+          raw_analysis: Json | null
+          strengths: Json | null
+          suggested_meta: string | null
+          suggested_title: string | null
+          title: string | null
+          updated_at: string
+          url: string
+          word_count: number | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          h1_count?: number | null
+          id?: string
+          issues?: Json | null
+          keyword_gaps?: Json | null
+          language?: string
+          meta_description?: string | null
+          opportunities?: Json | null
+          overall_score?: number | null
+          page_type?: string | null
+          raw_analysis?: Json | null
+          strengths?: Json | null
+          suggested_meta?: string | null
+          suggested_title?: string | null
+          title?: string | null
+          updated_at?: string
+          url: string
+          word_count?: number | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          h1_count?: number | null
+          id?: string
+          issues?: Json | null
+          keyword_gaps?: Json | null
+          language?: string
+          meta_description?: string | null
+          opportunities?: Json | null
+          overall_score?: number | null
+          page_type?: string | null
+          raw_analysis?: Json | null
+          strengths?: Json | null
+          suggested_meta?: string | null
+          suggested_title?: string | null
+          title?: string | null
+          updated_at?: string
+          url?: string
+          word_count?: number | null
+        }
+        Relationships: []
+      }
       shared_poi_links: {
         Row: {
           created_at: string
