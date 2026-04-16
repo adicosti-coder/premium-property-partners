@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { ScraperAdvancedFilters, AdvancedFilters, EMPTY_FILTERS, countActiveFilters, parseSurface, parseRooms, parseFloor } from "@/components/admin/ScraperAdvancedFilters";
 import { AIInsightButton, DailyBriefingButton } from "@/components/admin/ScraperAIInsight";
+import { PredictiveDetailCard, PredictiveBatchButton, UndervaluedLeadsWidget } from "@/components/admin/ScraperPredictive";
 import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/admin/ScraperFollowUp";
 import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
 import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
@@ -1277,6 +1278,12 @@ const ScraperLeads = () => {
               snoozedUntil={(selectedLead as any).snoozed_until}
             />
           </div>
+
+          {/* Predictive Analytics — conversion probability + undervaluation */}
+          <PredictiveDetailCard
+            lead={selectedLead}
+            onUpdate={() => queryClient.invalidateQueries({ queryKey: ["scraper-leads"] })}
+          />
 
           {/* ── Export to Properties ───────────────── */}
           <div className="flex gap-2">
