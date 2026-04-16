@@ -50,3 +50,27 @@ export const resolvePropertyImageUrl = (value: string | null | undefined): strin
   const path = normalized.replace(/^property-images\//, "").replace(/^\//, "");
   return supabase.storage.from(PROPERTY_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
 };
+
+/**
+ * Returns a thumbnail URL using Supabase Storage image transformation.
+ * Appends render endpoint params for server-side resize + WebP conversion.
+ */
+export const resolvePropertyThumbnailUrl = (
+  value: string | null | undefined,
+  width = 200,
+  height = 200,
+  quality = 60,
+): string | null => {
+  const fullUrl = resolvePropertyImageUrl(value);
+  if (!fullUrl) return null;
+
+  // Only transform Supabase storage URLs
+  if (!fullUrl.includes("/storage/v1/object/public/")) return fullUrl;
+
+  // Replace /object/public/ with /render/image/public/ and add params
+  const renderUrl = fullUrl.replace(
+    "/storage/v1/object/public/",
+    "/storage/v1/render/image/public/",
+  );
+  return `${renderUrl}?width=${width}&height=${height}&resize=cover&quality=${quality}`;
+};

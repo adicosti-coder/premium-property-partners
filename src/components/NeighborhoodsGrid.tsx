@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, TrendingUp, ArrowRight, Building2, Star } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
+import { resolvePropertyThumbnailUrl } from "@/utils/resolvePropertyImageUrl";
 import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
