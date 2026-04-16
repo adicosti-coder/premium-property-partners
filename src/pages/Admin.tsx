@@ -54,6 +54,7 @@ import AICacheManager from "@/components/admin/AICacheManager";
 import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
+import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -400,6 +401,10 @@ const Admin = () => {
             <TabsTrigger value="ai-memory" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               AI Memory
+            </TabsTrigger>
+            <TabsTrigger value="photo-studio" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Studio Foto AI
             </TabsTrigger>
           </TabsList>
 
