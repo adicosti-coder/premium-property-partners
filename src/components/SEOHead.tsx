@@ -168,14 +168,35 @@ const SEOHead = ({
   const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
   const finalDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
   
-  // Canonical URL: strip trailing slash (except root), remove duplicate params
-  const rawUrl = url || (typeof window !== "undefined" ? window.location.origin + window.location.pathname : BASE_URL);
-  const finalUrl = rawUrl.length > 1 && rawUrl.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
-  
-  // Generate alternate URLs for hreflang
+  // Canonical URL: ALWAYS absolute on www.realtrust.ro, pathname only (NO query params, NO hash, NO trailing slash except root).
+  // This ensures Google indexes one version per page regardless of ?lang, ?utm_*, ?id, filters, etc.
+  const buildCanonical = (): string => {
+    let pathname: string;
+    if (url) {
+      try {
+        // If a full URL is provided, extract just the pathname.
+        const parsed = new URL(url, BASE_URL);
+        pathname = parsed.pathname;
+      } catch {
+        pathname = url.startsWith("/") ? url.split("?")[0].split("#")[0] : "/";
+      }
+    } else if (typeof window !== "undefined") {
+      pathname = window.location.pathname;
+    } else {
+      pathname = "/";
+    }
+    // Normalize: collapse duplicate slashes, strip trailing slash (except root)
+    pathname = pathname.replace(/\/{2,}/g, "/");
+    if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+    return `${BASE_URL}${pathname}`;
+  };
+  const finalUrl = buildCanonical();
+
+  // Hreflang alternates — language is a client-side state (LanguageContext), not a URL segment.
+  // Both RO and EN share the same canonical pathname; we signal language equivalence to Google.
   const getAlternateUrl = (lang: string) => {
     if (lang === "ro") return finalUrl;
-    return finalUrl.includes("?") ? `${finalUrl}&lang=${lang}` : `${finalUrl}?lang=${lang}`;
+    return `${finalUrl}?lang=${lang}`;
   };
   
   // Default JSON-LD for LocalBusiness (AggregateRating injected dynamically on homepage)

@@ -14,6 +14,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StickyPropertyCTA from "@/components/StickyPropertyCTA";
 import SEOHead from "@/components/SEOHead";
+import NotFound from "@/pages/NotFound";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import PinterestPinButton from "@/components/PinterestPinButton";
@@ -400,7 +401,10 @@ const PropertyDetail = () => {
     );
   }
 
-  if (!property) return null;
+  // Property not found after loading → render 404 page (avoids "Redirect Error" / soft 404 in GSC)
+  if (!property) {
+    return <NotFound />;
+  }
 
   const isInvestmentListing = normalizedListingType === "investitie" || normalizedListingType === "vanzare";
   const displayRoi = dbProperty?.roi_percentage
