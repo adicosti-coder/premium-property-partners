@@ -3008,9 +3008,12 @@ export type Database = {
         Row: {
           admin_notes: string | null
           agency_name: string | null
+          ai_insight: Json | null
+          ai_insight_generated_at: string | null
           created_at: string
           estimated_roi: number | null
           extra_profit_3y: number
+          follow_up_at: string | null
           id: string
           is_priority: boolean | null
           lead_score: number
@@ -3022,6 +3025,7 @@ export type Database = {
           prospect_category: string | null
           search_keyword: string | null
           seo_description: string | null
+          snoozed_until: string | null
           source: string | null
           status: string
           tags: string[]
@@ -3033,9 +3037,12 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           agency_name?: string | null
+          ai_insight?: Json | null
+          ai_insight_generated_at?: string | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
+          follow_up_at?: string | null
           id?: string
           is_priority?: boolean | null
           lead_score?: number
@@ -3047,6 +3054,7 @@ export type Database = {
           prospect_category?: string | null
           search_keyword?: string | null
           seo_description?: string | null
+          snoozed_until?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -3058,9 +3066,12 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           agency_name?: string | null
+          ai_insight?: Json | null
+          ai_insight_generated_at?: string | null
           created_at?: string
           estimated_roi?: number | null
           extra_profit_3y?: number
+          follow_up_at?: string | null
           id?: string
           is_priority?: boolean | null
           lead_score?: number
@@ -3072,6 +3083,7 @@ export type Database = {
           prospect_category?: string | null
           search_keyword?: string | null
           seo_description?: string | null
+          snoozed_until?: string | null
           source?: string | null
           status?: string
           tags?: string[]
@@ -3079,6 +3091,39 @@ export type Database = {
           updated_at?: string
           url?: string
           whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
+      scraper_quick_reply_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          display_order: number
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

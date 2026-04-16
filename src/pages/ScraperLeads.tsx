@@ -34,6 +34,10 @@ import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ScraperAdvancedFilters, AdvancedFilters, EMPTY_FILTERS, countActiveFilters, parseSurface, parseRooms, parseFloor } from "@/components/admin/ScraperAdvancedFilters";
+import { AIInsightButton, DailyBriefingButton } from "@/components/admin/ScraperAIInsight";
+import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/admin/ScraperFollowUp";
+import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
+import { Keyboard } from "lucide-react";
 
 interface ScraperLead {
   id: string;
@@ -55,6 +59,9 @@ interface ScraperLead {
   search_keyword: string | null;
   agency_name: string | null;
   neighborhood_slug: string | null;
+  follow_up_at?: string | null;
+  snoozed_until?: string | null;
+  ai_insight?: any;
 }
 
 interface SearchKeyword {
@@ -254,10 +261,10 @@ const ScraperLeads = () => {
   const [isScraping, setIsScraping] = useState(false);
   const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
-  const [smartFilter, setSmartFilter] = useState<string>("all");
+  const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<"score" | "date">("score");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<"score" | "date">(() => (localStorage.getItem("scraper:sortBy") as any) || "score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => (localStorage.getItem("scraper:sortDir") as any) || "desc");
   const [keywordsOpen, setKeywordsOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newPlatform, setNewPlatform] = useState("General");
@@ -268,6 +275,16 @@ const ScraperLeads = () => {
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [showArchived, setShowArchived] = useState(false);
+  const [hideSnoozed, setHideSnoozed] = useState(true);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Debounced search to reduce filter recalcs
+  const debouncedSearch = useDebounce(searchQuery, 250);
+
+  // Persist preferences
+  useEffect(() => { localStorage.setItem("scraper:smartFilter", smartFilter); }, [smartFilter]);
+  useEffect(() => { localStorage.setItem("scraper:sortBy", sortBy); }, [sortBy]);
+  useEffect(() => { localStorage.setItem("scraper:sortDir", sortDir); }, [sortDir]);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -439,9 +456,14 @@ const ScraperLeads = () => {
     if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
     if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
     if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q));
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      result = result.filter((l) => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q) || l.phone?.toLowerCase().includes(q));
+    }
+    // Hide snoozed leads (those with snoozed_until in the future)
+    if (hideSnoozed) {
+      const now = Date.now();
+      result = result.filter((l) => !l.snoozed_until || new Date(l.snoozed_until).getTime() <= now);
     }
 
     // ── Advanced filters ──
@@ -503,7 +525,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, searchQuery, smartFilter, sortBy, sortDir, appliedFilters]);
+  }, [leads, hotOnly, listingTab, filterType, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -778,7 +800,27 @@ const ScraperLeads = () => {
     toast.success(`Categorie: ${label}${lead.phone ? " (salvată și pentru viitoarele importuri)" : ""}`);
   };
 
-  // ── Scan (Scanează acum) ──────────────────────────
+  // ── Keyboard shortcuts ──────────────────────────
+  useScraperKeyboardShortcuts({
+    enabled: !!selectedLead,
+    onNext: () => {
+      if (!selectedLead || !filteredLeads.length) return;
+      const idx = filteredLeads.findIndex((l) => l.id === selectedLead.id);
+      const next = filteredLeads[Math.min(idx + 1, filteredLeads.length - 1)];
+      if (next) { setSelectedLead(next as any); setGeneratedMessage(""); }
+    },
+    onPrev: () => {
+      if (!selectedLead || !filteredLeads.length) return;
+      const idx = filteredLeads.findIndex((l) => l.id === selectedLead.id);
+      const prev = filteredLeads[Math.max(idx - 1, 0)];
+      if (prev) { setSelectedLead(prev as any); setGeneratedMessage(""); }
+    },
+    onWhatsApp: () => selectedLead && handleWhatsApp(selectedLead),
+    onArchive: () => selectedLead && handleArchive(selectedLead.id),
+    onEscape: () => setSelectedLead(null),
+    onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
+  });
+
   const handleScrape = async () => {
     setIsScraping(true);
     setRecentScanPulse(true);
@@ -1184,6 +1226,22 @@ const ScraperLeads = () => {
             <Button size="sm" onClick={saveNotes} className="bg-primary">Salvează note</Button>
           </div>
 
+          {/* AI Insight + Follow-up reminder */}
+          <div className="flex gap-2 flex-wrap">
+            <AIInsightButton
+              leadId={selectedLead.id}
+              leadTitle={cleanTitleStatic(selectedLead.title)}
+              leadPhone={selectedLead.phone}
+              cachedInsight={(selectedLead as any).ai_insight}
+              onMessageSelected={(msg) => setGeneratedMessage(msg)}
+            />
+            <FollowUpManager
+              leadId={selectedLead.id}
+              followUpAt={(selectedLead as any).follow_up_at}
+              snoozedUntil={(selectedLead as any).snoozed_until}
+            />
+          </div>
+
           {/* ── Export to Properties ───────────────── */}
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
@@ -1323,6 +1381,10 @@ const ScraperLeads = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              <DailyBriefingButton />
+              <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setShortcutsOpen(true)} title="Shortcuts (?)">
+                <Keyboard className="w-4 h-4" /> Shortcuts
+              </Button>
               {/* CSV Export */}
               <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1.5" disabled={!filteredLeads.length}>
                 <Download className="w-4 h-4" /> CSV
