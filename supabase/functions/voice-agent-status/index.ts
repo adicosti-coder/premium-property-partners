@@ -36,7 +36,7 @@ serve(async (req) => {
     if (callStatus === "completed" && LOVABLE_API_KEY) {
       const { data: session } = await supabase
         .from("voice_call_sessions")
-        .select("transcript, call_objective, scraper_lead_id, to_number")
+        .select("transcript, call_objective, scraper_lead_id, prospect_listing_id, to_number")
         .eq("id", sessionId)
         .maybeSingle();
 
@@ -82,30 +82,93 @@ serve(async (req) => {
             appointment_scheduled_at: parsed.appointment_iso || null,
           }).eq("id", sessionId);
 
-          // Sync back to scraper_leads + send WhatsApp follow-up via Make.com
-          if (session.scraper_lead_id) {
-            const outcomeMap: Record<string, string> = {
-              interesat: "interested",
-              programare: "interested",
-              callback: "calling",
-              neinteresat: "rejected",
-              robot: "new",
-              nicio_legatura: "rejected",
-            };
-            const newLifecycle = outcomeMap[parsed.outcome] || "calling";
+          // Map outcome → lifecycle status
+          const outcomeMap: Record<string, string> = {
+            interesat: "interested",
+            programare: "interested",
+            callback: "callback",
+            neinteresat: "rejected",
+            robot: "new",
+            nicio_legatura: "rejected",
+          };
+          const newLifecycle = outcomeMap[parsed.outcome] || "calling";
+          const MAKE_WEBHOOK_URL = Deno.env.get("MAKE_WEBHOOK_URL");
+          const realtrustLink = "https://realtrust.ro/pentru-proprietari";
 
+          // ─── Sync prospect_listings (new pipeline) ───
+          if (session.prospect_listing_id) {
+            await supabase.from("prospect_listings").update({
+              call_summary: parsed.summary || null,
+              lifecycle_status: newLifecycle,
+              admin_notes: parsed.next_action || null,
+            }).eq("id", session.prospect_listing_id);
+
+            if (MAKE_WEBHOOK_URL && parsed.outcome === "interesat" || parsed.outcome === "programare") {
+              const { data: prospect } = await supabase
+                .from("prospect_listings")
+                .select("id, contact_name, contact_phone, phone_normalized, location, zone, price, currency, category, prospect_type, title, source_url, lead_score")
+                .eq("id", session.prospect_listing_id)
+                .maybeSingle();
+
+              const categoryLabel: Record<string, string> = {
+                vanzare: "Vânzare",
+                inchiriere: "Chirie",
+                hotelier: "Regim Hotelier",
+              };
+
+              if (MAKE_WEBHOOK_URL) {
+                fetch(MAKE_WEBHOOK_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    type: "voice_call_followup_whatsapp",
+                    owner_name: prospect?.contact_name || "stimat proprietar",
+                    owner_phone: prospect?.phone_normalized || prospect?.contact_phone || session.to_number,
+                    offer_type: categoryLabel[prospect?.category || ""] || prospect?.prospect_type || "Imobiliare",
+                    offer_type_code: prospect?.category,
+                    property: {
+                      title: prospect?.title,
+                      location: prospect?.location,
+                      zone: prospect?.zone,
+                      price: prospect?.price,
+                      currency: prospect?.currency,
+                      source_url: prospect?.source_url,
+                      lead_score: prospect?.lead_score,
+                    },
+                    call: {
+                      session_id: sessionId,
+                      summary: parsed.summary,
+                      outcome: parsed.outcome,
+                      sentiment: parsed.sentiment,
+                      next_action: parsed.next_action,
+                      appointment_iso: parsed.appointment_iso,
+                      duration_seconds: duration,
+                      recording_url: recordingUrl ? `${recordingUrl}.mp3` : null,
+                    },
+                    realtrust_link: realtrustLink,
+                    realtrust_link_text: `Bună ziua${prospect?.contact_name ? " " + prospect.contact_name : ""}, mulțumim pentru discuție! Mai multe detalii despre serviciile noastre RealTrust găsiți aici: ${realtrustLink}`,
+                  }),
+                }).catch((e) => console.error("Make.com webhook failed:", e));
+
+                await supabase.from("prospect_listings").update({
+                  followup_sent_at: new Date().toISOString(),
+                }).eq("id", session.prospect_listing_id);
+              }
+            }
+          }
+
+          // ─── Legacy: scraper_leads sync (kept for backward compat) ───
+          if (session.scraper_lead_id) {
             await supabase.from("scraper_leads").update({
               call_summary: parsed.summary || null,
               lifecycle_status: newLifecycle,
               admin_notes: parsed.next_action || null,
             }).eq("id", session.scraper_lead_id);
 
-            // Trigger Make.com WhatsApp follow-up (non-blocking)
-            const MAKE_WEBHOOK_URL = Deno.env.get("MAKE_WEBHOOK_URL");
             if (MAKE_WEBHOOK_URL && ["interesat", "programare", "callback"].includes(parsed.outcome)) {
               const { data: lead } = await supabase
                 .from("scraper_leads")
-                .select("id, phone, location, original_price, category, title, url, lead_score")
+                .select("id, phone, location, original_price, category, title, url, lead_score, agency_name")
                 .eq("id", session.scraper_lead_id)
                 .maybeSingle();
 
@@ -114,7 +177,10 @@ serve(async (req) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   type: "voice_call_followup_whatsapp",
-                  lead,
+                  owner_name: lead?.agency_name || "stimat proprietar",
+                  owner_phone: lead?.phone || session.to_number,
+                  offer_type: lead?.category || "Imobiliare",
+                  property: lead,
                   call: {
                     session_id: sessionId,
                     summary: parsed.summary,
@@ -125,7 +191,7 @@ serve(async (req) => {
                     duration_seconds: duration,
                     recording_url: recordingUrl ? `${recordingUrl}.mp3` : null,
                   },
-                  to_phone: session.to_number,
+                  realtrust_link: realtrustLink,
                 }),
               }).catch((e) => console.error("Make.com webhook failed:", e));
 
