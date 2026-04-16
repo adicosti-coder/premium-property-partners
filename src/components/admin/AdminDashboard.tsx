@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare } from "lucide-react";
+import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -43,6 +45,7 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3
 
 const AdminDashboard = () => {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const dateLocale = language === 'ro' ? ro : enUS;
   
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -51,6 +54,28 @@ const AdminDashboard = () => {
   const [syncingPrices, setSyncingPrices] = useState(false);
   const [syncingReviews, setSyncingReviews] = useState(false);
   const [syncingDetails, setSyncingDetails] = useState(false);
+
+  // 🔥 Hot prospects: status=new + lead_score>80 (eligibili pentru auto-dial AI)
+  const { data: hotProspects } = useQuery({
+    queryKey: ["admin-dashboard-hot-prospects"],
+    queryFn: async () => {
+      const [hotRes, callingRes, interestedRes] = await Promise.all([
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true })
+          .eq("lifecycle_status", "new").gt("lead_score", 80),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true })
+          .eq("lifecycle_status", "calling"),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true })
+          .eq("lifecycle_status", "interested"),
+      ]);
+      return {
+        hot: hotRes.count ?? 0,
+        calling: callingRes.count ?? 0,
+        interested: interestedRes.count ?? 0,
+      };
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+  });
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -345,6 +370,41 @@ const AdminDashboard = () => {
             >
               {syncingDetails ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSearch className="w-4 h-4 mr-2" />}
               {language === 'ro' ? 'Sync Detalii' : 'Sync Details'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 🔥 Hot Prospects AI - Quick Access Card */}
+      <Card className="border-2 border-destructive/30 bg-gradient-to-r from-destructive/5 via-amber-500/5 to-transparent">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-destructive/10 relative">
+                <Flame className="w-6 h-6 text-destructive" />
+                {(hotProspects?.hot ?? 0) > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-ping" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  Prospect Listings — Oportunități AI
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-bold text-destructive text-base">{hotProspects?.hot ?? 0}</span> prospecți fierbinți (score &gt; 80, status = new) ·{" "}
+                  <span className="font-medium text-amber-600 dark:text-amber-400">{hotProspects?.calling ?? 0}</span> în apelare ·{" "}
+                  <span className="font-medium text-green-600 dark:text-green-400">{hotProspects?.interested ?? 0}</span> interesați
+                </p>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              variant={hotProspects?.hot ? "destructive" : "outline"}
+              onClick={() => navigate("/admin/prospect-listings")}
+              className="w-full sm:w-auto"
+            >
+              <Phone className="w-4 h-4 mr-2" />
+              {language === "ro" ? "Deschide Prospect Listings" : "Open Prospect Listings"}
             </Button>
           </div>
         </CardContent>

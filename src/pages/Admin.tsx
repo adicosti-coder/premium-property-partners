@@ -110,6 +110,26 @@ const Admin = () => {
     enabled: !!user && isAdmin,
   });
 
+  // 🔥 Hot prospects: status=new + lead_score>80 (eligibili pentru auto-dial AI)
+  const { data: hotProspectsCount = 0 } = useQuery({
+    queryKey: ["prospect-listings-hot-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("prospect_listings")
+        .select("*", { count: "exact", head: true })
+        .eq("lifecycle_status", "new")
+        .gt("lead_score", 80);
+      if (error) {
+        console.warn("hot prospects count error:", error.message);
+        return 0;
+      }
+      return count ?? 0;
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+    enabled: !!user && isAdmin,
+  });
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -411,9 +431,18 @@ const Admin = () => {
               <Phone className="w-4 h-4" />
               Voice Agent
             </TabsTrigger>
-            <TabsTrigger value="prospect-listings" className="flex items-center gap-2" onClick={() => navigate("/admin/prospect-listings")}>
+            <TabsTrigger value="prospect-listings" className="flex items-center gap-2 relative" onClick={() => navigate("/admin/prospect-listings")}>
               <Phone className="w-4 h-4" />
               Prospect Listings
+              {hotProspectsCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 min-w-5 h-5 text-xs px-1.5 animate-pulse"
+                  title={`${hotProspectsCount} prospecți fierbinți (score>80, status=new)`}
+                >
+                  🔥 {hotProspectsCount > 99 ? "99+" : hotProspectsCount}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
