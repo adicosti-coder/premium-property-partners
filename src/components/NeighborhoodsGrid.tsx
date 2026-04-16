@@ -65,8 +65,6 @@ export function NeighborhoodsGrid() {
                               loading="lazy"
                               width={200}
                               height={200}
-                              decoding="async"
-                            />
                             />
                           </div>
                         );
