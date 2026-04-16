@@ -656,7 +656,11 @@
   box-shadow: 0 10px 30px hsl(0 0% 0% / 0.3);
 }
 
-/* Gold Gradient Shimmer for text */
+/* Gold Gradient Shimmer for text — uses background-position (text-clip requires it) */
+@keyframes shimmer-bg {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
 .gold-gradient-shimmer {
   background: linear-gradient(
     90deg, 
@@ -667,7 +671,7 @@
   background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer 3s infinite;
+  animation: shimmer-bg 3s infinite;
 }
 
 /* Gradient shift animation for buttons */
