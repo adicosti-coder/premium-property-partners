@@ -34,6 +34,10 @@ import { ScraperBulkActions } from "@/components/admin/ScraperBulkActions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ScraperAdvancedFilters, AdvancedFilters, EMPTY_FILTERS, countActiveFilters, parseSurface, parseRooms, parseFloor } from "@/components/admin/ScraperAdvancedFilters";
+import { AIInsightButton, DailyBriefingButton } from "@/components/admin/ScraperAIInsight";
+import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/admin/ScraperFollowUp";
+import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
+import { Keyboard } from "lucide-react";
 
 interface ScraperLead {
   id: string;
