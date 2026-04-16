@@ -53,6 +53,7 @@ import GuestGuideManager from "@/components/admin/GuestGuideManager";
 import AICacheManager from "@/components/admin/AICacheManager";
 import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
+import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -396,6 +397,10 @@ const Admin = () => {
               <Sparkles className="w-4 h-4" />
               SEO AI
             </TabsTrigger>
+            <TabsTrigger value="ai-memory" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              AI Memory
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
@@ -437,6 +442,22 @@ const Admin = () => {
           <TabsContent value="catalogs"><CatalogManager /></TabsContent>
           <TabsContent value="scraper-status"><ScraperStatusDashboard /></TabsContent>
           <TabsContent value="seo-optimizer"><SEOOptimizerManager /></TabsContent>
+          <TabsContent value="ai-memory">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <VisitorMemoryWidget />
+              <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm space-y-2">
+                <h3 className="font-semibold flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Cum funcționează</h3>
+                <p className="text-muted-foreground text-xs">Sistemul AI Memory urmărește anonim sesiunile vizitatorilor (proprietăți vizionate, căutări, interacțiuni cu chatbot-ul) și deduce automat preferințe: buget, cartiere, tip listare, intenție.</p>
+                <p className="text-muted-foreground text-xs">Scor 0-100 indică probabilitatea de conversie. Vizitatorii cu scor &gt; 70 pot fi targetați cu campanii personalizate.</p>
+                <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                  <li><strong>+5</strong> per proprietate vizionată</li>
+                  <li><strong>+3</strong> per căutare semantică</li>
+                  <li><strong>+20</strong> dacă a declarat buget</li>
+                  <li><strong>+25</strong> dacă este autentificat</li>
+                </ul>
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>

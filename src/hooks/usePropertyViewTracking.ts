@@ -35,6 +35,19 @@ export const usePropertyViewTracking = (propertyId: string | undefined) => {
           page_path: window.location.pathname,
         });
 
+        // Also feed into AI Memory (cross-function visitor tracker)
+        const memorySessionId = window.localStorage.getItem("rt_visitor_session_id");
+        if (memorySessionId) {
+          supabase.functions.invoke("visitor-memory", {
+            body: {
+              action: "track",
+              sessionId: memorySessionId,
+              userId: user?.id || null,
+              event: { type: "view", data: { propertyId } },
+            },
+          }).catch(() => {});
+        }
+
         hasTracked.current = true;
       } catch (error) {
         console.error("Property view tracking error:", error);
