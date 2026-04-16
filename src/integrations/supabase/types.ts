@@ -1994,6 +1994,7 @@ export type Database = {
           capital_necesar: number | null
           check_in_time: string | null
           check_out_time: string | null
+          comfort_level: string | null
           compartimentare: string | null
           construction_type: string | null
           contact_email: string | null
@@ -2002,6 +2003,7 @@ export type Database = {
           created_at: string
           description_en: string
           description_ro: string
+          destination: string | null
           display_order: number
           energy_class: string | null
           estimated_revenue: string | null
@@ -2015,6 +2017,7 @@ export type Database = {
           has_elevator: boolean | null
           has_storage: boolean | null
           heating_type: string | null
+          height_regime: string | null
           house_rules: string[] | null
           house_rules_en: string[] | null
           id: string
@@ -2022,6 +2025,7 @@ export type Database = {
           images: string[] | null
           intercom_type: string | null
           is_active: boolean
+          kitchens: number | null
           land_area: number | null
           latitude: number | null
           listing_type: string | null
@@ -2036,8 +2040,10 @@ export type Database = {
           price_per_sqm: number | null
           property_code: string | null
           property_condition: string | null
+          property_subtype: string | null
           renovation_year: number | null
           roi_percentage: string | null
+          rooms: number | null
           size: number | null
           slug: string | null
           source_platform: string | null
@@ -2069,6 +2075,7 @@ export type Database = {
           capital_necesar?: number | null
           check_in_time?: string | null
           check_out_time?: string | null
+          comfort_level?: string | null
           compartimentare?: string | null
           construction_type?: string | null
           contact_email?: string | null
@@ -2077,6 +2084,7 @@ export type Database = {
           created_at?: string
           description_en: string
           description_ro: string
+          destination?: string | null
           display_order?: number
           energy_class?: string | null
           estimated_revenue?: string | null
@@ -2090,6 +2098,7 @@ export type Database = {
           has_elevator?: boolean | null
           has_storage?: boolean | null
           heating_type?: string | null
+          height_regime?: string | null
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
@@ -2097,6 +2106,7 @@ export type Database = {
           images?: string[] | null
           intercom_type?: string | null
           is_active?: boolean
+          kitchens?: number | null
           land_area?: number | null
           latitude?: number | null
           listing_type?: string | null
@@ -2111,8 +2121,10 @@ export type Database = {
           price_per_sqm?: number | null
           property_code?: string | null
           property_condition?: string | null
+          property_subtype?: string | null
           renovation_year?: number | null
           roi_percentage?: string | null
+          rooms?: number | null
           size?: number | null
           slug?: string | null
           source_platform?: string | null
@@ -2144,6 +2156,7 @@ export type Database = {
           capital_necesar?: number | null
           check_in_time?: string | null
           check_out_time?: string | null
+          comfort_level?: string | null
           compartimentare?: string | null
           construction_type?: string | null
           contact_email?: string | null
@@ -2152,6 +2165,7 @@ export type Database = {
           created_at?: string
           description_en?: string
           description_ro?: string
+          destination?: string | null
           display_order?: number
           energy_class?: string | null
           estimated_revenue?: string | null
@@ -2165,6 +2179,7 @@ export type Database = {
           has_elevator?: boolean | null
           has_storage?: boolean | null
           heating_type?: string | null
+          height_regime?: string | null
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
@@ -2172,6 +2187,7 @@ export type Database = {
           images?: string[] | null
           intercom_type?: string | null
           is_active?: boolean
+          kitchens?: number | null
           land_area?: number | null
           latitude?: number | null
           listing_type?: string | null
@@ -2186,8 +2202,10 @@ export type Database = {
           price_per_sqm?: number | null
           property_code?: string | null
           property_condition?: string | null
+          property_subtype?: string | null
           renovation_year?: number | null
           roi_percentage?: string | null
+          rooms?: number | null
           size?: number | null
           slug?: string | null
           source_platform?: string | null
