@@ -400,7 +400,10 @@ const PropertyDetail = () => {
     );
   }
 
-  if (!property) return null;
+  // Property not found after loading → render 404 page (avoids "Redirect Error" / soft 404 in GSC)
+  if (!property) {
+    return <NotFound />;
+  }
 
   const isInvestmentListing = normalizedListingType === "investitie" || normalizedListingType === "vanzare";
   const displayRoi = dbProperty?.roi_percentage
