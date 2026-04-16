@@ -52,6 +52,7 @@ import CatalogManager from "@/components/admin/CatalogManager";
 import GuestGuideManager from "@/components/admin/GuestGuideManager";
 import AICacheManager from "@/components/admin/AICacheManager";
 import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
+import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -391,6 +392,10 @@ const Admin = () => {
               <BarChart3 className="w-4 h-4" />
               Vizualizări
             </TabsTrigger>
+            <TabsTrigger value="seo-optimizer" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              SEO AI
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
@@ -431,6 +436,7 @@ const Admin = () => {
           <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
           <TabsContent value="catalogs"><CatalogManager /></TabsContent>
           <TabsContent value="scraper-status"><ScraperStatusDashboard /></TabsContent>
+          <TabsContent value="seo-optimizer"><SEOOptimizerManager /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
