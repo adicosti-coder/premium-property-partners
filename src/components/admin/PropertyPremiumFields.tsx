@@ -104,6 +104,40 @@ export default function PropertyPremiumFields({ data, onChange }: Props) {
         </div>
       </div>
 
+      {/* Caracteristici Generale */}
+      <div className="p-4 bg-muted/50 rounded-xl border border-border space-y-4">
+        <div className="flex items-center gap-2">
+          <Layers className="w-5 h-5 text-primary" />
+          <h4 className="font-semibold text-foreground">Caracteristici Generale</h4>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Nr. Camere</Label>
+            <Input type="number" value={data.rooms ?? ""} onChange={(e) => onChange("rooms", e.target.value ? parseInt(e.target.value) : null)} placeholder="3" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Nr. Bucătării</Label>
+            <Input type="number" value={data.kitchens ?? ""} onChange={(e) => onChange("kitchens", e.target.value ? parseInt(e.target.value) : null)} placeholder="1" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Confort</Label>
+            <Input value={data.comfort_level || ""} onChange={(e) => onChange("comfort_level", e.target.value || null)} placeholder="Lux, 1, 2, 3" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Compartimentare</Label>
+            <Input value={data.compartimentare || ""} onChange={(e) => onChange("compartimentare", e.target.value || null)} placeholder="Decomandat, Semidecomandat..." />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Tip Imobil</Label>
+            <Input value={data.property_subtype || ""} onChange={(e) => onChange("property_subtype", e.target.value || null)} placeholder="Bloc, Casă, Vilă..." />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Destinație</Label>
+            <Input value={data.destination || ""} onChange={(e) => onChange("destination", e.target.value || null)} placeholder="Rezidențial, Birouri..." />
+          </div>
+        </div>
+      </div>
+
       {/* Suprafețe */}
       <div className="p-4 bg-muted/50 rounded-xl border border-border space-y-4">
         <div className="flex items-center gap-2">
@@ -122,10 +156,6 @@ export default function PropertyPremiumFields({ data, onChange }: Props) {
           <div className="space-y-1">
             <Label className="text-xs">Teren (m²)</Label>
             <Input type="number" value={data.land_area ?? ""} onChange={(e) => onChange("land_area", e.target.value ? parseFloat(e.target.value) : null)} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Compartimentare</Label>
-            <Input value={data.compartimentare || ""} onChange={(e) => onChange("compartimentare", e.target.value || null)} placeholder="Decomandat, Semidecomandat..." />
           </div>
         </div>
       </div>
@@ -170,6 +200,10 @@ export default function PropertyPremiumFields({ data, onChange }: Props) {
           <div className="space-y-1">
             <Label className="text-xs">Total Etaje Clădire</Label>
             <Input type="number" value={data.total_building_floors ?? ""} onChange={(e) => onChange("total_building_floors", e.target.value ? parseInt(e.target.value) : null)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Regim Înălțime</Label>
+            <Input value={data.height_regime || ""} onChange={(e) => onChange("height_regime", e.target.value || null)} placeholder="P+2E, P+5E, D+P+M..." />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Nr. Apartamente Bloc</Label>
