@@ -800,7 +800,27 @@ const ScraperLeads = () => {
     toast.success(`Categorie: ${label}${lead.phone ? " (salvată și pentru viitoarele importuri)" : ""}`);
   };
 
-  // ── Scan (Scanează acum) ──────────────────────────
+  // ── Keyboard shortcuts ──────────────────────────
+  useScraperKeyboardShortcuts({
+    enabled: !!selectedLead,
+    onNext: () => {
+      if (!selectedLead || !filteredLeads.length) return;
+      const idx = filteredLeads.findIndex((l) => l.id === selectedLead.id);
+      const next = filteredLeads[Math.min(idx + 1, filteredLeads.length - 1)];
+      if (next) { setSelectedLead(next as any); setGeneratedMessage(""); }
+    },
+    onPrev: () => {
+      if (!selectedLead || !filteredLeads.length) return;
+      const idx = filteredLeads.findIndex((l) => l.id === selectedLead.id);
+      const prev = filteredLeads[Math.max(idx - 1, 0)];
+      if (prev) { setSelectedLead(prev as any); setGeneratedMessage(""); }
+    },
+    onWhatsApp: () => selectedLead && handleWhatsApp(selectedLead),
+    onArchive: () => selectedLead && handleArchive(selectedLead.id),
+    onEscape: () => setSelectedLead(null),
+    onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
+  });
+
   const handleScrape = async () => {
     setIsScraping(true);
     setRecentScanPulse(true);
