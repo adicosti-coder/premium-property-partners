@@ -36,17 +36,19 @@ export const usePropertyViewTracking = (propertyId: string | undefined) => {
         });
 
         // Also feed into AI Memory (cross-function visitor tracker)
-        const memorySessionId = window.localStorage.getItem("rt_visitor_session_id");
-        if (memorySessionId) {
-          supabase.functions.invoke("visitor-memory", {
-            body: {
-              action: "track",
-              sessionId: memorySessionId,
-              userId: user?.id || null,
-              event: { type: "view", data: { propertyId } },
-            },
-          }).catch(() => {});
+        let memorySessionId = window.localStorage.getItem("rt_visitor_session_id");
+        if (!memorySessionId) {
+          memorySessionId = (crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+          window.localStorage.setItem("rt_visitor_session_id", memorySessionId);
         }
+        supabase.functions.invoke("visitor-memory", {
+          body: {
+            action: "track",
+            sessionId: memorySessionId,
+            userId: user?.id || null,
+            event: { type: "view", data: { propertyId } },
+          },
+        }).catch(() => {});
 
         hasTracked.current = true;
       } catch (error) {
