@@ -1345,6 +1345,10 @@ const ScraperLeads = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              <DailyBriefingButton />
+              <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setShortcutsOpen(true)} title="Shortcuts (?)">
+                <Keyboard className="w-4 h-4" /> Shortcuts
+              </Button>
               {/* CSV Export */}
               <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1.5" disabled={!filteredLeads.length}>
                 <Download className="w-4 h-4" /> CSV
