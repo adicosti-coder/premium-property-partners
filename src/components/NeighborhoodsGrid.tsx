@@ -39,6 +39,7 @@ export function NeighborhoodsGrid() {
             );
             const mosaicImages = neighborhoodProperties
               .flatMap((p) => p.images || [])
+              .map((img) => resolvePropertyThumbnailUrl(img, 200, 200, 50))
               .filter(Boolean)
               .slice(0, 4);
 
