@@ -135,6 +135,76 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      {/* AUTO-DIAL SETTINGS */}
+      <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-amber-600" />
+            Auto-Dial Inteligent
+            {autoSettings?.auto_dial_enabled && <Badge className="bg-green-100 text-green-800 animate-pulse">ACTIV</Badge>}
+          </CardTitle>
+          <CardDescription>
+            Sună automat lead-urile cu scor ≥ {autoSettings?.min_lead_score ?? 90} în intervalul orar permis. Cron rulează la 15 min, max 1 apel/rulare.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
+            <div>
+              <div className="font-medium text-sm">Activează auto-dial pentru lead-urile cu scor maxim</div>
+              <div className="text-xs text-muted-foreground">Când e activ, nu mai trebuie să apeși manual butonul.</div>
+            </div>
+            <Switch
+              checked={!!autoSettings?.auto_dial_enabled}
+              onCheckedChange={(v) => saveSettings({ auto_dial_enabled: v })}
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Scor minim lead</label>
+              <Input
+                type="number" min={50} max={100}
+                value={autoSettings?.min_lead_score ?? 90}
+                onChange={(e) => setAutoSettings({ ...autoSettings, min_lead_score: parseInt(e.target.value) || 90 })}
+                onBlur={(e) => saveSettings({ min_lead_score: parseInt(e.target.value) || 90 })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Ora start (RO)</label>
+              <Input
+                type="number" min={0} max={23}
+                value={autoSettings?.allowed_hours_start ?? 10}
+                onChange={(e) => setAutoSettings({ ...autoSettings, allowed_hours_start: parseInt(e.target.value) || 10 })}
+                onBlur={(e) => saveSettings({ allowed_hours_start: parseInt(e.target.value) || 10 })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Ora stop (RO)</label>
+              <Input
+                type="number" min={0} max={23}
+                value={autoSettings?.allowed_hours_end ?? 18}
+                onChange={(e) => setAutoSettings({ ...autoSettings, allowed_hours_end: parseInt(e.target.value) || 18 })}
+                onBlur={(e) => saveSettings({ allowed_hours_end: parseInt(e.target.value) || 18 })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Max apeluri / zi</label>
+              <Input
+                type="number" min={1} max={500}
+                value={autoSettings?.max_calls_per_day ?? 20}
+                onChange={(e) => setAutoSettings({ ...autoSettings, max_calls_per_day: parseInt(e.target.value) || 20 })}
+                onBlur={(e) => saveSettings({ max_calls_per_day: parseInt(e.target.value) || 20 })}
+              />
+            </div>
+          </div>
+
+          <Button onClick={triggerAutoDialNow} disabled={testingAuto} variant="outline" className="w-full">
+            {testingAuto ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+            Rulează Auto-Dial Acum (test)
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
