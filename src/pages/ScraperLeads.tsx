@@ -261,10 +261,10 @@ const ScraperLeads = () => {
   const [isScraping, setIsScraping] = useState(false);
   const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
-  const [smartFilter, setSmartFilter] = useState<string>("all");
+  const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<"score" | "date">("score");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<"score" | "date">(() => (localStorage.getItem("scraper:sortBy") as any) || "score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => (localStorage.getItem("scraper:sortDir") as any) || "desc");
   const [keywordsOpen, setKeywordsOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newPlatform, setNewPlatform] = useState("General");
@@ -275,6 +275,16 @@ const ScraperLeads = () => {
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [showArchived, setShowArchived] = useState(false);
+  const [hideSnoozed, setHideSnoozed] = useState(true);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Debounced search to reduce filter recalcs
+  const debouncedSearch = useDebounce(searchQuery, 250);
+
+  // Persist preferences
+  useEffect(() => { localStorage.setItem("scraper:smartFilter", smartFilter); }, [smartFilter]);
+  useEffect(() => { localStorage.setItem("scraper:sortBy", sortBy); }, [sortBy]);
+  useEffect(() => { localStorage.setItem("scraper:sortDir", sortDir); }, [sortDir]);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
