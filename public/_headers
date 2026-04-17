@@ -4,3 +4,30 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(self "https://elevenlabs.io"), geolocation=()
+
+# Hashed build assets — immutable, cache for 1 year
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Self-hosted fonts — immutable, cache for 1 year
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Optimized hero & static images — long cache
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/favicon.ico
+  Cache-Control: public, max-age=604800
+
+/manifest.json
+  Cache-Control: public, max-age=86400
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/pwa-sw.js
+  Cache-Control: public, max-age=0, must-revalidate
