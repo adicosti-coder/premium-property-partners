@@ -543,7 +543,96 @@ const SEOOptimizerManager = () => {
               </div>
             )}
 
-            <Accordion type="multiple" defaultValue={["issues", "keywords"]}>
+            <Accordion type="multiple" defaultValue={["local-seo", "issues", "keywords"]}>
+              {(selectedAudit.local_relevance_score != null ||
+                (selectedAudit.local_geo_keywords && selectedAudit.local_geo_keywords.length > 0) ||
+                (selectedAudit.local_recommendations && selectedAudit.local_recommendations.length > 0)) && (
+                <AccordionItem value="local-seo">
+                  <AccordionTrigger>
+                    <span className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-amber-600" />
+                      Local SEO Audit — Timișoara
+                      {selectedAudit.local_relevance_score != null && (
+                        <Badge variant={selectedAudit.local_relevance_score >= 70 ? "default" : selectedAudit.local_relevance_score >= 50 ? "secondary" : "destructive"}>
+                          {selectedAudit.local_relevance_score}/100
+                        </Badge>
+                      )}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      {selectedAudit.local_entities_found && selectedAudit.local_entities_found.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-green-700 dark:text-green-400">
+                            ✓ Entități locale găsite ({selectedAudit.local_entities_found.length})
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedAudit.local_entities_found.map((e: any, i: number) => (
+                              <Badge key={i} variant="outline" className="border-green-300 text-green-700 dark:border-green-800 dark:text-green-400 text-xs">
+                                {e.name} <span className="opacity-60 ml-1">· {e.category}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAudit.local_entities_missing && selectedAudit.local_entities_missing.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-red-700 dark:text-red-400">
+                            ✗ Entități importante lipsă ({selectedAudit.local_entities_missing.length}) — penalizează scorul
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedAudit.local_entities_missing.slice(0, 15).map((e: any, i: number) => (
+                              <Badge key={i} variant="outline" className="border-red-300 text-red-700 dark:border-red-800 dark:text-red-400 text-xs">
+                                {e.name} <span className="opacity-60 ml-1">· {e.category}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAudit.local_geo_keywords && selectedAudit.local_geo_keywords.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-primary">
+                            🔍 Keywords geografice sugerate de AI pentru Local Pack ({selectedAudit.local_geo_keywords.length})
+                          </div>
+                          <div className="space-y-2">
+                            {selectedAudit.local_geo_keywords.map((k: any, i: number) => (
+                              <div key={i} className="rounded border p-3 text-sm bg-amber-50/50 dark:bg-amber-950/10">
+                                <div className="flex items-center justify-between gap-2">
+                                  <code className="font-semibold">{k.keyword}</code>
+                                  <div className="flex items-center gap-1">
+                                    <Badge variant={k.priority === "high" ? "default" : "outline"} className="text-[10px]">{k.priority || "medium"}</Badge>
+                                    <Button size="sm" variant="ghost" onClick={() => copyText(k.keyword, "Keyword")}>
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {k.reason && <div className="text-muted-foreground text-xs mt-1">💡 {k.reason}</div>}
+                                {k.suggested_placement && <div className="text-xs mt-1">📍 {k.suggested_placement}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAudit.local_recommendations && selectedAudit.local_recommendations.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-primary">
+                            📋 Recomandări concrete Local SEO
+                          </div>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            {selectedAudit.local_recommendations.map((r: any, i: number) => (
+                              <li key={i}>{typeof r === "string" ? r : JSON.stringify(r)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
               {selectedAudit.issues?.length > 0 && (
                 <AccordionItem value="issues">
                   <AccordionTrigger>
