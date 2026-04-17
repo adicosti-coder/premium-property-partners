@@ -408,12 +408,6 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
-      <!--
-        NOTE: We intentionally use <h2> here (not <h1>) so the visible Hero <h1>
-        rendered by React (src/components/Hero.tsx) remains the single, canonical
-        H1 of each page. This avoids the "two H1 tags" SEO warning while still
-        giving crawlers a strong, prerendered topic header without JavaScript.
-      -->
       <h2>${escapeHtml(route.h1)}</h2>
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
