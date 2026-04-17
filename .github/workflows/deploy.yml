@@ -1,20 +1,31 @@
-name: Deploy to FTP
+name: Build Check (FTP Deploy Disabled)
+
+# NOTE: Deploy via FTP towards DreamHost was disabled after the migration
+# to Lovable hosting (April 2026). The live site realtrust.ro is now served
+# directly by Lovable through the custom domain integration — no FTP push needed.
+#
+# This workflow now only verifies that the project builds successfully on every
+# push to `main`, so we keep CI signal without trying (and failing) to upload
+# to a server that no longer hosts the site.
+#
+# To re-enable FTP deploys, restore the previous "Deploy to FTP" step and
+# update the FTP_SERVER / FTP_USERNAME / FTP_PASSWORD secrets.
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
 
 concurrency:
-  group: deploy-ftp
+  group: build-check
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
+    timeout-minutes: 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,13 +47,3 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
           VITE_MAPBOX_PUBLIC_TOKEN: ${{ secrets.VITE_MAPBOX_PUBLIC_TOKEN }}
-
-      - name: Deploy to FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          server-dir: ./realtrust.ro/
-          dangerous-clean-slate: false
