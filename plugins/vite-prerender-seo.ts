@@ -403,6 +403,7 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}">${escapeHtml(route.title)}</a>
+      ${route.seoBody ?? ''}
     </div>`;
 
   html = html.replace(
