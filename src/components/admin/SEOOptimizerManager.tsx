@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,8 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb, Copy, ExternalLink, Sparkles } from "lucide-react";
+import {
+  Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb,
+  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus,
+} from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
 
 const QUICK_URLS = [
   "https://www.realtrust.ro/",
@@ -44,6 +48,11 @@ const SEOOptimizerManager = () => {
   const [url, setUrl] = useState("https://www.realtrust.ro/");
   const [language, setLanguage] = useState<"ro" | "en">("ro");
   const [selectedAudit, setSelectedAudit] = useState<AuditRow | null>(null);
+  const [filter, setFilter] = useState("");
+  const [filterLang, setFilterLang] = useState<"all" | "ro" | "en">("all");
+  const [minScore, setMinScore] = useState<number>(0);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
 
   const { data: history = [] } = useQuery({
     queryKey: ["seo-audits-history"],
@@ -54,6 +63,23 @@ const SEOOptimizerManager = () => {
       return (data || []) as AuditRow[];
     },
   });
+
+  // Find previous audit for the same URL (for comparison)
+  const previousAudit = useMemo(() => {
+    if (!selectedAudit) return null;
+    return history.find(
+      (a) => a.url === selectedAudit.url && a.id !== selectedAudit.id && new Date(a.created_at) < new Date(selectedAudit.created_at)
+    ) || null;
+  }, [selectedAudit, history]);
+
+  const filteredHistory = useMemo(() => {
+    return history.filter((a) => {
+      if (filterLang !== "all" && a.language !== filterLang) return false;
+      if ((a.overall_score ?? 0) < minScore) return false;
+      if (filter && !a.url.toLowerCase().includes(filter.toLowerCase())) return false;
+      return true;
+    });
+  }, [history, filter, filterLang, minScore]);
 
   const auditMutation = useMutation({
     mutationFn: async ({ targetUrl, force }: { targetUrl: string; force: boolean }) => {
@@ -72,6 +98,155 @@ const SEOOptimizerManager = () => {
     onError: (e: any) => toast.error(e.message || "Eroare audit"),
   });
 
+  const runBulkAudit = async () => {
+    setBulkRunning(true);
+    setBulkProgress({ done: 0, total: QUICK_URLS.length });
+    let success = 0;
+    for (let i = 0; i < QUICK_URLS.length; i++) {
+      try {
+        await supabase.functions.invoke("seo-ai-optimizer", {
+          body: { url: QUICK_URLS[i], language, forceRefresh: false },
+        });
+        success++;
+      } catch (e) {
+        console.error("Bulk audit fail for", QUICK_URLS[i], e);
+      }
+      setBulkProgress({ done: i + 1, total: QUICK_URLS.length });
+    }
+    qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
+    setBulkRunning(false);
+    toast.success(`Bulk audit: ${success}/${QUICK_URLS.length} URL-uri analizate`);
+  };
+
+  const buildSummaryText = (a: AuditRow): string => {
+    const lines: string[] = [];
+    lines.push(`SEO Audit — ${a.url}`);
+    lines.push(`Data: ${new Date(a.created_at).toLocaleString("ro-RO")} | Limbă: ${a.language.toUpperCase()}`);
+    lines.push(`Scor general: ${a.overall_score ?? "—"}/100`);
+    lines.push(`Cuvinte: ${a.word_count ?? "—"} | H1: ${a.h1_count ?? "—"} | Risc duplicat: ${a.raw_analysis?.duplicate_content_risk || "—"}`);
+    lines.push("");
+    if (a.suggested_title) {
+      lines.push(`TITLU SUGERAT (${a.suggested_title.length} char):`);
+      lines.push(a.suggested_title);
+      if (a.title) lines.push(`Actual: ${a.title}`);
+      lines.push("");
+    }
+    if (a.suggested_meta) {
+      lines.push(`META DESCRIPTION SUGERATĂ (${a.suggested_meta.length} char):`);
+      lines.push(a.suggested_meta);
+      if (a.meta_description) lines.push(`Actual: ${a.meta_description}`);
+      lines.push("");
+    }
+    if (a.issues?.length) {
+      lines.push(`PROBLEME (${a.issues.length}):`);
+      a.issues.forEach((i: any) => lines.push(`• [${i.severity}] ${i.issue} → ${i.fix}`));
+      lines.push("");
+    }
+    if (a.keyword_gaps?.length) {
+      lines.push(`KEYWORD-URI LIPSĂ (${a.keyword_gaps.length}):`);
+      a.keyword_gaps.forEach((k: any) => lines.push(`• [${k.priority}] ${k.keyword} — ${k.where_to_add}`));
+      lines.push("");
+    }
+    if (a.opportunities?.length) {
+      lines.push(`OPORTUNITĂȚI (${a.opportunities.length}):`);
+      a.opportunities.forEach((o: any) => lines.push(`• [${o.type}/${o.impact}] ${o.description}`));
+      lines.push("");
+    }
+    if (a.strengths?.length) {
+      lines.push(`PUNCTE FORTE (${a.strengths.length}):`);
+      a.strengths.forEach((s: any) => lines.push(`• ${typeof s === "string" ? s : (s.text || JSON.stringify(s))}`));
+    }
+    return lines.join("\n");
+  };
+
+  const copySummary = (a: AuditRow) => {
+    navigator.clipboard.writeText(buildSummaryText(a));
+    toast.success("Rezumat copiat în clipboard");
+  };
+
+  const exportPDF = (a: AuditRow) => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 40;
+    let y = margin;
+
+    const ensureSpace = (needed: number) => {
+      if (y + needed > pageH - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    const writeWrapped = (text: string, fontSize: number, opts?: { bold?: boolean; color?: [number, number, number] }) => {
+      doc.setFontSize(fontSize);
+      doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
+      if (opts?.color) doc.setTextColor(...opts.color);
+      else doc.setTextColor(20, 20, 20);
+      const lines = doc.splitTextToSize(text, pageW - margin * 2);
+      lines.forEach((line: string) => {
+        ensureSpace(fontSize + 4);
+        doc.text(line, margin, y);
+        y += fontSize + 4;
+      });
+    };
+
+    // Header
+    writeWrapped("SEO Audit Report — RealTrust", 18, { bold: true, color: [10, 60, 120] });
+    writeWrapped(a.url, 11, { color: [80, 80, 80] });
+    writeWrapped(`${new Date(a.created_at).toLocaleString("ro-RO")} · ${a.language.toUpperCase()}`, 10, { color: [120, 120, 120] });
+    y += 10;
+
+    // Score
+    writeWrapped(`Scor general: ${a.overall_score ?? "—"}/100`, 16, { bold: true });
+    writeWrapped(`Cuvinte: ${a.word_count ?? "—"}  |  H1: ${a.h1_count ?? "—"}  |  Risc duplicat: ${a.raw_analysis?.duplicate_content_risk || "—"}`, 10);
+    y += 10;
+
+    if (a.suggested_title) {
+      writeWrapped(`Titlu sugerat (${a.suggested_title.length} char)`, 12, { bold: true });
+      writeWrapped(a.suggested_title, 11);
+      if (a.title) writeWrapped(`Actual: ${a.title}`, 9, { color: [120, 120, 120] });
+      y += 6;
+    }
+    if (a.suggested_meta) {
+      writeWrapped(`Meta description sugerată (${a.suggested_meta.length} char)`, 12, { bold: true });
+      writeWrapped(a.suggested_meta, 11);
+      if (a.meta_description) writeWrapped(`Actual: ${a.meta_description}`, 9, { color: [120, 120, 120] });
+      y += 6;
+    }
+
+    const sectionList = (title: string, items: any[], render: (it: any) => string) => {
+      if (!items?.length) return;
+      y += 6;
+      writeWrapped(`${title} (${items.length})`, 13, { bold: true, color: [10, 60, 120] });
+      items.forEach((it) => writeWrapped("• " + render(it), 10));
+    };
+
+    sectionList("Probleme", a.issues || [], (i) => `[${i.severity}] ${i.issue} → ${i.fix}`);
+    sectionList("Keyword-uri lipsă", a.keyword_gaps || [], (k) => `[${k.priority}] ${k.keyword} — ${k.where_to_add}`);
+    sectionList("Oportunități", a.opportunities || [], (o) => `[${o.type}/${o.impact}] ${o.description}`);
+    sectionList("Puncte forte", a.strengths || [], (s) => typeof s === "string" ? s : (s.text || JSON.stringify(s)));
+
+    if (a.raw_analysis?.recommended_internal_links?.length) {
+      y += 6;
+      writeWrapped(`Link-uri interne recomandate`, 13, { bold: true, color: [10, 60, 120] });
+      a.raw_analysis.recommended_internal_links.forEach((l: string) => writeWrapped("→ " + l, 9, { color: [10, 60, 120] }));
+    }
+
+    // Footer page numbers
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Pagina ${i} / ${pageCount} · Generat de RealTrust SEO AI Optimizer`, margin, pageH - 20);
+    }
+
+    const safeName = a.url.replace(/https?:\/\//, "").replace(/[^a-z0-9]+/gi, "-").slice(0, 50);
+    doc.save(`seo-audit-${safeName}-${new Date(a.created_at).toISOString().slice(0, 10)}.pdf`);
+    toast.success("PDF descărcat");
+  };
+
   const copyText = (txt: string, label: string) => {
     navigator.clipboard.writeText(txt);
     toast.success(`${label} copiat`);
@@ -89,6 +264,10 @@ const SEOOptimizerManager = () => {
     if (sev === "warning") return "secondary";
     return "outline";
   };
+
+  const scoreDelta = previousAudit && selectedAudit
+    ? (selectedAudit.overall_score ?? 0) - (previousAudit.overall_score ?? 0)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -135,13 +314,35 @@ const SEOOptimizerManager = () => {
             </Button>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             {QUICK_URLS.map((u) => (
               <Button key={u} variant="outline" size="sm" onClick={() => setUrl(u)}>
                 {u.replace("https://www.realtrust.ro", "") || "/"}
               </Button>
             ))}
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={runBulkAudit}
+              disabled={bulkRunning}
+              className="ml-auto"
+            >
+              {bulkRunning ? (
+                <>
+                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                  Bulk {bulkProgress.done}/{bulkProgress.total}
+                </>
+              ) : (
+                <>
+                  <Layers className="w-3 h-3 mr-2" />
+                  Analizează toate ({QUICK_URLS.length})
+                </>
+              )}
+            </Button>
           </div>
+          {bulkRunning && (
+            <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} />
+          )}
         </CardContent>
       </Card>
 
@@ -149,10 +350,10 @@ const SEOOptimizerManager = () => {
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <CardTitle className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="flex items-center gap-2 flex-wrap">
                   Rezultat audit
-                  <a href={selectedAudit.url} target="_blank" rel="noreferrer" className="text-primary hover:underline text-sm flex items-center gap-1">
+                  <a href={selectedAudit.url} target="_blank" rel="noreferrer" className="text-primary hover:underline text-sm flex items-center gap-1 break-all">
                     <ExternalLink className="w-3 h-3" />
                     {selectedAudit.url}
                   </a>
@@ -160,6 +361,16 @@ const SEOOptimizerManager = () => {
                 <CardDescription className="mt-1">
                   {new Date(selectedAudit.created_at).toLocaleString("ro-RO")} · {selectedAudit.language.toUpperCase()}
                 </CardDescription>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Button size="sm" variant="outline" onClick={() => exportPDF(selectedAudit)}>
+                    <Download className="w-3 h-3 mr-2" />
+                    Descarcă PDF
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => copySummary(selectedAudit)}>
+                    <Copy className="w-3 h-3 mr-2" />
+                    Copiază rezumat
+                  </Button>
+                </div>
               </div>
               <div className="text-right">
                 <div className={`text-4xl font-bold ${scoreColor(selectedAudit.overall_score)}`}>
@@ -167,6 +378,16 @@ const SEOOptimizerManager = () => {
                   <span className="text-base text-muted-foreground">/100</span>
                 </div>
                 <Progress value={selectedAudit.overall_score ?? 0} className="w-32 mt-2" />
+                {scoreDelta !== null && previousAudit && (
+                  <div className="mt-2 text-xs flex items-center gap-1 justify-end">
+                    {scoreDelta > 0 && <TrendingUp className="w-3 h-3 text-green-600" />}
+                    {scoreDelta < 0 && <TrendingDown className="w-3 h-3 text-red-600" />}
+                    {scoreDelta === 0 && <Minus className="w-3 h-3 text-muted-foreground" />}
+                    <span className={scoreDelta > 0 ? "text-green-600" : scoreDelta < 0 ? "text-red-600" : "text-muted-foreground"}>
+                      {scoreDelta > 0 ? "+" : ""}{scoreDelta} vs {new Date(previousAudit.created_at).toLocaleDateString("ro-RO")}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -185,6 +406,20 @@ const SEOOptimizerManager = () => {
                 <div className="text-lg font-semibold capitalize">{selectedAudit.raw_analysis?.duplicate_content_risk || "—"}</div>
               </div>
             </div>
+
+            {previousAudit && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs space-y-1">
+                <div className="font-semibold text-primary flex items-center gap-1">
+                  <Layers className="w-3 h-3" />
+                  Comparație vs audit anterior ({new Date(previousAudit.created_at).toLocaleString("ro-RO")})
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <div>Scor: <span className="font-semibold">{previousAudit.overall_score ?? "—"}</span> → <span className="font-semibold">{selectedAudit.overall_score ?? "—"}</span></div>
+                  <div>Probleme: <span className="font-semibold">{previousAudit.issues?.length ?? 0}</span> → <span className="font-semibold">{selectedAudit.issues?.length ?? 0}</span></div>
+                  <div>Cuvinte: <span className="font-semibold">{previousAudit.word_count ?? "—"}</span> → <span className="font-semibold">{selectedAudit.word_count ?? "—"}</span></div>
+                </div>
+              </div>
+            )}
 
             {selectedAudit.suggested_title && (
               <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
@@ -330,32 +565,73 @@ const SEOOptimizerManager = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Istoric audituri ({history.length})</CardTitle>
+          <CardTitle>Istoric audituri ({filteredHistory.length}/{history.length})</CardTitle>
           <CardDescription>Ultimele 30 de audituri generate</CardDescription>
+          <div className="flex flex-wrap gap-2 pt-3">
+            <Input
+              placeholder="Caută URL..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="max-w-xs"
+            />
+            <select
+              value={filterLang}
+              onChange={(e) => setFilterLang(e.target.value as any)}
+              className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="all">Toate limbile</option>
+              <option value="ro">RO</option>
+              <option value="en">EN</option>
+            </select>
+            <select
+              value={minScore}
+              onChange={(e) => setMinScore(Number(e.target.value))}
+              className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value={0}>Orice scor</option>
+              <option value={60}>Scor ≥ 60</option>
+              <option value={80}>Scor ≥ 80</option>
+              <option value={90}>Scor ≥ 90</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-96">
             <div className="space-y-2">
-              {history.map((a) => (
-                <button
+              {filteredHistory.map((a) => (
+                <div
                   key={a.id}
-                  onClick={() => setSelectedAudit(a)}
-                  className="w-full text-left rounded-lg border p-3 hover:bg-muted/50 transition-colors flex items-center justify-between gap-3"
+                  className="w-full rounded-lg border p-3 hover:bg-muted/50 transition-colors flex items-center justify-between gap-3"
                 >
-                  <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => setSelectedAudit(a)}
+                    className="flex-1 min-w-0 text-left"
+                  >
                     <div className="font-medium text-sm truncate">{a.url}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(a.created_at).toLocaleString("ro-RO")} · {a.language.toUpperCase()} · {a.word_count} cuvinte
                     </div>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => { e.stopPropagation(); exportPDF(a); }}
+                      title="Descarcă PDF"
+                    >
+                      <Download className="w-3 h-3" />
+                    </Button>
+                    <div className={`text-2xl font-bold ${scoreColor(a.overall_score)}`}>
+                      {a.overall_score ?? "—"}
+                    </div>
                   </div>
-                  <div className={`text-2xl font-bold ${scoreColor(a.overall_score)}`}>
-                    {a.overall_score ?? "—"}
-                  </div>
-                </button>
+                </div>
               ))}
-              {history.length === 0 && (
+              {filteredHistory.length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-8">
-                  Nu există audituri încă. Analizează prima pagină pentru a începe.
+                  {history.length === 0
+                    ? "Nu există audituri încă. Analizează prima pagină pentru a începe."
+                    : "Niciun audit nu corespunde filtrelor."}
                 </div>
               )}
             </div>
