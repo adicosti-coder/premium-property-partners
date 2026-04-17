@@ -44,8 +44,17 @@ const HOMEPAGE_SEO_BODY = `
   <h3>Investiții imobiliare în Centru Timișoara, ISHO și zonele premium</h3>
   <p>Pentru investitori, propunem oportunități verificate în Cetate / Centru, ISHO (cel mai iconic proiect de regenerare urbană din Timișoara, pe malul Begăi), Take Ionescu și Soarelui — zone cu randamente atractive (8–10% net pentru regim hotelier) și apreciere a capitalului peste media pieței. Calea Lipovei este o zonă în curs de modernizare cu potențial mare de apreciere, iar Zona Aradului oferă acces rapid la aeroport și la hub-urile de business Iulius Town și Openville.</p>
 
+  <h3>Apartamente de vânzare Timișoara — toate cartierele</h3>
+  <p>Oferim <strong>apartamente de vânzare Timișoara</strong> verificate în toate cartierele importante: garsoniere, apartamente cu 2 camere, 3 camere și 4 camere de vânzare în Centru, Iosefin, Elisabetin, Complex Studențesc, ISHO, Take Ionescu, Calea Aradului, Calea Lipovei și Circumvalațiunii. Consultanță completă pentru cumpărătorii de apartamente în Timișoara, evaluare gratuită, negociere și asistență la actele notariale.</p>
+
+  <h3>Închirieri apartamente Timișoara pe termen lung</h3>
+  <p>Pentru chiriași și proprietari oferim <strong>închirieri apartamente Timișoara pe termen lung</strong> (contracte 12 luni sau mai mult) — apartamente mobilate și utilate în Centru, Iosefin, Elisabetin, Complex Studențesc, Iulius Town, Calea Aradului și zona universitară (UVT, UPT, UMF). Verificare chiriași, contracte standardizate și gestionare profesională pe toată durata închirierii.</p>
+
+  <h3>Administrare proprietăți Timișoara — servicii complete pentru proprietari</h3>
+  <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu ROI 9.4% net verificat anual — partener de încredere pentru proprietari și investitori.</p>
+
   <h3>Servicii oferite</h3>
-  <p>Administrare apartamente regim hotelier Timișoara cu ROI 9.4% net verificat, investiții imobiliare Timișoara, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator ROI online și consultanță investiții imobiliare. Toate serviciile sunt gestionate profesional pentru proprietari, investitori și oaspeți.</p>
+  <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator ROI online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
 
   <h3>Proximitate landmark-uri Timișoara</h3>
   <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public.</p>
@@ -399,7 +408,7 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
-      <h1>${escapeHtml(route.h1)}</h1>
+      <h2>${escapeHtml(route.h1)}</h2>
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}">${escapeHtml(route.title)}</a>
