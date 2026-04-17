@@ -85,7 +85,42 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     mainSchema.priceRange = "€€";
   }
 
-  const allSchemas = [...homepageSchemas];
+  // Organization schema (separate from LocalBusiness — recommended by SEO audit)
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "RealTrust & ApArt Hotel",
+    "legalName": "RealTrust Imobiliare SRL",
+    "url": "https://www.realtrust.ro",
+    "logo": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+    "email": "info@realtrust.ro",
+    "telephone": "+40723154520",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "postalCode": "300125",
+      "addressCountry": "RO",
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "Timișoara",
+    },
+    "sameAs": [
+      "https://www.facebook.com/realtrust.ro",
+      "https://www.booking.com",
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+40723154520",
+      "contactType": "customer service",
+      "areaServed": "RO",
+      "availableLanguage": ["Romanian", "English"],
+    },
+  };
+
+  const allSchemas = [...homepageSchemas, organizationSchema];
 
   return (
     <SEOHead

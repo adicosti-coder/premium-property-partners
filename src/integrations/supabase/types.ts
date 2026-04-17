@@ -3253,6 +3253,62 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_audit_snapshots: {
+        Row: {
+          alert_reason: string | null
+          alert_triggered: boolean
+          audit_id: string | null
+          created_at: string
+          delta_local: number | null
+          delta_overall: number | null
+          id: string
+          language: string
+          local_relevance_score: number
+          overall_score: number
+          pdf_storage_path: string | null
+          run_type: string
+          url: string
+        }
+        Insert: {
+          alert_reason?: string | null
+          alert_triggered?: boolean
+          audit_id?: string | null
+          created_at?: string
+          delta_local?: number | null
+          delta_overall?: number | null
+          id?: string
+          language?: string
+          local_relevance_score?: number
+          overall_score?: number
+          pdf_storage_path?: string | null
+          run_type?: string
+          url: string
+        }
+        Update: {
+          alert_reason?: string | null
+          alert_triggered?: boolean
+          audit_id?: string | null
+          created_at?: string
+          delta_local?: number | null
+          delta_overall?: number | null
+          id?: string
+          language?: string
+          local_relevance_score?: number
+          overall_score?: number
+          pdf_storage_path?: string | null
+          run_type?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_audit_snapshots_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "seo_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_audits: {
         Row: {
           content_hash: string | null
