@@ -222,6 +222,10 @@ const SEOOptimizerManager = () => {
 
     // Score
     writeWrapped(`Scor general: ${a.overall_score ?? "—"}/100`, 16, { bold: true });
+    if (a.local_relevance_score != null) {
+      const localColor: [number, number, number] = a.local_relevance_score >= 70 ? [20, 120, 50] : a.local_relevance_score >= 50 ? [180, 120, 20] : [180, 40, 40];
+      writeWrapped(`Scor Local SEO Timișoara: ${a.local_relevance_score}/100`, 13, { bold: true, color: localColor });
+    }
     writeWrapped(`Cuvinte: ${a.word_count ?? "—"}  |  H1: ${a.h1_count ?? "—"}  |  Risc duplicat: ${a.raw_analysis?.duplicate_content_risk || "—"}`, 10);
     y += 10;
 
@@ -254,6 +258,59 @@ const SEOOptimizerManager = () => {
       y += 6;
       writeWrapped(`Link-uri interne recomandate`, 13, { bold: true, color: [10, 60, 120] });
       a.raw_analysis.recommended_internal_links.forEach((l: string) => writeWrapped("→ " + l, 9, { color: [10, 60, 120] }));
+    }
+
+    // === LOCAL SEO RECOMMENDATIONS SECTION ===
+    const hasLocalContent =
+      (a.local_geo_keywords && a.local_geo_keywords.length > 0) ||
+      (a.local_recommendations && a.local_recommendations.length > 0) ||
+      (a.local_entities_found && a.local_entities_found.length > 0) ||
+      (a.local_entities_missing && a.local_entities_missing.length > 0);
+
+    if (hasLocalContent) {
+      y += 14;
+      ensureSpace(40);
+      writeWrapped("📍 Local SEO Recommendations — Timișoara", 15, { bold: true, color: [180, 100, 20] });
+      writeWrapped("Optimizări dedicate pentru Google Local Pack și căutări geografice locale.", 9, { color: [120, 120, 120] });
+      y += 4;
+
+      if (a.local_relevance_score != null) {
+        writeWrapped(`Scor Local Relevance: ${a.local_relevance_score}/100`, 11, { bold: true });
+        y += 2;
+      }
+
+      if (a.local_entities_found && a.local_entities_found.length > 0) {
+        writeWrapped(`Entități locale GĂSITE în text (${a.local_entities_found.length})`, 11, { bold: true, color: [20, 120, 50] });
+        a.local_entities_found.forEach((e: any) =>
+          writeWrapped(`✓ ${e.name} (${e.category})`, 9, { color: [20, 120, 50] })
+        );
+        y += 4;
+      }
+
+      if (a.local_entities_missing && a.local_entities_missing.length > 0) {
+        writeWrapped(`Entități locale LIPSĂ — sugerate pentru menționare (${a.local_entities_missing.length})`, 11, { bold: true, color: [180, 60, 60] });
+        a.local_entities_missing.slice(0, 12).forEach((e: any) =>
+          writeWrapped(`✗ ${e.name} (${e.category})`, 9, { color: [180, 60, 60] })
+        );
+        y += 4;
+      }
+
+      if (a.local_geo_keywords && a.local_geo_keywords.length > 0) {
+        writeWrapped(`Keyword-uri geografice sugerate de AI pentru Local Pack (${a.local_geo_keywords.length})`, 11, { bold: true, color: [10, 60, 120] });
+        a.local_geo_keywords.forEach((k: any) => {
+          writeWrapped(`• [${k.priority || "medium"}] "${k.keyword}"`, 10, { bold: true });
+          if (k.reason) writeWrapped(`   De ce: ${k.reason}`, 9, { color: [80, 80, 80] });
+          if (k.suggested_placement) writeWrapped(`   Unde: ${k.suggested_placement}`, 9, { color: [80, 80, 80] });
+        });
+        y += 4;
+      }
+
+      if (a.local_recommendations && a.local_recommendations.length > 0) {
+        writeWrapped(`Recomandări concrete pentru Local SEO (${a.local_recommendations.length})`, 11, { bold: true, color: [10, 60, 120] });
+        a.local_recommendations.forEach((r: any) =>
+          writeWrapped("→ " + (typeof r === "string" ? r : JSON.stringify(r)), 10)
+        );
+      }
     }
 
     // Footer page numbers
