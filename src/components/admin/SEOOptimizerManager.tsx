@@ -128,6 +128,9 @@ const SEOOptimizerManager = () => {
     lines.push(`SEO Audit — ${a.url}`);
     lines.push(`Data: ${new Date(a.created_at).toLocaleString("ro-RO")} | Limbă: ${a.language.toUpperCase()}`);
     lines.push(`Scor general: ${a.overall_score ?? "—"}/100`);
+    if (a.local_relevance_score != null) {
+      lines.push(`Scor Local SEO Timișoara: ${a.local_relevance_score}/100`);
+    }
     lines.push(`Cuvinte: ${a.word_count ?? "—"} | H1: ${a.h1_count ?? "—"} | Risc duplicat: ${a.raw_analysis?.duplicate_content_risk || "—"}`);
     lines.push("");
     if (a.suggested_title) {
@@ -160,6 +163,21 @@ const SEOOptimizerManager = () => {
     if (a.strengths?.length) {
       lines.push(`PUNCTE FORTE (${a.strengths.length}):`);
       a.strengths.forEach((s: any) => lines.push(`• ${typeof s === "string" ? s : (s.text || JSON.stringify(s))}`));
+      lines.push("");
+    }
+    if (a.local_geo_keywords?.length) {
+      lines.push(`LOCAL SEO — KEYWORDS GEO LIPSĂ (${a.local_geo_keywords.length}):`);
+      a.local_geo_keywords.forEach((k: any) => lines.push(`• [${k.priority || "medium"}] ${k.keyword} — ${k.reason || ""} (${k.suggested_placement || ""})`));
+      lines.push("");
+    }
+    if (a.local_recommendations?.length) {
+      lines.push(`LOCAL SEO — RECOMANDĂRI (${a.local_recommendations.length}):`);
+      a.local_recommendations.forEach((r: any) => lines.push(`• ${typeof r === "string" ? r : JSON.stringify(r)}`));
+      lines.push("");
+    }
+    if (a.local_entities_missing?.length) {
+      const top = a.local_entities_missing.slice(0, 8).map((e: any) => e.name).join(", ");
+      lines.push(`LOCAL SEO — ENTITĂȚI LIPSĂ DE MENȚIONAT: ${top}`);
     }
     return lines.join("\n");
   };
