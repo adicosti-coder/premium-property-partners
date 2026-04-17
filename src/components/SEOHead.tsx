@@ -156,8 +156,8 @@ const SEOHead = ({
   const { language } = useLanguage();
   
   const defaultTitles = {
-    ro: "RealTrust & ApArt Hotel Timișoara | Imobiliare & Regim Hotelier",
-    en: "RealTrust & ApArt Hotel Timișoara | Real Estate & Short-Term Rentals"
+    ro: "RealTrust Timișoara: Imobiliare & Regim Hotelier Profitabil",
+    en: "RealTrust Timișoara: Real Estate & Profitable Short-Term Rentals"
   };
   
   const defaultDescriptions = {

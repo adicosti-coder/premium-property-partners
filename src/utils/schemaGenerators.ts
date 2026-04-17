@@ -1023,10 +1023,11 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
     lodgingBusiness,
     generateOrganizationSchema(),
     generateWebSiteSchema(),
+    generatePropertyManagementServiceSchema(),
   ];
 
   return schemas;
-};
+}
 
 // Blog Collection Page Schema for blog listing
 export interface BlogListingArticle {
