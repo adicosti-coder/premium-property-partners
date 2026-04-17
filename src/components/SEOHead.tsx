@@ -156,13 +156,13 @@ const SEOHead = ({
   const { language } = useLanguage();
   
   const defaultTitles = {
-    ro: "RealTrust Timișoara: Imobiliare & Regim Hotelier Profitabil",
-    en: "RealTrust Timișoara: Real Estate & Profitable Short-Term Rentals"
+    ro: "RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții",
+    en: "RealTrust Timișoara | Real Estate, Short-Term Rentals & Investments"
   };
   
   const defaultDescriptions = {
-    ro: "Apartamente regim hotelier Timișoara — Centru, Iosefin, Fabric, ISHO, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net verificat.",
-    en: "Short-term rental apartments Timișoara — Old Town, Iosefin, Fabric, ISHO, Student Complex, near UVT and Iulius Town. 9.4% net verified ROI."
+    ro: "Apartamente regim hotelier Timișoara — Centru, Iosefin, Elisabetin, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net. Calculează gratuit!",
+    en: "Short-term rental apartments Timișoara — Old Town, Iosefin, Elisabetin, Student Complex, near UVT and Iulius Town. 9.4% net ROI. Free calculator!"
   };
   
   const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;

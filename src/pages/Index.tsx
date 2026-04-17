@@ -5,6 +5,7 @@ import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
 import { ServicesH2Strip } from "@/components/ServicesH2Strip";
+import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
@@ -223,6 +224,9 @@ const Index = () => {
 
         {/* Neighborhoods Grid - Critical for SEO internal linking */}
         <NeighborhoodsGrid />
+
+        {/* Local SEO landmarks strip — UVT/UPT/UMF, Iulius Town, Shopping City, parks */}
+        <LocalLandmarksStrip />
 
         {/* Verified Reviews Badges - social proof */}
         <Suspense fallback={null}>

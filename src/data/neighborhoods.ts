@@ -196,6 +196,50 @@ export const neighborhoods: NeighborhoodData[] = [
       { id: 'stu-4', title: 'Apartament 2 camere renovat', price: 93500, pricePerSqm: 1700, rooms: 2, floor: 1, surface: 55, badge: 'vanzare', imageAlt: 'Apartament renovat Complex Studențesc' },
     ],
   },
+  {
+    slug: 'iosefin',
+    name: 'Iosefin',
+    fullName: 'Iosefin',
+    avgPricePerSqm: 1850,
+    listingsCount: 4,
+    description:
+      'Iosefin este unul dintre cele mai vechi și emblematice cartiere ale Timișoarei, situat la sud-vest de centrul istoric, pe malul Begăi. Cu o arhitectură habsburgică spectaculoasă, piață centrală tradițională și acces pietonal de 8 minute spre Piața Unirii, Iosefin atrage turiști culturali, profesioniști creativi și investitori care caută proprietăți cu identitate. Apartamentele regim hotelier din Iosefin generează ocupare ridicată datorită proximității Catedralei Romano-Catolice, a Sinagogii și a faimoasei Piețe Iosefin. Tramvaiul leagă zona direct de Universitatea de Vest (UVT) și de Iulius Town (10 minute). Investiția într-un apartament regim hotelier Iosefin Timișoara oferă atât atractivitate turistică, cât și apreciere de capital constantă.',
+    metaTitle: 'Apartamente Iosefin Timișoara | Regim Hotelier RealTrust',
+    metaDescription: 'Apartamente Iosefin Timișoara — regim hotelier în cartierul istoric. Aproape de Piața Unirii, UVT și Bega. Preț mediu 1.850 €/mp, randament 8-9%.',
+    faq: [
+      { question: 'De ce să investesc într-un apartament în Iosefin Timișoara?', answer: 'Iosefin combină arhitectură habsburgică, atracții turistice (Catedrala, Sinagoga, Piața Iosefin) și acces pietonal de 8 minute spre centru. Cererea pentru regim hotelier este constantă, generând randamente de 8-9% net.' },
+      { question: 'Cât de aproape este Iosefin de UVT și Iulius Town?', answer: 'Iosefin este la 10 minute cu tramvaiul de Universitatea de Vest (UVT) și de complexul Iulius Town, ceea ce îl face ideal atât pentru chiriași tineri, cât și pentru turiști.' },
+      { question: 'Ce tipuri de proprietăți sunt populare în Iosefin?', answer: 'Apartamentele cu 2-3 camere în clădiri istorice renovate și garsonierele moderne din proiecte noi sunt cele mai căutate. Prețul mediu este 1.850 €/mp.' },
+    ],
+    listings: [
+      { id: 'ios-1', title: 'Apartament 2 camere — clădire istorică', price: 96200, pricePerSqm: 1850, rooms: 2, floor: 1, surface: 52, badge: 'administrare', imageAlt: 'Apartament regim hotelier Iosefin Timișoara' },
+      { id: 'ios-2', title: 'Studio Iosefin — lângă Piața Unirii', price: 68500, pricePerSqm: 1900, rooms: 1, floor: 2, surface: 36, badge: 'administrare', imageAlt: 'Studio Iosefin lângă Piața Unirii' },
+      { id: 'ios-3', title: 'Apartament 3 camere renovat habsburgic', price: 162800, pricePerSqm: 1880, rooms: 3, floor: 2, surface: 87, badge: 'vanzare', imageAlt: 'Apartament 3 camere Iosefin Timișoara' },
+      { id: 'ios-4', title: 'Garsonieră investiție lângă Bega', price: 60800, pricePerSqm: 1840, rooms: 1, floor: 3, surface: 33, badge: 'administrare', imageAlt: 'Garsonieră investiție Iosefin Bega' },
+    ],
+  },
+  {
+    slug: 'elisabetin',
+    name: 'Elisabetin',
+    fullName: 'Elisabetin',
+    avgPricePerSqm: 1820,
+    listingsCount: 4,
+    description:
+      'Elisabetin este unul dintre cele mai elegante cartiere rezidențiale ale Timișoarei, recunoscut pentru vilele sale interbelice, străzile umbrite și atmosfera liniștită. Situat la sud de centrul istoric, Elisabetin oferă acces pietonal de 10 minute spre Piața Victoriei și conexiune directă cu tramvaiul către Universitatea de Vest (UVT) și Universitatea Politehnica (UPT). Zona include Parcul Rozelor, una dintre cele mai frumoase atracții ale orașului, și o densitate ridicată de cafenele specialty și restaurante de autor. Apartamentele de închiriat Elisabetin Timișoara sunt căutate atât de familii tinere, cât și de turiști care preferă o experiență premium, departe de zgomotul centrului. Investitorii apreciază stabilitatea prețurilor și ratele de ocupare ridicate în regim hotelier.',
+    metaTitle: 'Apartamente Elisabetin Timișoara | Cartier Premium RealTrust',
+    metaDescription: 'Apartamente Elisabetin Timișoara — cartier rezidențial premium lângă Parcul Rozelor și UVT. Preț 1.820 €/mp, regim hotelier cu randament verificat.',
+    faq: [
+      { question: 'Ce face Elisabetin un cartier premium?', answer: 'Elisabetin se distinge prin arhitectura interbelică, vile elegante, Parcul Rozelor și o densitate ridicată de cafenele și restaurante de autor. Atmosferă rezidențială liniștită la 10 minute pietonal de Piața Victoriei.' },
+      { question: 'Sunt apartamente de închiriat Elisabetin Timișoara potrivite pentru investiții?', answer: 'Da. Cererea constantă din partea familiilor tinere și a turiștilor premium asigură ocupare ridicată în regim hotelier, cu randamente nete de 7-9%. Prețul mediu este 1.820 €/mp.' },
+      { question: 'Cât de aproape este Elisabetin de universități?', answer: 'Tramvaiul direct leagă Elisabetin de Universitatea de Vest (UVT) și Universitatea Politehnica (UPT) în 8-12 minute, atrăgând și chiriași academici.' },
+    ],
+    listings: [
+      { id: 'eli-1', title: 'Apartament 2 camere — vilă interbelică', price: 94600, pricePerSqm: 1820, rooms: 2, floor: 1, surface: 52, badge: 'administrare', imageAlt: 'Apartament Elisabetin lângă Parcul Rozelor' },
+      { id: 'eli-2', title: 'Studio premium lângă Parcul Rozelor', price: 67000, pricePerSqm: 1860, rooms: 1, floor: 2, surface: 36, badge: 'administrare', imageAlt: 'Studio Elisabetin Parcul Rozelor' },
+      { id: 'eli-3', title: 'Apartament 3 camere renovat complet', price: 154700, pricePerSqm: 1850, rooms: 3, floor: 2, surface: 84, badge: 'vanzare', imageAlt: 'Apartament 3 camere Elisabetin Timișoara' },
+      { id: 'eli-4', title: 'Garsonieră elegantă — investiție', price: 59850, pricePerSqm: 1810, rooms: 1, floor: 3, surface: 33, badge: 'administrare', imageAlt: 'Garsonieră investiție Elisabetin Timișoara' },
+    ],
+  },
 ];
 
 export const getNeighborhoodBySlug = (slug: string): NeighborhoodData | undefined =>
