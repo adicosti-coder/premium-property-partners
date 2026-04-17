@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { analyzeLocalGeo } from "./localGeo.ts";
+import { isClearlyBrokenScrape, isObviouslyInvalidCachedAudit, pickBestScrapeResult } from "./scrapeQuality.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +34,11 @@ serve(async (req) => {
       const { data: cached } = await sb.from("seo_audits")
         .select("*").eq("url", url).eq("language", language)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (cached && (Date.now() - new Date(cached.created_at).getTime()) < 24 * 60 * 60 * 1000) {
+      if (
+        cached &&
+        !isObviouslyInvalidCachedAudit(cached) &&
+        (Date.now() - new Date(cached.created_at).getTime()) < 24 * 60 * 60 * 1000
+      ) {
         return json({ audit: cached, cached: true });
       }
     }
@@ -112,6 +117,8 @@ async function sha256(text: string): Promise<string> {
 }
 
 async function scrapePage(url: string, firecrawlKey?: string) {
+  const candidates = [];
+
   // Try Firecrawl first
   if (firecrawlKey) {
     try {
@@ -132,15 +139,27 @@ async function scrapePage(url: string, firecrawlKey?: string) {
         const md = data.markdown || data.data?.markdown || "";
         const html = data.html || data.data?.html || "";
         const meta = data.metadata || data.data?.metadata || {};
-        return parseScraped(md, html, meta);
+        candidates.push(parseScraped(md, html, meta));
       }
     } catch (e) { console.warn("Firecrawl fail, fallback:", e); }
   }
 
-  // Fallback: direct fetch
+  // Direct fetch as fallback and freshness guard against stale external snapshots
   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 SEO-Bot" } });
   const html = await res.text();
-  return parseScraped(htmlToText(html), html, extractMetaFromHtml(html));
+  candidates.push(parseScraped(htmlToText(html), html, extractMetaFromHtml(html)));
+
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+
+  const best = pickBestScrapeResult(candidates);
+  if (isClearlyBrokenScrape(best) && candidates.length > 1) {
+    const nonBroken = candidates.find((candidate) => !isClearlyBrokenScrape(candidate));
+    if (nonBroken) return nonBroken;
+  }
+
+  return best;
 }
 
 function parseScraped(markdown: string, html: string, meta: any) {
