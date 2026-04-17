@@ -79,13 +79,23 @@ const SEOLocalEntitiesBlock = () => {
         profesional pentru proprietari și investitori.
       </p>
 
-      <h3>Proximitate landmark-uri</h3>
+      <h3>Cazare lângă Spitalul Județean Timișoara</h3>
       <p>
-        Toate proprietățile sunt aproape de universități (UVT, UPT, UMF),
-        mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul
-        Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană,
-        malul Bega, Spitalul Județean, Aeroportul Timișoara și Gara de Nord —
-        la 5, 10 sau 15 minute pe jos sau cu transport public.
+        Apartamente regim hotelier lângă Spitalul Județean Timișoara, Spitalul
+        Municipal și Spitalul de Copii „Louis Țurcanu" — opțiune confortabilă
+        pentru familiile pacienților, medici și personal medical aflat în
+        deplasare în Timișoara.
+      </p>
+
+      <h3>Proximitate landmark-uri Timișoara</h3>
+      <p>
+        Toate proprietățile sunt aproape de universități (UVT — Universitatea
+        de Vest, UPT — Politehnica Timișoara, UMF Medicină), mall-uri (Iulius
+        Town / Iulius Mall Openville, Shopping City Timișoara), parcuri
+        (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala
+        Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul
+        Internațional „Traian Vuia" și Gara de Nord — la 5, 10 sau 15 minute
+        pe jos sau cu transport public.
       </p>
     </div>
   );
