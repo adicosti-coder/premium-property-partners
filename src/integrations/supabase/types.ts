@@ -3262,6 +3262,11 @@ export type Database = {
           issues: Json | null
           keyword_gaps: Json | null
           language: string
+          local_entities_found: Json | null
+          local_entities_missing: Json | null
+          local_geo_keywords: Json | null
+          local_recommendations: Json | null
+          local_relevance_score: number | null
           meta_description: string | null
           opportunities: Json | null
           overall_score: number | null
@@ -3283,6 +3288,11 @@ export type Database = {
           issues?: Json | null
           keyword_gaps?: Json | null
           language?: string
+          local_entities_found?: Json | null
+          local_entities_missing?: Json | null
+          local_geo_keywords?: Json | null
+          local_recommendations?: Json | null
+          local_relevance_score?: number | null
           meta_description?: string | null
           opportunities?: Json | null
           overall_score?: number | null
@@ -3304,6 +3314,11 @@ export type Database = {
           issues?: Json | null
           keyword_gaps?: Json | null
           language?: string
+          local_entities_found?: Json | null
+          local_entities_missing?: Json | null
+          local_geo_keywords?: Json | null
+          local_recommendations?: Json | null
+          local_relevance_score?: number | null
           meta_description?: string | null
           opportunities?: Json | null
           overall_score?: number | null

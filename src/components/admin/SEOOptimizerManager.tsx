@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb,
-  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus,
+  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -41,6 +41,11 @@ interface AuditRow {
   opportunities: any[];
   raw_analysis: any;
   created_at: string;
+  local_relevance_score?: number | null;
+  local_entities_found?: any[];
+  local_entities_missing?: any[];
+  local_geo_keywords?: any[];
+  local_recommendations?: any[];
 }
 
 const SEOOptimizerManager = () => {
@@ -123,6 +128,9 @@ const SEOOptimizerManager = () => {
     lines.push(`SEO Audit — ${a.url}`);
     lines.push(`Data: ${new Date(a.created_at).toLocaleString("ro-RO")} | Limbă: ${a.language.toUpperCase()}`);
     lines.push(`Scor general: ${a.overall_score ?? "—"}/100`);
+    if (a.local_relevance_score != null) {
+      lines.push(`Scor Local SEO Timișoara: ${a.local_relevance_score}/100`);
+    }
     lines.push(`Cuvinte: ${a.word_count ?? "—"} | H1: ${a.h1_count ?? "—"} | Risc duplicat: ${a.raw_analysis?.duplicate_content_risk || "—"}`);
     lines.push("");
     if (a.suggested_title) {
@@ -155,6 +163,21 @@ const SEOOptimizerManager = () => {
     if (a.strengths?.length) {
       lines.push(`PUNCTE FORTE (${a.strengths.length}):`);
       a.strengths.forEach((s: any) => lines.push(`• ${typeof s === "string" ? s : (s.text || JSON.stringify(s))}`));
+      lines.push("");
+    }
+    if (a.local_geo_keywords?.length) {
+      lines.push(`LOCAL SEO — KEYWORDS GEO LIPSĂ (${a.local_geo_keywords.length}):`);
+      a.local_geo_keywords.forEach((k: any) => lines.push(`• [${k.priority || "medium"}] ${k.keyword} — ${k.reason || ""} (${k.suggested_placement || ""})`));
+      lines.push("");
+    }
+    if (a.local_recommendations?.length) {
+      lines.push(`LOCAL SEO — RECOMANDĂRI (${a.local_recommendations.length}):`);
+      a.local_recommendations.forEach((r: any) => lines.push(`• ${typeof r === "string" ? r : JSON.stringify(r)}`));
+      lines.push("");
+    }
+    if (a.local_entities_missing?.length) {
+      const top = a.local_entities_missing.slice(0, 8).map((e: any) => e.name).join(", ");
+      lines.push(`LOCAL SEO — ENTITĂȚI LIPSĂ DE MENȚIONAT: ${top}`);
     }
     return lines.join("\n");
   };
@@ -199,6 +222,10 @@ const SEOOptimizerManager = () => {
 
     // Score
     writeWrapped(`Scor general: ${a.overall_score ?? "—"}/100`, 16, { bold: true });
+    if (a.local_relevance_score != null) {
+      const localColor: [number, number, number] = a.local_relevance_score >= 70 ? [20, 120, 50] : a.local_relevance_score >= 50 ? [180, 120, 20] : [180, 40, 40];
+      writeWrapped(`Scor Local SEO Timișoara: ${a.local_relevance_score}/100`, 13, { bold: true, color: localColor });
+    }
     writeWrapped(`Cuvinte: ${a.word_count ?? "—"}  |  H1: ${a.h1_count ?? "—"}  |  Risc duplicat: ${a.raw_analysis?.duplicate_content_risk || "—"}`, 10);
     y += 10;
 
@@ -231,6 +258,59 @@ const SEOOptimizerManager = () => {
       y += 6;
       writeWrapped(`Link-uri interne recomandate`, 13, { bold: true, color: [10, 60, 120] });
       a.raw_analysis.recommended_internal_links.forEach((l: string) => writeWrapped("→ " + l, 9, { color: [10, 60, 120] }));
+    }
+
+    // === LOCAL SEO RECOMMENDATIONS SECTION ===
+    const hasLocalContent =
+      (a.local_geo_keywords && a.local_geo_keywords.length > 0) ||
+      (a.local_recommendations && a.local_recommendations.length > 0) ||
+      (a.local_entities_found && a.local_entities_found.length > 0) ||
+      (a.local_entities_missing && a.local_entities_missing.length > 0);
+
+    if (hasLocalContent) {
+      y += 14;
+      ensureSpace(40);
+      writeWrapped("📍 Local SEO Recommendations — Timișoara", 15, { bold: true, color: [180, 100, 20] });
+      writeWrapped("Optimizări dedicate pentru Google Local Pack și căutări geografice locale.", 9, { color: [120, 120, 120] });
+      y += 4;
+
+      if (a.local_relevance_score != null) {
+        writeWrapped(`Scor Local Relevance: ${a.local_relevance_score}/100`, 11, { bold: true });
+        y += 2;
+      }
+
+      if (a.local_entities_found && a.local_entities_found.length > 0) {
+        writeWrapped(`Entități locale GĂSITE în text (${a.local_entities_found.length})`, 11, { bold: true, color: [20, 120, 50] });
+        a.local_entities_found.forEach((e: any) =>
+          writeWrapped(`✓ ${e.name} (${e.category})`, 9, { color: [20, 120, 50] })
+        );
+        y += 4;
+      }
+
+      if (a.local_entities_missing && a.local_entities_missing.length > 0) {
+        writeWrapped(`Entități locale LIPSĂ — sugerate pentru menționare (${a.local_entities_missing.length})`, 11, { bold: true, color: [180, 60, 60] });
+        a.local_entities_missing.slice(0, 12).forEach((e: any) =>
+          writeWrapped(`✗ ${e.name} (${e.category})`, 9, { color: [180, 60, 60] })
+        );
+        y += 4;
+      }
+
+      if (a.local_geo_keywords && a.local_geo_keywords.length > 0) {
+        writeWrapped(`Keyword-uri geografice sugerate de AI pentru Local Pack (${a.local_geo_keywords.length})`, 11, { bold: true, color: [10, 60, 120] });
+        a.local_geo_keywords.forEach((k: any) => {
+          writeWrapped(`• [${k.priority || "medium"}] "${k.keyword}"`, 10, { bold: true });
+          if (k.reason) writeWrapped(`   De ce: ${k.reason}`, 9, { color: [80, 80, 80] });
+          if (k.suggested_placement) writeWrapped(`   Unde: ${k.suggested_placement}`, 9, { color: [80, 80, 80] });
+        });
+        y += 4;
+      }
+
+      if (a.local_recommendations && a.local_recommendations.length > 0) {
+        writeWrapped(`Recomandări concrete pentru Local SEO (${a.local_recommendations.length})`, 11, { bold: true, color: [10, 60, 120] });
+        a.local_recommendations.forEach((r: any) =>
+          writeWrapped("→ " + (typeof r === "string" ? r : JSON.stringify(r)), 10)
+        );
+      }
     }
 
     // Footer page numbers
@@ -392,7 +472,7 @@ const SEOOptimizerManager = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
               <div className="rounded-lg border p-3">
                 <div className="text-muted-foreground text-xs">Cuvinte</div>
                 <div className="text-lg font-semibold">{selectedAudit.word_count ?? "—"}</div>
@@ -404,6 +484,19 @@ const SEOOptimizerManager = () => {
               <div className="rounded-lg border p-3">
                 <div className="text-muted-foreground text-xs">Risc duplicat</div>
                 <div className="text-lg font-semibold capitalize">{selectedAudit.raw_analysis?.duplicate_content_risk || "—"}</div>
+              </div>
+              <div className="rounded-lg border p-3 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+                <div className="text-muted-foreground text-xs flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> Local SEO Timișoara
+                </div>
+                <div className={`text-lg font-semibold ${scoreColor(selectedAudit.local_relevance_score ?? null)}`}>
+                  {selectedAudit.local_relevance_score ?? "—"}<span className="text-xs text-muted-foreground">/100</span>
+                </div>
+                {selectedAudit.local_entities_found && (
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {selectedAudit.local_entities_found.length} entități găsite
+                  </div>
+                )}
               </div>
             </div>
 
@@ -450,7 +543,96 @@ const SEOOptimizerManager = () => {
               </div>
             )}
 
-            <Accordion type="multiple" defaultValue={["issues", "keywords"]}>
+            <Accordion type="multiple" defaultValue={["local-seo", "issues", "keywords"]}>
+              {(selectedAudit.local_relevance_score != null ||
+                (selectedAudit.local_geo_keywords && selectedAudit.local_geo_keywords.length > 0) ||
+                (selectedAudit.local_recommendations && selectedAudit.local_recommendations.length > 0)) && (
+                <AccordionItem value="local-seo">
+                  <AccordionTrigger>
+                    <span className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-amber-600" />
+                      Local SEO Audit — Timișoara
+                      {selectedAudit.local_relevance_score != null && (
+                        <Badge variant={selectedAudit.local_relevance_score >= 70 ? "default" : selectedAudit.local_relevance_score >= 50 ? "secondary" : "destructive"}>
+                          {selectedAudit.local_relevance_score}/100
+                        </Badge>
+                      )}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      {selectedAudit.local_entities_found && selectedAudit.local_entities_found.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-green-700 dark:text-green-400">
+                            ✓ Entități locale găsite ({selectedAudit.local_entities_found.length})
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedAudit.local_entities_found.map((e: any, i: number) => (
+                              <Badge key={i} variant="outline" className="border-green-300 text-green-700 dark:border-green-800 dark:text-green-400 text-xs">
+                                {e.name} <span className="opacity-60 ml-1">· {e.category}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAudit.local_entities_missing && selectedAudit.local_entities_missing.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-red-700 dark:text-red-400">
+                            ✗ Entități importante lipsă ({selectedAudit.local_entities_missing.length}) — penalizează scorul
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedAudit.local_entities_missing.slice(0, 15).map((e: any, i: number) => (
+                              <Badge key={i} variant="outline" className="border-red-300 text-red-700 dark:border-red-800 dark:text-red-400 text-xs">
+                                {e.name} <span className="opacity-60 ml-1">· {e.category}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAudit.local_geo_keywords && selectedAudit.local_geo_keywords.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-primary">
+                            🔍 Keywords geografice sugerate de AI pentru Local Pack ({selectedAudit.local_geo_keywords.length})
+                          </div>
+                          <div className="space-y-2">
+                            {selectedAudit.local_geo_keywords.map((k: any, i: number) => (
+                              <div key={i} className="rounded border p-3 text-sm bg-amber-50/50 dark:bg-amber-950/10">
+                                <div className="flex items-center justify-between gap-2">
+                                  <code className="font-semibold">{k.keyword}</code>
+                                  <div className="flex items-center gap-1">
+                                    <Badge variant={k.priority === "high" ? "default" : "outline"} className="text-[10px]">{k.priority || "medium"}</Badge>
+                                    <Button size="sm" variant="ghost" onClick={() => copyText(k.keyword, "Keyword")}>
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {k.reason && <div className="text-muted-foreground text-xs mt-1">💡 {k.reason}</div>}
+                                {k.suggested_placement && <div className="text-xs mt-1">📍 {k.suggested_placement}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAudit.local_recommendations && selectedAudit.local_recommendations.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-2 text-primary">
+                            📋 Recomandări concrete Local SEO
+                          </div>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            {selectedAudit.local_recommendations.map((r: any, i: number) => (
+                              <li key={i}>{typeof r === "string" ? r : JSON.stringify(r)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
               {selectedAudit.issues?.length > 0 && (
                 <AccordionItem value="issues">
                   <AccordionTrigger>
