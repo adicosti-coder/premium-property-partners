@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb,
-  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus,
+  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -41,6 +41,11 @@ interface AuditRow {
   opportunities: any[];
   raw_analysis: any;
   created_at: string;
+  local_relevance_score?: number | null;
+  local_entities_found?: any[];
+  local_entities_missing?: any[];
+  local_geo_keywords?: any[];
+  local_recommendations?: any[];
 }
 
 const SEOOptimizerManager = () => {
