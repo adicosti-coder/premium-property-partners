@@ -17,7 +17,39 @@ interface PrerenderRoute {
   h1: string;
   jsonLd: Record<string, unknown> | Record<string, unknown>[];
   canonical: string;
+  /** Optional rich SEO body content (HTML string) injected in the prerendered block.
+   *  Used to give crawlers like Firecrawl/Bing dense local-SEO content even
+   *  before React hydrates. Safe HTML — built from trusted constants only. */
+  seoBody?: string;
 }
+
+/**
+ * Rich, dense local-SEO HTML for the homepage. Mirrors SEOLocalEntitiesBlock.tsx
+ * but injected into the static HTML so crawlers without JS still see it.
+ * Includes all 27 local entities tracked by seo-ai-optimizer/localGeo.ts.
+ */
+const HOMEPAGE_SEO_BODY = `
+  <h2>Servicii imobiliare și regim hotelier în toate cartierele Timișoarei</h2>
+  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net verificat de 9.4% anual. Acoperim toate cartierele importante ale orașului: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii și Calea Lipovei.</p>
+
+  <h3>Apartamente regim hotelier Complex Studențesc Timișoara</h3>
+  <p>Apartamente regim hotelier în Complex Studențesc Timișoara, la 5 minute pe jos de UVT (Universitatea de Vest din Timișoara), Politehnica Timișoara (UPT) și UMF Medicină „Victor Babeș". Cazare lângă universități, ideală pentru studenți, părinți care vizitează studenții, profesori și participanți la evenimente academice și conferințe medicale.</p>
+
+  <h3>Apartamente Iosefin și Elisabetin Timișoara</h3>
+  <p>Apartamente de închiriat și regim hotelier în Iosefin Timișoara — cartier istoric și rezidențial central, aproape de malul Bega și de Centrul Vechi. În Elisabetin Timișoara oferim apartamente într-un cartier rezidențial liniștit, lângă Parcul Rozelor și Parcul Botanic, la câțiva pași de Catedrala Mitropolitană.</p>
+
+  <h3>Cazare lângă Iulius Town, Shopping City Timișoara și Spitalul Județean</h3>
+  <p>Proprietățile noastre sunt situate la 5–15 minute de Iulius Town / Iulius Mall Openville, Shopping City Timișoara (Auchan), Vox Park, Aeroportul Internațional Timișoara „Traian Vuia" și Gara de Nord Timișoara. Oferim de asemenea cazare lângă Spitalul Județean Timișoara, Spitalul Municipal și Spitalul de Copii „Louis Țurcanu" — opțiune confortabilă pentru familiile pacienților, medici și personal medical aflat în deplasare în Timișoara.</p>
+
+  <h3>Investiții imobiliare în Centru Timișoara, ISHO și zonele premium</h3>
+  <p>Pentru investitori, propunem oportunități verificate în Cetate / Centru, ISHO (cel mai iconic proiect de regenerare urbană din Timișoara, pe malul Begăi), Take Ionescu și Soarelui — zone cu randamente atractive (8–10% net pentru regim hotelier) și apreciere a capitalului peste media pieței. Calea Lipovei este o zonă în curs de modernizare cu potențial mare de apreciere, iar Zona Aradului oferă acces rapid la aeroport și la hub-urile de business Iulius Town și Openville.</p>
+
+  <h3>Servicii oferite</h3>
+  <p>Administrare apartamente regim hotelier Timișoara cu ROI 9.4% net verificat, investiții imobiliare Timișoara, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator ROI online și consultanță investiții imobiliare. Toate serviciile sunt gestionate profesional pentru proprietari, investitori și oaspeți.</p>
+
+  <h3>Proximitate landmark-uri Timișoara</h3>
+  <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public.</p>
+`;
 
 const BASE_URL = 'https://www.realtrust.ro';
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
@@ -187,13 +219,44 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
 function buildStaticRoutes(): PrerenderRoute[] {
   const routes: PrerenderRoute[] = [];
 
-  // Index page
+  // Homepage — overrides dist/index.html with rich SEO body so crawlers
+  // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
+  routes.push({
+    path: '/',
+    title: 'RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții',
+    description: 'Apartamente regim hotelier Timișoara — Centru, Iosefin, Elisabetin, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net. Calculează gratuit!',
+    h1: 'RealTrust Timișoara — Imobiliare, Regim Hotelier & Investiții',
+    canonical: `${BASE_URL}/`,
+    seoBody: HOMEPAGE_SEO_BODY,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name: 'RealTrust & ApArt Hotel Timișoara',
+      description: 'Agenție imobiliară premium din Timișoara — vânzări, investiții și administrare apartamente regim hotelier cu ROI 9.4% net verificat.',
+      url: `${BASE_URL}/`,
+      telephone: '+40723154520',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+        addressLocality: 'Timișoara',
+        addressRegion: 'Timiș',
+        postalCode: '300125',
+        addressCountry: 'RO',
+      },
+      geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
+      areaServed: 'Timișoara',
+      priceRange: '$$',
+    },
+  });
+
+  // /imobiliare-timisoara
   routes.push({
     path: '/imobiliare-timisoara',
     title: 'Imobiliare Timișoara — Apartamente pe Zone | RealTrust',
     description: 'Explorează apartamentele de vânzare din Timișoara pe zone: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO.',
     h1: 'Apartamente de Vânzare în Timișoara',
     canonical: `${BASE_URL}/imobiliare-timisoara`,
+    seoBody: HOMEPAGE_SEO_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
@@ -340,6 +403,7 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}">${escapeHtml(route.title)}</a>
+      ${route.seoBody ?? ''}
     </div>`;
 
   html = html.replace(
@@ -392,14 +456,17 @@ export default function vitePrerenderSeo(): Plugin {
         console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
 
         for (const route of allRoutes) {
-          const dirPath = path.join(outDir, route.path);
-          fs.mkdirSync(dirPath, { recursive: true });
+          // Homepage ('/') overwrites dist/index.html in place; subroutes get
+          // their own dist/<path>/index.html.
+          const isRoot = route.path === '/' || route.path === '';
+          const dirPath = isRoot ? outDir : path.join(outDir, route.path);
+          if (!isRoot) fs.mkdirSync(dirPath, { recursive: true });
 
           const htmlContent = generateHtml(template, route, protectedHeadNodes);
           const filePath = path.join(dirPath, 'index.html');
           fs.writeFileSync(filePath, htmlContent, 'utf-8');
 
-          console.log(`  ✓ ${route.path}/index.html`);
+          console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
 
         console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} properties)`);
