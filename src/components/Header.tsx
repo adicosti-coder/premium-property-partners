@@ -309,6 +309,19 @@ const Header = () => {
             <ThemeToggle />
             {/* Language switcher - visible on all screens */}
             <LanguageSwitcher />
+            {isAuthenticated === true && isAdmin && (
+              <Link to="/admin/prospect-listings" aria-label="Prospect Listings AI">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-amber-600 hover:text-amber-500 transition-all duration-300 hover:scale-105"
+                  aria-label="Prospect Listings AI"
+                >
+                  <span className="text-lg">📞</span>
+                  <span className="hidden xl:inline ml-1 text-xs font-semibold">Prospects</span>
+                </Button>
+              </Link>
+            )}
             {isAuthenticated === true && (
               <Link to="/auth" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
                 <Button 
