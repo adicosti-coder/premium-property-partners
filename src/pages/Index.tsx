@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
+import { ServicesH2Strip } from "@/components/ServicesH2Strip";
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
