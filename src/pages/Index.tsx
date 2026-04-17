@@ -214,8 +214,8 @@ const Index = () => {
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
         <PageSummary
-          summaryRo="RealTrust & ApArt Hotel Timișoara — Apartamente în regim hotelier aproape de Centrul istoric, de obiectivele turistice și comerciale importante din Timișoara, de Amazonia Aquapark, la Fructus Plaza, City of Mara, Ring, X-City, Ateneo și Denya Forest, etc."
-          summaryEn="RealTrust & ApArt Hotel Timișoara — Short-term rental apartments near the Old Town, major tourist and commercial landmarks in Timișoara, Amazonia Aquapark, at Fructus Plaza, City of Mara, Ring, X-City, Ateneo and Denya Forest, etc."
+          summaryRo="RealTrust & ApArt Hotel Timișoara — apartamente regim hotelier și investiții imobiliare în cele mai căutate cartiere din Timișoara: Centrul istoric (lângă Parcul Central și Parcul Rozelor), Iosefin, Elisabetin, Fabric, ISHO, Complex Studențesc (lângă UVT, UPT, UMF), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Proprietăți la 5–10 minute de Iulius Town, Shopping City Timișoara, Aeroportul Internațional și Gara de Nord. Administrare profesională, ROI 9.4% net verificat."
+          summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
         />
 
         {/* SEO H2 strip — explicit service headings (per audit) */}
