@@ -472,7 +472,7 @@ const SEOOptimizerManager = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
               <div className="rounded-lg border p-3">
                 <div className="text-muted-foreground text-xs">Cuvinte</div>
                 <div className="text-lg font-semibold">{selectedAudit.word_count ?? "—"}</div>
@@ -484,6 +484,19 @@ const SEOOptimizerManager = () => {
               <div className="rounded-lg border p-3">
                 <div className="text-muted-foreground text-xs">Risc duplicat</div>
                 <div className="text-lg font-semibold capitalize">{selectedAudit.raw_analysis?.duplicate_content_risk || "—"}</div>
+              </div>
+              <div className="rounded-lg border p-3 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+                <div className="text-muted-foreground text-xs flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> Local SEO Timișoara
+                </div>
+                <div className={`text-lg font-semibold ${scoreColor(selectedAudit.local_relevance_score ?? null)}`}>
+                  {selectedAudit.local_relevance_score ?? "—"}<span className="text-xs text-muted-foreground">/100</span>
+                </div>
+                {selectedAudit.local_entities_found && (
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {selectedAudit.local_entities_found.length} entități găsite
+                  </div>
+                )}
               </div>
             </div>
 
