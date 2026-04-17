@@ -456,14 +456,17 @@ export default function vitePrerenderSeo(): Plugin {
         console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
 
         for (const route of allRoutes) {
-          const dirPath = path.join(outDir, route.path);
-          fs.mkdirSync(dirPath, { recursive: true });
+          // Homepage ('/') overwrites dist/index.html in place; subroutes get
+          // their own dist/<path>/index.html.
+          const isRoot = route.path === '/' || route.path === '';
+          const dirPath = isRoot ? outDir : path.join(outDir, route.path);
+          if (!isRoot) fs.mkdirSync(dirPath, { recursive: true });
 
           const htmlContent = generateHtml(template, route, protectedHeadNodes);
           const filePath = path.join(dirPath, 'index.html');
           fs.writeFileSync(filePath, htmlContent, 'utf-8');
 
-          console.log(`  ✓ ${route.path}/index.html`);
+          console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
 
         console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} properties)`);
