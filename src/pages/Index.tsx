@@ -6,6 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
 import { ServicesH2Strip } from "@/components/ServicesH2Strip";
 import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
+import SEOLocalEntitiesBlock from "@/components/SEOLocalEntitiesBlock";
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
@@ -212,6 +213,9 @@ const Index = () => {
       )}
       <Header />
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
+        {/* SEO-only block (sr-only) — survives React hydration so Firecrawl/Google
+            see ALL local entities tracked by the SEO AI Optimizer. */}
+        <SEOLocalEntitiesBlock />
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
         <PageSummary

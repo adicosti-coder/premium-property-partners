@@ -118,7 +118,14 @@ async function scrapePage(url: string, firecrawlKey?: string) {
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url, formats: ["markdown", "html"], onlyMainContent: false }),
+        body: JSON.stringify({
+          url,
+          formats: ["markdown", "html"],
+          onlyMainContent: false,
+          // Wait 4s for the React SPA to hydrate so SR-only SEO blocks
+          // (rendered by React, not just static index.html) are captured.
+          waitFor: 4000,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
