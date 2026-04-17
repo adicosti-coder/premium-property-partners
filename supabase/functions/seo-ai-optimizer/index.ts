@@ -117,6 +117,8 @@ async function sha256(text: string): Promise<string> {
 }
 
 async function scrapePage(url: string, firecrawlKey?: string) {
+  const candidates = [];
+
   // Try Firecrawl first
   if (firecrawlKey) {
     try {
@@ -137,15 +139,27 @@ async function scrapePage(url: string, firecrawlKey?: string) {
         const md = data.markdown || data.data?.markdown || "";
         const html = data.html || data.data?.html || "";
         const meta = data.metadata || data.data?.metadata || {};
-        return parseScraped(md, html, meta);
+        candidates.push(parseScraped(md, html, meta));
       }
     } catch (e) { console.warn("Firecrawl fail, fallback:", e); }
   }
 
-  // Fallback: direct fetch
+  // Direct fetch as fallback and freshness guard against stale external snapshots
   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 SEO-Bot" } });
   const html = await res.text();
-  return parseScraped(htmlToText(html), html, extractMetaFromHtml(html));
+  candidates.push(parseScraped(htmlToText(html), html, extractMetaFromHtml(html)));
+
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+
+  const best = pickBestScrapeResult(candidates);
+  if (isClearlyBrokenScrape(best) && candidates.length > 1) {
+    const nonBroken = candidates.find((candidate) => !isClearlyBrokenScrape(candidate));
+    if (nonBroken) return nonBroken;
+  }
+
+  return best;
 }
 
 function parseScraped(markdown: string, html: string, meta: any) {
