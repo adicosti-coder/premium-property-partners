@@ -4174,6 +4174,7 @@ export type Database = {
         | "rejected"
         | "posted"
         | "callback"
+        | "pending_credentials"
       listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
       listing_status: "pending_inspection" | "approved" | "rejected"
       offer_category: "vanzare" | "inchiriere" | "hotelier"
@@ -4320,6 +4321,7 @@ export const Constants = {
         "rejected",
         "posted",
         "callback",
+        "pending_credentials",
       ],
       listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
       listing_status: ["pending_inspection", "approved", "rejected"],
