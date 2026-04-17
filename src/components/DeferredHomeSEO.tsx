@@ -89,7 +89,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
 
   return (
     <SEOHead
-      description="RealTrust & ApArt Hotel Timișoara — administrare apartamente regim hotelier. ROI 9.4% net verificat, 60+ proprietăți gestionate, rating 9.7 Booking.com. Află cât câștigă apartamentul tău."
+      description="Administrare apartamente regim hotelier în Timișoara cu ROI 9.4% net. 60+ proprietăți, rating 9.7 Booking. Calculează-ți câștigul gratuit!"
       jsonLd={allSchemas}
       includeWebSiteSchema={true}
     />
