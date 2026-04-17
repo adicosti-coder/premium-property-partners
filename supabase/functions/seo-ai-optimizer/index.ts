@@ -49,10 +49,13 @@ serve(async (req) => {
       .neq("url", url)
       .limit(5);
 
-    // 3. AI analysis
-    const analysis = await analyzeWithAI(scraped, url, language, duplicates || [], LOVABLE_API_KEY);
+    // 3. Local GEO Audit (Timișoara entities + proximity signals)
+    const localGeo = analyzeLocalGeo(scraped.markdown || "");
 
-    // 4. Store
+    // 4. AI analysis (now includes local geo context for better keyword suggestions)
+    const analysis = await analyzeWithAI(scraped, url, language, duplicates || [], localGeo, LOVABLE_API_KEY);
+
+    // 5. Store
     const { data: saved, error: saveErr } = await sb.from("seo_audits").insert({
       url,
       language,
@@ -70,6 +73,11 @@ serve(async (req) => {
       opportunities: analysis.opportunities || [],
       raw_analysis: analysis,
       content_hash: contentHash,
+      local_relevance_score: localGeo.score,
+      local_entities_found: localGeo.found,
+      local_entities_missing: localGeo.missing,
+      local_geo_keywords: analysis.local_geo_keywords || [],
+      local_recommendations: analysis.local_recommendations || [],
     }).select().single();
 
     if (saveErr) console.error("Save error:", saveErr);
@@ -159,12 +167,18 @@ function extractMetaFromHtml(html: string) {
   };
 }
 
-async function analyzeWithAI(scraped: any, url: string, lang: string, duplicates: any[], apiKey: string) {
+async function analyzeWithAI(scraped: any, url: string, lang: string, duplicates: any[], localGeo: any, apiKey: string) {
   const dupNote = duplicates.length > 0
     ? `\nATENȚIE: Am detectat ${duplicates.length} alte pagini cu conținut identic: ${duplicates.map(d => d.url).join(", ")}`
     : "";
 
-  const prompt = `Analizează această pagină web și returnează un audit SEO complet în JSON.
+  const localFoundNames = (localGeo.found || []).map((e: any) => e.name).join(", ") || "niciuna";
+  const localMissingNames = (localGeo.missing || []).slice(0, 12).map((e: any) => `${e.name} (${e.category})`).join(", ") || "—";
+  const proxNote = localGeo.has_proximity_signals
+    ? `Da — keyword-uri detectate: ${localGeo.proximity_keywords_found.slice(0, 5).join(", ")}`
+    : "NU — pagina NU menționează proximitatea față de facilități (școli, parcuri, mall-uri, transport). Aceasta este o problemă mare pentru Local SEO / Google Local Pack.";
+
+  const prompt = `Analizează această pagină web și returnează un audit SEO complet în JSON, cu accent special pe LOCAL SEO Timișoara.
 
 URL: ${url}
 Limbă: ${lang}
@@ -173,6 +187,12 @@ Meta description actuală: "${scraped.metaDescription}"
 Număr H1: ${scraped.h1Count}
 Număr cuvinte: ${scraped.wordCount}
 ${dupNote}
+
+=== LOCAL GEO CONTEXT (Timișoara) ===
+Scor relevanță locală calculat: ${localGeo.score}/100
+Entități locale găsite în text: ${localFoundNames}
+Entități locale importante LIPSĂ (nu sunt menționate, dar ar trebui): ${localMissingNames}
+Conține semnale de proximitate ("aproape de", "lângă", minute pe jos, etc.)? ${proxNote}
 
 Conținut (primele 8000 caractere):
 ${scraped.markdown}
@@ -185,12 +205,20 @@ Returnează EXCLUSIV JSON cu structura:
   "keyword_gaps": [{"keyword": "...", "search_intent": "...", "priority": "high|medium|low", "where_to_add": "..."}],
   "strengths": ["3-5 puncte forte SEO ale paginii"],
   "issues": [{"severity": "critical|warning|info", "issue": "...", "fix": "..."}],
-  "opportunities": [{"type": "internal_linking|content_gap|schema|technical", "description": "...", "impact": "high|medium|low"}],
+  "opportunities": [{"type": "internal_linking|content_gap|schema|technical|local_seo", "description": "...", "impact": "high|medium|low"}],
   "readability_score": număr 0-100,
   "keyword_density": {"primary_keyword": "...", "density_pct": număr},
   "duplicate_content_risk": "none|low|medium|high",
-  "recommended_internal_links": ["URL-uri din realtrust.ro către care ar trebui linkat"]
-}`;
+  "recommended_internal_links": ["URL-uri din realtrust.ro către care ar trebui linkat"],
+  "local_geo_keywords": [
+    {"keyword": "cuvânt cheie geografic Timișoara care lipsește", "reason": "de ce e important pentru Local Pack", "priority": "high|medium|low", "suggested_placement": "unde să fie inserat (H2, paragraf, alt, etc.)"}
+  ],
+  "local_recommendations": [
+    "3-5 recomandări concrete pentru Local SEO Timișoara: cartiere de menționat, proximități de adăugat (școli/parcuri/mall-uri), schema LocalBusiness, micro-formate de adresă, etc."
+  ]
+}
+
+IMPORTANT pentru local_geo_keywords: returnează FIX 3-5 cuvinte cheie geografice (ex: "apartamente Iulius Town", "cazare lângă UVT", "hotel Centru Timișoara", "regim hotelier Aradului") care lipsesc DIN TEXTUL ANALIZAT și care ar ajuta indexarea în Local Pack Google.`;
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -198,7 +226,7 @@ Returnează EXCLUSIV JSON cu structura:
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: "Ești expert SEO senior pentru piața imobiliară din România. Răspunzi exclusiv cu JSON valid, fără markdown code fence, fără text suplimentar." },
+        { role: "system", content: "Ești expert SEO senior pentru piața imobiliară din Timișoara. Cunoști foarte bine cartierele, mall-urile (Iulius Town, Shopping City), universitățile (UVT, UPT, UMF), parcurile și landmark-urile orașului. Răspunzi exclusiv cu JSON valid, fără markdown code fence." },
         { role: "user", content: prompt },
       ],
       temperature: 0.4,
