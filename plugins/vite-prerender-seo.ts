@@ -219,13 +219,44 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
 function buildStaticRoutes(): PrerenderRoute[] {
   const routes: PrerenderRoute[] = [];
 
-  // Index page
+  // Homepage — overrides dist/index.html with rich SEO body so crawlers
+  // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
+  routes.push({
+    path: '/',
+    title: 'RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții',
+    description: 'Apartamente regim hotelier Timișoara — Centru, Iosefin, Elisabetin, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net. Calculează gratuit!',
+    h1: 'RealTrust Timișoara — Imobiliare, Regim Hotelier & Investiții',
+    canonical: `${BASE_URL}/`,
+    seoBody: HOMEPAGE_SEO_BODY,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name: 'RealTrust & ApArt Hotel Timișoara',
+      description: 'Agenție imobiliară premium din Timișoara — vânzări, investiții și administrare apartamente regim hotelier cu ROI 9.4% net verificat.',
+      url: `${BASE_URL}/`,
+      telephone: '+40723154520',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+        addressLocality: 'Timișoara',
+        addressRegion: 'Timiș',
+        postalCode: '300125',
+        addressCountry: 'RO',
+      },
+      geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
+      areaServed: 'Timișoara',
+      priceRange: '$$',
+    },
+  });
+
+  // /imobiliare-timisoara
   routes.push({
     path: '/imobiliare-timisoara',
     title: 'Imobiliare Timișoara — Apartamente pe Zone | RealTrust',
     description: 'Explorează apartamentele de vânzare din Timișoara pe zone: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO.',
     h1: 'Apartamente de Vânzare în Timișoara',
     canonical: `${BASE_URL}/imobiliare-timisoara`,
+    seoBody: HOMEPAGE_SEO_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
