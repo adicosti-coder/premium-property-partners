@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { analyzeLocalGeo } from "./localGeo.ts";
+import { isClearlyBrokenScrape, isObviouslyInvalidCachedAudit, pickBestScrapeResult } from "./scrapeQuality.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +34,11 @@ serve(async (req) => {
       const { data: cached } = await sb.from("seo_audits")
         .select("*").eq("url", url).eq("language", language)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (cached && (Date.now() - new Date(cached.created_at).getTime()) < 24 * 60 * 60 * 1000) {
+      if (
+        cached &&
+        !isObviouslyInvalidCachedAudit(cached) &&
+        (Date.now() - new Date(cached.created_at).getTime()) < 24 * 60 * 60 * 1000
+      ) {
         return json({ audit: cached, cached: true });
       }
     }
