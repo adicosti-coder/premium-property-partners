@@ -135,14 +135,27 @@ Options -Indexes
 </IfModule>
 
 # Immutable Cache-Control for Vite hashed assets
+# Vite filenames look like: name-aB3yJXtV.js, vendor-react-C9uDq233.js, etc.
+# We apply long cache to everything inside /assets/, /fonts/, /images/ since those are content-hashed or static.
 <IfModule mod_headers.c>
-  <FilesMatch "\.[a-zA-Z0-9]{8}\.(js|css|woff2?|jpg|jpeg|png|webp|avif|svg)$">
+  # Anything under /assets/ is hashed by Vite — safe to cache forever
+  <FilesMatch "^.*\.(js|mjs|css|woff|woff2|ttf|otf|eot|jpg|jpeg|png|webp|avif|gif|svg|ico|mp4|webm)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
-  
+
+  # HTML must always revalidate (SPA shell)
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+
   # Service worker must not be cached aggressively
-  <FilesMatch "(sw|pwa-sw)\.js$">
+  <FilesMatch "^(sw|pwa-sw)\.js$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+
+  # Manifest & robots — short cache
+  <FilesMatch "^(manifest\.json|manifest\.webmanifest|robots\.txt)$">
+    Header set Cache-Control "public, max-age=86400"
   </FilesMatch>
 </IfModule>
 
