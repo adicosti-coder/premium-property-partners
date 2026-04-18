@@ -6,6 +6,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 // Hero image served from public/ — single 800w variant (mobile-first, ~35KB).
 // Desktop CSS scales it. Avoids the 150KB 1920w fetch that PageSpeed mobile penalises.
 const HERO_IMAGE_PUBLIC = "/images/hero-optimized-800w.webp";
+
+const fireHeroAnalyticsEvent = (eventName: string, params: Record<string, string>) => {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", eventName, params);
+};
+
 interface HeroSettings {
   videoUrl: string;
   customFallbackImage: string | null;
@@ -234,15 +240,14 @@ const HeroContent = ({
   isMobile: boolean;
   language: string;
 }) => {
-  const trackManagement = () => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new CustomEvent("rt:cta-track", { detail: { type: "management" } }));
-  };
+  const trackManagement = () => fireHeroAnalyticsEvent("lead_administrare", { page_path: "/" });
 
-  const trackInvestment = () => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new CustomEvent("rt:cta-track", { detail: { type: "investment" } }));
-  };
+  const trackInvestment = () =>
+    fireHeroAnalyticsEvent("interes_imobiliar", {
+      interes_imobil: "investitie",
+      buget_client: "estimat",
+      page_path: "/",
+    });
   return (
     <>
       <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
