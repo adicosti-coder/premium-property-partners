@@ -96,12 +96,53 @@ const SEOLocalEntitiesBlock = () => {
         profesional pentru proprietari și investitori.
       </p>
 
-      <h3>Cazare lângă Spitalul Județean Timișoara</h3>
+      <h3>Cazare temporară Spitalul Județean Timișoara</h3>
       <p>
-        Apartamente regim hotelier lângă Spitalul Județean Timișoara, Spitalul
-        Municipal și Spitalul de Copii „Louis Țurcanu" — opțiune confortabilă
-        pentru familiile pacienților, medici și personal medical aflat în
-        deplasare în Timișoara.
+        Apartamente regim hotelier și <strong>cazare temporară Spitalul
+        Județean Timișoara</strong>, lângă Spitalul Municipal și Spitalul de
+        Copii „Louis Țurcanu" — opțiune confortabilă pentru familiile
+        pacienților, medici și personal medical aflat în deplasare.
+      </p>
+
+      <h3>Apartamente de închiriat Aeroport Timișoara</h3>
+      <p>
+        <strong>Apartamente de închiriat Aeroport Timișoara</strong> și cazare
+        regim hotelier la 15–20 minute de Aeroportul Internațional „Traian
+        Vuia" — ideale pentru călători de business, echipaje de zbor, pasageri
+        în tranzit și relocări. Acces rapid prin Calea Aradului și autostrada
+        A1, cu transfer aeroport disponibil la cerere.
+      </p>
+
+      <h3>Regim hotelier Piața Unirii Timișoara</h3>
+      <p>
+        <strong>Regim hotelier Piața Unirii Timișoara</strong> — apartamente
+        premium în inima Centrului Vechi (Cetate), la pași de Catedrala
+        Romano-Catolică, Bastionul Theresia, Piața Victoriei și Catedrala
+        Mitropolitană. Locația ideală pentru turism cultural și business.
+      </p>
+
+      <h3>Apartamente de vânzare Calea Șagului Timișoara</h3>
+      <p>
+        <strong>Apartamente de vânzare Calea Șagului Timișoara</strong> — zonă
+        rezidențială în plină dezvoltare, cu acces la Shopping City, Auchan și
+        transport public dens (linii 11, 13, 33). Proprietăți noi 2024–2026
+        cu finisaje premium și parcare subterană.
+      </p>
+
+      <h3>Apartamente de închiriat Timișoara — prețuri</h3>
+      <p>
+        <strong>Apartamente de închiriat Timișoara prețuri</strong> transparente:
+        garsoniere de la 280€/lună, 2 camere 380–550€/lună, 3 camere
+        550–850€/lună (în funcție de cartier și finisaje). Apartamente noi
+        Timișoara 2024 disponibile în ISHO, Openville, Calea Aradului.
+      </p>
+
+      <h3>Agenție imobiliară Timișoara păreri</h3>
+      <p>
+        <strong>Agenție imobiliară Timișoara păreri</strong>: rating 9.7/10 pe
+        Booking (180+ recenzii verificate) și 5/5 stele Google Reviews.
+        Clienții menționează frecvent profesionalismul echipei, transparența
+        comisioanelor și ROI-ul real obținut din regim hotelier.
       </p>
 
       <h3>Proximitate landmark-uri Timișoara</h3>
