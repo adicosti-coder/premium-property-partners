@@ -31,6 +31,17 @@ const SEOLocalEntitiesBlock = () => {
         evaluare gratuită și transparență totală a comisioanelor.
       </p>
 
+      <h3>Investiții imobiliare randament Timișoara</h3>
+      <p>
+        <strong>Investiții imobiliare randament Timișoara</strong> pentru
+        investitori care caută apartamente cu cashflow predictibil în Centru
+        Vechi, ISHO, Iosefin, Fabric, Calea Aradului și Calea Girocului.
+        Diferențiem clar <strong>apartamente de vânzare Timișoara</strong>
+        pentru locuire de <strong>proprietăți de vânzare Timișoara</strong>
+        orientate spre investiție, pachete premium sau randament în regim
+        hotelier, cu ROI net țintit 8–10% și benchmark standard 9.4%.
+      </p>
+
       <h3>Imobiliare Timișoara ISHO — apartamente de vânzare și investiții</h3>
       <p>
         <strong>Imobiliare Timișoara ISHO</strong>: apartamente de vânzare în
@@ -86,6 +97,15 @@ const SEOLocalEntitiesBlock = () => {
         personalizare și plan de plăți etapizat.
       </p>
 
+      <h3>Apartamente noi Timișoara ISHO</h3>
+      <p>
+        <strong>Apartamente noi Timișoara ISHO</strong> și apartamente de lux
+        cu vedere spre Bega, la câteva minute de Centru Vechi, Piața Unirii și
+        zona business. ISHO atrage cumpărători premium, expați și investitori
+        interesați de proprietăți noi cu potențial ridicat de închiriere și
+        revânzare.
+      </p>
+
       <h3>Apartamente de vânzare Timișoara Centru și apartamente Timișoara Piața Unirii</h3>
       <p>
         <strong>Apartamente de vânzare Timișoara Centru</strong> și <strong>apartamente Timișoara Piața Unirii</strong> (Cetate, Piața
@@ -108,6 +128,15 @@ const SEOLocalEntitiesBlock = () => {
         Studențesc, lângă UVT (Universitatea de Vest), Politehnica (UPT) și
         UMF Medicină — opțiuni accesibile pentru studenți români și
         internaționali, cu contracte pe an universitar.
+      </p>
+
+      <h3>Închirieri apartamente Timișoara Complex Studențesc</h3>
+      <p>
+        <strong>Închirieri apartamente Timișoara Complex Studențesc</strong>
+        pentru studenți, rezidenți UMF și profesori invitați, cu acces rapid la
+        stația Complex Studențesc, la liniile de tramvai din zona centrală și
+        la trasee directe spre UVT, UPT, Biblioteca Centrală și Spitalul
+        Județean.
       </p>
 
       <h3>Cartiere Timișoara — acoperire completă</h3>
@@ -173,6 +202,14 @@ const SEOLocalEntitiesBlock = () => {
         Apartamente de vânzare Zona Aradului Timișoara și <strong>apartamente de vânzare Timișoara Openville</strong> — zonă strategică cu
         acces rapid la Aeroportul Internațional Timișoara, ideală pentru
         investitori și navetiști. Proprietăți noi și renovate cu ROI atractiv.
+      </p>
+
+      <h3>Proprietăți de vânzare Timișoara Calea Girocului</h3>
+      <p>
+        <strong>Proprietăți de vânzare Timișoara Calea Girocului</strong> —
+        apartamente pentru familii și investiții rezidențiale, aproape de
+        Spitalul Județean, clinici private, școli, supermarketuri locale și
+        conexiuni rapide cu centrul orașului.
       </p>
 
       <h3>Servicii</h3>
@@ -243,6 +280,16 @@ const SEOLocalEntitiesBlock = () => {
         Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul
         Internațional „Traian Vuia" și Gara de Nord. Oferim inclusiv <strong>regim hotelier Timișoara Gara de Nord</strong> — la 5, 10 sau 15 minute
         pe jos sau cu transport public.
+      </p>
+
+      <h3>Transport public Timișoara lângă proprietăți</h3>
+      <p>
+        Exemple concrete de proximitate: proprietăți aproape de stațiile Piața
+        Maria, Prefectură, Complex Studențesc, Gara de Nord și de liniile expres
+        <strong>E4</strong> și <strong>E7</strong> pentru conexiuni rapide spre
+        Aeroport Timișoara. În zone precum Iosefin, Elisabetin, Centru și Calea
+        Girocului, accesul la tramvai și autobuz reduce timpul de deplasare spre
+        UVT, Iulius Town, Spitalul Județean și principalele zone office.
       </p>
     </div>
   );
