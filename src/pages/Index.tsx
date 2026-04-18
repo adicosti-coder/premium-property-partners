@@ -171,16 +171,15 @@ const Index = () => {
   const { language } = useLanguage();
 
   // Phase 1: above-fold renders immediately
-  // Phase 2: below-fold sections rendered via startTransition to yield main thread
-  const [belowFoldReady, setBelowFoldReady] = useState(false);
+  // Phase 2: below-fold sections gated by IntersectionObserver sentinel —
+  // prevents 100+ lazy chunks from downloading on initial page load (PageSpeed fix).
+  // Sentinel is placed AFTER the near-fold section, so chunks load only when
+  // the user actually scrolls toward them.
+  const [belowFoldRef, belowFoldReady] = useLazyVisible("600px");
 
   // Defer SEO/analytics to after first paint
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    // Render below-fold in a low-priority transition so the browser
-    // can paint the hero & above-fold content without a 440ms long task
-    startTransition(() => setBelowFoldReady(true));
-
     const id = requestIdleCallback?.(() => setMounted(true)) ?? setTimeout(() => setMounted(true), 100);
     return () => { if (typeof id === 'number') cancelIdleCallback?.(id) ?? clearTimeout(id); };
   }, []);
@@ -240,7 +239,10 @@ const Index = () => {
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
         <NearFoldSection />
 
-        {/* Below-fold: rendered via startTransition to avoid blocking LCP */}
+        {/* Sentinel: triggers below-fold chunk downloads only when user scrolls near */}
+        <div ref={belowFoldRef} aria-hidden="true" style={{ height: 1 }} />
+
+        {/* Below-fold: gated by IntersectionObserver to avoid blocking LCP */}
         {belowFoldReady && (
           <>
             {/* Mid-fold: trust + service sections */}
