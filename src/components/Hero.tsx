@@ -256,8 +256,8 @@ const HeroContent = ({
         ))}
       </p>
       
-      {/* CTAs — gap-6 (24px) for WCAG touch-target spacing on mobile */}
-      <div className="flex flex-col sm:flex-row gap-6 sm:gap-4">
+      {/* CTAs — gap-8 (32px) for WCAG AAA touch-target spacing on mobile */}
+      <div className="flex flex-col sm:flex-row gap-8 sm:gap-4">
         <Button 
           variant="hero" 
           size="xl" 
