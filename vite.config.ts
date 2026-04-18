@@ -75,14 +75,16 @@ export default defineConfig(({ mode }) => {
             // Keep chunking stable to avoid circular vendor dependencies and
             // stale dynamic-import failures after deploys.
             if (id.includes("node_modules")) {
-              if (id.includes("react-router") || id.includes("/react/") || id.includes("react-dom") || id.includes("scheduler")) {
+              // Tight react-core matcher — avoids catching react-day-picker, react-hook-form, etc.
+              if (
+                /node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)
+              ) {
                 return "vendor-react";
               }
               if (id.includes("@tanstack/react-query")) return "vendor-query";
               if (id.includes("embla-carousel")) return "vendor-embla";
               if (id.includes("mapbox-gl")) return "vendor-mapbox";
-              // Group all Radix UI primitives together — they're small individually
-              // but always co-loaded; keeps HTTP requests low without forcing a giant chunk
+              // Group all Radix UI primitives together — keeps HTTP requests low
               if (id.includes("@radix-ui/")) return "vendor-radix";
               return undefined;
             }
