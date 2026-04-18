@@ -1,12 +1,14 @@
 import React, { useEffect, lazy, Suspense, useState, useRef } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
 import { ServicesH2Strip } from "@/components/ServicesH2Strip";
 import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
 import SEOLocalEntitiesBlock from "@/components/SEOLocalEntitiesBlock";
+import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schemaGenerators";
 
 // ALL below-fold components are lazy loaded
 const StatsCounters = lazy(() => import("@/components/StatsCounters"));
@@ -164,11 +166,35 @@ const BottomFoldSection = () => (
   </div>
 );
 
-// Deferred SEO — loaded after first paint to avoid blocking render
+const HOMEPAGE_SEO = {
+  ro: {
+    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier și ROI",
+    description:
+      "Apartamente regim hotelier și investiții imobiliare în Timișoara, lângă Aeroport Timișoara, UVT și Iulius Town. Calculează gratuit ROI!",
+  },
+  en: {
+    title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
+    description:
+      "Short-term rental apartments and real estate investments in Timișoara, near Timișoara Airport, UVT and Iulius Town. Calculate ROI free.",
+  },
+} as const;
+
+const STATIC_HOMEPAGE_SCHEMAS = [
+  ...generateHomepageSchemas(),
+  generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://www.realtrust.ro", [
+    ".page-summary",
+    "h1",
+    "h2",
+    ".faq-section",
+  ]),
+];
+
+// Deferred review schema enrichment — loaded after first paint to avoid blocking render
 const DeferredHomeSEO = lazy(() => import("@/components/DeferredHomeSEO"));
 
 const Index = () => {
   const { language } = useLanguage();
+  const homepageSeo = HOMEPAGE_SEO[language as keyof typeof HOMEPAGE_SEO] || HOMEPAGE_SEO.ro;
 
   // Phase 1: above-fold renders immediately
   // Phase 2: below-fold sections gated by IntersectionObserver sentinel —
@@ -207,6 +233,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={homepageSeo.title}
+        description={homepageSeo.description}
+        url="https://www.realtrust.ro/"
+        jsonLd={STATIC_HOMEPAGE_SCHEMAS}
+      />
       {/* Skip to content link for screen readers & keyboard users */}
       <a
         href="#main-content"

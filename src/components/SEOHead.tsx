@@ -156,12 +156,12 @@ const SEOHead = ({
   const { language } = useLanguage();
   
   const defaultTitles = {
-    ro: "Agenție Imobiliară Timișoara | Regim Hotelier & ROI 9.4%",
+    ro: "RealTrust Timișoara | Imobiliare, Regim Hotelier, ROI",
     en: "Real Estate Agency Timișoara | Short-Term Rentals & 9.4% ROI"
   };
   
   const defaultDescriptions = {
-    ro: "Apartamente regim hotelier Timișoara — Centru, Iosefin, Elisabetin, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net. Calculează gratuit!",
+    ro: "Apartamente regim hotelier și investiții imobiliare în Timișoara, lângă Aeroport Timișoara, UVT și Iulius Town. Calculează gratuit ROI!",
     en: "Short-term rental apartments Timișoara — Old Town, Iosefin, Elisabetin, Student Complex, near UVT and Iulius Town. 9.4% net ROI. Free calculator!"
   };
   

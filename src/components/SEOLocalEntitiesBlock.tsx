@@ -21,10 +21,10 @@ const SEOLocalEntitiesBlock = () => {
         Agenție imobiliară Timișoara — servicii imobiliare complete, apartamente regim hotelier și investiții în toate cartierele Timișoarei
       </h2>
 
-      <h3>Cazare Aeroport Timișoara — apartamente lângă Aeroportul Internațional „Traian Vuia"</h3>
+      <h3>Cazare Aeroport Timișoara — apartamente de închiriat Timișoara Aeroport și apartamente lângă Aeroportul Internațional „Traian Vuia"</h3>
       <p>
-        <strong>Cazare Aeroport Timișoara</strong> în apartamente regim hotelier
-        situate la doar <strong>15–20 minute</strong> de Aeroportul Internațional
+        <strong>Cazare Aeroport Timișoara</strong> și <strong>apartamente de închiriat Timișoara Aeroport</strong> în apartamente regim hotelier
+        situate la doar <strong>15–20 minute</strong> de <strong>Aeroport Timișoara</strong>, adică Aeroportul Internațional
         „Traian Vuia" (TSR), accesibile rapid prin <strong>Calea Aradului</strong>{" "}
         și <strong>autostrada A1</strong>. Opțiunea ideală pentru pasageri în
         tranzit, echipaje de zbor (crew layover), călători de business și
@@ -45,10 +45,10 @@ const SEOLocalEntitiesBlock = () => {
         personalizare și plan de plăți etapizat.
       </p>
 
-      <h3>Apartamente de vânzare Timișoara Centru</h3>
+      <h3>Apartamente de vânzare Timișoara Centru și apartamente Timișoara Piața Unirii</h3>
       <p>
-        <strong>Apartamente de vânzare Timișoara Centru</strong> (Cetate, Piața
-        Unirii, Piața Victoriei) — clădiri istorice renovate și apartamente
+        <strong>Apartamente de vânzare Timișoara Centru</strong> și <strong>apartamente Timișoara Piața Unirii</strong> (Cetate, Piața
+        Unirii, Piața Victoriei) — clădiri istorice renovate, apartamente de lux Timișoara Centru și apartamente
         boutique în inima orașului, cu randament excelent în regim hotelier
         datorită fluxului constant de turiști.
       </p>
@@ -115,7 +115,7 @@ const SEOLocalEntitiesBlock = () => {
         ideală pentru pasageri în tranzit, echipaje de zbor și călători de
         business. Proprietăți situate la 5–15 minute de Iulius Town / Iulius
         Mall Openville, Shopping City Timișoara (Auchan), Vox Park și Gara de
-        Nord Timișoara. Regim hotelier Iulius Town Timișoara și cazare lângă
+        Nord Timișoara. Regim hotelier Iulius Town Timișoara, <strong>închirieri apartamente Timișoara termen scurt</strong> și cazare lângă
         Aeroportul Timișoara, aproape de cele mai importante puncte de interes.
       </p>
 
@@ -127,9 +127,9 @@ const SEOLocalEntitiesBlock = () => {
         închirieri apartamente Timișoara pe termen scurt în regim hotelier.
       </p>
 
-      <h3>Apartamente de vânzare Zona Aradului Timișoara</h3>
+      <h3>Apartamente de vânzare Zona Aradului Timișoara și apartamente de vânzare Timișoara Openville</h3>
       <p>
-        Apartamente de vânzare Zona Aradului Timișoara — zonă strategică cu
+        Apartamente de vânzare Zona Aradului Timișoara și <strong>apartamente de vânzare Timișoara Openville</strong> — zonă strategică cu
         acces rapid la Aeroportul Internațional Timișoara, ideală pentru
         investitori și navetiști. Proprietăți noi și renovate cu ROI atractiv.
       </p>
@@ -147,7 +147,7 @@ const SEOLocalEntitiesBlock = () => {
       <h3>Cazare temporară Spitalul Județean Timișoara</h3>
       <p>
         Apartamente regim hotelier și <strong>cazare temporară Spitalul
-        Județean Timișoara</strong>, lângă Spitalul Municipal și Spitalul de
+        Județean Timișoara</strong>, plus <strong>cazare Timișoara Spitalul Județean</strong>, lângă Spitalul Municipal și Spitalul de
         Copii „Louis Țurcanu" — opțiune confortabilă pentru familiile
         pacienților, medici și personal medical aflat în deplasare.
       </p>
@@ -185,9 +185,9 @@ const SEOLocalEntitiesBlock = () => {
         Timișoara 2024 disponibile în ISHO, Openville, Calea Aradului.
       </p>
 
-      <h3>Agenție imobiliară Timișoara păreri</h3>
+      <h3>Agentie imobiliara Timișoara păreri</h3>
       <p>
-        <strong>Agenție imobiliară Timișoara păreri</strong>: rating 9.7/10 pe
+        <strong>Agentie imobiliara Timișoara păreri</strong>: rating 9.7/10 pe
         Booking (180+ recenzii verificate) și 5/5 stele Google Reviews.
         Clienții menționează frecvent profesionalismul echipei, transparența
         comisioanelor și ROI-ul real obținut din regim hotelier.
@@ -200,7 +200,7 @@ const SEOLocalEntitiesBlock = () => {
         Town / Iulius Mall Openville, Shopping City Timișoara), parcuri
         (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala
         Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul
-        Internațional „Traian Vuia" și Gara de Nord — la 5, 10 sau 15 minute
+        Internațional „Traian Vuia" și Gara de Nord. Oferim inclusiv <strong>regim hotelier Timișoara Gara de Nord</strong> — la 5, 10 sau 15 minute
         pe jos sau cu transport public.
       </p>
     </div>

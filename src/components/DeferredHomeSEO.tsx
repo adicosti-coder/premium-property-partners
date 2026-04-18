@@ -4,7 +4,21 @@ import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 
+const HOMEPAGE_SEO = {
+  ro: {
+    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier, ROI",
+    description:
+      "Apartamente regim hotelier și investiții imobiliare în Timișoara, lângă Aeroport Timișoara, UVT și Iulius Town. Calculează gratuit ROI!",
+  },
+  en: {
+    title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
+    description:
+      "Short-term rental apartments and real estate investments in Timișoara, near Timișoara Airport, UVT and Iulius Town. Calculate ROI free.",
+  },
+} as const;
+
 const DeferredHomeSEO = ({ language }: { language: string }) => {
+  const homepageSeo = HOMEPAGE_SEO[language as keyof typeof HOMEPAGE_SEO] || HOMEPAGE_SEO.ro;
   const { data: reviews } = useQuery({
     queryKey: ["homepage-reviews-schema"],
     queryFn: async () => {
@@ -130,9 +144,9 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
 
   return (
     <SEOHead
-      description="Administrare apartamente regim hotelier în Timișoara cu ROI 9.4% net. 60+ proprietăți, rating 9.7 Booking. Calculează-ți câștigul gratuit!"
+      title={homepageSeo.title}
+      description={homepageSeo.description}
       jsonLd={allSchemas}
-      includeWebSiteSchema={true}
     />
   );
 };
