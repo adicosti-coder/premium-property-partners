@@ -2,7 +2,7 @@
 // Handles caching, offline support, and push notifications
 
 // Bump this when changing SW behavior to force cache refresh on clients
-const SW_VERSION = '2026-03-09-4';
+const SW_VERSION = '2026-04-18-1';
 const CACHE_NAME = `realtrust-cache-${SW_VERSION}`;
 const STATIC_ASSETS = [
   '/',
@@ -10,6 +10,8 @@ const STATIC_ASSETS = [
   '/favicon.ico',
   '/placeholder.svg',
 ];
+
+const IMMUTABLE_ASSET_PATTERN = /\/assets\/.*\.(?:js|css|map|woff2?|ttf|otf)$/i;
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -47,12 +49,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
   
   // Skip external requests
   if (!event.request.url.startsWith(self.location.origin)) return;
   
   // Skip API requests
   if (event.request.url.includes('/functions/') || event.request.url.includes('/rest/')) return;
+
+  // Never cache hashed bundles/fonts — browser cache handles them better and
+  // SW caching here can cause stale chunk mismatches after deployments.
+  if (
+    IMMUTABLE_ASSET_PATTERN.test(url.pathname) ||
+    ['script', 'style', 'worker', 'font'].includes(event.request.destination)
+  ) {
+    return;
+  }
 
   // Skip large media files (video) – partial 206 responses break Cache Storage
   if (event.request.url.match(/\.(mp4|webm|ogg|avi|mov)(\?|$)/i)) return;
@@ -75,8 +88,8 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // Return offline page for navigation requests
-          if (event.request.mode === 'navigate') {
+          // Return offline shell only for full document navigations
+          if (event.request.mode === 'navigate' || event.request.destination === 'document') {
             return caches.match('/');
           }
           return new Response('Offline', { status: 503 });
