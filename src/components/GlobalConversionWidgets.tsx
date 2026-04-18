@@ -66,6 +66,16 @@ const GlobalConversionWidgets = ({
 }: GlobalConversionWidgetsProps) => {
   const [phase1Ready, setPhase1Ready] = useState(false);
   const [phase2Ready, setPhase2Ready] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
 
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
@@ -120,8 +130,8 @@ const GlobalConversionWidgets = ({
       {phase1Ready && (
         <Suspense fallback={null}>
           <OfflineIndicator />
-          {showMobileCTA && <MobileCTABar />}
-          <DesktopStickyContactBar />
+          {showMobileCTA && isMobile && <MobileCTABar />}
+          {!isMobile && <DesktopStickyContactBar />}
           <AccessibilityPanel />
         </Suspense>
       )}
