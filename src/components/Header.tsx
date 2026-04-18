@@ -391,9 +391,11 @@ const Header = () => {
                 </div>
 
                 {/* Property Code Search - Mobile */}
-                <div className="pb-3 border-b border-border/50">
-                  <Suspense fallback={null}><PropertyCodeSearch className="w-full" /></Suspense>
-                </div>
+                {mobileMenuOpen && (
+                  <div className="pb-3 border-b border-border/50">
+                    <Suspense fallback={null}><PropertyCodeSearch className="w-full" /></Suspense>
+                  </div>
+                )}
 
                 {navGroups.map((group, gi) => (
                   <div key={group.label}>

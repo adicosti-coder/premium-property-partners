@@ -239,6 +239,25 @@ const Index = () => {
     return () => { clearTimeout(t); document.removeEventListener("scroll", loadAnalytics); };
   }, []);
 
+  useEffect(() => {
+    const handler = async (event: Event) => {
+      const detail = (event as CustomEvent<{ type?: string }>).detail;
+      const { useCtaAnalytics } = await import("@/hooks/useCtaAnalytics");
+      const analytics = useCtaAnalytics();
+
+      if (detail?.type === "management") {
+        analytics.trackManagement();
+      }
+
+      if (detail?.type === "investment") {
+        analytics.trackInvestment();
+      }
+    };
+
+    window.addEventListener("rt:cta-track", handler as EventListener);
+    return () => window.removeEventListener("rt:cta-track", handler as EventListener);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
