@@ -271,31 +271,31 @@ const Index = () => {
           summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
         />
 
-        {/* SEO H2 strip — explicit service headings (per audit) */}
-        <ServicesH2Strip />
-
-        {/* Neighborhoods Grid - Critical for SEO internal linking */}
-        <NeighborhoodsGrid />
-
-        {/* Local SEO landmarks strip — UVT/UPT/UMF, Iulius Town, Shopping City, parks */}
-        <LocalLandmarksStrip />
-
-        {/* Verified Reviews Badges - social proof */}
-        {belowFoldReady && (
-          <Suspense fallback={null}>
-            <VerifiedReviewsBadges />
-          </Suspense>
-        )}
-
-        {/* Near-fold: stats + calculator — visibility gated at 200px */}
-        <NearFoldSection />
-
-        {/* Sentinel: triggers below-fold chunk downloads only when user scrolls near */}
+        {/* Sentinel placed RIGHT AFTER hero+summary — moves EVERYTHING below
+            (ServicesH2Strip, NeighborhoodsGrid, LocalLandmarksStrip, NearFold,
+            etc.) out of the LCP critical path. Hero fills 100dvh on mobile so
+            none of these are visible at first paint anyway. */}
         <div ref={belowFoldRef} aria-hidden="true" style={{ height: 1 }} />
 
-        {/* Below-fold: gated by IntersectionObserver to avoid blocking LCP */}
         {belowFoldReady && (
           <>
+            {/* SEO H2 strip — explicit service headings (per audit) */}
+            <ServicesH2Strip />
+
+            {/* Neighborhoods Grid - Critical for SEO internal linking */}
+            <NeighborhoodsGrid />
+
+            {/* Local SEO landmarks strip — UVT/UPT/UMF, Iulius Town, parks */}
+            <LocalLandmarksStrip />
+
+            {/* Verified Reviews Badges - social proof */}
+            <Suspense fallback={null}>
+              <VerifiedReviewsBadges />
+            </Suspense>
+
+            {/* Near-fold: stats + calculator */}
+            <NearFoldSection />
+
             {/* Mid-fold: trust + service sections */}
             <MidFoldSection />
 
@@ -316,7 +316,7 @@ const Index = () => {
         )}
       </main>
       <Suspense fallback={null}>
-        <Footer />
+        {belowFoldReady && <Footer />}
         {belowFoldReady && <GlobalConversionWidgets />}
       </Suspense>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, TrendingUp, ArrowRight, Building2, Star } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
