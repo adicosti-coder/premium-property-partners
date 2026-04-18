@@ -115,7 +115,7 @@ const Hero = () => {
           alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, City of Mara — lângă Iulius Mall, Centrul Vechi. ROI 9.4% net verificat."
           className="w-full h-full object-cover"
           width={800}
-          height={450}
+          height={447}
           fetchPriority="high"
           decoding="async"
           loading="eager"
