@@ -60,13 +60,30 @@ const SEOLocalEntitiesBlock = () => {
         Catedrala Mitropolitană.
       </p>
 
-      <h3>Cazare lângă Iulius Town și Shopping City Timișoara</h3>
+      <h3>Cazare lângă Aeroportul Timișoara, Iulius Town și Shopping City</h3>
       <p>
-        Proprietăți situate la 5–15 minute de Iulius Town / Iulius Mall
-        Openville, Shopping City Timișoara (Auchan), Vox Park, Aeroportul
-        Internațional Timișoara și Gara de Nord Timișoara. Apartamente regim
-        hotelier Iulius Town și regim hotelier Shopping City Timișoara,
-        aproape de cele mai importante puncte de interes ale orașului.
+        Apartamente regim hotelier și cazare lângă <strong>Aeroportul
+        Internațional Timișoara „Traian Vuia"</strong> (15–20 min cu mașina) —
+        ideală pentru pasageri în tranzit, echipaje de zbor și călători de
+        business. Proprietăți situate la 5–15 minute de Iulius Town / Iulius
+        Mall Openville, Shopping City Timișoara (Auchan), Vox Park și Gara de
+        Nord Timișoara. Regim hotelier Iulius Town Timișoara și cazare lângă
+        Aeroportul Timișoara, aproape de cele mai importante puncte de interes.
+      </p>
+
+      <h3>Agenție imobiliară Timișoara — prețuri transparente</h3>
+      <p>
+        Agenție imobiliară Timișoara prețuri transparente: comision management
+        15–25%, fără taxe ascunse. Apartamente de vânzare Timișoara noi în
+        ansambluri rezidențiale moderne (ISHO, Openville, Take Ionescu) și
+        închirieri apartamente Timișoara pe termen scurt în regim hotelier.
+      </p>
+
+      <h3>Apartamente de vânzare Zona Aradului Timișoara</h3>
+      <p>
+        Apartamente de vânzare Zona Aradului Timișoara — zonă strategică cu
+        acces rapid la Aeroportul Internațional Timișoara, ideală pentru
+        investitori și navetiști. Proprietăți noi și renovate cu ROI atractiv.
       </p>
 
       <h3>Servicii</h3>
