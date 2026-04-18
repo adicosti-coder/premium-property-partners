@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense, useState, useRef } from "react";
+import React, { useEffect, lazy, Suspense, useState } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
