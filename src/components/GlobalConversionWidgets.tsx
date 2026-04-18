@@ -25,7 +25,7 @@ const lazyWithChunkRecovery = <T extends { default: React.ComponentType<any> }>(
         window.location.reload();
       }
 
-      return { default: () => null } as T;
+      return { default: () => null } as unknown as T;
     }
   });
 
