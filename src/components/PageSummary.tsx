@@ -1,5 +1,4 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Sparkles } from "lucide-react";
 
 /**
  * AI-friendly summary block for key landing pages.
@@ -23,7 +22,7 @@ const PageSummary = ({ summaryRo, summaryEn }: PageSummaryProps) => {
       aria-label={label}
     >
       <div className="flex items-center gap-2 mb-2">
-        <Sparkles className="h-4 w-4 text-primary" />
+        <span className="inline-flex h-4 w-4 items-center justify-center text-primary" aria-hidden="true">✦</span>
         <span className="text-xs font-semibold uppercase tracking-wider text-primary">
           {label}
         </span>
