@@ -1,7 +1,7 @@
 import SEOHead from "@/components/SEOHead";
 import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 
 const HOMEPAGE_SEO = {
@@ -37,26 +37,21 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     },
     staleTime: Infinity, gcTime: Infinity,
     refetchOnWindowFocus: false, refetchOnMount: false, refetchOnReconnect: false,
-    placeholderData: keepPreviousData,
   });
 
-  // Fetch real aggregate rating from DB
+  // Derive aggregate rating from the already limited review sample to avoid a second heavy query on homepage.
   const { data: ratingData } = useQuery({
     queryKey: ["homepage-aggregate-rating"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("property_reviews")
-        .select("rating")
-        .eq("is_published", true);
-      if (error) throw error;
-      if (!data || data.length === 0) return null;
-      const avg = data.reduce((sum, r) => sum + (r.rating || 0), 0) / data.length;
-      // Booking.com uses 1-10 scale; convert to 1-5 for schema.org
-      const avgNormalized = avg > 5 ? (avg / 2).toFixed(1) : avg.toFixed(1);
-      return { ratingValue: avgNormalized, reviewCount: String(data.length) };
-    },
+    queryFn: async () => null,
     staleTime: Infinity, gcTime: Infinity,
     refetchOnWindowFocus: false, refetchOnMount: false, refetchOnReconnect: false,
+    enabled: false,
+    initialData: (() => {
+      if (!reviews?.length) return null;
+      const avg = reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length;
+      const avgNormalized = avg > 5 ? (avg / 2).toFixed(1) : avg.toFixed(1);
+      return { ratingValue: avgNormalized, reviewCount: String(reviews.length) };
+    })(),
   });
 
   const homepageFaqItems = [
