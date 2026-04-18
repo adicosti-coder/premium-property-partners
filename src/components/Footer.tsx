@@ -108,6 +108,10 @@ const Footer = () => {
             </a>
             <p className="text-sm text-muted-foreground mb-1">Imo Business Centrum SRL</p>
             <p className="text-xs text-muted-foreground mb-4">CUI: RO14380627 · Timișoara</p>
+            <address className="not-italic text-xs text-muted-foreground mb-4 leading-relaxed">
+              Strada Samuil Micu nr. 14, ap. 4<br />
+              300125, Timișoara, Timiș, România
+            </address>
             <div className="space-y-2">
               <a href="tel:+40723154520" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Phone className="w-4 h-4" />

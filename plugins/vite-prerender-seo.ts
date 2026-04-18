@@ -38,11 +38,11 @@ const HOMEPAGE_SEO_BODY = `
   <h3>Apartamente Iosefin și Elisabetin Timișoara</h3>
   <p>Apartamente de închiriat și regim hotelier în Iosefin Timișoara — cartier istoric și rezidențial central, aproape de malul Bega și de Centrul Vechi. În Elisabetin Timișoara oferim apartamente într-un cartier rezidențial liniștit, lângă Parcul Rozelor și Parcul Botanic, la câțiva pași de Catedrala Mitropolitană.</p>
 
-  <h3>Cazare lângă Iulius Town, Shopping City Timișoara și Spitalul Județean</h3>
-  <p>Proprietățile noastre sunt situate la 5–15 minute de Iulius Town / Iulius Mall Openville, Shopping City Timișoara (Auchan), Vox Park, Aeroportul Internațional Timișoara „Traian Vuia" și Gara de Nord Timișoara. Oferim de asemenea cazare lângă Spitalul Județean Timișoara, Spitalul Municipal și Spitalul de Copii „Louis Țurcanu" — opțiune confortabilă pentru familiile pacienților, medici și personal medical aflat în deplasare în Timișoara.</p>
+  <h3>Cazare lângă Iulius Town, Shopping City Timișoara, Aeroport Timișoara și Spitalul Județean</h3>
+  <p>Proprietățile noastre sunt situate la 5–15 minute de Iulius Town / Iulius Mall Openville, Shopping City Timișoara (Auchan), Vox Park, <strong>Aeroport Timișoara</strong> / Aeroportul Internațional Timișoara „Traian Vuia" și Gara de Nord Timișoara. Oferim <strong>apartamente de închiriat Timișoara Aeroport</strong>, <strong>cazare Timișoara Spitalul Județean</strong> și opțiuni de <strong>regim hotelier Timișoara Gara de Nord</strong> — ideale pentru pasageri în tranzit, familiile pacienților, medici, personal medical și călători business.</p>
 
   <h3>Investiții imobiliare în Centru Timișoara, ISHO și zonele premium</h3>
-  <p>Pentru investitori, propunem oportunități verificate în Cetate / Centru, ISHO (cel mai iconic proiect de regenerare urbană din Timișoara, pe malul Begăi), Take Ionescu și Soarelui — zone cu randamente atractive (8–10% net pentru regim hotelier) și apreciere a capitalului peste media pieței. Calea Lipovei este o zonă în curs de modernizare cu potențial mare de apreciere, iar Zona Aradului oferă acces rapid la aeroport și la hub-urile de business Iulius Town și Openville.</p>
+  <p>Pentru investitori, propunem oportunități verificate în Cetate / Centru, ISHO (cel mai iconic proiect de regenerare urbană din Timișoara, pe malul Begăi), Take Ionescu și Soarelui — zone cu randamente atractive (8–10% net pentru regim hotelier) și apreciere a capitalului peste media pieței. Avem inclusiv <strong>apartamente de vânzare Timișoara Openville</strong>, proprietăți premium lângă hub-ul de business Iulius Town / Openville și <strong>apartamente Timișoara Piața Unirii</strong> pentru cumpărători care caută Centru Vechi și randament excelent.</p>
 
   <h3>Apartamente de vânzare Timișoara — proprietăți de vânzare în toate cartierele</h3>
   <p>Ca <strong>agenție imobiliară Timișoara</strong> de încredere, oferim <strong>apartamente de vânzare Timișoara</strong> și <strong>proprietăți de vânzare Timișoara</strong> verificate în toate cartierele importante: garsoniere, apartamente cu 2 camere, 3 camere și 4 camere de vânzare în Centru, Iosefin, Elisabetin, Complex Studențesc, ISHO, Take Ionescu, Calea Aradului, Calea Lipovei și Circumvalațiunii. Consultanță completă pentru cumpărătorii de apartamente în Timișoara, evaluare gratuită, negociere și asistență la actele notariale.</p>
@@ -59,8 +59,8 @@ const HOMEPAGE_SEO_BODY = `
   <h3>Proximitate landmark-uri Timișoara și acces transport public</h3>
   <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public. Acces facil la stația de tramvai (linii 1, 2, 4, 8) și autobuz (E1, E4, 33, 40), cu mijloc de transport în comun la sub 100m de fiecare proprietate.</p>
 
-  <h3>Apartamente de lux Timișoara și apartamente noi Timișoara</h3>
-  <p><strong>Apartamente de lux Timișoara</strong> și <strong>apartamente noi Timișoara</strong> — selecție premium în ISHO (cel mai iconic proiect mixed-use pe malul Begăi), Take Ionescu, City of Mara Circumvalațiunii și Openville. Dezvoltări moderne 2022–2026, eficiență energetică clasa A, finisaje de top, smart-home și amenajări de design pentru investitori și cumpărători exigenți.</p>
+  <h3>Apartamente de lux Timișoara Centru și apartamente noi Timișoara</h3>
+  <p><strong>Apartamente de lux Timișoara Centru</strong> și <strong>apartamente noi Timișoara</strong> — selecție premium în ISHO, Piața Unirii, Take Ionescu, City of Mara Circumvalațiunii și Openville. Dezvoltări moderne 2022–2026, eficiență energetică clasa A, finisaje de top, smart-home și amenajări de design pentru investitori și cumpărători exigenți.</p>
 
   <h3>Închirieri apartamente studenți Timișoara — Complex Studențesc</h3>
   <p><strong>Închirieri apartamente studenți Timișoara</strong> în Complexul Studențesc, la 5 minute pe jos de UVT, UPT (Politehnica) și UMF Medicină „Victor Babeș" — garsoniere și apartamente cu 2 camere mobilate, contracte 9–12 luni, utilități incluse, internet de mare viteză și verificare proprietar pentru siguranță.</p>
@@ -69,7 +69,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Administrare proprietăți Timișoara prețuri</strong> transparente: comision 15–25% management + 15–23% comision platforme (Booking, Airbnb). Pachet complet care include marketing pe toate platformele, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară și optimizare yield management. ROI 9.4% net verificat anual.</p>
 
   <h3>Cazare temporară Timișoara Centru și apartamente lângă Iulius Town</h3>
-  <p><strong>Cazare temporară Timișoara Centru</strong> și <strong>apartamente de închiriat lângă Iulius Town</strong> — soluții flexibile pentru sejururi de 1 noapte până la 1 lună, ideale pentru turism business, conferințe, vizite medicale și relocare temporară. Proprietăți premium la 5–15 minute de Iulius Mall, Openville, Piața Unirii și Piața Victoriei.</p>
+  <p><strong>Cazare temporară Timișoara Centru</strong>, <strong>închirieri apartamente Timișoara termen scurt</strong> și <strong>apartamente de închiriat lângă Iulius Town</strong> — soluții flexibile pentru sejururi de 1 noapte până la 1 lună, ideale pentru turism business, conferințe, vizite medicale și relocare temporară. Proprietăți premium la 5–15 minute de Iulius Mall, Openville, Piața Unirii și Piața Victoriei.</p>
 
   <h3>Proprietăți de vânzare Zona Aradului</h3>
   <p><strong>Proprietăți de vânzare Zona Aradului</strong> Timișoara — apartamente cu 2, 3 și 4 camere în zone cu acces rapid la Aeroportul Internațional „Traian Vuia", Iulius Town și Openville. Profil de chiriași cu venituri ridicate, apreciere a capitalului peste media pieței.</p>
@@ -250,8 +250,8 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
   routes.push({
     path: '/',
-    title: 'RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții',
-    description: 'Apartamente regim hotelier Timișoara — Centru, Iosefin, Elisabetin, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net. Calculează gratuit!',
+    title: 'RealTrust Timișoara | Imobiliare, Regim Hotelier, ROI',
+    description: 'Apartamente regim hotelier și investiții imobiliare în Timișoara, lângă Aeroport Timișoara, UVT și Iulius Town. Calculează gratuit ROI!',
     h1: 'RealTrust Timișoara — Investiții Imobiliare Profitabile & Regim Hotelier',
     canonical: `${BASE_URL}/`,
     seoBody: HOMEPAGE_SEO_BODY,
@@ -259,7 +259,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: 'RealTrust & ApArt Hotel Timișoara',
-      description: 'Agenție imobiliară premium din Timișoara — vânzări, investiții și administrare apartamente regim hotelier cu ROI 9.4% net verificat.',
+      description: 'Apartamente regim hotelier și investiții imobiliare în Timișoara, aproape de Aeroport Timișoara, Openville, Gara de Nord și Spitalul Județean.',
       url: `${BASE_URL}/`,
       telephone: '+40723154520',
       address: {
