@@ -18,8 +18,56 @@ const SEOLocalEntitiesBlock = () => {
       // overflow:hidden; clip:rect(0,0,0,0); whiteSpace:nowrap; border:0;
     >
       <h2>
-        Apartamente regim hotelier și investiții imobiliare în toate cartierele Timișoarei
+        Agenție imobiliară Timișoara — servicii imobiliare complete, apartamente regim hotelier și investiții în toate cartierele Timișoarei
       </h2>
+
+      <h3>Cazare Aeroport Timișoara — apartamente lângă Aeroportul Internațional „Traian Vuia"</h3>
+      <p>
+        <strong>Cazare Aeroport Timișoara</strong> în apartamente regim hotelier
+        situate la doar <strong>15–20 minute</strong> de Aeroportul Internațional
+        „Traian Vuia" (TSR), accesibile rapid prin <strong>Calea Aradului</strong>{" "}
+        și <strong>autostrada A1</strong>. Opțiunea ideală pentru pasageri în
+        tranzit, echipaje de zbor (crew layover), călători de business și
+        familii care sosesc cu zboruri târzii sau pleacă dimineața devreme.
+        Oferim <strong>transfer aeroport la cerere</strong>, check-in flexibil
+        24/7 prin sistem self check-in cu cod PIN și WiFi de mare viteză.
+        Proximitatea față de aeroport face din proprietățile RealTrust o
+        alegere strategică pentru turismul de afaceri și relocările
+        internaționale în Timișoara.
+      </p>
+
+      <h3>Apartamente noi Timișoara de vânzare 2024–2026</h3>
+      <p>
+        <strong>Apartamente noi Timișoara de vânzare</strong> în ansambluri
+        rezidențiale moderne (ISHO, Openville, Take Ionescu, Calea Aradului) —
+        finisaje premium, parcare subterană, izolație termică clasa A, smart
+        home ready. Apartamente noi 2024, 2025 și 2026 cu posibilitate de
+        personalizare și plan de plăți etapizat.
+      </p>
+
+      <h3>Apartamente de vânzare Timișoara Centru</h3>
+      <p>
+        <strong>Apartamente de vânzare Timișoara Centru</strong> (Cetate, Piața
+        Unirii, Piața Victoriei) — clădiri istorice renovate și apartamente
+        boutique în inima orașului, cu randament excelent în regim hotelier
+        datorită fluxului constant de turiști.
+      </p>
+
+      <h3>Apartamente de închiriat Timișoara termen lung</h3>
+      <p>
+        <strong>Apartamente de închiriat Timișoara termen lung</strong> —
+        contracte 12+ luni pentru familii, profesioniști și expați.
+        Garsoniere, 2 și 3 camere mobilate și utilate complet, în Iosefin,
+        Elisabetin, Cetate, Calea Aradului și ISHO.
+      </p>
+
+      <h3>Apartamente de închiriat studenți Timișoara</h3>
+      <p>
+        <strong>Apartamente de închiriat studenți Timișoara</strong> în Complex
+        Studențesc, lângă UVT (Universitatea de Vest), Politehnica (UPT) și
+        UMF Medicină — opțiuni accesibile pentru studenți români și
+        internaționali, cu contracte pe an universitar.
+      </p>
 
       <h3>Cartiere Timișoara — acoperire completă</h3>
       <p>

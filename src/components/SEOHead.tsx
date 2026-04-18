@@ -156,8 +156,8 @@ const SEOHead = ({
   const { language } = useLanguage();
   
   const defaultTitles = {
-    ro: "RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții",
-    en: "RealTrust Timișoara | Real Estate, Short-Term Rentals & Investments"
+    ro: "Agenție Imobiliară Timișoara | Regim Hotelier & ROI 9.4%",
+    en: "Real Estate Agency Timișoara | Short-Term Rentals & 9.4% ROI"
   };
   
   const defaultDescriptions = {
