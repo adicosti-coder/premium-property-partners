@@ -56,8 +56,26 @@ const HOMEPAGE_SEO_BODY = `
   <h3>Servicii oferite</h3>
   <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator ROI online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
 
-  <h3>Proximitate landmark-uri Timișoara</h3>
-  <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public.</p>
+  <h3>Proximitate landmark-uri Timișoara și acces transport public</h3>
+  <p>Toate proprietățile noastre sunt aproape de universități (UVT, UPT, UMF), mall-uri (Iulius Town, Shopping City Timișoara), parcuri (Parcul Central, Parcul Rozelor, Parcul Botanic), Catedrala Mitropolitană, malul Bega, Spitalul Județean Timișoara, Aeroportul Internațional și Gara de Nord — la 5, 10 sau 15 minute pe jos sau cu transport public. Acces facil la stația de tramvai (linii 1, 2, 4, 8) și autobuz (E1, E4, 33, 40), cu mijloc de transport în comun la sub 100m de fiecare proprietate.</p>
+
+  <h3>Apartamente de lux Timișoara și apartamente noi Timișoara</h3>
+  <p><strong>Apartamente de lux Timișoara</strong> și <strong>apartamente noi Timișoara</strong> — selecție premium în ISHO (cel mai iconic proiect mixed-use pe malul Begăi), Take Ionescu, City of Mara Circumvalațiunii și Openville. Dezvoltări moderne 2022–2026, eficiență energetică clasa A, finisaje de top, smart-home și amenajări de design pentru investitori și cumpărători exigenți.</p>
+
+  <h3>Închirieri apartamente studenți Timișoara — Complex Studențesc</h3>
+  <p><strong>Închirieri apartamente studenți Timișoara</strong> în Complexul Studențesc, la 5 minute pe jos de UVT, UPT (Politehnica) și UMF Medicină „Victor Babeș" — garsoniere și apartamente cu 2 camere mobilate, contracte 9–12 luni, utilități incluse, internet de mare viteză și verificare proprietar pentru siguranță.</p>
+
+  <h3>Administrare proprietăți Timișoara — prețuri transparente</h3>
+  <p><strong>Administrare proprietăți Timișoara prețuri</strong> transparente: comision 15–25% management + 15–23% comision platforme (Booking, Airbnb). Pachet complet care include marketing pe toate platformele, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară și optimizare yield management. ROI 9.4% net verificat anual.</p>
+
+  <h3>Cazare temporară Timișoara Centru și apartamente lângă Iulius Town</h3>
+  <p><strong>Cazare temporară Timișoara Centru</strong> și <strong>apartamente de închiriat lângă Iulius Town</strong> — soluții flexibile pentru sejururi de 1 noapte până la 1 lună, ideale pentru turism business, conferințe, vizite medicale și relocare temporară. Proprietăți premium la 5–15 minute de Iulius Mall, Openville, Piața Unirii și Piața Victoriei.</p>
+
+  <h3>Proprietăți de vânzare Zona Aradului</h3>
+  <p><strong>Proprietăți de vânzare Zona Aradului</strong> Timișoara — apartamente cu 2, 3 și 4 camere în zone cu acces rapid la Aeroportul Internațional „Traian Vuia", Iulius Town și Openville. Profil de chiriași cu venituri ridicate, apreciere a capitalului peste media pieței.</p>
+
+  <h3>Cazare evenimente Timișoara — FITS, Festivalul Inimilor și conferințe</h3>
+  <p>Cazare pentru evenimente locale majore: <strong>cazare FITS Timișoara</strong> (Festivalul Internațional de Teatru), <strong>apartamente închiriere Festivalul Inimilor</strong>, Timișoara Jazz Festival, Plai Festival, Revolution Festival și conferințe medicale UMF — apartamente disponibile cu rezervare anticipată în Centru, Iosefin și Complex Studențesc.</p>
 `;
 
 const BASE_URL = 'https://www.realtrust.ro';
@@ -234,7 +252,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     path: '/',
     title: 'RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții',
     description: 'Apartamente regim hotelier Timișoara — Centru, Iosefin, Elisabetin, Complex Studențesc, lângă UVT și Iulius Town. ROI 9.4% net. Calculează gratuit!',
-    h1: 'RealTrust Timișoara — Imobiliare, Regim Hotelier & Investiții',
+    h1: 'RealTrust Timișoara — Investiții Imobiliare Profitabile & Regim Hotelier',
     canonical: `${BASE_URL}/`,
     seoBody: HOMEPAGE_SEO_BODY,
     jsonLd: {
