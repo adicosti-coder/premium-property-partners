@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
-import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Hero image served from public/ — single 800w variant (mobile-first, ~35KB).
@@ -235,7 +234,15 @@ const HeroContent = ({
   isMobile: boolean;
   language: string;
 }) => {
-  const { trackManagement, trackInvestment } = useCtaAnalytics();
+  const trackManagement = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("rt:cta-track", { detail: { type: "management" } }));
+  };
+
+  const trackInvestment = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("rt:cta-track", { detail: { type: "investment" } }));
+  };
   return (
     <>
       <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
