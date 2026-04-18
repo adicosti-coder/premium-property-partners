@@ -13,6 +13,7 @@ import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
+const TURNSTILE_LOAD_DELAY_MS = 12000;
 
 const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
 
@@ -30,6 +31,7 @@ const QuickLeadForm = () => {
   // Turnstile state - invisible mode
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [securityReady, setSecurityReady] = useState(false);
   const pendingSubmitRef = useRef(false);
 
   // Store form data for submission after captcha
@@ -40,8 +42,21 @@ const QuickLeadForm = () => {
     listingUrl: string;
   } | null>(null);
 
-  // Fetch Turnstile site key on mount
   useEffect(() => {
+    const onInteraction = () => setSecurityReady(true);
+    const events: Array<keyof WindowEventMap> = ["focus", "pointerdown", "touchstart", "keydown"];
+    events.forEach((event) => window.addEventListener(event, onInteraction, { once: true, passive: true }));
+    const timer = window.setTimeout(() => setSecurityReady(true), TURNSTILE_LOAD_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, onInteraction));
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!securityReady || turnstileSiteKey) return;
+
     const fetchSiteKey = async () => {
       try {
         const { data, error } = await supabase.functions.invoke('get-turnstile-site-key');
@@ -51,8 +66,9 @@ const QuickLeadForm = () => {
         console.error("Failed to fetch Turnstile site key:", error);
       }
     };
+
     fetchSiteKey();
-  }, []);
+  }, [securityReady, turnstileSiteKey]);
 
   const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
     try {
@@ -322,7 +338,7 @@ const QuickLeadForm = () => {
                 type="submit" 
                 size="lg"
                 className="h-12 px-6 md:px-8 font-semibold"
-                disabled={isSubmitting || !turnstileSiteKey || !turnstileToken}
+                disabled={isSubmitting || !securityReady || !turnstileSiteKey || !turnstileToken}
               >
                 {isSubmitting ? (
                   <>
