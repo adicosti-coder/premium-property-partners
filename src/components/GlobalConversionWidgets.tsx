@@ -142,7 +142,7 @@ const GlobalConversionWidgets = ({
           
           <PWAInstallPrompt />
           {showChatbot && <AIChatbot />}
-          {showVoiceWidget && <ElevenLabsWidgetLazy />}
+           {showVoiceWidget && !isMobile && <ElevenLabsWidgetLazy />}
           {showExitIntent && <ExitIntentPopup />}
           <ReferralPopup />
           <InlineCalculatorPopup />

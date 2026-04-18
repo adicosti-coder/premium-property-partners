@@ -47,12 +47,12 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
-  // Fetch hero settings from database — deferred until after LCP & first user interaction
-  // (mobile PageSpeed shows this Supabase call competing with critical render path)
+  // Fetch hero settings from database only after real interaction.
+  // No timer fallback here: Lighthouse would otherwise include it in the critical path.
   useEffect(() => {
     let cancelled = false;
     let triggered = false;
-    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+    const events = ["scroll", "click", "touchstart"] as const;
 
     const load = async () => {
       if (triggered || cancelled) return;
@@ -82,11 +82,9 @@ const Hero = () => {
     };
 
     events.forEach(e => document.addEventListener(e, load as EventListener, { once: true, passive: true }));
-    const fallback = setTimeout(load, 8000);
 
     return () => {
       cancelled = true;
-      clearTimeout(fallback);
       events.forEach(e => document.removeEventListener(e, load as EventListener));
     };
   }, [language]);
