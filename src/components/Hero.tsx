@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Hero image served from public/ — optimized compressed versions
-const HERO_IMAGE_PUBLIC = "/images/hero-optimized-1920w.webp";
+// Hero image served from public/ — single 800w variant (mobile-first, ~35KB).
+// Desktop CSS scales it. Avoids the 150KB 1920w fetch that PageSpeed mobile penalises.
+const HERO_IMAGE_PUBLIC = "/images/hero-optimized-800w.webp";
 interface HeroSettings {
   videoUrl: string;
   customFallbackImage: string | null;
@@ -104,25 +105,16 @@ const Hero = () => {
     <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-28 md:pt-32">
       {/* Background: static image + video (desktop only) */}
       <div className="absolute inset-0">
-        <picture>
-          {!(heroSettings.customFallbackImage) && (
-            <source
-              srcSet="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
-              sizes="100vw"
-              type="image/webp"
-            />
-          )}
-          <img
-            src={heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC}
-            alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier: ATENEO, GREEN FOREST, FullView Studio, HELIOS, City of Mara, Fructus Plaza, Ring, Denya Forest, X-City — lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, ROI 9.4% net verificat."
-            className="w-full h-full object-cover"
-            width={1920}
-            height={1080}
-            fetchPriority="high"
-            decoding="sync"
-            loading="eager"
-          />
-        </picture>
+        <img
+          src={heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC}
+          alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, City of Mara — lângă Iulius Mall, Centrul Vechi. ROI 9.4% net verificat."
+          className="w-full h-full object-cover"
+          width={800}
+          height={450}
+          fetchPriority="high"
+          decoding="async"
+          loading="eager"
+        />
         {/* Video — desktop only */}
         {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
