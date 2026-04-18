@@ -232,9 +232,11 @@ const Index = () => {
         <LocalLandmarksStrip />
 
         {/* Verified Reviews Badges - social proof */}
-        <Suspense fallback={null}>
-          <VerifiedReviewsBadges />
-        </Suspense>
+        {belowFoldReady && (
+          <Suspense fallback={null}>
+            <VerifiedReviewsBadges />
+          </Suspense>
+        )}
 
         {/* Near-fold: stats + calculator — visibility gated at 200px */}
         <NearFoldSection />

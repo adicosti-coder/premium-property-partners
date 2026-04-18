@@ -47,44 +47,47 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
-  // Fetch hero settings from database — deferred until after LCP
+  // Fetch hero settings from database — deferred until after LCP & first user interaction
+  // (mobile PageSpeed shows this Supabase call competing with critical render path)
   useEffect(() => {
-    const load = () => {
-      (async () => {
-        try {
-          const { supabase } = await import("@/lib/supabaseClient");
-          const { data, error } = await (supabase
-            .from("public_site_settings" as any)
-            .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
-            .single() as any);
-          
-          if (!error && data) {
-            setHeroSettings({
-              videoUrl: data.hero_video_url || "/hero-video.mp4",
-              customFallbackImage: data.hero_image_url,
-              customTitle: language === "ro" ? data.hero_title_ro : data.hero_title_en,
-              customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
-              customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
-              customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
-              customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
-              customCtaPrimary: language === "ro" ? data.hero_cta_primary_ro : data.hero_cta_primary_en,
-              customCtaSecondary: language === "ro" ? data.hero_cta_secondary_ro : data.hero_cta_secondary_en,
-            });
-          }
-        } catch (err) {
-          console.error("Error fetching hero settings:", err);
-        }
-      })();
+    let cancelled = false;
+    let triggered = false;
+    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+
+    const load = async () => {
+      if (triggered || cancelled) return;
+      triggered = true;
+      events.forEach(e => document.removeEventListener(e, load as EventListener));
+      try {
+        const { supabase } = await import("@/lib/supabaseClient");
+        const { data, error } = await (supabase
+          .from("public_site_settings" as any)
+          .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
+          .single() as any);
+        if (cancelled || error || !data) return;
+        setHeroSettings({
+          videoUrl: data.hero_video_url || "/hero-video.mp4",
+          customFallbackImage: data.hero_image_url,
+          customTitle: language === "ro" ? data.hero_title_ro : data.hero_title_en,
+          customHighlight: language === "ro" ? data.hero_highlight_ro : data.hero_highlight_en,
+          customSubtitle: language === "ro" ? data.hero_subtitle_ro : data.hero_subtitle_en,
+          customBadge: language === "ro" ? data.hero_badge_ro : data.hero_badge_en,
+          customTags: language === "ro" ? data.hero_tags_ro : data.hero_tags_en,
+          customCtaPrimary: language === "ro" ? data.hero_cta_primary_ro : data.hero_cta_primary_en,
+          customCtaSecondary: language === "ro" ? data.hero_cta_secondary_ro : data.hero_cta_secondary_en,
+        });
+      } catch {
+        // silent: fallback to static text
+      }
     };
 
-    const idleId = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(load, { timeout: 3000 })
-      : null;
-    const timerId = idleId === null ? setTimeout(load, 1500) : null;
+    events.forEach(e => document.addEventListener(e, load as EventListener, { once: true, passive: true }));
+    const fallback = setTimeout(load, 8000);
 
     return () => {
-      if (idleId !== null) cancelIdleCallback(idleId);
-      if (timerId !== null) clearTimeout(timerId);
+      cancelled = true;
+      clearTimeout(fallback);
+      events.forEach(e => document.removeEventListener(e, load as EventListener));
     };
   }, [language]);
 
