@@ -302,8 +302,9 @@ const Header = () => {
               </Link>
             )}
             {/* Notifications - hidden on mobile, visible md+ only for authenticated admins */}
+            {/* Notifications + Animation toggle: render only after mobile menu interaction OR md+ viewport.
+                Avoids loading non-critical chunks on mobile LCP path. */}
             {isAuthenticated === true && <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>}
-            {/* Animation toggle - hidden on mobile */}
             <div className="hidden md:block"><Suspense fallback={null}><AnimationToggle /></Suspense></div>
             {/* Theme toggle - visible on all screens */}
             <ThemeToggle />
@@ -463,8 +464,8 @@ const Header = () => {
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
-                  {isAuthenticated === true && <Suspense fallback={null}><NotificationBell /></Suspense>}
-                  <Suspense fallback={null}><AnimationToggle /></Suspense>
+                  {mobileMenuOpen && isAuthenticated === true && <Suspense fallback={null}><NotificationBell /></Suspense>}
+                  {mobileMenuOpen && <Suspense fallback={null}><AnimationToggle /></Suspense>}
                   <ThemeToggle />
                   <LanguageSwitcher />
                 </div>
