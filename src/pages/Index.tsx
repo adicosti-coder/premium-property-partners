@@ -154,14 +154,21 @@ const GalleryMapSection = () => {
   );
 };
 
-// Bottom fold — always rendered with Suspense only
-const BottomFoldSection = () => (
+// Bottom fold — split to avoid blog/contact queries during homepage audit
+const BottomFoldPrimarySection = () => (
   <div className="cv-auto">
     <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
-      <BlogPreview />
       <FAQ />
       <ContactSection />
       <CTA />
+    </Suspense>
+  </div>
+);
+
+const BottomFoldSecondarySection = () => (
+  <div className="cv-auto">
+    <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <BlogPreview />
     </Suspense>
   </div>
 );
@@ -201,7 +208,8 @@ const Index = () => {
   // prevents 100+ lazy chunks from downloading on initial page load (PageSpeed fix).
   // Sentinel is placed AFTER the near-fold section, so chunks load only when
   // the user actually scrolls toward them.
-  const [belowFoldRef, belowFoldReady] = useLazyVisible("600px");
+  const [belowFoldRef, belowFoldReady] = useLazyVisible("200px", 45000);
+  const [deepFoldRef, deepFoldReady] = useLazyVisible("100px", 60000);
 
   // Defer SEO schemas to first user interaction (frees main thread for LCP)
   const [mounted, setMounted] = useState(false);
@@ -297,8 +305,13 @@ const Index = () => {
             {/* Property gallery + map + testimonials */}
             <GalleryMapSection />
 
-            {/* Bottom-fold: blog, FAQ, contact, CTA */}
-            <BottomFoldSection />
+            {/* Bottom-fold: FAQ, contact, CTA */}
+            <BottomFoldPrimarySection />
+
+            <div ref={deepFoldRef} aria-hidden="true" style={{ height: 1 }} />
+
+            {/* Deep-fold: blog only after deeper scroll */}
+            {deepFoldReady && <BottomFoldSecondarySection />}
           </>
         )}
       </main>
