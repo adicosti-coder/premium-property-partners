@@ -16,6 +16,14 @@ export function ServicesH2Strip() {
 
   const services = [
     {
+      to: "/imobiliare",
+      icon: Building2,
+      h2: isRo ? "Agenție imobiliară Timișoara" : "Real estate agency Timișoara",
+      desc: isRo
+        ? "Servicii imobiliare Timișoara: vânzări, cumpărări, închirieri și consultanță locală cu evaluare profesionistă."
+        : "Real estate services in Timișoara: sales, rentals and local consulting with professional valuation.",
+    },
+    {
       to: "/imobiliare-timisoara",
       icon: Building2,
       h2: isRo ? "Apartamente de vânzare Timișoara" : "Apartments for sale Timișoara",
@@ -55,7 +63,7 @@ export function ServicesH2Strip() {
       className="w-full bg-background py-10 md:py-14 border-b border-border/40"
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
           {services.map(({ to, icon: Icon, h2, desc }) => (
             <Link
               key={to}
