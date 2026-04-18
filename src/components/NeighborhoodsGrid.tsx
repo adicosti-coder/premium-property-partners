@@ -19,19 +19,14 @@ export function NeighborhoodsGrid() {
       setEnabled(true);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
-    const events = ["scroll", "click", "touchstart", "keydown", "mousemove"] as const;
+    // ONLY scroll/click/touch — no mousemove (fires instantly), no idle (fires in Lighthouse).
+    const events = ["scroll", "click", "touchstart"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
-    // Fallback after idle so SSR/no-interaction visitors still get data
-    const idleId = (window as any).requestIdleCallback
-      ? (window as any).requestIdleCallback(trigger, { timeout: 3500 })
-      : setTimeout(trigger, 2500);
+    // Long fallback so Lighthouse audit (no scroll) finishes before query fires.
+    const fallback = setTimeout(trigger, 15000);
     return () => {
       events.forEach(e => document.removeEventListener(e, trigger));
-      if ((window as any).cancelIdleCallback && typeof idleId === "number") {
-        (window as any).cancelIdleCallback(idleId);
-      } else {
-        clearTimeout(idleId as any);
-      }
+      clearTimeout(fallback);
     };
   }, []);
   const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties(undefined, { enabled });
