@@ -1,21 +1,50 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 
-// ALL widgets deferred — nothing loads eagerly to cut initial JS execution
-const AccessibilityPanel = lazy(() => import("@/components/AccessibilityPanel"));
-const MobileCTABar = lazy(() => import("@/components/MobileCTABar"));
+const CHUNK_RELOAD_KEY = "__rt_chunk_reload__";
 
-const OfflineIndicator = lazy(() => import("@/components/OfflineIndicator"));
-const DesktopStickyContactBar = lazy(() => import("@/components/DesktopStickyContactBar"));
+const lazyWithChunkRecovery = <T extends { default: React.ComponentType<any> }>(
+  importer: () => Promise<T>,
+) =>
+  lazy(async () => {
+    try {
+      return await importer();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const isChunkError =
+        message.includes("Failed to fetch dynamically imported module") ||
+        message.includes("Loading chunk") ||
+        message.includes("Loading CSS chunk");
+
+      if (
+        isChunkError &&
+        typeof window !== "undefined" &&
+        typeof sessionStorage !== "undefined" &&
+        !sessionStorage.getItem(CHUNK_RELOAD_KEY)
+      ) {
+        sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+        window.location.reload();
+      }
+
+      return { default: () => null } as T;
+    }
+  });
+
+// ALL widgets deferred — nothing loads eagerly to cut initial JS execution
+const AccessibilityPanel = lazyWithChunkRecovery(() => import("@/components/AccessibilityPanel"));
+const MobileCTABar = lazyWithChunkRecovery(() => import("@/components/MobileCTABar"));
+
+const OfflineIndicator = lazyWithChunkRecovery(() => import("@/components/OfflineIndicator"));
+const DesktopStickyContactBar = lazyWithChunkRecovery(() => import("@/components/DesktopStickyContactBar"));
 
 // Defer non-critical widgets to reduce initial main-thread work
-const ExitIntentPopup = lazy(() => import("@/components/ExitIntentPopup"));
-const AIChatbot = lazy(() => import("@/components/AIChatbot"));
-const PWAInstallPrompt = lazy(() => import("@/components/PWAInstallPrompt"));
-const ElevenLabsWidgetLazy = lazy(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
-const ReferralPopup = lazy(() => import("@/components/ReferralPopup"));
+const ExitIntentPopup = lazyWithChunkRecovery(() => import("@/components/ExitIntentPopup"));
+const AIChatbot = lazyWithChunkRecovery(() => import("@/components/AIChatbot"));
+const PWAInstallPrompt = lazyWithChunkRecovery(() => import("@/components/PWAInstallPrompt"));
+const ElevenLabsWidgetLazy = lazyWithChunkRecovery(() => import("@/components/ElevenLabsWidget").then(m => ({ default: m.ElevenLabsWidget })));
+const ReferralPopup = lazyWithChunkRecovery(() => import("@/components/ReferralPopup"));
 
-const InlineCalculatorPopup = lazy(() => import("@/components/InlineCalculatorPopup"));
-const FeedbackBanner = lazy(() => import("@/components/FeedbackBanner"));
+const InlineCalculatorPopup = lazyWithChunkRecovery(() => import("@/components/InlineCalculatorPopup"));
+const FeedbackBanner = lazyWithChunkRecovery(() => import("@/components/FeedbackBanner"));
 
 interface GlobalConversionWidgetsProps {
   showMobileCTA?: boolean;
@@ -37,6 +66,11 @@ const GlobalConversionWidgets = ({
 }: GlobalConversionWidgetsProps) => {
   const [phase1Ready, setPhase1Ready] = useState(false);
   const [phase2Ready, setPhase2Ready] = useState(false);
+
+  useEffect(() => {
+    if (typeof sessionStorage === "undefined") return;
+    sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+  }, []);
 
   // Load widgets only after first user interaction to free main thread
   useEffect(() => {

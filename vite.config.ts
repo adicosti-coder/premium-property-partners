@@ -72,20 +72,18 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Core vendor libs loaded on every page
+            // Keep chunking stable to avoid circular vendor dependencies and
+            // stale dynamic-import failures after deploys.
             if (id.includes("node_modules")) {
               if (id.includes("react-router") || id.includes("/react/") || id.includes("react-dom") || id.includes("scheduler")) {
                 return "vendor-react";
               }
               if (id.includes("@tanstack/react-query")) return "vendor-query";
               if (id.includes("embla-carousel")) return "vendor-embla";
-              // Bundle ALL other small node_modules deps (lucide-react icons,
-              // radix primitives, utils) into ONE shared chunk to eliminate
-              // the 60+ tiny <1KiB chunks that bloat the network waterfall.
-              return "vendor-misc";
+              if (id.includes("mapbox-gl")) return "vendor-mapbox";
+              return undefined;
             }
-            // Bundle small shared UI primitives into one chunk to avoid
-            // 30+ tiny per-component chunks (popover, dialog, label, etc.)
+
             if (id.includes("/src/components/ui/")) {
               return "ui-primitives";
             }
