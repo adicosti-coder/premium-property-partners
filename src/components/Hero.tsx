@@ -115,7 +115,7 @@ const Hero = () => {
           alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, City of Mara — lângă Iulius Mall, Centrul Vechi. ROI 9.4% net verificat."
           className="w-full h-full object-cover"
           width={800}
-          height={450}
+          height={447}
           fetchPriority="high"
           decoding="async"
           loading="eager"
@@ -256,8 +256,8 @@ const HeroContent = ({
         ))}
       </p>
       
-      {/* CTAs */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* CTAs — gap-6 (24px) for WCAG touch-target spacing on mobile */}
+      <div className="flex flex-col sm:flex-row gap-6 sm:gap-4">
         <Button 
           variant="hero" 
           size="xl" 
