@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => {
         webp: { quality: 35, effort: 6 },
         avif: { quality: 30, effort: 6 },
       }),
-      mode === "production" && viteAsyncCss(),
+      // viteAsyncCss removed — caused FOUC/CLS in PageSpeed mobile.
       mode === "production" && vitePrerenderSeo(),
     ].filter(Boolean),
     resolve: {
