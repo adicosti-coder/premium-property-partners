@@ -73,7 +73,7 @@ const PhoneInputWithCountry = ({
   const listRef = useRef<HTMLDivElement>(null);
 
   // Auto-detect country from geolocation
-  const geoDetection = useGeoCountryDetection();
+  const geoDetection = useGeoCountryDetection(autoDetectLocation);
 
   // Set initial country from geolocation (only if user hasn't manually selected and no saved preference)
   useEffect(() => {
