@@ -146,12 +146,10 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
       setReady(true);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
-    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+    const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
-    const fallback = setTimeout(trigger, 30000);
     return () => {
       events.forEach(e => document.removeEventListener(e, trigger));
-      clearTimeout(fallback);
     };
   }, []);
 

@@ -221,22 +221,20 @@ const Index = () => {
       setMounted(true);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
-    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+    const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
-    const fallback = setTimeout(trigger, 6000);
-    return () => { clearTimeout(fallback); events.forEach(e => document.removeEventListener(e, trigger)); };
+    return () => { events.forEach(e => document.removeEventListener(e, trigger)); };
   }, []);
 
   // Defer session analytics to first scroll (not a fixed timer)
   useEffect(() => {
     const loadAnalytics = () => {
       import("@/hooks/useSessionAnalytics").catch(() => {});
-      document.removeEventListener("scroll", loadAnalytics);
+      events.forEach(e => document.removeEventListener(e, loadAnalytics));
     };
-    document.addEventListener("scroll", loadAnalytics, { once: true, passive: true });
-    // Fallback after 12s if no scroll
-    const t = setTimeout(loadAnalytics, 30000);
-    return () => { clearTimeout(t); document.removeEventListener("scroll", loadAnalytics); };
+    const events = ["click", "touchstart", "keydown"] as const;
+    events.forEach(e => document.addEventListener(e, loadAnalytics, { once: true, passive: true }));
+    return () => { events.forEach(e => document.removeEventListener(e, loadAnalytics)); };
   }, []);
 
   return (

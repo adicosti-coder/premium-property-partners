@@ -12,7 +12,7 @@ interface GeoLocationState {
  * Hook to detect user's country based on their location
  * Uses IP-based geolocation (no permission required) with optional GPS fallback
  */
-export const useGeoCountryDetection = () => {
+export const useGeoCountryDetection = (enabled = true) => {
   const [state, setState] = useState<GeoLocationState>({
     country: getDefaultCountry(),
     isLoading: true,
@@ -21,6 +21,16 @@ export const useGeoCountryDetection = () => {
   });
 
   useEffect(() => {
+    if (!enabled) {
+      setState({
+        country: getDefaultCountry(),
+        isLoading: false,
+        error: null,
+        source: 'default',
+      });
+      return;
+    }
+
     const detectCountry = async () => {
       // Try IP-based geolocation first (no permission required)
       try {
@@ -62,7 +72,7 @@ export const useGeoCountryDetection = () => {
     };
 
     detectCountry();
-  }, []);
+  }, [enabled]);
 
   return state;
 };
