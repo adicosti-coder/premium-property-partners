@@ -13,8 +13,6 @@ import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
-const TURNSTILE_LOAD_DELAY_MS = 12000;
-
 const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
 
 const QuickLeadForm = () => {
@@ -42,16 +40,8 @@ const QuickLeadForm = () => {
     listingUrl: string;
   } | null>(null);
 
-  useEffect(() => {
-    const onInteraction = () => setSecurityReady(true);
-    const events: Array<keyof WindowEventMap> = ["focus", "pointerdown", "touchstart", "keydown"];
-    events.forEach((event) => window.addEventListener(event, onInteraction, { once: true, passive: true }));
-    const timer = window.setTimeout(() => setSecurityReady(true), TURNSTILE_LOAD_DELAY_MS);
-
-    return () => {
-      window.clearTimeout(timer);
-      events.forEach((event) => window.removeEventListener(event, onInteraction));
-    };
+  const activateSecurity = useCallback(() => {
+    setSecurityReady(true);
   }, []);
 
   useEffect(() => {
@@ -199,6 +189,16 @@ const QuickLeadForm = () => {
     }
 
     // Check if captcha is ready
+    if (!securityReady) {
+      activateSecurity();
+      toast({
+        title: language === 'en' ? "Security check required" : "Verificare de securitate necesară",
+        description: language === 'en' ? "Please complete the security check below." : "Te rugăm să completezi verificarea de securitate de mai jos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!turnstileSiteKey) {
       toast({
         title: language === 'en' ? "Please wait" : "Vă rugăm așteptați",
@@ -276,7 +276,7 @@ const QuickLeadForm = () => {
           </div>
           
           {/* Inline Form */}
-          <form onSubmit={handleSubmit} className="relative">
+          <form onSubmit={handleSubmit} onFocusCapture={activateSecurity} onPointerDownCapture={activateSecurity} className="relative">
             <div className="flex flex-col md:flex-row gap-3 p-3 md:p-2 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
               {/* Name Input */}
               <div className="relative flex-1">
@@ -298,6 +298,7 @@ const QuickLeadForm = () => {
                   placeholder={t.quickLeadForm?.phonePlaceholder || "+40 7XX XXX XXX"}
                   error={phoneError}
                   inputClassName="h-12 bg-background/50 border-0"
+                  autoDetectLocation={false}
                 />
               </div>
               
@@ -338,7 +339,7 @@ const QuickLeadForm = () => {
                 type="submit" 
                 size="lg"
                 className="h-12 px-6 md:px-8 font-semibold"
-                disabled={isSubmitting || !securityReady || !turnstileSiteKey || !turnstileToken}
+                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
