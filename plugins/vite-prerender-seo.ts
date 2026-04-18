@@ -441,15 +441,8 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `${seoBlock}\n    <div id="root">`
   );
 
-  // Defer main stylesheet to eliminate ~480ms render-blocking time on mobile.
-  // The hero shell uses 100% inline styles, so deferring CSS is safe for LCP.
-  // Inline critical CSS in <head> covers body background to prevent FOUC.
-  html = html.replace(
-    /<link rel="stylesheet"\s+crossorigin\s+href="([^"]+)"\s*\/?>/g,
-    (_m, href) =>
-      `<link rel="preload" as="style" crossorigin href="${href}" onload="this.onload=null;this.rel='stylesheet'">` +
-      `<noscript><link rel="stylesheet" crossorigin href="${href}"></noscript>`
-  );
+  // Keep the main stylesheet render-blocking.
+  // Previous preload-swap optimization caused unstyled first paint and score instability.
 
   return ensureProtectedHeadNodes(html, protectedHeadNodes);
 }
