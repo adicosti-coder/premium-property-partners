@@ -27,11 +27,9 @@
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-    <!-- Preconnect only to the single most critical origin (API) -->
-    <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
-    <!-- Cloudflare Turnstile: dns-prefetch only (not used on every page) -->
+    <!-- DNS prefetch only — preconnect was unused per Lighthouse (Supabase not used pre-LCP) -->
+    <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
     <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
-    <!-- Non-critical origins: dns-prefetch only -->
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
