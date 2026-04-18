@@ -75,18 +75,22 @@ export default defineConfig(({ mode }) => {
             // Keep chunking stable to avoid circular vendor dependencies and
             // stale dynamic-import failures after deploys.
             if (id.includes("node_modules")) {
-              if (id.includes("react-router") || id.includes("/react/") || id.includes("react-dom") || id.includes("scheduler")) {
+              // Tight react-core matcher — avoids catching react-day-picker, react-hook-form, etc.
+              if (
+                /node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)
+              ) {
                 return "vendor-react";
               }
               if (id.includes("@tanstack/react-query")) return "vendor-query";
               if (id.includes("embla-carousel")) return "vendor-embla";
               if (id.includes("mapbox-gl")) return "vendor-mapbox";
+              // Group all Radix UI primitives together — keeps HTTP requests low
+              if (id.includes("@radix-ui/")) return "vendor-radix";
               return undefined;
             }
-
-            if (id.includes("/src/components/ui/")) {
-              return "ui-primitives";
-            }
+            // NOTE: Do NOT force a "ui-primitives" chunk. Letting Rollup split
+            // src/components/ui/* per route allows tree-shaking — Hero/Header only
+            // pull Button, so the eager bundle drops by ~200 KiB (LCP win).
           },
         },
       },
