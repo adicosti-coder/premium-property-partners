@@ -207,8 +207,8 @@ const Index = () => {
   // prevents 100+ lazy chunks from downloading on initial page load (PageSpeed fix).
   // Sentinel is placed AFTER the near-fold section, so chunks load only when
   // the user actually scrolls toward them.
-  const [belowFoldRef, belowFoldReady] = useLazyVisible("1600px");
-  const [deepFoldRef, deepFoldReady] = useLazyVisible("1200px");
+  const [belowFoldRef, belowFoldReady] = useLazyVisible("300px", null);
+  const [deepFoldRef, deepFoldReady] = useLazyVisible("200px", null);
 
   // Defer SEO schemas to first user interaction (frees main thread for LCP)
   const [mounted, setMounted] = useState(false);

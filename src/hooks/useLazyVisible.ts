@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
  * enters the viewport (with a generous rootMargin so components start
  * loading before the user scrolls to them). Once true it never reverts.
  */
-export function useLazyVisible(rootMargin = "400px", timeoutMs = 15000) {
+export function useLazyVisible(rootMargin = "400px", timeoutMs: number | null = null) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -15,11 +15,11 @@ export function useLazyVisible(rootMargin = "400px", timeoutMs = 15000) {
     const el = ref.current;
 
     // Fallback: force visible after timeout regardless of observer
-    const timer = setTimeout(() => setIsVisible(true), timeoutMs);
+    const timer = timeoutMs == null ? null : setTimeout(() => setIsVisible(true), timeoutMs);
 
     if (!el || typeof IntersectionObserver === "undefined") {
       setIsVisible(true);
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       return;
     }
 
@@ -28,7 +28,7 @@ export function useLazyVisible(rootMargin = "400px", timeoutMs = 15000) {
         if (entry.isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
-          clearTimeout(timer);
+          if (timer) clearTimeout(timer);
         }
       },
       { rootMargin }
@@ -37,7 +37,7 @@ export function useLazyVisible(rootMargin = "400px", timeoutMs = 15000) {
     observer.observe(el);
     return () => {
       observer.disconnect();
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     };
   }, [isVisible, rootMargin, timeoutMs]);
 
