@@ -4,7 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import vitePrerenderSeo from "./plugins/vite-prerender-seo";
-import viteAsyncCss from "./plugins/vite-async-css";
+// Note: viteAsyncCss removed — caused FOUC/CLS regression in PageSpeed.
 
 const normalizeEnvValue = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
