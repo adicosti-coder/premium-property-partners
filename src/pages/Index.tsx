@@ -177,11 +177,20 @@ const Index = () => {
   // the user actually scrolls toward them.
   const [belowFoldRef, belowFoldReady] = useLazyVisible("600px");
 
-  // Defer SEO/analytics to after first paint
+  // Defer SEO schemas to first user interaction (frees main thread for LCP)
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const id = requestIdleCallback?.(() => setMounted(true)) ?? setTimeout(() => setMounted(true), 100);
-    return () => { if (typeof id === 'number') cancelIdleCallback?.(id) ?? clearTimeout(id); };
+    let triggered = false;
+    const trigger = () => {
+      if (triggered) return;
+      triggered = true;
+      setMounted(true);
+      events.forEach(e => document.removeEventListener(e, trigger));
+    };
+    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    const fallback = setTimeout(trigger, 6000);
+    return () => { clearTimeout(fallback); events.forEach(e => document.removeEventListener(e, trigger)); };
   }, []);
 
   // Defer session analytics to first scroll (not a fixed timer)
