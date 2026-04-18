@@ -1032,17 +1032,17 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
     generateOrganizationSchema(),
     generateWebSiteSchema(),
     generatePropertyManagementServiceSchema(),
-    generateRealEstateAgentSchema(),
+    generateHomepageRealEstateAgentSchema(),
   ];
 
   return schemas;
 }
 
-// RealEstateAgent schema — explicit signal for Google's real estate vertical
-export const generateRealEstateAgentSchema = () => ({
+// Homepage-specific RealEstateAgent schema — explicit signal for Google's real estate vertical
+export const generateHomepageRealEstateAgentSchema = () => ({
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
-  "@id": `${BASE_URL}/#realestateagent`,
+  "@id": `${BASE_URL}/#realestateagent-home`,
   "name": "RealTrust Imobiliare Timișoara",
   "alternateName": ["Agenție imobiliară Timișoara RealTrust", "RealTrust Real Estate"],
   "description": "Agenție imobiliară Timișoara: apartamente de vânzare, proprietăți de închiriere, regim hotelier și administrare apartamente Timișoara cu ROI 9.4% net verificat.",
