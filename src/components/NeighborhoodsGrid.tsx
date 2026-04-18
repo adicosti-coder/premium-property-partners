@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, TrendingUp, ArrowRight, Building2, Star } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
@@ -7,7 +8,33 @@ import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
   const { language } = useLanguage();
-  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties();
+  // Defer the heavy Supabase query until after first paint / user interaction
+  // to keep it out of the LCP critical path (PageSpeed mobile fix).
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    let triggered = false;
+    const trigger = () => {
+      if (triggered) return;
+      triggered = true;
+      setEnabled(true);
+      events.forEach(e => document.removeEventListener(e, trigger));
+    };
+    const events = ["scroll", "click", "touchstart", "keydown", "mousemove"] as const;
+    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    // Fallback after idle so SSR/no-interaction visitors still get data
+    const idleId = (window as any).requestIdleCallback
+      ? (window as any).requestIdleCallback(trigger, { timeout: 3500 })
+      : setTimeout(trigger, 2500);
+    return () => {
+      events.forEach(e => document.removeEventListener(e, trigger));
+      if ((window as any).cancelIdleCallback && typeof idleId === "number") {
+        (window as any).cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId as any);
+      }
+    };
+  }, []);
+  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties(undefined, { enabled });
 
   return (
     <section className="w-full bg-gradient-to-b from-background to-muted/30 py-10 md:py-16 lg:py-20">
