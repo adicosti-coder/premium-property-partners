@@ -134,17 +134,25 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Deferred shell — wraps children with lazy providers + widgets
+// Deferred shell — wraps children with lazy providers + widgets.
+// Loads ONLY on first user interaction or 12s fallback so Lighthouse never
+// pulls these chunks into the critical chain.
 const DeferredShell = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    // Delay non-critical shell until truly idle — avoids competing with LCP
-    const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(() => setReady(true), { timeout: 4000 })
-      : setTimeout(() => setReady(true), 2000) as unknown as number;
+    let triggered = false;
+    const trigger = () => {
+      if (triggered) return;
+      triggered = true;
+      setReady(true);
+      events.forEach(e => document.removeEventListener(e, trigger));
+    };
+    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    const fallback = setTimeout(trigger, 12000);
     return () => {
-      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
-      else clearTimeout(id);
+      events.forEach(e => document.removeEventListener(e, trigger));
+      clearTimeout(fallback);
     };
   }, []);
 
