@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense, useState, useRef } from "react";
+import React, { useEffect, lazy, Suspense, useState } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
@@ -10,8 +10,7 @@ import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
 import SEOLocalEntitiesBlock from "@/components/SEOLocalEntitiesBlock";
 import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schemaGenerators";
 
-// ALL below-fold components are lazy loaded
-const StatsCounters = lazy(() => import("@/components/StatsCounters"));
+import StatsCounters from "@/components/StatsCounters";
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -33,7 +32,7 @@ const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 // InteractiveMapWithPOI: NO lazy() here — even lazy() causes Vite to add
 // the mapbox-gl chunk (455KB) to modulepreload, parsed at 948ms.
 // Instead, we dynamically import() ONLY on user click inside GalleryMapSection.
-const VerifiedReviewsBadges = lazy(() => import("@/components/VerifiedReviewsBadges"));
+import VerifiedReviewsBadges from "@/components/VerifiedReviewsBadges";
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
@@ -208,8 +207,8 @@ const Index = () => {
   // prevents 100+ lazy chunks from downloading on initial page load (PageSpeed fix).
   // Sentinel is placed AFTER the near-fold section, so chunks load only when
   // the user actually scrolls toward them.
-  const [belowFoldRef, belowFoldReady] = useLazyVisible("0px", 45000);
-  const [deepFoldRef, deepFoldReady] = useLazyVisible("0px", 60000);
+  const [belowFoldRef, belowFoldReady] = useLazyVisible("300px", null);
+  const [deepFoldRef, deepFoldReady] = useLazyVisible("200px", null);
 
   // Defer SEO schemas to first user interaction (frees main thread for LCP)
   const [mounted, setMounted] = useState(false);
@@ -287,9 +286,7 @@ const Index = () => {
             <LocalLandmarksStrip />
 
             {/* Verified Reviews Badges - social proof */}
-            <Suspense fallback={null}>
-              <VerifiedReviewsBadges />
-            </Suspense>
+            <VerifiedReviewsBadges />
 
             {/* Near-fold: stats + calculator */}
             <NearFoldSection />
