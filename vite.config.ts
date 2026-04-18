@@ -71,16 +71,24 @@ export default defineConfig(({ mode }) => {
       modulePreload: false,
       rollupOptions: {
         output: {
-          manualChunks: {
-            // Core vendor libs loaded on every page — kept together
-            // because react-router-dom depends on react/react-dom
-            "vendor-react": ["react", "react-dom", "react-router-dom"],
-            "vendor-query": ["@tanstack/react-query"],
-            // Embla carousel isolated — causes forced reflow (60ms);
-            // separate chunk allows browser to parse it in its own task
-            "vendor-embla": ["embla-carousel-react", "embla-carousel-autoplay"],
-            // Heavy libs (framer-motion, recharts, mapbox-gl, supabase)
-            // split naturally via lazy() imports — NOT listed here
+          manualChunks: (id) => {
+            // Core vendor libs loaded on every page
+            if (id.includes("node_modules")) {
+              if (id.includes("react-router") || id.includes("/react/") || id.includes("react-dom") || id.includes("scheduler")) {
+                return "vendor-react";
+              }
+              if (id.includes("@tanstack/react-query")) return "vendor-query";
+              if (id.includes("embla-carousel")) return "vendor-embla";
+              // Bundle ALL other small node_modules deps (lucide-react icons,
+              // radix primitives, utils) into ONE shared chunk to eliminate
+              // the 60+ tiny <1KiB chunks that bloat the network waterfall.
+              return "vendor-misc";
+            }
+            // Bundle small shared UI primitives into one chunk to avoid
+            // 30+ tiny per-component chunks (popover, dialog, label, etc.)
+            if (id.includes("/src/components/ui/")) {
+              return "ui-primitives";
+            }
           },
         },
       },

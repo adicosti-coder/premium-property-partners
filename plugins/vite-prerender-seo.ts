@@ -438,6 +438,17 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `${seoBlock}\n    <div id="root">`
   );
 
+  // Non-blocking CSS: switch ALL build-injected <link rel="stylesheet"> tags to
+  // preload+swap. The static hero shell uses inline styles, so deferring the
+  // main stylesheet does NOT cause FOUC for the LCP element. Saves ~480ms
+  // render-block time on mobile per Lighthouse.
+  html = html.replace(
+    /<link rel="stylesheet"\s+crossorigin\s+href="([^"]+)"\s*\/?>/g,
+    (_m, href) =>
+      `<link rel="preload" as="style" crossorigin href="${href}" onload="this.onload=null;this.rel='stylesheet'">` +
+      `<noscript><link rel="stylesheet" crossorigin href="${href}"></noscript>`
+  );
+
   return ensureProtectedHeadNodes(html, protectedHeadNodes);
 }
 
