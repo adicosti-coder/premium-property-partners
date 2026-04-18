@@ -35,20 +35,17 @@
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
-    <!-- Preload hero LCP image — mobile 800w (matches static <img> src in hero shell) -->
+    <!-- Preload hero LCP image — single 800w file for ALL viewports (mobile-first).
+         No imagesrcset on link rel=preload because retina DPR would force browser
+         to fetch the 1920w (~150KB) variant on small phones. The static shell <img>
+         below also uses ONLY 800w so the byte cost is ~35KB instead of ~150KB. -->
     <link rel="preload" as="image" type="image/webp" fetchpriority="high"
-          href="/images/hero-optimized-800w.webp"
-          imagesrcset="/images/hero-optimized-800w.webp 800w, /images/hero-optimized-1920w.webp 1920w"
-          imagesizes="100vw" />
+          href="/images/hero-optimized-800w.webp" />
 
-    <!-- Preload hero fonts (Playfair Display) — H1 uses Romanian chars (latin-ext) -->
+    <!-- Preload ONLY the H1 hero font (latin-ext covers Romanian diacritics).
+         All other fonts (NotoSans, Inter, Playfair-latin) load via @font-face
+         on demand without blocking LCP. -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin-ext.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
-    <!-- Preload NotoSans-Regular — body/subtitle font (LCP text element) -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/NotoSans-Regular.woff2" crossorigin />
-    <!-- Preload Inter fonts — prevents 3.3s critical chain via CSS discovery -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
     <style>
