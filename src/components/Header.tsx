@@ -374,7 +374,7 @@ const Header = () => {
         <nav
           className={`px-4 border-t border-border origin-top overflow-auto bg-background transition-all duration-300 ease-out ${mobileMenuOpen ? 'max-h-[80vh] opacity-100 scale-y-100 py-4' : 'max-h-0 opacity-0 scale-y-95 py-0 border-t-0 pointer-events-none'}`}
           style={{ transformOrigin: 'top' }}
-          aria-hidden={!mobileMenuOpen}
+          {...(!mobileMenuOpen ? { inert: '' as unknown as boolean } : {})}
         >
               <div className="flex flex-col gap-2">
                 

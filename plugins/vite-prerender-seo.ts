@@ -423,13 +423,16 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     ? route.jsonLd.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n      ')
     : `<script type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>`;
 
+  // Use `inert` (not aria-hidden) so focusable descendants like <a> are properly removed
+  // from the accessibility tree and tab order — fixes Lighthouse "aria-hidden with focusable
+  // descendants" rule.
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
-    <div id="seo-prerender" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+    <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
       <h1>${escapeHtml(route.h1)}</h1>
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
-      <a href="${route.canonical}">${escapeHtml(route.title)}</a>
+      <a href="${route.canonical}" tabindex="-1">${escapeHtml(route.title)}</a>
       ${route.seoBody ?? ''}
     </div>`;
 
