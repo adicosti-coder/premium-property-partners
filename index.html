@@ -77,6 +77,32 @@
       })();
     </script>
 
+    <!-- Async-load Vite-injected main stylesheet so it never blocks render.
+         The inline critical CSS above already covers the static hero shell (LCP element). -->
+    <script>
+      (function () {
+        function asyncifyMainCss() {
+          try {
+            var links = document.head.querySelectorAll('link[rel="stylesheet"][href*="/assets/"]');
+            for (var i = 0; i < links.length; i++) {
+              var l = links[i];
+              if (l.dataset.async === '1') continue;
+              l.dataset.async = '1';
+              l.media = 'print';
+              l.onload = function () { this.media = 'all'; this.onload = null; };
+            }
+          } catch (_) {}
+        }
+        asyncifyMainCss();
+        var tries = 0;
+        var iv = setInterval(function () {
+          asyncifyMainCss();
+          if (++tries > 40) clearInterval(iv);
+        }, 50);
+        document.addEventListener('DOMContentLoaded', function () { clearInterval(iv); asyncifyMainCss(); });
+      })();
+    </script>
+
 </head>
 
   <body>
