@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+/* useState reserved for future filters; kept import-free */
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, TrendingUp, ArrowRight, Building2, Star } from "lucide-react";
 import { neighborhoods } from "@/data/neighborhoods";
@@ -8,28 +8,9 @@ import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
   const { language } = useLanguage();
-  // Defer the heavy Supabase query until after first paint / user interaction
-  // to keep it out of the LCP critical path (PageSpeed mobile fix).
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    let triggered = false;
-    const trigger = () => {
-      if (triggered) return;
-      triggered = true;
-      setEnabled(true);
-      events.forEach(e => document.removeEventListener(e, trigger));
-    };
-    // ONLY scroll/click/touch — no mousemove (fires instantly), no idle (fires in Lighthouse).
-    const events = ["scroll", "click", "touchstart"] as const;
-    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
-    // Long fallback so Lighthouse audit (no scroll) finishes before query fires.
-    const fallback = setTimeout(trigger, 15000);
-    return () => {
-      events.forEach(e => document.removeEventListener(e, trigger));
-      clearTimeout(fallback);
-    };
-  }, []);
-  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties(undefined, { enabled });
+  // Parent (Index.tsx) already gates this section behind belowFoldReady,
+  // so we can fetch immediately when this component actually renders.
+  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties(undefined, { enabled: true });
 
   return (
     <section className="w-full bg-gradient-to-b from-background to-muted/30 py-10 md:py-16 lg:py-20">
