@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense, useState, useRef, startTransition } from "react";
+import React, { useEffect, lazy, Suspense, useState, useRef } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
