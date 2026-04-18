@@ -1032,10 +1032,69 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
     generateOrganizationSchema(),
     generateWebSiteSchema(),
     generatePropertyManagementServiceSchema(),
+    generateHomepageRealEstateAgentSchema(),
   ];
 
   return schemas;
 }
+
+// Homepage-specific RealEstateAgent schema — explicit signal for Google's real estate vertical
+export const generateHomepageRealEstateAgentSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "RealEstateAgent",
+  "@id": `${BASE_URL}/#realestateagent-home`,
+  "name": "RealTrust Imobiliare Timișoara",
+  "alternateName": ["Agenție imobiliară Timișoara RealTrust", "RealTrust Real Estate"],
+  "description": "Agenție imobiliară Timișoara: apartamente de vânzare, proprietăți de închiriere, regim hotelier și administrare apartamente Timișoara cu ROI 9.4% net verificat.",
+  "url": BASE_URL,
+  "telephone": "+40723154520",
+  "email": "info@realtrust.ro",
+  "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
+  "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,
+  "priceRange": "€€",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+    "addressLocality": "Timișoara",
+    "addressRegion": "Timiș",
+    "postalCode": "300125",
+    "addressCountry": "RO",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 45.7489,
+    "longitude": 21.2087,
+  },
+  "areaServed": [
+    { "@type": "City", "name": "Timișoara" },
+    { "@type": "AdministrativeArea", "name": "Timiș County" },
+  ],
+  "knowsAbout": [
+    "agenție imobiliară Timișoara",
+    "proprietăți de vânzare Timișoara",
+    "apartamente de vânzare Timișoara Centru",
+    "apartamente de închiriat Timișoara studenți",
+    "imobiliare Timișoara ISHO",
+    "administrare apartamente Timișoara",
+    "cazare temporară Timișoara",
+    "regim hotelier Complex Studențesc",
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Servicii Imobiliare Timișoara",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Vânzări apartamente Timișoara", "areaServed": "Timișoara" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Închirieri apartamente Timișoara", "areaServed": "Timișoara" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Administrare apartamente Timișoara", "areaServed": "Timișoara" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Regim hotelier Timișoara", "areaServed": "Timișoara" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Evaluare gratuită proprietate Timișoara", "areaServed": "Timișoara" } },
+    ],
+  },
+  "sameAs": [
+    "https://www.facebook.com/realtrust.ro",
+    "https://www.instagram.com/realtrust_timisoara",
+  ],
+});
 
 // Blog Collection Page Schema for blog listing
 export interface BlogListingArticle {

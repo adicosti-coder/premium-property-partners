@@ -21,6 +21,47 @@ const SEOLocalEntitiesBlock = () => {
         Agenție imobiliară Timișoara — servicii imobiliare complete, apartamente regim hotelier și investiții în toate cartierele Timișoarei
       </h2>
 
+      <h3>Agenție imobiliară Timișoara — proprietăți de vânzare și închiriere</h3>
+      <p>
+        <strong>Agenție imobiliară Timișoara</strong> RealTrust oferă o gamă
+        completă de servicii: <strong>proprietăți de vânzare Timișoara</strong>,
+        apartamente de închiriere pe termen lung și scurt, regim hotelier
+        profesional și <strong>administrare apartamente Timișoara</strong>.
+        Echipă cu peste 25 de ani de experiență în piața imobiliară locală,
+        evaluare gratuită și transparență totală a comisioanelor.
+      </p>
+
+      <h3>Imobiliare Timișoara ISHO — apartamente de vânzare și investiții</h3>
+      <p>
+        <strong>Imobiliare Timișoara ISHO</strong>: apartamente de vânzare în
+        cel mai modern ansamblu rezidențial din oraș, lângă malul Bega și
+        Centrul Vechi. ISHO este un landmark premium cu cerere ridicată pentru
+        regim hotelier (ADR mediu 75–110 €/noapte), parcare subterană,
+        finisaje superioare și acces rapid la Iulius Town și UVT. Investiție
+        recomandată pentru randamente nete 8–10%.
+      </p>
+
+      <h3>Cazare temporară Timișoara — apartamente flexibile pe termen scurt</h3>
+      <p>
+        <strong>Cazare temporară Timișoara</strong> în apartamente regim
+        hotelier complet mobilate și utilate, ideale pentru sejururi scurte de
+        1–30 nopți. Self check-in 24/7, WiFi de mare viteză, parcare gratuită,
+        curățenie profesională și suport multilingv. Soluție pentru călători
+        de business, turiști, familii ale pacienților Spitalul Județean și
+        relocări temporare în Timișoara.
+      </p>
+
+      <h3>Apartamente de închiriat Timișoara studenți — Complex Studențesc</h3>
+      <p>
+        <strong>Apartamente de închiriat Timișoara studenți</strong> în Complex
+        Studențesc, la 5 minute pe jos de UVT (Universitatea de Vest),
+        Politehnica Timișoara (UPT) și UMF „Victor Babeș" Medicină. Garsoniere
+        și apartamente 2–3 camere mobilate, contracte pe an universitar
+        (octombrie–iunie), prețuri accesibile pentru studenți români și
+        internaționali (Erasmus, mobilități academice). Cerere constantă, zonă
+        sigură cu transport public dens.
+      </p>
+
       <h3>Cazare Aeroport Timișoara — apartamente de închiriat Timișoara Aeroport și apartamente lângă Aeroportul Internațional „Traian Vuia"</h3>
       <p>
         <strong>Cazare Aeroport Timișoara</strong> și <strong>apartamente de închiriat Timișoara Aeroport</strong> în apartamente regim hotelier
