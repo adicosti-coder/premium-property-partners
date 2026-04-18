@@ -77,11 +77,12 @@ async function fetchProperties(): Promise<NeighborhoodProperty[]> {
     .filter((property): property is NeighborhoodProperty => Boolean(property));
 }
 
-export function useNeighborhoodProperties(slug?: string) {
+export function useNeighborhoodProperties(slug?: string, options?: { enabled?: boolean }) {
   const query = useQuery({
     queryKey: ["neighborhood-properties"],
     queryFn: fetchProperties,
     staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled ?? true,
   });
 
   const filtered = slug
