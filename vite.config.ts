@@ -4,6 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import vitePrerenderSeo from "./plugins/vite-prerender-seo";
+import viteAsyncCss from "./plugins/vite-async-css";
 
 const normalizeEnvValue = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
@@ -56,6 +57,7 @@ export default defineConfig(({ mode }) => {
         webp: { quality: 35, effort: 6 },
         avif: { quality: 30, effort: 6 },
       }),
+      mode === "production" && viteAsyncCss(),
       mode === "production" && vitePrerenderSeo(),
     ].filter(Boolean),
     resolve: {
