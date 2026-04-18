@@ -1,5 +1,4 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Star } from "lucide-react";
 
 const VerifiedReviewsBadges = () => {
   const { language } = useLanguage();
@@ -10,15 +9,15 @@ const VerifiedReviewsBadges = () => {
       platform: "Booking.com",
       score: "9.7 / 10",
       detail: isRo ? "500+ recenzii" : "500+ reviews",
-      color: "bg-[hsl(220,80%,45%)]",
-      textColor: "text-white",
+      color: "bg-primary",
+      textColor: "text-primary-foreground",
     },
     {
       platform: "Airbnb",
       score: "4.9 ★",
       detail: isRo ? "oaspeți verificați" : "verified guests",
-      color: "bg-[hsl(350,65%,52%)]",
-      textColor: "text-white",
+      color: "bg-secondary",
+      textColor: "text-secondary-foreground",
     },
     {
       platform: "Google",

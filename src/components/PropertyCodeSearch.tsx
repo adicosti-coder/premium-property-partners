@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Search, X, Home, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -39,7 +39,6 @@ const PropertyCodeSearch = ({ className }: PropertyCodeSearchProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [results, setResults] = useState<PropertyResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const searchProperties = async () => {
@@ -111,7 +110,6 @@ const PropertyCodeSearch = ({ className }: PropertyCodeSearchProps) => {
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
             <Input
-              ref={inputRef}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder={language === "ro" ? "ID sau nume proprietate..." : "Property ID or name..."}
