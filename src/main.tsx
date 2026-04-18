@@ -22,17 +22,8 @@ const mountApp = () => {
 
   const events = ["scroll", "click", "touchstart", "keydown"] as const;
 
-  // Use 'once' pattern: attach listeners, fire once, then auto-remove
-  if ("requestIdleCallback" in window) {
-    // Fallback: load after idle if user never interacts within 10s
-    const idleId = requestIdleCallback(() => loadNonCritical(), { timeout: 10000 });
-    const wrappedLoad = () => { cancelIdleCallback(idleId); loadNonCritical(); };
-    events.forEach(e => document.addEventListener(e, wrappedLoad, { once: true, passive: true }));
-  } else {
-    const timeoutId = setTimeout(loadNonCritical, 10000);
-    const wrappedLoad = () => { clearTimeout(timeoutId); loadNonCritical(); };
-    events.forEach(e => document.addEventListener(e, wrappedLoad, { once: true, passive: true }));
-  }
+  // Only load these after real user intent; idle fallback was polluting Lighthouse runs.
+  events.forEach(e => document.addEventListener(e, loadNonCritical, { once: true, passive: true }));
 
   const rootEl = document.getElementById("root");
   if (rootEl) {

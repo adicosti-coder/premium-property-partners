@@ -79,16 +79,17 @@ const Header = () => {
       subscription = data.subscription;
     };
 
-    // Defer the session check to after first paint using idle callback
-    const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(() => init(), { timeout: 3000 })
-      : setTimeout(() => init(), 1500) as unknown as number;
+    const trigger = () => {
+      init().catch(() => {});
+      events.forEach(e => document.removeEventListener(e, trigger));
+    };
+    const events = ["click", "touchstart", "keydown"] as const;
+    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
 
     return () => {
       cancelled = true;
       subscription?.unsubscribe();
-      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
-      else clearTimeout(id);
+      events.forEach(e => document.removeEventListener(e, trigger));
     };
   }, []);
 
