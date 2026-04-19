@@ -40,15 +40,19 @@ const AboutUs = () => {
   const content = {
     ro: {
       hero: {
-        badge: "Despre Noi",
-        title: "Două Branduri,",
-        titleHighlight: "O Singură Viziune",
-        subtitle: "RealTrust și ApArt Hotel sunt cele două brațe ale aceleiași companii, unite de o misiune comună: să transformăm piața imobiliară din Timișoara prin profesionalism, transparență și rezultate concrete."
+        badge: "Despre Noi · Echipă & Poveste",
+        title: "Echipa din spatele",
+        titleHighlight: "RealTrust Timișoara",
+        subtitle: "Suntem o echipă locală condusă de Adrian Costi, dedicată exclusiv pieței imobiliare din Timișoara. Aici afli povestea noastră, valorile care ne ghidează și oamenii care răspund de fiecare proprietate administrată."
+      },
+      mission: {
+        title: "Misiunea Noastră",
+        text: "Să oferim proprietarilor din Timișoara o alternativă profesionistă, transparentă și măsurabilă la administrarea clasică a imobilelor — combinând expertiza imobiliară (RealTrust) cu standardele hoteliere (ApArt Hotel) într-un singur partener de încredere."
       },
       story: {
         title: "Povestea Noastră",
-        subtitle: "Peste 25 de ani de excelență în imobiliare",
-        intro: "Cu o experiență de peste un sfert de secol în piața imobiliară din România, am devenit un partener de încredere pentru mii de clienți. Am început această călătorie cu pasiunea pentru imobiliare și cu dorința de a aduce standarde internaționale în Timișoara.",
+        subtitle: "De la prima tranzacție la 60+ proprietăți administrate",
+        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm peste 60 de apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
@@ -156,6 +160,17 @@ const AboutUs = () => {
           { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
+      faq: {
+        title: "Întrebări Frecvente despre RealTrust",
+        items: [
+          { q: "Cine este fondatorul RealTrust Timișoara?", a: "Compania este fondată și condusă de Adrian Costi, antreprenor local cu peste 25 de ani de experiență în piața imobiliară din Timișoara și vestul României. Adrian este implicat direct în fiecare colaborare cu proprietarii." },
+          { q: "Ce comision are agenția imobiliară RealTrust Timișoara?", a: "Pentru vânzări aplicăm un comision standard de 2% + TVA din partea vânzătorului, iar pentru închirieri pe termen lung un comision egal cu o chirie lunară. Pentru administrare în regim hotelier comisionul de management este de 20–25% din venitul net, fără taxe ascunse. Toate comisioanele sunt agreate înainte de semnarea contractului." },
+          { q: "Oferiți consultanță pentru credit imobiliar Timișoara?", a: "Da, colaborăm cu brokeri independenți de credite și cu băncile partenere (BCR, BT, ING, Raiffeisen, BRD) pentru pre-aprobare, comparare oferte (dobândă fixă vs. variabilă), Prima Casă/Noua Casă și evaluare ANEVAR. Consultanța inițială este gratuită pentru clienții noștri." },
+          { q: "Vindeți și case în Timișoara, nu doar apartamente?", a: "Da. Portofoliul nostru include atât apartamente (1–4 camere) cât și case de vânzare în Timișoara și zona metropolitană (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz, Chișoda) — case individuale, duplexuri și vile cu teren intravilan." },
+          { q: "În ce zone din Timișoara activați?", a: "Acoperim întreg orașul Timișoara — Centru, ISHO, Iulius Town, Complex Studențesc, Cetate, Iosefin, Elisabetin, Fabric, Mehala, Freidorf, Lipovei, Aradului — plus zonele metropolitane Dumbrăvița, Giroc, Moșnița Nouă și Ghiroda." },
+          { q: "Cum mă asigur că proprietatea mea este în siguranță?", a: "Folosim contracte transparente, verificare bonitate chiriași, asigurare PAD obligatorie, smart-lock cu coduri unice per oaspete, monitorizare IoT (zgomot, fum), curățenie după fiecare sejur cu raportare foto și depozit de garanție returnat 100% la finalul colaborării." }
+        ]
+      },
       cta: {
         title: "Pregătit să Începem?",
         subtitle: "Contactează-ne pentru o discuție fără obligații despre cum te putem ajuta.",
@@ -164,15 +179,19 @@ const AboutUs = () => {
     },
     en: {
       hero: {
-        badge: "About Us",
-        title: "Two Brands,",
-        titleHighlight: "One Vision",
-        subtitle: "RealTrust and ApArt Hotel are the two arms of the same company, united by a common mission: to transform the Timișoara real estate market through professionalism, transparency, and concrete results."
+        badge: "About Us · Team & Story",
+        title: "The team behind",
+        titleHighlight: "RealTrust Timișoara",
+        subtitle: "We're a local team led by Adrian Costi, dedicated exclusively to the Timișoara real estate market. Here you'll find our story, the values that guide us, and the people responsible for every property we manage."
+      },
+      mission: {
+        title: "Our Mission",
+        text: "To offer property owners in Timișoara a professional, transparent and measurable alternative to traditional property management — combining real estate expertise (RealTrust) with hotel standards (ApArt Hotel) in one trusted partner."
       },
       story: {
         title: "Our Story",
-        subtitle: "Over 25 Years of Excellence in Real Estate",
-        intro: "With more than a quarter century of experience in the Romanian real estate market, we have become a trusted partner for thousands of clients. We started this journey with a passion for real estate and the desire to bring international standards to Timișoara.",
+        subtitle: "From the first transaction to 60+ properties managed",
+        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage over 60 apartments with a verified 9.4% net ROI and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
@@ -280,6 +299,17 @@ const AboutUs = () => {
           { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
+      faq: {
+        title: "Frequently Asked Questions about RealTrust",
+        items: [
+          { q: "Who is the founder of RealTrust Timișoara?", a: "The company is founded and led by Adrian Costi, a local entrepreneur with over 25 years of experience in the Timișoara real estate market. Adrian is directly involved in every owner collaboration." },
+          { q: "What commission does RealTrust real estate agency charge?", a: "For sales we apply a standard 2% + VAT commission from the seller; for long-term rentals one monthly rent. For short-term rental management the fee is 20–25% of net revenue, with no hidden costs. All commissions are agreed upfront." },
+          { q: "Do you offer mortgage consulting in Timișoara?", a: "Yes, we partner with independent mortgage brokers and partner banks (BCR, BT, ING, Raiffeisen, BRD) for pre-approval, offer comparison (fixed vs. variable rate), Prima Casă/Noua Casă programs and ANEVAR appraisal. Initial consulting is free for our clients." },
+          { q: "Do you sell houses in Timișoara, not just apartments?", a: "Yes. Our portfolio includes both apartments (1–4 rooms) and houses for sale in Timișoara and the metropolitan area (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz) — single-family houses, duplexes and villas with land." },
+          { q: "Which areas of Timișoara do you cover?", a: "We cover the entire city of Timișoara — Centru, ISHO, Iulius Town, Complex Studențesc, Cetate, Iosefin, Elisabetin, Fabric, Mehala, Freidorf, Lipovei, Aradului — plus metropolitan areas Dumbrăvița, Giroc, Moșnița Nouă and Ghiroda." },
+          { q: "How is my property kept safe?", a: "We use transparent contracts, tenant credit checks, mandatory PAD insurance, smart-lock with unique guest codes, IoT monitoring (noise, smoke), post-stay cleaning with photo reporting and a 100% returned security deposit at the end of the collaboration." }
+        ]
+      },
       cta: {
         title: "Ready to Start?",
         subtitle: "Contact us for a no-obligation discussion about how we can help.",
@@ -351,6 +381,36 @@ const AboutUs = () => {
     ]
   };
 
+  // Person schema for the founder (E-E-A-T)
+  const founderSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Adrian Costi",
+    "jobTitle": language === "ro" ? "Fondator & CEO" : "Founder & CEO",
+    "worksFor": { "@type": "RealEstateAgent", "name": "RealTrust & ApArt Hotel" },
+    "knowsAbout": [
+      "Real Estate Timișoara",
+      "Short-term rental management",
+      "Property investment ROI",
+      "Airbnb & Booking.com optimization",
+      "Hotel-style property management"
+    ],
+    "url": "https://www.realtrust.ro/despre-noi"
+  };
+
+  // FAQPage schema
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": t.faq.items.map((item: { q: string; a: string }) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": { "@type": "Answer", "text": item.a }
+    }))
+  };
+
+  const combinedSchema = [organizationSchema, founderSchema, faqSchema];
+
   const breadcrumbItems = [
     { label: language === "ro" ? "Despre Noi" : "About Us" }
   ];
@@ -361,7 +421,7 @@ const AboutUs = () => {
         title={seo.title}
         description={seo.description}
         url="https://www.realtrust.ro/despre-noi"
-        jsonLd={organizationSchema}
+        jsonLd={combinedSchema}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
           { name: language === "ro" ? "Despre Noi" : "About Us", url: "https://www.realtrust.ro/despre-noi" },
@@ -439,57 +499,38 @@ const AboutUs = () => {
               </p>
             </div>
 
-            {/* Real Estate Services */}
-            <div className="max-w-6xl mx-auto mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">{t.story.realEstate.title}</h3>
-                  <p className="text-muted-foreground">{t.story.realEstate.description}</p>
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                {t.story.realEstate.services.map((service, idx) => (
-                  <Card key={idx} className="border-l-4 border-l-primary/50 hover:border-l-primary transition-colors">
-                    <CardContent className="p-6">
-                      <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                        {service.title}
-                      </h4>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {service.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            {/* Mission */}
+            <div className="max-w-3xl mx-auto mb-16">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-8 text-center">
+                  <Target className="w-10 h-10 text-primary mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold mb-3">{t.mission.title}</h3>
+                  <p className="text-foreground/90 leading-relaxed">{t.mission.text}</p>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Hotel Management Services */}
-            <div className="max-w-6xl mx-auto mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                  <Home className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">{t.story.hotelManagement.title}</h3>
-                  <p className="text-muted-foreground">{t.story.hotelManagement.description}</p>
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {t.story.hotelManagement.services.map((service, idx) => (
-                  <Card key={idx} className="border-t-4 border-t-amber-500/50 hover:border-t-amber-500 transition-colors hover:shadow-lg">
-                    <CardContent className="p-6">
-                      <h4 className="text-lg font-semibold mb-2">{service.title}</h4>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {service.description}
-                      </p>
-                    </CardContent>
-                  </Card>
+            {/* Pillar links — content hub (eliminates duplication with /oaspeti & /complexe) */}
+            <div className="max-w-5xl mx-auto mb-16">
+              <h3 className="text-xl font-semibold text-center mb-6 text-muted-foreground">
+                {language === "ro" ? "Explorează paginile noastre dedicate" : "Explore our dedicated pages"}
+              </h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { to: "/imobiliare-timisoara", label: language === "ro" ? "Vânzări apartamente & case Timișoara" : "Apartments & houses for sale Timișoara", icon: Building2 },
+                  { to: "/calculator-roi", label: language === "ro" ? "Calculator ROI Regim Hotelier" : "Short-term Rental ROI Calculator", icon: TrendingUp },
+                  { to: "/pentru-oaspeti", label: language === "ro" ? "Cazare Premium pentru oaspeți" : "Premium stays for guests", icon: Home },
+                  { to: "/evaluare-gratuita", label: language === "ro" ? "Evaluare gratuită proprietate" : "Free property valuation", icon: Award }
+                ].map((p, i) => (
+                  <Link key={i} to={p.to} className="group">
+                    <Card className="h-full hover:border-primary hover:shadow-md transition-all">
+                      <CardContent className="p-5 flex flex-col items-start gap-3">
+                        <p.icon className="w-6 h-6 text-primary" />
+                        <span className="text-sm font-medium group-hover:text-primary transition-colors">{p.label}</span>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -696,6 +737,23 @@ const AboutUs = () => {
                   </Card>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20 bg-muted/30">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">{t.faq.title}</h2>
+            <div className="space-y-4">
+              {t.faq.items.map((item: { q: string; a: string }, idx: number) => (
+                <Card key={idx} className="border-l-4 border-l-primary/50">
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
+                    <p className="text-muted-foreground leading-relaxed text-sm">{item.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
