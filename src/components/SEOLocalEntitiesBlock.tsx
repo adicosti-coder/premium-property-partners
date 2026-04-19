@@ -584,6 +584,51 @@ const SEOLocalEntitiesBlock = () => {
         valoarea tranzacției, fără costuri suplimentare ascunse.
       </p>
 
+      <h3>Imobiliare Dumbrăvița — apartamente și case în zona premium limitrofă Timișoarei</h3>
+      <p>
+        <strong>Imobiliare Dumbrăvița</strong> — Dumbrăvița este cea mai
+        importantă și premium zonă rezidențială limitrofă Timișoarei, cu
+        ansambluri noi, vile individuale și duplexuri. <strong>Apartamente de
+        vânzare Dumbrăvița</strong> în proiecte moderne (Adora Forest, Vivalia,
+        Cosmopolis), <strong>case de vânzare Dumbrăvița</strong> cu terenuri
+        300–800 mp, plus oferte de <strong>chirie Dumbrăvița</strong> pentru
+        familii și expați. Acces rapid la centrul Timișoarei (8–12 minute), zone
+        verzi, școli internaționale și Iulius Town.
+      </p>
+
+      <h3>Apartamente de vânzare Giroc — al doilea pol de dezvoltare rezidențială</h3>
+      <p>
+        <strong>Apartamente de vanzare Giroc</strong> și <strong>case de vânzare
+        Giroc</strong> — Giroc este al doilea pol major de dezvoltare
+        rezidențială de lângă Timișoara, cu mii de apartamente noi în ansambluri
+        precum Cetatea Soarelui, Brava Residence și dezvoltări pe Calea
+        Timișoarei. Prețuri accesibile (1.100–1.450 €/mp), comunitate tânără,
+        școli și grădinițe noi, transport public direct cu linia E4 spre
+        centrul Timișoarei.
+      </p>
+
+      <h3>Apartamente Mehala Timișoara — cartier istoric subevaluat</h3>
+      <p>
+        <strong>Apartamente Mehala</strong> — Mehala este un cartier istoric și
+        mare al Timișoarei, similar cu Iosefin sau Fabric, cu case interbelice,
+        biserici monument și acces la Bega. Apartamente Mehala disponibile
+        pentru vânzare și închiriere, prețuri sub media orașului (1.150–1.500
+        €/mp), potențial mare de apreciere odată cu reabilitarea zonei. Ideal
+        pentru investitori cu viziune pe termen lung și familii care caută
+        liniște în apropierea centrului.
+      </p>
+
+      <h3>Chirie Timișoara — apartamente de închiriat pe termen lung 2026</h3>
+      <p>
+        <strong>Chirie Timișoara</strong>: găsește o chirie în Timișoara pe
+        termen lung pentru garsoniere (de la 280 €/lună), apartamente cu 2
+        camere (380–600 €/lună) și 3 camere (550–900 €/lună), în toate
+        cartierele majore — Centru, Iosefin, Elisabetin, ISHO, Take Ionescu,
+        Complex Studențesc, Calea Aradului, Calea Girocului, Dumbrăvița și
+        Giroc. <strong>Chirie apartament Timișoara</strong> cu contracte
+        standardizate, garanție 1–2 luni, fără surprize.
+      </p>
+
       <h3>Transport public Timișoara lângă proprietăți</h3>
       <p>
         Exemple concrete de proximitate: proprietăți aproape de stațiile Piața
