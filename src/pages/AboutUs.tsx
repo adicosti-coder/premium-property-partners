@@ -168,15 +168,19 @@ const AboutUs = () => {
     },
     en: {
       hero: {
-        badge: "About Us",
-        title: "Two Brands,",
-        titleHighlight: "One Vision",
-        subtitle: "RealTrust and ApArt Hotel are the two arms of the same company, united by a common mission: to transform the Timișoara real estate market through professionalism, transparency, and concrete results."
+        badge: "About Us · Team & Story",
+        title: "The team behind",
+        titleHighlight: "RealTrust Timișoara",
+        subtitle: "We're a local team led by Adrian Costi, dedicated exclusively to the Timișoara real estate market. Here you'll find our story, the values that guide us, and the people responsible for every property we manage."
+      },
+      mission: {
+        title: "Our Mission",
+        text: "To offer property owners in Timișoara a professional, transparent and measurable alternative to traditional property management — combining real estate expertise (RealTrust) with hotel standards (ApArt Hotel) in one trusted partner."
       },
       story: {
         title: "Our Story",
-        subtitle: "Over 25 Years of Excellence in Real Estate",
-        intro: "With more than a quarter century of experience in the Romanian real estate market, we have become a trusted partner for thousands of clients. We started this journey with a passion for real estate and the desire to bring international standards to Timișoara.",
+        subtitle: "From the first transaction to 60+ properties managed",
+        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage over 60 apartments with a verified 9.4% net ROI and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",
