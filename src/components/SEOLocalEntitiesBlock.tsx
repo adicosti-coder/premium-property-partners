@@ -52,14 +52,42 @@ const SEOLocalEntitiesBlock = () => {
         recomandată pentru randamente nete 8–10%.
       </p>
 
-      <h3>Cazare temporară Timișoara — apartamente flexibile pe termen scurt</h3>
+      <h3>Cazare temporară Timișoara — închirieri apartamente Timișoara pe termen scurt</h3>
       <p>
-        <strong>Cazare temporară Timișoara</strong> în apartamente regim
+        <strong>Cazare temporară Timișoara</strong> și <strong>închirieri apartamente Timișoara pe termen scurt</strong> în apartamente regim
         hotelier complet mobilate și utilate, ideale pentru sejururi scurte de
         1–30 nopți. Self check-in 24/7, WiFi de mare viteză, parcare gratuită,
         curățenie profesională și suport multilingv. Soluție pentru călători
         de business, turiști, familii ale pacienților Spitalul Județean și
         relocări temporare în Timișoara.
+      </p>
+
+      <h2>Cazare evenimente Timișoara — concerte, conferințe, festivaluri</h2>
+      <p>
+        <strong>Cazare evenimente Timișoara</strong> pentru participanții la
+        concerte la Sala Polivalentă, conferințe la Centrul Regional de Afaceri,
+        festivaluri (TIMAF, Plai, Codru, Revolution Festival), târguri auto și
+        meciuri pe Stadionul Dan Păltinișanu. Apartamente regim hotelier la
+        5–15 minute de principalele locații, cu disponibilitate confirmată în
+        weekend-urile cu evenimente majore și grupuri de prieteni sau colegi.
+      </p>
+
+      <h2>Apartamente de vânzare Timișoara Centru Vechi — Cetate, Piața Unirii, Piața Victoriei</h2>
+      <p>
+        <strong>Apartamente de vânzare Timișoara Centru Vechi</strong> în
+        clădiri istorice restaurate din zona Cetate, Piața Unirii, Piața
+        Victoriei și Piața Libertății. Proprietăți cu randament ridicat în
+        regim hotelier (ocupare 75–85%) datorită proximității față de toate
+        atracțiile turistice și pietonalul central.
+      </p>
+
+      <h2>Administrare proprietăți regim hotelier Timișoara — prețuri transparente</h2>
+      <p>
+        <strong>Administrare proprietăți regim hotelier Timișoara prețuri</strong>:
+        comision management 15–25% (în funcție de pachet și volum), comision
+        platforme Booking/Airbnb 15–23%, curățenie 35–50€/sejur (recuperată de
+        la oaspete). Fără taxă de setup, fără costuri ascunse — raportare
+        lunară completă cu venituri și cheltuieli detaliate.
       </p>
 
       <h3>Apartamente de închiriat Timișoara studenți — Complex Studențesc</h3>
