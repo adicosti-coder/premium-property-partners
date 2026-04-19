@@ -110,7 +110,7 @@ const SEOOptimizerManager = () => {
     for (let i = 0; i < QUICK_URLS.length; i++) {
       try {
         await supabase.functions.invoke("seo-ai-optimizer", {
-          body: { url: QUICK_URLS[i], language, forceRefresh: false },
+          body: { url: QUICK_URLS[i], language, forceRefresh: true },
         });
         success++;
       } catch (e) {

@@ -44,7 +44,7 @@ serve(async (req) => {
     }
 
     // 1. Scrape
-    const scraped = await scrapePage(url, FIRECRAWL_API_KEY);
+    const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
     const contentHash = await sha256(scraped.markdown || "");
 
     // 2. Detect duplicate content vs alte audituri
@@ -116,8 +116,11 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function scrapePage(url: string, firecrawlKey?: string) {
+async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = false) {
   const candidates = [];
+  const freshUrl = forceRefresh
+    ? `${url}${url.includes("?") ? "&" : "?"}seo_refresh=${Date.now()}`
+    : url;
 
   // Try Firecrawl first
   if (firecrawlKey) {
@@ -126,7 +129,7 @@ async function scrapePage(url: string, firecrawlKey?: string) {
         method: "POST",
         headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          url,
+          url: freshUrl,
           formats: ["markdown", "html"],
           onlyMainContent: false,
           // Wait 4s for the React SPA to hydrate so SR-only SEO blocks
@@ -145,7 +148,13 @@ async function scrapePage(url: string, firecrawlKey?: string) {
   }
 
   // Direct fetch as fallback and freshness guard against stale external snapshots
-  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 SEO-Bot" } });
+    const res = await fetch(freshUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 SEO-Bot",
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        Pragma: "no-cache",
+      },
+    });
   const html = await res.text();
   candidates.push(parseScraped(htmlToText(html), html, extractMetaFromHtml(html)));
 
