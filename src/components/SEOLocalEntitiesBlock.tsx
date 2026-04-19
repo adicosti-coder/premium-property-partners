@@ -459,8 +459,56 @@ const SEOLocalEntitiesBlock = () => {
         <strong>Cazare de scurtă durată Timișoara</strong> și
         <strong> închirieri apartamente Timișoara pe termen scurt</strong> —
         sejururi de la 1 noapte până la 30 de zile, ideale pentru turiști, business
-        travel, relocări temporare și participanți la evenimente (FITS,
-        Festivalul Inimilor, conferințe Politehnica). Check-in self-service 24/7.
+        travel, relocări temporare și participanți la evenimente locale din Timișoara
+        (Timișoara Jazz Festival, Plai Festival, Festivalul Inimilor, FEST-FDR,
+        conferințe Politehnica). Check-in self-service 24/7.
+      </p>
+
+      <h3>Apartamente noi Timișoara — XCity Towers, Adora Forest, ISHO și ansambluri premium</h3>
+      <p>
+        <strong>Apartamente XCity Towers</strong> și <strong>ansamblu rezidențial
+        Adora Forest</strong> sunt printre cele mai căutate dezvoltări noi din
+        Timișoara, alături de ISHO, Openville, United Business Center și Ateneo
+        Premium Residence. Oferim consultanță pentru achiziție, evaluare ROI
+        regim hotelier și administrare completă pentru investitori.
+      </p>
+
+      <h3>Apartamente lângă Continental Timișoara și marii angajatori</h3>
+      <p>
+        <strong>Apartamente langa Continental Timisoara</strong> (fabrica de
+        anvelope), Hella, Flex, Continental Automotive și parcurile industriale
+        de pe Calea Șagului și Calea Aradului. Soluții de cazare regim hotelier
+        pentru angajați relocați, expați și echipe de proiect, la 10–15 minute
+        de cei mai mari angajatori din Timișoara.
+      </p>
+
+      <h3>Evaluare apartament Timișoara — analiză gratuită preț corect de piață</h3>
+      <p>
+        <strong>Evaluare apartament Timișoara</strong> realizată de echipa
+        RealTrust pe baza datelor reale de tranzacționare, comparabile recente
+        și tendințe de cartier. Oferim raport gratuit cu prețul corect de
+        vânzare, estimare timp de listare și recomandări pentru maximizarea
+        valorii (home staging, fotografie premium, marketing pe Imobiliare.ro,
+        Storia, OLX).
+      </p>
+
+      <h3>Prețuri apartamente Timișoara 2026 — analiză €/mp pe cartiere</h3>
+      <p>
+        <strong>Prețuri apartamente Timișoara</strong> variază între
+        1.350–1.800 €/mp în Iosefin/Elisabetin, 1.500–2.100 €/mp în Centru/Cetate,
+        1.700–2.400 €/mp în ISHO și XCity Towers, 1.200–1.600 €/mp în Calea
+        Șagului și Aradului. Actualizăm trimestrial harta de prețuri pe baza
+        tranzacțiilor reale închise prin agenția noastră.
+      </p>
+
+      <h3>Consultanță credit imobiliar Timișoara — parteneri brokeri certificați</h3>
+      <p>
+        Oferim <strong>consultanță credit imobiliar</strong> prin parteneriate
+        cu brokeri independenți autorizați ANPC, pentru credite ipotecare
+        Prima Casă, Noua Casă și standard. Pre-aprobare în 48h, comparație
+        între 8+ bănci (BCR, BRD, ING, Raiffeisen, UniCredit, Banca
+        Transilvania, CEC, Alpha Bank) și asistență completă până la
+        semnarea actului notarial.
       </p>
 
       <h3>Apartamente de închiriat studenți Timișoara — Complex Studențesc, UVT, UPT, UMF</h3>
