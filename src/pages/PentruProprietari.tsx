@@ -49,8 +49,6 @@ const ServiceChainAF = lazy(() => import("@/components/ServiceChainAF"));
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
-const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
-const FloatingInvestorGuide = lazy(() => import("@/components/FloatingInvestorGuide"));
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 
@@ -92,10 +90,10 @@ const PentruProprietari = () => {
 
   const content = {
     ro: {
-      badge: "Pentru Proprietari de Apartamente",
-      title: "Transformă-ți Proprietatea",
-      titleHighlight: "într-o Sursă de Venit",
-      subtitle: "Management profesional în regim hotelier cu tehnologie avansată, transparență totală și echipă dedicată. Maximizează randamentul apartamentului tău fără stres.",
+      badge: "Pentru Proprietari din Timișoara",
+      title: "Administrare Proprietăți",
+      titleHighlight: "în Regim Hotelier",
+      subtitle: "Preluăm apartamentul tău în administrare completă în Timișoara: marketing, oaspeți, curățenie, mentenanță, raportare și optimizare fiscală a veniturilor din chirii.",
       cta: "Calculează Potențialul Tău",
       secondaryCta: "Contactează-ne",
       stats: [
@@ -215,13 +213,10 @@ const PentruProprietari = () => {
       {/* AI-friendly page summary for extraction */}
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="RealTrust oferă administrare profesională a apartamentelor în regim hotelier în Timișoara, cu comision de 15-25%, rată de ocupare de peste 85%, self check-in digital, și transparență financiară completă prin rapoarte lunare. Fără perioadă minimă de contract."
+          summaryRo="RealTrust oferă proprietarilor din Timișoara administrare completă pentru apartamente în regim hotelier: preluare apartament în administrare, contracte, conformitate ANAF, optimizare fiscală a veniturilor din chirii, management mentenanță și gestionarea conflictelor cu chiriașii sau oaspeții."
           summaryEn="RealTrust provides professional short-term rental management in Timișoara, with a 15-25% commission, over 85% occupancy rate, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
         />
       </div>
-
-      {/* Floating Investor Guide - Mobile Only */}
-      <FloatingInvestorGuide />
       
       {/* Breadcrumb */}
       <div className="container mx-auto px-6">
@@ -370,6 +365,80 @@ const PentruProprietari = () => {
       {/* Quick Value Banner - Moved below Hero */}
       <QuickValueBanner onCtaClick={scrollToCalculator} />
 
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="max-w-3xl mb-10">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                {language === "ro"
+                  ? "Administrare proprietăți pentru proprietari în Timișoara"
+                  : "Property management for owners in Timișoara"}
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                {language === "ro"
+                  ? "Pagina este dedicată exclusiv proprietarilor care vor un sistem complet de operare: preluare apartament în administrare, conformitate fiscală, mentenanță, relația cu chiriașii și creșterea profitului net."
+                  : "This page is built specifically for owners who want full-service operations, tax compliance, maintenance and tenant handling."}
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-2xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro" ? "Preluare apartament în administrare" : "Property onboarding"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {language === "ro"
+                    ? "Audităm proprietatea, stabilim strategia de preț, pregătim fotografiile, onboarding-ul operațional și listarea pe canale. Procesul este gândit pentru proprietarii care vor să externalizeze complet administrarea fără pierdere de control."
+                    : "We audit the property, prepare pricing, visuals and the operational setup before launching it on channels."}
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-2xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro" ? "Contract închiriere ANAF Timișoara" : "Contract and tax compliance"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {language === "ro"
+                    ? "Te ajutăm cu documentația contractuală, obligațiile declarative și pașii practici pentru contract închiriere ANAF Timișoara, astfel încât veniturile obținute din chirii sau regim hotelier să fie corect documentate."
+                    : "We help with contracts, reporting obligations and practical tax compliance steps for rental income."}
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-2xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro" ? "Optimizare fiscală venituri chirii" : "Tax optimization for rental income"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {language === "ro"
+                    ? "Structurăm împreună opțiunea potrivită pentru optimizare fiscală venituri chirii, de la raportarea veniturilor până la evidența cheltuielilor deductibile și alegerea modelului operațional potrivit proprietății tale."
+                    : "We structure the right reporting and deductible-cost model to improve net rental income."}
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-2xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro" ? "Management conflicte chiriași și mentenanță proprietăți" : "Tenant conflict and maintenance management"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {language === "ro"
+                    ? "Preluăm comunicarea operațională, intervențiile, management mentenanță proprietăți și management conflicte chiriași sau oaspeți, astfel încât proprietarul să nu piardă timp cu reclamații, urgențe sau neînțelegeri recurente."
+                    : "We handle maintenance, guest issues and recurring operational conflicts so owners stay hands-off."}
+                </p>
+              </article>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button asChild variant="hero" size="lg">
+                <Link to="/calculator-roi">{language === "ro" ? "Deschide Calculatorul ROI" : "Open ROI Calculator"}</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/evaluare-gratuita">{language === "ro" ? "Solicită evaluare gratuită" : "Request a free valuation"}</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ========= CONVERSION FUNNEL: Beneficii → Calculator → Pachete → CTA ========= */}
 
       {/* STEP 1: Beneficii - convinge proprietarul */}
@@ -454,18 +523,20 @@ const PentruProprietari = () => {
       {/* Partnership Timeline */}
       <PartnershipTimeline />
 
-      {/* Investor Guide CTA */}
+      {/* Owner guide CTA */}
       <section className="py-12 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
         <div className="container mx-auto px-6 text-center">
-          <h3 className="text-2xl font-serif font-bold mb-4">
-            {language === "ro" ? "Descarcă Ghidul Investitorului 2026" : "Download the 2026 Investor's Guide"}
-          </h3>
+          <h2 className="text-2xl font-serif font-bold mb-4">
+            {language === "ro" ? "Ghidul Proprietarului 2026" : "The 2026 Owner Guide"}
+          </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
             {language === "ro" 
-              ? "Strategii de maximizare a randamentului, analiză de piață și zone premium din Timișoara."
-              : "Strategies for maximizing returns, market analysis and premium zones in Timișoara."}
+              ? "Checklist de onboarding, repere fiscale, conformitate ANAF și pași clari pentru preluare apartament în administrare fără stres."
+              : "Owner checklist, tax guidance and clear onboarding steps for full-service property management."}
           </p>
-          <InvestorGuideButton size="lg" />
+          <Button asChild variant="hero" size="lg">
+            <Link to="/evaluare-gratuita">{language === "ro" ? "Primește evaluarea gratuită" : "Get a free valuation"}</Link>
+          </Button>
         </div>
       </section>
 
