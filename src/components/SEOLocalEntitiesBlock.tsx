@@ -539,6 +539,51 @@ const SEOLocalEntitiesBlock = () => {
         pe jos sau cu transport public.
       </p>
 
+      <h3>Case de vânzare Timișoara — vile, duplexuri și case individuale</h3>
+      <p>
+        <strong>Case de vânzare Timișoara</strong> și zona metropolitană
+        (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz, Sânmihaiu Român,
+        Chișoda) — vile individuale, duplexuri și case înșiruite cu suprafețe
+        80–250 mp utili și terenuri 200–800 mp. Selecție pentru familii și
+        investitori, finanțare prin credit ipotecar Prima Casă sau standard,
+        evaluare gratuită inclusă. Prețuri de la 95.000 € (case mici Giroc) la
+        450.000 € (vile premium Dumbrăvița).
+      </p>
+
+      <h3>Ansamblu rezidențial Timișoara — proiecte noi 2024–2026</h3>
+      <p>
+        <strong>Ansamblu rezidențial Timișoara</strong>: prezentăm cele mai
+        importante proiecte imobiliare noi din oraș — ISHO Residence, Openville
+        Towers, City of Mara, XCity Towers, Adora Forest,{" "}
+        <strong>Vivalia</strong> Residence, Ateneo Premium, Take Ionescu
+        Residence, United Business Center și ansambluri rezidențiale Calea
+        Aradului. Apartamente noi cu certificat energetic clasa A, parcare
+        subterană, smart-home și finisaje premium, livrare etapizată
+        2024–2026.
+      </p>
+
+      <h3>Credit ipotecar Timișoara — pre-aprobare în 48h</h3>
+      <p>
+        <strong>Credit ipotecar</strong> și consultanță bancară RealTrust prin
+        rețeaua de brokeri parteneri certificați ANPC. Pre-aprobare credit
+        ipotecar în 48 ore, comparație ofertă între 8+ bănci (BCR, BRD, ING,
+        Raiffeisen, UniCredit, Banca Transilvania, CEC, Alpha Bank), asistență
+        completă pentru programele Prima Casă, Noua Casă și credit ipotecar
+        standard cu avans de la 15%. Recomandăm cea mai bună structură de credit
+        în funcție de venit, vârstă și obiectiv (locuință proprie sau
+        investiție regim hotelier).
+      </p>
+
+      <h3>Servicii pentru cumpărători Timișoara — pachet complet</h3>
+      <p>
+        <strong>Servicii pentru cumpărători</strong>: identificare proprietate
+        conform criteriilor (zonă, buget, configurație, ROI țintă), verificare
+        legală a actelor (extras CF, intabulare, sarcini), negociere preț,
+        consultanță <strong>credit ipotecar</strong> prin brokeri parteneri,
+        asistență la notar și predare-primire. Onorariu transparent 2% din
+        valoarea tranzacției, fără costuri suplimentare ascunse.
+      </p>
+
       <h3>Transport public Timișoara lângă proprietăți</h3>
       <p>
         Exemple concrete de proximitate: proprietăți aproape de stațiile Piața
