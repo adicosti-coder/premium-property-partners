@@ -176,7 +176,7 @@ const HOMEPAGE_SEO = {
   ro: {
     title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
     description:
-      "Descoperă apartamente de vânzare, închiriat și regim hotelier în Timișoara, lângă UVT, Iulius Town și Aeroport. Calculează ROI și contactează-ne acum!",
+      "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!",
   },
   en: {
     title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
@@ -258,11 +258,11 @@ const Index = () => {
       )}
       <Header />
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
-        {/* SEO-only block (sr-only) — survives React hydration so Firecrawl/Google
-            see ALL local entities tracked by the SEO AI Optimizer. */}
-        <SEOLocalEntitiesBlock />
         {/* Hero - Entry Point (above-fold, eager) */}
         <Hero />
+        {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
+            still see the semantic content without causing the page to start with H2. */}
+        <SEOLocalEntitiesBlock />
         <PageSummary
           summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
           summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."

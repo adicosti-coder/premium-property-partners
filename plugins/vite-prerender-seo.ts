@@ -259,7 +259,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: 'RealTrust & ApArt Hotel Timișoara',
-      description: 'Apartamente regim hotelier și investiții imobiliare în Timișoara, aproape de Aeroport Timișoara, Openville, Gara de Nord și Spitalul Județean.',
+      description: 'Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!',
       url: `${BASE_URL}/`,
       telephone: '+40723154520',
       address: {
