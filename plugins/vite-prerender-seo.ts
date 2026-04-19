@@ -30,7 +30,16 @@ interface PrerenderRoute {
  */
 const HOMEPAGE_SEO_BODY = `
   <h2>Servicii imobiliare și regim hotelier în toate cartierele Timișoarei</h2>
-  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net verificat de 9.4% anual. Acoperim toate cartierele importante ale orașului: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii și Calea Lipovei.</p>
+  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net verificat de 9.4% anual. Acoperim toate cartierele importante ale orașului și zonele metropolitane: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, precum și zonele metropolitane <strong>imobiliare Dumbrăvița</strong>, <strong>apartamente Ghiroda</strong> (acces rapid la Aeroport și zona industrială) și <strong>case Moșnița Nouă</strong> pentru investitorii interesați de vile și case noi.</p>
+
+  <h2>Ansambluri rezidențiale Timișoara — colaborări cu dezvoltatori</h2>
+  <p>Lucrăm cu cele mai importante <strong>ansambluri rezidențiale Timișoara</strong>: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers, Openville Residential, Vox Park și complexele noi din Dumbrăvița și Ghiroda. Selecție premium de <strong>apartamente noi Timișoara</strong> — eficiență energetică clasa A, finisaje moderne, smart-home și apreciere a capitalului peste media pieței.</p>
+
+  <h2>Credit ipotecar Timișoara — consultanță financiară pentru cumpărători</h2>
+  <p>Oferim consultanță gratuită pentru <strong>credit ipotecar Timișoara</strong> prin parteneriatele noastre cu brokerii de credite și principalele bănci active local (BCR, BRD, Raiffeisen, ING, Banca Transilvania). Te ajutăm să compari ofertele, să optimizezi avansul și să obții cea mai bună rată DAE pentru achiziția apartamentului tău în Timișoara, Dumbrăvița sau Ghiroda.</p>
+
+  <h2>Comision agenție imobiliară Timișoara — transparență totală</h2>
+  <p><strong>Comision agenție imobiliară Timișoara</strong> RealTrust: structură transparentă pentru tranzacții — 2% comision standard la vânzări (negociabil pentru proprietăți premium), o chirie pentru închirieri pe termen lung, fără costuri ascunse. Pentru administrare regim hotelier comisionul este 15–25% din veniturile generate, plătit doar din încasările reale.</p>
 
   <h3>Apartamente regim hotelier Complex Studențesc Timișoara</h3>
   <p>Apartamente regim hotelier în Complex Studențesc Timișoara, la 5 minute pe jos de UVT (Universitatea de Vest din Timișoara), Politehnica Timișoara (UPT) și UMF Medicină „Victor Babeș". Cazare lângă universități, ideală pentru studenți, părinți care vizitează studenții, profesori și participanți la evenimente academice și conferințe medicale.</p>
@@ -512,7 +521,7 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
-      <h2 data-prerender-title>${escapeHtml(route.h1)}</h2>
+      <h1 data-prerender-title>${escapeHtml(route.h1)}</h1>
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}" tabindex="-1">${escapeHtml(route.title)}</a>
