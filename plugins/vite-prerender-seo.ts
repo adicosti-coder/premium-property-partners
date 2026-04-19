@@ -722,6 +722,15 @@ export default function vitePrerenderSeo(): Plugin {
           const filePath = path.join(dirPath, 'index.html');
           fs.writeFileSync(filePath, htmlContent, 'utf-8');
 
+          // Also emit flat route files (e.g. /pentru-proprietari.html) as a
+          // hosting fallback for Apache/edge setups that don't honor nested
+          // directory index resolution before the SPA catch-all rule.
+          if (!isRoot) {
+            const flatFilePath = path.join(outDir, `${route.path.replace(/^\//, '')}.html`);
+            fs.mkdirSync(path.dirname(flatFilePath), { recursive: true });
+            fs.writeFileSync(flatFilePath, htmlContent, 'utf-8');
+          }
+
           console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
 
