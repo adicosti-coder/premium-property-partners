@@ -34,6 +34,18 @@
   RewriteRule ^proprietate/(.+)$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/og-property?slug=$1 [P,L]
 
   RewriteRule ^index\.html$ - [L]
+  # Prefer prerendered route HTML over SPA fallback so crawlers receive
+  # the page-specific static document instead of the homepage shell.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.+?)/?$ /$1.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /$1/index.html [L]
+
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-e
