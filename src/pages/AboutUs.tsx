@@ -421,7 +421,7 @@ const AboutUs = () => {
         title={seo.title}
         description={seo.description}
         url="https://www.realtrust.ro/despre-noi"
-        jsonLd={organizationSchema}
+        jsonLd={combinedSchema}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
           { name: language === "ro" ? "Despre Noi" : "About Us", url: "https://www.realtrust.ro/despre-noi" },
