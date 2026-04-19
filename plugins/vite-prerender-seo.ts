@@ -492,6 +492,15 @@ function buildStaticRoutes(): PrerenderRoute[] {
 
       <h3>Renovare apartament pentru închiriere — creștere randament</h3>
       <p><strong>Renovare apartament pentru închiriere</strong>: parteneriate cu antreprenori locali verificați pentru renovări strategice (zugrăveli, parchet, mobilier, electrocasnice, smart-home) cu ROI mediu de 18–24 luni. Investițiile țintite în finisaje și amenajare cresc tariful nopții cu 25–40% și ocuparea cu 10–15 puncte procentuale.</p>
+
+      <h3>Firmă administrare imobile Timișoara — management proprietăți cu rezultate</h3>
+      <p>RealTrust este <strong>firmă administrare imobile Timișoara</strong> cu echipă locală dedicată și peste 60 de proprietăți active în portofoliu. Oferim servicii complete de <strong>management proprietăți Timișoara</strong> — sinonim cu administrare proprietăți — incluzând marketing multi-canal, gestiunea oaspeților, mentenanță, raportare financiară și optimizare yield. Furnizor specializat pentru proprietari rezidenți și diaspora.</p>
+
+      <h3>Consultanță fiscală imobiliare — servicii cu valoare adăugată</h3>
+      <p><strong>Consultanță fiscală imobiliare</strong> inclusă în pachetele noastre: optimizarea veniturilor din chirii (forfetar vs regim real), declarații ANAF, înregistrare PFA / SRL pentru regim hotelier, recuperare TVA pentru investitori, calcul amortizare clădiri și deduceri cheltuieli. Suport complet pentru proprietari, de la achiziție la exit.</p>
+
+      <h3>Repere geografice: Bulevardul Vasile Pârvan, Piața Traian, comuna Giroc</h3>
+      <p>Apartamentele administrate în Complexul Studențesc sunt poziționate pe sau lângă <strong>Bulevardul Vasile Pârvan</strong>, artera principală care leagă UVT (Universitatea de Vest) și UPT (Politehnica) — proximitate decisivă pentru chirii studențești și cazare academică. În cartierul istoric Fabric oferim proprietăți cu valoare arhitecturală lângă <strong>Piața Traian</strong>, reper turistic major. Acoperim și comuna <strong>Giroc</strong> (zonă metropolitană distinctă de Calea Girocului), în plină expansiune cu case și apartamente noi pentru investitori.</p>
     `,
     jsonLd: [
       {
