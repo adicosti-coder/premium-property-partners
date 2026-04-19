@@ -569,6 +569,11 @@ function buildStaticRoutes(): PrerenderRoute[] {
             name: 'Care este impozitul pe vânzarea unui imobil în Timișoara?',
             acceptedAnswer: { '@type': 'Answer', text: 'Pentru imobile deținute sub 3 ani: 3% din valoarea ce depășește 450.000 RON. Pentru cele peste 3 ani: 1%. Onorariu notarial conform grilelor Camerei Notarilor Publici Timișoara.' },
           },
+          {
+            '@type': 'Question',
+            name: 'Ce tip de contract se semnează pentru administrarea proprietății?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Contract administrare imobil standard RealTrust pe minim 12 luni, cu comision 15–25% din încasări, raportare lunară transparentă, plată până în data de 15, reziliere amiabilă cu preaviz 30 zile. Conform legislației române.' },
+          },
         ],
       },
     ],
