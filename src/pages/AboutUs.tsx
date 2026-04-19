@@ -584,7 +584,7 @@ const AboutUs = () => {
         </section>
 
         {/* Two Brands Section */}
-        <section className="py-20 md:py-28">
+        <section id="branduri" className="py-20 md:py-28">
           <div 
             ref={brandsAnimation.ref}
             className={`container mx-auto px-4 transition-all duration-700 ${
@@ -704,7 +704,7 @@ const AboutUs = () => {
         {/* <TeamSection /> */}
 
         {/* Values Section */}
-        <section className="py-20 bg-muted/30">
+        <section id="valori" className="py-20 bg-muted/30">
           <div 
             ref={valuesAnimation.ref}
             className={`container mx-auto px-4 transition-all duration-700 ${
@@ -755,7 +755,7 @@ const AboutUs = () => {
         </section>
 
         {/* Company Info */}
-        <section className="py-16 bg-muted/30">
+        <section id="companie" className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-2xl font-bold text-center mb-2">{t.company.title}</h2>
@@ -777,7 +777,7 @@ const AboutUs = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 bg-muted/30">
+        <section id="intrebari" className="py-20 bg-muted/30">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">{t.faq.title}</h2>
             <div className="space-y-4">
