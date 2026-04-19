@@ -292,12 +292,12 @@ const AboutUs = () => {
 
   const seoContent = {
     ro: {
-      title: "Despre Noi | RealTrust & ApArt Hotel Timișoara",
-      description: "RealTrust — echipa din spatele ApArt Hotel Timișoara. 60+ proprietăți, 10.000+ oaspeți, rating 9.7 Booking.com. Imo Business Centrum SRL."
+      title: "Despre RealTrust: Imobiliare & Regim Hotelier Timișoara",
+      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. Peste 60 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!"
     },
     en: {
-      title: "About Us | RealTrust & ApArt Hotel Timișoara",
-      description: "Two brands, one vision. Over 25 years of real estate experience in Timișoara. Complete sales, acquisitions and professional short-term rental management services."
+      title: "About RealTrust: Real Estate & Short-Term Rentals Timișoara",
+      description: "RealTrust team: real estate and short-term rental experts in Timișoara. Over 60 properties managed with 9.4% net ROI. Contact us today!"
     }
   };
 
@@ -306,18 +306,31 @@ const AboutUs = () => {
   // Organization JSON-LD schema
   const organizationSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "RealEstateAgent",
     "name": "RealTrust & ApArt Hotel",
     "legalName": "Imo Business Centrum SRL",
     "url": "https://www.realtrust.ro",
     "logo": "https://www.realtrust.ro/favicon.ico",
+    "image": "https://www.realtrust.ro/og-image.jpg",
     "description": seo.description,
     "foundingDate": "1999",
+    "priceRange": "€€",
+    "areaServed": [
+      { "@type": "City", "name": "Timișoara" },
+      { "@type": "AdministrativeArea", "name": "Timiș" },
+      { "@type": "Place", "name": "Dumbrăvița" },
+      { "@type": "Place", "name": "Giroc" }
+    ],
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Timișoara",
       "addressRegion": "Timiș",
       "addressCountry": "RO"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 45.7489,
+      "longitude": 21.2087
     },
     "contactPoint": {
       "@type": "ContactPoint",
@@ -325,6 +338,12 @@ const AboutUs = () => {
       "contactType": "customer service",
       "email": "info@realtrust.ro",
       "availableLanguage": ["Romanian", "English"]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "9.7",
+      "bestRating": "10",
+      "ratingCount": "180"
     },
     "sameAs": [
       "https://www.facebook.com/realtrust",
