@@ -13,15 +13,15 @@
 
 export const HOMEPAGE_SEO = {
   ro: {
-    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
+    title: "RealTrust Timișoara | Imobiliare & Regim Hotelier",
     description:
-      "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!",
+      "Investește în imobiliare Timișoara: regim hotelier, vânzări, închirieri lângă UVT & Iulius Town. Calculează ROI gratuit acum!",
     h1: "RealTrust & ApArt Hotel Timișoara — imobiliare & regim hotelier cu randament garantat.",
   },
   en: {
-    title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
+    title: "RealTrust Timișoara | Real Estate & Short-Term Rentals",
     description:
-      "Short-term rental apartments and real estate investments in Timișoara, near Timișoara Airport, UVT and Iulius Town. Calculate ROI free.",
+      "Invest in Timișoara real estate: short-term rentals, sales, rentals near UVT & Iulius Town. Calculate your ROI for free now!",
     h1: "RealTrust & ApArt Hotel Timișoara — real estate & short-term rentals with guaranteed yield.",
   },
 } as const;
