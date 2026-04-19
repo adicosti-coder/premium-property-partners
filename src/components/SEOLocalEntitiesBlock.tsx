@@ -714,6 +714,53 @@ const SEOLocalEntitiesBlock = () => {
         Girocului, accesul la tramvai și autobuz reduce timpul de deplasare spre
         UVT, Iulius Town, Spitalul Județean și principalele zone office.
       </p>
+
+      <h3>City Business Centre Timișoara — cazare și birouri lângă hub-ul corporate</h3>
+      <p>
+        <strong>City Business Centre (CBC)</strong> — cel mai mare hub de
+        birouri clasă A din vestul României, alături de <strong>Iulius Town</strong>,
+        <strong>Vox Technology Park</strong> și <strong>UBC (United Business Center)</strong>,
+        găzduiește companii precum Atos, Visma, Ness, Hella, Wipro și SocGen.
+        Oferim apartamente regim hotelier și închirieri corporate la 3–7 minute
+        de City Business Centre, pentru relocări executive, business travel,
+        training-uri și consultanți internaționali. Acces rapid la Bd. Take
+        Ionescu, Centru Vechi, Iulius Town și Aeroportul Internațional Timișoara.
+      </p>
+
+      <h3>Cartier Freidorf Timișoara — investiții cu potențial industrial</h3>
+      <p>
+        <strong>Cartier Freidorf</strong> — zonă rezidențială de sud-vest cu
+        dezvoltare mixtă (case individuale și mici ansambluri), relevantă pentru
+        investitorii care vizează angajații platformelor industriale Calea Șagului
+        (Continental, Smithfield, Nestlé). Prețuri accesibile (sub 1.300 €/mp),
+        cu acces direct la centura Timișoara, Aeroport și autostrada A1 spre
+        Arad. Recomandat pentru închirieri pe termen lung către familii și
+        navetiști, dar și pentru achiziții de tip buy-to-let cu randament stabil.
+      </p>
+
+      <h3>Consultanță credit ipotecar Timișoara — Prima Casă, Noua Casă și standard</h3>
+      <p>
+        <strong>Consultanță credit ipotecar</strong> completă prin parteneriate
+        cu brokeri certificați și bănci de top (BCR, BRD, ING, Raiffeisen, Banca
+        Transilvania, UniCredit). Sprijin integral pentru: <strong>programul
+        Prima Casă Timișoara</strong> și Noua Casă (avans redus 5%, garanție de
+        stat), credit ipotecar standard cu dobândă fixă sau variabilă (IRCC),
+        comparație ofertă pe ofertă, pre-aprobare în 48h, asistență la dosar,
+        evaluare ANEVAR și semnătură la notar. Recomandat pentru cumpărătorii la
+        prima achiziție, tinerii sub 35 ani și familiile cu venituri medii.
+      </p>
+
+      <h3>Randament chirie termen lung vs. regim hotelier Timișoara</h3>
+      <p>
+        Analiză comparativă pentru investitori: <strong>randament chirie termen
+        lung</strong> în Timișoara este de 4,5–5,8% brut anual (zone premium ISHO,
+        Centru, Iulius Town: chirii 450–700 €/lună pentru 2 camere), în timp ce
+        regimul hotelier administrat profesional generează 8,5–11% net verificat
+        (medie portofoliu RealTrust: 9,4%). Diferența: ocupare 70–85%, tarife
+        dinamice (50–120 €/noapte), gestionare completă și venituri în EUR. Ideal
+        pentru proprietăți în Centru Vechi, Iosefin, ISHO, Complex Studențesc și
+        Calea Aradului. Calculator ROI dedicat și consultanță investițională gratuită.
+      </p>
     </div>
   );
 };
