@@ -47,7 +47,7 @@ const AboutUs = () => {
       },
       mission: {
         title: "Misiunea Noastră",
-        text: "Să oferim proprietarilor din Timișoara o alternativă profesionistă, transparentă și măsurabilă la administrarea clasică a imobilelor — combinând expertiza imobiliară (RealTrust) cu standardele hoteliere (ApArt Hotel) într-un singur partener de încredere."
+        text: "Să oferim proprietarilor din Timișoara o alternativă profesionistă, transparentă și măsurabilă la administrarea clasică a imobilelor — combinând consultanță imobiliară Timișoara (RealTrust) cu standardele hoteliere (ApArt Hotel) într-un singur partener de încredere. Includem evaluare apartament Timișoara gratuită și analiză comparativă de randament chirie Timișoara versus regim hotelier."
       },
       story: {
         title: "Povestea Noastră",
