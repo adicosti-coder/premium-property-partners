@@ -452,6 +452,104 @@ function buildStaticRoutes(): PrerenderRoute[] {
     });
   }
 
+  // /pentru-proprietari — pillar page for property owners
+  routes.push({
+    path: '/pentru-proprietari',
+    title: 'Servicii pentru Proprietari Timișoara — Vânzări, Închirieri & Regim Hotelier',
+    description: 'Servicii complete pentru proprietari Timișoara: vânzare apartament, închiriere termen lung, administrare regim hotelier cu ROI 9.4% net. Comision transparent.',
+    h1: 'Servicii pentru Proprietari în Timișoara',
+    canonical: `${BASE_URL}/pentru-proprietari`,
+    seoBody: `
+      <h2>Servicii complete pentru proprietari de imobile în Timișoara</h2>
+      <p>RealTrust oferă proprietarilor din Timișoara trei direcții principale: <strong>vânzare apartament Timișoara</strong> cu evaluare gratuită și negociere, <strong>închirieri pe termen lung</strong> cu verificarea chiriașilor, și <strong>administrare apartamente regim hotelier</strong> cu ROI 9.4% net verificat anual. Toate serviciile sunt livrate de o echipă locală cu peste 60 de proprietăți active în portofoliu.</p>
+
+      <h2>Preț metru pătrat Timișoara — analiză piață pe cartiere</h2>
+      <p>Analiza <strong>preț metru pătrat Timișoara</strong> pe principalele zone (aprilie 2026): ISHO 2.150 €/mp, Circumvalațiunii 1.920 €/mp, Aradului 1.780 €/mp, Complex Studențesc 1.720 €/mp, Girocului 1.650 €/mp, Șagului 1.580 €/mp, Calea Lipovei 1.550 €/mp. Factori care influențează valoarea: anul construcției, etaj, finisaje, eficiență energetică, proximitate față de UVT, Iulius Town, Aeroport și Spitalul Județean. Oferim evaluare gratuită personalizată pentru proprietatea ta.</p>
+
+      <h2>Comision agenție imobiliară Timișoara — transparență totală</h2>
+      <p>Structura noastră de <strong>comision agenție imobiliară Timișoara</strong>: 2% la vânzări (negociabil pentru proprietăți premium peste 200.000 €), o chirie pentru închirieri pe termen lung de 12 luni, 15–25% management pentru regim hotelier (plătit doar din încasările reale). Fără costuri ascunse, fără taxe de listare, fără abonamente.</p>
+
+      <h2>Contract închiriere apartament — model standardizat</h2>
+      <p>Punem la dispoziția proprietarilor un <strong>contract închiriere apartament model</strong> standardizat, conform legislației române (OUG 114/2018 și Codul Civil), cu clauze pentru garanție, întreținere, durată, reziliere, plata utilităților și inventar mobilier. Modelul poate fi descărcat gratuit după înregistrare.</p>
+
+      <h2>Impozit vânzare imobil Timișoara — obligații fiscale</h2>
+      <p><strong>Impozit vânzare imobil Timișoara</strong>: pentru proprietățile deținute sub 3 ani impozitul este 3% din valoarea tranzacției ce depășește 450.000 RON, iar pentru cele deținute peste 3 ani este 1%. Onorariul notarial se calculează după grilele Camerei Notarilor Publici Timișoara. Echipa noastră te asistă cu toate actele și calculul fiscal complet.</p>
+
+      <h3>Administrare regim hotelier Timișoara — pachet complet</h3>
+      <p>Pachetul de <strong>administrare regim hotelier Timișoara</strong>: marketing pe Booking, Airbnb și platforme directe; check-in / check-out 24/7; curățenie hotelieră; mentenanță; raportare lunară financiară transparentă; optimizare yield management. Comision 15–25% management + 15–23% comision platforme. ROI 9.4% net verificat anual pe portofoliul activ.</p>
+
+      <h3>Calculator ROI online — randament chirie clasică vs regim hotelier</h3>
+      <p>Folosește <a href="${BASE_URL}/calculator-roi" tabindex="-1">calculatorul ROI interactiv</a> pentru a compara randamentul apartamentului tău în chirie clasică vs regim hotelier. Introduci valoarea proprietății, suprafața și tier-ul de management, iar instrumentul afișează venitul lunar estimat, ROI anual și diferența netă. Instrumentul este gratuit și nu necesită înregistrare.</p>
+
+      <h3>Zone acoperite: Centru, ISHO, Complex Studențesc, Dumbrăvița, Ghiroda</h3>
+      <p>Acoperim toate cartierele din Timișoara — Centru / Cetate, Iosefin, Elisabetin, Fabric, ISHO, Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, Complex Studențesc — și zonele metropolitane <strong>Dumbrăvița</strong>, <strong>Ghiroda</strong> (acces rapid la Aeroport) și <strong>Moșnița Nouă</strong> (case și vile noi).</p>
+    `,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'RealEstateAgent',
+        name: 'RealTrust & ApArt Hotel — Servicii Proprietari Timișoara',
+        url: `${BASE_URL}/pentru-proprietari`,
+        telephone: '+40723154520',
+        areaServed: 'Timișoara',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+          addressLocality: 'Timișoara',
+          addressRegion: 'Timiș',
+          postalCode: '300125',
+          addressCountry: 'RO',
+        },
+        priceRange: '$$',
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        serviceType: 'Administrare apartamente regim hotelier',
+        provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        areaServed: 'Timișoara',
+        url: `${BASE_URL}/pentru-proprietari`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        serviceType: 'Vânzare apartamente Timișoara',
+        provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        areaServed: 'Timișoara',
+        url: `${BASE_URL}/pentru-proprietari`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        serviceType: 'Închirieri pe termen lung Timișoara',
+        provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        areaServed: 'Timișoara',
+        url: `${BASE_URL}/pentru-proprietari`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'Cât este comisionul agenției RealTrust pentru vânzarea unui apartament în Timișoara?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Comisionul standard este 2% din valoarea tranzacției, negociabil pentru proprietăți premium peste 200.000 €. Fără costuri ascunse sau taxe de listare.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Ce randament pot obține în regim hotelier față de chirie clasică?',
+            acceptedAnswer: { '@type': 'Answer', text: 'ROI net verificat de 9.4% anual în regim hotelier RealTrust, comparativ cu 4-5% pentru chirie clasică. Diferența medie netă este 60–80% în favoarea regimului hotelier.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Care este impozitul pe vânzarea unui imobil în Timișoara?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Pentru imobile deținute sub 3 ani: 3% din valoarea ce depășește 450.000 RON. Pentru cele peste 3 ani: 1%. Onorariu notarial conform grilelor Camerei Notarilor Publici Timișoara.' },
+          },
+        ],
+      },
+    ],
+  });
+
   // /complexe — managed residential complexes
   routes.push({
     path: '/complexe',
