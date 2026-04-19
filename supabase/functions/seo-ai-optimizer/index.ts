@@ -44,7 +44,7 @@ serve(async (req) => {
     }
 
     // 1. Scrape
-    const scraped = await scrapePage(url, FIRECRL_API_KEY ?? FIRECRAWL_API_KEY, forceRefresh);
+    const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
     const contentHash = await sha256(scraped.markdown || "");
 
     // 2. Detect duplicate content vs alte audituri
