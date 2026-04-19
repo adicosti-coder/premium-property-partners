@@ -529,6 +529,8 @@ const SEOOptimizerManager = () => {
                 )}
               </div>
             )}
+
+            {previousAudit && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs space-y-1">
                 <div className="font-semibold text-primary flex items-center gap-1">
                   <Layers className="w-3 h-3" />
