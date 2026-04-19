@@ -16,12 +16,26 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 
 const QUICK_URLS = [
+  // Principal
   "https://www.realtrust.ro/",
-  "https://www.realtrust.ro/oaspeti",
-  "https://www.realtrust.ro/imobiliare-timisoara",
-  "https://www.realtrust.ro/blog",
-  "https://www.realtrust.ro/calculator-roi",
+  "https://www.realtrust.ro/despre",
+  "https://www.realtrust.ro/contact",
+  // Proprietari
   "https://www.realtrust.ro/pentru-proprietari",
+  "https://www.realtrust.ro/preturi-pachete",
+  "https://www.realtrust.ro/analiza-proprietate",
+  "https://www.realtrust.ro/evaluare-gratuita",
+  // Oaspeți
+  "https://www.realtrust.ro/oaspeti",
+  "https://www.realtrust.ro/complexuri-rezidentiale",
+  // Investiții
+  "https://www.realtrust.ro/investitii",
+  "https://www.realtrust.ro/catalog-investitii",
+  "https://www.realtrust.ro/imobiliare-timisoara",
+  "https://www.realtrust.ro/cartiere-timisoara",
+  "https://www.realtrust.ro/calculator-roi",
+  // Informații
+  "https://www.realtrust.ro/blog",
 ];
 
 interface AuditRow {
