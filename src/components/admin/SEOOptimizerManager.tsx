@@ -18,22 +18,30 @@ import jsPDF from "jspdf";
 const QUICK_URLS = [
   // Principal
   "https://www.realtrust.ro/",
-  "https://www.realtrust.ro/despre",
+  "https://www.realtrust.ro/despre-noi",
   "https://www.realtrust.ro/contact",
   // Proprietari
   "https://www.realtrust.ro/pentru-proprietari",
-  "https://www.realtrust.ro/preturi-pachete",
+  "https://www.realtrust.ro/preturi",
   "https://www.realtrust.ro/analiza-proprietate",
   "https://www.realtrust.ro/evaluare-gratuita",
   // Oaspeți
+  "https://www.realtrust.ro/pentru-oaspeti",
   "https://www.realtrust.ro/oaspeti",
-  "https://www.realtrust.ro/complexuri-rezidentiale",
-  // Investiții
+  "https://www.realtrust.ro/complexe",
+  // Investiții & Imobiliare
   "https://www.realtrust.ro/investitii",
   "https://www.realtrust.ro/catalog-investitii",
+  "https://www.realtrust.ro/imobiliare",
   "https://www.realtrust.ro/imobiliare-timisoara",
-  "https://www.realtrust.ro/cartiere-timisoara",
   "https://www.realtrust.ro/calculator-roi",
+  "https://www.realtrust.ro/piata-imobiliara-timisoara",
+  // Cartiere prioritare (NeighborhoodDetail)
+  "https://www.realtrust.ro/imobiliare-timisoara/isho",
+  "https://www.realtrust.ro/imobiliare-timisoara/iosefin",
+  "https://www.realtrust.ro/imobiliare-timisoara/dumbravita",
+  "https://www.realtrust.ro/imobiliare-timisoara/giroc",
+  "https://www.realtrust.ro/imobiliare-timisoara/complex-studentesc",
   // Informații
   "https://www.realtrust.ro/blog",
 ];
