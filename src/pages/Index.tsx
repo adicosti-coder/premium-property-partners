@@ -176,7 +176,7 @@ const HOMEPAGE_SEO = {
   ro: {
     title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
     description:
-      "Descoperă apartamente de închiriat și vânzare în Timișoara, regim hotelier lângă UVT și Iulius Town. Calculează ROI și contactează-ne!",
+      "Descoperă apartamente de vânzare, închiriat și regim hotelier în Timișoara, lângă UVT, Iulius Town și Aeroport. Calculează ROI și contactează-ne acum!",
   },
   en: {
     title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
