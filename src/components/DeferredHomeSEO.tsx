@@ -1,24 +1,10 @@
-import SEOHead from "@/components/SEOHead";
+import { Helmet } from "react-helmet-async";
 import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 
-const HOMEPAGE_SEO = {
-  ro: {
-    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
-    description:
-      "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!",
-  },
-  en: {
-    title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
-    description:
-      "Short-term rental apartments and real estate investments in Timișoara, near Timișoara Airport, UVT and Iulius Town. Calculate ROI free.",
-  },
-} as const;
-
 const DeferredHomeSEO = ({ language }: { language: string }) => {
-  const homepageSeo = HOMEPAGE_SEO[language as keyof typeof HOMEPAGE_SEO] || HOMEPAGE_SEO.ro;
   const { data: reviews } = useQuery({
     queryKey: ["homepage-reviews-schema"],
     queryFn: async () => {
@@ -205,11 +191,9 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   const allSchemas = [...homepageSchemas, organizationSchema, realEstateAgentSchema];
 
   return (
-    <SEOHead
-      title={homepageSeo.title}
-      description={homepageSeo.description}
-      jsonLd={allSchemas}
-    />
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(allSchemas)}</script>
+    </Helmet>
   );
 };
 
