@@ -38,13 +38,15 @@
   # the page-specific static document instead of the homepage shell.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
-  RewriteRule ^(.+?)/?$ /$1.html [L]
+  RewriteCond %{REQUEST_URI} ^/(.+?)/?$
+  RewriteCond %{DOCUMENT_ROOT}/%1.html -f
+  RewriteRule ^ %1.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
-  RewriteRule ^(.+?)/?$ /$1/index.html [L]
+  RewriteCond %{REQUEST_URI} ^/(.+?)/?$
+  RewriteCond %{DOCUMENT_ROOT}/%1/index.html -f
+  RewriteRule ^ %1/index.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
