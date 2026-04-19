@@ -60,6 +60,20 @@ serve(async (req) => {
     // 4. AI analysis (now includes local geo context for better keyword suggestions)
     const analysis = await analyzeWithAI(scraped, url, language, duplicates || [], localGeo, LOVABLE_API_KEY);
 
+    // Build a diagnostic blob so the admin UI can show "what the audit actually saw"
+    const diagnostics = {
+      scrape_source: (scraped as any).source || "unknown",
+      title_detected: scraped.title,
+      meta_chosen: scraped.metaDescription,
+      meta_candidates: (scraped as any).metaCandidatesDebug || [],
+      h1_count: scraped.h1Count,
+      h2_count: (scraped as any).h2Count ?? null,
+      word_count: scraped.wordCount,
+      force_refresh: forceRefresh,
+      audited_at: new Date().toISOString(),
+    };
+    const enrichedAnalysis = { ...analysis, _diagnostics: diagnostics };
+
     // 5. Store
     const { data: saved, error: saveErr } = await sb.from("seo_audits").insert({
       url,
@@ -76,7 +90,7 @@ serve(async (req) => {
       strengths: analysis.strengths || [],
       issues: analysis.issues || [],
       opportunities: analysis.opportunities || [],
-      raw_analysis: analysis,
+      raw_analysis: enrichedAnalysis,
       content_hash: contentHash,
       local_relevance_score: localGeo.score,
       local_entities_found: localGeo.found,
@@ -87,7 +101,7 @@ serve(async (req) => {
 
     if (saveErr) console.error("Save error:", saveErr);
 
-    return json({ audit: saved, cached: false, duplicates: duplicates || [] });
+    return json({ audit: saved, cached: false, duplicates: duplicates || [], diagnostics });
   } catch (err: any) {
     console.error("seo-ai-optimizer error:", err);
     return json({ error: err.message || "Unknown" }, 500);
@@ -117,7 +131,7 @@ async function sha256(text: string): Promise<string> {
 }
 
 async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = false) {
-  const candidates = [];
+  const candidates: any[] = [];
   const freshUrl = forceRefresh
     ? `${url}${url.includes("?") ? "&" : "?"}seo_refresh=${Date.now()}`
     : url;
@@ -132,8 +146,6 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
           url: freshUrl,
           formats: ["markdown", "html"],
           onlyMainContent: false,
-          // Wait 4s for the React SPA to hydrate so SR-only SEO blocks
-          // (rendered by React, not just static index.html) are captured.
           waitFor: 4000,
         }),
       });
@@ -142,12 +154,15 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
         const md = data.markdown || data.data?.markdown || "";
         const html = data.html || data.data?.html || "";
         const meta = data.metadata || data.data?.metadata || {};
-        candidates.push(parseScraped(md, html, meta));
+        const parsed = parseScraped(md, html, meta);
+        (parsed as any).source = "firecrawl";
+        candidates.push(parsed);
       }
     } catch (e) { console.warn("Firecrawl fail, fallback:", e); }
   }
 
-  // Direct fetch as fallback and freshness guard against stale external snapshots
+  // Direct fetch as fallback
+  try {
     const res = await fetch(freshUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 SEO-Bot",
@@ -155,59 +170,129 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
         Pragma: "no-cache",
       },
     });
-  const html = await res.text();
-  candidates.push(parseScraped(htmlToText(html), html, extractMetaFromHtml(html)));
-
-  if (candidates.length === 1) {
-    return candidates[0];
+    const html = await res.text();
+    const parsed = parseScraped(htmlToText(html), html, extractMetaFromHtml(html));
+    (parsed as any).source = "direct-fetch";
+    candidates.push(parsed);
+  } catch (e) {
+    console.warn("Direct fetch fail:", e);
   }
+
+  if (candidates.length === 0) {
+    return { title: "", metaDescription: "", h1Count: 0, h2Count: 0, wordCount: 0, markdown: "", fullHtml: "", source: "none", metaCandidatesDebug: [] } as any;
+  }
+  if (candidates.length === 1) return candidates[0];
 
   const best = pickBestScrapeResult(candidates);
   if (isClearlyBrokenScrape(best) && candidates.length > 1) {
     const nonBroken = candidates.find((candidate) => !isClearlyBrokenScrape(candidate));
     if (nonBroken) return nonBroken;
   }
-
   return best;
 }
 
 function parseScraped(markdown: string, html: string, meta: any) {
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  const metaDescMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+
+  // Collect ALL meta description candidates (description, og:description, twitter:description)
+  // — never trust just the first regex hit. Some pages inject 2-3 sources via React + prerender.
+  const metaCandidates = collectMetaDescriptionCandidates(html, meta);
+
   const h1Matches = html.match(/<h1[^>]*>/gi) || [];
+  const h2Matches = html.match(/<h2[^>]*>/gi) || [];
   const text = markdown || htmlToText(html);
 
   return {
     title: meta.title || titleMatch?.[1]?.trim() || "",
-    metaDescription: normalizeMetaDescription(meta.description || metaDescMatch?.[1]?.trim() || ""),
+    metaDescription: pickBestMetaDescription(metaCandidates),
+    metaCandidatesDebug: metaCandidates,
     h1Count: h1Matches.length,
+    h2Count: h2Matches.length,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     markdown: text.slice(0, 8000),
     fullHtml: html.slice(0, 2000),
   };
 }
 
-function normalizeMetaDescription(raw: string): string {
-  const cleaned = raw.replace(/\s+/g, " ").trim();
-  if (!cleaned) return "";
+interface MetaCandidate {
+  source: string;
+  value: string;
+}
 
-  const candidates = cleaned
-    .split(/\s*,\s*(?=[A-ZĂÂÎȘȚ])/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+function collectMetaDescriptionCandidates(html: string, meta: any): MetaCandidate[] {
+  const found: MetaCandidate[] = [];
+  const seen = new Set<string>();
+  const push = (source: string, raw: string | undefined | null) => {
+    if (!raw) return;
+    const cleaned = raw.replace(/\s+/g, " ").trim();
+    if (!cleaned) return;
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    found.push({ source, value: cleaned });
+  };
 
-  const unique = candidates.filter((part, index, arr) => arr.findIndex((item) => item.toLowerCase() === part.toLowerCase()) === index);
-  const best = unique
-    .sort((a, b) => {
-      const score = (value: string) => {
-        const lengthScore = value.length <= 160 ? 2 : 0;
-        const ctaScore = /(calculeaza|calculează|contacteaza|contactează|descopera|descoperă|solicita|solicită|vezi)/i.test(value) ? 1 : 0;
-        return lengthScore + ctaScore;
-      };
-      return score(b) - score(a) || a.length - b.length;
-    })[0];
+  // Firecrawl-provided structured metadata first (most trustworthy)
+  push("metadata.description", meta?.description);
+  push("metadata.ogDescription", meta?.ogDescription || meta?.["og:description"]);
+  push("metadata.twitterDescription", meta?.twitterDescription || meta?.["twitter:description"]);
 
-  return best || cleaned;
+  // Now scan ALL <meta name="description"> occurrences (not just the first)
+  const descRe = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/gi;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = descRe.exec(html)) !== null && i < 10) {
+    push(`html.meta.description[${i}]`, m[1]);
+    i++;
+  }
+
+  // og:description
+  const ogRe = /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/gi;
+  i = 0;
+  while ((m = ogRe.exec(html)) !== null && i < 5) {
+    push(`html.og:description[${i}]`, m[1]);
+    i++;
+  }
+
+  // twitter:description
+  const twRe = /<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["']/gi;
+  i = 0;
+  while ((m = twRe.exec(html)) !== null && i < 5) {
+    push(`html.twitter:description[${i}]`, m[1]);
+    i++;
+  }
+
+  return found;
+}
+
+/**
+ * Pick the best (most complete, most informative) meta description from
+ * multiple candidates. Avoids the previous buggy behavior of splitting on
+ * commas and returning a truncated fragment like "Aeroport. Calculează ROI gratuit!".
+ */
+function pickBestMetaDescription(candidates: MetaCandidate[]): string {
+  if (!candidates.length) return "";
+  const score = (value: string) => {
+    let s = 0;
+    // Strongly prefer descriptions in the SEO sweet spot (130–160 chars)
+    if (value.length >= 120 && value.length <= 165) s += 10;
+    else if (value.length >= 80 && value.length < 120) s += 6;
+    else if (value.length > 165 && value.length <= 200) s += 4;
+    else if (value.length < 60) s -= 5;
+    // Prefer descriptions with a CTA verb
+    if (/(calculeaz|contacteaz|descoper|solicit|vezi|invest|află|afla)/i.test(value)) s += 3;
+    // Prefer descriptions mentioning Timișoara (canonical brand keyword)
+    if (/timi[șs]oara/i.test(value)) s += 2;
+    // Penalize descriptions that look like a fragment (start lowercase or with a fragment marker)
+    if (/^[a-zăâîșț]/.test(value)) s -= 4;
+    // Penalize obvious concatenations (multiple sentences with dot-space-Capital + comma joins)
+    const sentenceCount = (value.match(/[.!?]\s+[A-ZĂÂÎȘȚ]/g) || []).length;
+    if (sentenceCount > 3) s -= 3;
+    // Prefer html.meta.description over og/twitter when scores are tied
+    return s;
+  };
+  const sorted = [...candidates].sort((a, b) => score(b.value) - score(a.value));
+  return sorted[0].value;
 }
 
 function htmlToText(html: string): string {
@@ -222,6 +307,8 @@ function extractMetaFromHtml(html: string) {
   return {
     title: get(/<title[^>]*>([^<]+)<\/title>/i),
     description: get(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i),
+    ogDescription: get(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i),
+    twitterDescription: get(/<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["']/i),
   };
 }
 

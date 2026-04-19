@@ -11,6 +11,7 @@ import SEOLocalEntitiesBlock from "@/components/SEOLocalEntitiesBlock";
 import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schemaGenerators";
 
 import StatsCounters from "@/components/StatsCounters";
+import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -172,19 +173,6 @@ const BottomFoldSecondarySection = () => (
   </div>
 );
 
-const HOMEPAGE_SEO = {
-  ro: {
-    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
-    description:
-      "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!",
-  },
-  en: {
-    title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
-    description:
-      "Short-term rental apartments and real estate investments in Timișoara, near Timișoara Airport, UVT and Iulius Town. Calculate ROI free.",
-  },
-} as const;
-
 const STATIC_HOMEPAGE_SCHEMAS = [
   ...generateHomepageSchemas(),
   generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://www.realtrust.ro", [
@@ -241,7 +229,7 @@ const Index = () => {
       <SEOHead
         title={homepageSeo.title}
         description={homepageSeo.description}
-        url="https://www.realtrust.ro/"
+        url={HOMEPAGE_CANONICAL}
         jsonLd={STATIC_HOMEPAGE_SCHEMAS}
       />
       {/* Skip to content link for screen readers & keyboard users */}

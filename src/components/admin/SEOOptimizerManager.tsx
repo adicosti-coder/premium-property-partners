@@ -500,6 +500,36 @@ const SEOOptimizerManager = () => {
               </div>
             </div>
 
+            {selectedAudit.raw_analysis?._diagnostics && (
+              <div className="rounded-lg border border-blue-300 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20 p-4 text-xs space-y-2">
+                <div className="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  🔬 Diagnostic — ce a citit efectiv auditul
+                </div>
+                <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
+                  <div><span className="text-muted-foreground">Sursă scrape:</span> <code className="font-semibold">{selectedAudit.raw_analysis._diagnostics.scrape_source || "—"}</code></div>
+                  <div><span className="text-muted-foreground">Force refresh:</span> <code>{String(selectedAudit.raw_analysis._diagnostics.force_refresh)}</code></div>
+                  <div><span className="text-muted-foreground">H1 detectat:</span> <code>{selectedAudit.raw_analysis._diagnostics.h1_count ?? "—"}</code></div>
+                  <div><span className="text-muted-foreground">H2 detectat:</span> <code>{selectedAudit.raw_analysis._diagnostics.h2_count ?? "—"}</code></div>
+                  <div className="sm:col-span-2"><span className="text-muted-foreground">Title detectat:</span> <code className="break-all">{selectedAudit.raw_analysis._diagnostics.title_detected || "—"}</code></div>
+                  <div className="sm:col-span-2"><span className="text-muted-foreground">Meta aleasă:</span> <code className="break-words">{selectedAudit.raw_analysis._diagnostics.meta_chosen || "—"}</code></div>
+                </div>
+                {Array.isArray(selectedAudit.raw_analysis._diagnostics.meta_candidates) && selectedAudit.raw_analysis._diagnostics.meta_candidates.length > 0 && (
+                  <details className="mt-1">
+                    <summary className="cursor-pointer text-blue-700 dark:text-blue-300 font-medium">
+                      Toate candidații meta description găsiți ({selectedAudit.raw_analysis._diagnostics.meta_candidates.length})
+                    </summary>
+                    <ul className="mt-2 space-y-1 pl-4">
+                      {selectedAudit.raw_analysis._diagnostics.meta_candidates.map((c: any, i: number) => (
+                        <li key={i} className="break-words">
+                          <span className="text-muted-foreground">[{c.source}]</span> <code>{c.value}</code> <span className="text-muted-foreground">({c.value?.length || 0} char)</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+
             {previousAudit && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs space-y-1">
                 <div className="font-semibold text-primary flex items-center gap-1">
