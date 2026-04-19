@@ -523,18 +523,20 @@ const PentruProprietari = () => {
       {/* Partnership Timeline */}
       <PartnershipTimeline />
 
-      {/* Investor Guide CTA */}
+      {/* Owner guide CTA */}
       <section className="py-12 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
         <div className="container mx-auto px-6 text-center">
-          <h3 className="text-2xl font-serif font-bold mb-4">
-            {language === "ro" ? "Descarcă Ghidul Investitorului 2026" : "Download the 2026 Investor's Guide"}
-          </h3>
+          <h2 className="text-2xl font-serif font-bold mb-4">
+            {language === "ro" ? "Ghidul Proprietarului 2026" : "The 2026 Owner Guide"}
+          </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
             {language === "ro" 
-              ? "Strategii de maximizare a randamentului, analiză de piață și zone premium din Timișoara."
-              : "Strategies for maximizing returns, market analysis and premium zones in Timișoara."}
+              ? "Checklist de onboarding, repere fiscale, conformitate ANAF și pași clari pentru preluare apartament în administrare fără stres."
+              : "Owner checklist, tax guidance and clear onboarding steps for full-service property management."}
           </p>
-          <InvestorGuideButton size="lg" />
+          <Button asChild variant="hero" size="lg">
+            <Link to="/evaluare-gratuita">{language === "ro" ? "Primește evaluarea gratuită" : "Get a free valuation"}</Link>
+          </Button>
         </div>
       </section>
 
