@@ -74,8 +74,8 @@ const HOMEPAGE_SEO_BODY = `
   <h3>Proprietăți de vânzare Zona Aradului</h3>
   <p><strong>Proprietăți de vânzare Zona Aradului</strong> Timișoara — apartamente cu 2, 3 și 4 camere în zone cu acces rapid la Aeroportul Internațional „Traian Vuia", Iulius Town și Openville. Profil de chiriași cu venituri ridicate, apreciere a capitalului peste media pieței.</p>
 
-  <h3>Cazare evenimente Timișoara — FITS, Festivalul Inimilor și conferințe</h3>
-  <p>Cazare pentru evenimente locale majore: <strong>cazare FITS Timișoara</strong> (Festivalul Internațional de Teatru), <strong>apartamente închiriere Festivalul Inimilor</strong>, Timișoara Jazz Festival, Plai Festival, Revolution Festival și conferințe medicale UMF — apartamente disponibile cu rezervare anticipată în Centru, Iosefin și Complex Studențesc.</p>
+  <h3>Cazare evenimente Timișoara — FEST-FDR, Festivalul Inimilor și conferințe</h3>
+  <p>Cazare pentru evenimente locale majore: <strong>cazare FEST-FDR Timișoara</strong> (Festivalul European al Spectacolului), <strong>apartamente închiriere Festivalul Inimilor</strong>, Timișoara Jazz Festival, Plai Festival, Revolution Festival și conferințe medicale UMF — apartamente disponibile cu rezervare anticipată în Centru, Iosefin și Complex Studențesc.</p>
 `;
 
 const BASE_URL = 'https://www.realtrust.ro';
