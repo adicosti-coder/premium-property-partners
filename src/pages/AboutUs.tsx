@@ -160,6 +160,17 @@ const AboutUs = () => {
           { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
+      faq: {
+        title: "Întrebări Frecvente despre RealTrust",
+        items: [
+          { q: "Cine este fondatorul RealTrust Timișoara?", a: "Compania este fondată și condusă de Adrian Costi, antreprenor local cu peste 25 de ani de experiență în piața imobiliară din Timișoara și vestul României. Adrian este implicat direct în fiecare colaborare cu proprietarii." },
+          { q: "Ce comision are agenția imobiliară RealTrust Timișoara?", a: "Pentru vânzări aplicăm un comision standard de 2% + TVA din partea vânzătorului, iar pentru închirieri pe termen lung un comision egal cu o chirie lunară. Pentru administrare în regim hotelier comisionul de management este de 20–25% din venitul net, fără taxe ascunse. Toate comisioanele sunt agreate înainte de semnarea contractului." },
+          { q: "Oferiți consultanță pentru credit imobiliar Timișoara?", a: "Da, colaborăm cu brokeri independenți de credite și cu băncile partenere (BCR, BT, ING, Raiffeisen, BRD) pentru pre-aprobare, comparare oferte (dobândă fixă vs. variabilă), Prima Casă/Noua Casă și evaluare ANEVAR. Consultanța inițială este gratuită pentru clienții noștri." },
+          { q: "Vindeți și case în Timișoara, nu doar apartamente?", a: "Da. Portofoliul nostru include atât apartamente (1–4 camere) cât și case de vânzare în Timișoara și zona metropolitană (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz, Chișoda) — case individuale, duplexuri și vile cu teren intravilan." },
+          { q: "În ce zone din Timișoara activați?", a: "Acoperim întreg orașul Timișoara — Centru, ISHO, Iulius Town, Complex Studențesc, Cetate, Iosefin, Elisabetin, Fabric, Mehala, Freidorf, Lipovei, Aradului — plus zonele metropolitane Dumbrăvița, Giroc, Moșnița Nouă și Ghiroda." },
+          { q: "Cum mă asigur că proprietatea mea este în siguranță?", a: "Folosim contracte transparente, verificare bonitate chiriași, asigurare PAD obligatorie, smart-lock cu coduri unice per oaspete, monitorizare IoT (zgomot, fum), curățenie după fiecare sejur cu raportare foto și depozit de garanție returnat 100% la finalul colaborării." }
+        ]
+      },
       cta: {
         title: "Pregătit să Începem?",
         subtitle: "Contactează-ne pentru o discuție fără obligații despre cum te putem ajuta.",
