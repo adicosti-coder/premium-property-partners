@@ -118,6 +118,41 @@ const SEOLocalEntitiesBlock = () => {
         relocări temporare în Timișoara.
       </p>
 
+      <h3>Garsoniere de închiriat Timișoara — Complex Studențesc, Iosefin, Centru</h3>
+      <p>
+        <strong>Garsoniere de închiriat Timișoara</strong> mobilate și utilate
+        complet, ideale pentru studenți, tineri profesioniști și persoane
+        singure. Disponibile în Complex Studențesc (lângă UVT, UPT, UMF),
+        Iosefin, Elisabetin, Cetate și Calea Aradului. Prețuri de la 280 €/lună,
+        contracte flexibile pe termen lung sau scurt.
+      </p>
+
+      <h3>Apartamente de vânzare Timișoara 2 camere — selecție investitori</h3>
+      <p>
+        <strong>Apartamente de vânzare Timișoara 2 camere</strong> — cea mai
+        căutată configurație pentru investiții în regim hotelier și pentru
+        cumpărători first-time. Selecție în ISHO, Centru, Iosefin, Take Ionescu
+        și Calea Aradului, cu suprafețe 45–65 mp, finisaje moderne și ROI net
+        estimat 7–10% în regim hotelier.
+      </p>
+
+      <h3>Apartamente de închiriat Timișoara pe termen scurt — regim hotelier</h3>
+      <p>
+        <strong>Apartamente de închiriat Timișoara pe termen scurt</strong> în
+        regim hotelier — sejururi de la 1 noapte la 30 nopți, self check-in 24/7,
+        WiFi rapid, parcare gratuită și curățenie profesională între sejururi.
+        Disponibile în Centru Vechi, Iulius Town, ISHO și lângă Aeroport.
+      </p>
+
+      <h3>Cazare Timișoara Piața Unirii — apartamente boutique în inima Cetății</h3>
+      <p>
+        <strong>Cazare Timișoara Piața Unirii</strong> — apartamente regim
+        hotelier în clădiri istorice restaurate, la 2–5 minute pe jos de Piața
+        Unirii, Domul Romano-Catolic, Catedrala Sârbească și pietonalul
+        Alba Iulia. Locație ideală pentru turism cultural, business în Centru
+        și călători care doresc să exploreze patrimoniul UNESCO al Timișoarei.
+      </p>
+
       <h2>Cazare evenimente Timișoara — concerte, conferințe, festivaluri</h2>
       <p>
         <strong>Cazare evenimente Timișoara</strong> pentru participanții la
