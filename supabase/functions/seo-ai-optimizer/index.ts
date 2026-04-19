@@ -312,7 +312,76 @@ function extractMetaFromHtml(html: string) {
   };
 }
 
+/**
+ * Deterministic SEO score (0-100) calculated from MEASURABLE signals.
+ * The AI no longer decides the score — it only suggests improvements.
+ * This eliminates the "92 → 95 → 92" flip-flop pattern caused by AI variance.
+ */
+function calculateDeterministicScore(scraped: any, localGeo: any, duplicates: any[]): {
+  score: number;
+  breakdown: Record<string, { points: number; max: number; reason: string }>;
+} {
+  const breakdown: Record<string, { points: number; max: number; reason: string }> = {};
+
+  // 1. Title quality (15 pts)
+  const title = scraped.title || "";
+  const titleLen = title.length;
+  let titlePts = 0;
+  if (titleLen >= 40 && titleLen <= 65) titlePts = 15;
+  else if (titleLen >= 30 && titleLen < 40) titlePts = 10;
+  else if (titleLen > 65 && titleLen <= 75) titlePts = 11;
+  else if (titleLen > 0) titlePts = 5;
+  breakdown.title = { points: titlePts, max: 15, reason: `${titleLen} chars` };
+
+  // 2. Meta description quality (15 pts)
+  const meta = scraped.metaDescription || "";
+  const metaLen = meta.length;
+  let metaPts = 0;
+  if (metaLen >= 130 && metaLen <= 160) metaPts = 15;
+  else if (metaLen >= 110 && metaLen < 130) metaPts = 12;
+  else if (metaLen > 160 && metaLen <= 180) metaPts = 11;
+  else if (metaLen >= 70) metaPts = 7;
+  else if (metaLen > 0) metaPts = 3;
+  breakdown.meta = { points: metaPts, max: 15, reason: `${metaLen} chars` };
+
+  // 3. H1 structure (10 pts) — exactly 1 is ideal
+  const h1 = scraped.h1Count || 0;
+  const h1Pts = h1 === 1 ? 10 : h1 === 0 ? 0 : h1 === 2 ? 5 : 3;
+  breakdown.h1 = { points: h1Pts, max: 10, reason: `${h1} H1 tags` };
+
+  // 4. H2 structure (5 pts)
+  const h2 = scraped.h2Count || 0;
+  const h2Pts = h2 >= 5 ? 5 : h2 >= 3 ? 4 : h2 >= 1 ? 2 : 0;
+  breakdown.h2 = { points: h2Pts, max: 5, reason: `${h2} H2 tags` };
+
+  // 5. Content length (15 pts)
+  const wc = scraped.wordCount || 0;
+  let wcPts = 0;
+  if (wc >= 1500) wcPts = 15;
+  else if (wc >= 800) wcPts = 12;
+  else if (wc >= 400) wcPts = 8;
+  else if (wc >= 200) wcPts = 4;
+  breakdown.content = { points: wcPts, max: 15, reason: `${wc} words` };
+
+  // 6. Local SEO (25 pts)
+  const localPts = Math.round((localGeo.score / 100) * 25);
+  breakdown.local_seo = { points: localPts, max: 25, reason: `${localGeo.score}/100 local relevance` };
+
+  // 7. Proximity signals (5 pts)
+  const proxPts = localGeo.has_proximity_signals ? 5 : 0;
+  breakdown.proximity = { points: proxPts, max: 5, reason: localGeo.has_proximity_signals ? "present" : "missing" };
+
+  // 8. Duplicate content (10 pts)
+  const dupPts = duplicates.length === 0 ? 10 : duplicates.length <= 2 ? 5 : 0;
+  breakdown.duplicates = { points: dupPts, max: 10, reason: `${duplicates.length} duplicates` };
+
+  const total = Object.values(breakdown).reduce((sum, b) => sum + b.points, 0);
+  return { score: Math.min(100, total), breakdown };
+}
+
 async function analyzeWithAI(scraped: any, url: string, lang: string, duplicates: any[], localGeo: any, apiKey: string) {
+  const { score: deterministicScore, breakdown } = calculateDeterministicScore(scraped, localGeo, duplicates);
+
   const dupNote = duplicates.length > 0
     ? `\nATENȚIE: Am detectat ${duplicates.length} alte pagini cu conținut identic: ${duplicates.map(d => d.url).join(", ")}`
     : "";
@@ -321,61 +390,77 @@ async function analyzeWithAI(scraped: any, url: string, lang: string, duplicates
   const localMissingNames = (localGeo.missing || []).slice(0, 12).map((e: any) => `${e.name} (${e.category})`).join(", ") || "—";
   const proxNote = localGeo.has_proximity_signals
     ? `Da — keyword-uri detectate: ${localGeo.proximity_keywords_found.slice(0, 5).join(", ")}`
-    : "NU — pagina NU menționează proximitatea față de facilități (școli, parcuri, mall-uri, transport). Aceasta este o problemă mare pentru Local SEO / Google Local Pack.";
+    : "NU — pagina NU menționează proximitatea față de facilități.";
 
-  const prompt = `Analizează această pagină web și returnează un audit SEO complet în JSON, cu accent special pe LOCAL SEO Timișoara.
+  const titleLen = (scraped.title || "").length;
+  const metaLen = (scraped.metaDescription || "").length;
+
+  const prompt = `Ești auditor SEO SENIOR cu 15+ ani experiență pe piața imobiliară din Timișoara. Analizezi cu RIGOARE și CONSECVENȚĂ — NU dai recomandări contradictorii.
 
 URL: ${url}
 Limbă: ${lang}
-Titlu actual: "${scraped.title}"
-Meta description actuală: "${scraped.metaDescription}"
-Număr H1: ${scraped.h1Count}
+Titlu actual (${titleLen} chars): "${scraped.title}"
+Meta description actuală (${metaLen} chars): "${scraped.metaDescription}"
+Număr H1: ${scraped.h1Count} | H2: ${scraped.h2Count || 0}
 Număr cuvinte: ${scraped.wordCount}
 ${dupNote}
 
-=== LOCAL GEO CONTEXT (Timișoara) ===
-Scor relevanță locală calculat: ${localGeo.score}/100
-Entități locale găsite în text: ${localFoundNames}
-Entități locale importante LIPSĂ (nu sunt menționate, dar ar trebui): ${localMissingNames}
-Conține semnale de proximitate ("aproape de", "lângă", minute pe jos, etc.)? ${proxNote}
+=== SCOR DETERMINIST (calculat din semnale măsurabile) ===
+Scor total: ${deterministicScore}/100
+Breakdown:
+${Object.entries(breakdown).map(([k, v]) => `  - ${k}: ${v.points}/${v.max} (${v.reason})`).join("\n")}
 
-Conținut (primele 8000 caractere):
+=== LOCAL GEO (Timișoara) ===
+Scor relevanță locală: ${localGeo.score}/100
+Entități găsite: ${localFoundNames}
+Entități LIPSĂ: ${localMissingNames}
+Proximitate: ${proxNote}
+
+Conținut analizat (primele 8000 caractere):
 ${scraped.markdown}
 
-Returnează EXCLUSIV JSON cu structura:
+=== REGULI STRICTE ANTI-FLIP-FLOP ===
+1. Titlu între 40-65 chars = OK. NU recomanda "scurtează" dacă e între 50-65 sau "extinde" dacă e între 40-55.
+2. Meta description între 130-160 chars = OK. Aceeași regulă — NU oscila.
+3. NU repeta recomandări care contrazic auditul anterior. Dacă titlul include cuvinte cheie principale, NU mai cere modificări cosmetice.
+4. NU sugera adăugarea de cuvinte deja prezente în text (verifică textul ÎNAINTE de a sugera).
+5. Recomandările trebuie să fie ACȚIONABILE și NETRIVIALE — nu generic "adaugă testimoniale".
+6. Dacă scor ≥ 90, focus pe oportunități STRATEGICE (schema avansat, content hubs, internal linking), NU pe ajustări minore titlu/meta.
+7. Pentru fiecare keyword sugerat, verifică DUBLU dacă NU e deja în textul analizat. Dacă e, OMITE-l.
+8. Issues cu severity "info" sunt rezervate pentru observații cu impact REAL — nu pentru ajustări estetice.
+
+Returnează EXCLUSIV JSON valid (fără markdown):
 {
-  "overall_score": număr 0-100,
-  "suggested_title": "titlu SEO optimizat (max 60 caractere)",
-  "suggested_meta": "meta description optimizată (max 155 caractere) cu CTA",
+  "suggested_title": "titlu optimizat 50-60 chars (sau actualul dacă deja OK)",
+  "suggested_meta": "meta optimizată 130-155 chars cu CTA (sau actuala dacă deja OK)",
   "keyword_gaps": [{"keyword": "...", "search_intent": "...", "priority": "high|medium|low", "where_to_add": "..."}],
-  "strengths": ["3-5 puncte forte SEO ale paginii"],
-  "issues": [{"severity": "critical|warning|info", "issue": "...", "fix": "..."}],
+  "strengths": ["3-5 puncte forte SEO concrete"],
+  "issues": [{"severity": "critical|warning|info", "issue": "descriere PRECISĂ", "fix": "acțiune CONCRETĂ"}],
   "opportunities": [{"type": "internal_linking|content_gap|schema|technical|local_seo", "description": "...", "impact": "high|medium|low"}],
   "readability_score": număr 0-100,
   "keyword_density": {"primary_keyword": "...", "density_pct": număr},
   "duplicate_content_risk": "none|low|medium|high",
   "recommended_internal_links": ["URL-uri din realtrust.ro către care ar trebui linkat"],
   "local_geo_keywords": [
-    {"keyword": "cuvânt cheie geografic Timișoara care lipsește", "reason": "de ce e important pentru Local Pack", "priority": "high|medium|low", "suggested_placement": "unde să fie inserat (H2, paragraf, alt, etc.)"}
+    {"keyword": "cuvânt cheie geo NEMENȚIONAT încă", "reason": "...", "priority": "high|medium|low", "suggested_placement": "..."}
   ],
-  "local_recommendations": [
-    "3-5 recomandări concrete pentru Local SEO Timișoara: cartiere de menționat, proximități de adăugat (școli/parcuri/mall-uri), schema LocalBusiness, micro-formate de adresă, etc."
-  ]
+  "local_recommendations": ["3-5 recomandări STRATEGICE pentru Local SEO"]
 }
 
-IMPORTANT pentru local_geo_keywords: returnează FIX 3-5 cuvinte cheie geografice (ex: "apartamente Iulius Town", "cazare lângă UVT", "hotel Centru Timișoara", "regim hotelier Aradului") care lipsesc DIN TEXTUL ANALIZAT și care ar ajuta indexarea în Local Pack Google.`;
+CRITIC: Verifică keyword_gaps și local_geo_keywords împotriva textului. Dacă apar deja, OMITE-le.`;
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.5-pro",
       messages: [
-        { role: "system", content: "Ești expert SEO senior pentru piața imobiliară din Timișoara. Cunoști foarte bine cartierele, mall-urile (Iulius Town, Shopping City), universitățile (UVT, UPT, UMF), parcurile și landmark-urile orașului. Răspunzi exclusiv cu JSON valid, fără markdown code fence." },
+        { role: "system", content: "Ești auditor SEO PREMIUM, senior pe piața imobiliară Timișoara. Răspunzi STABIL, CONSECVENT, NEVARIABIL. NU oscilezi între recomandări contradictorii. Răspuns exclusiv JSON valid, fără markdown code fence. Verifici DUBLU fiecare sugestie împotriva textului real înainte de a o include." },
         { role: "user", content: prompt },
       ],
-      temperature: 0.4,
+      temperature: 0.1,
       response_format: { type: "json_object" },
+      reasoning: { effort: "medium" },
     }),
   });
 
@@ -386,5 +471,11 @@ IMPORTANT pentru local_geo_keywords: returnează FIX 3-5 cuvinte cheie geografic
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || "{}";
-  try { return JSON.parse(content); } catch { return { raw: content, overall_score: 0 }; }
+  let parsed: any;
+  try { parsed = JSON.parse(content); } catch { parsed = { raw: content }; }
+
+  // Override AI score with deterministic score — single source of truth
+  parsed.overall_score = deterministicScore;
+  parsed._score_breakdown = breakdown;
+  return parsed;
 }
