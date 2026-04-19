@@ -299,6 +299,17 @@ const AboutUs = () => {
           { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
+      faq: {
+        title: "Frequently Asked Questions about RealTrust",
+        items: [
+          { q: "Who is the founder of RealTrust Timișoara?", a: "The company is founded and led by Adrian Costi, a local entrepreneur with over 25 years of experience in the Timișoara real estate market. Adrian is directly involved in every owner collaboration." },
+          { q: "What commission does RealTrust real estate agency charge?", a: "For sales we apply a standard 2% + VAT commission from the seller; for long-term rentals one monthly rent. For short-term rental management the fee is 20–25% of net revenue, with no hidden costs. All commissions are agreed upfront." },
+          { q: "Do you offer mortgage consulting in Timișoara?", a: "Yes, we partner with independent mortgage brokers and partner banks (BCR, BT, ING, Raiffeisen, BRD) for pre-approval, offer comparison (fixed vs. variable rate), Prima Casă/Noua Casă programs and ANEVAR appraisal. Initial consulting is free for our clients." },
+          { q: "Do you sell houses in Timișoara, not just apartments?", a: "Yes. Our portfolio includes both apartments (1–4 rooms) and houses for sale in Timișoara and the metropolitan area (Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda, Săcălaz) — single-family houses, duplexes and villas with land." },
+          { q: "Which areas of Timișoara do you cover?", a: "We cover the entire city of Timișoara — Centru, ISHO, Iulius Town, Complex Studențesc, Cetate, Iosefin, Elisabetin, Fabric, Mehala, Freidorf, Lipovei, Aradului — plus metropolitan areas Dumbrăvița, Giroc, Moșnița Nouă and Ghiroda." },
+          { q: "How is my property kept safe?", a: "We use transparent contracts, tenant credit checks, mandatory PAD insurance, smart-lock with unique guest codes, IoT monitoring (noise, smoke), post-stay cleaning with photo reporting and a 100% returned security deposit at the end of the collaboration." }
+        ]
+      },
       cta: {
         title: "Ready to Start?",
         subtitle: "Contact us for a no-obligation discussion about how we can help.",
