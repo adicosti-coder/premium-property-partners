@@ -40,15 +40,19 @@ const AboutUs = () => {
   const content = {
     ro: {
       hero: {
-        badge: "Despre Noi",
-        title: "Două Branduri,",
-        titleHighlight: "O Singură Viziune",
-        subtitle: "RealTrust și ApArt Hotel sunt cele două brațe ale aceleiași companii, unite de o misiune comună: să transformăm piața imobiliară din Timișoara prin profesionalism, transparență și rezultate concrete."
+        badge: "Despre Noi · Echipă & Poveste",
+        title: "Echipa din spatele",
+        titleHighlight: "RealTrust Timișoara",
+        subtitle: "Suntem o echipă locală condusă de Adrian Costi, dedicată exclusiv pieței imobiliare din Timișoara. Aici afli povestea noastră, valorile care ne ghidează și oamenii care răspund de fiecare proprietate administrată."
+      },
+      mission: {
+        title: "Misiunea Noastră",
+        text: "Să oferim proprietarilor din Timișoara o alternativă profesionistă, transparentă și măsurabilă la administrarea clasică a imobilelor — combinând expertiza imobiliară (RealTrust) cu standardele hoteliere (ApArt Hotel) într-un singur partener de încredere."
       },
       story: {
         title: "Povestea Noastră",
-        subtitle: "Peste 25 de ani de excelență în imobiliare",
-        intro: "Cu o experiență de peste un sfert de secol în piața imobiliară din România, am devenit un partener de încredere pentru mii de clienți. Am început această călătorie cu pasiunea pentru imobiliare și cu dorința de a aduce standarde internaționale în Timișoara.",
+        subtitle: "De la prima tranzacție la 60+ proprietăți administrate",
+        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm peste 60 de apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
