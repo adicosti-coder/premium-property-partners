@@ -741,6 +741,23 @@ const AboutUs = () => {
           </div>
         </section>
 
+        {/* FAQ Section */}
+        <section className="py-20 bg-muted/30">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">{t.faq.title}</h2>
+            <div className="space-y-4">
+              {t.faq.items.map((item: { q: string; a: string }, idx: number) => (
+                <Card key={idx} className="border-l-4 border-l-primary/50">
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg mb-2">{item.q}</h3>
+                    <p className="text-muted-foreground leading-relaxed text-sm">{item.a}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
           <div className="container mx-auto px-4 text-center">
