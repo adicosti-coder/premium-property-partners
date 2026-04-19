@@ -223,8 +223,17 @@ function parseScraped(markdown: string, html: string, meta: any) {
   // — never trust just the first regex hit. Some pages inject 2-3 sources via React + prerender.
   const metaCandidates = collectMetaDescriptionCandidates(html, meta);
 
-  const h1Matches = html.match(/<h1[^>]*>/gi) || [];
-  const h2Matches = html.match(/<h2[^>]*>/gi) || [];
+  // Filter out hidden/prerender shell H1s (used for non-JS crawlers as a fallback,
+  // not a real visible heading). Pattern: <h1 data-prerender-title> or
+  // elements with hidden / aria-hidden / sr-only / display:none.
+  const allH1 = html.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi) || [];
+  const allH2 = html.match(/<h2\b[^>]*>[\s\S]*?<\/h2>/gi) || [];
+  const isShellHeading = (tag: string): boolean => {
+    const open = tag.match(/<h[12]\b[^>]*>/i)?.[0] || "";
+    return /data-prerender-title|aria-hidden=["']?true|hidden(\s|=|>)|sr-only|visually-hidden|display\s*:\s*none|visibility\s*:\s*hidden/i.test(open);
+  };
+  const h1Matches = allH1.filter((t) => !isShellHeading(t));
+  const h2Matches = allH2.filter((t) => !isShellHeading(t));
   const text = markdown || htmlToText(html);
 
   return {
