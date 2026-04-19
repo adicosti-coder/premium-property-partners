@@ -455,9 +455,9 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // /pentru-proprietari — pillar page for property owners
   routes.push({
     path: '/pentru-proprietari',
-    title: 'Servicii pentru Proprietari Timișoara — Vânzări, Închirieri & Regim Hotelier',
-    description: 'Servicii complete pentru proprietari Timișoara: vânzare apartament, închiriere termen lung, administrare regim hotelier cu ROI 9.4% net. Comision transparent.',
-    h1: 'Servicii pentru Proprietari în Timișoara',
+    title: 'Administrare Apartamente Regim Hotelier Timișoara | RealTrust',
+    description: 'Oferim administrare completă pentru apartamente în Timișoara: regim hotelier, marketing, oaspeți, curățenie. Atinge un ROI de 9.4% net. Contactează-ne!',
+    h1: 'Administrare Proprietăți și Apartamente Regim Hotelier în Timișoara',
     canonical: `${BASE_URL}/pentru-proprietari`,
     seoBody: `
       <h2>Servicii complete pentru proprietari de imobile în Timișoara</h2>
@@ -499,8 +499,14 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h3>Consultanță fiscală imobiliare — servicii cu valoare adăugată</h3>
       <p><strong>Consultanță fiscală imobiliare</strong> inclusă în pachetele noastre: optimizarea veniturilor din chirii (forfetar vs regim real), declarații ANAF, înregistrare PFA / SRL pentru regim hotelier, recuperare TVA pentru investitori, calcul amortizare clădiri și deduceri cheltuieli. Suport complet pentru proprietari, de la achiziție la exit.</p>
 
-      <h3>Repere geografice: Bulevardul Vasile Pârvan, Piața Traian, comuna Giroc</h3>
-      <p>Apartamentele administrate în Complexul Studențesc sunt poziționate pe sau lângă <strong>Bulevardul Vasile Pârvan</strong>, artera principală care leagă UVT (Universitatea de Vest) și UPT (Politehnica) — proximitate decisivă pentru chirii studențești și cazare academică. În cartierul istoric Fabric oferim proprietăți cu valoare arhitecturală lângă <strong>Piața Traian</strong>, reper turistic major. Acoperim și comuna <strong>Giroc</strong> (zonă metropolitană distinctă de Calea Girocului), în plină expansiune cu case și apartamente noi pentru investitori.</p>
+      <h3>Repere geografice: Vasile Pârvan, Piața Traian, Giroc, Continental, Spitalul Louis Țurcanu</h3>
+      <p>Apartamentele administrate în Complexul Studențesc sunt poziționate pe sau lângă <strong>Bulevardul Vasile Pârvan</strong>, artera principală care leagă UVT (Universitatea de Vest) și UPT (Politehnica) — proximitate decisivă pentru chirii studențești și cazare academică. În cartierul istoric Fabric oferim proprietăți cu valoare arhitecturală lângă <strong>Piața Traian</strong>, reper turistic major. Acoperim și comuna <strong>Giroc</strong> (zonă metropolitană distinctă de Calea Girocului), în plină expansiune cu case și apartamente noi pentru investitori. Pe Calea Aradului avem apartamente apreciate de angajații și expații companiei <strong>Continental Automotive Timișoara</strong>, unul dintre cei mai mari angajatori din regiune. Pentru cazare medicală oferim opțiuni în proximitatea <strong>Spitalului de Copii Louis Țurcanu</strong> și a Spitalului Județean — cerere constantă din partea familiilor și personalului medical.</p>
+
+      <h3>Servicii property management Timișoara — optimizare venituri Airbnb</h3>
+      <p><strong>Servicii property management Timișoara</strong> end-to-end pentru proprietari: <strong>optimizare venituri Airbnb Timișoara</strong> prin algoritmi de yield management dinamic (PriceLabs, Wheelhouse), repricing zilnic în funcție de evenimente locale (FITS, conferințe UVT, târguri) și sezonalitate, optimizare titlu/descriere/fotografii listing pentru CTR mai mare, sincronizare iCal multi-platformă (Booking, Airbnb, Vrbo, Direct). Rezultate medii: +28% RevPAR vs. self-management.</p>
+
+      <h3>Contract administrare imobil — model RealTrust</h3>
+      <p><strong>Contract administrare imobil</strong> RealTrust: contract bilateral standard cu durată minimă 12 luni, clauze clare privind comisionul (15–25% din încasări), obligațiile administratorului (marketing, check-in, curățenie, mentenanță minoră, raportare lunară), obligațiile proprietarului (utilități, mentenanță majoră, asigurare), modalități de plată (transfer lunar până în data de 15), reziliere amiabilă cu preaviz 30 zile. Modelul respectă legislația română și poate fi consultat înainte de semnare.</p>
     `,
     jsonLd: [
       {
@@ -562,6 +568,11 @@ function buildStaticRoutes(): PrerenderRoute[] {
             '@type': 'Question',
             name: 'Care este impozitul pe vânzarea unui imobil în Timișoara?',
             acceptedAnswer: { '@type': 'Answer', text: 'Pentru imobile deținute sub 3 ani: 3% din valoarea ce depășește 450.000 RON. Pentru cele peste 3 ani: 1%. Onorariu notarial conform grilelor Camerei Notarilor Publici Timișoara.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Ce tip de contract se semnează pentru administrarea proprietății?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Contract administrare imobil standard RealTrust pe minim 12 luni, cu comision 15–25% din încasări, raportare lunară transparentă, plată până în data de 15, reziliere amiabilă cu preaviz 30 zile. Conform legislației române.' },
           },
         ],
       },
