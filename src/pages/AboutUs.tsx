@@ -381,6 +381,36 @@ const AboutUs = () => {
     ]
   };
 
+  // Person schema for the founder (E-E-A-T)
+  const founderSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Adrian Costi",
+    "jobTitle": language === "ro" ? "Fondator & CEO" : "Founder & CEO",
+    "worksFor": { "@type": "RealEstateAgent", "name": "RealTrust & ApArt Hotel" },
+    "knowsAbout": [
+      "Real Estate Timișoara",
+      "Short-term rental management",
+      "Property investment ROI",
+      "Airbnb & Booking.com optimization",
+      "Hotel-style property management"
+    ],
+    "url": "https://www.realtrust.ro/despre-noi"
+  };
+
+  // FAQPage schema
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": t.faq.items.map((item: { q: string; a: string }) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": { "@type": "Answer", "text": item.a }
+    }))
+  };
+
+  const combinedSchema = [organizationSchema, founderSchema, faqSchema];
+
   const breadcrumbItems = [
     { label: language === "ro" ? "Despre Noi" : "About Us" }
   ];
