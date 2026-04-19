@@ -483,6 +483,15 @@ function buildStaticRoutes(): PrerenderRoute[] {
 
       <h3>Zone acoperite: Centru, ISHO, Complex Studențesc, Dumbrăvița, Ghiroda</h3>
       <p>Acoperim toate cartierele din Timișoara — Centru / Cetate, Iosefin, Elisabetin, Fabric, ISHO, Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, Complex Studențesc — și zonele metropolitane <strong>Dumbrăvița</strong>, <strong>Ghiroda</strong> (acces rapid la Aeroport) și <strong>Moșnița Nouă</strong> (case și vile noi).</p>
+
+      <h3>Optimizare fiscală imobiliare — venituri din chirii</h3>
+      <p><strong>Optimizare fiscală imobiliare</strong> Timișoara: pentru veniturile din chirii proprietarii pot opta între impozitul forfetar (10% după deducerea cotei de 40% cheltuieli) sau regimul real (deducere cheltuieli efective — utilități, reparații, comisioane, amortizare). Pentru regim hotelier înregistrat ca PFA sau SRL există optimizări suplimentare prin TVA și amortizare accelerată. Consultanță fiscală inclusă în pachetele de management.</p>
+
+      <h3>Property management Timișoara — international owners</h3>
+      <p>Serviciile noastre de administrare proprietăți (cunoscute internațional ca <strong>property management Timișoara</strong>) sunt potrivite și pentru proprietarii nerezidenți sau diaspora — comunicare bilingvă RO/EN, plăți internaționale, raportare lunară în EUR și asistență fiscală pentru declarațiile anuale ANAF.</p>
+
+      <h3>Renovare apartament pentru închiriere — creștere randament</h3>
+      <p><strong>Renovare apartament pentru închiriere</strong>: parteneriate cu antreprenori locali verificați pentru renovări strategice (zugrăveli, parchet, mobilier, electrocasnice, smart-home) cu ROI mediu de 18–24 luni. Investițiile țintite în finisaje și amenajare cresc tariful nopții cu 25–40% și ocuparea cu 10–15 puncte procentuale.</p>
     `,
     jsonLd: [
       {
@@ -616,10 +625,14 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // Use `inert` (not aria-hidden) so focusable descendants like <a> are properly removed
   // from the accessibility tree and tab order — fixes Lighthouse "aria-hidden with focusable
   // descendants" rule.
+  // Only inject H1 for the homepage (where Hero may not be hydrated yet for non-JS crawlers).
+  // For all other routes, the React page renders its own H1 — injecting another would create duplicate H1s.
+  const isHomepage = route.path === '/' || route.path === '';
+  const headingTag = isHomepage ? 'h1' : 'h2';
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
-      <h1 data-prerender-title>${escapeHtml(route.h1)}</h1>
+      <${headingTag} data-prerender-title>${escapeHtml(route.h1)}</${headingTag}>
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}" tabindex="-1">${escapeHtml(route.title)}</a>
