@@ -60,6 +60,20 @@ serve(async (req) => {
     // 4. AI analysis (now includes local geo context for better keyword suggestions)
     const analysis = await analyzeWithAI(scraped, url, language, duplicates || [], localGeo, LOVABLE_API_KEY);
 
+    // Build a diagnostic blob so the admin UI can show "what the audit actually saw"
+    const diagnostics = {
+      scrape_source: (scraped as any).source || "unknown",
+      title_detected: scraped.title,
+      meta_chosen: scraped.metaDescription,
+      meta_candidates: (scraped as any).metaCandidatesDebug || [],
+      h1_count: scraped.h1Count,
+      h2_count: (scraped as any).h2Count ?? null,
+      word_count: scraped.wordCount,
+      force_refresh: forceRefresh,
+      audited_at: new Date().toISOString(),
+    };
+    const enrichedAnalysis = { ...analysis, _diagnostics: diagnostics };
+
     // 5. Store
     const { data: saved, error: saveErr } = await sb.from("seo_audits").insert({
       url,
@@ -76,7 +90,7 @@ serve(async (req) => {
       strengths: analysis.strengths || [],
       issues: analysis.issues || [],
       opportunities: analysis.opportunities || [],
-      raw_analysis: analysis,
+      raw_analysis: enrichedAnalysis,
       content_hash: contentHash,
       local_relevance_score: localGeo.score,
       local_entities_found: localGeo.found,
@@ -87,7 +101,7 @@ serve(async (req) => {
 
     if (saveErr) console.error("Save error:", saveErr);
 
-    return json({ audit: saved, cached: false, duplicates: duplicates || [] });
+    return json({ audit: saved, cached: false, duplicates: duplicates || [], diagnostics });
   } catch (err: any) {
     console.error("seo-ai-optimizer error:", err);
     return json({ error: err.message || "Unknown" }, 500);
