@@ -161,15 +161,42 @@ const SEOLocalEntitiesBlock = () => {
         datorită fluxului constant de turiști.
       </p>
 
-      <h3>Apartamente de închiriat Timișoara termen lung</h3>
+      <h3>Apartamente de închiriat Timișoara termen lung — cazare de lungă durată Timișoara</h3>
       <p>
-        <strong>Apartamente de închiriat Timișoara termen lung</strong> —
-        contracte 12+ luni pentru familii, profesioniști și expați.
+        <strong>Apartamente de închiriat Timișoara termen lung</strong> și{" "}
+        <strong>cazare de lungă durată Timișoara</strong> — contracte 12+ luni
+        pentru familii, profesioniști, expați și relocări corporate.
         Garsoniere, 2 și 3 camere mobilate și utilate complet, în Iosefin,
         Elisabetin, Cetate, Calea Aradului și ISHO.
       </p>
 
-      <h3>Apartamente de închiriat studenți Timișoara</h3>
+      <h3>Apartamente de închiriat Timișoara prețuri — chirii actualizate 2026</h3>
+      <p>
+        <strong>Apartamente de închiriat Timișoara prețuri</strong> 2026:
+        garsoniere de la 280 €/lună (Complex Studențesc, Iosefin),
+        apartamente cu 2 camere între 380–550 €/lună (Centru, Elisabetin,
+        ISHO), apartamente cu 3 camere între 550–850 €/lună (Cetate,
+        Take Ionescu, Openville). Tarife transparente, fără comision ascuns,
+        contracte standardizate.
+      </p>
+
+      <h3>Agenție imobiliară Timișoara comision — tarife transparente</h3>
+      <p>
+        <strong>Agenție imobiliară Timișoara comision</strong>: 1,5–2% pentru
+        vânzări, o lună chirie pentru închirieri pe termen lung, 15–25%
+        management pentru regim hotelier. Fără taxe ascunse, fără cost de
+        setup, raportare lunară transparentă.
+      </p>
+
+      <h3>Apartamente noi Timișoara 2024 — 2026, dezvoltări recente</h3>
+      <p>
+        <strong>Apartamente noi Timișoara 2024</strong>, 2025 și 2026 în
+        ansambluri rezidențiale moderne (ISHO, Openville, City of Mara,
+        Ateneo Imobiliar, Take Ionescu) — eficiență energetică clasa A,
+        finisaje premium, smart-home și parcare subterană.
+      </p>
+
+      <h3>Apartamente de închiriat Timișoara studenți UVT — Universitatea de Vest</h3>
       <p>
         <strong>Apartamente de închiriat studenți Timișoara</strong> în Complex
         Studențesc, lângă UVT (Universitatea de Vest), Politehnica (UPT) și
