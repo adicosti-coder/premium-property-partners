@@ -143,24 +143,45 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
   // Try Firecrawl first
   if (firecrawlKey) {
     try {
+      // SPA-aware scrape: wait for React app to hydrate and inject route-specific
+      // <title>, <meta>, <h1> via Helmet/dynamic SEO. Without JS rendering the
+      // server returns the SPA shell (homepage HTML), causing false-positive
+      // "duplicate content" and "2x H1" warnings.
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           url: freshUrl,
-          formats: ["markdown", "html"],
+          formats: ["markdown", "rawHtml"],
           onlyMainContent: false,
-          waitFor: 4000,
+          waitFor: 6000,
+          mobile: false,
+          blockAds: true,
+          skipTlsVerification: false,
+          location: { country: "RO", languages: ["ro-RO"] },
+          // Wait for hydrated route content before snapshotting HTML
+          actions: [
+            { type: "wait", milliseconds: 2500 },
+            { type: "scroll", direction: "down" },
+            { type: "wait", milliseconds: 1500 },
+            { type: "scroll", direction: "up" },
+            { type: "wait", milliseconds: 1500 },
+          ],
         }),
       });
       if (res.ok) {
         const data = await res.json();
         const md = data.markdown || data.data?.markdown || "";
-        const html = data.html || data.data?.html || "";
+        // Prefer rawHtml (post-hydration DOM) over the cleaned `html` field
+        const html =
+          data.rawHtml || data.data?.rawHtml ||
+          data.html || data.data?.html || "";
         const meta = data.metadata || data.data?.metadata || {};
         const parsed = parseScraped(md, html, meta);
         (parsed as any).source = "firecrawl";
         candidates.push(parsed);
+      } else {
+        console.warn("Firecrawl status", res.status, await res.text().catch(() => ""));
       }
     } catch (e) { console.warn("Firecrawl fail, fallback:", e); }
   }
@@ -202,8 +223,17 @@ function parseScraped(markdown: string, html: string, meta: any) {
   // — never trust just the first regex hit. Some pages inject 2-3 sources via React + prerender.
   const metaCandidates = collectMetaDescriptionCandidates(html, meta);
 
-  const h1Matches = html.match(/<h1[^>]*>/gi) || [];
-  const h2Matches = html.match(/<h2[^>]*>/gi) || [];
+  // Filter out hidden/prerender shell H1s (used for non-JS crawlers as a fallback,
+  // not a real visible heading). Pattern: <h1 data-prerender-title> or
+  // elements with hidden / aria-hidden / sr-only / display:none.
+  const allH1 = html.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi) || [];
+  const allH2 = html.match(/<h2\b[^>]*>[\s\S]*?<\/h2>/gi) || [];
+  const isShellHeading = (tag: string): boolean => {
+    const open = tag.match(/<h[12]\b[^>]*>/i)?.[0] || "";
+    return /data-prerender-title|aria-hidden=["']?true|hidden(\s|=|>)|sr-only|visually-hidden|display\s*:\s*none|visibility\s*:\s*hidden/i.test(open);
+  };
+  const h1Matches = allH1.filter((t) => !isShellHeading(t));
+  const h2Matches = allH2.filter((t) => !isShellHeading(t));
   const text = markdown || htmlToText(html);
 
   return {
