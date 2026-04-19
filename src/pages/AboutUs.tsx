@@ -47,7 +47,7 @@ const AboutUs = () => {
       },
       mission: {
         title: "Misiunea Noastră",
-        text: "Să oferim proprietarilor din Timișoara o alternativă profesionistă, transparentă și măsurabilă la administrarea clasică a imobilelor — combinând expertiza imobiliară (RealTrust) cu standardele hoteliere (ApArt Hotel) într-un singur partener de încredere."
+        text: "Să oferim proprietarilor din Timișoara o alternativă profesionistă, transparentă și măsurabilă la administrarea clasică a imobilelor — combinând consultanță imobiliară Timișoara (RealTrust) cu standardele hoteliere (ApArt Hotel) într-un singur partener de încredere. Includem evaluare apartament Timișoara gratuită și analiză comparativă de randament chirie Timișoara versus regim hotelier."
       },
       story: {
         title: "Povestea Noastră",
@@ -441,8 +441,40 @@ const AboutUs = () => {
         <div className="container mx-auto px-4 pt-4">
           <PageBreadcrumb items={breadcrumbItems} />
         </div>
+
+        {/* Table of Contents — jump links for long page (mobile-friendly) */}
+        <nav
+          aria-label={language === "ro" ? "Cuprins pagină" : "Page contents"}
+          className="container mx-auto px-4 mt-4"
+        >
+          <div className="max-w-4xl mx-auto rounded-xl border border-border bg-muted/40 p-4">
+            <p className="text-sm font-semibold mb-2 text-foreground">
+              {language === "ro" ? "Cuprins" : "Contents"}
+            </p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {[
+                { id: "misiune", label: language === "ro" ? "Misiune" : "Mission" },
+                { id: "poveste", label: language === "ro" ? "Poveste" : "Story" },
+                { id: "branduri", label: language === "ro" ? "Branduri" : "Brands" },
+                { id: "valori", label: language === "ro" ? "Valori" : "Values" },
+                { id: "companie", label: language === "ro" ? "Date companie" : "Company info" },
+                { id: "intrebari", label: language === "ro" ? "Întrebări frecvente" : "FAQ" },
+              ].map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    className="text-primary hover:underline underline-offset-4"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-primary/5 via-background to-background relative overflow-hidden">
+        <section id="poveste" className="py-20 md:py-28 bg-gradient-to-b from-primary/5 via-background to-background relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-20 left-[10%] w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute bottom-20 right-[10%] w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
@@ -488,7 +520,7 @@ const AboutUs = () => {
         </section>
 
         {/* Story Section - Expanded */}
-        <section className="py-20 md:py-28 bg-muted/30">
+        <section id="misiune" className="py-20 md:py-28 bg-muted/30">
           <div className="container mx-auto px-4">
             {/* Header */}
             <div className="max-w-4xl mx-auto text-center mb-16">
@@ -552,7 +584,7 @@ const AboutUs = () => {
         </section>
 
         {/* Two Brands Section */}
-        <section className="py-20 md:py-28">
+        <section id="branduri" className="py-20 md:py-28">
           <div 
             ref={brandsAnimation.ref}
             className={`container mx-auto px-4 transition-all duration-700 ${
@@ -672,7 +704,7 @@ const AboutUs = () => {
         {/* <TeamSection /> */}
 
         {/* Values Section */}
-        <section className="py-20 bg-muted/30">
+        <section id="valori" className="py-20 bg-muted/30">
           <div 
             ref={valuesAnimation.ref}
             className={`container mx-auto px-4 transition-all duration-700 ${
@@ -723,7 +755,7 @@ const AboutUs = () => {
         </section>
 
         {/* Company Info */}
-        <section className="py-16 bg-muted/30">
+        <section id="companie" className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-2xl font-bold text-center mb-2">{t.company.title}</h2>
@@ -745,7 +777,7 @@ const AboutUs = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 bg-muted/30">
+        <section id="intrebari" className="py-20 bg-muted/30">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">{t.faq.title}</h2>
             <div className="space-y-4">

@@ -74,8 +74,8 @@ const HOMEPAGE_SEO_BODY = `
   <h3>Proprietăți de vânzare Zona Aradului</h3>
   <p><strong>Proprietăți de vânzare Zona Aradului</strong> Timișoara — apartamente cu 2, 3 și 4 camere în zone cu acces rapid la Aeroportul Internațional „Traian Vuia", Iulius Town și Openville. Profil de chiriași cu venituri ridicate, apreciere a capitalului peste media pieței.</p>
 
-  <h3>Cazare evenimente Timișoara — FITS, Festivalul Inimilor și conferințe</h3>
-  <p>Cazare pentru evenimente locale majore: <strong>cazare FITS Timișoara</strong> (Festivalul Internațional de Teatru), <strong>apartamente închiriere Festivalul Inimilor</strong>, Timișoara Jazz Festival, Plai Festival, Revolution Festival și conferințe medicale UMF — apartamente disponibile cu rezervare anticipată în Centru, Iosefin și Complex Studențesc.</p>
+  <h3>Cazare evenimente Timișoara — FEST-FDR, Festivalul Inimilor și conferințe</h3>
+  <p>Cazare pentru evenimente locale majore: <strong>cazare FEST-FDR Timișoara</strong> (Festivalul European al Spectacolului), <strong>apartamente închiriere Festivalul Inimilor</strong>, Timișoara Jazz Festival, Plai Festival, Revolution Festival și conferințe medicale UMF — apartamente disponibile cu rezervare anticipată în Centru, Iosefin și Complex Studențesc.</p>
 `;
 
 const BASE_URL = 'https://www.realtrust.ro';
@@ -378,6 +378,89 @@ function buildStaticRoutes(): PrerenderRoute[] {
       description: 'Evaluare gratuită a proprietății tale din Timișoara de către echipa RealTrust',
       url: `${BASE_URL}/evaluare-gratuita`,
       provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+    },
+  });
+
+  // /despre-noi — page about the team and company (NOT a service pillar)
+  routes.push({
+    path: '/despre-noi',
+    title: 'Despre RealTrust: Imobiliare & Regim Hotelier Timișoara',
+    description: 'Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. Peste 60 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!',
+    h1: 'Echipa din spatele RealTrust Timișoara',
+    canonical: `${BASE_URL}/despre-noi`,
+    seoBody: `
+      <h2>Despre echipa RealTrust Timișoara</h2>
+      <p>RealTrust este o echipă locală din Timișoara, coordonată de Adrian Costi (Fondator & CEO), specializată în <strong>consultanță imobiliară Timișoara</strong>, administrare proprietăți și regim hotelier.</p>
+      <h3>Misiune, transparență și rezultate măsurabile</h3>
+      <p>Oferim <strong>evaluare apartament Timișoara</strong> gratuită, analiză de <strong>randament chirie Timișoara</strong> versus regim hotelier, și comunicare transparentă pentru fiecare colaborare — ROI 9.4% net verificat pe peste 60 proprietăți.</p>
+      <h3>Cuprins pagină</h3>
+      <ul>
+        <li>Misiunea noastră</li>
+        <li>Povestea RealTrust & ApArt Hotel</li>
+        <li>Două branduri, servicii complete</li>
+        <li>Valorile companiei</li>
+        <li>Date de contact</li>
+        <li>Întrebări frecvente</li>
+      </ul>
+    `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      name: 'Despre RealTrust Timișoara',
+      url: `${BASE_URL}/despre-noi`,
+      mainEntity: {
+        '@type': 'RealEstateAgent',
+        name: 'RealTrust & ApArt Hotel',
+        url: `${BASE_URL}/despre-noi`,
+        telephone: '+40723154520',
+        areaServed: 'Timișoara',
+        address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
+        founder: { '@type': 'Person', name: 'Adrian Costi', jobTitle: 'Fondator & CEO' },
+      },
+    },
+  });
+
+  // /oaspeti & /pentru-oaspeti — premium stays for guests
+  for (const path of ['/oaspeti', '/pentru-oaspeti']) {
+    routes.push({
+      path,
+      title: 'Cazare Premium Timișoara — Apartamente Regim Hotelier | RealTrust',
+      description: 'Apartamente premium pentru cazare în Timișoara: check-in flexibil, rezervare directă, locații lângă Iulius Town, Centru, Spitalul Județean și Aeroport.',
+      h1: 'Cazare Premium pentru Oaspeți în Timișoara',
+      canonical: `${BASE_URL}${path}`,
+      seoBody: `
+        <h2>Apartamente premium pentru oaspeți în Timișoara</h2>
+        <p>Listăm apartamentele disponibile pentru cazare în <strong>regim hotelier Timișoara</strong>, cu check-in flexibil, rezervare directă și filtrare după locație, preț, rating și capacitate.</p>
+        <h3>Cazare business, city break și sejururi medicale</h3>
+        <p>Oferta include apartamente aproape de Iulius Town, Complex Studențesc, Centru, Spitalul Județean, <strong>Continental Automotive Timișoara</strong>, <strong>Nokia Timișoara</strong> și Aeroportul Internațional Timișoara — ideale pentru turiști, familii, expați și călători business.</p>
+      `,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Cazare Premium Timișoara',
+        url: `${BASE_URL}${path}`,
+      },
+    });
+  }
+
+  // /complexe — managed residential complexes
+  routes.push({
+    path: '/complexe',
+    title: 'Ansambluri Rezidențiale Timișoara — ISHO, ATENEO, City of Mara | RealTrust',
+    description: 'Complexe rezidențiale Timișoara administrate de RealTrust: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers. Investiții cu randament verificat.',
+    h1: 'Complexe Rezidențiale Premium Timișoara',
+    canonical: `${BASE_URL}/complexe`,
+    seoBody: `
+      <h2>Complexe rezidențiale din Timișoara administrate de RealTrust</h2>
+      <p>Pagina /complexe este dedicată ansamblurilor rezidențiale și proprietăților administrate de RealTrust în Timișoara: <strong>ISHO</strong>, <strong>ATENEO Residence</strong>, <strong>City of Mara</strong>, <strong>Fructus Plaza</strong>, <strong>XCity Towers</strong> și alte dezvoltări premium.</p>
+      <h3>Ansambluri rezidențiale Timișoara cu potențial investițional</h3>
+      <p>Prezentăm zone, facilități și rezultate reale de ocupare pentru investitori interesați de apartamente noi, randament verificat și administrare în regim hotelier în cele mai căutate micro-piețe din Timișoara.</p>
+    `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'Complexe Rezidențiale Timișoara',
+      url: `${BASE_URL}/complexe`,
     },
   });
 
