@@ -131,7 +131,7 @@ async function sha256(text: string): Promise<string> {
 }
 
 async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = false) {
-  const candidates = [];
+  const candidates: any[] = [];
   const freshUrl = forceRefresh
     ? `${url}${url.includes("?") ? "&" : "?"}seo_refresh=${Date.now()}`
     : url;
@@ -146,8 +146,6 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
           url: freshUrl,
           formats: ["markdown", "html"],
           onlyMainContent: false,
-          // Wait 4s for the React SPA to hydrate so SR-only SEO blocks
-          // (rendered by React, not just static index.html) are captured.
           waitFor: 4000,
         }),
       });
@@ -156,12 +154,15 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
         const md = data.markdown || data.data?.markdown || "";
         const html = data.html || data.data?.html || "";
         const meta = data.metadata || data.data?.metadata || {};
-        candidates.push(parseScraped(md, html, meta));
+        const parsed = parseScraped(md, html, meta);
+        (parsed as any).source = "firecrawl";
+        candidates.push(parsed);
       }
     } catch (e) { console.warn("Firecrawl fail, fallback:", e); }
   }
 
-  // Direct fetch as fallback and freshness guard against stale external snapshots
+  // Direct fetch as fallback
+  try {
     const res = await fetch(freshUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 SEO-Bot",
@@ -169,19 +170,24 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
         Pragma: "no-cache",
       },
     });
-  const html = await res.text();
-  candidates.push(parseScraped(htmlToText(html), html, extractMetaFromHtml(html)));
-
-  if (candidates.length === 1) {
-    return candidates[0];
+    const html = await res.text();
+    const parsed = parseScraped(htmlToText(html), html, extractMetaFromHtml(html));
+    (parsed as any).source = "direct-fetch";
+    candidates.push(parsed);
+  } catch (e) {
+    console.warn("Direct fetch fail:", e);
   }
+
+  if (candidates.length === 0) {
+    return { title: "", metaDescription: "", h1Count: 0, h2Count: 0, wordCount: 0, markdown: "", fullHtml: "", source: "none", metaCandidatesDebug: [] } as any;
+  }
+  if (candidates.length === 1) return candidates[0];
 
   const best = pickBestScrapeResult(candidates);
   if (isClearlyBrokenScrape(best) && candidates.length > 1) {
     const nonBroken = candidates.find((candidate) => !isClearlyBrokenScrape(candidate));
     if (nonBroken) return nonBroken;
   }
-
   return best;
 }
 
