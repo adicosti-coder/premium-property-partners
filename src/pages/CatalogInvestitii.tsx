@@ -685,9 +685,10 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
-          {property.base_price_per_night && (
+          {property.base_price_per_night && (property.listing_type === "cazare" || property.listing_type === "inchiriere") && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
-              <Euro className="w-3 h-3" /> €{property.base_price_per_night}/{t.night}
+              <Euro className="w-3 h-3" /> €{property.base_price_per_night}
+              {property.listing_type === "inchiriere" ? (isRo ? "/lună" : "/month") : `/${t.night}`}
             </span>
           )}
           {property.capital_necesar && (
