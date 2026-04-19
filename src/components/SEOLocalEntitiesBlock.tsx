@@ -90,15 +90,34 @@ const SEOLocalEntitiesBlock = () => {
         lunară completă cu venituri și cheltuieli detaliate.
       </p>
 
-      <h3>Apartamente de închiriat Timișoara studenți — Complex Studențesc</h3>
+      <h2>Apartamente de închiriat Timișoara studenți — Complex Studențesc, lângă UPT, UVT, UMF</h2>
       <p>
-        <strong>Apartamente de închiriat Timișoara studenți</strong> în Complex
-        Studențesc, la 5 minute pe jos de UVT (Universitatea de Vest),
+        <strong>Apartamente de închiriat Timișoara studenți</strong> și
+        <strong> apartamente de închiriat lângă UPT Timișoara</strong> în
+        Complex Studențesc, la 5 minute pe jos de UVT (Universitatea de Vest),
         Politehnica Timișoara (UPT) și UMF „Victor Babeș" Medicină. Garsoniere
         și apartamente 2–3 camere mobilate, contracte pe an universitar
         (octombrie–iunie), prețuri accesibile pentru studenți români și
         internaționali (Erasmus, mobilități academice). Cerere constantă, zonă
         sigură cu transport public dens.
+      </p>
+
+      <h2>Imobiliare Timișoara zona de Nord — Calea Aradului, Calea Lipovei, Lipovei</h2>
+      <p>
+        <strong>Imobiliare Timișoara zona de Nord</strong> acoperă Calea
+        Aradului, Calea Lipovei, cartierul Lipovei și Aerodrom — zone cu acces
+        rapid la Aeroportul Internațional Traian Vuia, Iulius Town și autostrada
+        A1. Proprietăți noi, garsoniere și apartamente 2–3 camere, ideale
+        pentru investitori, navetiști și familii.
+      </p>
+
+      <h2>Proprietăți de vânzare Giroc Timișoara și apartamente Calea Girocului</h2>
+      <p>
+        <strong>Proprietăți de vânzare Giroc Timișoara</strong> și
+        <strong> apartamente de vânzare Timișoara Girocului</strong> — comuna
+        Giroc și Calea Girocului sunt zone rezidențiale în expansiune cu
+        ansambluri noi, școli, grădinițe și acces direct la centură. Cerere
+        mare din partea familiilor tinere și a profesioniștilor IT.
       </p>
 
       <h3>Cazare Aeroport Timișoara — apartamente de închiriat Timișoara Aeroport și apartamente lângă Aeroportul Internațional „Traian Vuia"</h3>
