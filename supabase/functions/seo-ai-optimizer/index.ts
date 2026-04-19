@@ -478,8 +478,25 @@ CRITIC: Verifică keyword_gaps și local_geo_keywords împotriva textului. Dacă
   let parsed: any;
   try { parsed = JSON.parse(content); } catch { parsed = { raw: content }; }
 
-  // Override AI score with deterministic score — single source of truth
-  parsed.overall_score = deterministicScore;
-  parsed._score_breakdown = breakdown;
+  // Penalize deterministic score based on AI-detected qualitative issues.
+  // Prevents "100/100 but still has problems" — a perfect score requires
+  // ZERO critical/warning issues from the AI auditor.
+  const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
+  const criticalCount = issues.filter((i: any) => i?.severity === "critical").length;
+  const warningCount = issues.filter((i: any) => i?.severity === "warning").length;
+  const infoCount = issues.filter((i: any) => i?.severity === "info").length;
+
+  const qualityPenalty = (criticalCount * 8) + (warningCount * 4) + (infoCount * 1);
+  const adjustedScore = Math.max(0, Math.min(100, deterministicScore - qualityPenalty));
+
+  parsed.overall_score = adjustedScore;
+  parsed._score_breakdown = {
+    ...breakdown,
+    ai_quality_penalty: {
+      points: -qualityPenalty,
+      max: 0,
+      reason: `${criticalCount} critical(-${criticalCount * 8}) + ${warningCount} warning(-${warningCount * 4}) + ${infoCount} info(-${infoCount})`,
+    },
+  };
   return parsed;
 }
