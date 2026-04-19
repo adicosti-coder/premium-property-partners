@@ -429,7 +429,7 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
-      <h1>${escapeHtml(route.h1)}</h1>
+      <h2 data-prerender-title>${escapeHtml(route.h1)}</h2>
       ${jsonLdStr}
       <p>${escapeHtml(route.description)}</p>
       <a href="${route.canonical}" tabindex="-1">${escapeHtml(route.title)}</a>

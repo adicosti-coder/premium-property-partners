@@ -6,9 +6,9 @@ import { supabase } from "@/lib/supabaseClient";
 
 const HOMEPAGE_SEO = {
   ro: {
-    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier, ROI",
+    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
     description:
-      "Investește inteligent în Timișoara! Apartamente regim hotelier și imobiliare profitabile lângă Aeroport, UVT, Iulius Town. Calculează ROI gratuit!",
+      "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!",
   },
   en: {
     title: "RealTrust Timișoara | Real Estate, Short-Term Rentals & ROI",
