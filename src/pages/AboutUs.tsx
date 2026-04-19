@@ -441,8 +441,40 @@ const AboutUs = () => {
         <div className="container mx-auto px-4 pt-4">
           <PageBreadcrumb items={breadcrumbItems} />
         </div>
+
+        {/* Table of Contents — jump links for long page (mobile-friendly) */}
+        <nav
+          aria-label={language === "ro" ? "Cuprins pagină" : "Page contents"}
+          className="container mx-auto px-4 mt-4"
+        >
+          <div className="max-w-4xl mx-auto rounded-xl border border-border bg-muted/40 p-4">
+            <p className="text-sm font-semibold mb-2 text-foreground">
+              {language === "ro" ? "Cuprins" : "Contents"}
+            </p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {[
+                { id: "misiune", label: language === "ro" ? "Misiune" : "Mission" },
+                { id: "poveste", label: language === "ro" ? "Poveste" : "Story" },
+                { id: "branduri", label: language === "ro" ? "Branduri" : "Brands" },
+                { id: "valori", label: language === "ro" ? "Valori" : "Values" },
+                { id: "companie", label: language === "ro" ? "Date companie" : "Company info" },
+                { id: "intrebari", label: language === "ro" ? "Întrebări frecvente" : "FAQ" },
+              ].map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    className="text-primary hover:underline underline-offset-4"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-primary/5 via-background to-background relative overflow-hidden">
+        <section id="poveste" className="py-20 md:py-28 bg-gradient-to-b from-primary/5 via-background to-background relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-20 left-[10%] w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute bottom-20 right-[10%] w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
@@ -488,7 +520,7 @@ const AboutUs = () => {
         </section>
 
         {/* Story Section - Expanded */}
-        <section className="py-20 md:py-28 bg-muted/30">
+        <section id="misiune" className="py-20 md:py-28 bg-muted/30">
           <div className="container mx-auto px-4">
             {/* Header */}
             <div className="max-w-4xl mx-auto text-center mb-16">
