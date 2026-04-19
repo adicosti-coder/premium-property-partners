@@ -179,12 +179,35 @@ function parseScraped(markdown: string, html: string, meta: any) {
 
   return {
     title: meta.title || titleMatch?.[1]?.trim() || "",
-    metaDescription: meta.description || metaDescMatch?.[1]?.trim() || "",
+    metaDescription: normalizeMetaDescription(meta.description || metaDescMatch?.[1]?.trim() || ""),
     h1Count: h1Matches.length,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     markdown: text.slice(0, 8000),
     fullHtml: html.slice(0, 2000),
   };
+}
+
+function normalizeMetaDescription(raw: string): string {
+  const cleaned = raw.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+
+  const candidates = cleaned
+    .split(/\s*,\s*(?=[A-ZĂÂÎȘȚ])/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const unique = candidates.filter((part, index, arr) => arr.findIndex((item) => item.toLowerCase() === part.toLowerCase()) === index);
+  const best = unique
+    .sort((a, b) => {
+      const score = (value: string) => {
+        const lengthScore = value.length <= 160 ? 2 : 0;
+        const ctaScore = /(calculeaza|calculează|contacteaza|contactează|descopera|descoperă|solicita|solicită|vezi)/i.test(value) ? 1 : 0;
+        return lengthScore + ctaScore;
+      };
+      return score(b) - score(a) || a.length - b.length;
+    })[0];
+
+  return best || cleaned;
 }
 
 function htmlToText(html: string): string {

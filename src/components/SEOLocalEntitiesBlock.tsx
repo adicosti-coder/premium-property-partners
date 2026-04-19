@@ -24,11 +24,11 @@ const SEOLocalEntitiesBlock = () => {
       <h3>Agenție imobiliară Timișoara — proprietăți de vânzare și închiriere</h3>
       <p>
         <strong>Agenție imobiliară Timișoara</strong> RealTrust oferă o gamă
-        completă de servicii: <strong>proprietăți de vânzare Timișoara</strong>,
+        completă de servicii pentru proprietari și cumpărători: <strong>proprietăți de vânzare Timișoara</strong>,
         apartamente de închiriere pe termen lung și scurt, regim hotelier
         profesional și <strong>administrare apartamente Timișoara</strong>.
-        Echipă cu peste 25 de ani de experiență în piața imobiliară locală,
-        evaluare gratuită și transparență totală a comisioanelor.
+        Echipă locală, evaluare gratuită, consultanță clară și transparență
+        totală a comisioanelor.
       </p>
 
       <h3>Investiții imobiliare randament Timișoara</h3>
@@ -36,10 +36,9 @@ const SEOLocalEntitiesBlock = () => {
         <strong>Investiții imobiliare randament Timișoara</strong> pentru
         investitori care caută apartamente cu cashflow predictibil în Centru
         Vechi, ISHO, Iosefin, Fabric, Calea Aradului și Calea Girocului.
-        Diferențiem clar <strong>apartamente de vânzare Timișoara</strong>
-        pentru locuire de <strong>proprietăți de vânzare Timișoara</strong>
-        orientate spre investiție, pachete premium sau randament în regim
-        hotelier, cu ROI net țintit 8–10% și benchmark standard 9.4%.
+        Separăm natural opțiunile pentru locuire de cele orientate spre
+        investiție și randament în regim hotelier, cu ROI net țintit 8–10%
+        și benchmark standard 9.4%.
       </p>
 
       <h3>Imobiliare Timișoara ISHO — apartamente de vânzare și investiții</h3>
@@ -123,7 +122,7 @@ const SEOLocalEntitiesBlock = () => {
       <h3>Cazare Aeroport Timișoara — apartamente de închiriat Timișoara Aeroport și apartamente lângă Aeroportul Internațional „Traian Vuia"</h3>
       <p>
         <strong>Cazare Aeroport Timișoara</strong> și <strong>apartamente de închiriat Timișoara Aeroport</strong> în apartamente regim hotelier
-        situate la doar <strong>15–20 minute</strong> de <strong>Aeroport Timișoara</strong>, adică Aeroportul Internațional
+        situate la doar <strong>15–20 minute cu mașina</strong> și aproximativ <strong>10 km</strong> de <strong>Aeroport Timișoara</strong>, adică Aeroportul Internațional
         „Traian Vuia" (TSR), accesibile rapid prin <strong>Calea Aradului</strong>{" "}
         și <strong>autostrada A1</strong>. Opțiunea ideală pentru pasageri în
         tranzit, echipaje de zbor (crew layover), călători de business și
@@ -158,7 +157,7 @@ const SEOLocalEntitiesBlock = () => {
         <strong>Apartamente de vânzare Timișoara Centru</strong> și <strong>apartamente Timișoara Piața Unirii</strong> (Cetate, Piața
         Unirii, Piața Victoriei) — clădiri istorice renovate, apartamente de lux Timișoara Centru și apartamente
         boutique în inima orașului, cu randament excelent în regim hotelier
-        datorită fluxului constant de turiști.
+        datorită fluxului constant de turiști, la circa <strong>3–8 minute de mers pe jos</strong> de principalele piețe istorice.
       </p>
 
       <h3>Apartamente de închiriat Timișoara termen lung — cazare de lungă durată Timișoara</h3>
@@ -210,7 +209,7 @@ const SEOLocalEntitiesBlock = () => {
         pentru studenți, rezidenți UMF și profesori invitați, cu acces rapid la
         stația Complex Studențesc, la liniile de tramvai din zona centrală și
         la trasee directe spre UVT, UPT, Biblioteca Centrală și Spitalul
-        Județean.
+        Județean, de regulă la <strong>3–7 minute de mers pe jos</strong> de campus și facultăți.
       </p>
 
       <h3>Cartiere Timișoara — acoperire completă</h3>
