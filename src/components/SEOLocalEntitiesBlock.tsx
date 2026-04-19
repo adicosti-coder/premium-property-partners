@@ -629,6 +629,82 @@ const SEOLocalEntitiesBlock = () => {
         standardizate, garanție 1–2 luni, fără surprize.
       </p>
 
+      <h3>Consultanță credit ipotecar Timișoara — finanțare achiziție apartament</h3>
+      <p>
+        <strong>Consultanță credit ipotecar Timișoara</strong> prin parteneriate
+        cu brokeri acreditați și bănci de top (BCR, BRD, Raiffeisen, ING, Banca
+        Transilvania). Asistență completă: pre-aprobare, comparare oferte
+        dobândă fixă vs. variabilă, simulare rate lunare, dosar credit, evaluare
+        ANEVAR și asistență la notar. Soluții pentru Prima Casă, Noua Casă,
+        credit standard sau refinanțare, cu LTV până la 85% pentru rezidenți și
+        70% pentru non-rezidenți.
+      </p>
+
+      <h3>Evoluție prețuri imobiliare Timișoara — analiză piață 2024–2026</h3>
+      <p>
+        <strong>Evoluție prețuri imobiliare Timișoara</strong>: prețul mediu pe
+        metru pătrat a crescut de la 1.450 €/mp (2022) la 1.850–2.100 €/mp în
+        zonele premium (Centru, ISHO, Iulius Town) în 2026. <strong>Prețuri
+        apartamente Timișoara</strong> pe cartiere: Centru 2.000–2.800 €/mp,
+        ISHO 2.100–2.600 €/mp, Iosefin 1.700–2.100 €/mp, Elisabetin 1.650–2.000
+        €/mp, Dumbrăvița 1.450–1.800 €/mp, Giroc 1.100–1.450 €/mp. Cerere
+        susținută de polii IT (Continental, Nokia, Hella) și de cei 40.000 de
+        studenți UVT și UPT.
+      </p>
+
+      <h3>Terenuri de vânzare Timișoara — intravilan și extravilan</h3>
+      <p>
+        <strong>Teren intravilan de vânzare Timișoara</strong> și terenuri
+        extravilane în zona metropolitană (Giroc, Chișoda, Moșnița Nouă,
+        Dumbrăvița, Sânmihaiu Român, Săcălaz). Parcele 400–1.200 mp pentru case
+        individuale, terenuri mari pentru ansambluri rezidențiale și loturi
+        comerciale pe căile de acces majore (Calea Aradului, Calea Lugojului,
+        Calea Șagului). Verificare PUG, PUZ, certificat de urbanism și acces
+        utilități incluse în consultanță.
+      </p>
+
+      <h3>Cazare pet friendly Timișoara — apartamente care acceptă animale</h3>
+      <p>
+        <strong>Cazare pet friendly Timișoara</strong> — selecție de
+        apartamente regim hotelier care acceptă animale de companie (câini și
+        pisici), cu acces la Parcul Central, Parcul Rozelor și malurile Bega
+        pentru plimbări. Taxă unică de curățenie pentru animale, fără
+        restricții de talie în majoritatea proprietăților. Ideal pentru
+        călători de afaceri și turiști care nu vor să își lase prietenii blănoși
+        acasă.
+      </p>
+
+      <h3>Apartamente cu jacuzzi Timișoara — cazare premium pentru cupluri</h3>
+      <p>
+        <strong>Apartament cu jacuzzi Timișoara</strong> — proprietăți premium
+        cu jacuzzi privat sau cadă cu hidromasaj, ideale pentru weekenduri
+        romantice, aniversări și escapade de lux. Selecția include apartamente
+        cu vedere panoramică spre Bega și Centru, dotate cu Smart TV, Netflix,
+        espressor și balcon privat. Disponibile pentru rezervări scurte (1–3
+        nopți) sau pe termen mediu.
+      </p>
+
+      <h3>Cazare business Timișoara — apartamente pentru călători de afaceri</h3>
+      <p>
+        <strong>Cazare business Timișoara</strong> — apartamente regim hotelier
+        optimizate pentru călătorii de afaceri din zonele Vox Park, Openville,
+        Iulius Town, Continental Automotive și Nokia Campus. Facilități:
+        Wi-Fi fibră 1 Gbps, birou ergonomic, parcare subterană gratuită, self
+        check-in 24/7, factură fiscală pe firmă, kitchenette completă. Acces
+        rapid la Aeroportul Internațional Timișoara (15 min) și Gara de Nord.
+      </p>
+
+      <h3>Cazare lângă Continental Automotive și Nokia Campus Timișoara</h3>
+      <p>
+        <strong>Cazare lângă Continental Automotive Timișoara</strong> și
+        <strong>cazare lângă Nokia Campus Timișoara</strong> — apartamente
+        amplasate strategic în zona de nord (Calea Aradului, Aeroport) și în
+        zona industrială Calea Șagului, la 5–15 minute de cei mai mari
+        angajatori din Timișoara: Continental Automotive (5.000+ angajați),
+        Nokia (2.000+ angajați), Hella, Flex, Smithfield. Soluții pentru
+        relocări temporare, training-uri și vizite de business.
+      </p>
+
       <h3>Transport public Timișoara lângă proprietăți</h3>
       <p>
         Exemple concrete de proximitate: proprietăți aproape de stațiile Piața
