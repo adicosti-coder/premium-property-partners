@@ -124,6 +124,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     },
     "sameAs": [
       "https://www.facebook.com/realtrust.ro",
+      "https://www.instagram.com/realtrust_timisoara",
       "https://www.booking.com",
     ],
     "contactPoint": {
@@ -135,7 +136,67 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     },
   };
 
-  const allSchemas = [...homepageSchemas, organizationSchema];
+  // RealEstateAgent schema — high-priority recommendation from SEO audit
+  const realEstateAgentSchema = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": "https://www.realtrust.ro/#realestateagent",
+    "name": "RealTrust Imobiliare Timișoara",
+    "description": "Agenție imobiliară în Timișoara specializată în vânzări apartamente, închirieri pe termen lung și administrare regim hotelier. Servicii pentru investitori și proprietari în Cetate, Iosefin, Complex Studențesc, ISHO, Girocului și toate cartierele Timișoarei.",
+    "url": "https://www.realtrust.ro",
+    "logo": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+    "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+    "telephone": "+40723154520",
+    "email": "info@realtrust.ro",
+    "priceRange": "€€",
+    "currenciesAccepted": "EUR, RON",
+    "paymentAccepted": "Cash, Credit Card, Bank Transfer",
+    "openingHours": "Mo-Fr 10:00-18:00",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "postalCode": "300125",
+      "addressCountry": "RO",
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 45.7489,
+      "longitude": 21.2087,
+    },
+    "areaServed": [
+      { "@type": "City", "name": "Timișoara" },
+      { "@type": "Place", "name": "Cetate, Timișoara" },
+      { "@type": "Place", "name": "Iosefin, Timișoara" },
+      { "@type": "Place", "name": "Complex Studențesc, Timișoara" },
+      { "@type": "Place", "name": "ISHO, Timișoara" },
+      { "@type": "Place", "name": "Girocului, Timișoara" },
+      { "@type": "Place", "name": "Fabric, Timișoara" },
+      { "@type": "Place", "name": "Elisabetin, Timișoara" },
+    ],
+    "knowsAbout": [
+      "Apartamente de vânzare Timișoara",
+      "Închirieri apartamente Timișoara studenți",
+      "Cazare regim hotelier Timișoara",
+      "Investiții imobiliare Timișoara",
+      "Administrare apartamente Airbnb Booking",
+      "Evaluare proprietăți Timișoara",
+    ],
+    "serviceType": [
+      "Vânzări imobiliare",
+      "Închirieri apartamente",
+      "Administrare regim hotelier",
+      "Consultanță investiții imobiliare",
+      "Evaluare gratuită proprietăți",
+    ],
+    "sameAs": [
+      "https://www.facebook.com/realtrust.ro",
+      "https://www.instagram.com/realtrust_timisoara",
+    ],
+  };
+
+  const allSchemas = [...homepageSchemas, organizationSchema, realEstateAgentSchema];
 
   return (
     <SEOHead
