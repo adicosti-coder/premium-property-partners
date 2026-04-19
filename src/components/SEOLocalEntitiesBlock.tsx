@@ -318,7 +318,51 @@ const SEOLocalEntitiesBlock = () => {
         comisioanelor și ROI-ul real obținut din regim hotelier.
       </p>
 
-      <h3>Proximitate landmark-uri Timișoara</h3>
+      <h3>Apartamente de vânzare Centrul Vechi Timișoara — Cetate, Piața Unirii</h3>
+      <p>
+        <strong>Apartamente de vânzare Centrul Vechi Timișoara</strong> în
+        Cetate, Piața Unirii, Piața Victoriei și Piața Libertății — clădiri
+        istorice renovate, apartamente cu tavan înalt și finisaje premium.
+        Investiție sigură cu apreciere constantă a valorii și potențial maxim
+        pentru regim hotelier (ADR 75–110 €/noapte).
+      </p>
+
+      <h3>Apartamente de închiriat lângă Spitalul Județean Timișoara</h3>
+      <p>
+        <strong>Apartamente de închiriat lângă Spitalul Județean Timișoara</strong>
+        și cazare regim hotelier pentru pacienți, familii și personal medical
+        aflat în tratament la Spitalul Clinic Județean de Urgență „Pius
+        Brînzeu". Garsoniere și apartamente la 5–10 minute de spital, cu
+        check-in flexibil și sejururi de scurtă sau lungă durată.
+      </p>
+
+      <h3>Cazare de scurtă durată Timișoara — închirieri apartamente pe termen scurt</h3>
+      <p>
+        <strong>Cazare de scurtă durată Timișoara</strong> și
+        <strong> închirieri apartamente Timișoara pe termen scurt</strong> —
+        sejururi de la 1 noapte până la 30 de zile, ideale pentru turiști, business
+        travel, relocări temporare și participanți la evenimente (FITS,
+        Festivalul Inimilor, conferințe Politehnica). Check-in self-service 24/7.
+      </p>
+
+      <h3>Apartamente de închiriat studenți Timișoara — Complex Studențesc, UVT, UPT, UMF</h3>
+      <p>
+        <strong>Apartamente de închiriat studenți Timișoara</strong> în
+        Complex Studențesc, la 3–7 minute de UVT (Universitatea de Vest), UPT
+        (Politehnica) și UMF Medicină. Contracte pe an universitar, garsoniere
+        de la 280€/lună, 2 camere 380–550€/lună, pentru studenți români și
+        bursieri Erasmus. <strong>Apartamente de închiriat lângă UPT Timișoara</strong>
+        cu transport public direct (linii 1, 8, 11).
+      </p>
+
+      <h3>Agenție imobiliară Timișoara prețuri — comisioane transparente</h3>
+      <p>
+        <strong>Agenție imobiliară Timișoara prețuri</strong> și comisioane
+        transparente RealTrust: 2% comision vânzări (din partea cumpărătorului),
+        50% din prima chirie pentru închirieri pe termen lung, 15–25% comision
+        management regim hotelier. Fără taxe ascunse, fără cost de setup,
+        evaluare gratuită inclusă.
+      </p>
       <p>
         Toate proprietățile sunt aproape de universități (UVT — Universitatea
         de Vest, UPT — Politehnica Timișoara, UMF Medicină), mall-uri (Iulius
