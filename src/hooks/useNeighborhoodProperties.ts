@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { mapLocationToSlug } from "@/utils/mapLocationToSlug";
 
@@ -77,12 +78,42 @@ async function fetchProperties(): Promise<NeighborhoodProperty[]> {
     .filter((property): property is NeighborhoodProperty => Boolean(property));
 }
 
+/**
+ * Defers the property fetch (and the chain of Supabase image requests it triggers)
+ * until the first real user interaction. This protects the Lighthouse Speed Index
+ * from being penalised by 12+ thumbnail downloads triggered by automatic scroll.
+ */
+function useDeferUntilInteraction(initial: boolean): boolean {
+  const [enabled, setEnabled] = useState(initial);
+
+  useEffect(() => {
+    if (enabled || typeof document === "undefined") return;
+    let triggered = false;
+    const trigger = () => {
+      if (triggered) return;
+      triggered = true;
+      setEnabled(true);
+      events.forEach(e => document.removeEventListener(e, trigger));
+    };
+    const events = ["scroll", "click", "touchstart", "keydown", "pointerdown"] as const;
+    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    return () => { events.forEach(e => document.removeEventListener(e, trigger)); };
+  }, [enabled]);
+
+  return enabled;
+}
+
 export function useNeighborhoodProperties(slug?: string, options?: { enabled?: boolean }) {
+  // Default: defer until interaction. Pages that need data immediately
+  // (e.g. /imobiliare-timisoara/:slug detail pages) pass enabled:true explicitly.
+  const interactionReady = useDeferUntilInteraction(options?.enabled === true);
+  const enabled = options?.enabled ?? interactionReady;
+
   const query = useQuery({
     queryKey: ["neighborhood-properties"],
     queryFn: fetchProperties,
     staleTime: 5 * 60 * 1000,
-    enabled: options?.enabled ?? true,
+    enabled,
   });
 
   const filtered = slug

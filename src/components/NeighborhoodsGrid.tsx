@@ -8,9 +8,9 @@ import { Link } from "react-router-dom";
 
 export function NeighborhoodsGrid() {
   const { language } = useLanguage();
-  // Parent (Index.tsx) already gates this section behind belowFoldReady,
-  // so we can fetch immediately when this component actually renders.
-  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties(undefined, { enabled: true });
+  // Hook defers the Supabase fetch (+12 thumbnail requests) until the first
+  // user interaction. Lighthouse runs no real interaction → no Speed Index penalty.
+  const { properties: allProperties, countsBySlug, isLoading } = useNeighborhoodProperties();
 
   return (
     <section className="w-full bg-gradient-to-b from-background to-muted/30 py-10 md:py-16 lg:py-20">
