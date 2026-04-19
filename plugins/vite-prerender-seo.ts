@@ -452,6 +452,92 @@ function buildStaticRoutes(): PrerenderRoute[] {
     });
   }
 
+  // /investitii — investor-focused pillar page (distinct from /pentru-proprietari)
+  routes.push({
+    path: '/investitii',
+    title: 'Investiții Imobiliare Timișoara | Randament 9.4% Net | RealTrust',
+    description: 'Investiții imobiliare profitabile în Timișoara cu RealTrust. ROI 9.4% net, randament garantat, ghid gratuit 2026. Descarcă analiza completă.',
+    h1: 'Investiții Imobiliare Timișoara: Ghid Complet pentru Randament Profitabil',
+    canonical: `${BASE_URL}/investitii`,
+    seoBody: `
+      <h2>Tipuri de investiții imobiliare în Timișoara</h2>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (ROI 9.4% net verificat anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–25% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții ROI conservative și administrare profesională inclusă.</p>
+
+      <h2>Evoluție prețuri imobiliare Timișoara 2020–2026</h2>
+      <p><strong>Evoluție prețuri imobiliare Timișoara</strong>: media €/mp a crescut de la 1.250 € (2020) la 1.890 € (Q1 2026), cu un CAGR de aproximativ 7,1%. Cele mai puternice creșteri s-au înregistrat în ISHO (+62%), Circumvalațiunii / City of Mara (+48%) și Complex Studențesc (+41%). Prognoză 2026–2028: apreciere medie 5–8% anual, susținută de cererea din partea companiilor mari (Continental, Nokia, Hella, Flex, Atos) și de fluxul universitar (UVT, UPT, UMF — peste 40.000 studenți activi).</p>
+
+      <h2>Analiza zonelor cheie din Timișoara pentru investitori</h2>
+      <p>Cele mai performante micro-piețe pentru investitori în 2026: <strong>ISHO</strong> (2.150 €/mp, ocupare 85–90% regim hotelier), <strong>Centru / Cetate</strong> (apreciere capital + venit dual din business travel și turism), <strong>Complex Studențesc</strong> (cerere garantată 9 luni/an, randament 8–10% net), <strong>Calea Aradului</strong> (proximitate Aeroport + Continental Automotive — chiriași business cu venituri mari) și <strong>Dumbrăvița / Ghiroda</strong> (case noi, profil familial, apreciere capital peste media orașului).</p>
+
+      <h3>Investiții în regim hotelier — randament verificat</h3>
+      <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează ROI 9.4% net verificat pe portofoliul activ (60+ apartamente). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–25% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
+
+      <h3>Calculator taxe notariale și costuri tranzacție</h3>
+      <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-roi" tabindex="-1">calculatorul ROI</a> pentru proiecția completă a investiției.</p>
+
+      <h3>Credit ipotecar Timișoara — finanțare investiții</h3>
+      <p>Consultanță gratuită <strong>credit ipotecar Timișoara</strong> prin parteneriatele cu BCR, BRD, Raiffeisen, ING și Banca Transilvania. Pentru investiții optime: avans 25–35%, perioadă 25–30 ani, DAE competitiv 6,5–7,5% (aprilie 2026). Te ajutăm să compari ofertele și să optimizezi structura financiară pentru maximizarea cash-flow-ului lunar.</p>
+
+      <h3>Consultant imobiliar Timișoara — due diligence complet</h3>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 60+ proprietăți administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
+
+      <h3>Ghid investitor 2026 — descarcă gratuit</h3>
+      <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator ROI cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
+    `,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'RealEstateAgent',
+        name: 'RealTrust & ApArt Hotel — Investiții Imobiliare Timișoara',
+        url: `${BASE_URL}/investitii`,
+        telephone: '+40723154520',
+        areaServed: 'Timișoara',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+          addressLocality: 'Timișoara',
+          addressRegion: 'Timiș',
+          postalCode: '300125',
+          addressCountry: 'RO',
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: 'Investiții Imobiliare Timișoara: Ghid Complet pentru Randament Profitabil',
+        description: 'Ghid complet de investiții imobiliare în Timișoara: ROI 9.4% net, analiză cartiere, evoluție prețuri 2020–2026 și calculator costuri tranzacție.',
+        author: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'RealTrust & ApArt Hotel',
+          logo: { '@type': 'ImageObject', url: `${BASE_URL}/images/hero-optimized-800w.webp` },
+        },
+        mainEntityOfPage: `${BASE_URL}/investitii`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'Care este randamentul mediu al investițiilor imobiliare în Timișoara?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, ROI mediu este 9.4% net anual, verificat pe portofoliul de 60+ apartamente. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Ce capital minim este necesar pentru o investiție imobiliară în Timișoara?',
+            acceptedAnswer: { '@type': 'Answer', text: 'De la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc, cu finanțare bancară până la 75% din valoare prin credit ipotecar.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Care sunt taxele notariale pentru cumpărarea unui apartament în Timișoara?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Onorariu notarial ~1% din valoarea tranzacției, taxe ANCPI ~0,15%, comision agenție RealTrust 2%. Pentru un apartament de 100.000 €, costurile totale sunt aproximativ 3.500–4.500 €.' },
+          },
+        ],
+      },
+    ],
+  });
+
   // /pentru-proprietari — pillar page for property owners
   routes.push({
     path: '/pentru-proprietari',
