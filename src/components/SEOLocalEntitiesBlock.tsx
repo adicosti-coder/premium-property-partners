@@ -18,8 +18,65 @@ const SEOLocalEntitiesBlock = () => {
       // overflow:hidden; clip:rect(0,0,0,0); whiteSpace:nowrap; border:0;
     >
       <h2>
-        Agenție imobiliară Timișoara — servicii imobiliare complete, apartamente regim hotelier și investiții în toate cartierele Timișoarei
+        Agenție imobiliară Timișoara Centru — servicii imobiliare complete, investiții imobiliare Timișoara, apartamente regim hotelier în toate cartierele Timișoarei
       </h2>
+
+      <h2>Investiții imobiliare Timișoara — randament 9.4% net verificat</h2>
+      <p>
+        <strong>Investiții imobiliare Timișoara</strong> cu randament net
+        verificat de 9.4%, focus pe apartamente în Centru, ISHO, Iulius Town,
+        Iosefin și Complex Studențesc. Selecție strictă a proprietăților după
+        ROI, ocupare, ADR și potențial de revânzare. Consultanță completă
+        pentru investitori locali și internaționali interesați de piața
+        imobiliară din Timișoara.
+      </p>
+
+      <h2>Apartamente de vânzare Timișoara ISHO — investiții premium</h2>
+      <p>
+        <strong>Apartamente de vânzare Timișoara ISHO</strong> — cel mai căutat
+        ansamblu rezidențial premium din Timișoara, cu acces direct la Bega,
+        Centru Vechi și Iulius Town. Investiții ISHO cu ROI net 8–10% în regim
+        hotelier și revânzare cu plus-valoare anuală 6–9%.
+      </p>
+
+      <h2>Apartamente de închiriat Timișoara Iulius Town — termen lung & scurt</h2>
+      <p>
+        <strong>Apartamente de închiriat Timișoara Iulius Town</strong> —
+        garsoniere și apartamente 2–3 camere lângă Iulius Mall Openville, hub-ul
+        de business și shopping al orașului. Cerere ridicată din partea
+        angajaților din clădirile de birouri Openville, expaților și
+        profesioniștilor IT. Contracte pe termen lung și opțiuni regim hotelier.
+      </p>
+
+      <h2>Regim hotelier Timișoara Spitalul Județean — cazare pentru familii pacienți</h2>
+      <p>
+        <strong>Regim hotelier Timișoara Spitalul Județean</strong> și
+        <strong> cazare Timișoara Spitalul Județean</strong> — apartamente
+        complet mobilate la 5–10 minute de Spitalul Clinic Județean de Urgență
+        „Pius Brînzeu", Spitalul Municipal și Spitalul de Copii „Louis
+        Țurcanu". Soluție confortabilă și accesibilă pentru familii ale
+        pacienților, medici rezidenți și personal medical aflat în deplasare.
+      </p>
+
+      <h2>Cazare Timișoara aproape de UVT — apartamente lângă Universitatea de Vest</h2>
+      <p>
+        <strong>Cazare Timișoara aproape de UVT</strong> — apartamente regim
+        hotelier la <strong>3–7 minute pe jos</strong> de Universitatea de Vest
+        (UVT), ideale pentru părinți în vizită, profesori invitați,
+        participanți la conferințe academice și studenți internaționali.
+        Aproape de Politehnica (UPT), UMF Medicină și Biblioteca Centrală
+        Universitară.
+      </p>
+
+      <h2>Administrare apartamente Timișoara prețuri — comisioane transparente</h2>
+      <p>
+        <strong>Administrare apartamente Timișoara prețuri</strong>: comision
+        management 15–25% în funcție de pachet, fără taxă de setup, fără
+        costuri ascunse. Raportare lunară completă, sincronizare Booking,
+        Airbnb, Expedia și canale directe, curățenie profesională și suport
+        oaspeți 24/7. Servicii dedicate proprietarilor din Iulius Town, ISHO,
+        Centru, Iosefin și Complex Studențesc.
+      </p>
 
       <h3>Agenție imobiliară Timișoara — proprietăți de vânzare și închiriere</h3>
       <p>
