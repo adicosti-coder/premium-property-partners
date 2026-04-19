@@ -45,12 +45,22 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
 
-    <!-- Critical above-fold CSS inlined to eliminate render-blocking wait -->
+    <!-- Critical above-fold CSS inlined to eliminate render-blocking wait.
+         Includes HSL design tokens so any React component painted before the
+         main Vite stylesheet arrives uses correct colors (no FOUC flash). -->
     <style>
-      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:'NotoSans',system-ui,-apple-system,sans-serif;background:#f7f5f0;color:#1e293b}
-      .dark body{background:#0f172a;color:#e2e8f0}
-      .cv-auto{contain:content}
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;border-width:0;border-style:solid}
+      html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:'Inter','Inter Fallback',system-ui,-apple-system,sans-serif}
+      :root,.light{--background:40 25% 96%;--foreground:222 47% 11%;--primary:45 90% 28%;--primary-foreground:0 0% 100%;--muted:40 20% 92%;--muted-foreground:222 30% 40%;--border:40 20% 80%;--card:0 0% 100%;--card-foreground:222 47% 11%;--radius:0.5rem}
+      .dark{--background:222 47% 11%;--foreground:210 40% 98%;--primary:45 90% 38%;--primary-foreground:222 47% 11%;--muted:222 30% 20%;--muted-foreground:210 40% 70%;--border:222 30% 25%;--card:222 47% 14%;--card-foreground:210 40% 98%}
+      body{font-family:'NotoSans','Inter Fallback',system-ui,-apple-system,sans-serif;background:hsl(var(--background));color:hsl(var(--foreground));-webkit-font-smoothing:antialiased;min-height:100vh;line-height:inherit}
+      h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}
+      img,video{max-width:100%;height:auto;display:block}
+      button{font-family:inherit;cursor:pointer;background:transparent;border:0;color:inherit}
+      a{color:inherit;text-decoration:inherit}
+      .cv-auto{content-visibility:auto;contain-intrinsic-size:1px 600px}
+      .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+      [hidden]{display:none}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
