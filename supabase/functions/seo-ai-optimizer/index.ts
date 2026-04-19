@@ -64,11 +64,15 @@ serve(async (req) => {
     const diagnostics = {
       scrape_source: (scraped as any).source || "unknown",
       title_detected: scraped.title,
+      title_length: (scraped.title || "").length,
       meta_chosen: scraped.metaDescription,
+      meta_length: (scraped.metaDescription || "").length,
       meta_candidates: (scraped as any).metaCandidatesDebug || [],
       h1_count: scraped.h1Count,
       h2_count: (scraped as any).h2Count ?? null,
       word_count: scraped.wordCount,
+      score_breakdown: analysis._score_breakdown || null,
+      ai_model: "google/gemini-2.5-pro",
       force_refresh: forceRefresh,
       audited_at: new Date().toISOString(),
     };
