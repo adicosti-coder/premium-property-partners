@@ -499,57 +499,38 @@ const AboutUs = () => {
               </p>
             </div>
 
-            {/* Real Estate Services */}
-            <div className="max-w-6xl mx-auto mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">{t.story.realEstate.title}</h3>
-                  <p className="text-muted-foreground">{t.story.realEstate.description}</p>
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                {t.story.realEstate.services.map((service, idx) => (
-                  <Card key={idx} className="border-l-4 border-l-primary/50 hover:border-l-primary transition-colors">
-                    <CardContent className="p-6">
-                      <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                        {service.title}
-                      </h4>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {service.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            {/* Mission */}
+            <div className="max-w-3xl mx-auto mb-16">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-8 text-center">
+                  <Target className="w-10 h-10 text-primary mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold mb-3">{t.mission.title}</h3>
+                  <p className="text-foreground/90 leading-relaxed">{t.mission.text}</p>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Hotel Management Services */}
-            <div className="max-w-6xl mx-auto mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                  <Home className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">{t.story.hotelManagement.title}</h3>
-                  <p className="text-muted-foreground">{t.story.hotelManagement.description}</p>
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {t.story.hotelManagement.services.map((service, idx) => (
-                  <Card key={idx} className="border-t-4 border-t-amber-500/50 hover:border-t-amber-500 transition-colors hover:shadow-lg">
-                    <CardContent className="p-6">
-                      <h4 className="text-lg font-semibold mb-2">{service.title}</h4>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {service.description}
-                      </p>
-                    </CardContent>
-                  </Card>
+            {/* Pillar links — content hub (eliminates duplication with /oaspeti & /complexe) */}
+            <div className="max-w-5xl mx-auto mb-16">
+              <h3 className="text-xl font-semibold text-center mb-6 text-muted-foreground">
+                {language === "ro" ? "Explorează paginile noastre dedicate" : "Explore our dedicated pages"}
+              </h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { to: "/imobiliare-timisoara", label: language === "ro" ? "Vânzări apartamente & case Timișoara" : "Apartments & houses for sale Timișoara", icon: Building2 },
+                  { to: "/calculator-roi", label: language === "ro" ? "Calculator ROI Regim Hotelier" : "Short-term Rental ROI Calculator", icon: TrendingUp },
+                  { to: "/pentru-oaspeti", label: language === "ro" ? "Cazare Premium pentru oaspeți" : "Premium stays for guests", icon: Home },
+                  { to: "/evaluare-gratuita", label: language === "ro" ? "Evaluare gratuită proprietate" : "Free property valuation", icon: Award }
+                ].map((p, i) => (
+                  <Link key={i} to={p.to} className="group">
+                    <Card className="h-full hover:border-primary hover:shadow-md transition-all">
+                      <CardContent className="p-5 flex flex-col items-start gap-3">
+                        <p.icon className="w-6 h-6 text-primary" />
+                        <span className="text-sm font-medium group-hover:text-primary transition-colors">{p.label}</span>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
