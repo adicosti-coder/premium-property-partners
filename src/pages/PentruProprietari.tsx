@@ -49,8 +49,6 @@ const ServiceChainAF = lazy(() => import("@/components/ServiceChainAF"));
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
-const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
-const FloatingInvestorGuide = lazy(() => import("@/components/FloatingInvestorGuide"));
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 
@@ -92,10 +90,10 @@ const PentruProprietari = () => {
 
   const content = {
     ro: {
-      badge: "Pentru Proprietari de Apartamente",
-      title: "Transformă-ți Proprietatea",
-      titleHighlight: "într-o Sursă de Venit",
-      subtitle: "Management profesional în regim hotelier cu tehnologie avansată, transparență totală și echipă dedicată. Maximizează randamentul apartamentului tău fără stres.",
+      badge: "Pentru Proprietari din Timișoara",
+      title: "Administrare Proprietăți",
+      titleHighlight: "în Regim Hotelier",
+      subtitle: "Preluăm apartamentul tău în administrare completă în Timișoara: marketing, oaspeți, curățenie, mentenanță, raportare și optimizare fiscală a veniturilor din chirii.",
       cta: "Calculează Potențialul Tău",
       secondaryCta: "Contactează-ne",
       stats: [
