@@ -306,18 +306,31 @@ const AboutUs = () => {
   // Organization JSON-LD schema
   const organizationSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "RealEstateAgent",
     "name": "RealTrust & ApArt Hotel",
     "legalName": "Imo Business Centrum SRL",
     "url": "https://www.realtrust.ro",
     "logo": "https://www.realtrust.ro/favicon.ico",
+    "image": "https://www.realtrust.ro/og-image.jpg",
     "description": seo.description,
     "foundingDate": "1999",
+    "priceRange": "€€",
+    "areaServed": [
+      { "@type": "City", "name": "Timișoara" },
+      { "@type": "AdministrativeArea", "name": "Timiș" },
+      { "@type": "Place", "name": "Dumbrăvița" },
+      { "@type": "Place", "name": "Giroc" }
+    ],
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Timișoara",
       "addressRegion": "Timiș",
       "addressCountry": "RO"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 45.7489,
+      "longitude": 21.2087
     },
     "contactPoint": {
       "@type": "ContactPoint",
@@ -325,6 +338,12 @@ const AboutUs = () => {
       "contactType": "customer service",
       "email": "info@realtrust.ro",
       "availableLanguage": ["Romanian", "English"]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "9.7",
+      "bestRating": "10",
+      "ratingCount": "180"
     },
     "sameAs": [
       "https://www.facebook.com/realtrust",
