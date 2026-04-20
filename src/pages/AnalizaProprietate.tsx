@@ -92,7 +92,7 @@ const AnalizaProprietate = () => {
 
   const t = {
     ro: {
-      pageTitle: "Analiză Proprietate AI Timișoara | Evaluare & Consultanță Imobiliară",
+      pageTitle: "Analiză Proprietate AI Timișoara | Evaluare & Consultanță",
       pageDesc: "Analiză AI gratuită pentru piața imobiliară Timișoara: evaluare apartament, scor ROI estimat, consultanță imobiliară personalizată pentru regim hotelier, vânzări și închirieri.",
       heroTitle: "Analiză AI",
       heroHighlight: "Proprietate",
@@ -110,7 +110,7 @@ const AnalizaProprietate = () => {
       photosHint: "Adaugă fotografii pentru o analiză vizuală suplimentară",
     },
     en: {
-      pageTitle: "AI Property Analysis Timișoara | Valuation & Real Estate Consulting",
+      pageTitle: "AI Property Analysis Timișoara | Valuation & Consulting",
       pageDesc: "Free AI analysis for Timișoara real estate market: apartment valuation, ROI score, personalized real estate consulting for short-term rental, sales and long-term rentals.",
       heroTitle: "AI Property",
       heroHighlight: "Analysis",
@@ -281,7 +281,18 @@ const AnalizaProprietate = () => {
         ? "Analiza durează aproximativ 2 minute. Primești scorul proprietății, estimarea randamentului lunar și recomandări concrete de optimizare."
         : "The analysis takes approximately 2 minutes. You receive the property score, monthly yield estimate and concrete optimization recommendations.",
     },
-  ]);
+    {
+      question: language === "ro" ? "Care este randamentul chiriei în Timișoara?" : "What is the rental yield in Timișoara?",
+      answer: language === "ro"
+        ? "Randamentul chiriei în Timișoara variază între 4-6% net pe an pentru închirieri pe termen lung și 8-11% net pentru regim hotelier (administrat profesional). HostScan AI calculează randamentul exact pentru proprietatea ta în funcție de zonă, dotări și ocupare estimată."
+        : "Rental yield in Timișoara ranges 4-6% net per year for long-term rentals and 8-11% net for short-term (professionally managed). HostScan AI calculates the exact yield for your property based on area, amenities and estimated occupancy.",
+    },
+    {
+      question: language === "ro" ? "Care este evoluția prețurilor pe piața imobiliară Timișoara?" : "How are real estate prices evolving in Timișoara?",
+      answer: language === "ro"
+        ? "Piața imobiliară Timișoara a înregistrat o creștere medie de 7-9% anual în ultimii 3 ani, cu vârfuri în zonele ISHO, Complex Studențesc și Iulius Town. Apartamentele noi se vând cu 1.800-2.500€/mp, iar cele vechi cu 1.400-1.900€/mp. Tendința rămâne ascendentă datorită cererii corporate (Continental, Hella, City Business Centre) și a populației studențești."
+        : "Timișoara's real estate market grew 7-9% annually over the last 3 years, peaking in ISHO, Student Complex and Iulius Town areas. New apartments sell for €1,800-2,500/sqm, older ones €1,400-1,900/sqm. The upward trend continues thanks to corporate demand (Continental, Hella, City Business Centre) and student population.",
+    },
 
   const jsonLdSchemas = [
     {
