@@ -445,7 +445,7 @@ const Preturi = () => {
       </section>
 
       {/* Other Services */}
-      <section className="py-16 bg-muted/20">
+      <section id="alte-servicii" className="py-16 bg-muted/20 scroll-mt-24">
         <div className="container mx-auto px-6 max-w-5xl">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-4">
             {lang === "ro" ? "Alte servicii" : "Other services"}
