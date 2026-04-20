@@ -25,6 +25,37 @@ const ImobiliareTimisoara = () => {
     { label: "Imobiliare Timișoara" },
   ];
 
+  const tocItems = [
+    { id: "live", label: "Anunțuri live" },
+    { id: "neighborhoods", label: "Cartiere" },
+    { id: "evaluare", label: "Evaluare apartament" },
+    { id: "preturi", label: "Prețuri & tendințe" },
+    { id: "terenuri", label: "Terenuri Giroc & Chișoda" },
+    { id: "market-pulse", label: "Market Pulse" },
+    { id: "faq", label: "Întrebări frecvente" },
+  ];
+
+  const faqItems = [
+    {
+      question: "Cum se face evaluarea unui apartament în Timișoara?",
+      answer: "Evaluarea apartamentului în Timișoara se realizează gratuit de RealTrust, ținând cont de cartier (Centru, ISHO, Dumbrăvița, Giroc, Chișoda), suprafață utilă, an construcție, finisaje și prețurile comparabile recente. Primești un raport în 24h.",
+    },
+    {
+      question: "Care sunt prețurile imobiliare în Timișoara în 2026?",
+      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.400 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru, ISHO). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8% pentru proiectele noi.",
+    },
+    {
+      question: "Vindeți și terenuri în Timișoara, Giroc sau Chișoda?",
+      answer: "Da, intermediem terenuri intravilane și extravilane în Timișoara și zonele metropolitane Giroc, Chișoda, Moșnița Nouă, Dumbrăvița și Ghiroda — pentru construcție casă, dezvoltare rezidențială sau investiție pe termen lung.",
+    },
+    {
+      question: "Care sunt cele mai active cartiere pentru investiții?",
+      answer: "ISHO, Centru, Complex Studențesc și Dumbrăvița domină cererea de regim hotelier. Giroc și Chișoda atrag familii pentru locuință, iar Aradului și Lipovei oferă cele mai bune randamente la închiriere clasică.",
+    },
+  ];
+
+  useRegisterFAQs("imobiliare-timisoara", faqItems);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
