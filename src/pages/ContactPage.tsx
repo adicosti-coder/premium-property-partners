@@ -160,25 +160,27 @@ const ContactPage = () => {
           {/* Hero Section */}
           <section className="text-center max-w-3xl mx-auto mb-12">
             <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4">
-              {isRo ? "Contact & Prezență Locală" : "Contact & Local Presence"}
+              {isRo ? "Contact & Prezență Locală — Sediu RealTrust Timișoara" : "Contact & Local Presence — RealTrust Timișoara Office"}
             </h1>
             <p className="text-lg text-muted-foreground">
               {isRo
-                ? "Management profesional de proprietăți în Timișoara — sediu fizic, echipă locală dedicată, disponibilitate non-stop pentru oaspeți și proprietari."
-                : "Professional property management in Timișoara — physical office, dedicated local team, 24/7 availability for guests and owners."}
+                ? "Sediu RealTrust în Strada Samuil Micu Nr.14, Timișoara — partenerul tău de încredere pentru imobiliare în Timișoara și întreg județul Timiș (inclusiv Giroc, Dumbrăvița, Moșnița Nouă)."
+                : "RealTrust office at Strada Samuil Micu Nr.14, Timișoara — your trusted partner for real estate in Timișoara and all of Timiș county (including Giroc, Dumbrăvița, Moșnița Nouă)."}
             </p>
           </section>
 
-          {/* Table of Contents */}
-          <nav aria-label={isRo ? "Cuprins pagină" : "Page contents"} className="max-w-3xl mx-auto mb-12 p-4 bg-muted/30 border rounded-xl">
-            <p className="text-sm font-semibold mb-2">{isRo ? "Cuprins:" : "On this page:"}</p>
+          {/* Jump-to / Table of Contents */}
+          <nav aria-label={isRo ? "Sari direct la secțiune" : "Jump to section"} className="max-w-3xl mx-auto mb-12 p-4 bg-muted/30 border rounded-xl">
+            <p className="text-sm font-semibold mb-2">{isRo ? "Sari direct la:" : "Jump to:"}</p>
             <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              <li><a href="#contact-rapid" className="text-primary hover:underline">{isRo ? "Contact rapid" : "Quick contact"}</a></li>
-              <li><a href="#sediu" className="text-primary hover:underline">{isRo ? "Sediu & hartă" : "Office & map"}</a></li>
-              <li><a href="#servicii" className="text-primary hover:underline">{isRo ? "Servicii management" : "Management services"}</a></li>
-              <li><a href="#piata-imobiliara" className="text-primary hover:underline">{isRo ? "Piața imobiliară Timișoara" : "Timișoara real estate market"}</a></li>
-              <li><a href="#cazare-spitale" className="text-primary hover:underline">{isRo ? "Cazare lângă spitale" : "Stays near hospitals"}</a></li>
-              <li><a href="#de-ce-realtrust" className="text-primary hover:underline">{isRo ? "De ce RealTrust" : "Why RealTrust"}</a></li>
+              <li><a href="#contact-rapid" className="text-primary hover:underline">{isRo ? "📞 Adresă & Telefon" : "📞 Address & Phone"}</a></li>
+              <li><a href="#program" className="text-primary hover:underline">{isRo ? "🕒 Program agenție imobiliară Timișoara" : "🕒 Office hours"}</a></li>
+              <li><a href="#departamente" className="text-primary hover:underline">{isRo ? "👥 Contact pe departamente" : "👥 Departments"}</a></li>
+              <li><a href="#sediu" className="text-primary hover:underline">{isRo ? "📍 Sediu & hartă" : "📍 Office & map"}</a></li>
+              <li><a href="#servicii" className="text-primary hover:underline">{isRo ? "🛠️ Servicii management" : "🛠️ Management services"}</a></li>
+              <li><a href="#piata-imobiliara" className="text-primary hover:underline">{isRo ? "📈 Piața imobiliară Timișoara" : "📈 Timișoara real estate market"}</a></li>
+              <li><a href="#cazare-spitale" className="text-primary hover:underline">{isRo ? "🏥 Cazare lângă spitale" : "🏥 Stays near hospitals"}</a></li>
+              <li><a href="#faq" className="text-primary hover:underline">{isRo ? "❓ Întrebări frecvente" : "❓ FAQ"}</a></li>
             </ul>
           </nav>
           <section id="contact-rapid" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 scroll-mt-24">
