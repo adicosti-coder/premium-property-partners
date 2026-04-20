@@ -1,9 +1,12 @@
 import { lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 
 import {
@@ -19,6 +22,10 @@ import {
   Phone,
   CheckCircle2,
   ArrowRight,
+  BarChart3,
+  Calculator,
+  HelpCircle,
+  LineChart,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 
