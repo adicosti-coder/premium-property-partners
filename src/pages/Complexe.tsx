@@ -185,24 +185,63 @@ const Complexe = () => {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": t.heroTitle,
-    "description": t.metaDescription,
-    "itemListElement": complexes.map((complex, idx) => ({
-      "@type": "ListItem",
-      "position": idx + 1,
-      "item": {
-        "@type": "ApartmentComplex",
-        "name": complex.name,
-        "url": `https://www.realtrust.ro/complex/${complex.slug}`,
+    "@graph": [
+      {
+        "@type": "RealEstateAgent",
+        "@id": "https://www.realtrust.ro/#organization",
+        "name": "RealTrust & ApArt Hotel",
+        "url": "https://www.realtrust.ro",
+        "areaServed": {
+          "@type": "City",
+          "name": "Timișoara",
+        },
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Timișoara",
           "addressRegion": "Timiș",
           "addressCountry": "RO",
         },
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": language === "en" ? "Residential Complexes Managed" : "Complexe Rezidențiale Administrate",
+          "itemListElement": complexes.map((complex, idx) => ({
+            "@type": "Offer",
+            "position": idx + 1,
+            "itemOffered": {
+              "@type": "ApartmentComplex",
+              "name": complex.name,
+              "url": `https://www.realtrust.ro/complex/${complex.slug}`,
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Timișoara",
+                "addressRegion": "Timiș",
+                "addressCountry": "RO",
+              },
+            },
+          })),
+        },
       },
-    })),
+      {
+        "@type": "ItemList",
+        "name": t.heroTitle,
+        "description": t.metaDescription,
+        "itemListElement": complexes.map((complex, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 1,
+          "item": {
+            "@type": "ApartmentComplex",
+            "name": complex.name,
+            "url": `https://www.realtrust.ro/complex/${complex.slug}`,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Timișoara",
+              "addressRegion": "Timiș",
+              "addressCountry": "RO",
+            },
+          },
+        })),
+      },
+    ],
   };
 
   return (
