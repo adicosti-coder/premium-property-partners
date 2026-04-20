@@ -114,7 +114,7 @@ const EvaluareGratuita = () => {
     <Suspense fallback={null}>
       <SEOHead
         title="Evaluare Gratuită Apartament & Casă Timișoara | RealTrust"
-        description="Primește o evaluare gratuită pentru apartamentul sau casa ta din Timișoara. Află un preț corect de piață în 24h. Experții noștri locali analizează datele pentru o estimare precisă."
+        description="Obține o evaluare imobiliară gratuită pentru apartamentul sau casa ta din Timișoara. Estimare de piață vs raport ANEVAR, proces rapid online, fără obligații."
         url="https://www.realtrust.ro/evaluare-gratuita"
       />
       <Header />
