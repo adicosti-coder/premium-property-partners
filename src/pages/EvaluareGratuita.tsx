@@ -266,6 +266,61 @@ const EvaluareGratuita = () => {
             )}
           </div>
         </div>
+
+        {/* SEO content sections */}
+        <div className="max-w-3xl mx-auto mt-16 space-y-12">
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <FileCheck className="w-6 h-6 text-primary" /> Cum funcționează estimarea preț apartament Timișoara
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Metodologia RealTrust combină <strong>analiza comparativă a pieței</strong> (CMA) cu date proprii din peste
+              500 de tranzacții recente din Timișoara. Analizăm prețul mediu pe metru pătrat în cartierul dvs.
+              (Circumvalațiunii, ISHO, Iosefin, Complex Studențesc, Fabric, Elisabetin, Dumbrăvița, Ghiroda),
+              ajustăm pentru etaj, finisaje, an construcție, dotări și expunere, apoi corelăm cu cererea curentă.
+            </p>
+            <ul className="grid md:grid-cols-2 gap-3 text-sm">
+              <li className="flex gap-2"><MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Tranzacții comparabile pe stradă/cartier</li>
+              <li className="flex gap-2"><Clock className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Răspuns garantat în 24h</li>
+              <li className="flex gap-2"><ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Fără obligații, 100% gratuit</li>
+              <li className="flex gap-2"><Building2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> Acoperim și zone metropolitane (Dumbrăvița, Giroc, Moșnița)</li>
+            </ul>
+          </section>
+
+          <section className="space-y-3 bg-muted/40 rounded-xl p-6 border border-border">
+            <h2 className="text-xl font-bold text-foreground">Estimare de piață vs. raport de evaluare ANEVAR</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Serviciul nostru oferă o <strong>estimare de piață</strong> — prețul realist la care proprietatea se poate
+              vinde în condițiile actuale ale pieței din Timișoara. Aceasta este diferită de un{" "}
+              <strong>raport de evaluare proprietate</strong> oficial, emis de un <em>evaluator ANEVAR Timișoara</em>,
+              care este un document contra-cost necesar băncilor pentru credite ipotecare, instanțelor sau pentru
+              partaje succesorale. Pentru decizia de vânzare, estimarea noastră este suficientă și mai relevantă.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Vrei să vinzi după evaluare?{" "}
+              <Link to="/imobiliare-timisoara" className="text-primary underline">
+                Vezi cum vindem proprietățile
+              </Link>{" "}
+              sau{" "}
+              <Link to="/calculator-roi" className="text-primary underline">
+                calculează randamentul investiției
+              </Link>
+              .
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">Întrebări frecvente despre evaluarea proprietății</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {EVAL_FAQS.map((faq, i) => (
+                <AccordionItem key={i} value={`faq-${i}`}>
+                  <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
+        </div>
       </main>
       <Footer />
     </Suspense>
