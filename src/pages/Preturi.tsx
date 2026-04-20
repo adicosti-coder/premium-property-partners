@@ -267,12 +267,60 @@ const Preturi = () => {
 
   useRegisterFAQs("preturi-administrare", pricingFaqItems);
 
+  const BASE_URL = "https://www.realtrust.ro";
+
+  const realEstateAgentSchema = {
+    "@context": "https://schema.org",
+    "@type": ["RealEstateAgent", "LocalBusiness"],
+    "@id": `${BASE_URL}/preturi#org`,
+    "name": "RealTrust Property Management Timișoara",
+    "url": `${BASE_URL}/preturi`,
+    "telephone": "+40723154520",
+    "email": "info@realtrust.ro",
+    "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Strada Samuil Micu Nr.14",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "postalCode": "300125",
+      "addressCountry": "RO",
+    },
+    "areaServed": [
+      { "@type": "City", "name": "Timișoara" },
+      { "@type": "AdministrativeArea", "name": "Județul Timiș" },
+    ],
+    "priceRange": "15%-25%",
+  };
+
+  const servicePriceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": lang === "ro" ? "Administrare apartamente regim hotelier" : "Short-term rental property management",
+    "name": lang === "ro" ? "Tarife administrare imobiliare Timișoara" : "Property management pricing Timișoara",
+    "provider": { "@id": `${BASE_URL}/preturi#org` },
+    "areaServed": { "@type": "City", "name": "Timișoara" },
+    "offers": pkgs.map((p) => ({
+      "@type": "Offer",
+      "name": p.name,
+      "description": p.tagline,
+      "priceSpecification": {
+        "@type": "PriceSpecification",
+        "price": parseInt(p.commission),
+        "priceCurrency": "EUR",
+        "valueAddedTaxIncluded": false,
+        "description": `${p.commission} ${p.commissionNote}`,
+      },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
         title={s.title}
         description={s.description}
-        url="https://www.realtrust.ro/preturi"
+        url={`${BASE_URL}/preturi`}
+        jsonLd={[realEstateAgentSchema, servicePriceSchema]}
       />
       <Header />
 
@@ -294,23 +342,39 @@ const Preturi = () => {
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              {lang === "ro" ? "Pachete & " : "Packages & "}
-              <span className="text-gradient-gold">{lang === "ro" ? "Prețuri" : "Pricing"}</span>
+              {lang === "ro" ? (
+                <>Prețuri & Servicii de <span className="text-gradient-gold">Administrare Proprietăți Timișoara</span></>
+              ) : (
+                <>Pricing & <span className="text-gradient-gold">Property Management Timișoara</span></>
+              )}
             </h1>
             <p className="text-base font-semibold text-amber-400 mb-2 tracking-wide">
-              {lang === "ro" ? "— Administrare în regim hotelier —" : "— Short-term rental management —"}
+              {lang === "ro" ? "— Tarife administrare imobiliare Timișoara, transparente —" : "— Transparent property management Timișoara pricing —"}
             </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {lang === "ro"
-                ? "Alege pachetul potrivit proprietății tale. Comisionul include tot — nu există taxe ascunse."
-                : "Choose the right package for your property. The commission includes everything — no hidden fees."}
+                ? "Alege pachetul potrivit proprietății tale. Solicită o ofertă preț administrare apartament personalizată — comisionul include tot, fără taxe ascunse. Servicii disponibile și în engleză pentru investitori internaționali (property management Timișoara)."
+                : "Choose the right package for your property. Request a custom pricing offer — the commission includes everything, no hidden fees. Services available in English for international investors."}
             </p>
+
+            {/* Table of Contents */}
+            <nav aria-label={lang === "ro" ? "Cuprins pagină" : "Page contents"} className="mt-8 p-4 bg-muted/30 border rounded-xl text-left">
+              <p className="text-sm font-semibold mb-2">{lang === "ro" ? "Sari direct la:" : "Jump to:"}</p>
+              <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <li><a href="#pachete" className="text-primary hover:underline">{lang === "ro" ? "💼 Pachete & Comisioane" : "💼 Packages & Commissions"}</a></li>
+                <li><a href="#alte-servicii" className="text-primary hover:underline">{lang === "ro" ? "🏠 Alte servicii (vânzări, închirieri)" : "🏠 Other services"}</a></li>
+                <li><a href="#zone-business" className="text-primary hover:underline">{lang === "ro" ? "🏢 Zone business (Continental, Hella)" : "🏢 Business areas"}</a></li>
+                <li><a href="#garantii" className="text-primary hover:underline">{lang === "ro" ? "🛡️ Garanțiile noastre" : "🛡️ Our guarantees"}</a></li>
+                <li><a href="#evaluare" className="text-primary hover:underline">{lang === "ro" ? "📊 Evaluare gratuită" : "📊 Free evaluation"}</a></li>
+                <li><a href="#faq" className="text-primary hover:underline">{lang === "ro" ? "❓ Întrebări frecvente" : "❓ FAQ"}</a></li>
+              </ul>
+            </nav>
           </div>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16 px-6">
+      <section id="pachete" className="py-16 px-6 scroll-mt-24">
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {pkgs.map((pkg) => {
@@ -381,7 +445,7 @@ const Preturi = () => {
       </section>
 
       {/* Other Services */}
-      <section className="py-16 bg-muted/20">
+      <section id="alte-servicii" className="py-16 bg-muted/20 scroll-mt-24">
         <div className="container mx-auto px-6 max-w-5xl">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-4">
             {lang === "ro" ? "Alte servicii" : "Other services"}
@@ -423,8 +487,41 @@ const Preturi = () => {
         </div>
       </section>
 
+      {/* Business / Industrial Areas — Continental, Hella, Draxlmaier */}
+      <section id="zone-business" className="py-16 bg-background scroll-mt-24">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-4">
+            {lang === "ro" ? "Apartamente pentru Angajați Corporate — Zone Industriale Timișoara" : "Apartments for Corporate Employees — Timișoara Industrial Areas"}
+          </h2>
+          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-8">
+            {lang === "ro"
+              ? "Administrăm apartamente cu cerere ridicată din partea angajaților marilor corporații din Timișoara — segment cheie pentru închirieri pe termen lung și mediu."
+              : "We manage apartments with strong demand from major corporate employers in Timișoara — a key segment for long- and mid-term rentals."}
+          </p>
+          <div className="grid sm:grid-cols-3 gap-4 text-sm">
+            <div className="p-5 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-1">{lang === "ro" ? "Închirieri lângă Continental Timișoara" : "Rentals near Continental Timișoara"}</h3>
+              <p className="text-muted-foreground">{lang === "ro" ? "Calea Aradului, Ghiroda — 5–15 min de fabrica Continental." : "Calea Aradului, Ghiroda — 5–15 min from the Continental plant."}</p>
+            </div>
+            <div className="p-5 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-1">{lang === "ro" ? "Apartamente aproape de Hella" : "Apartments near Hella"}</h3>
+              <p className="text-muted-foreground">{lang === "ro" ? "Zona Aeroport / Ghiroda — convenabil pentru R&D Hella." : "Airport / Ghiroda area — convenient for Hella R&D staff."}</p>
+            </div>
+            <div className="p-5 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-1">{lang === "ro" ? "Cazare lângă Draxlmaier" : "Stays near Draxlmaier"}</h3>
+              <p className="text-muted-foreground">{lang === "ro" ? "Pol industrial est — chiriași stabili pe termen lung." : "Eastern industrial pole — stable long-term tenants."}</p>
+            </div>
+          </div>
+          <p className="text-center text-xs text-muted-foreground mt-6">
+            {lang === "ro"
+              ? "Solicită o ofertă preț administrare apartament personalizată pentru zona ta — răspundem în 24h."
+              : "Request a custom apartment management pricing offer for your area — we reply within 24h."}
+          </p>
+        </div>
+      </section>
+
       {/* Guarantees */}
-      <section className="py-16 bg-muted/30">
+      <section id="garantii" className="py-16 bg-muted/30 scroll-mt-24">
         <div className="container mx-auto px-6 max-w-5xl">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-10">
             {lang === "ro" ? "Garanțiile noastre" : "Our guarantees"}
@@ -442,7 +539,7 @@ const Preturi = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
+      <section id="evaluare" className="py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 scroll-mt-24">
         <div className="container mx-auto px-6 text-center max-w-2xl">
           <h2 className="text-3xl font-serif font-bold text-foreground mb-4">
             {lang === "ro" ? "Evaluare gratuită pentru proprietatea ta" : "Free evaluation for your property"}
@@ -468,7 +565,7 @@ const Preturi = () => {
       </section>
 
       {/* FAQ — pricing & costs */}
-      <section className="py-16 bg-background">
+      <section id="faq" className="py-16 bg-background scroll-mt-24">
         <div className="container mx-auto px-6 max-w-3xl">
           <div className="flex items-center gap-2 mb-6">
             <HelpCircle className="w-5 h-5 text-primary" />
