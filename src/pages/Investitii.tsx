@@ -144,6 +144,60 @@ const Investitii = () => {
 
   const t = texts[language as keyof typeof texts] || texts.ro;
 
+  const faqItems = language === "ro" ? [
+    {
+      question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
+      answer: "Pentru regim hotelier administrat de RealTrust, randamentul net mediu este de 9.4% anual, verificat pe portofoliul nostru de peste 50 de proprietăți. În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+    },
+    {
+      question: "Care sunt cele mai bune zone pentru investiții imobiliare în Timișoara?",
+      answer: "Zonele cu cel mai mare potențial sunt: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți + Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
+    },
+    {
+      question: "Cât capital am nevoie pentru o investiție la cheie în Timișoara?",
+      answer: "Pentru o garsonieră în regim hotelier la cheie (achiziție + amenajare + dotare): între 60.000 € și 85.000 €. Pentru un apartament 2 camere: 95.000 € – 130.000 €. Includem amenajarea completă, mobilier, electrocasnice și fotografii profesionale.",
+    },
+    {
+      question: "Ce taxe notariale și de tranzacție am la cumpărarea unui apartament?",
+      answer: "Taxele notariale variază între 0.4% și 1.6% din prețul tranzacției (degresiv). Adăugați aproximativ 0.5% pentru intabulare la Cartea Funciară și impozit pe transfer (1% pentru proprietăți peste 450.000 lei deținute mai puțin de 3 ani). Total estimat: 1.5–2.5% din preț.",
+    },
+    {
+      question: "Cum funcționează serviciul de investiție imobiliară la cheie?",
+      answer: "RealTrust gestionează întregul proces: identificarea proprietății potrivite, due diligence, negociere preț, asistență la actul notarial, amenajarea și dotarea apartamentului, listarea pe Booking/Airbnb și administrarea operațională. Tu doar semnezi și încasezi raportul lunar.",
+    },
+    {
+      question: "Care este evoluția prețurilor imobiliare în Timișoara?",
+      answer: "În ultimii 5 ani, prețurile au crescut cu aproximativ 35-45% în zonele centrale (ISHO, Centrul Istoric) și cu 50-60% în zonele metropolitane (Dumbrăvița, Giroc, Chișoda). Pentru 2026 estimăm o creștere moderată de 5-8%, cu cel mai bun potențial în Iosefin și Complex Studențesc.",
+    },
+  ] : [
+    {
+      question: "What is the average yield for a real estate investment in Timișoara?",
+      answer: "For hotel-style management by RealTrust, the average net yield is 9.4% per year, verified across our portfolio of 50+ properties. Classic long-term rentals in Timișoara typically yield 4-5% net.",
+    },
+    {
+      question: "What are the best areas for real estate investment in Timișoara?",
+      answer: "Highest potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
+    },
+    {
+      question: "How much capital do I need for a turnkey investment in Timișoara?",
+      answer: "Studio in turnkey hotel-style (purchase + renovation + furnishing): €60,000–€85,000. 2-room apartment: €95,000–€130,000. We include full renovation, furniture, appliances and professional photography.",
+    },
+    {
+      question: "What notary and transaction fees apply when buying an apartment?",
+      answer: "Notary fees range 0.4–1.6% of transaction price (degressive). Add ~0.5% for Land Registry and transfer tax (1% for properties over 450,000 RON owned less than 3 years). Total estimate: 1.5–2.5% of price.",
+    },
+    {
+      question: "How does the turnkey real estate investment service work?",
+      answer: "RealTrust manages the entire process: property sourcing, due diligence, price negotiation, notary support, full renovation and furnishing, listing on Booking/Airbnb and operational management. You just sign and collect the monthly report.",
+    },
+    {
+      question: "What is the price trend for Timișoara real estate?",
+      answer: "Last 5 years: prices grew ~35-45% in central areas (ISHO, Historic Center) and 50-60% in metropolitan areas (Dumbrăvița, Giroc, Chișoda). For 2026 we forecast moderate 5-8% growth, with best upside in Iosefin and Student Complex.",
+    },
+  ];
+
+  useRegisterFAQs("investitii-page", faqItems);
+
   const breadcrumbItems = [{ label: t.title }];
 
   const formatCurrency = (value: number | null) => {
