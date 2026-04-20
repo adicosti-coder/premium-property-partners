@@ -214,7 +214,96 @@ const CatalogInvestitii = () => {
     guests: isRo ? "persoane" : "guests",
     reviews: isRo ? "recenzii" : "reviews",
     investment: isRo ? "Capital" : "Investment",
+    tocTitle: isRo ? "Cuprins" : "Table of Contents",
+    marketTitle: isRo ? "Piața imobiliară Timișoara — analiză 2026" : "Timișoara real estate market — 2026 analysis",
+    faqTitle: isRo ? "Întrebări frecvente despre investiții imobiliare" : "Frequently asked questions about real estate investments",
   };
+
+  const tocItems = isRo
+    ? [
+        { id: "why", label: "De ce Timișoara" },
+        { id: "market", label: "Piața imobiliară & prețuri" },
+        { id: "properties", label: "Proprietăți de vânzare" },
+        { id: "portfolio", label: "Portofoliu activ" },
+        { id: "comparison", label: "Comparație ROI" },
+        { id: "faq", label: "Întrebări frecvente" },
+      ]
+    : [
+        { id: "why", label: "Why Timișoara" },
+        { id: "market", label: "Market & prices" },
+        { id: "properties", label: "Properties for sale" },
+        { id: "portfolio", label: "Active portfolio" },
+        { id: "comparison", label: "ROI comparison" },
+        { id: "faq", label: "FAQ" },
+      ];
+
+  const faqItems = isRo
+    ? [
+        {
+          question: "Care sunt prețurile apartamentelor în Timișoara în 2026?",
+          answer:
+            "Prețurile apartamentelor din Timișoara variază între 1.500–2.000 EUR/mp în zonele periferice (Mehala, Plopi) și 2.300–3.200 EUR/mp în zonele premium (Centru, ISHO, Iulius Town, Complex Studențesc). În ansamblurile noi precum ATENEO, City of Mara, Adora Forest, Vivalia sau Nord One, prețurile pornesc de la 1.900 EUR/mp în Dumbrăvița, Giroc și Ghiroda.",
+        },
+        {
+          question: "Există terenuri de vânzare în Timișoara și zonele metropolitane?",
+          answer:
+            "Da, oferim consultanță pentru terenuri în Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda și Săcălaz, cu prețuri între 60–180 EUR/mp în funcție de utilități, PUZ și zonificare. Sunt ideale pentru dezvoltatori sau investitori care construiesc case sau mici ansambluri de închiriat.",
+        },
+        {
+          question: "Ce ROI pot obține din investiții în regim hotelier vs. chirie clasică?",
+          answer:
+            "Apartamentele administrate în regim hotelier de RealTrust generează ROI net verificat de 8–11% (mediu 9.4%), comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Diferența anuală pentru un apartament de 140.000 EUR este de aproximativ +8.340 EUR.",
+        },
+        {
+          question: "Care este structura de comision RealTrust?",
+          answer:
+            "Pentru tranzacții de vânzare/cumpărare comisionul standard este 2% (negociabil). Pentru administrarea în regim hotelier reținem 20% din venitul brut, fără costuri ascunse — totul este transparent în raportul lunar.",
+        },
+        {
+          question: "Cum funcționează creditul ipotecar pentru o investiție imobiliară?",
+          answer:
+            "Colaborăm cu brokeri locali care obțin pre-aprobări în 48h, cu avans 15–25%, dobânzi fixe sau variabile (IRCC + 2–3%) și perioade de 25–30 ani. Pentru investiții, banca evaluează venitul estimat din chirie ca venit suplimentar.",
+        },
+        {
+          question: "Care sunt avantajele zonelor cu parcuri industriale (Continental, Hella, VGP, WDP, Incontro)?",
+          answer:
+            "Cartierele Aradului, Calea Torontalului și Ghiroda beneficiază de cerere constantă de chirie din partea angajaților relocați la Continental, Hella, VGP, WDP, Incontro și Linde. Proprietățile aici au ocupare 95%+ și sunt ideale pentru închiriere medii și lungi.",
+        },
+      ]
+    : [
+        {
+          question: "What are apartment prices in Timișoara in 2026?",
+          answer:
+            "Timișoara apartment prices range from 1,500–2,000 EUR/sqm in outer areas (Mehala, Plopi) up to 2,300–3,200 EUR/sqm in premium zones (Centru, ISHO, Iulius Town, Student Complex). New developments like ATENEO, City of Mara, Adora Forest, Vivalia or Nord One start from 1,900 EUR/sqm in Dumbrăvița, Giroc and Ghiroda.",
+        },
+        {
+          question: "Are there land plots for sale in Timișoara and metro area?",
+          answer:
+            "Yes, we advise on plots in Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda and Săcălaz, with prices 60–180 EUR/sqm depending on utilities, PUZ and zoning. Ideal for developers or investors building houses or small rental complexes.",
+        },
+        {
+          question: "What ROI can I get from hotel-style vs. classic rental?",
+          answer:
+            "Apartments managed in hotel-style by RealTrust generate verified net ROI of 8–11% (average 9.4%), versus 3–4% on long-term classic rental. The yearly difference for a 140,000 EUR apartment is approximately +8,340 EUR.",
+        },
+        {
+          question: "What is RealTrust's commission structure?",
+          answer:
+            "Sale/purchase transactions: standard 2% commission (negotiable). Hotel-style management: 20% of gross revenue, with no hidden costs — fully transparent in the monthly report.",
+        },
+        {
+          question: "How does a mortgage work for a real estate investment?",
+          answer:
+            "We work with local brokers who get pre-approval in 48h, with 15–25% down payment, fixed or variable rates (IRCC + 2–3%) and 25–30 year terms. For investments, the bank counts estimated rental income as additional income.",
+        },
+        {
+          question: "What are the benefits of areas near industrial parks (Continental, Hella, VGP, WDP, Incontro)?",
+          answer:
+            "Aradului, Calea Torontalului and Ghiroda neighborhoods benefit from constant rental demand from employees relocated to Continental, Hella, VGP, WDP, Incontro and Linde. Properties here have 95%+ occupancy and are ideal for medium and long-term rentals.",
+        },
+      ];
+
+  useRegisterFAQs("catalog-investitii", faqItems);
 
   const reasons = isRo
     ? [
