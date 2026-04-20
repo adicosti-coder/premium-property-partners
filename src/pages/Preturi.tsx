@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CheckCircle2, X, MessageCircle, ArrowRight, TrendingUp, Shield, Star, Zap } from "lucide-react";
+import { CheckCircle2, X, MessageCircle, ArrowRight, TrendingUp, Shield, Star, Zap, HelpCircle } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -9,6 +9,8 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 
 const packages = {
