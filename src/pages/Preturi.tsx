@@ -565,7 +565,7 @@ const Preturi = () => {
       </section>
 
       {/* FAQ — pricing & costs */}
-      <section className="py-16 bg-background">
+      <section id="faq" className="py-16 bg-background scroll-mt-24">
         <div className="container mx-auto px-6 max-w-3xl">
           <div className="flex items-center gap-2 mb-6">
             <HelpCircle className="w-5 h-5 text-primary" />
