@@ -85,6 +85,24 @@ const HOMEPAGE_SEO_BODY = `
 
   <h3>Cazare evenimente Timișoara — FEST-FDR, Festivalul Inimilor și conferințe</h3>
   <p>Cazare pentru evenimente locale majore: <strong>cazare FEST-FDR Timișoara</strong> (Festivalul European al Spectacolului), <strong>apartamente închiriere Festivalul Inimilor</strong>, Timișoara Jazz Festival, Plai Festival, Revolution Festival și conferințe medicale UMF — apartamente disponibile cu rezervare anticipată în Centru, Iosefin și Complex Studențesc.</p>
+
+  <h3>Zona metropolitană extinsă — Giarmata Vii, Săcălaz, Moșnița Nouă, Ghiroda</h3>
+  <p>Acoperim întreaga zonă metropolitană Timișoara, inclusiv comunele în expansiune rapidă: <strong>imobiliare Giarmata Vii</strong> (case noi și ansambluri rezidențiale lângă Aeroportul „Traian Vuia", profil cumpărători tineri profesioniști IT și piloți Wizz Air / TAROM), <strong>case Moșnița Nouă</strong>, <strong>apartamente Ghiroda</strong> și <strong>terenuri intravilane Săcălaz</strong>. Aceste zone metropolitane oferă raport calitate-preț excelent (1.350–1.680 €/mp), clasa A energetică și acces direct la centura Timișoara.</p>
+
+  <h3>Hub-uri de business Timișoara — Olympia Business Park, Vox Park, City Business Centre</h3>
+  <p>Apartamente regim hotelier și închirieri corporate lângă cele mai importante hub-uri de business din Timișoara: <strong>Olympia Business Park</strong> (zona de nord, sediu pentru companii multinaționale și relocări corporate pe termen mediu), <strong>Vox Park</strong>, Iulius Town &amp; Openville, City Business Centre (ISHO), Continental Automotive (Calea Aradului) și Nokia Campus. Proprietățile noastre acomodează business travelers cu sejururi de 1–4 săptămâni, expați și echipe de proiect.</p>
+
+  <h3>Bulevardul Vasile Pârvan — închirieri studenți Complex Studențesc</h3>
+  <p><strong>Închirieri apartamente studenți Bulevardul Vasile Pârvan</strong> — artera principală care traversează Complexul Studențesc Timișoara, oferind acces direct (sub 5 minute pe jos) la UVT — Universitatea de Vest, Politehnica Timișoara (UPT) și UMF „Victor Babeș". Apartamente cu 1, 2 și 3 camere mobilate, contracte 9–12 luni cu utilități incluse, internet de mare viteză și verificare proprietar pentru siguranța studenților și părinților.</p>
+
+  <h3>Randament chirie Timișoara — comparație termen lung vs regim hotelier</h3>
+  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>ROI net verificat de 9.4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
+
+  <h3>Evaluator ANEVAR Timișoara — evaluări oficiale acreditate</h3>
+  <p>Pentru tranzacțiile bancare, succesiuni, partaje sau credite ipotecare colaborăm cu <strong>evaluator ANEVAR Timișoara</strong> acreditat (Asociația Națională a Evaluatorilor Autorizați din România). Rapoarte de evaluare oficiale acceptate de toate băncile (BCR, BRD, Raiffeisen, ING, Banca Transilvania), notari și instanțe — livrare 3–5 zile lucrătoare, prețuri transparente.</p>
+
+  <h3>Piața imobiliară Timișoara — evoluție și analize trimestriale</h3>
+  <p>Monitorizăm continuu <strong>piața imobiliară Timișoara evoluție</strong>: rapoarte trimestriale pe micro-zone (ISHO, Complex Studențesc, Iosefin, Dumbrăvița, Giroc), date despre prețul mediu pe metru pătrat, randamentul chiriilor, viteza de tranzacționare și impactul proiectelor majore (Iulius Town, Openville, Parcul Industrial Timișoara). Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței imobiliare Timișoara</a>.</p>
 `;
 
 const BASE_URL = 'https://www.realtrust.ro';
