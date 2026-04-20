@@ -1155,7 +1155,7 @@ const AIChatbot = () => {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12"
+                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
                         disabled={isLoading}
                         maxLength={2000}
                       />
