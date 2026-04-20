@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, TrendingUp, Building2, ArrowRight, Loader2 } from "lucide-react";
+import { MapPin, TrendingUp, Building2, ArrowRight, Loader2, Calculator, LineChart, TreePine, HelpCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -8,6 +8,8 @@ import BackToTop from "@/components/BackToTop";
 import RealPropertyCard from "@/components/RealPropertyCard";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { lazy, Suspense } from "react";
 
 
