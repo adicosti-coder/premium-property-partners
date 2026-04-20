@@ -310,6 +310,61 @@ const EvaluareGratuita = () => {
           </section>
 
           <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">Cât valorează apartamentul meu din Timișoara?</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Pentru a răspunde rapid la întrebarea <strong>„cât valorează apartamentul meu”</strong>, RealTrust
+              folosește o bază de date proprie cu prețuri de tranzacționare reale (nu prețuri de listare) din
+              ultimele 6-12 luni, segmentate pe cartier și tip de imobil. Pentru o{" "}
+              <strong>estimare preț apartament Timișoara</strong> corectă contează cartierul (un 2 camere în
+              Circumvalațiunii nu valorează cât unul în Complex Studențesc), anul construcției, finisajele,
+              etajul și expunerea. Livrabilul este un <strong>raport de evaluare proprietate</strong> sintetic
+              în PDF, cu interval min/mediu/max recomandat pentru listare.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground">Exemple de evaluări recente în Timișoara</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {[
+                {
+                  title: "Apartament 2 camere · Circumvalațiunii",
+                  details: "55 mp utili, etaj 3/4, renovat 2022, centrală proprie",
+                  price: "€95.000 – €105.000",
+                  factors: "Evaluare apartament Circumvalațiunii — cerere ridicată, finisaje moderne",
+                },
+                {
+                  title: "Casă individuală · Dumbrăvița",
+                  details: "P+1, 140 mp, teren 400 mp, an 2018",
+                  price: "€235.000 – €260.000",
+                  factors: "Estimare preț casă Dumbrăvița — zonă metropolitană în expansiune",
+                },
+                {
+                  title: "Apartament 3 camere · ISHO",
+                  details: "78 mp, etaj 5, vedere Bega, complet mobilat",
+                  price: "€155.000 – €172.000",
+                  factors: "Premium, randament regim hotelier 8-10%",
+                },
+                {
+                  title: "Apartament 2 camere · Complex Studențesc",
+                  details: "48 mp, etaj 2, semi-renovat, lângă UVT",
+                  price: "€78.000 – €88.000",
+                  factors: "Cerere studenți, randament chirie clasică ridicat",
+                },
+              ].map((c) => (
+                <div key={c.title} className="rounded-xl border border-border bg-card p-4 space-y-1.5">
+                  <h3 className="font-semibold text-foreground text-sm">{c.title}</h3>
+                  <p className="text-xs text-muted-foreground">{c.details}</p>
+                  <p className="text-primary font-bold text-sm">{c.price}</p>
+                  <p className="text-[11px] text-muted-foreground italic">Factori: {c.factors}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Date anonimizate, exemple ilustrative din portofoliul RealTrust 2025-2026.
+            </p>
+          </section>
+
+          <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">Întrebări frecvente despre evaluarea proprietății</h2>
             <Accordion type="single" collapsible className="w-full">
               {EVAL_FAQS.map((faq, i) => (
