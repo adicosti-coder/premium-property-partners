@@ -4,7 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import vitePrerenderSeo from "./plugins/vite-prerender-seo";
-// Note: viteAsyncCss removed — caused FOUC/CLS regression in PageSpeed.
+import viteAsyncCss from "./plugins/vite-async-css";
 
 const normalizeEnvValue = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
@@ -57,7 +57,9 @@ export default defineConfig(({ mode }) => {
         webp: { quality: 35, effort: 6 },
         avif: { quality: 30, effort: 6 },
       }),
-      // viteAsyncCss removed — caused FOUC/CLS in PageSpeed mobile.
+      // Async CSS — main stylesheet preloaded then swapped to stylesheet on load.
+      // Critical above-the-fold CSS is inlined in index.html so no FOUC occurs.
+      mode === "production" && viteAsyncCss(),
       mode === "production" && vitePrerenderSeo(),
     ].filter(Boolean),
     resolve: {
@@ -84,6 +86,11 @@ export default defineConfig(({ mode }) => {
               if (id.includes("@tanstack/react-query")) return "vendor-query";
               if (id.includes("embla-carousel")) return "vendor-embla";
               if (id.includes("mapbox-gl")) return "vendor-mapbox";
+              // Isolate framer-motion (~60KB) — only loaded by below-the-fold
+              // components, must NOT be in the eager LCP bundle.
+              if (id.includes("framer-motion")) return "vendor-motion";
+              // Isolate lucide-react icons (~50KB tree-shaken) — same rationale.
+              if (id.includes("lucide-react")) return "vendor-icons";
               // Group all Radix UI primitives together — keeps HTTP requests low
               if (id.includes("@radix-ui/")) return "vendor-radix";
               return undefined;
