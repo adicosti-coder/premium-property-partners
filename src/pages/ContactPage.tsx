@@ -148,7 +148,7 @@ const ContactPage = () => {
               <li><a href="#de-ce-realtrust" className="text-primary hover:underline">{isRo ? "De ce RealTrust" : "Why RealTrust"}</a></li>
             </ul>
           </nav>
-          <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          <section id="contact-rapid" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 scroll-mt-24">
             <a href="tel:+40723154520" className="flex flex-col items-center p-6 bg-card border rounded-2xl hover:border-primary/50 transition-colors group">
               <Phone className="w-8 h-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
               <span className="font-semibold mb-1">{isRo ? "Telefon" : "Phone"}</span>
@@ -172,7 +172,7 @@ const ContactPage = () => {
           </section>
 
           {/* Map + Address */}
-          <section className="grid lg:grid-cols-2 gap-8 mb-16">
+          <section id="sediu" className="grid lg:grid-cols-2 gap-8 mb-16 scroll-mt-24">
             <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
               <iframe
                 src={`https://maps.google.com/maps?q=${GOOGLE_MAPS_QUERY}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
