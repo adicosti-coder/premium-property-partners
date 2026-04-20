@@ -750,10 +750,12 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // Use `inert` (not aria-hidden) so focusable descendants like <a> are properly removed
   // from the accessibility tree and tab order — fixes Lighthouse "aria-hidden with focusable
   // descendants" rule.
-  // Only inject H1 for the homepage (where Hero may not be hydrated yet for non-JS crawlers).
-  // For all other routes, the React page renders its own H1 — injecting another would create duplicate H1s.
+  // Inject H1 for routes that don't reliably render one in the static shell
+  // (homepage + neighborhood landing pages). React hydration replaces #root
+  // content but the inert SEO div outside #root remains for crawlers.
   const isHomepage = route.path === '/' || route.path === '';
-  const headingTag = isHomepage ? 'h1' : 'h2';
+  const isNeighborhood = route.path.startsWith('/imobiliare-timisoara/');
+  const headingTag = (isHomepage || isNeighborhood) ? 'h1' : 'h2';
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
