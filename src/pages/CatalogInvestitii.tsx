@@ -493,7 +493,32 @@ const CatalogInvestitii = () => {
                 </div>
               </div>
 
-              <section className="max-w-5xl mx-auto px-4 py-16 md:py-24">
+              {/* Table of Contents */}
+              <nav
+                aria-label={t.tocTitle}
+                className="max-w-5xl mx-auto px-4 pt-10"
+              >
+                <div className="rounded-2xl border border-border bg-muted/30 p-5">
+                  <div className="flex items-center gap-2 mb-3 text-foreground font-semibold">
+                    <List className="w-4 h-4 text-primary" />
+                    {t.tocTitle}
+                  </div>
+                  <ul className="flex flex-wrap gap-2 text-sm">
+                    {tocItems.map((item) => (
+                      <li key={item.id}>
+                        <a
+                          href={`#${item.id}`}
+                          className="inline-flex items-center px-3 py-1.5 rounded-full bg-card border border-border hover:border-primary/40 hover:text-primary transition-colors text-muted-foreground"
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </nav>
+
+              <section id="why" className="max-w-5xl mx-auto px-4 py-16 md:py-24 scroll-mt-24">
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
                   {t.whyTitle}
                 </h2>
