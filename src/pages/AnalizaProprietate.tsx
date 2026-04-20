@@ -110,8 +110,8 @@ const AnalizaProprietate = () => {
       photosHint: "Adaugă fotografii pentru o analiză vizuală suplimentară",
     },
     en: {
-      pageTitle: "AI Property Analysis | RealTrust",
-      pageDesc: "Analyze your property potential with AI. Score, estimated ROI and personalized recommendations.",
+      pageTitle: "AI Property Analysis Timișoara | Valuation & Real Estate Consulting",
+      pageDesc: "Free AI analysis for Timișoara real estate market: apartment valuation, ROI score, personalized real estate consulting for short-term rental, sales and long-term rentals.",
       heroTitle: "AI Property",
       heroHighlight: "Analysis",
       heroSubtitle: "Intelligent scoring, estimated ROI and personalized recommendations in real-time.",
