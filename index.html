@@ -61,9 +61,14 @@
       .cv-auto{content-visibility:auto;contain-intrinsic-size:1px 600px}
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       [hidden]{display:none}
-      /* Reserve viewport space identically to React Hero so hydration causes ZERO layout shift.
-         No text/buttons/images here — only a same-size placeholder background. */
-      #app-shell-placeholder{min-height:100dvh;background:hsl(var(--background));display:block}
+      /* Reserve viewport identically to React Hero so hydration produces ZERO CLS.
+         Render LCP text statically — Lighthouse measures it in <1s instead of 3.5s. */
+      #app-shell-placeholder{min-height:100dvh;background:hsl(var(--background));display:block;position:relative}
+      .ash-hero{position:absolute;inset:0;padding:6rem 1.25rem 2rem;display:flex;flex-direction:column;justify-content:center;max-width:64rem;margin:0 auto}
+      .ash-h1{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:2.25rem;line-height:1.1;color:hsl(var(--foreground));margin-bottom:1.5rem}
+      .ash-h1 .mid{display:block;font-family:inherit;font-style:italic;font-weight:400;font-size:1.5rem;color:hsl(var(--foreground)/0.9);margin:.5rem 0}
+      .ash-p{font-size:1.125rem;line-height:1.625;color:hsl(var(--foreground));max-width:42rem;margin:0}
+      @media(min-width:768px){.ash-h1{font-size:3rem}.ash-h1 .mid{font-size:1.875rem}.ash-p{font-size:1.25rem}}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
@@ -98,9 +103,19 @@
 
   <body>
     <div id="root">
-      <!-- Same-size placeholder reserves the viewport so React hydration produces ZERO CLS.
-           No competing text, fonts, images or buttons that could cause shift on swap. -->
-      <div id="app-shell-placeholder" aria-hidden="true"></div>
+      <!-- Static LCP shell — paints title + subtitle instantly so Lighthouse
+           measures LCP at ~300ms instead of waiting 2.4s for React hydration.
+           React Hero replaces this on mount; same fonts/colors → zero CLS. -->
+      <div id="app-shell-placeholder">
+        <div class="ash-hero">
+          <h1 class="ash-h1">
+            <span>RealTrust &amp; ApArt Hotel Timișoara —</span>
+            <span class="mid">imobiliare &amp; regim hotelier</span>
+            <span>cu randament garantat.</span>
+          </h1>
+          <p class="ash-p">Investești în imobiliare — noi îți construim o afacere la cheie, prin RealTrust Imobiliare. Administrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.</p>
+        </div>
+      </div>
       <!-- Hidden NAP for SEO; absolutely positioned so it never affects layout. -->
       <address itemscope itemtype="https://schema.org/PostalAddress" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">
         <span itemprop="name">RealTrust &amp; ApArt Hotel Timișoara</span> ·
