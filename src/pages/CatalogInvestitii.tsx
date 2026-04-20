@@ -11,11 +11,13 @@ import SEOFooterText from "@/components/SEOFooterText";
 import BackToTop from "@/components/BackToTop";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { toast } from "sonner";
 import {
   TrendingUp, Building, Star, ArrowRight, Download, MapPin,
   BedDouble, Bath, Users, Euro, CheckCircle2, Shield, BarChart3,
-  Sparkles, Lock, Mail, Award, Flame, Plane,
+  Sparkles, Lock, Mail, Award, Flame, Plane, List, HelpCircle, TreePine, Factory,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList,
@@ -212,7 +214,96 @@ const CatalogInvestitii = () => {
     guests: isRo ? "persoane" : "guests",
     reviews: isRo ? "recenzii" : "reviews",
     investment: isRo ? "Capital" : "Investment",
+    tocTitle: isRo ? "Cuprins" : "Table of Contents",
+    marketTitle: isRo ? "Piața imobiliară Timișoara — analiză 2026" : "Timișoara real estate market — 2026 analysis",
+    faqTitle: isRo ? "Întrebări frecvente despre investiții imobiliare" : "Frequently asked questions about real estate investments",
   };
+
+  const tocItems = isRo
+    ? [
+        { id: "why", label: "De ce Timișoara" },
+        { id: "market", label: "Piața imobiliară & prețuri" },
+        { id: "properties", label: "Proprietăți de vânzare" },
+        { id: "portfolio", label: "Portofoliu activ" },
+        { id: "comparison", label: "Comparație ROI" },
+        { id: "faq", label: "Întrebări frecvente" },
+      ]
+    : [
+        { id: "why", label: "Why Timișoara" },
+        { id: "market", label: "Market & prices" },
+        { id: "properties", label: "Properties for sale" },
+        { id: "portfolio", label: "Active portfolio" },
+        { id: "comparison", label: "ROI comparison" },
+        { id: "faq", label: "FAQ" },
+      ];
+
+  const faqItems = isRo
+    ? [
+        {
+          question: "Care sunt prețurile apartamentelor în Timișoara în 2026?",
+          answer:
+            "Prețurile apartamentelor din Timișoara variază între 1.500–2.000 EUR/mp în zonele periferice (Mehala, Plopi) și 2.300–3.200 EUR/mp în zonele premium (Centru, ISHO, Iulius Town, Complex Studențesc). În ansamblurile noi precum ATENEO, City of Mara, Adora Forest, Vivalia sau Nord One, prețurile pornesc de la 1.900 EUR/mp în Dumbrăvița, Giroc și Ghiroda.",
+        },
+        {
+          question: "Există terenuri de vânzare în Timișoara și zonele metropolitane?",
+          answer:
+            "Da, oferim consultanță pentru terenuri în Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda și Săcălaz, cu prețuri între 60–180 EUR/mp în funcție de utilități, PUZ și zonificare. Sunt ideale pentru dezvoltatori sau investitori care construiesc case sau mici ansambluri de închiriat.",
+        },
+        {
+          question: "Ce ROI pot obține din investiții în regim hotelier vs. chirie clasică?",
+          answer:
+            "Apartamentele administrate în regim hotelier de RealTrust generează ROI net verificat de 8–11% (mediu 9.4%), comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Diferența anuală pentru un apartament de 140.000 EUR este de aproximativ +8.340 EUR.",
+        },
+        {
+          question: "Care este structura de comision RealTrust?",
+          answer:
+            "Pentru tranzacții de vânzare/cumpărare comisionul standard este 2% (negociabil). Pentru administrarea în regim hotelier reținem 20% din venitul brut, fără costuri ascunse — totul este transparent în raportul lunar.",
+        },
+        {
+          question: "Cum funcționează creditul ipotecar pentru o investiție imobiliară?",
+          answer:
+            "Colaborăm cu brokeri locali care obțin pre-aprobări în 48h, cu avans 15–25%, dobânzi fixe sau variabile (IRCC + 2–3%) și perioade de 25–30 ani. Pentru investiții, banca evaluează venitul estimat din chirie ca venit suplimentar.",
+        },
+        {
+          question: "Care sunt avantajele zonelor cu parcuri industriale (Continental, Hella, VGP, WDP, Incontro)?",
+          answer:
+            "Cartierele Aradului, Calea Torontalului și Ghiroda beneficiază de cerere constantă de chirie din partea angajaților relocați la Continental, Hella, VGP, WDP, Incontro și Linde. Proprietățile aici au ocupare 95%+ și sunt ideale pentru închiriere medii și lungi.",
+        },
+      ]
+    : [
+        {
+          question: "What are apartment prices in Timișoara in 2026?",
+          answer:
+            "Timișoara apartment prices range from 1,500–2,000 EUR/sqm in outer areas (Mehala, Plopi) up to 2,300–3,200 EUR/sqm in premium zones (Centru, ISHO, Iulius Town, Student Complex). New developments like ATENEO, City of Mara, Adora Forest, Vivalia or Nord One start from 1,900 EUR/sqm in Dumbrăvița, Giroc and Ghiroda.",
+        },
+        {
+          question: "Are there land plots for sale in Timișoara and metro area?",
+          answer:
+            "Yes, we advise on plots in Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda and Săcălaz, with prices 60–180 EUR/sqm depending on utilities, PUZ and zoning. Ideal for developers or investors building houses or small rental complexes.",
+        },
+        {
+          question: "What ROI can I get from hotel-style vs. classic rental?",
+          answer:
+            "Apartments managed in hotel-style by RealTrust generate verified net ROI of 8–11% (average 9.4%), versus 3–4% on long-term classic rental. The yearly difference for a 140,000 EUR apartment is approximately +8,340 EUR.",
+        },
+        {
+          question: "What is RealTrust's commission structure?",
+          answer:
+            "Sale/purchase transactions: standard 2% commission (negotiable). Hotel-style management: 20% of gross revenue, with no hidden costs — fully transparent in the monthly report.",
+        },
+        {
+          question: "How does a mortgage work for a real estate investment?",
+          answer:
+            "We work with local brokers who get pre-approval in 48h, with 15–25% down payment, fixed or variable rates (IRCC + 2–3%) and 25–30 year terms. For investments, the bank counts estimated rental income as additional income.",
+        },
+        {
+          question: "What are the benefits of areas near industrial parks (Continental, Hella, VGP, WDP, Incontro)?",
+          answer:
+            "Aradului, Calea Torontalului and Ghiroda neighborhoods benefit from constant rental demand from employees relocated to Continental, Hella, VGP, WDP, Incontro and Linde. Properties here have 95%+ occupancy and are ideal for medium and long-term rentals.",
+        },
+      ];
+
+  useRegisterFAQs("catalog-investitii", faqItems);
 
   const reasons = isRo
     ? [
@@ -402,7 +493,32 @@ const CatalogInvestitii = () => {
                 </div>
               </div>
 
-              <section className="max-w-5xl mx-auto px-4 py-16 md:py-24">
+              {/* Table of Contents */}
+              <nav
+                aria-label={t.tocTitle}
+                className="max-w-5xl mx-auto px-4 pt-10"
+              >
+                <div className="rounded-2xl border border-border bg-muted/30 p-5">
+                  <div className="flex items-center gap-2 mb-3 text-foreground font-semibold">
+                    <List className="w-4 h-4 text-primary" />
+                    {t.tocTitle}
+                  </div>
+                  <ul className="flex flex-wrap gap-2 text-sm">
+                    {tocItems.map((item) => (
+                      <li key={item.id}>
+                        <a
+                          href={`#${item.id}`}
+                          className="inline-flex items-center px-3 py-1.5 rounded-full bg-card border border-border hover:border-primary/40 hover:text-primary transition-colors text-muted-foreground"
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </nav>
+
+              <section id="why" className="max-w-5xl mx-auto px-4 py-16 md:py-24 scroll-mt-24">
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-12">
                   {t.whyTitle}
                 </h2>
@@ -425,8 +541,92 @@ const CatalogInvestitii = () => {
                 </div>
               </section>
 
+              {/* Market Analysis Section — keywords: piața imobiliară, prețuri, terenuri, Giroc, parcuri industriale, Adora Forest */}
+              <section id="market" className="bg-card border-y border-border py-16 md:py-24 scroll-mt-24">
+                <div className="max-w-5xl mx-auto px-4">
+                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4">
+                    {t.marketTitle}
+                  </h2>
+                  <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+                    {isRo
+                      ? "Analiza completă a pieței imobiliare din Timișoara: prețuri pe cartiere, ansambluri rezidențiale, terenuri și zone metropolitane."
+                      : "Complete analysis of Timișoara's real estate market: prices by neighborhood, residential developments, land plots and metropolitan areas."}
+                  </p>
+
+                  {/* Pricing grid by zone */}
+                  <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Euro className="w-5 h-5 text-primary" />
+                    {isRo ? "Prețuri apartamente Timișoara — EUR/mp (2026)" : "Timișoara apartment prices — EUR/sqm (2026)"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+                    {[
+                      { zone: isRo ? "Centru / Iosefin" : "Center / Iosefin", price: "2.500 – 3.200" },
+                      { zone: "ISHO / Iulius Town", price: "2.400 – 3.000" },
+                      { zone: isRo ? "Complex Studențesc" : "Student Complex", price: "2.300 – 2.800" },
+                      { zone: "Dumbrăvița / Ghiroda", price: "1.900 – 2.500" },
+                      { zone: "Giroc / Moșnița Nouă", price: "1.800 – 2.300" },
+                      { zone: isRo ? "Mehala / Plopi" : "Mehala / Plopi", price: "1.500 – 2.000" },
+                    ].map((row) => (
+                      <div key={row.zone} className="rounded-xl border border-border bg-background p-4">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{row.zone}</div>
+                        <div className="text-lg font-bold text-primary">€{row.price}/mp</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Residential complexes */}
+                  <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Building className="w-5 h-5 text-primary" />
+                    {isRo ? "Ansambluri rezidențiale — stadiu construcție" : "Residential developments — construction status"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-3 mb-10">
+                    {[
+                      { name: "ISHO", status: isRo ? "Finalizat — disponibil imediat" : "Completed — available now" },
+                      { name: "ATENEO", status: isRo ? "În construcție — finalizare T4 2026" : "Under construction — Q4 2026" },
+                      { name: "City of Mara", status: isRo ? "Faza 2 — finalizare T2 2026" : "Phase 2 — Q2 2026" },
+                      { name: "Adora Forest", status: isRo ? "În construcție — Dumbrăvița" : "Under construction — Dumbrăvița" },
+                      { name: "Vivalia", status: isRo ? "Pre-vânzare — livrare 2027" : "Pre-sale — 2027 delivery" },
+                      { name: "Nord One", status: isRo ? "Finalizat — apartamente cu grădină disponibile" : "Completed — garden apartments available" },
+                      { name: "GREEN FOREST", status: isRo ? "Finalizat — Dumbrăvița" : "Completed — Dumbrăvița" },
+                      { name: "FullView", status: isRo ? "Finalizat — disponibil pentru investiție" : "Completed — investment-ready" },
+                    ].map((c) => (
+                      <div key={c.name} className="rounded-xl border border-border bg-background p-4">
+                        <div className="font-bold text-foreground">{c.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{c.status}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Land + metro */}
+                  <div className="grid md:grid-cols-2 gap-6 mb-10">
+                    <div className="rounded-2xl border border-border bg-background p-6">
+                      <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                        <TreePine className="w-5 h-5 text-primary" />
+                        {isRo ? "Terenuri de vânzare Timișoara metropolitan" : "Land for sale — Timișoara metro"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {isRo
+                          ? "Oferim terenuri intravilane în Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda și Săcălaz, cu prețuri 60–180 EUR/mp. Ideale pentru construcție casă, mici ansambluri sau apartamente cu grădină."
+                          : "We offer plots in Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda and Săcălaz at 60–180 EUR/sqm. Ideal for house construction, small developments or garden apartments."}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-background p-6">
+                      <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                        <Factory className="w-5 h-5 text-primary" />
+                        {isRo ? "Parcuri industriale — cerere de chirie" : "Industrial parks — rental demand"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {isRo
+                          ? "Proximitatea față de Continental, Hella, VGP, WDP, Incontro și Linde generează cerere constantă de chirie pe Calea Aradului, Calea Torontalului și Ghiroda — ocupare 95%+."
+                          : "Proximity to Continental, Hella, VGP, WDP, Incontro and Linde drives steady rental demand on Calea Aradului, Calea Torontalului and Ghiroda — 95%+ occupancy."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               {saleProperties.length > 0 && (
-                <section className="bg-muted/30 py-16 md:py-24">
+                <section id="properties" className="bg-muted/30 py-16 md:py-24 scroll-mt-24">
                   <div className="max-w-6xl mx-auto px-4">
                     <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4">
                       {t.saleTitle}
@@ -446,7 +646,7 @@ const CatalogInvestitii = () => {
               )}
 
               {rentalProperties.length > 0 && (
-                <section className="py-16 md:py-24">
+                <section id="portfolio" className="py-16 md:py-24 scroll-mt-24">
                   <div className="max-w-6xl mx-auto px-4">
                     <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4">
                       {t.portfolioTitle}
@@ -465,7 +665,7 @@ const CatalogInvestitii = () => {
                 </section>
               )}
 
-              <section className="bg-foreground text-primary-foreground py-16 md:py-24">
+              <section id="comparison" className="bg-foreground text-primary-foreground py-16 md:py-24 scroll-mt-24">
                 <div className="max-w-4xl mx-auto px-4">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-4">
                     {t.comparisonTitle}
@@ -534,6 +734,33 @@ const CatalogInvestitii = () => {
                       {isRo ? "în favoarea regimului hotelier" : "in favor of hotel-style management"}
                     </div>
                   </motion.div>
+                </div>
+              </section>
+
+              {/* FAQ Section — generates FAQPage JSON-LD via useRegisterFAQs */}
+              <section id="faq" className="bg-muted/30 py-16 md:py-24 scroll-mt-24">
+                <div className="max-w-3xl mx-auto px-4">
+                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4 flex items-center justify-center gap-3">
+                    <HelpCircle className="w-8 h-8 text-primary" />
+                    {t.faqTitle}
+                  </h2>
+                  <p className="text-muted-foreground text-center max-w-xl mx-auto mb-10">
+                    {isRo
+                      ? "Răspunsuri la cele mai comune întrebări despre investiții imobiliare în Timișoara."
+                      : "Answers to the most common questions about real estate investments in Timișoara."}
+                  </p>
+                  <Accordion type="single" collapsible className="bg-card border border-border rounded-2xl px-6">
+                    {faqItems.map((item, i) => (
+                      <AccordionItem key={i} value={`faq-${i}`} className={i === faqItems.length - 1 ? "border-b-0" : ""}>
+                        <AccordionTrigger className="text-left text-foreground font-semibold">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground leading-relaxed">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
               </section>
 
