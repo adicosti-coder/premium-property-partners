@@ -1,6 +1,4 @@
 import React, { useEffect, lazy, Suspense, useState } from "react";
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -12,6 +10,13 @@ import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schema
 
 import StatsCounters from "@/components/StatsCounters";
 import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
+
+// Header & Hero are lazy — the static shell in index.html already paints
+// instantly as LCP. Loading the React versions eagerly was adding ~134 KiB
+// JS to the critical path and delaying LCP element render by ~5.3s.
+const Header = lazy(() => import("@/components/Header"));
+const Hero = lazy(() => import("@/components/Hero"));
+const PageSummary = lazy(() => import("@/components/PageSummary"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
