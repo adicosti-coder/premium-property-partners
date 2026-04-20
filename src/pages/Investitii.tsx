@@ -32,6 +32,10 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import InvestorGuideButton from "@/components/InvestorGuideButton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { Download, HelpCircle } from "lucide-react";
 
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
