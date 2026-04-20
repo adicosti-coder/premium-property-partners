@@ -1,15 +1,8 @@
 import type { Plugin } from "vite";
 
 /**
- * Converts the auto-injected <link rel="stylesheet"> tag into an async preload
- * pattern so it doesn't block first paint. The inline critical CSS already
- * present in <head> covers the above-the-fold hero shell, eliminating FOUC.
- *
- * Pattern:
- *   <link rel="preload" as="style" href="..." onload="this.rel='stylesheet'">
- *   <noscript><link rel="stylesheet" href="..."></noscript>
- *
- * Only runs in production builds.
+ * Makes Vite's stylesheet injection fully non-blocking and pushes hydration
+ * scripts to the end of <body> so the static shell paints first.
  */
 export default function viteAsyncCss(): Plugin {
   return {
@@ -17,12 +10,22 @@ export default function viteAsyncCss(): Plugin {
     apply: "build",
     enforce: "post",
     transformIndexHtml(html) {
-      return html.replace(
-        /<link rel="stylesheet"(?:\s+crossorigin)?\s+href="([^"]+\.css)"\s*\/?>(?!<\/noscript>)/g,
-        (_match, href) =>
-          `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">` +
-          `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
-      );
+      const moduleScripts = html.match(/<script\s+type="module"[^>]*><\/script>/g) ?? [];
+
+      let transformed = html
+        .replace(/<script\s+type="module"[^>]*><\/script>\s*/g, "")
+        .replace(
+          /<link rel="stylesheet"(?:\s+crossorigin)?\s+href="([^"]+\.css)"\s*\/?>/g,
+          (_match, href) =>
+            `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all'">` +
+            `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
+        );
+
+      if (moduleScripts.length > 0) {
+        transformed = transformed.replace("</body>", `${moduleScripts.join("\n")}\n</body>`);
+      }
+
+      return transformed;
     },
   };
 }
