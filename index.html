@@ -61,14 +61,24 @@
       .cv-auto{content-visibility:auto;contain-intrinsic-size:1px 600px}
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       [hidden]{display:none}
-      /* Reserve viewport identically to React Hero so hydration produces ZERO CLS.
-         Render LCP text statically — Lighthouse measures it in <1s instead of 3.5s. */
-      #app-shell-placeholder{min-height:100dvh;background:hsl(var(--background));display:block;position:relative}
-      .ash-hero{position:absolute;inset:0;padding:6rem 1.25rem 2rem;display:flex;flex-direction:column;justify-content:center;max-width:64rem;margin:0 auto}
-      .ash-h1{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:2.25rem;line-height:1.1;color:hsl(var(--foreground));margin-bottom:1.5rem}
-      .ash-h1 .mid{display:block;font-family:inherit;font-style:italic;font-weight:400;font-size:1.5rem;color:hsl(var(--foreground)/0.9);margin:.5rem 0}
-      .ash-p{font-size:1.125rem;line-height:1.625;color:hsl(var(--foreground));max-width:42rem;margin:0}
-      @media(min-width:768px){.ash-h1{font-size:3rem}.ash-h1 .mid{font-size:1.875rem}.ash-p{font-size:1.25rem}}
+      /* Static LCP shell that mirrors <Hero> EXACTLY so React hydration causes ZERO CLS.
+         Tailwind equivalents: section.relative.min-h-[100dvh].pt-28.md:pt-32 with absolute bg-img,
+         container.mx-auto.px-6.py-20.lg:py-32, max-w-4xl, h1.text-4xl.md:text-5xl.font-serif. */
+      #app-shell-placeholder{position:relative;min-height:100dvh;background:hsl(var(--background));overflow:hidden;display:flex;align-items:center;padding-top:7rem}
+      @media(min-width:768px){#app-shell-placeholder{padding-top:8rem}}
+      .ash-bg{position:absolute;inset:0;z-index:0}
+      .ash-bg img{width:100%;height:100%;object-fit:cover;display:block}
+      .ash-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(to right,hsl(var(--background)/.85),hsl(var(--background)/.45),transparent)}
+      .ash-container{position:relative;z-index:10;width:100%;max-width:80rem;margin:0 auto;padding:5rem 1.5rem;min-height:60vh}
+      @media(min-width:1024px){.ash-container{padding:8rem 1.5rem;min-height:50vh}}
+      .ash-inner{max-width:56rem}
+      .ash-h1{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:2.25rem;line-height:1.1;color:hsl(var(--foreground));margin-bottom:1.5rem;display:block}
+      .ash-h1>span{display:block}
+      .ash-h1 .mid{font-family:inherit;font-style:italic;font-weight:400;font-size:1.5rem;color:hsl(var(--foreground)/0.9);margin:.5rem 0}
+      .ash-h1 .pill{display:inline-flex;align-items:baseline;gap:.25rem;padding:.25rem .5rem;border-radius:.5rem;background:hsl(var(--background)/.35);border:1px solid hsl(var(--border)/.4);color:hsl(var(--primary))}
+      .ash-sub{max-width:42rem;margin:0 0 2rem;min-height:5.5rem;font-size:1.125rem;line-height:1.625;color:hsl(var(--foreground))}
+      @media(min-width:768px){.ash-h1{font-size:3rem}.ash-h1 .mid{font-size:1.875rem}.ash-sub{font-size:1.25rem;min-height:6rem}}
+      @media(min-width:1024px){.ash-h1{font-size:3.75rem}.ash-h1 .mid{font-size:2.25rem}}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
@@ -103,17 +113,22 @@
 
   <body>
     <div id="root">
-      <!-- Static LCP shell — paints title + subtitle instantly so Lighthouse
-           measures LCP at ~300ms instead of waiting 2.4s for React hydration.
-           React Hero replaces this on mount; same fonts/colors → zero CLS. -->
+      <!-- Static LCP shell — mirrors <Hero> structure & spacing so React hydration
+           is layout-identical (CLS ≈ 0). Paints H1 + LCP image at ~400ms. -->
       <div id="app-shell-placeholder">
-        <div class="ash-hero">
-          <h1 class="ash-h1">
-            <span>RealTrust &amp; ApArt Hotel Timișoara —</span>
-            <span class="mid">imobiliare &amp; regim hotelier</span>
-            <span>cu randament garantat.</span>
-          </h1>
-          <p class="ash-p">Investești în imobiliare — noi îți construim o afacere la cheie, prin RealTrust Imobiliare. Administrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.</p>
+        <div class="ash-bg">
+          <img src="/images/hero-optimized-800w.webp" alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. ROI 9.4% net verificat." width="800" height="447" fetchpriority="high" decoding="async" />
+        </div>
+        <div class="ash-overlay"></div>
+        <div class="ash-container">
+          <div class="ash-inner">
+            <h1 class="ash-h1">
+              <span>RealTrust &amp; ApArt Hotel Timișoara —</span>
+              <span class="mid">imobiliare &amp; regim hotelier</span>
+              <span><span class="pill">cu randament garantat.</span></span>
+            </h1>
+            <p class="ash-sub">Investești în imobiliare — noi îți construim o afacere la cheie, prin RealTrust Imobiliare.<br>Administrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.<br>Tu încasezi, noi ne ocupăm de tot.</p>
+          </div>
         </div>
       </div>
       <!-- Hidden NAP for SEO; absolutely positioned so it never affects layout. -->
