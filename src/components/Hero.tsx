@@ -250,11 +250,13 @@ const HeroContent = ({
     });
   return (
     <>
-      <p className="text-lg md:text-xl text-foreground max-w-2xl mb-8 leading-relaxed">
-        {subtitle.split('\n').map((line, i) => (
-          <span key={i}>{line}{i < subtitle.split('\n').length - 1 && <br />}</span>
-        ))}
-      </p>
+      <div className="max-w-2xl mb-8 min-h-[5.5rem] md:min-h-[6rem]">
+        <p className="text-lg md:text-xl text-foreground leading-relaxed">
+          {subtitle.split('\n').map((line, i) => (
+            <span key={i}>{line}{i < subtitle.split('\n').length - 1 && <br />}</span>
+          ))}
+        </p>
+      </div>
       
       {/* CTAs — gap-8 (32px) for WCAG AAA touch-target spacing on mobile */}
       <div className="flex flex-col sm:flex-row gap-8 sm:gap-4">
