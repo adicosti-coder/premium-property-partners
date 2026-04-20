@@ -142,24 +142,40 @@ const PentruOaspeti = () => {
       faqTitleHighlight: "Frecvente",
       faqItems: [
         {
+          question: "Oferiți cazare Timișoara cu parcare?",
+          answer: "Da. Toate apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) includ parcare subterană privată gratuită, securizată 24/7 — ideală pentru călători business care vizitează Continental, Hella sau parcurile industriale din nord."
+        },
+        {
+          question: "Aveți apartament cu 2 camere regim hotelier Timișoara?",
+          answer: "Da, oferim apartamente cu 2 camere în regim hotelier (ATENEO, GREEN FOREST), perfecte pentru familii sau grupuri de până la 4 persoane, cu dormitor separat, living și bucătărie completă."
+        },
+        {
+          question: "Pot rezerva cazare în Timișoara doar pentru o noapte?",
+          answer: "Da, acceptăm rezervări flexibile — de la cazare pentru o noapte până la sejururi prelungite (long stay) cu tarife preferențiale pentru 7+ nopți."
+        },
+        {
           question: "Care este ora de check-in și check-out?",
           answer: "Check-in: de la 15:00 | Check-out: până la 11:00. Pentru flexibilitate, contactează-ne în avans."
         },
         {
+          question: "Care este politica de anulare și cum se poate plăti?",
+          answer: "Acceptăm plata cu cardul (Visa, Mastercard) și transfer bancar. Politica de anulare este flexibilă pentru rezervări directe — anulare gratuită până cu 48h înainte de check-in."
+        },
+        {
           question: "Pot aduce animale de companie?",
-          answer: "Unele apartamente acceptă animale de companie. Verifică pagina proprietății sau contactează-ne."
+          answer: "Unele apartamente acceptă animale de companie (pet-friendly). Verifică pagina proprietății sau contactează-ne."
+        },
+        {
+          question: "Sunt apartamentele potrivite pentru familii cu copii?",
+          answer: "Da, suntem ideali pentru familii — apartamentele sunt aproape de Parcul Copiilor, Amazonia Aquapark și Iulius Town, cu pătuț pentru bebeluși disponibil la cerere."
         },
         {
           question: "Ce facilități sunt incluse?",
-          answer: "WiFi, Netflix, bucătărie complet echipată, mașină de spălat, produse de igienă premium și lenjerie de hotel."
+          answer: "WiFi high-speed, Netflix, AC, bucătărie complet echipată, mașină de spălat, produse de igienă premium, lenjerie de hotel și parcare subterană gratuită."
         },
         {
           question: "Cum funcționează self check-in?",
-          answer: "Primești un cod unic de acces pe email și WhatsApp cu instrucțiuni video detaliate."
-        },
-        {
-          question: "Ce se întâmplă dacă am o problemă?",
-          answer: "Suntem disponibili 24/7 pe WhatsApp și telefon. Răspundem în maxim 30 de minute."
+          answer: "Primești un cod unic de acces pe email și WhatsApp cu instrucțiuni video detaliate, disponibil 24/7."
         }
       ],
       ctaTitle: "Pregătit pentru",
@@ -250,24 +266,40 @@ const PentruOaspeti = () => {
       faqTitleHighlight: "Asked Questions",
       faqItems: [
         {
+          question: "Do you offer accommodation in Timișoara with parking?",
+          answer: "Yes. All our apartments (ATENEO, GREEN FOREST, FullView Studio, HELIOS) include free private underground parking, secured 24/7 — ideal for business travelers visiting Continental, Hella or the northern industrial parks."
+        },
+        {
+          question: "Do you have 2-bedroom short-term rental apartments in Timișoara?",
+          answer: "Yes, we offer 2-bedroom apartments (ATENEO, GREEN FOREST), perfect for families or groups of up to 4 guests, with separate bedroom, living room and full kitchen."
+        },
+        {
+          question: "Can I book accommodation in Timișoara for just one night?",
+          answer: "Yes, we accept flexible bookings — from one night to long-stay reservations with preferential rates for 7+ nights."
+        },
+        {
           question: "What are the check-in and check-out times?",
           answer: "Check-in: from 3:00 PM | Check-out: until 11:00 AM. For flexibility, contact us in advance."
         },
         {
+          question: "What is the cancellation policy and how can I pay?",
+          answer: "We accept card payments (Visa, Mastercard) and bank transfer. Flexible cancellation for direct bookings — free cancellation up to 48h before check-in."
+        },
+        {
           question: "Can I bring pets?",
-          answer: "Some apartments accept pets. Check the property page or contact us."
+          answer: "Some apartments are pet-friendly. Check the property page or contact us."
+        },
+        {
+          question: "Are the apartments suitable for families with children?",
+          answer: "Yes, we're ideal for families — apartments are close to Parcul Copiilor (Children's Park), Amazonia Aquapark and Iulius Town, with baby cots available on request."
         },
         {
           question: "What amenities are included?",
-          answer: "WiFi, Netflix, fully equipped kitchen, washing machine, premium toiletries and hotel linens."
+          answer: "High-speed WiFi, Netflix, AC, fully equipped kitchen, washing machine, premium toiletries, hotel linens and free underground parking."
         },
         {
           question: "How does self check-in work?",
-          answer: "You receive a unique access code via email and WhatsApp with detailed video instructions."
-        },
-        {
-          question: "What happens if I have a problem?",
-          answer: "We're available 24/7 on WhatsApp and phone. We respond within 30 minutes."
+          answer: "You receive a unique access code via email and WhatsApp with detailed video instructions, available 24/7."
         }
       ],
       ctaTitle: "Ready for",
@@ -289,10 +321,10 @@ const PentruOaspeti = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Cazare Regim Hotelier Timișoara | ATENEO, GREEN FOREST, FullView, HELIOS" : "Short-Term Rental Timișoara | ATENEO, GREEN FOREST, FullView, HELIOS"}
+        title={language === "ro" ? "Cazare Regim Hotelier Timișoara | Apartamente & Garsoniere" : "Short-Term Rental Timișoara | Apartments & Studios"}
         description={language === "ro" 
-          ? "Apartamente regim hotelier Timișoara lângă Iulius Mall, Amazonia Aquapark, Centrul Vechi. Parcare subterană gratuită, self check-in 24/7, bucătărie completă. Rezervă direct și economisești 5%!"
-          : "Apartments in Timișoara near Iulius Mall, Amazonia Aquapark, Old Town. Free underground parking, 24/7 self check-in, fully equipped kitchen. Book direct and save 5%!"}
+          ? "Cauți cazare în regim hotelier în Timișoara? Apartamente premium lângă UVT, Iulius Town, Aeroport și Centru. Parcare gratuită, self check-in 24/7. Rezervă direct!"
+          : "Looking for short-term rental in Timișoara? Premium apartments near UVT, Iulius Town, Airport and Old Town. Free parking, 24/7 self check-in. Book direct!"}
         url="https://www.realtrust.ro/pentru-oaspeti"
       />
       <Header />
