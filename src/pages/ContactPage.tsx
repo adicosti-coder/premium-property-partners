@@ -20,16 +20,32 @@ const ContactPage = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
 
+  const faqItems = isRo
+    ? [
+        { q: "Care este programul agenției imobiliare RealTrust din Timișoara?", a: "Sediul RealTrust din Strada Samuil Micu Nr.14, Timișoara este deschis Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
+        { q: "Ce comision percepe RealTrust pentru administrarea în regim hotelier?", a: "Comisionul standard pentru management complet (listing, check-in, curățenie, raportare) este de 20-25% din venitul brut, în funcție de pachetul ales. Toate detaliile se discută la sediul RealTrust din Timișoara sau telefonic." },
+        { q: "În ce zone din Timișoara și județul Timiș oferiți servicii?", a: "Acoperim Timișoara (Centru, Iosefin, Fabric, Elisabetin, Complex Studențesc, Iulius Town, ISHO) și zonele metropolitane: Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda. Pentru proiecte mari evaluăm și restul județului Timiș." },
+        { q: "Cum se desfășoară procesul de tranzacționare imobiliară?", a: "1) Evaluare gratuită proprietate, 2) Listare profesională cu fotografii și marketing AI, 3) Selecție cumpărători verificați, 4) Negociere și asistență notarială completă până la semnare." },
+        { q: "Aveți departamente separate pentru vânzări, închirieri și administrare?", a: "Da. Departamentul Vânzări gestionează tranzacțiile imobiliare, Departamentul Închirieri se ocupă de contracte rezidențiale pe termen lung, iar Departamentul Administrare (regim hotelier) operează portofoliul ApArt Hotel. Toate la același număr: +40 723 154 520." },
+      ]
+    : [
+        { q: "What are RealTrust office hours in Timișoara?", a: "Our office at Strada Samuil Micu Nr.14, Timișoara is open Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
+        { q: "What commission does RealTrust charge for short-term rental management?", a: "Standard full-management commission (listing, check-in, cleaning, reporting) is 20-25% of gross revenue, depending on the package. All details are discussed at our Timișoara office or by phone." },
+        { q: "Which areas in Timișoara and Timiș county do you cover?", a: "We cover Timișoara (Center, Iosefin, Fabric, Elisabetin, Student Complex, Iulius Town, ISHO) and metropolitan areas: Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda. For larger projects we also assess the rest of Timiș county." },
+        { q: "How does the real estate transaction process work?", a: "1) Free property valuation, 2) Professional listing with photos and AI marketing, 3) Verified buyer selection, 4) Negotiation and full notarial assistance through signing." },
+        { q: "Do you have separate departments for sales, rentals and management?", a: "Yes. The Sales department handles real estate transactions, the Rentals department covers long-term residential contracts, and the Management department (short-term rentals) operates the ApArt Hotel portfolio. All at the same number: +40 723 154 520." },
+      ];
+
   const jsonLdSchemas = [
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": ["RealEstateAgent", "LocalBusiness"],
       "@id": `${BASE_URL}/contact`,
       "name": "RealTrust & ApArt Hotel Timișoara",
       "alternateName": "RealTrust Property Management",
       "description": isRo
-        ? "Management profesional de proprietăți în Timișoara. Administrare apartamente regim hotelier cu randament net 9.4% ROI. Sediu: Str. Samuil Micu Nr.14."
-        : "Professional property management in Timișoara. Short-term rental management with 9.4% net ROI. Office: Str. Samuil Micu Nr.14.",
+        ? "Sediu RealTrust Timișoara — agenție imobiliară și management proprietăți în regim hotelier. Vânzări, închirieri, administrare apartamente cu randament net 9.4% ROI. Acoperire Timișoara și județul Timiș (Giroc, Dumbrăvița, Moșnița)."
+        : "RealTrust Timișoara office — real estate agency and short-term rental management. Sales, rentals, apartment management with 9.4% net ROI. Coverage in Timișoara and Timiș county (Giroc, Dumbrăvița, Moșnița).",
       "url": `${BASE_URL}/contact`,
       "telephone": "+40723154520",
       "email": "info@realtrust.ro",
@@ -42,25 +58,22 @@ const ContactPage = () => {
         "postalCode": "300125",
         "addressCountry": "RO",
       },
-      "openingHoursSpecification": [
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          "opens": "09:00",
-          "closes": "18:00",
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": "Saturday",
-          "opens": "10:00",
-          "closes": "14:00",
-        },
-      ],
-      "areaServed": {
-        "@type": "City",
-        "name": "Timișoara",
-        "containedInPlace": { "@type": "Country", "name": "Romania" },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 45.7672,
+        "longitude": 21.2495,
       },
+      "openingHoursSpecification": [
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "18:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" },
+      ],
+      "areaServed": [
+        { "@type": "City", "name": "Timișoara", "containedInPlace": { "@type": "AdministrativeArea", "name": "Județul Timiș" } },
+        { "@type": "AdministrativeArea", "name": "Județul Timiș" },
+        { "@type": "Place", "name": "Giroc" },
+        { "@type": "Place", "name": "Dumbrăvița" },
+        { "@type": "Place", "name": "Moșnița Nouă" },
+      ],
       "priceRange": "€50-€150 per night",
       "sameAs": [
         "https://www.facebook.com/realtrust.ro",
@@ -68,6 +81,26 @@ const ContactPage = () => {
         GOOGLE_BUSINESS_URL,
       ],
       "hasMap": GOOGLE_MAPS_URL,
+      "makesOffer": [
+        { "@type": "Offer", "name": isRo ? "Administrare regim hotelier" : "Short-term rental management", "description": isRo ? "Management complet apartamente Airbnb & Booking, ROI 9.4% net." : "Full Airbnb & Booking apartment management, 9.4% net ROI." },
+        { "@type": "Offer", "name": isRo ? "Vânzări apartamente Timișoara" : "Apartment sales Timișoara", "description": isRo ? "Intermediere vânzări apartamente în Timișoara și județul Timiș." : "Apartment sales brokerage in Timișoara and Timiș county." },
+        { "@type": "Offer", "name": isRo ? "Închirieri rezidențiale" : "Long-term rentals", "description": isRo ? "Contracte de închiriere pe termen lung pentru proprietari și chiriași." : "Long-term rental contracts for owners and tenants." },
+        { "@type": "Offer", "name": isRo ? "Evaluare gratuită proprietate" : "Free property valuation", "description": isRo ? "Estimare prețuri apartamente Timișoara pe cartiere." : "Apartment price estimates in Timișoara by neighborhood." },
+      ],
+      "contactPoint": [
+        { "@type": "ContactPoint", "contactType": "sales", "telephone": "+40723154520", "email": "info@realtrust.ro", "areaServed": "RO", "availableLanguage": ["Romanian", "English"] },
+        { "@type": "ContactPoint", "contactType": "reservations", "telephone": "+40770635252", "email": "info@realtrust.ro", "areaServed": "RO", "availableLanguage": ["Romanian", "English"] },
+        { "@type": "ContactPoint", "contactType": "property management", "telephone": "+40723154520", "email": "info@realtrust.ro", "areaServed": "RO", "availableLanguage": ["Romanian", "English"] },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqItems.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
     },
     {
       "@context": "https://schema.org",
