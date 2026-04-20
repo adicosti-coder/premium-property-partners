@@ -89,16 +89,70 @@ const Imobiliare = () => {
 
   const seoContent = {
     ro: {
-      title: "Servicii Imobiliare Timișoara | RealTrust",
-      description: "Servicii imobiliare RealTrust Timișoara — vânzare, cumpărare și administrare apartamente. Calculator ROI gratuit. Recomandări în 24h."
+      title: "Imobiliare Timișoara: Vânzări, Închirieri, Regim Hotelier | RealTrust",
+      description: "Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!"
     },
     en: {
-      title: "Real Estate Services Timișoara | RealTrust",
-      description: "Complete real estate services in Timișoara: sales, acquisitions, rentals and investor consulting. Over 25 years of experience and deep local market knowledge."
+      title: "Real Estate Timișoara: Sales, Rentals, Hotel-Style | RealTrust",
+      description: "Profitable real estate investment in Timișoara! Hotel-style apartments, sales, rentals near UVT, Iulius Town, Airport. Free ROI calculator."
     }
   };
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
+
+  const faqItems = language === "ro" ? [
+    {
+      question: "Cum funcționează evaluarea apartamentului în Timișoara?",
+      answer: "Evaluarea apartamentului este gratuită și se face în 24-48h: analizăm zona (ISHO, Complex Studențesc, Dumbrăvița, Giroc, Săcălaz, Giarmata Vii etc.), starea proprietății, comparabile vândute recent și potențialul de randament. Primești un raport PDF cu preț minim, mediu și maxim de listare.",
+    },
+    {
+      question: "Ce include consultanța imobiliară RealTrust în Timișoara?",
+      answer: "Consultanța imobiliară completă include: analiza pieței locale, due diligence juridic (acte, sarcini, intabulare), strategie de finanțare (credit ipotecar Prima Casă/Noua Casă), negociere preț, asistență la notar și optimizare fiscală. Comision transparent de 2% pentru vânzări.",
+    },
+    {
+      question: "Cum evoluează piața imobiliară din Timișoara în 2026?",
+      answer: "Piața imobiliară Timișoara crește moderat cu 5-8% în 2026, susținută de Parcul Industrial și Tehnologic Timișoara, Continental Automotive și expansiunea metropolitană (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Cele mai active zone: ISHO, Complex Studențesc, Iosefin.",
+    },
+    {
+      question: "Ce randament am la o investiție imobiliară în Timișoara?",
+      answer: "Pentru regim hotelier administrat profesional: 9.4% ROI net verificat. Pentru chirie clasică pe termen lung: 4-5% net. Cele mai bune randamente sunt în Complex Studențesc (cerere studenți UVT/UPT) și ISHO (proximitate Iulius Town și aeroport).",
+    },
+    {
+      question: "Care sunt costurile la cumpărarea unui apartament în Timișoara?",
+      answer: "Pe lângă prețul de achiziție: comision agenție 2%, taxe notariale 0.4-1.6% (degresiv), intabulare CF ~0.5%, impozit transfer 1% (pentru imobile peste 450.000 lei deținute sub 3 ani). Total estimat: 3-4% peste preț.",
+    },
+    {
+      question: "Oferiți servicii de administrare apartamente regim hotelier?",
+      answer: "Da. RealTrust oferă administrare completă regim hotelier în Timișoara: listare Booking/Airbnb, channel management, check-in/check-out, curățenie 5⭐, marketing și raportare lunară transparentă. Comision 20% din venit, fără costuri ascunse.",
+    },
+  ] : [
+    {
+      question: "How does apartment evaluation work in Timișoara?",
+      answer: "Apartment evaluation is free and delivered in 24-48h: we analyze the zone (ISHO, Student Complex, Dumbrăvița, Giroc, Săcălaz, Giarmata Vii etc.), property condition, recent comparables and yield potential. You receive a PDF report with min/avg/max listing price.",
+    },
+    {
+      question: "What does RealTrust real estate consulting include in Timișoara?",
+      answer: "Full real estate consulting: local market analysis, legal due diligence (deeds, encumbrances, Land Registry), financing strategy (Prima Casă/Noua Casă mortgages), price negotiation, notary support and tax optimization. Transparent 2% sales commission.",
+    },
+    {
+      question: "How is the Timișoara real estate market evolving in 2026?",
+      answer: "Timișoara real estate is growing moderately at 5-8% in 2026, supported by Timișoara Industrial & Technology Park, Continental Automotive and metropolitan expansion (Dumbrăvița, Giroc, Săcălaz, Giarmata Vii). Most active zones: ISHO, Student Complex, Iosefin.",
+    },
+    {
+      question: "What yield can I get from a Timișoara real estate investment?",
+      answer: "Professionally managed hotel-style: 9.4% verified net ROI. Long-term classic rental: 4-5% net. Best yields are in Student Complex (UVT/UPT student demand) and ISHO (proximity to Iulius Town and airport).",
+    },
+    {
+      question: "What are the costs of buying an apartment in Timișoara?",
+      answer: "Beyond purchase price: 2% agency commission, 0.4-1.6% notary (degressive), ~0.5% Land Registry, 1% transfer tax (for properties over 450,000 RON owned less than 3 years). Estimated total: 3-4% above price.",
+    },
+    {
+      question: "Do you offer hotel-style apartment management services?",
+      answer: "Yes. RealTrust offers complete hotel-style management in Timișoara: Booking/Airbnb listing, channel management, check-in/check-out, 5⭐ cleaning, marketing and transparent monthly reporting. 20% commission, no hidden costs.",
+    },
+  ];
+
+  useRegisterFAQs("imobiliare-page", faqItems);
 
   const breadcrumbItems = [
     { label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services" }
