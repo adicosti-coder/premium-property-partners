@@ -126,8 +126,26 @@ const neighborhoods = [
   { slug: 'isho', name: 'ISHO', fullName: 'ISHO & Fabric', avgPrice: 2150, faq: [
     { q: 'Ce face ISHO diferit?', a: 'Cel mai iconic proiect de regenerare urbană din Timișoara — complex mixed-use pe malul Begăi.' },
     { q: 'Care este prețul mediu la ISHO?', a: '2.150 €/mp, cel mai ridicat din Timișoara.' },
-  ]},
+    { q: 'Ce randament au investițiile imobiliare în ISHO?', a: 'ROI net 8–10% în regim hotelier RealTrust, datorită cererii constante și aprecierii capitalului peste media pieței Timișoara.' },
+    { q: 'Ce este în apropiere de ISHO și Fabric?', a: 'Piața Traian, City Business Centre, Iulius Town, malul Begăi, Centrul Vechi (Piața Unirii) — toate la 5–15 minute pe jos sau cu mașina.' },
+  ], seoBody: `
+    <h2>Apartamente de vânzare în ISHO &amp; Fabric, Timișoara</h2>
+    <p>Cartierul <strong>ISHO</strong> și zona istorică <strong>Fabric</strong> formează cea mai dinamică micro-piață imobiliară din Timișoara. ISHO este cel mai iconic proiect de regenerare urbană din oraș — complex mixed-use pe malul Begăi cu apartamente premium, birouri, retail și spații verzi. Preț mediu 2.150 €/mp, cu apreciere constantă și cerere de chirie ridicată.</p>
+    <h2>Investiții imobiliare ISHO Timișoara — randament și ROI</h2>
+    <p>Apartamentele din ISHO oferă <strong>randament net 8–10% în regim hotelier</strong> administrat de RealTrust, datorită proximității față de <strong>City Business Centre</strong>, <strong>Iulius Town</strong>, Vox Park și Centrul Vechi. Cumpărătorii pot accesa <strong>credit ipotecar Timișoara</strong> cu DAE de la 6,2% prin partenerii noștri bancari.</p>
+    <h3>Puncte de interes lângă ISHO &amp; Fabric</h3>
+    <p><strong>Piața Traian</strong> (reper istoric Fabric, 5 min), <strong>City Business Centre</strong> (hub corporate, 7 min), Iulius Town &amp; Openville (10 min), Centrul Vechi cu Piața Unirii și Catedrala Mitropolitană (10 min), Spitalul Județean (8 min), UVT &amp; Politehnica (12 min), Aeroport (15 min).</p>
+    <h3>Apartamente de închiriat ISHO Timișoara</h3>
+    <p>Pentru chirie clasică, ISHO atrage chiriași corporate (Continental, Hella, Nokia) și expați cu venituri ridicate. Chirie medie 1 cameră: 450–550 €/lună; 2 camere: 600–800 €/lună. Pentru regim hotelier, ocupare medie 78% și ADR 65–95€/noapte.</p>
+    <h3>Spații comerciale &amp; terenuri ISHO Fabric</h3>
+    <p>Zona include și <strong>spații comerciale Timișoara</strong> de tip street retail în ISHO Galleria și pe Bulevardul Take Ionescu, plus <strong>terenuri de vânzare Timișoara</strong> intravilan în Fabric pentru dezvoltări mici. RealTrust intermediază închirieri și vânzări pentru investitori interesați de yield comercial 7–9% net.</p>
+    <h3>Piața imobiliară Timișoara — context ISHO</h3>
+    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
+  ` },
 ];
+
+// Map for type-safety on optional seoBody
+type Neighborhood = (typeof neighborhoods)[number] & { seoBody?: string };
 
 interface DbProperty {
   slug: string;
@@ -322,12 +340,22 @@ function buildStaticRoutes(): PrerenderRoute[] {
       description: `Apartamente de vânzare în ${n.fullName}, Timișoara. Prețuri de la ${n.avgPrice.toLocaleString('ro-RO')} €/mp, administrare RealTrust inclusă.`,
       h1: `Apartamente de vânzare în ${n.fullName}, Timișoara`,
       canonical: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+      seoBody: (n as Neighborhood).seoBody,
       jsonLd: faqSchema ? [
         {
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',
           name: `Apartamente ${n.fullName} Timișoara`,
           url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+          address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateAgent',
+          name: `RealTrust — ${n.fullName}, Timișoara`,
+          url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+          telephone: '+40723154520',
+          areaServed: { '@type': 'Place', name: `${n.fullName}, Timișoara` },
           address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
         },
         faqSchema,
@@ -722,10 +750,12 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // Use `inert` (not aria-hidden) so focusable descendants like <a> are properly removed
   // from the accessibility tree and tab order — fixes Lighthouse "aria-hidden with focusable
   // descendants" rule.
-  // Only inject H1 for the homepage (where Hero may not be hydrated yet for non-JS crawlers).
-  // For all other routes, the React page renders its own H1 — injecting another would create duplicate H1s.
+  // Inject H1 for routes that don't reliably render one in the static shell
+  // (homepage + neighborhood landing pages). React hydration replaces #root
+  // content but the inert SEO div outside #root remains for crawlers.
   const isHomepage = route.path === '/' || route.path === '';
-  const headingTag = isHomepage ? 'h1' : 'h2';
+  const isNeighborhood = route.path.startsWith('/imobiliare-timisoara/');
+  const headingTag = (isHomepage || isNeighborhood) ? 'h1' : 'h2';
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
