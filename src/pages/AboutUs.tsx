@@ -52,7 +52,7 @@ const AboutUs = () => {
       story: {
         title: "Povestea Noastră",
         subtitle: "De la prima tranzacție la 60+ proprietăți administrate",
-        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm peste 60 de apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
+        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm peste 60 de apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
