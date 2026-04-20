@@ -161,6 +161,38 @@ const neighborhoods = [
     <h3>Apartamente de închiriat Iosefin Timișoara</h3>
     <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
   ` },
+  { slug: 'dumbravita', name: 'Dumbrăvița', fullName: 'Dumbrăvița', avgPrice: 1680, faq: [
+    { q: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', a: 'Apartamente noi 1.680 €/mp, cu 15–20% sub media Timișoara. Case și vile între 180.000 și 380.000 €.' },
+    { q: 'Ce ansambluri rezidențiale sunt disponibile în Dumbrăvița?', a: 'Iris Residence, Lipovei Residence, Cetatea Veche Residence — apartamente clasa A energetică cu parcare inclusă.' },
+    { q: 'Sunt disponibile case de vânzare în Dumbrăvița?', a: 'Da, vile P+1, duplex-uri și case individuale între 180.000 și 380.000 €, aproape de Pădurea Verde și școli.' },
+    { q: 'Cum este accesul din Dumbrăvița spre centură și aeroport?', a: 'Acces centura Timișoara direct (3 min), Aeroportul „Traian Vuia" la 8 min. Autobuze E1, E4, 33 spre Iulius Town și Centru.' },
+    { q: 'Există terenuri intravilane de vânzare Dumbrăvița?', a: 'Da, teren intravilan Dumbrăvița 80–150 €/mp, pentru case, duplex-uri sau ansambluri mici.' },
+  ], seoBody: `
+    <h2>Imobiliare Dumbrăvița — apartamente noi, case și vile lângă Pădurea Verde</h2>
+    <p><strong>Dumbrăvița</strong> este cea mai dinamică zonă metropolitană a Timișoarei, situată la nord-est, cu <strong>acces centura Timișoara</strong> direct (3 minute) și Aeroportul Internațional „Traian Vuia" la 8 minute. Profil cumpărători: familii tinere 28–45 ani, profesioniști IT din Iulius Town &amp; Openville, navetiști care preferă liniștea suburbană.</p>
+
+    <h2>Tipuri de proprietăți în Dumbrăvița</h2>
+    <h3>Apartamente noi în ansambluri rezidențiale</h3>
+    <p>Apartamente noi în <strong>ansamblu rezidențial Dumbrăvița</strong> — Iris Residence, Lipovei Residence, Cetatea Veche Residence și dezvoltări 2024–2026. Prețuri 65.000–145.000 € (1.680 €/mp medie), clasa A energetică, finisaje moderne, locuri de parcare incluse, lifturi, intercom video.</p>
+    <h3>Case de vânzare Dumbrăvița</h3>
+    <p><strong>Case de vânzare Dumbrăvița</strong> — vile P+1, duplex-uri și case individuale între 180.000 și 380.000 €, în zone rezidențiale liniștite. Construcții 2018–2026, terenuri 250–500 mp, finisaje premium, garaj inclus.</p>
+    <h3>Teren intravilan Dumbrăvița</h3>
+    <p><strong>Teren intravilan Dumbrăvița</strong> 80–150 €/mp, ideal pentru construcții rezidențiale (case, duplex-uri) sau pentru dezvoltatori interesați de ansambluri mici. Parcele 400–800 mp cu utilități la limită.</p>
+
+    <h2>Stil de viață și facilități în Dumbrăvița</h2>
+    <p><strong>Pădurea Verde</strong> — parc natural protejat la marginea cartierului, spațiu unic de recreere pentru familii cu copii (jogging, ciclism, picnic). Supermarketuri Lidl și Kaufland în zonă, Selgros la 3 minute, plus restaurante locale și cafenele de specialitate.</p>
+
+    <h3>Educație și facilități pentru familii — școli și grădinițe Dumbrăvița</h3>
+    <p><strong>Școli și grădinițe Dumbrăvița</strong>: Școala Gimnazială „Dimitrie Țichindeal", grădinițele Smart Kids și Happy Kids, Liceul Spectrum (particular), creșe private. Infrastructură educațională completă pentru segmentul demografic principal — familii cu copii.</p>
+
+    <h3>Transport și accesibilitate</h3>
+    <p>Autobuze E1, E4 și 33 leagă Dumbrăvița de Iulius Town (10 min) și Centru (15 min). <strong>Acces centura Timișoara</strong> permite navigarea rapidă către Aeroport, zona industrială Calea Aradului și DN6 spre Arad.</p>
+
+    <h3>Piața imobiliară Dumbrăvița — analiză 2026</h3>
+    <p>Dumbrăvița a crescut cu ~6% în 2025, susținută de cererea familiilor tinere și a profesioniștilor IT relocați. Preț mediu apartamente noi: 1.680 €/mp (vs. 2.000+ €/mp în Centru). Comparativ cu Giroc (1.650 €/mp) și Moșnița Nouă (1.580 €/mp), Dumbrăvița oferă cea mai bună infrastructură și acces la aeroport.</p>
+
+    <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
+  ` },
 ];
 
 // Map for type-safety on optional seoBody
