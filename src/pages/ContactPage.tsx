@@ -402,7 +402,7 @@ const ContactPage = () => {
                   Echipa noastră locală gestionează întregul proces: de la listing-ul profesional pe Airbnb, Booking.com și alte platforme, la self check-in cu smart lock, curățenie profesională între sejururi, mentenanță preventivă și raportare financiară lunară transparentă.
                 </p>
                 <p>
-                  Fie că ești proprietar și vrei să maximizezi venitul din proprietatea ta, fie că ești investitor și cauți oportunități imobiliare cu randament ridicat în Timișoara, te invităm la sediul nostru din Strada Samuil Micu Nr.14 sau ne poți contacta telefonic la +40 723 154 520.
+                  Fie că ești proprietar și vrei să maximizezi venitul din proprietatea ta, fie că ești investitor și cauți oportunități imobiliare cu randament ridicat în Timișoara și întreg <strong>județul Timiș</strong> (inclusiv <strong>Giroc</strong>, Dumbrăvița, Moșnița Nouă), te invităm la <strong>sediul RealTrust Timișoara</strong> din Strada Samuil Micu Nr.14 sau ne poți contacta telefonic la +40 723 154 520.
                 </p>
               </>
             ) : (
