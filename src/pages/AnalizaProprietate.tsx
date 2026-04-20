@@ -283,12 +283,50 @@ const AnalizaProprietate = () => {
     },
   ]);
 
+  const jsonLdSchemas = [
+    {
+      "@context": "https://schema.org",
+      "@type": ["RealEstateAgent", "LocalBusiness"],
+      "name": "RealTrust Timișoara",
+      "url": "https://www.realtrust.ro/analiza-proprietate",
+      "telephone": "+40723154520",
+      "email": "info@realtrust.ro",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+        "addressLocality": "Timișoara",
+        "addressRegion": "Timiș",
+        "postalCode": "300125",
+        "addressCountry": "RO",
+      },
+      "geo": { "@type": "GeoCoordinates", "latitude": 45.7672, "longitude": 21.2495 },
+      "areaServed": { "@type": "City", "name": "Timișoara" },
+      "makesOffer": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Evaluare apartament Timișoara (AI)" : "Apartment valuation Timișoara (AI)" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Administrare regim hotelier" : "Short-term rental management" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Vânzări apartamente Timișoara" : "Apartment sales Timișoara" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Închirieri apartamente Timișoara" : "Long-term rentals Timișoara" } },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": language === "ro" ? "Analiză AI Proprietate (HostScan)" : "AI Property Analysis (HostScan)",
+      "serviceType": language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
+      "provider": { "@type": "RealEstateAgent", "name": "RealTrust Timișoara" },
+      "areaServed": { "@type": "City", "name": "Timișoara" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock" },
+    },
+  ];
+
   return (
     <>
       <SEOHead
         title={text.pageTitle}
         description={text.pageDesc}
         url="https://www.realtrust.ro/analiza-proprietate"
+        jsonLd={jsonLdSchemas}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
           { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://www.realtrust.ro/pentru-proprietari" },
