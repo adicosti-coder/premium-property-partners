@@ -108,8 +108,8 @@ const ContactPage = () => {
       <SEOHead
         title={isRo ? "Contact & Locație | Management Proprietăți Timișoara — RealTrust" : "Contact & Location | Property Management Timișoara — RealTrust"}
         description={isRo
-          ? "Contactează RealTrust pentru management profesional de proprietăți în Timișoara. Sediul nostru: Str. Samuil Micu Nr.14. Telefon: +40723154520. Randament 9.4% ROI."
-          : "Contact RealTrust for professional property management in Timișoara. Office: Str. Samuil Micu Nr.14. Phone: +40723154520. 9.4% ROI yield."}
+          ? "Contact RealTrust Timișoara: sediu Str. Samuil Micu 14, tel. +40723154520. Analiză prețuri apartamente Timișoara, piața imobiliară pe cartiere, ROI 9.4% net."
+          : "Contact RealTrust Timișoara: office Str. Samuil Micu 14, phone +40723154520. Apartment price analysis, local real estate market by neighborhood, 9.4% net ROI."}
         url={`${BASE_URL}/contact`}
         jsonLd={jsonLdSchemas}
       />
