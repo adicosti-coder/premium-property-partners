@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import PageSummary from "@/components/PageSummary";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import {
   Building2,
   MapPin,
@@ -68,7 +70,26 @@ const Complexe = () => {
       totalProperties: "Proprietăți",
       totalPropertiesValue: "60+",
       localSeoTitle: "Management Regim Hotelier Timișoara",
-      localSeoText: "RealTrust & ApArt Hotel oferă servicii complete de administrare în regim hotelier pentru proprietățile din cele mai căutate zone ale Timișoarei: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris și multe altele. Lista se completează continuu cu noi ansambluri și complexe rezidențiale.",
+      localSeoText: "RealTrust & ApArt Hotel oferă servicii complete de administrare în regim hotelier pentru proprietățile din cele mai căutate zone ale Timișoarei: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris și multe altele, acoperind cartiere precum Centru, Iosefin, Fabric, Mehala, Braytim, Soarelui, Girocului și zonele metropolitane Dumbrăvița și Ghiroda. Lista se completează continuu cu noi ansambluri și complexe rezidențiale.",
+      tocTitle: "Cuprins",
+      tocItems: [
+        { id: "stats", label: "Rezultate demonstrate" },
+        { id: "complexes", label: "Lista complexelor" },
+        { id: "pricing", label: "Prețuri & tipuri apartamente" },
+        { id: "local-seo", label: "Zone și cartiere acoperite" },
+        { id: "faq", label: "Întrebări frecvente" },
+      ],
+      pricingTitle: "Prețuri apartamente noi Timișoara & tipuri disponibile",
+      pricingText: "Prețurile pentru apartamente noi în Timișoara variază între 1.400 – 2.400 €/mp, în funcție de complex, etaj și finisaje. Administrăm garsoniere, apartamente cu 2 și 3 camere, penthouse-uri și apartamente cu grădină proprie la parter — disponibile în special în complexele din Dumbrăvița, Ghiroda și zona Braytim. Stadiul construcției și disponibilitatea exactă pentru fiecare ansamblu (în construcție / finalizat) sunt detaliate pe pagina dedicată complexului.",
+      faqTitle: "Întrebări frecvente despre complexele rezidențiale",
+      faqItems: [
+        { question: "Care sunt prețurile apartamentelor noi în Timișoara?", answer: "Prețurile pentru apartamente noi în Timișoara variază între 1.400 și 2.400 €/mp, în funcție de complex, etaj, orientare și nivel de finisaje. ISHO și Fructus Plaza se situează în segmentul premium, iar complexele din Dumbrăvița și Ghiroda oferă cel mai bun raport preț/randament." },
+        { question: "Care este stadiul construcției pentru complexele noi (ATENEO, City of Mara)?", answer: "Stadiul exact al construcției — în construcție, în curs de finalizare sau finalizat — este actualizat pe pagina dedicată fiecărui complex. Verificați pagina complexului pentru termenele de livrare și disponibilitatea unităților." },
+        { question: "Aveți apartamente cu grădină în Timișoara?", answer: "Da, în mai multe complexe noi (în special Dumbrăvița, Ghiroda și zona Braytim) sunt disponibile apartamente la parter cu grădină privată — ideale pentru familii sau ca investiție diferențiată în regim hotelier." },
+        { question: "Ce zone și cartiere acoperiți?", answer: "Acoperim toate cartierele majore din Timișoara: Centru, Iosefin, Fabric, Mehala, Circumvalațiunii, Complex Studențesc, Soarelui, Girocului, Braytim, Calea Aradului, plus zonele metropolitane Dumbrăvița, Ghiroda, Moșnița Nouă, Chișoda și Giroc." },
+        { question: "Ce randament pot obține printr-un complex rezidențial administrat de RealTrust?", answer: "Randamentul mediu net verificat este de 9.4% anual prin regim hotelier, cu o ocupare medie de 95% în complexele administrate. Calculul include toate costurile (administrare, curățenie, comisioane platforme)." },
+        { question: "Pot obține credit ipotecar pentru un apartament într-un complex nou?", answer: "Da, oferim consultanță pentru credit ipotecar prin partenerii noștri bancari, cu pre-aprobare în 48h pentru apartamentele din complexele listate." },
+      ],
     },
     en: {
       title: "Residential Complexes Timișoara | Short-Term Rental Management",
@@ -88,11 +109,32 @@ const Complexe = () => {
       totalProperties: "Properties",
       totalPropertiesValue: "60+",
       localSeoTitle: "Short-Term Rental Management Timișoara",
-      localSeoText: "RealTrust & ApArt Hotel offers complete short-term rental management services for properties in Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris and many more. The list is continuously expanding with new residential ensembles and complexes.",
+      localSeoText: "RealTrust & ApArt Hotel offers complete short-term rental management services for properties in Timișoara's most sought-after residential complexes: Fructus Plaza, City of Mara, Ateneo, Ring, Vivalia, Nord-One, Monarch, Paltim, Denya Forest, Campeador, XCity Towers, Iris and many more, covering neighborhoods such as Centru, Iosefin, Fabric, Mehala, Braytim, Soarelui, Girocului and the metropolitan areas Dumbrăvița and Ghiroda. The list is continuously expanding with new residential ensembles and complexes.",
+      tocTitle: "Table of Contents",
+      tocItems: [
+        { id: "stats", label: "Proven results" },
+        { id: "complexes", label: "List of complexes" },
+        { id: "pricing", label: "Pricing & apartment types" },
+        { id: "local-seo", label: "Areas & neighborhoods covered" },
+        { id: "faq", label: "Frequently asked questions" },
+      ],
+      pricingTitle: "New apartment prices Timișoara & available types",
+      pricingText: "Prices for new apartments in Timișoara range between €1,400 – €2,400/sqm, depending on the complex, floor and finishes. We manage studios, 2- and 3-bedroom apartments, penthouses and ground-floor apartments with private gardens — available especially in Dumbrăvița, Ghiroda and the Braytim area. The exact construction stage and unit availability for each complex (under construction / completed) is detailed on the dedicated complex page.",
+      faqTitle: "Frequently asked questions about residential complexes",
+      faqItems: [
+        { question: "What are the prices for new apartments in Timișoara?", answer: "Prices for new apartments in Timișoara range between €1,400 and €2,400/sqm, depending on the complex, floor, orientation and finish level. ISHO and Fructus Plaza sit in the premium segment, while complexes in Dumbrăvița and Ghiroda offer the best price/yield ratio." },
+        { question: "What is the construction status for new complexes (ATENEO, City of Mara)?", answer: "The exact construction status — under construction, near completion, or completed — is updated on each complex's dedicated page. Check the complex page for delivery deadlines and unit availability." },
+        { question: "Do you have apartments with a garden in Timișoara?", answer: "Yes, several new complexes (especially in Dumbrăvița, Ghiroda and the Braytim area) offer ground-floor apartments with private gardens — ideal for families or as a differentiated short-term rental investment." },
+        { question: "What areas and neighborhoods do you cover?", answer: "We cover all major neighborhoods in Timișoara: Centru, Iosefin, Fabric, Mehala, Circumvalațiunii, Complex Studențesc, Soarelui, Girocului, Braytim, Calea Aradului, plus the metropolitan areas Dumbrăvița, Ghiroda, Moșnița Nouă, Chișoda and Giroc." },
+        { question: "What yield can I get through a residential complex managed by RealTrust?", answer: "The average verified net yield is 9.4% annually via short-term rental, with an average 95% occupancy in managed complexes. The calculation includes all costs (management, cleaning, platform commissions)." },
+        { question: "Can I get a mortgage for an apartment in a new complex?", answer: "Yes, we offer mortgage consulting through our banking partners, with pre-approval in 48h for apartments in the listed complexes." },
+      ],
     },
   };
 
   const t = translations[language as keyof typeof translations] || translations.ro;
+
+  useRegisterFAQs("complexe-page", t.faqItems);
 
   useEffect(() => {
     const fetchComplexes = async () => {
@@ -209,8 +251,29 @@ const Complexe = () => {
           </div>
         </section>
 
+        {/* Table of Contents */}
+        <nav aria-label={t.tocTitle} className="py-6 border-b border-border bg-muted/20">
+          <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto">
+              <p className="text-sm font-semibold text-foreground mb-3">{t.tocTitle}</p>
+              <ul className="flex flex-wrap gap-2">
+                {t.tocItems.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`}
+                      className="text-sm px-3 py-1.5 rounded-md bg-card border border-border hover:border-primary/40 hover:text-primary transition-colors"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </nav>
+
         {/* Stats Section */}
-        <section className="py-12 border-b border-border">
+        <section id="stats" className="py-12 border-b border-border">
           <div className="container mx-auto px-6">
             <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto text-center">
               <div>
@@ -236,7 +299,7 @@ const Complexe = () => {
         </section>
 
         {/* Complexes Grid */}
-        <section className="py-16">
+        <section id="complexes" className="py-16">
           <div className="container mx-auto px-6">
             {isLoading ? (
               <div className="flex justify-center py-12">
@@ -314,8 +377,22 @@ const Complexe = () => {
           </div>
         </section>
 
+        {/* Pricing & Apartment Types */}
+        <section id="pricing" className="py-16 border-t border-border">
+          <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-serif font-semibold text-foreground mb-4">
+                {t.pricingTitle}
+              </h2>
+              <p className="text-foreground/80 leading-relaxed">
+                {t.pricingText}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Local SEO Content */}
-        <section className="py-16 bg-muted/30">
+        <section id="local-seo" className="py-16 bg-muted/30">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-serif font-semibold text-foreground mb-6">
@@ -339,6 +416,27 @@ const Complexe = () => {
                   </Link>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="py-16 border-t border-border">
+          <div className="container mx-auto px-6">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-6 text-center">
+                {t.faqTitle}
+              </h2>
+              <Accordion type="single" collapsible className="w-full">
+                {t.faqItems.map((item, idx) => (
+                  <AccordionItem key={idx} value={`item-${idx}`}>
+                    <AccordionTrigger className="text-left">{item.question}</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </section>
