@@ -665,7 +665,7 @@ const CatalogInvestitii = () => {
                 </section>
               )}
 
-              <section className="bg-foreground text-primary-foreground py-16 md:py-24">
+              <section id="comparison" className="bg-foreground text-primary-foreground py-16 md:py-24 scroll-mt-24">
                 <div className="max-w-4xl mx-auto px-4">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-4">
                     {t.comparisonTitle}
