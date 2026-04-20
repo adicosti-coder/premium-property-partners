@@ -216,10 +216,105 @@ const ImobiliareTimisoara = () => {
               })}
           </div>
 
+          {/* Evaluare apartament */}
+          <section id="evaluare" className="mb-16 rounded-2xl border border-border bg-card p-6 md:p-8">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="rounded-xl bg-primary/10 p-3">
+                <Calculator className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                  Evaluare apartament Timișoara — află prețul corect
+                </h2>
+                <p className="text-muted-foreground">
+                  Vrei să vinzi sau să refinanțezi? Evaluarea gratuită RealTrust analizează cartierul (Centru, ISHO, Dumbrăvița, Giroc, Chișoda, Complex Studențesc), suprafața, anul construcției și comparabile recente. Primești raport în 24h.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/evaluare-gratuita"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Solicită evaluare gratuită <ArrowRight className="w-4 h-4" />
+            </Link>
+          </section>
+
+          {/* Prețuri & tendințe */}
+          <section id="preturi" className="mb-16">
+            <div className="flex items-center gap-2 mb-4">
+              <LineChart className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold text-foreground">
+                Prețuri imobiliare Timișoara — tendințe 2026
+              </h2>
+            </div>
+            <p className="text-muted-foreground mb-6 max-w-3xl">
+              Piața imobiliară din Timișoara continuă aprecierea în 2026. Prețurile medii pe metru pătrat au crescut cu 5-8% față de 2025, susținute de cererea pentru proiecte noi și de expansiunea zonelor metropolitane Giroc, Chișoda și Dumbrăvița.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { zone: "Centru & ISHO", price: "2.400-2.600 €/mp", trend: "+6% YoY" },
+                { zone: "Dumbrăvița & Giroc", price: "1.800-2.100 €/mp", trend: "+8% YoY" },
+                { zone: "Aradului & Lipovei", price: "1.500-1.700 €/mp", trend: "+5% YoY" },
+                { zone: "Complex Studențesc", price: "1.900-2.200 €/mp", trend: "+7% YoY" },
+                { zone: "Chișoda & Moșnița", price: "1.400-1.700 €/mp", trend: "+9% YoY" },
+                { zone: "Mehala & Ronaț", price: "1.300-1.500 €/mp", trend: "+4% YoY" },
+              ].map((item) => (
+                <div key={item.zone} className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-sm font-semibold text-foreground">{item.zone}</p>
+                  <p className="text-lg font-bold text-primary mt-1">{item.price}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{item.trend}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Terenuri */}
+          <section id="terenuri" className="mb-16 rounded-2xl border border-border bg-card p-6 md:p-8">
+            <div className="flex items-start gap-4">
+              <div className="rounded-xl bg-primary/10 p-3">
+                <TreePine className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                  Terenuri de vânzare Timișoara, Giroc, Chișoda
+                </h2>
+                <p className="text-muted-foreground mb-3">
+                  Intermediem terenuri intravilane și extravilane în Timișoara și zonele metropolitane <strong>Giroc</strong>, <strong>Chișoda</strong>, Moșnița Nouă, Dumbrăvița și Ghiroda — pentru construcție casă, dezvoltare rezidențială sau investiție pe termen lung.
+                </p>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                >
+                  Discută cu un consultant <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </section>
+
           {/* Market Pulse */}
-          <Suspense fallback={<div className="min-h-[300px]" />}>
-            <MarketPulse />
-          </Suspense>
+          <div id="market-pulse">
+            <Suspense fallback={<div className="min-h-[300px]" />}>
+              <MarketPulse />
+            </Suspense>
+          </div>
+
+          {/* FAQ */}
+          <section id="faq" className="mt-16">
+            <div className="flex items-center gap-2 mb-4">
+              <HelpCircle className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold text-foreground">
+                Întrebări frecvente — imobiliare Timișoara
+              </h2>
+            </div>
+            <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6">
+              {faqItems.map((item, idx) => (
+                <AccordionItem key={idx} value={`item-${idx}`} className="last:border-b-0">
+                  <AccordionTrigger className="text-left text-foreground">{item.question}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
         </div>
       </main>
 
