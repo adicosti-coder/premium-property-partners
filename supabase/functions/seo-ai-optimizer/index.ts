@@ -244,6 +244,10 @@ function parseScraped(markdown: string, html: string, meta: any) {
     h2Count: h2Matches.length,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     markdown: text.slice(0, 8000),
+    // fullText is used ONLY for content_hash so two pages that share the same
+    // SPA shell header/hero (first ~2000 chars) still produce different hashes
+    // when their unique body copy diverges further down the page.
+    fullText: text,
     fullHtml: html.slice(0, 2000),
   };
 }
