@@ -701,13 +701,17 @@ const AdvancedRentalCalculator = () => {
                         axisLine={{ stroke: 'hsl(var(--border))' }}
                       />
                       <Tooltip
+                        cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
                         contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid hsl(38 92% 50%)',
+                          borderRadius: '10px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                          padding: '10px 14px',
+                          opacity: 1,
                         }}
-                        labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#0f172a', fontWeight: 700, marginBottom: 4 }}
+                        itemStyle={{ color: '#0f172a', fontWeight: 600 }}
                         formatter={(value: number) => [`€${value}`, 'Venit NET/lună']}
                       />
                       <Bar 
