@@ -32,7 +32,7 @@ const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCa
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
-const PageSummary = lazy(() => import("@/components/PageSummary"));
+// PageSummary lazy-imported above (kept off the eager LCP bundle)
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 // InteractiveMapWithPOI: NO lazy() here — even lazy() causes Vite to add
