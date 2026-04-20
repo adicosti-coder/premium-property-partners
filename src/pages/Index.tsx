@@ -1,6 +1,4 @@
 import React, { useEffect, lazy, Suspense, useState } from "react";
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
 import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -12,6 +10,13 @@ import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schema
 
 import StatsCounters from "@/components/StatsCounters";
 import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
+
+// Header & Hero are lazy — the static shell in index.html already paints
+// instantly as LCP. Loading the React versions eagerly was adding ~134 KiB
+// JS to the critical path and delaying LCP element render by ~5.3s.
+const Header = lazy(() => import("@/components/Header"));
+const Hero = lazy(() => import("@/components/Hero"));
+const PageSummary = lazy(() => import("@/components/PageSummary"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -27,7 +32,7 @@ const MainNavigationCards = lazy(() => import("@/components/hub/MainNavigationCa
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const OwnersTeaser = lazy(() => import("@/components/hub/OwnersTeaser"));
 const GuestsTeaser = lazy(() => import("@/components/hub/GuestsTeaser"));
-const PageSummary = lazy(() => import("@/components/PageSummary"));
+// PageSummary lazy-imported above (kept off the eager LCP bundle)
 const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 // InteractiveMapWithPOI: NO lazy() here — even lazy() causes Vite to add
@@ -244,17 +249,24 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
-        {/* Hero - Entry Point (above-fold, eager) */}
-        <Hero />
+        {/* Hero - lazy-loaded to free the LCP critical path. The static
+            hero-shell painted by index.html stays visible until React mounts. */}
+        <Suspense fallback={null}>
+          <Hero />
+        </Suspense>
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
-        <PageSummary
-          summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
-          summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
-        />
+        <Suspense fallback={null}>
+          <PageSummary
+            summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
+            summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
+          />
+        </Suspense>
 
         {/* Sentinel placed RIGHT AFTER hero+summary — moves EVERYTHING below
             (ServicesH2Strip, NeighborhoodsGrid, LocalLandmarksStrip, NearFold,
