@@ -193,6 +193,41 @@ const neighborhoods = [
 
     <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
   ` },
+  { slug: 'giroc', name: 'Giroc', fullName: 'Giroc', avgPrice: 1620, faq: [
+    { q: 'Care este prețul mediu pe metru pătrat în Giroc?', a: 'Apartamente 1.500–1.800 €/mp (medie 1.620 €/mp). Case 165.000–320.000 €. Terenuri intravilane 70–130 €/mp.' },
+    { q: 'Ce ansambluri rezidențiale sunt în Giroc?', a: 'Green Forest Residence, Pădurea Verde Giroc, Lake View Residence, City Garden Giroc — apartamente clasa A cu parcare.' },
+    { q: 'Ce școli sunt în Giroc?', a: 'Școala Gimnazială Giroc, Liceul Tehnologic și 5+ grădinițe publice și private.' },
+    { q: 'Cum este transportul în comun Giroc Timișoara?', a: 'Autobuze 33 și 40 spre Piața Maria și UVT, frecvență 15 min. Drum 12–25 min în funcție de oră.' },
+    { q: 'Ce magazine sunt în Giroc?', a: 'Lidl, Penny Market, supermarket-uri locale, plus Shopping City Timișoara (Auchan) la 5 min.' },
+  ], seoBody: `
+    <h2>Apartamente de vânzare și închiriat Giroc — comuna metropolitană la 10 minute de Centru</h2>
+    <p><strong>Giroc</strong> este una dintre cele mai căutate comune metropolitane de la sud de Timișoara, situată la 10 minute de Centru și la 5 minute de Shopping City Timișoara (Auchan). Pol rezidențial premium pentru familii tinere și profesioniști care lucrează la Continental, Hella și în zona industrială Calea Șagului.</p>
+
+    <h2>Tipuri de proprietăți în Giroc</h2>
+    <h3>Apartamente de vânzare Giroc</h3>
+    <p><strong>Apartamente de vânzare în Giroc</strong> — prețuri 1.500–1.800 €/mp (medie 1.620 €/mp). Garsoniere 55.000–72.000 €, 2 camere 80.000–105.000 €, 3 camere 120.000–145.000 €. Apartamente noi clasa A energetică în ansamblurile principale.</p>
+    <h3>Case noi Giroc</h3>
+    <p><strong>Case noi Giroc</strong> între 165.000 și 320.000 € — vile P+1, duplex-uri și case individuale. Construcții 2020–2026, terenuri 300–600 mp, finisaje moderne, garaj inclus.</p>
+    <h3>Ansamblu rezidențial Giroc</h3>
+    <p>Principalele <strong>ansambluri rezidențiale Giroc</strong>: Green Forest Residence, Pădurea Verde Giroc, Lake View Residence, City Garden Giroc — apartamente clasa A energetică, parcare inclusă, locuri de joacă pentru copii.</p>
+    <h3>Teren intravilan Giroc</h3>
+    <p><strong>Teren intravilan Giroc</strong> 70–130 €/mp, parcele 400–800 mp ideale pentru construcții familiale. Utilități la limită.</p>
+
+    <h2>Ghidul cumpărătorului în Giroc — facilități și viață locală</h2>
+    <h3>Școli Giroc și grădinițe</h3>
+    <p><strong>Școli Giroc</strong>: Școala Gimnazială Giroc, Liceul Tehnologic, plus 5+ grădinițe publice și private — infrastructură educațională completă pentru familii cu copii.</p>
+    <h3>Magazine Giroc și viață cotidiană</h3>
+    <p><strong>Magazine Giroc</strong>: Lidl, Penny Market, supermarket-uri locale, farmacii. Shopping City Timișoara (Auchan) la 5 min. Stadion comunal renovat, lacul Giroc și parcuri.</p>
+    <h3>Transport în comun Giroc Timișoara</h3>
+    <p><strong>Transport în comun Giroc Timișoara</strong>: autobuzele 33 și 40 leagă Giroc de Piața Maria și UVT (frecvență 15 min). Drum 12 min în afara orelor de vârf, 25–30 min la ora de vârf pe DJ595.</p>
+    <h3>Administrație locală — Primăria Giroc</h3>
+    <p><strong>Primăria Giroc</strong> oferă servicii moderne pentru rezidenți: certificate de urbanism rapide (5 zile), taxe locale cu 20% sub Timișoara, programe de modernizare a infrastructurii.</p>
+
+    <h3>Avantaje și dezavantaje Giroc</h3>
+    <p><strong>Avantaje</strong>: liniște, spațiu verde abundent (lacul Giroc, parcuri), aer curat, taxe locale mai mici, școli bune. <strong>Dezavantaje</strong>: trafic aglomerat dimineața pe DJ595, distanță față de Centrul Vechi (10–25 min).</p>
+
+    <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
+  ` },
 ];
 
 // Map for type-safety on optional seoBody
