@@ -107,6 +107,24 @@ const ImobiliareTimisoara = () => {
             </p>
           </div>
 
+          {/* Table of Contents */}
+          <nav aria-label="Cuprins pagină" className="mb-12 rounded-2xl border border-border bg-card/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Cuprins</p>
+            <ul className="flex flex-wrap gap-2">
+              {tocItems.map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div id="live" />
           {(isLoading || liveNeighborhoodProperties.length > 0) && (
             <section className="mb-16">
               <div className="mb-6 space-y-3">
