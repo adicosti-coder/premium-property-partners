@@ -700,8 +700,68 @@ const AboutUs = () => {
         {/* Company Timeline */}
         <CompanyTimeline />
 
-        {/* Team Section - temporarily hidden */}
-        {/* <TeamSection /> */}
+        {/* Team Section */}
+        <TeamSection />
+
+        {/* Case Study — verified ROI proof */}
+        <section id="studiu-caz" className="py-20 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-10">
+                <Badge variant="outline" className="mb-4 px-4 py-2 text-sm font-medium border-primary/30 bg-primary/5">
+                  <TrendingUp className="w-4 h-4 mr-2 text-primary" />
+                  {language === "ro" ? "Studiu de Caz · ROI Verificat" : "Case Study · Verified ROI"}
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold mb-3">
+                  {language === "ro" ? "Cum am ajuns la 9,4% ROI net" : "How we reached 9.4% net ROI"}
+                </h2>
+                <p className="text-muted-foreground">
+                  {language === "ro"
+                    ? "Exemplu anonimizat — apartament 2 camere, zona Centru/Iosefin, administrat în regim hotelier."
+                    : "Anonymized example — 2-room apartment, Centru/Iosefin area, managed short-term."}
+                </p>
+              </div>
+
+              <Card className="border-primary/20">
+                <CardContent className="p-8 grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="font-bold text-lg mb-3">{language === "ro" ? "Date proprietate" : "Property data"}</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Tip" : "Type"}</span><span className="font-medium">2 camere · 52 mp</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Zonă" : "Area"}</span><span className="font-medium">Iosefin / Centru</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Investiție" : "Investment"}</span><span className="font-medium">€95.000</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Mobilare + setup" : "Furnishing + setup"}</span><span className="font-medium">€8.500</span></li>
+                      <li className="flex justify-between py-2"><span className="text-muted-foreground">{language === "ro" ? "Ocupare medie" : "Avg. occupancy"}</span><span className="font-medium">82%</span></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-3">{language === "ro" ? "Rezultat anual (net)" : "Annual result (net)"}</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Venit brut" : "Gross income"}</span><span className="font-medium">€16.800</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Comision platforme" : "Platform fees"}</span><span className="font-medium">−€2.520</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Curățenie + utilități" : "Cleaning + utilities"}</span><span className="font-medium">−€2.400</span></li>
+                      <li className="flex justify-between border-b border-border py-2"><span className="text-muted-foreground">{language === "ro" ? "Management 20%" : "Management 20%"}</span><span className="font-medium">−€2.156</span></li>
+                      <li className="flex justify-between py-2 text-base"><span className="font-semibold">{language === "ro" ? "Profit net" : "Net profit"}</span><span className="font-bold text-primary">€9.724 · 9,4%</span></li>
+                    </ul>
+                  </div>
+                  <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
+                    <Button asChild className="flex-1">
+                      <Link to="/calculator-roi">
+                        {language === "ro" ? "Calculează ROI pentru proprietatea ta" : "Calculate ROI for your property"}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="flex-1">
+                      <Link to="/catalog-investitii">
+                        {language === "ro" ? "Vezi catalogul de investiții 2026" : "View investment catalog 2026"}
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
 
         {/* Values Section */}
         <section id="valori" className="py-20 bg-muted/30">
