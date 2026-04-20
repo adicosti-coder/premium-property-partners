@@ -32,6 +32,10 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import InvestorGuideButton from "@/components/InvestorGuideButton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { Download, HelpCircle } from "lucide-react";
 
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
@@ -139,6 +143,60 @@ const Investitii = () => {
   };
 
   const t = texts[language as keyof typeof texts] || texts.ro;
+
+  const faqItems = language === "ro" ? [
+    {
+      question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
+      answer: "Pentru regim hotelier administrat de RealTrust, randamentul net mediu este de 9.4% anual, verificat pe portofoliul nostru de peste 50 de proprietăți. În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+    },
+    {
+      question: "Care sunt cele mai bune zone pentru investiții imobiliare în Timișoara?",
+      answer: "Zonele cu cel mai mare potențial sunt: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți + Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
+    },
+    {
+      question: "Cât capital am nevoie pentru o investiție la cheie în Timișoara?",
+      answer: "Pentru o garsonieră în regim hotelier la cheie (achiziție + amenajare + dotare): între 60.000 € și 85.000 €. Pentru un apartament 2 camere: 95.000 € – 130.000 €. Includem amenajarea completă, mobilier, electrocasnice și fotografii profesionale.",
+    },
+    {
+      question: "Ce taxe notariale și de tranzacție am la cumpărarea unui apartament?",
+      answer: "Taxele notariale variază între 0.4% și 1.6% din prețul tranzacției (degresiv). Adăugați aproximativ 0.5% pentru intabulare la Cartea Funciară și impozit pe transfer (1% pentru proprietăți peste 450.000 lei deținute mai puțin de 3 ani). Total estimat: 1.5–2.5% din preț.",
+    },
+    {
+      question: "Cum funcționează serviciul de investiție imobiliară la cheie?",
+      answer: "RealTrust gestionează întregul proces: identificarea proprietății potrivite, due diligence, negociere preț, asistență la actul notarial, amenajarea și dotarea apartamentului, listarea pe Booking/Airbnb și administrarea operațională. Tu doar semnezi și încasezi raportul lunar.",
+    },
+    {
+      question: "Care este evoluția prețurilor imobiliare în Timișoara?",
+      answer: "În ultimii 5 ani, prețurile au crescut cu aproximativ 35-45% în zonele centrale (ISHO, Centrul Istoric) și cu 50-60% în zonele metropolitane (Dumbrăvița, Giroc, Chișoda). Pentru 2026 estimăm o creștere moderată de 5-8%, cu cel mai bun potențial în Iosefin și Complex Studențesc.",
+    },
+  ] : [
+    {
+      question: "What is the average yield for a real estate investment in Timișoara?",
+      answer: "For hotel-style management by RealTrust, the average net yield is 9.4% per year, verified across our portfolio of 50+ properties. Classic long-term rentals in Timișoara typically yield 4-5% net.",
+    },
+    {
+      question: "What are the best areas for real estate investment in Timișoara?",
+      answer: "Highest potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
+    },
+    {
+      question: "How much capital do I need for a turnkey investment in Timișoara?",
+      answer: "Studio in turnkey hotel-style (purchase + renovation + furnishing): €60,000–€85,000. 2-room apartment: €95,000–€130,000. We include full renovation, furniture, appliances and professional photography.",
+    },
+    {
+      question: "What notary and transaction fees apply when buying an apartment?",
+      answer: "Notary fees range 0.4–1.6% of transaction price (degressive). Add ~0.5% for Land Registry and transfer tax (1% for properties over 450,000 RON owned less than 3 years). Total estimate: 1.5–2.5% of price.",
+    },
+    {
+      question: "How does the turnkey real estate investment service work?",
+      answer: "RealTrust manages the entire process: property sourcing, due diligence, price negotiation, notary support, full renovation and furnishing, listing on Booking/Airbnb and operational management. You just sign and collect the monthly report.",
+    },
+    {
+      question: "What is the price trend for Timișoara real estate?",
+      answer: "Last 5 years: prices grew ~35-45% in central areas (ISHO, Historic Center) and 50-60% in metropolitan areas (Dumbrăvița, Giroc, Chișoda). For 2026 we forecast moderate 5-8% growth, with best upside in Iosefin and Student Complex.",
+    },
+  ];
+
+  useRegisterFAQs("investitii-page", faqItems);
 
   const breadcrumbItems = [{ label: t.title }];
 
@@ -493,6 +551,100 @@ const Investitii = () => {
               <InvestmentEngineV34 defaultPrice={95000} defaultRent={450} />
             </Suspense>
           </div>
+        </div>
+      </section>
+
+      {/* Free Investor Guide 2026 — Lead Magnet Section */}
+      <section className="py-16 md:py-20 bg-gradient-to-br from-amber-500/5 via-background to-blue-950/10 border-y border-amber-500/10">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <Badge variant="outline" className="mb-4 px-3 py-1 text-amber-500 border-amber-500/40 bg-amber-500/5">
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                {language === "ro" ? "Descărcare Gratuită" : "Free Download"}
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 leading-tight">
+                {language === "ro"
+                  ? "Ghidul Investitorului Imobiliar Timișoara 2026"
+                  : "Timișoara Real Estate Investor Guide 2026"}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {language === "ro"
+                  ? "Analiză completă PDF, gratuită, cu evoluția prețurilor pe cartiere, randamente verificate, taxe notariale și calculator de investiție la cheie. Folosit de peste 1.200 de investitori din Timișoara."
+                  : "Complete free PDF analysis with neighborhood price trends, verified yields, notary fees and turnkey investment calculator. Used by 1,200+ investors in Timișoara."}
+              </p>
+              <ul className="space-y-2 mb-6">
+                {(language === "ro" ? [
+                  "Evoluția prețurilor 2021–2026 pe cartiere",
+                  "Randament regim hotelier vs. chirie clasică",
+                  "Taxe notariale, intabulare CF, impozit transfer",
+                  "Top 10 ansambluri rezidențiale 2026",
+                ] : [
+                  "Price trends 2021–2026 by neighborhood",
+                  "Hotel-style yield vs. classic rental",
+                  "Notary fees, Land Registry, transfer tax",
+                  "Top 10 residential complexes 2026",
+                ]).map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
+                    <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <InvestorGuideButton />
+            </div>
+            <div className="hidden md:flex justify-center">
+              <div className="relative w-64 h-80 rounded-xl bg-gradient-to-br from-blue-900 to-blue-950 border border-amber-500/30 shadow-2xl shadow-amber-500/10 flex flex-col items-center justify-center p-6 text-center transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                <FileText className="w-16 h-16 text-amber-400 mb-4" />
+                <p className="text-xs uppercase tracking-widest text-amber-300/70 mb-2">
+                  {language === "ro" ? "Ediția 2026" : "2026 Edition"}
+                </p>
+                <p className="text-xl font-serif font-bold text-white mb-2">
+                  Investor Guide
+                </p>
+                <p className="text-xs text-blue-200/70">
+                  Timișoara Real Estate
+                </p>
+                <div className="absolute bottom-4 text-[10px] text-amber-400/60 uppercase tracking-wider">
+                  RealTrust · 48 pages
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section — Generates FAQPage schema */}
+      <section className="py-16 md:py-20">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="mb-4 px-3 py-1">
+              <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
+              FAQ
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">
+              {language === "ro"
+                ? "Întrebări frecvente despre investiții imobiliare în Timișoara"
+                : "Frequently asked questions about real estate investment in Timișoara"}
+            </h2>
+            <p className="text-muted-foreground">
+              {language === "ro"
+                ? "Răspunsuri la cele mai comune întrebări despre randament, zone, taxe și serviciul la cheie."
+                : "Answers to common questions about yield, zones, taxes and turnkey service."}
+            </p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            {faqItems.map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`}>
+                <AccordionTrigger className="text-left text-base font-semibold">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
