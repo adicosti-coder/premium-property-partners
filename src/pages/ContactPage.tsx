@@ -419,6 +419,24 @@ const ContactPage = () => {
               </>
             )}
           </section>
+
+          {/* FAQ */}
+          <section id="faq" className="max-w-3xl mx-auto mb-12 scroll-mt-24">
+            <h2 className="text-2xl font-serif font-semibold mb-6 text-center">
+              {isRo ? "Întrebări Frecvente" : "Frequently Asked Questions"}
+            </h2>
+            <div className="space-y-3">
+              {faqItems.map((item, i) => (
+                <details key={i} className="group p-5 bg-card border rounded-2xl open:border-primary/40">
+                  <summary className="cursor-pointer font-semibold list-none flex justify-between items-center gap-4">
+                    <span>{item.q}</span>
+                    <span className="text-primary text-xl transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
         </div>
       </main>
 
