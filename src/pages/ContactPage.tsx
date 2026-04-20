@@ -224,7 +224,7 @@ const ContactPage = () => {
           </section>
 
           {/* Services */}
-          <section className="mb-16">
+          <section id="servicii" className="mb-16 scroll-mt-24">
             <h2 className="text-2xl font-serif font-semibold text-center mb-8">
               {isRo ? "Servicii de Management Proprietăți în Timișoara" : "Property Management Services in Timișoara"}
             </h2>
@@ -239,8 +239,76 @@ const ContactPage = () => {
             </div>
           </section>
 
+          {/* Market context — piața imobiliară Timișoara + prețuri apartamente Timișoara */}
+          <section id="piata-imobiliara" className="max-w-3xl mx-auto mb-12 scroll-mt-24">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold">
+                {isRo ? "Piața Imobiliară Timișoara — Context & Prețuri" : "Timișoara Real Estate Market — Context & Prices"}
+              </h2>
+            </div>
+            <div className="prose prose-sm text-muted-foreground max-w-none space-y-3">
+              {isRo ? (
+                <>
+                  <p>
+                    Monitorizăm zilnic <strong>piața imobiliară Timișoara</strong> și actualizăm <strong>prețuri apartamente Timișoara</strong> pe fiecare cartier major. Prețul mediu/m² variază între 1.700 € (Soarelui, Steaua) și 2.600 € (Centru, ISHO, Iulius Town), iar randamentul net în regim hotelier ajunge la <strong>9,4% ROI verificat</strong>.
+                  </p>
+                  <p>
+                    Cartiere acoperite cu landing pages dedicate:{" "}
+                    <Link to="/imobiliare-timisoara/centru" className="text-primary hover:underline">Centru</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/iosefin" className="text-primary hover:underline">Iosefin</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/fabric" className="text-primary hover:underline">Fabric</Link> (lângă <strong>Piața Traian Timișoara</strong>),{" "}
+                    <Link to="/imobiliare-timisoara/elisabetin" className="text-primary hover:underline">Elisabetin</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/complex-studentesc" className="text-primary hover:underline">Complex Studențesc</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/dumbravita" className="text-primary hover:underline">Dumbrăvița</Link>.
+                  </p>
+                  <p>
+                    Pentru analiză personalizată folosește{" "}
+                    <Link to="/calculator-roi" className="text-primary hover:underline">Calculatorul ROI</Link> sau{" "}
+                    <Link to="/evaluare-gratuita" className="text-primary hover:underline">Evaluare Gratuită Proprietate</Link>.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    We monitor the <strong>Timișoara real estate market</strong> daily and update <strong>apartment prices in Timișoara</strong> by neighborhood. Average €/m² ranges from €1,700 (Soarelui, Steaua) to €2,600 (City Center, ISHO, Iulius Town), with verified short-term rental net ROI up to <strong>9.4%</strong>.
+                  </p>
+                  <p>
+                    Neighborhoods with dedicated landing pages:{" "}
+                    <Link to="/imobiliare-timisoara/centru" className="text-primary hover:underline">Center</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/iosefin" className="text-primary hover:underline">Iosefin</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/fabric" className="text-primary hover:underline">Fabric</Link> (near <strong>Piața Traian</strong>),{" "}
+                    <Link to="/imobiliare-timisoara/elisabetin" className="text-primary hover:underline">Elisabetin</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/complex-studentesc" className="text-primary hover:underline">Student Complex</Link>,{" "}
+                    <Link to="/imobiliare-timisoara/dumbravita" className="text-primary hover:underline">Dumbrăvița</Link>.
+                  </p>
+                  <p>
+                    For a tailored analysis use the{" "}
+                    <Link to="/calculator-roi" className="text-primary hover:underline">ROI Calculator</Link> or request a{" "}
+                    <Link to="/evaluare-gratuita" className="text-primary hover:underline">Free Property Valuation</Link>.
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* Stays near hospitals */}
+          <section id="cazare-spitale" className="max-w-3xl mx-auto mb-12 scroll-mt-24">
+            <div className="flex items-center gap-2 mb-4">
+              <Hospital className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold">
+                {isRo ? "Cazare lângă Spitalele din Timișoara" : "Stays Near Timișoara Hospitals"}
+              </h2>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              {isRo
+                ? "Apartamentele noastre sunt poziționate strategic pentru familii și personal medical: la 5–15 minute de Spitalul Județean (Bd. Iosif Bulbuca) și de Spitalul Municipal Timișoara (Clinica Nouă, Bd. Revoluției), dar și aproape de Maternitatea Bega și Spitalul de Copii Louis Țurcanu."
+                : "Our apartments are strategically located for families and medical staff: 5–15 minutes from the County Hospital (Bd. Iosif Bulbuca) and Spitalul Municipal Timișoara (Clinica Nouă, Bd. Revoluției), as well as Maternitatea Bega and the Louis Țurcanu Children's Hospital."}
+            </p>
+          </section>
+
           {/* SEO Text Block */}
-          <section className="max-w-3xl mx-auto prose prose-sm text-muted-foreground mb-12">
+          <section id="de-ce-realtrust" className="max-w-3xl mx-auto prose prose-sm text-muted-foreground mb-12 scroll-mt-24">
             <h2 className="text-xl font-serif font-semibold text-foreground">
               {isRo ? "Management Proprietăți în Timișoara — De Ce RealTrust?" : "Property Management in Timișoara — Why RealTrust?"}
             </h2>
