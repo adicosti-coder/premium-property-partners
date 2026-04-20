@@ -92,8 +92,8 @@ const AnalizaProprietate = () => {
 
   const t = {
     ro: {
-      pageTitle: "Analiză Proprietate AI | RealTrust",
-      pageDesc: "Analizează potențialul proprietății tale cu AI. Scor, ROI estimat și recomandări personalizate.",
+      pageTitle: "Analiză Proprietate AI Timișoara | Evaluare & Consultanță Imobiliară",
+      pageDesc: "Analiză AI gratuită pentru piața imobiliară Timișoara: evaluare apartament, scor ROI estimat, consultanță imobiliară personalizată pentru regim hotelier, vânzări și închirieri.",
       heroTitle: "Analiză AI",
       heroHighlight: "Proprietate",
       heroSubtitle: "Scor inteligent, ROI estimat și recomandări personalizate în timp real.",
