@@ -374,7 +374,7 @@ const Preturi = () => {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16 px-6">
+      <section id="pachete" className="py-16 px-6 scroll-mt-24">
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {pkgs.map((pkg) => {
