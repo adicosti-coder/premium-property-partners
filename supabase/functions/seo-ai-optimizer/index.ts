@@ -45,13 +45,21 @@ serve(async (req) => {
 
     // 1. Scrape
     const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
-    const contentHash = await sha256(scraped.markdown || "");
+    // Hash on full text (not the truncated 8000-char snippet) and skip the
+    // first 1500 chars which are dominated by the shared SPA shell (header,
+    // nav, hero CTAs). Otherwise two distinct pages on the same SPA share an
+    // identical hash and falsely trigger "duplicate content" warnings.
+    const hashSource = (scraped as any).fullText || scraped.markdown || "";
+    const hashBody = hashSource.length > 1500 ? hashSource.slice(1500) : hashSource;
+    const contentHash = await sha256(hashBody);
 
-    // 2. Detect duplicate content vs alte audituri
+    // 2. Detect duplicate content vs alte audituri (only recent — last 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: duplicates } = await sb.from("seo_audits")
       .select("url, content_hash")
       .eq("content_hash", contentHash)
       .neq("url", url)
+      .gte("created_at", sevenDaysAgo)
       .limit(5);
 
     // 3. Local GEO Audit (Timișoara entities + proximity signals)
@@ -244,6 +252,10 @@ function parseScraped(markdown: string, html: string, meta: any) {
     h2Count: h2Matches.length,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     markdown: text.slice(0, 8000),
+    // fullText is used ONLY for content_hash so two pages that share the same
+    // SPA shell header/hero (first ~2000 chars) still produce different hashes
+    // when their unique body copy diverges further down the page.
+    fullText: text,
     fullHtml: html.slice(0, 2000),
   };
 }

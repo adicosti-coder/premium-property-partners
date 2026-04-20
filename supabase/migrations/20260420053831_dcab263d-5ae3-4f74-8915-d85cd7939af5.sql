@@ -1,0 +1,1 @@
+DELETE FROM public.seo_audits WHERE url IN ('https://www.realtrust.ro/pentru-proprietari', 'https://www.realtrust.ro/investitii');
