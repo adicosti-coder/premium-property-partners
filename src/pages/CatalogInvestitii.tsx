@@ -737,6 +737,33 @@ const CatalogInvestitii = () => {
                 </div>
               </section>
 
+              {/* FAQ Section — generates FAQPage JSON-LD via useRegisterFAQs */}
+              <section id="faq" className="bg-muted/30 py-16 md:py-24 scroll-mt-24">
+                <div className="max-w-3xl mx-auto px-4">
+                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4 flex items-center justify-center gap-3">
+                    <HelpCircle className="w-8 h-8 text-primary" />
+                    {t.faqTitle}
+                  </h2>
+                  <p className="text-muted-foreground text-center max-w-xl mx-auto mb-10">
+                    {isRo
+                      ? "Răspunsuri la cele mai comune întrebări despre investiții imobiliare în Timișoara."
+                      : "Answers to the most common questions about real estate investments in Timișoara."}
+                  </p>
+                  <Accordion type="single" collapsible className="bg-card border border-border rounded-2xl px-6">
+                    {faqItems.map((item, i) => (
+                      <AccordionItem key={i} value={`faq-${i}`} className={i === faqItems.length - 1 ? "border-b-0" : ""}>
+                        <AccordionTrigger className="text-left text-foreground font-semibold">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground leading-relaxed">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              </section>
+
               <section className="py-16 md:py-24">
                 <div className="max-w-3xl mx-auto px-4 text-center">
                   <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
