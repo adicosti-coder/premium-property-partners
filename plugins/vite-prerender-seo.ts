@@ -340,12 +340,22 @@ function buildStaticRoutes(): PrerenderRoute[] {
       description: `Apartamente de vânzare în ${n.fullName}, Timișoara. Prețuri de la ${n.avgPrice.toLocaleString('ro-RO')} €/mp, administrare RealTrust inclusă.`,
       h1: `Apartamente de vânzare în ${n.fullName}, Timișoara`,
       canonical: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+      seoBody: (n as Neighborhood).seoBody,
       jsonLd: faqSchema ? [
         {
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',
           name: `Apartamente ${n.fullName} Timișoara`,
           url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+          address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateAgent',
+          name: `RealTrust — ${n.fullName}, Timișoara`,
+          url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
+          telephone: '+40723154520',
+          areaServed: { '@type': 'Place', name: `${n.fullName}, Timișoara` },
           address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
         },
         faqSchema,
