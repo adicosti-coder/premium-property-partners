@@ -36,6 +36,7 @@ const WhyUs = lazy(() => import("@/components/WhyUs"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const VideoTestimonials = lazy(() => import("@/components/VideoTestimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
+const OwnersFAQ = lazy(() => import("@/components/owners/OwnersFAQ"));
 const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -608,6 +609,7 @@ const PentruProprietari = () => {
 
       {/* FAQ - deferred via IntersectionObserver */}
       <div ref={faqSentinel} />
+      {faqReady && <OwnersFAQ />}
       {faqReady && <FAQ />}
 
       {/* Final CTA */}
