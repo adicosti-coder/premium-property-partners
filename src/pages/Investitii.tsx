@@ -554,6 +554,100 @@ const Investitii = () => {
         </div>
       </section>
 
+      {/* Free Investor Guide 2026 — Lead Magnet Section */}
+      <section className="py-16 md:py-20 bg-gradient-to-br from-amber-500/5 via-background to-blue-950/10 border-y border-amber-500/10">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <Badge variant="outline" className="mb-4 px-3 py-1 text-amber-500 border-amber-500/40 bg-amber-500/5">
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                {language === "ro" ? "Descărcare Gratuită" : "Free Download"}
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4 leading-tight">
+                {language === "ro"
+                  ? "Ghidul Investitorului Imobiliar Timișoara 2026"
+                  : "Timișoara Real Estate Investor Guide 2026"}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {language === "ro"
+                  ? "Analiză completă PDF, gratuită, cu evoluția prețurilor pe cartiere, randamente verificate, taxe notariale și calculator de investiție la cheie. Folosit de peste 1.200 de investitori din Timișoara."
+                  : "Complete free PDF analysis with neighborhood price trends, verified yields, notary fees and turnkey investment calculator. Used by 1,200+ investors in Timișoara."}
+              </p>
+              <ul className="space-y-2 mb-6">
+                {(language === "ro" ? [
+                  "Evoluția prețurilor 2021–2026 pe cartiere",
+                  "Randament regim hotelier vs. chirie clasică",
+                  "Taxe notariale, intabulare CF, impozit transfer",
+                  "Top 10 ansambluri rezidențiale 2026",
+                ] : [
+                  "Price trends 2021–2026 by neighborhood",
+                  "Hotel-style yield vs. classic rental",
+                  "Notary fees, Land Registry, transfer tax",
+                  "Top 10 residential complexes 2026",
+                ]).map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
+                    <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <InvestorGuideButton />
+            </div>
+            <div className="hidden md:flex justify-center">
+              <div className="relative w-64 h-80 rounded-xl bg-gradient-to-br from-blue-900 to-blue-950 border border-amber-500/30 shadow-2xl shadow-amber-500/10 flex flex-col items-center justify-center p-6 text-center transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                <FileText className="w-16 h-16 text-amber-400 mb-4" />
+                <p className="text-xs uppercase tracking-widest text-amber-300/70 mb-2">
+                  {language === "ro" ? "Ediția 2026" : "2026 Edition"}
+                </p>
+                <p className="text-xl font-serif font-bold text-white mb-2">
+                  Investor Guide
+                </p>
+                <p className="text-xs text-blue-200/70">
+                  Timișoara Real Estate
+                </p>
+                <div className="absolute bottom-4 text-[10px] text-amber-400/60 uppercase tracking-wider">
+                  RealTrust · 48 pages
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section — Generates FAQPage schema */}
+      <section className="py-16 md:py-20">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="mb-4 px-3 py-1">
+              <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
+              FAQ
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">
+              {language === "ro"
+                ? "Întrebări frecvente despre investiții imobiliare în Timișoara"
+                : "Frequently asked questions about real estate investment in Timișoara"}
+            </h2>
+            <p className="text-muted-foreground">
+              {language === "ro"
+                ? "Răspunsuri la cele mai comune întrebări despre randament, zone, taxe și serviciul la cheie."
+                : "Answers to common questions about yield, zones, taxes and turnkey service."}
+            </p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            {faqItems.map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`}>
+                <AccordionTrigger className="text-left text-base font-semibold">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-sm leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       {/* Final CTA Section */}
       <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-primary/5">
         <div className="container mx-auto px-6 text-center max-w-3xl">
