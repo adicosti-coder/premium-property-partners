@@ -11,11 +11,13 @@ import SEOFooterText from "@/components/SEOFooterText";
 import BackToTop from "@/components/BackToTop";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { toast } from "sonner";
 import {
   TrendingUp, Building, Star, ArrowRight, Download, MapPin,
   BedDouble, Bath, Users, Euro, CheckCircle2, Shield, BarChart3,
-  Sparkles, Lock, Mail, Award, Flame, Plane,
+  Sparkles, Lock, Mail, Award, Flame, Plane, List, HelpCircle, TreePine, Factory,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList,
