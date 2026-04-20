@@ -350,7 +350,36 @@ const AnalizaProprietate = () => {
               {text.heroTitle} <span className="text-primary">{text.heroHighlight}</span>
             </h1>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">{text.heroSubtitle}</p>
+            {/* SEO intro paragraph with target keywords */}
+            <p className="sr-only">
+              {language === "ro"
+                ? "Evaluare apartament Timișoara și consultanță imobiliară Timișoara cu instrumentul HostScan AI. Analizăm piața imobiliară Timișoara — vânzări, închirieri și regim hotelier — pe cartiere (ISHO, Centru, Iosefin, Complex Studențesc, Iulius Town, Openville) pentru a oferi un scor obiectiv și ROI estimat pentru proprietatea ta."
+                : "Apartment valuation Timișoara and real estate consulting with the HostScan AI tool. We analyze the Timișoara real estate market — sales, rentals and short-term rental — by neighborhoods (ISHO, Centru, Iosefin, Student Complex, Iulius Town, Openville) to deliver an objective score and estimated ROI for your property."}
+            </p>
           </motion.div>
+
+          {/* SEO H2 strip — promoted from H3 to better reflect service hierarchy */}
+          <section className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3" aria-label={language === "ro" ? "Servicii imobiliare Timișoara" : "Real estate services Timișoara"}>
+            {[
+              {
+                h2: language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
+                desc: language === "ro" ? "Scor obiectiv din 140 puncte pentru proprietatea ta." : "Objective 140-point score for your property.",
+              },
+              {
+                h2: language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara",
+                desc: language === "ro" ? "Strategie investiții, vânzări și închirieri pe cartiere." : "Investment, sales & rental strategy by neighborhood.",
+              },
+              {
+                h2: language === "ro" ? "Administrare regim hotelier" : "Short-term rental management",
+                desc: language === "ro" ? "ROI net verificat 9.4% pe Booking, Airbnb și direct." : "9.4% verified net ROI on Booking, Airbnb and direct.",
+              },
+            ].map((item) => (
+              <div key={item.h2} className="p-4 rounded-2xl bg-card border border-border/50">
+                <h2 className="text-sm font-bold text-foreground">{item.h2}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+              </div>
+            ))}
+          </section>
 
           {/* Main Card */}
           <motion.div
