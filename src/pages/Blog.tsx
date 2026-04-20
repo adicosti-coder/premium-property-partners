@@ -25,6 +25,8 @@ import BackToTop from "@/components/BackToTop";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageSummary from "@/components/PageSummary";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 interface BlogArticle {
   id: string;
@@ -215,6 +217,27 @@ const Blog = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
+  const blogFaqItems = [
+    {
+      question: "Care sunt prețurile imobiliare în Timișoara în 2026?",
+      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.300 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru, ISHO). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8%.",
+    },
+    {
+      question: "Cum a evoluat piața imobiliară Timișoara în ultimii ani?",
+      answer: "Piața imobiliară Timișoara a crescut cu 35-50% în 2020-2026, susținută de dezvoltarea zonelor metropolitane (Giroc, Dumbrăvița, Chișoda), expansiunea hub-urilor industriale (Continental, Hella, Flex) și cererea pentru regim hotelier post-pandemic.",
+    },
+    {
+      question: "Care este randamentul chiriei în Timișoara — clasic vs regim hotelier?",
+      answer: "Chirie clasică: 4-6% randament brut. Regim hotelier administrat profesional (RealTrust): 9.4% net verificat, multiplicator 1.6-2.5x. Cele mai performante zone: ISHO, Centru, Complex Studențesc, Iulius Town.",
+    },
+    {
+      question: "Sunt apartamente disponibile lângă Continental, Hella sau Spitalul Premiere?",
+      answer: "Da. Pentru angajații Continental și hub-urile industriale (zona Aradului, Calea Torontalului) recomandăm apartamente în Aradului și Lipovei. Pentru proximitate Spitalul Premiere (Calea Torontalului) — zonele Aradului și Mehala. Pentru zone rezidențiale liniștite cu acces la natură — Pădurea Verde și Ghiroda.",
+    },
+  ];
+
+  useRegisterFAQs("blog-realtrust", blogFaqItems);
+
   const breadcrumbItems = [
     { label: "Blog" }
   ];
@@ -271,6 +294,32 @@ const Blog = () => {
               {t.subtitle}
             </p>
           </div>
+
+          {/* Pillar intro — investment hub */}
+          {language === "ro" && (
+            <section className="mb-10 rounded-2xl border border-border bg-card/60 p-6 md:p-8">
+              <h2 className="text-2xl font-serif font-semibold text-foreground mb-3">
+                Hub investiții imobiliare Timișoara
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                Articolele noastre acoperă <strong>prețurile imobiliare Timișoara</strong> pe cartiere, <strong>evoluția pieței imobiliare Timișoara</strong> și <strong>randamentul chiriei</strong> — clasic vs regim hotelier. Ghiduri practice pentru investitori, proprietari și angajați ai hub-urilor business: <Link to="/imobiliare-timisoara/aradului" className="text-primary hover:underline">apartamente lângă Continental Timișoara</Link>, zona <strong>Pădurea Verde</strong>, cazare lângă <strong>Spitalul Premiere</strong> și Spitalul Județean.
+              </p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <Link to="/calculator-roi" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Calculator ROI
+                </Link>
+                <Link to="/piata-imobiliara-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Prețuri pe cartiere
+                </Link>
+                <Link to="/imobiliare-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Apartamente pe zone
+                </Link>
+                <Link to="/catalog-investitii" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Catalog investiții
+                </Link>
+              </div>
+            </section>
+          )}
 
           {/* Community Contest Banner */}
           <div className="mb-8 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
@@ -489,6 +538,23 @@ const Blog = () => {
           <div className="mt-12 text-center">
             <InvestorGuideButton size="lg" />
           </div>
+
+          {/* FAQ — pillar topic */}
+          {language === "ro" && (
+            <section className="mt-16">
+              <h2 className="text-2xl font-serif font-semibold text-foreground mb-4">
+                Întrebări frecvente — investiții imobiliare Timișoara
+              </h2>
+              <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6">
+                {blogFaqItems.map((item, idx) => (
+                  <AccordionItem key={idx} value={`blog-faq-${idx}`} className="last:border-b-0">
+                    <AccordionTrigger className="text-left text-foreground">{item.question}</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </section>
+          )}
 
           {/* Lead Magnet Banner */}
           <div className="mt-16">
