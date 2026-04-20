@@ -539,7 +539,7 @@ const Preturi = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
+      <section id="evaluare" className="py-20 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 scroll-mt-24">
         <div className="container mx-auto px-6 text-center max-w-2xl">
           <h2 className="text-3xl font-serif font-bold text-foreground mb-4">
             {lang === "ro" ? "Evaluare gratuită pentru proprietatea ta" : "Free evaluation for your property"}
