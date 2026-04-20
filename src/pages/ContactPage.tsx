@@ -206,6 +206,52 @@ const ContactPage = () => {
             </div>
           </section>
 
+          {/* Program agenție imobiliară Timișoara */}
+          <section id="program" className="max-w-3xl mx-auto mb-12 scroll-mt-24 p-6 bg-card border rounded-2xl">
+            <h2 className="text-xl font-serif font-semibold mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              {isRo ? "Program agenție imobiliară Timișoara" : "Real estate office hours — Timișoara"}
+            </h2>
+            <ul className="space-y-1 text-sm">
+              <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Luni – Vineri" : "Monday – Friday"}</span><span className="font-medium">09:00 – 18:00</span></li>
+              <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Sâmbătă" : "Saturday"}</span><span className="font-medium">10:00 – 14:00</span></li>
+              <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Duminică" : "Sunday"}</span><span className="font-medium">{isRo ? "Doar urgențe" : "Emergencies only"}</span></li>
+              <li className="flex justify-between pt-2 border-t mt-2"><span className="text-muted-foreground">{isRo ? "Suport oaspeți (WhatsApp)" : "Guest support (WhatsApp)"}</span><span className="font-medium text-primary">24/7</span></li>
+            </ul>
+            <p className="text-xs text-muted-foreground mt-3">
+              {isRo
+                ? "Sediu RealTrust Timișoara: Strada Samuil Micu Nr.14, sector central — vis-à-vis de zona Iulius Town."
+                : "RealTrust Timișoara office: Strada Samuil Micu Nr.14, central area — near Iulius Town."}
+            </p>
+          </section>
+
+          {/* Contact pe departamente */}
+          <section id="departamente" className="max-w-4xl mx-auto mb-16 scroll-mt-24">
+            <h2 className="text-2xl font-serif font-semibold text-center mb-6">
+              {isRo ? "Contact pe Departamente" : "Contact by Department"}
+            </h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="p-5 bg-card border rounded-2xl">
+                <h3 className="font-semibold mb-2 flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" />{isRo ? "Vânzări" : "Sales"}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{isRo ? "Tranzacții imobiliare în Timișoara și județul Timiș (Giroc, Dumbrăvița, Moșnița)." : "Real estate transactions in Timișoara and Timiș county (Giroc, Dumbrăvița, Moșnița)."}</p>
+                <a href="tel:+40723154520" className="text-sm text-primary hover:underline block">+40 723 154 520</a>
+                <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
+              </div>
+              <div className="p-5 bg-card border rounded-2xl">
+                <h3 className="font-semibold mb-2 flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />{isRo ? "Închirieri" : "Rentals"}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{isRo ? "Contracte rezidențiale pe termen lung — proprietari și chiriași verificați." : "Long-term residential contracts — verified owners and tenants."}</p>
+                <a href="tel:+40723154520" className="text-sm text-primary hover:underline block">+40 723 154 520</a>
+                <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
+              </div>
+              <div className="p-5 bg-card border rounded-2xl">
+                <h3 className="font-semibold mb-2 flex items-center gap-2"><Star className="w-5 h-5 text-primary" />{isRo ? "Administrare" : "Management"}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{isRo ? "Regim hotelier ApArt Hotel — Airbnb, Booking, ROI 9.4% net." : "Short-term rentals (ApArt Hotel) — Airbnb, Booking, 9.4% net ROI."}</p>
+                <a href="tel:+40770635252" className="text-sm text-primary hover:underline block">+40 770 635 252</a>
+                <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
+              </div>
+            </div>
+          </section>
+
           {/* Map + Address */}
           <section id="sediu" className="grid lg:grid-cols-2 gap-8 mb-16 scroll-mt-24">
             <div className="rounded-2xl overflow-hidden border aspect-[4/3] lg:aspect-auto">
