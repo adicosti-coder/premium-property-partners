@@ -25,6 +25,8 @@ import BackToTop from "@/components/BackToTop";
 import LeadMagnetBanner from "@/components/LeadMagnetBanner";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageSummary from "@/components/PageSummary";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 interface BlogArticle {
   id: string;
