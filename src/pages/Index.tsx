@@ -249,17 +249,24 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
-        {/* Hero - Entry Point (above-fold, eager) */}
-        <Hero />
+        {/* Hero - lazy-loaded to free the LCP critical path. The static
+            hero-shell painted by index.html stays visible until React mounts. */}
+        <Suspense fallback={null}>
+          <Hero />
+        </Suspense>
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
-        <PageSummary
-          summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
-          summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
-        />
+        <Suspense fallback={null}>
+          <PageSummary
+            summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
+            summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
+          />
+        </Suspense>
 
         {/* Sentinel placed RIGHT AFTER hero+summary — moves EVERYTHING below
             (ServicesH2Strip, NeighborhoodsGrid, LocalLandmarksStrip, NearFold,
