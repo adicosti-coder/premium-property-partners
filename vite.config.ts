@@ -84,6 +84,11 @@ export default defineConfig(({ mode }) => {
               if (id.includes("@tanstack/react-query")) return "vendor-query";
               if (id.includes("embla-carousel")) return "vendor-embla";
               if (id.includes("mapbox-gl")) return "vendor-mapbox";
+              // Isolate framer-motion (~60KB) — only loaded by below-the-fold
+              // components, must NOT be in the eager LCP bundle.
+              if (id.includes("framer-motion")) return "vendor-motion";
+              // Isolate lucide-react icons (~50KB tree-shaken) — same rationale.
+              if (id.includes("lucide-react")) return "vendor-icons";
               // Group all Radix UI primitives together — keeps HTTP requests low
               if (id.includes("@radix-ui/")) return "vendor-radix";
               return undefined;
