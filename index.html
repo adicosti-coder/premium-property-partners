@@ -61,6 +61,7 @@
       .cv-auto{content-visibility:auto;contain-intrinsic-size:1px 600px}
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       [hidden]{display:none}
+      @media(min-width:640px){.hero-cta-row{flex-direction:row !important;gap:1rem !important;max-width:none !important}}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
@@ -99,7 +100,7 @@
       <div id="hero-shell" style="position:relative;min-height:100dvh;display:flex;align-items:center;overflow:hidden;padding-top:7rem;background:#f7f5f0">
         <img src="/images/hero-optimized-800w.webp" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" fetchpriority="high" decoding="sync" width="800" height="447" />
         <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(247,245,240,0.85),rgba(247,245,240,0.45),transparent);z-index:1"></div>
-        <div style="position:relative;z-index:10;max-width:56rem;margin:0 auto;padding:5rem 1.5rem" aria-hidden="true">
+        <div style="position:relative;z-index:10;max-width:56rem;margin:0 auto;padding:5rem 1.5rem">
           <div style="font-family:'Playfair Display',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;color:#1e293b;line-height:1.05;margin-bottom:1.5rem;max-width:56rem">
             <span style="display:block">RealTrust &amp; ApArt Hotel Timișoara —</span>
             <span style="display:block;font-size:0.58em;font-style:italic;font-weight:400;opacity:0.9;margin:0.55rem 0">imobiliare &amp; regim hotelier</span>
@@ -110,7 +111,7 @@
             Administrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.<br>
             Tu încasezi, noi ne ocupăm de tot.
           </p>
-          <div style="display:flex;flex-direction:column;gap:2rem;max-width:26rem;margin-bottom:1.5rem">
+          <div class="hero-cta-row" style="display:flex;flex-direction:column;gap:2rem;max-width:26rem;margin-bottom:1.5rem">
             <a href="#calculator" style="min-height:56px;display:inline-flex;align-items:center;justify-content:center;padding:0.75rem 2rem;border-radius:0.75rem;background:#b8860b;color:#fff7ed;font-family:'Inter',system-ui,sans-serif;font-size:1rem;font-weight:600;text-align:center;text-decoration:none;box-shadow:0 10px 24px rgba(184,134,11,0.22)">Află Randamentul Tău</a>
             <a href="/investitii" style="min-height:56px;display:inline-flex;align-items:center;justify-content:center;padding:0.75rem 2rem;border-radius:0.75rem;background:#1e293b;color:#f8fafc;font-family:'Inter',system-ui,sans-serif;font-size:1rem;font-weight:600;text-align:center;text-decoration:none;border:1px solid #1e293b;box-shadow:0 8px 20px rgba(15,23,42,0.15)">Vreau investiție profitabilă în Timișoara</a>
           </div>
