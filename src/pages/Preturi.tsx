@@ -487,8 +487,41 @@ const Preturi = () => {
         </div>
       </section>
 
+      {/* Business / Industrial Areas — Continental, Hella, Draxlmaier */}
+      <section id="zone-business" className="py-16 bg-background scroll-mt-24">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-4">
+            {lang === "ro" ? "Apartamente pentru Angajați Corporate — Zone Industriale Timișoara" : "Apartments for Corporate Employees — Timișoara Industrial Areas"}
+          </h2>
+          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-8">
+            {lang === "ro"
+              ? "Administrăm apartamente cu cerere ridicată din partea angajaților marilor corporații din Timișoara — segment cheie pentru închirieri pe termen lung și mediu."
+              : "We manage apartments with strong demand from major corporate employers in Timișoara — a key segment for long- and mid-term rentals."}
+          </p>
+          <div className="grid sm:grid-cols-3 gap-4 text-sm">
+            <div className="p-5 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-1">{lang === "ro" ? "Închirieri lângă Continental Timișoara" : "Rentals near Continental Timișoara"}</h3>
+              <p className="text-muted-foreground">{lang === "ro" ? "Calea Aradului, Ghiroda — 5–15 min de fabrica Continental." : "Calea Aradului, Ghiroda — 5–15 min from the Continental plant."}</p>
+            </div>
+            <div className="p-5 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-1">{lang === "ro" ? "Apartamente aproape de Hella" : "Apartments near Hella"}</h3>
+              <p className="text-muted-foreground">{lang === "ro" ? "Zona Aeroport / Ghiroda — convenabil pentru R&D Hella." : "Airport / Ghiroda area — convenient for Hella R&D staff."}</p>
+            </div>
+            <div className="p-5 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-1">{lang === "ro" ? "Cazare lângă Draxlmaier" : "Stays near Draxlmaier"}</h3>
+              <p className="text-muted-foreground">{lang === "ro" ? "Pol industrial est — chiriași stabili pe termen lung." : "Eastern industrial pole — stable long-term tenants."}</p>
+            </div>
+          </div>
+          <p className="text-center text-xs text-muted-foreground mt-6">
+            {lang === "ro"
+              ? "Solicită o ofertă preț administrare apartament personalizată pentru zona ta — răspundem în 24h."
+              : "Request a custom apartment management pricing offer for your area — we reply within 24h."}
+          </p>
+        </div>
+      </section>
+
       {/* Guarantees */}
-      <section className="py-16 bg-muted/30">
+      <section id="garantii" className="py-16 bg-muted/30 scroll-mt-24">
         <div className="container mx-auto px-6 max-w-5xl">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-center text-foreground mb-10">
             {lang === "ro" ? "Garanțiile noastre" : "Our guarantees"}
