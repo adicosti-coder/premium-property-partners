@@ -541,8 +541,92 @@ const CatalogInvestitii = () => {
                 </div>
               </section>
 
+              {/* Market Analysis Section — keywords: piața imobiliară, prețuri, terenuri, Giroc, parcuri industriale, Adora Forest */}
+              <section id="market" className="bg-card border-y border-border py-16 md:py-24 scroll-mt-24">
+                <div className="max-w-5xl mx-auto px-4">
+                  <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4">
+                    {t.marketTitle}
+                  </h2>
+                  <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+                    {isRo
+                      ? "Analiza completă a pieței imobiliare din Timișoara: prețuri pe cartiere, ansambluri rezidențiale, terenuri și zone metropolitane."
+                      : "Complete analysis of Timișoara's real estate market: prices by neighborhood, residential developments, land plots and metropolitan areas."}
+                  </p>
+
+                  {/* Pricing grid by zone */}
+                  <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Euro className="w-5 h-5 text-primary" />
+                    {isRo ? "Prețuri apartamente Timișoara — EUR/mp (2026)" : "Timișoara apartment prices — EUR/sqm (2026)"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+                    {[
+                      { zone: isRo ? "Centru / Iosefin" : "Center / Iosefin", price: "2.500 – 3.200" },
+                      { zone: "ISHO / Iulius Town", price: "2.400 – 3.000" },
+                      { zone: isRo ? "Complex Studențesc" : "Student Complex", price: "2.300 – 2.800" },
+                      { zone: "Dumbrăvița / Ghiroda", price: "1.900 – 2.500" },
+                      { zone: "Giroc / Moșnița Nouă", price: "1.800 – 2.300" },
+                      { zone: isRo ? "Mehala / Plopi" : "Mehala / Plopi", price: "1.500 – 2.000" },
+                    ].map((row) => (
+                      <div key={row.zone} className="rounded-xl border border-border bg-background p-4">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{row.zone}</div>
+                        <div className="text-lg font-bold text-primary">€{row.price}/mp</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Residential complexes */}
+                  <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Building className="w-5 h-5 text-primary" />
+                    {isRo ? "Ansambluri rezidențiale — stadiu construcție" : "Residential developments — construction status"}
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-3 mb-10">
+                    {[
+                      { name: "ISHO", status: isRo ? "Finalizat — disponibil imediat" : "Completed — available now" },
+                      { name: "ATENEO", status: isRo ? "În construcție — finalizare T4 2026" : "Under construction — Q4 2026" },
+                      { name: "City of Mara", status: isRo ? "Faza 2 — finalizare T2 2026" : "Phase 2 — Q2 2026" },
+                      { name: "Adora Forest", status: isRo ? "În construcție — Dumbrăvița" : "Under construction — Dumbrăvița" },
+                      { name: "Vivalia", status: isRo ? "Pre-vânzare — livrare 2027" : "Pre-sale — 2027 delivery" },
+                      { name: "Nord One", status: isRo ? "Finalizat — apartamente cu grădină disponibile" : "Completed — garden apartments available" },
+                      { name: "GREEN FOREST", status: isRo ? "Finalizat — Dumbrăvița" : "Completed — Dumbrăvița" },
+                      { name: "FullView", status: isRo ? "Finalizat — disponibil pentru investiție" : "Completed — investment-ready" },
+                    ].map((c) => (
+                      <div key={c.name} className="rounded-xl border border-border bg-background p-4">
+                        <div className="font-bold text-foreground">{c.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{c.status}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Land + metro */}
+                  <div className="grid md:grid-cols-2 gap-6 mb-10">
+                    <div className="rounded-2xl border border-border bg-background p-6">
+                      <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                        <TreePine className="w-5 h-5 text-primary" />
+                        {isRo ? "Terenuri de vânzare Timișoara metropolitan" : "Land for sale — Timișoara metro"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {isRo
+                          ? "Oferim terenuri intravilane în Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda și Săcălaz, cu prețuri 60–180 EUR/mp. Ideale pentru construcție casă, mici ansambluri sau apartamente cu grădină."
+                          : "We offer plots in Giroc, Dumbrăvița, Moșnița Nouă, Ghiroda and Săcălaz at 60–180 EUR/sqm. Ideal for house construction, small developments or garden apartments."}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-background p-6">
+                      <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                        <Factory className="w-5 h-5 text-primary" />
+                        {isRo ? "Parcuri industriale — cerere de chirie" : "Industrial parks — rental demand"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {isRo
+                          ? "Proximitatea față de Continental, Hella, VGP, WDP, Incontro și Linde generează cerere constantă de chirie pe Calea Aradului, Calea Torontalului și Ghiroda — ocupare 95%+."
+                          : "Proximity to Continental, Hella, VGP, WDP, Incontro and Linde drives steady rental demand on Calea Aradului, Calea Torontalului and Ghiroda — 95%+ occupancy."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               {saleProperties.length > 0 && (
-                <section className="bg-muted/30 py-16 md:py-24">
+                <section id="properties" className="bg-muted/30 py-16 md:py-24 scroll-mt-24">
                   <div className="max-w-6xl mx-auto px-4">
                     <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground text-center mb-4">
                       {t.saleTitle}
