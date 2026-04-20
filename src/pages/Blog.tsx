@@ -539,6 +539,23 @@ const Blog = () => {
             <InvestorGuideButton size="lg" />
           </div>
 
+          {/* FAQ — pillar topic */}
+          {language === "ro" && (
+            <section className="mt-16">
+              <h2 className="text-2xl font-serif font-semibold text-foreground mb-4">
+                Întrebări frecvente — investiții imobiliare Timișoara
+              </h2>
+              <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6">
+                {blogFaqItems.map((item, idx) => (
+                  <AccordionItem key={idx} value={`blog-faq-${idx}`} className="last:border-b-0">
+                    <AccordionTrigger className="text-left text-foreground">{item.question}</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </section>
+          )}
+
           {/* Lead Magnet Banner */}
           <div className="mt-16">
             <LeadMagnetBanner variant="hero" />
