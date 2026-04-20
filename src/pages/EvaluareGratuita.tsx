@@ -1,12 +1,48 @@
 import { useState, lazy, Suspense } from "react";
-import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2, FileCheck, MapPin, Clock, ShieldCheck } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { neighborhoods } from "@/data/neighborhoods";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+
+const EVAL_FAQS = [
+  {
+    question: "Cât valorează apartamentul meu din Timișoara?",
+    answer:
+      "Valoarea unui apartament în Timișoara depinde de cartier (ex: Circumvalațiunii, ISHO, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa RealTrust analizează tranzacții comparabile recente din zonă și vă oferă o estimare preț apartament Timișoara în maxim 24 de ore, complet gratuit.",
+  },
+  {
+    question: "Care este diferența între estimarea de piață și un raport de evaluare ANEVAR?",
+    answer:
+      "Estimarea de piață oferită gratuit de RealTrust reflectă prețul realist de vânzare bazat pe cererea actuală și tranzacții comparabile. Un raport de evaluare proprietate emis de un evaluator ANEVAR Timișoara este un document oficial, contra-cost, necesar pentru bănci (credite ipotecare), instanțe judecătorești sau partaje. Estimarea noastră este ideală pentru a decide prețul de listare la vânzare.",
+  },
+  {
+    question: "Cât durează evaluarea gratuită?",
+    answer:
+      "Răspundem în maxim 24 de ore lucrătoare. Pentru proprietăți complexe (case, terenuri, spații comerciale) sau zone metropolitane (Dumbrăvița, Ghiroda, Moșnița Nouă, Giroc), poate fi necesară o vizită la fața locului, programată în următoarele 48-72h.",
+  },
+  {
+    question: "Ce date trebuie să furnizez pentru o evaluare corectă?",
+    answer:
+      "Pentru o estimare precisă avem nevoie de: tipul proprietății (apartament, casă, teren, comercial), cartierul exact, suprafața utilă, anul construcției, etajul, numărul de camere, starea finisajelor (renovat, semi-renovat, vechi) și opțional fotografii. Cu cât detaliile sunt mai exacte, cu atât estimarea este mai apropiată de prețul real de tranzacționare.",
+  },
+  {
+    question: "Evaluarea gratuită mă obligă să vând prin RealTrust?",
+    answer:
+      "Nu. Evaluarea este 100% gratuită și fără obligații. Primiți raportul de estimare și decideți liber dacă doriți să listați proprietatea cu noi sau nu. Mulți proprietari folosesc estimarea doar pentru a-și planifica viitorul financiar sau o moștenire.",
+  },
+  {
+    question: "Acoperiți și zone metropolitane ca Dumbrăvița sau Giroc?",
+    answer:
+      "Da. Oferim evaluare apartament Circumvalațiunii, estimare preț casă Dumbrăvița, precum și pentru Ghiroda, Moșnița Nouă, Giroc, Chișoda și Săcălaz. Cunoaștem prețurile pe metru pătrat și particularitățile fiecărei zone metropolitane din jurul Timișoarei.",
+  },
+];
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -36,6 +72,8 @@ const EvaluareGratuita = () => {
     phone: "",
     email: "",
   });
+
+  useRegisterFAQs("evaluare-gratuita", EVAL_FAQS);
 
   const progress = (step / 4) * 100;
 
@@ -75,13 +113,22 @@ const EvaluareGratuita = () => {
   return (
     <Suspense fallback={null}>
       <SEOHead
-        title="Evaluare Gratuită Proprietate Timișoara | RealTrust"
-        description="Solicită o evaluare gratuită pentru proprietatea ta din Timișoara. Răspundem în maxim 24 de ore cu o estimare personalizată."
+        title="Evaluare Gratuită Apartament & Casă Timișoara | RealTrust"
+        description="Primește o evaluare gratuită pentru apartamentul sau casa ta din Timișoara. Află un preț corect de piață în 24h. Experții noștri locali analizează datele pentru o estimare precisă."
         url="https://www.realtrust.ro/evaluare-gratuita"
       />
       <Header />
-      <main className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-lg">
+      <main className="min-h-[80vh] px-4 py-12">
+        <div className="max-w-3xl mx-auto mb-8 text-center space-y-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            Evaluare Gratuită Proprietate Imobiliară în Timișoara
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Aflați cât valorează apartamentul, casa, terenul sau spațiul comercial din Timișoara —
+            estimare preț bazată pe tranzacții reale din cartierul dvs., livrată în maxim 24 de ore.
+          </p>
+        </div>
+        <div className="w-full max-w-lg mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-lg">
           {/* Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
