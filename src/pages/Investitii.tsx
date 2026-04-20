@@ -219,7 +219,7 @@ const Investitii = () => {
   return (
     <div className="dark min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Investiții Imobiliare Timișoara | RealTrust" : "Real Estate Investments Timișoara | RealTrust"}
+        title={language === "ro" ? "Investiții Imobiliare Timișoara | Randament 9.4% | RealTrust" : "Real Estate Investments Timișoara | 9.4% Yield | RealTrust"}
         description={t.metaDescription}
         url="https://www.realtrust.ro/investitii"
         jsonLd={speakableSchema}
