@@ -318,6 +318,45 @@ const PentruOaspeti = () => {
     answer: item.answer,
   })));
 
+  const lodgingJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    "name": "ApArt Hotel by RealTrust — Cazare Regim Hotelier Timișoara",
+    "url": "https://www.realtrust.ro/pentru-oaspeti",
+    "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+    "priceRange": "€45 – €120 / noapte",
+    "telephone": "+40723154520",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+      "addressLocality": "Timișoara",
+      "addressRegion": "Timiș",
+      "postalCode": "300125",
+      "addressCountry": "RO",
+    },
+    "geo": { "@type": "GeoCoordinates", "latitude": 45.7672, "longitude": 21.2495 },
+    "checkinTime": "15:00",
+    "checkoutTime": "11:00",
+    "petsAllowed": true,
+    "amenityFeature": [
+      { "@type": "LocationFeatureSpecification", "name": "Free underground parking", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Free WiFi", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Air conditioning", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Self check-in 24/7", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Fully equipped kitchen", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Washing machine", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Netflix / Smart TV", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Hotel linens & towels", "value": true },
+    ],
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "9.7", "reviewCount": "180", "bestRating": "10" },
+    "containsPlace": [
+      { "@type": "Apartment", "name": "ATENEO", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
+      { "@type": "Apartment", "name": "GREEN FOREST", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
+      { "@type": "Apartment", "name": "FullView Studio", "numberOfRooms": 1, "occupancy": { "@type": "QuantitativeValue", "maxValue": 2 } },
+      { "@type": "Apartment", "name": "HELIOS", "numberOfRooms": 1, "occupancy": { "@type": "QuantitativeValue", "maxValue": 2 } },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
@@ -326,6 +365,7 @@ const PentruOaspeti = () => {
           ? "Cauți cazare în regim hotelier în Timișoara? Apartamente premium lângă UVT, Iulius Town, Aeroport și Centru. Parcare gratuită, self check-in 24/7. Rezervă direct!"
           : "Looking for short-term rental in Timișoara? Premium apartments near UVT, Iulius Town, Airport and Old Town. Free parking, 24/7 self check-in. Book direct!"}
         url="https://www.realtrust.ro/pentru-oaspeti"
+        jsonLd={lodgingJsonLd}
       />
       <Header />
       
