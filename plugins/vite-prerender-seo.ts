@@ -142,6 +142,25 @@ const neighborhoods = [
     <h3>Piața imobiliară Timișoara — context ISHO</h3>
     <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
   ` },
+  { slug: 'iosefin', name: 'Iosefin', fullName: 'Iosefin', avgPrice: 1850, faq: [
+    { q: 'Care este prețul mediu pe metru pătrat în Iosefin Timișoara?', a: 'Prețurile apartamentelor în Iosefin variază între 1.700 și 2.100 €/mp (medie 1.850 €/mp). Garsonierele se tranzacționează între 60.000 și 75.000 €.' },
+    { q: 'De ce să investesc în Iosefin?', a: 'Arhitectură habsburgică, Piața Iosefin, Sinagoga din Iosefin, acces 8 min pe jos spre Piața Unirii. Randament regim hotelier 8–9% net.' },
+    { q: 'Cum evoluează piața imobiliară Iosefin?', a: 'Creștere de ~7% în 2025, susținută de cererea expaților și aprecierea clădirilor istorice renovate.' },
+    { q: 'Sunt disponibile garsoniere de vânzare Iosefin?', a: 'Da, 60.000–75.000 €, atât în clădiri istorice renovate, cât și în proiecte noi pe malul Begăi.' },
+  ], seoBody: `
+    <h2>Apartamente de vânzare în Iosefin, Timișoara — cartier istoric pe malul Begăi</h2>
+    <p>Cartierul <strong>Iosefin</strong> este una dintre cele mai vechi și emblematice zone ale Timișoarei, recunoscut pentru arhitectura habsburgică, <strong>Piața Iosefin</strong> (reper comercial vital), <strong>Sinagoga din Iosefin</strong> (monument istoric emblematic) și acces pietonal de 8 minute spre Piața Unirii. <strong>Bulevardul 16 Decembrie 1989</strong> traversează cartierul și asigură legături excelente de tramvai (liniile 1, 2) către UVT și Iulius Town (10 minute).</p>
+    <h2>Prețuri apartamente Iosefin Timișoara — analiză 2026</h2>
+    <p><strong>Prețurile apartamentelor în Iosefin Timișoara</strong> variază între 1.700 și 2.100 €/mp (medie 1.850 €/mp). Clădirile istorice renovate ating 2.000–2.100 €/mp, iar cele cu lucrări necesare 1.700–1.800 €/mp. Factori de influență: starea structurală (clădiri monument vs. blocuri noi), proximitatea față de malul Begăi și nivelul de finisaje. Față de Cetate (2.300+ €/mp), Iosefin oferă același acces ultracentral la prețuri cu 15–20% mai mici.</p>
+    <h3>Garsoniere de vânzare Iosefin Timișoara</h3>
+    <p><strong>Garsonierele de vânzare în Iosefin</strong> sunt o tipologie foarte căutată în zona centrală — preț 60.000–75.000 €, suprafețe 28–38 mp. Cerere ridicată pentru regim hotelier (turism cultural) și pentru chirie pe termen lung din partea studenților UVT și a tinerilor profesioniști.</p>
+    <h3>Piața imobiliară Iosefin — tendințe și investitori</h3>
+    <p><strong>Piața imobiliară Iosefin</strong> a crescut cu ~7% în 2025, susținută de cererea pentru închirieri pe termen lung din partea expaților și a profesioniștilor creativi, plus apreciere de capital constantă pentru clădirile istorice renovate. Profil tipic investitor: cumpărător 35–55 ani, focus pe randament regim hotelier (8–9% net) și apreciere capital pe 5–10 ani.</p>
+    <h3>Puncte de interes lângă Iosefin</h3>
+    <p><strong>Piața Iosefin</strong> (reper comercial, 2 min), <strong>Sinagoga din Iosefin</strong> (monument istoric, 5 min), Catedrala Romano-Catolică (3 min), malul Begăi (1 min), Piața Unirii (8 min pe jos), Gara de Nord (5 min), UVT (10 min cu tramvaiul de pe Bulevardul 16 Decembrie 1989), Iulius Town (10 min).</p>
+    <h3>Apartamente de închiriat Iosefin Timișoara</h3>
+    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
+  ` },
 ];
 
 // Map for type-safety on optional seoBody
