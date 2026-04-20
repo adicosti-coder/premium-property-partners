@@ -242,6 +242,31 @@ const Preturi = () => {
   const s = seo[lang];
   const breadcrumbs = [{ label: lang === "ro" ? "Prețuri" : "Pricing" }];
 
+  const pricingFaqItems = [
+    {
+      question: "Ce costuri implică administrarea unui imobil în Timișoara?",
+      answer: "Costurile de administrare imobil în Timișoara la RealTrust sunt incluse într-un comision unic procentual din venitul brut: Starter 15%, Esențial 18%, Standard 20%, Premium 25%. Acest tarif acoperă listarea pe Booking/Airbnb, check-in, curățenie, suport oaspeți, prețuri dinamice și raportare. Nu există taxe ascunse de setup, abonament sau retragere.",
+    },
+    {
+      question: "Care este tariful de administrare proprietăți în Timișoara?",
+      answer: "Tariful de administrare proprietăți în Timișoara variază între 15% și 25% din venitul brut, în funcție de pachet. Pentru un apartament cu venit brut de 1.800€/lună, comisionul Standard (20%) este 360€/lună. Diferența față de auto-administrare este compensată de creșterea ocupării (75% vs 50%) și a tarifului mediu pe noapte.",
+    },
+    {
+      question: "Care sunt pachetele de administrare regim hotelier disponibile?",
+      answer: "Oferim 4 pachete de administrare regim hotelier: Starter (15% — listare basic), Esențial (18% — fotografii + curățenie), Standard (20% — cel mai popular, prețuri dinamice + 10+ canale), Premium (25% — manager dedicat + revenue management avansat). Toate includ raportare lunară transparentă.",
+    },
+    {
+      question: "Administrați apartamente în zone cu cerere ridicată (Continental, Hella, Piața 700)?",
+      answer: "Da. Avem expertiză specifică pe zonele cu cerere business: apartamente lângă Continental Timișoara (Calea Aradului), cazare lângă Hella Timișoara (Ghiroda/Aeroport) și închirieri Piața 700 (ultracentral, lângă Iulius Town). Aceste zone generează ocupare suplimentară din business travel — ideal pentru pachetele Standard și Premium.",
+    },
+    {
+      question: "Sunt prețurile pachetelor negociabile sau există costuri de setup?",
+      answer: "Comisioanele sunt fixe, transparente și aceleași pentru toți proprietarii — nu negociem cu unii și ascundem la alții. Setup-ul (smart lock, fotografii, listare pe canale) este inclus în comision. Contractul este flexibil, fără penalități de retragere după primele 3 luni.",
+    },
+  ];
+
+  useRegisterFAQs("preturi-administrare", pricingFaqItems);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
