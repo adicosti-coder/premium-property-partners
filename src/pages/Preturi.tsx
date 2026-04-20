@@ -467,6 +467,26 @@ const Preturi = () => {
         </div>
       </section>
 
+      {/* FAQ — pricing & costs */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <div className="flex items-center gap-2 mb-6">
+            <HelpCircle className="w-5 h-5 text-primary" />
+            <h2 className="text-2xl md:text-3xl font-serif font-semibold text-foreground">
+              {lang === "ro" ? "Întrebări frecvente — costuri & pachete" : "FAQ — costs & packages"}
+            </h2>
+          </div>
+          <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6">
+            {pricingFaqItems.map((item, idx) => (
+              <AccordionItem key={idx} value={`pricing-faq-${idx}`} className="last:border-b-0">
+                <AccordionTrigger className="text-left text-foreground">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       <Footer />
       <GlobalConversionWidgets />
       <BackToTop />
