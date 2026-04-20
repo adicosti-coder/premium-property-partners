@@ -20,16 +20,32 @@ const ContactPage = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
 
+  const faqItems = isRo
+    ? [
+        { q: "Care este programul agenției imobiliare RealTrust din Timișoara?", a: "Sediul RealTrust din Strada Samuil Micu Nr.14, Timișoara este deschis Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
+        { q: "Ce comision percepe RealTrust pentru administrarea în regim hotelier?", a: "Comisionul standard pentru management complet (listing, check-in, curățenie, raportare) este de 20-25% din venitul brut, în funcție de pachetul ales. Toate detaliile se discută la sediul RealTrust din Timișoara sau telefonic." },
+        { q: "În ce zone din Timișoara și județul Timiș oferiți servicii?", a: "Acoperim Timișoara (Centru, Iosefin, Fabric, Elisabetin, Complex Studențesc, Iulius Town, ISHO) și zonele metropolitane: Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda. Pentru proiecte mari evaluăm și restul județului Timiș." },
+        { q: "Cum se desfășoară procesul de tranzacționare imobiliară?", a: "1) Evaluare gratuită proprietate, 2) Listare profesională cu fotografii și marketing AI, 3) Selecție cumpărători verificați, 4) Negociere și asistență notarială completă până la semnare." },
+        { q: "Aveți departamente separate pentru vânzări, închirieri și administrare?", a: "Da. Departamentul Vânzări gestionează tranzacțiile imobiliare, Departamentul Închirieri se ocupă de contracte rezidențiale pe termen lung, iar Departamentul Administrare (regim hotelier) operează portofoliul ApArt Hotel. Toate la același număr: +40 723 154 520." },
+      ]
+    : [
+        { q: "What are RealTrust office hours in Timișoara?", a: "Our office at Strada Samuil Micu Nr.14, Timișoara is open Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
+        { q: "What commission does RealTrust charge for short-term rental management?", a: "Standard full-management commission (listing, check-in, cleaning, reporting) is 20-25% of gross revenue, depending on the package. All details are discussed at our Timișoara office or by phone." },
+        { q: "Which areas in Timișoara and Timiș county do you cover?", a: "We cover Timișoara (Center, Iosefin, Fabric, Elisabetin, Student Complex, Iulius Town, ISHO) and metropolitan areas: Dumbrăvița, Giroc, Moșnița Nouă, Ghiroda. For larger projects we also assess the rest of Timiș county." },
+        { q: "How does the real estate transaction process work?", a: "1) Free property valuation, 2) Professional listing with photos and AI marketing, 3) Verified buyer selection, 4) Negotiation and full notarial assistance through signing." },
+        { q: "Do you have separate departments for sales, rentals and management?", a: "Yes. The Sales department handles real estate transactions, the Rentals department covers long-term residential contracts, and the Management department (short-term rentals) operates the ApArt Hotel portfolio. All at the same number: +40 723 154 520." },
+      ];
+
   const jsonLdSchemas = [
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": ["RealEstateAgent", "LocalBusiness"],
       "@id": `${BASE_URL}/contact`,
       "name": "RealTrust & ApArt Hotel Timișoara",
       "alternateName": "RealTrust Property Management",
       "description": isRo
-        ? "Management profesional de proprietăți în Timișoara. Administrare apartamente regim hotelier cu randament net 9.4% ROI. Sediu: Str. Samuil Micu Nr.14."
-        : "Professional property management in Timișoara. Short-term rental management with 9.4% net ROI. Office: Str. Samuil Micu Nr.14.",
+        ? "Sediu RealTrust Timișoara — agenție imobiliară și management proprietăți în regim hotelier. Vânzări, închirieri, administrare apartamente cu randament net 9.4% ROI. Acoperire Timișoara și județul Timiș (Giroc, Dumbrăvița, Moșnița)."
+        : "RealTrust Timișoara office — real estate agency and short-term rental management. Sales, rentals, apartment management with 9.4% net ROI. Coverage in Timișoara and Timiș county (Giroc, Dumbrăvița, Moșnița).",
       "url": `${BASE_URL}/contact`,
       "telephone": "+40723154520",
       "email": "info@realtrust.ro",
@@ -42,25 +58,22 @@ const ContactPage = () => {
         "postalCode": "300125",
         "addressCountry": "RO",
       },
-      "openingHoursSpecification": [
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          "opens": "09:00",
-          "closes": "18:00",
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": "Saturday",
-          "opens": "10:00",
-          "closes": "14:00",
-        },
-      ],
-      "areaServed": {
-        "@type": "City",
-        "name": "Timișoara",
-        "containedInPlace": { "@type": "Country", "name": "Romania" },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 45.7672,
+        "longitude": 21.2495,
       },
+      "openingHoursSpecification": [
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "18:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" },
+      ],
+      "areaServed": [
+        { "@type": "City", "name": "Timișoara", "containedInPlace": { "@type": "AdministrativeArea", "name": "Județul Timiș" } },
+        { "@type": "AdministrativeArea", "name": "Județul Timiș" },
+        { "@type": "Place", "name": "Giroc" },
+        { "@type": "Place", "name": "Dumbrăvița" },
+        { "@type": "Place", "name": "Moșnița Nouă" },
+      ],
       "priceRange": "€50-€150 per night",
       "sameAs": [
         "https://www.facebook.com/realtrust.ro",
@@ -68,6 +81,26 @@ const ContactPage = () => {
         GOOGLE_BUSINESS_URL,
       ],
       "hasMap": GOOGLE_MAPS_URL,
+      "makesOffer": [
+        { "@type": "Offer", "name": isRo ? "Administrare regim hotelier" : "Short-term rental management", "description": isRo ? "Management complet apartamente Airbnb & Booking, ROI 9.4% net." : "Full Airbnb & Booking apartment management, 9.4% net ROI." },
+        { "@type": "Offer", "name": isRo ? "Vânzări apartamente Timișoara" : "Apartment sales Timișoara", "description": isRo ? "Intermediere vânzări apartamente în Timișoara și județul Timiș." : "Apartment sales brokerage in Timișoara and Timiș county." },
+        { "@type": "Offer", "name": isRo ? "Închirieri rezidențiale" : "Long-term rentals", "description": isRo ? "Contracte de închiriere pe termen lung pentru proprietari și chiriași." : "Long-term rental contracts for owners and tenants." },
+        { "@type": "Offer", "name": isRo ? "Evaluare gratuită proprietate" : "Free property valuation", "description": isRo ? "Estimare prețuri apartamente Timișoara pe cartiere." : "Apartment price estimates in Timișoara by neighborhood." },
+      ],
+      "contactPoint": [
+        { "@type": "ContactPoint", "contactType": "sales", "telephone": "+40723154520", "email": "info@realtrust.ro", "areaServed": "RO", "availableLanguage": ["Romanian", "English"] },
+        { "@type": "ContactPoint", "contactType": "reservations", "telephone": "+40770635252", "email": "info@realtrust.ro", "areaServed": "RO", "availableLanguage": ["Romanian", "English"] },
+        { "@type": "ContactPoint", "contactType": "property management", "telephone": "+40723154520", "email": "info@realtrust.ro", "areaServed": "RO", "availableLanguage": ["Romanian", "English"] },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqItems.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
     },
     {
       "@context": "https://schema.org",
@@ -127,25 +160,27 @@ const ContactPage = () => {
           {/* Hero Section */}
           <section className="text-center max-w-3xl mx-auto mb-12">
             <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4">
-              {isRo ? "Contact & Prezență Locală" : "Contact & Local Presence"}
+              {isRo ? "Contact & Prezență Locală — Sediu RealTrust Timișoara" : "Contact & Local Presence — RealTrust Timișoara Office"}
             </h1>
             <p className="text-lg text-muted-foreground">
               {isRo
-                ? "Management profesional de proprietăți în Timișoara — sediu fizic, echipă locală dedicată, disponibilitate non-stop pentru oaspeți și proprietari."
-                : "Professional property management in Timișoara — physical office, dedicated local team, 24/7 availability for guests and owners."}
+                ? "Sediu RealTrust în Strada Samuil Micu Nr.14, Timișoara — partenerul tău de încredere pentru imobiliare în Timișoara și întreg județul Timiș (inclusiv Giroc, Dumbrăvița, Moșnița Nouă)."
+                : "RealTrust office at Strada Samuil Micu Nr.14, Timișoara — your trusted partner for real estate in Timișoara and all of Timiș county (including Giroc, Dumbrăvița, Moșnița Nouă)."}
             </p>
           </section>
 
-          {/* Table of Contents */}
-          <nav aria-label={isRo ? "Cuprins pagină" : "Page contents"} className="max-w-3xl mx-auto mb-12 p-4 bg-muted/30 border rounded-xl">
-            <p className="text-sm font-semibold mb-2">{isRo ? "Cuprins:" : "On this page:"}</p>
+          {/* Jump-to / Table of Contents */}
+          <nav aria-label={isRo ? "Sari direct la secțiune" : "Jump to section"} className="max-w-3xl mx-auto mb-12 p-4 bg-muted/30 border rounded-xl">
+            <p className="text-sm font-semibold mb-2">{isRo ? "Sari direct la:" : "Jump to:"}</p>
             <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              <li><a href="#contact-rapid" className="text-primary hover:underline">{isRo ? "Contact rapid" : "Quick contact"}</a></li>
-              <li><a href="#sediu" className="text-primary hover:underline">{isRo ? "Sediu & hartă" : "Office & map"}</a></li>
-              <li><a href="#servicii" className="text-primary hover:underline">{isRo ? "Servicii management" : "Management services"}</a></li>
-              <li><a href="#piata-imobiliara" className="text-primary hover:underline">{isRo ? "Piața imobiliară Timișoara" : "Timișoara real estate market"}</a></li>
-              <li><a href="#cazare-spitale" className="text-primary hover:underline">{isRo ? "Cazare lângă spitale" : "Stays near hospitals"}</a></li>
-              <li><a href="#de-ce-realtrust" className="text-primary hover:underline">{isRo ? "De ce RealTrust" : "Why RealTrust"}</a></li>
+              <li><a href="#contact-rapid" className="text-primary hover:underline">{isRo ? "📞 Adresă & Telefon" : "📞 Address & Phone"}</a></li>
+              <li><a href="#program" className="text-primary hover:underline">{isRo ? "🕒 Program agenție imobiliară Timișoara" : "🕒 Office hours"}</a></li>
+              <li><a href="#departamente" className="text-primary hover:underline">{isRo ? "👥 Contact pe departamente" : "👥 Departments"}</a></li>
+              <li><a href="#sediu" className="text-primary hover:underline">{isRo ? "📍 Sediu & hartă" : "📍 Office & map"}</a></li>
+              <li><a href="#servicii" className="text-primary hover:underline">{isRo ? "🛠️ Servicii management" : "🛠️ Management services"}</a></li>
+              <li><a href="#piata-imobiliara" className="text-primary hover:underline">{isRo ? "📈 Piața imobiliară Timișoara" : "📈 Timișoara real estate market"}</a></li>
+              <li><a href="#cazare-spitale" className="text-primary hover:underline">{isRo ? "🏥 Cazare lângă spitale" : "🏥 Stays near hospitals"}</a></li>
+              <li><a href="#faq" className="text-primary hover:underline">{isRo ? "❓ Întrebări frecvente" : "❓ FAQ"}</a></li>
             </ul>
           </nav>
           <section id="contact-rapid" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 scroll-mt-24">
@@ -168,6 +203,52 @@ const ContactPage = () => {
               <Clock className="w-8 h-8 text-primary mb-3" />
               <span className="font-semibold mb-1">{isRo ? "Program" : "Hours"}</span>
               <span className="text-sm text-muted-foreground text-center">{isRo ? "L-V: 09-18 | S: 10-14" : "Mon-Fri: 09-18 | Sat: 10-14"}</span>
+            </div>
+          </section>
+
+          {/* Program agenție imobiliară Timișoara */}
+          <section id="program" className="max-w-3xl mx-auto mb-12 scroll-mt-24 p-6 bg-card border rounded-2xl">
+            <h2 className="text-xl font-serif font-semibold mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              {isRo ? "Program agenție imobiliară Timișoara" : "Real estate office hours — Timișoara"}
+            </h2>
+            <ul className="space-y-1 text-sm">
+              <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Luni – Vineri" : "Monday – Friday"}</span><span className="font-medium">09:00 – 18:00</span></li>
+              <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Sâmbătă" : "Saturday"}</span><span className="font-medium">10:00 – 14:00</span></li>
+              <li className="flex justify-between"><span className="text-muted-foreground">{isRo ? "Duminică" : "Sunday"}</span><span className="font-medium">{isRo ? "Doar urgențe" : "Emergencies only"}</span></li>
+              <li className="flex justify-between pt-2 border-t mt-2"><span className="text-muted-foreground">{isRo ? "Suport oaspeți (WhatsApp)" : "Guest support (WhatsApp)"}</span><span className="font-medium text-primary">24/7</span></li>
+            </ul>
+            <p className="text-xs text-muted-foreground mt-3">
+              {isRo
+                ? "Sediu RealTrust Timișoara: Strada Samuil Micu Nr.14, sector central — vis-à-vis de zona Iulius Town."
+                : "RealTrust Timișoara office: Strada Samuil Micu Nr.14, central area — near Iulius Town."}
+            </p>
+          </section>
+
+          {/* Contact pe departamente */}
+          <section id="departamente" className="max-w-4xl mx-auto mb-16 scroll-mt-24">
+            <h2 className="text-2xl font-serif font-semibold text-center mb-6">
+              {isRo ? "Contact pe Departamente" : "Contact by Department"}
+            </h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="p-5 bg-card border rounded-2xl">
+                <h3 className="font-semibold mb-2 flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" />{isRo ? "Vânzări" : "Sales"}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{isRo ? "Tranzacții imobiliare în Timișoara și județul Timiș (Giroc, Dumbrăvița, Moșnița)." : "Real estate transactions in Timișoara and Timiș county (Giroc, Dumbrăvița, Moșnița)."}</p>
+                <a href="tel:+40723154520" className="text-sm text-primary hover:underline block">+40 723 154 520</a>
+                <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
+              </div>
+              <div className="p-5 bg-card border rounded-2xl">
+                <h3 className="font-semibold mb-2 flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />{isRo ? "Închirieri" : "Rentals"}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{isRo ? "Contracte rezidențiale pe termen lung — proprietari și chiriași verificați." : "Long-term residential contracts — verified owners and tenants."}</p>
+                <a href="tel:+40723154520" className="text-sm text-primary hover:underline block">+40 723 154 520</a>
+                <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
+              </div>
+              <div className="p-5 bg-card border rounded-2xl">
+                <h3 className="font-semibold mb-2 flex items-center gap-2"><Star className="w-5 h-5 text-primary" />{isRo ? "Administrare" : "Management"}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{isRo ? "Regim hotelier ApArt Hotel — Airbnb, Booking, ROI 9.4% net." : "Short-term rentals (ApArt Hotel) — Airbnb, Booking, 9.4% net ROI."}</p>
+                <a href="tel:+40770635252" className="text-sm text-primary hover:underline block">+40 770 635 252</a>
+                <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
+              </div>
             </div>
           </section>
 
@@ -321,7 +402,7 @@ const ContactPage = () => {
                   Echipa noastră locală gestionează întregul proces: de la listing-ul profesional pe Airbnb, Booking.com și alte platforme, la self check-in cu smart lock, curățenie profesională între sejururi, mentenanță preventivă și raportare financiară lunară transparentă.
                 </p>
                 <p>
-                  Fie că ești proprietar și vrei să maximizezi venitul din proprietatea ta, fie că ești investitor și cauți oportunități imobiliare cu randament ridicat în Timișoara, te invităm la sediul nostru din Strada Samuil Micu Nr.14 sau ne poți contacta telefonic la +40 723 154 520.
+                  Fie că ești proprietar și vrei să maximizezi venitul din proprietatea ta, fie că ești investitor și cauți oportunități imobiliare cu randament ridicat în Timișoara și întreg <strong>județul Timiș</strong> (inclusiv <strong>Giroc</strong>, Dumbrăvița, Moșnița Nouă), te invităm la <strong>sediul RealTrust Timișoara</strong> din Strada Samuil Micu Nr.14 sau ne poți contacta telefonic la +40 723 154 520.
                 </p>
               </>
             ) : (
@@ -337,6 +418,24 @@ const ContactPage = () => {
                 </p>
               </>
             )}
+          </section>
+
+          {/* FAQ */}
+          <section id="faq" className="max-w-3xl mx-auto mb-12 scroll-mt-24">
+            <h2 className="text-2xl font-serif font-semibold mb-6 text-center">
+              {isRo ? "Întrebări Frecvente" : "Frequently Asked Questions"}
+            </h2>
+            <div className="space-y-3">
+              {faqItems.map((item, i) => (
+                <details key={i} className="group p-5 bg-card border rounded-2xl open:border-primary/40">
+                  <summary className="cursor-pointer font-semibold list-none flex justify-between items-center gap-4">
+                    <span>{item.q}</span>
+                    <span className="text-primary text-xl transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
           </section>
         </div>
       </main>
