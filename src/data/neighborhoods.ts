@@ -267,6 +267,32 @@ export const neighborhoods: NeighborhoodData[] = [
       { id: 'dum-4', title: 'Duplex modern — finisaje premium', price: 215000, pricePerSqm: 1750, rooms: 4, floor: 1, surface: 123, badge: 'vanzare', imageAlt: 'Duplex Dumbrăvița finisaje premium' },
     ],
   },
+  {
+    slug: 'giroc',
+    name: 'Giroc',
+    fullName: 'Giroc',
+    avgPricePerSqm: 1620,
+    listingsCount: 4,
+    description:
+      'Giroc este una dintre cele mai căutate comune metropolitane de la sud de Timișoara, situată la 10 minute de Centru și la 5 minute de Shopping City Timișoara (Auchan). Giroc s-a transformat radical în ultimii 8 ani — de la sat tradițional la pol rezidențial premium pentru familii tinere și profesioniști care lucrează la Continental, Hella și în zona industrială Calea Șagului. Apartamentele de vânzare în Giroc au prețuri 1.500–1.800 €/mp (medie 1.620 €/mp), iar casele noi în ansambluri rezidențiale variază între 165.000 și 320.000 €. Ansamblurile rezidențiale principale: Green Forest Residence, Pădurea Verde Giroc, Lake View Residence și City Garden Giroc — toate cu apartamente clasa A energetică, parcare inclusă și locuri de joacă pentru copii. Infrastructura include Primăria Giroc, 3 școli (Școala Gimnazială Giroc, Liceul Tehnologic), 5+ grădinițe, supermarketuri Lidl și Penny, plus stadionul comunal renovat. Transport în comun Giroc Timișoara: autobuze 33 și 40 cu frecvență 15 minute spre Piața Maria și UVT (drum 25 min ora de vârf, 12 min în afara orelor de vârf). Terenuri intravilane Giroc: 70–130 €/mp, ideale pentru construcții familiale. Avantaje: liniște, spațiu verde abundent (lacul Giroc, parcuri), aer curat. Dezavantaje: trafic aglomerat dimineața pe DJ595 spre centru.',
+    metaTitle: 'Apartamente de Vânzare și Închiriat Giroc | Imobiliare RealTrust',
+    metaDescription: 'Cauți apartamente sau case în Giroc? Descoperă oferte de vânzare și închirieri în ansambluri noi și vechi. Consultanță imobiliară completă. Contactează RealTrust!',
+    faq: [
+      { question: 'Care este prețul mediu pe metru pătrat în Giroc?', answer: 'Apartamentele de vânzare în Giroc au prețuri 1.500–1.800 €/mp (medie 1.620 €/mp). Casele noi variază între 165.000 și 320.000 €, iar terenurile intravilane Giroc între 70 și 130 €/mp.' },
+      { question: 'Ce ansambluri rezidențiale sunt disponibile în Giroc?', answer: 'Principalele ansambluri rezidențiale Giroc sunt Green Forest Residence, Pădurea Verde Giroc, Lake View Residence și City Garden Giroc — apartamente clasa A energetică, parcare inclusă și locuri de joacă.' },
+      { question: 'Ce școli și grădinițe sunt în Giroc?', answer: 'Giroc dispune de Școala Gimnazială Giroc, Liceul Tehnologic, plus 5+ grădinițe publice și private. Infrastructură educațională completă pentru familii cu copii.' },
+      { question: 'Cum este transportul în comun Giroc Timișoara?', answer: 'Autobuzele 33 și 40 leagă Giroc de Piața Maria și UVT cu frecvență de 15 minute. Drumul durează 12 minute în afara orelor de vârf și 25 minute la ora de vârf pe DJ595.' },
+      { question: 'Cât durează drumul până în centrul Timișoarei la ora de vârf?', answer: 'Drumul cu mașina din Giroc spre Centru durează 12 minute în afara orelor de vârf și 25–30 minute la ora de vârf (08:00–09:30 și 17:00–18:30) pe DJ595.' },
+      { question: 'Ce magazine și facilități sunt în Giroc?', answer: 'Magazine Giroc: Lidl, Penny Market, supermarket-uri locale, farmacii, plus Shopping City Timișoara (Auchan) la 5 minute. Stadion comunal renovat, lac Giroc și parcuri pentru recreere.' },
+      { question: 'Există case noi de vânzare în Giroc?', answer: 'Da, case noi Giroc între 165.000 și 320.000 € — vile P+1, duplex-uri și case individuale în zone rezidențiale liniștite, în ansambluri ca Green Forest sau Lake View.' },
+    ],
+    listings: [
+      { id: 'gir2-1', title: 'Apartament 2 camere — Green Forest Giroc', price: 89000, pricePerSqm: 1620, rooms: 2, floor: 2, surface: 55, badge: 'vanzare', imageAlt: 'Apartament 2 camere Green Forest Giroc' },
+      { id: 'gir2-2', title: 'Casă vilă P+1 — zona Pădurea Verde Giroc', price: 245000, pricePerSqm: 1700, rooms: 4, floor: 1, surface: 144, badge: 'vanzare', imageAlt: 'Casă vilă Pădurea Verde Giroc' },
+      { id: 'gir2-3', title: 'Apartament 3 camere — Lake View Giroc', price: 132000, pricePerSqm: 1650, rooms: 3, floor: 3, surface: 80, badge: 'vanzare', imageAlt: 'Apartament 3 camere Lake View Giroc' },
+      { id: 'gir2-4', title: 'Duplex modern — City Garden Giroc', price: 198000, pricePerSqm: 1720, rooms: 4, floor: 1, surface: 115, badge: 'vanzare', imageAlt: 'Duplex City Garden Giroc' },
+    ],
+  },
 ];
 
 export const getNeighborhoodBySlug = (slug: string): NeighborhoodData | undefined =>
