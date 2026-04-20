@@ -92,8 +92,8 @@ const AnalizaProprietate = () => {
 
   const t = {
     ro: {
-      pageTitle: "Analiză Proprietate AI | RealTrust",
-      pageDesc: "Analizează potențialul proprietății tale cu AI. Scor, ROI estimat și recomandări personalizate.",
+      pageTitle: "Analiză Proprietate AI Timișoara | Evaluare & Consultanță Imobiliară",
+      pageDesc: "Analiză AI gratuită pentru piața imobiliară Timișoara: evaluare apartament, scor ROI estimat, consultanță imobiliară personalizată pentru regim hotelier, vânzări și închirieri.",
       heroTitle: "Analiză AI",
       heroHighlight: "Proprietate",
       heroSubtitle: "Scor inteligent, ROI estimat și recomandări personalizate în timp real.",
@@ -110,8 +110,8 @@ const AnalizaProprietate = () => {
       photosHint: "Adaugă fotografii pentru o analiză vizuală suplimentară",
     },
     en: {
-      pageTitle: "AI Property Analysis | RealTrust",
-      pageDesc: "Analyze your property potential with AI. Score, estimated ROI and personalized recommendations.",
+      pageTitle: "AI Property Analysis Timișoara | Valuation & Real Estate Consulting",
+      pageDesc: "Free AI analysis for Timișoara real estate market: apartment valuation, ROI score, personalized real estate consulting for short-term rental, sales and long-term rentals.",
       heroTitle: "AI Property",
       heroHighlight: "Analysis",
       heroSubtitle: "Intelligent scoring, estimated ROI and personalized recommendations in real-time.",
@@ -283,12 +283,50 @@ const AnalizaProprietate = () => {
     },
   ]);
 
+  const jsonLdSchemas = [
+    {
+      "@context": "https://schema.org",
+      "@type": ["RealEstateAgent", "LocalBusiness"],
+      "name": "RealTrust Timișoara",
+      "url": "https://www.realtrust.ro/analiza-proprietate",
+      "telephone": "+40723154520",
+      "email": "info@realtrust.ro",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+        "addressLocality": "Timișoara",
+        "addressRegion": "Timiș",
+        "postalCode": "300125",
+        "addressCountry": "RO",
+      },
+      "geo": { "@type": "GeoCoordinates", "latitude": 45.7672, "longitude": 21.2495 },
+      "areaServed": { "@type": "City", "name": "Timișoara" },
+      "makesOffer": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Evaluare apartament Timișoara (AI)" : "Apartment valuation Timișoara (AI)" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Administrare regim hotelier" : "Short-term rental management" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Vânzări apartamente Timișoara" : "Apartment sales Timișoara" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Închirieri apartamente Timișoara" : "Long-term rentals Timișoara" } },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": language === "ro" ? "Analiză AI Proprietate (HostScan)" : "AI Property Analysis (HostScan)",
+      "serviceType": language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
+      "provider": { "@type": "RealEstateAgent", "name": "RealTrust Timișoara" },
+      "areaServed": { "@type": "City", "name": "Timișoara" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock" },
+    },
+  ];
+
   return (
     <>
       <SEOHead
         title={text.pageTitle}
         description={text.pageDesc}
         url="https://www.realtrust.ro/analiza-proprietate"
+        jsonLd={jsonLdSchemas}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
           { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://www.realtrust.ro/pentru-proprietari" },
@@ -312,7 +350,36 @@ const AnalizaProprietate = () => {
               {text.heroTitle} <span className="text-primary">{text.heroHighlight}</span>
             </h1>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">{text.heroSubtitle}</p>
+            {/* SEO intro paragraph with target keywords */}
+            <p className="sr-only">
+              {language === "ro"
+                ? "Evaluare apartament Timișoara și consultanță imobiliară Timișoara cu instrumentul HostScan AI. Analizăm piața imobiliară Timișoara — vânzări, închirieri și regim hotelier — pe cartiere (ISHO, Centru, Iosefin, Complex Studențesc, Iulius Town, Openville) pentru a oferi un scor obiectiv și ROI estimat pentru proprietatea ta."
+                : "Apartment valuation Timișoara and real estate consulting with the HostScan AI tool. We analyze the Timișoara real estate market — sales, rentals and short-term rental — by neighborhoods (ISHO, Centru, Iosefin, Student Complex, Iulius Town, Openville) to deliver an objective score and estimated ROI for your property."}
+            </p>
           </motion.div>
+
+          {/* SEO H2 strip — promoted from H3 to better reflect service hierarchy */}
+          <section className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3" aria-label={language === "ro" ? "Servicii imobiliare Timișoara" : "Real estate services Timișoara"}>
+            {[
+              {
+                h2: language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
+                desc: language === "ro" ? "Scor obiectiv din 140 puncte pentru proprietatea ta." : "Objective 140-point score for your property.",
+              },
+              {
+                h2: language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara",
+                desc: language === "ro" ? "Strategie investiții, vânzări și închirieri pe cartiere." : "Investment, sales & rental strategy by neighborhood.",
+              },
+              {
+                h2: language === "ro" ? "Administrare regim hotelier" : "Short-term rental management",
+                desc: language === "ro" ? "ROI net verificat 9.4% pe Booking, Airbnb și direct." : "9.4% verified net ROI on Booking, Airbnb and direct.",
+              },
+            ].map((item) => (
+              <div key={item.h2} className="p-4 rounded-2xl bg-card border border-border/50">
+                <h2 className="text-sm font-bold text-foreground">{item.h2}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+              </div>
+            ))}
+          </section>
 
           {/* Main Card */}
           <motion.div
