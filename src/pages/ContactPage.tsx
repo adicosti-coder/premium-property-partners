@@ -136,7 +136,18 @@ const ContactPage = () => {
             </p>
           </section>
 
-          {/* Contact Cards */}
+          {/* Table of Contents */}
+          <nav aria-label={isRo ? "Cuprins pagină" : "Page contents"} className="max-w-3xl mx-auto mb-12 p-4 bg-muted/30 border rounded-xl">
+            <p className="text-sm font-semibold mb-2">{isRo ? "Cuprins:" : "On this page:"}</p>
+            <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              <li><a href="#contact-rapid" className="text-primary hover:underline">{isRo ? "Contact rapid" : "Quick contact"}</a></li>
+              <li><a href="#sediu" className="text-primary hover:underline">{isRo ? "Sediu & hartă" : "Office & map"}</a></li>
+              <li><a href="#servicii" className="text-primary hover:underline">{isRo ? "Servicii management" : "Management services"}</a></li>
+              <li><a href="#piata-imobiliara" className="text-primary hover:underline">{isRo ? "Piața imobiliară Timișoara" : "Timișoara real estate market"}</a></li>
+              <li><a href="#cazare-spitale" className="text-primary hover:underline">{isRo ? "Cazare lângă spitale" : "Stays near hospitals"}</a></li>
+              <li><a href="#de-ce-realtrust" className="text-primary hover:underline">{isRo ? "De ce RealTrust" : "Why RealTrust"}</a></li>
+            </ul>
+          </nav>
           <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             <a href="tel:+40723154520" className="flex flex-col items-center p-6 bg-card border rounded-2xl hover:border-primary/50 transition-colors group">
               <Phone className="w-8 h-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
