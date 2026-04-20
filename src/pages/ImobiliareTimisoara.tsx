@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, TrendingUp, Building2, ArrowRight, Loader2 } from "lucide-react";
+import { MapPin, TrendingUp, Building2, ArrowRight, Loader2, Calculator, LineChart, TreePine, HelpCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -8,6 +8,8 @@ import BackToTop from "@/components/BackToTop";
 import RealPropertyCard from "@/components/RealPropertyCard";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { lazy, Suspense } from "react";
 
 
@@ -22,6 +24,37 @@ const ImobiliareTimisoara = () => {
     { label: "Acasă", href: "/" },
     { label: "Imobiliare Timișoara" },
   ];
+
+  const tocItems = [
+    { id: "live", label: "Anunțuri live" },
+    { id: "neighborhoods", label: "Cartiere" },
+    { id: "evaluare", label: "Evaluare apartament" },
+    { id: "preturi", label: "Prețuri & tendințe" },
+    { id: "terenuri", label: "Terenuri Giroc & Chișoda" },
+    { id: "market-pulse", label: "Market Pulse" },
+    { id: "faq", label: "Întrebări frecvente" },
+  ];
+
+  const faqItems = [
+    {
+      question: "Cum se face evaluarea unui apartament în Timișoara?",
+      answer: "Evaluarea apartamentului în Timișoara se realizează gratuit de RealTrust, ținând cont de cartier (Centru, ISHO, Dumbrăvița, Giroc, Chișoda), suprafață utilă, an construcție, finisaje și prețurile comparabile recente. Primești un raport în 24h.",
+    },
+    {
+      question: "Care sunt prețurile imobiliare în Timișoara în 2026?",
+      answer: "Prețurile medii pe metru pătrat în Timișoara variază între 1.400 €/mp (Mehala, Ronaț) și 2.600 €/mp (Centru, ISHO). Dumbrăvița și Giroc se situează la 1.800-2.100 €/mp, cu apreciere anuală de 5-8% pentru proiectele noi.",
+    },
+    {
+      question: "Vindeți și terenuri în Timișoara, Giroc sau Chișoda?",
+      answer: "Da, intermediem terenuri intravilane și extravilane în Timișoara și zonele metropolitane Giroc, Chișoda, Moșnița Nouă, Dumbrăvița și Ghiroda — pentru construcție casă, dezvoltare rezidențială sau investiție pe termen lung.",
+    },
+    {
+      question: "Care sunt cele mai active cartiere pentru investiții?",
+      answer: "ISHO, Centru, Complex Studențesc și Dumbrăvița domină cererea de regim hotelier. Giroc și Chișoda atrag familii pentru locuință, iar Aradului și Lipovei oferă cele mai bune randamente la închiriere clasică.",
+    },
+  ];
+
+  useRegisterFAQs("imobiliare-timisoara", faqItems);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -74,6 +107,24 @@ const ImobiliareTimisoara = () => {
             </p>
           </div>
 
+          {/* Table of Contents */}
+          <nav aria-label="Cuprins pagină" className="mb-12 rounded-2xl border border-border bg-card/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Cuprins</p>
+            <ul className="flex flex-wrap gap-2">
+              {tocItems.map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:border-primary/40 hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div id="live" />
           {(isLoading || liveNeighborhoodProperties.length > 0) && (
             <section className="mb-16">
               <div className="mb-6 space-y-3">
@@ -109,7 +160,7 @@ const ImobiliareTimisoara = () => {
           )}
 
           {/* Neighborhood Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          <div id="neighborhoods" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {neighborhoods
               .map((zone) => {
                 const liveCount = countsBySlug[zone.slug] || 0;
@@ -165,10 +216,105 @@ const ImobiliareTimisoara = () => {
               })}
           </div>
 
+          {/* Evaluare apartament */}
+          <section id="evaluare" className="mb-16 rounded-2xl border border-border bg-card p-6 md:p-8">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="rounded-xl bg-primary/10 p-3">
+                <Calculator className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                  Evaluare apartament Timișoara — află prețul corect
+                </h2>
+                <p className="text-muted-foreground">
+                  Vrei să vinzi sau să refinanțezi? Evaluarea gratuită RealTrust analizează cartierul (Centru, ISHO, Dumbrăvița, Giroc, Chișoda, Complex Studențesc), suprafața, anul construcției și comparabile recente. Primești raport în 24h.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/evaluare-gratuita"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Solicită evaluare gratuită <ArrowRight className="w-4 h-4" />
+            </Link>
+          </section>
+
+          {/* Prețuri & tendințe */}
+          <section id="preturi" className="mb-16">
+            <div className="flex items-center gap-2 mb-4">
+              <LineChart className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold text-foreground">
+                Prețuri imobiliare Timișoara — tendințe 2026
+              </h2>
+            </div>
+            <p className="text-muted-foreground mb-6 max-w-3xl">
+              Piața imobiliară din Timișoara continuă aprecierea în 2026. Prețurile medii pe metru pătrat au crescut cu 5-8% față de 2025, susținute de cererea pentru proiecte noi și de expansiunea zonelor metropolitane Giroc, Chișoda și Dumbrăvița.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { zone: "Centru & ISHO", price: "2.400-2.600 €/mp", trend: "+6% YoY" },
+                { zone: "Dumbrăvița & Giroc", price: "1.800-2.100 €/mp", trend: "+8% YoY" },
+                { zone: "Aradului & Lipovei", price: "1.500-1.700 €/mp", trend: "+5% YoY" },
+                { zone: "Complex Studențesc", price: "1.900-2.200 €/mp", trend: "+7% YoY" },
+                { zone: "Chișoda & Moșnița", price: "1.400-1.700 €/mp", trend: "+9% YoY" },
+                { zone: "Mehala & Ronaț", price: "1.300-1.500 €/mp", trend: "+4% YoY" },
+              ].map((item) => (
+                <div key={item.zone} className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-sm font-semibold text-foreground">{item.zone}</p>
+                  <p className="text-lg font-bold text-primary mt-1">{item.price}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{item.trend}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Terenuri */}
+          <section id="terenuri" className="mb-16 rounded-2xl border border-border bg-card p-6 md:p-8">
+            <div className="flex items-start gap-4">
+              <div className="rounded-xl bg-primary/10 p-3">
+                <TreePine className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                  Terenuri de vânzare Timișoara, Giroc, Chișoda
+                </h2>
+                <p className="text-muted-foreground mb-3">
+                  Intermediem terenuri intravilane și extravilane în Timișoara și zonele metropolitane <strong>Giroc</strong>, <strong>Chișoda</strong>, Moșnița Nouă, Dumbrăvița și Ghiroda — pentru construcție casă, dezvoltare rezidențială sau investiție pe termen lung.
+                </p>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                >
+                  Discută cu un consultant <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </section>
+
           {/* Market Pulse */}
-          <Suspense fallback={<div className="min-h-[300px]" />}>
-            <MarketPulse />
-          </Suspense>
+          <div id="market-pulse">
+            <Suspense fallback={<div className="min-h-[300px]" />}>
+              <MarketPulse />
+            </Suspense>
+          </div>
+
+          {/* FAQ */}
+          <section id="faq" className="mt-16">
+            <div className="flex items-center gap-2 mb-4">
+              <HelpCircle className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold text-foreground">
+                Întrebări frecvente — imobiliare Timișoara
+              </h2>
+            </div>
+            <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6">
+              {faqItems.map((item, idx) => (
+                <AccordionItem key={idx} value={`item-${idx}`} className="last:border-b-0">
+                  <AccordionTrigger className="text-left text-foreground">{item.question}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
         </div>
       </main>
 
