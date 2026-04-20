@@ -242,6 +242,31 @@ export const neighborhoods: NeighborhoodData[] = [
       { id: 'eli-4', title: 'Garsonieră elegantă — investiție', price: 59850, pricePerSqm: 1810, rooms: 1, floor: 3, surface: 33, badge: 'administrare', imageAlt: 'Garsonieră investiție Elisabetin Timișoara' },
     ],
   },
+  {
+    slug: 'dumbravita',
+    name: 'Dumbrăvița',
+    fullName: 'Dumbrăvița',
+    avgPricePerSqm: 1680,
+    listingsCount: 4,
+    description:
+      'Dumbrăvița este cea mai dinamică zonă metropolitană a Timișoarei, situată la nord-est de oraș, cu acces direct la centura Timișoara și la Aeroportul Internațional „Traian Vuia" (8 minute). Cartierul a explodat demografic în ultimii 10 ani datorită ansamblurilor rezidențiale noi (Iris Residence, Lipovei Residence, Cetatea Veche Residence), prețurilor accesibile (1.680 €/mp față de 2.000+ €/mp în Centru) și calității vieții pentru familii. Pădurea Verde, parc natural protejat la marginea cartierului, oferă spațiu de recreere unic în zonă. Infrastructura include 5+ școli și grădinițe (Școala „Dimitrie Țichindeal", Grădinița Smart Kids, Happy Kids), supermarketuri Lidl și Kaufland, Selgros la 3 minute și transport public regulat (autobuze E1, E4, 33). Profilul cumpărătorilor: familii tinere 28–45 ani, profesioniști IT din Iulius Town și Openville, navetiști care preferă liniștea suburbană. Casele de vânzare în Dumbrăvița (vile P+1, duplex-uri) variază între 180.000 și 380.000 €, iar terenurile intravilane între 80 și 150 €/mp. Apartamentele noi în ansamblurile rezidențiale au prețuri 65.000–145.000 €.',
+    metaTitle: 'Imobiliare Dumbrăvița: Apartamente & Case Noi | RealTrust',
+    metaDescription: 'Cauți apartamente noi sau case de vânzare în Dumbrăvița? Descoperă selecția premium de proprietăți, vile și ansambluri rezidențiale. Consultanță gratuită!',
+    faq: [
+      { question: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', answer: 'Prețul mediu este de 1.680 €/mp pentru apartamente noi, cu 15-20% sub media orașului Timișoara. Casele și vilele variază între 180.000 și 380.000 € în funcție de suprafață și nivelul de finisaje.' },
+      { question: 'Ce ansambluri rezidențiale sunt disponibile în Dumbrăvița?', answer: 'Cele mai populare ansambluri rezidențiale Dumbrăvița sunt Iris Residence, Lipovei Residence, Cetatea Veche Residence și proiectele dezvoltatorilor locali — toate cu apartamente noi clasa A energetică, finisaje moderne și locuri de parcare incluse.' },
+      { question: 'Sunt disponibile case de vânzare în Dumbrăvița?', answer: 'Da, oferim case de vânzare Dumbrăvița (vile P+1, duplex-uri și case individuale) între 180.000 și 380.000 €, în zone rezidențiale liniștite, aproape de școli și de Pădurea Verde.' },
+      { question: 'Cum este accesul din Dumbrăvița spre centură și aeroport?', answer: 'Dumbrăvița are acces centura Timișoara direct (3 minute) și Aeroportul Internațional „Traian Vuia" la 8 minute cu mașina. Transport public regulat (autobuze E1, E4, 33) spre Iulius Town și Centru.' },
+      { question: 'Ce școli și grădinițe sunt în Dumbrăvița?', answer: 'Dumbrăvița dispune de Școala Gimnazială „Dimitrie Țichindeal", grădinițele Smart Kids și Happy Kids, plus liceu particular Spectrum și creșe private — infrastructură educațională completă pentru familii.' },
+      { question: 'Există terenuri intravilane de vânzare în Dumbrăvița?', answer: 'Da, intermediez teren intravilan Dumbrăvița între 80 și 150 €/mp pentru construcții rezidențiale (case, duplex-uri) sau pentru dezvoltatori interesați de ansambluri mici.' },
+    ],
+    listings: [
+      { id: 'dum-1', title: 'Apartament 3 camere — Iris Residence', price: 138000, pricePerSqm: 1700, rooms: 3, floor: 2, surface: 81, badge: 'vanzare', imageAlt: 'Apartament nou Iris Residence Dumbrăvița' },
+      { id: 'dum-2', title: 'Casă vilă P+1 — zonă rezidențială', price: 285000, pricePerSqm: 1850, rooms: 4, floor: 1, surface: 154, badge: 'vanzare', imageAlt: 'Casă vânzare Dumbrăvița lângă Pădurea Verde' },
+      { id: 'dum-3', title: 'Apartament 2 camere — ansamblu nou', price: 92500, pricePerSqm: 1680, rooms: 2, floor: 3, surface: 55, badge: 'vanzare', imageAlt: 'Apartament 2 camere ansamblu rezidențial Dumbrăvița' },
+      { id: 'dum-4', title: 'Duplex modern — finisaje premium', price: 215000, pricePerSqm: 1750, rooms: 4, floor: 1, surface: 123, badge: 'vanzare', imageAlt: 'Duplex Dumbrăvița finisaje premium' },
+    ],
+  },
 ];
 
 export const getNeighborhoodBySlug = (slug: string): NeighborhoodData | undefined =>
