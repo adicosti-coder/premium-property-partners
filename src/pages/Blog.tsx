@@ -295,6 +295,32 @@ const Blog = () => {
             </p>
           </div>
 
+          {/* Pillar intro — investment hub */}
+          {language === "ro" && (
+            <section className="mb-10 rounded-2xl border border-border bg-card/60 p-6 md:p-8">
+              <h2 className="text-2xl font-serif font-semibold text-foreground mb-3">
+                Hub investiții imobiliare Timișoara
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                Articolele noastre acoperă <strong>prețurile imobiliare Timișoara</strong> pe cartiere, <strong>evoluția pieței imobiliare Timișoara</strong> și <strong>randamentul chiriei</strong> — clasic vs regim hotelier. Ghiduri practice pentru investitori, proprietari și angajați ai hub-urilor business: <Link to="/imobiliare-timisoara/aradului" className="text-primary hover:underline">apartamente lângă Continental Timișoara</Link>, zona <strong>Pădurea Verde</strong>, cazare lângă <strong>Spitalul Premiere</strong> și Spitalul Județean.
+              </p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <Link to="/calculator-roi" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Calculator ROI
+                </Link>
+                <Link to="/piata-imobiliara-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Prețuri pe cartiere
+                </Link>
+                <Link to="/imobiliare-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Apartamente pe zone
+                </Link>
+                <Link to="/catalog-investitii" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                  Catalog investiții
+                </Link>
+              </div>
+            </section>
+          )}
+
           {/* Community Contest Banner */}
           <div className="mb-8 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
