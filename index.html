@@ -46,8 +46,8 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait.
-         Includes HSL design tokens so any React component painted before the
-         main Vite stylesheet arrives uses correct colors (no FOUC flash). -->
+         Includes header + hero shell styles so first paint is complete before
+         the main stylesheet hydrates. -->
     <style>
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;border-width:0;border-style:solid}
       html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:'Inter','Inter Fallback',system-ui,-apple-system,sans-serif}
@@ -61,7 +61,32 @@
       .cv-auto{content-visibility:auto;contain-intrinsic-size:1px 600px}
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       [hidden]{display:none}
-      @media(min-width:640px){.hero-cta-row{flex-direction:row !important;gap:1rem !important;max-width:none !important}}
+      .static-header-shell{position:fixed;top:0;left:0;right:0;z-index:20;border-bottom:1px solid hsl(var(--border)/0.5);background:hsl(var(--background)/0.9);backdrop-filter:saturate(180%) blur(10px)}
+      .static-header-inner{max-width:1280px;height:4rem;margin:0 auto;padding:0 1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem}
+      .static-brand{display:flex;flex-direction:column;align-items:center;line-height:1.05;flex-shrink:0}
+      .static-brand-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:600;color:hsl(var(--foreground))}
+      .static-brand-title em{font-style:italic;font-weight:400;color:hsl(var(--muted-foreground))}
+      .static-brand-accent{color:hsl(var(--primary))}
+      .static-brand-caption{font-size:0.5rem;letter-spacing:0.24em;text-transform:uppercase;font-weight:600;color:hsl(var(--muted-foreground))}
+      .static-header-tagline{display:none;font-size:0.7rem;line-height:1.3;font-weight:500;color:hsl(var(--muted-foreground));text-align:right;max-width:17rem}
+      .static-header-tagline strong{color:hsl(var(--foreground))}
+      #hero-shell{position:relative;min-height:100dvh;display:flex;align-items:center;overflow:hidden;padding-top:7rem;background:hsl(var(--background))}
+      .hero-shell-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+      .hero-shell-overlay{position:absolute;inset:0;background:linear-gradient(to right,hsla(40,25%,96%,0.9),hsla(40,25%,96%,0.52),transparent);z-index:1}
+      .hero-shell-inner{position:relative;z-index:10;max-width:56rem;margin:0 auto;padding:5rem 1.5rem}
+      .hero-shell-title{font-family:'Playfair Display',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;color:hsl(var(--foreground));line-height:1.05;margin-bottom:1.5rem;max-width:56rem}
+      .hero-shell-mid{display:block;font-size:.58em;font-style:italic;font-weight:400;opacity:.9;margin:.55rem 0}
+      .hero-shell-highlight-wrap{display:inline-flex;align-items:baseline;gap:.25rem;padding:.35rem .65rem;border-radius:.75rem;background:hsla(40,25%,96%,.35);border:1px solid hsla(215,20%,65%,.35)}
+      .hero-shell-highlight{background:linear-gradient(135deg,hsl(var(--primary)),hsl(43 74% 49%));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+      .hero-shell-copy-wrap{max-width:42rem;min-height:5.5rem;margin-bottom:2rem}
+      .hero-shell-copy{font-family:'Inter',system-ui,sans-serif;font-size:clamp(1.125rem,2.8vw,1.25rem);color:hsl(var(--foreground));line-height:1.625;font-weight:400}
+      .hero-cta-row{display:flex;flex-direction:column;gap:2rem;max-width:26rem;margin-bottom:1.5rem}
+      .hero-shell-cta{min-height:56px;display:inline-flex;align-items:center;justify-content:center;padding:.75rem 2rem;border-radius:.75rem;font-family:'Inter',system-ui,sans-serif;font-size:1rem;font-weight:600;text-align:center;text-decoration:none}
+      .hero-shell-cta-primary{background:hsl(var(--primary));color:hsl(var(--primary-foreground));box-shadow:0 10px 24px hsl(var(--primary)/0.22)}
+      .hero-shell-cta-secondary{background:hsl(var(--foreground));color:hsl(var(--background));border:1px solid hsl(var(--foreground));box-shadow:0 8px 20px hsl(var(--foreground)/0.15)}
+      .hero-shell-trust{font-family:'Inter',system-ui,sans-serif;color:hsl(var(--muted-foreground));font-size:.875rem;line-height:1.5}
+      .hero-shell-trust p + p{margin-top:.25rem}
+      @media(min-width:640px){.hero-cta-row{flex-direction:row !important;gap:1rem !important;max-width:none !important}.static-header-tagline{display:block}}
     </style>
 
     <!-- Self-hosted Google Fonts — eliminates 2 DNS lookups + external requests -->
@@ -96,28 +121,40 @@
 
   <body>
     <div id="root">
+      <div class="static-header-shell" aria-hidden="true">
+        <div class="static-header-inner">
+          <div class="static-brand">
+            <span class="static-brand-title">Real<span class="static-brand-accent">Trust</span> <em>&amp;</em></span>
+            <span class="static-brand-title"><span class="static-brand-accent">ApArt</span> Hotel</span>
+            <span class="static-brand-caption">Imobiliare &amp; Regim Hotelier</span>
+          </div>
+          <p class="static-header-tagline">De la achiziție la venit hotelier — <strong>1 sistem complet</strong>, orientat spre randament</p>
+        </div>
+      </div>
       <!-- Static hero shell — painted instantly as LCP before React hydrates -->
-      <div id="hero-shell" style="position:relative;min-height:100dvh;display:flex;align-items:center;overflow:hidden;padding-top:7rem;background:#f7f5f0">
-        <img src="/images/hero-optimized-800w.webp" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" fetchpriority="high" decoding="sync" width="800" height="447" />
-        <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(247,245,240,0.85),rgba(247,245,240,0.45),transparent);z-index:1"></div>
-        <div style="position:relative;z-index:10;max-width:56rem;margin:0 auto;padding:5rem 1.5rem">
-          <div style="font-family:'Playfair Display',serif;font-size:clamp(2.25rem,5vw,4.5rem);font-weight:600;color:#1e293b;line-height:1.05;margin-bottom:1.5rem;max-width:56rem">
+      <div id="hero-shell">
+        <img src="/images/hero-optimized-800w.webp" alt="" class="hero-shell-media" fetchpriority="high" loading="eager" decoding="sync" width="800" height="447" />
+        <div class="hero-shell-overlay"></div>
+        <div class="hero-shell-inner">
+          <div class="hero-shell-title">
             <span style="display:block">RealTrust &amp; ApArt Hotel Timișoara —</span>
-            <span style="display:block;font-size:0.58em;font-style:italic;font-weight:400;opacity:0.9;margin:0.55rem 0">imobiliare &amp; regim hotelier</span>
-            <span style="display:block"><span style="display:inline-flex;align-items:baseline;gap:0.25rem;padding:0.35rem 0.65rem;border-radius:0.75rem;background:rgba(247,245,240,0.35);backdrop-filter:blur(8px);border:1px solid rgba(148,163,184,0.35)"><span style="background:linear-gradient(135deg,#b8860b,#daa520);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">cu randament garantat.</span></span></span>
+            <span class="hero-shell-mid">imobiliare &amp; regim hotelier</span>
+            <span style="display:block"><span class="hero-shell-highlight-wrap"><span class="hero-shell-highlight">cu randament garantat.</span></span></span>
           </div>
-          <p style="font-family:'Inter',system-ui,sans-serif;font-size:clamp(1.125rem,2.8vw,1.25rem);color:#1e293b;max-width:42rem;margin-bottom:2rem;line-height:1.625;font-weight:400">
-            Investești în imobiliare — noi îți construim o afacere la cheie, prin RealTrust Imobiliare.<br>
-            Administrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.<br>
-            Tu încasezi, noi ne ocupăm de tot.
-          </p>
-          <div class="hero-cta-row" style="display:flex;flex-direction:column;gap:2rem;max-width:26rem;margin-bottom:1.5rem">
-            <a href="#calculator" style="min-height:56px;display:inline-flex;align-items:center;justify-content:center;padding:0.75rem 2rem;border-radius:0.75rem;background:#b8860b;color:#fff7ed;font-family:'Inter',system-ui,sans-serif;font-size:1rem;font-weight:600;text-align:center;text-decoration:none;box-shadow:0 10px 24px rgba(184,134,11,0.22)">Află Randamentul Tău</a>
-            <a href="/investitii" style="min-height:56px;display:inline-flex;align-items:center;justify-content:center;padding:0.75rem 2rem;border-radius:0.75rem;background:#1e293b;color:#f8fafc;font-family:'Inter',system-ui,sans-serif;font-size:1rem;font-weight:600;text-align:center;text-decoration:none;border:1px solid #1e293b;box-shadow:0 8px 20px rgba(15,23,42,0.15)">Vreau investiție profitabilă în Timișoara</a>
+          <div class="hero-shell-copy-wrap">
+            <p class="hero-shell-copy">
+              Investești în imobiliare — noi îți construim o afacere la cheie, prin RealTrust Imobiliare.<br>
+              Administrare completă regim hotelier, fără bătăi de cap, prin ApArt Hotel.<br>
+              Tu încasezi, noi ne ocupăm de tot.
+            </p>
           </div>
-          <div style="font-family:'Inter',system-ui,sans-serif;color:#334155;font-size:0.875rem;line-height:1.5">
+          <div class="hero-cta-row">
+            <a href="#calculator" class="hero-shell-cta hero-shell-cta-primary">Află Randamentul Tău</a>
+            <a href="/investitii" class="hero-shell-cta hero-shell-cta-secondary">Vreau investiție profitabilă în Timișoara</a>
+          </div>
+          <div class="hero-shell-trust">
             <p>Primești o simulare completă + recomandări în 24h</p>
-            <p style="margin-top:0.25rem">Nu trimitem spam. Datele tale rămân private.</p>
+            <p>Nu trimitem spam. Datele tale rămân private.</p>
           </div>
         </div>
         <!-- SEO content (hidden entities block, address, neighborhoods, services)
@@ -135,7 +172,6 @@
         </address>
       </div>
     </div>
-    <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
     
     <!-- GA4 deferred — loads on first user interaction to avoid TBT impact -->
     <script>
@@ -161,6 +197,7 @@
         var fallback = setTimeout(loadGA4, 45000);
       })();
     </script>
+    <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
   </body>
 
 </html>
