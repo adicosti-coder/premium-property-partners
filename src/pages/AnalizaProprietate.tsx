@@ -293,6 +293,7 @@ const AnalizaProprietate = () => {
         ? "Piața imobiliară Timișoara a înregistrat o creștere medie de 7-9% anual în ultimii 3 ani, cu vârfuri în zonele ISHO, Complex Studențesc și Iulius Town. Apartamentele noi se vând cu 1.800-2.500€/mp, iar cele vechi cu 1.400-1.900€/mp. Tendința rămâne ascendentă datorită cererii corporate (Continental, Hella, City Business Centre) și a populației studențești."
         : "Timișoara's real estate market grew 7-9% annually over the last 3 years, peaking in ISHO, Student Complex and Iulius Town areas. New apartments sell for €1,800-2,500/sqm, older ones €1,400-1,900/sqm. The upward trend continues thanks to corporate demand (Continental, Hella, City Business Centre) and student population.",
     },
+  ]);
 
   const jsonLdSchemas = [
     {
