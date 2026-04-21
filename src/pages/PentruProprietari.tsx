@@ -57,6 +57,7 @@ const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm")
 const OwnerMarketingServices = lazy(() => import("@/components/owners/OwnerMarketingServices"));
 const OwnerCoverageMap = lazy(() => import("@/components/owners/OwnerCoverageMap"));
 const OwnerGuideHub = lazy(() => import("@/components/owners/OwnerGuideHub"));
+const OwnerTestimonials = lazy(() => import("@/components/owners/OwnerTestimonials"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -871,6 +872,9 @@ const PentruProprietari = () => {
           <ReferralBanner variant="hero" />
         </div>
       </section>
+
+      {/* Owner Testimonials - peace of mind + 9%+ ROI */}
+      {faqReady && <OwnerTestimonials />}
 
       {/* FAQ - deferred via IntersectionObserver */}
       <div ref={faqSentinel} />
