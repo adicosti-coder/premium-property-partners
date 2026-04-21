@@ -46,8 +46,8 @@ const OwnerHowItWorks = () => {
         {
           icon: ClipboardCheck,
           number: "01",
-          title: "Free, honest evaluation",
-          description: "We assess your apartment, calculate realistic income based on real local data, and tell you straight if hotel-style management is worth it. No pressure, no inflated promises.",
+          title: "Free evaluation, calibrated on real data",
+          description: "We estimate monthly income using ranges recalibrated quarterly from our hotel-regime portfolio (75–85% occupancy, 2025–2026 rates, Booking/Airbnb fees deducted). No inflated promises — only verified figures from comparable apartments in your area.",
           detail: "Answer in 24h",
         },
         {
@@ -61,7 +61,7 @@ const OwnerHowItWorks = () => {
           icon: TrendingUp,
           number: "03",
           title: "Monthly income, zero hassle",
-          description: "We run everything: guests, cleaning, maintenance, communication. You receive money directly in your account, with a detailed financial report every month.",
+          description: "We run everything: guests, cleaning, maintenance, communication. You receive money directly in your account, with a detailed monthly report — benchmarked against the initial estimate for full transparency.",
           detail: "Guaranteed monthly payments",
         },
       ],
