@@ -136,7 +136,7 @@ const PropertyInvestmentCalculator = ({ propertyName, propertyCode, defaultPrice
     const msg = language === "ro"
       ? `Bună ziua! Sunt ${name}. Am finalizat analiza RealTrust (Randament: ${yieldText}) și doresc să programăm o vizionare pentru: ${window.location.href}`
       : `Hello! I'm ${name}. I completed the RealTrust analysis (Yield: ${yieldText}) and would like to schedule a viewing for: ${window.location.href}`;
-    window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   };
 
   const handlePdf = () => window.print();

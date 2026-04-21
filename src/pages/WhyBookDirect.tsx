@@ -540,7 +540,7 @@ const WhyBookDirect = () => {
                     ? 'Nu ai găsit răspunsul? ' 
                     : "Didn't find your answer? "}
                   <a 
-                    href="https://wa.me/40723154520" 
+                    href="https://wa.me/40799069256" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:underline font-medium"

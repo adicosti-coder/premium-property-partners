@@ -656,8 +656,8 @@ const AIChatbot = () => {
       addMessage("assistant", thankMsg);
     } else {
       const supportMsg = language === "ro"
-        ? "Ne pare rău că experiența nu a fost pe măsura așteptărilor. Vă putem conecta direct cu managerul nostru pentru clarificări: [WhatsApp Manager](https://wa.me/40723154520)"
-        : "We are sorry the experience did not meet your expectations. We can connect you directly with our manager: [WhatsApp Manager](https://wa.me/40723154520)";
+        ? "Ne pare rău că experiența nu a fost pe măsura așteptărilor. Vă putem conecta direct cu managerul nostru pentru clarificări: [WhatsApp Manager](https://wa.me/40799069256)"
+        : "We are sorry the experience did not meet your expectations. We can connect you directly with our manager: [WhatsApp Manager](https://wa.me/40799069256)";
       addMessage("assistant", supportMsg);
     }
   };
@@ -978,7 +978,7 @@ const AIChatbot = () => {
                         variant="whatsapp"
                         size="lg"
                         className="w-full gap-2"
-                        onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(
+                        onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(
                           `Scor HostScan: ${propertyReport.scor}/${propertyReport.max_scor} pentru ${propertyReport.zona}. ROI estimat: ${propertyReport.roi_estimat}. Vreau o evaluare detaliată.`
                         )}`, '_blank', 'noopener,noreferrer')}
                       >

@@ -301,7 +301,7 @@ const AnalizaProprietate = () => {
       "@type": ["RealEstateAgent", "LocalBusiness"],
       "name": "RealTrust Timișoara",
       "url": "https://www.realtrust.ro/analiza-proprietate",
-      "telephone": "+40723154520",
+      "telephone": "+40799069256",
       "email": "info@realtrust.ro",
       "address": {
         "@type": "PostalAddress",
@@ -604,7 +604,7 @@ const AnalizaProprietate = () => {
                           variant="whatsapp"
                           size="lg"
                           className="w-full gap-2"
-                          onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(
+                          onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(
                             `Scor HostScan: ${report.scor}/${report.max_scor} | ${report.zona} | ROI: ${report.roi_estimat} | ${form.name} - ${form.phone}`
                           )}`, '_blank', 'noopener,noreferrer')}
                         >
