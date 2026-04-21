@@ -73,7 +73,27 @@ const OwnerGuideHub = () => {
   }[lang];
 
   // Article schema (ItemList of BlogPosting) for the 4 owner-guide articles
+  // E-E-A-T: explicit Person author + Organization publisher with valid logo
   const baseUrl = "https://www.realtrust.ro";
+  const isoDate = new Date().toISOString().split("T")[0];
+  const author = {
+    "@type": "Person",
+    "name": "Adrian Costi",
+    "jobTitle": lang === "ro" ? "Fondator & CEO RealTrust" : "Founder & CEO RealTrust",
+    "url": `${baseUrl}/despre-noi`,
+    "worksFor": { "@type": "Organization", "name": "RealTrust" },
+  };
+  const publisher = {
+    "@type": "Organization",
+    "name": "RealTrust & ApArt Hotel Timișoara",
+    "url": baseUrl,
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${baseUrl}/images/hero-optimized-800w.webp`,
+      "width": 800,
+      "height": 450,
+    },
+  };
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -86,16 +106,11 @@ const OwnerGuideHub = () => {
         "headline": a.title,
         "description": a.desc,
         "url": `${baseUrl}${a.to}`,
+        "datePublished": isoDate,
+        "dateModified": isoDate,
         "inLanguage": lang === "ro" ? "ro-RO" : "en-US",
-        "author": { "@type": "Organization", "name": "RealTrust" },
-        "publisher": {
-          "@type": "Organization",
-          "name": "RealTrust",
-          "logo": {
-            "@type": "ImageObject",
-            "url": `${baseUrl}/logo.png`,
-          },
-        },
+        "author": author,
+        "publisher": publisher,
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": `${baseUrl}${a.to}`,
