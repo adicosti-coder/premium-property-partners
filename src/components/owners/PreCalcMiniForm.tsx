@@ -206,15 +206,15 @@ const PreCalcMiniForm = ({
     try {
       // Persist lead — even if WhatsApp redirect fails, we keep the contact.
       const { error } = await supabase.from("leads").insert({
-        name: parsed.data.name,
+        name: data.name,
         whatsapp_number: "PRECALC_NO_PHONE", // sentinel — real number captured in WhatsApp chat
-        property_type: parsed.data.apartmentType,
+        property_type: data.apartmentType,
         property_area: 0,
-        message: `[${source}] Oraș: ${parsed.data.city} · Tip: ${parsed.data.apartmentType}`,
+        message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
         source,
         simulation_data: {
-          city: parsed.data.city,
-          apartment_type: parsed.data.apartmentType,
+          city: data.city,
+          apartment_type: data.apartmentType,
           estimated_monthly_min: range[0],
           estimated_monthly_max: range[1],
           generated_message: message,
