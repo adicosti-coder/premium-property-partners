@@ -373,13 +373,13 @@ const PentruProprietari = () => {
             <div className="max-w-3xl mb-10">
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
                 {language === "ro"
-                  ? "Administrare proprietăți pentru proprietari în Timișoara"
-                  : "Property management for owners in Timișoara"}
+                  ? "Un singur partener pentru tot ce ține de apartamentul tău"
+                  : "One partner for everything your apartment needs"}
               </h2>
               <p className="text-lg text-muted-foreground">
                 {language === "ro"
-                  ? "Pagina este dedicată exclusiv proprietarilor care vor un sistem complet de operare: preluare apartament în administrare, conformitate fiscală, mentenanță, relația cu chiriașii și creșterea profitului net."
-                  : "This page is built specifically for owners who want full-service operations, tax compliance, maintenance and tenant handling."}
+                  ? "Pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții — tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
+                  : "Built for owners who want monthly income, full transparency and zero daily involvement. We take over operations, tax compliance, maintenance and guest relations — you stay in control through clear reports and 24/7 portal access."}
               </p>
             </div>
 
