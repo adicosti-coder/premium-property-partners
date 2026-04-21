@@ -1,4 +1,4 @@
-import { ClipboardCheck, Cog, TrendingUp, ArrowRight } from "lucide-react";
+import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 
