@@ -582,6 +582,32 @@ const OwnerHowItWorks = () => {
                   </table>
                 </div>
 
+                {/* Auto-generated summary insights */}
+                <div className="mt-8 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card p-5 sm:p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+                      {t.report.summaryEyebrow}
+                    </span>
+                  </div>
+                  <h4 className="text-base sm:text-lg heading-premium text-foreground mb-4">
+                    {t.report.summaryTitle}
+                  </h4>
+                  <ul className="space-y-2.5">
+                    {computed.insights.map((insight, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2.5 text-sm text-foreground/85 leading-relaxed"
+                      >
+                        <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center tabular-nums">
+                          {idx + 1}
+                        </span>
+                        <span>{insight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
                 <div className="mt-8 pt-6 border-t border-border">
                   <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">
                     {t.report.recalibrationLabel}
