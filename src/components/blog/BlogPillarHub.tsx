@@ -286,7 +286,13 @@ const BlogPillarHub = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <div id="evaluare-metoda-comparativa" className="scroll-mt-24 rounded-xl border border-border bg-background p-4">
                 <h3 className="text-base font-semibold text-foreground mb-1">
-                  <a href="#evaluare-metoda-comparativa" className="hover:text-primary">Metoda comparativă</a>
+                  <a
+                    href="#evaluare-metoda-comparativa"
+                    className="hover:text-primary"
+                    onClick={() => trackEvaluationEvent("inline_metoda_comparativa", { source: "inline_anchor" })}
+                  >
+                    Metoda comparativă
+                  </a>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Analizăm 5–10 anunțuri active în raza de 500 m, ajustate pentru suprafață utilă,
@@ -295,7 +301,13 @@ const BlogPillarHub = () => {
               </div>
               <div id="evaluare-metoda-capitalizarii" className="scroll-mt-24 rounded-xl border border-border bg-background p-4">
                 <h3 className="text-base font-semibold text-foreground mb-1">
-                  <a href="#evaluare-metoda-capitalizarii" className="hover:text-primary">Metoda capitalizării</a>
+                  <a
+                    href="#evaluare-metoda-capitalizarii"
+                    className="hover:text-primary"
+                    onClick={() => trackEvaluationEvent("inline_metoda_capitalizarii", { source: "inline_anchor" })}
+                  >
+                    Metoda capitalizării
+                  </a>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Calculăm valoarea pornind de la chiria potențială (clasică sau regim hotelier),
@@ -307,7 +319,11 @@ const BlogPillarHub = () => {
             {/* Factors anchor */}
             <div id="evaluare-factori-pret" className="scroll-mt-24 mt-6 rounded-xl border border-border bg-card/40 p-4">
               <h3 className="text-base font-semibold text-foreground mb-2">
-                <a href="#evaluare-factori-pret" className="hover:text-primary">
+                <a
+                  href="#evaluare-factori-pret"
+                  className="hover:text-primary"
+                  onClick={() => trackEvaluationEvent("inline_factori_pret", { source: "inline_anchor" })}
+                >
                   Factori care influențează prețul
                 </a>
               </h3>
@@ -336,6 +352,12 @@ const BlogPillarHub = () => {
               </div>
               <Link
                 to="/evaluare-gratuita#formular"
+                onClick={() =>
+                  trackEvaluationEvent("cta_formular_evaluare_gratuita", {
+                    source: "blog_pillar_cta",
+                    destination: "/evaluare-gratuita#formular",
+                  })
+                }
                 className="shrink-0 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
               >
                 Completează formularul →
