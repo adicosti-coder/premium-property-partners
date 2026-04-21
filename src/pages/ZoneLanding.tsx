@@ -15,6 +15,7 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
+const InvestorInsightLink = lazy(() => import("@/components/blog/InvestorInsightLink"));
 
 interface ZoneData {
   slug: string;
