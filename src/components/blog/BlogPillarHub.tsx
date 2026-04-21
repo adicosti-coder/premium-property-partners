@@ -165,30 +165,76 @@ const BlogPillarHub = () => {
               care combină prețul mediu pe mp din zonă cu ajustări pentru finisaje, vedere, dotări și
               potențialul de regim hotelier.
             </p>
+
+            {/* Granular anchors for direct deep-linking */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-border bg-background p-4">
-                <h3 className="text-base font-semibold text-foreground mb-1">Metoda comparativă</h3>
+              <div id="evaluare-metoda-comparativa" className="scroll-mt-24 rounded-xl border border-border bg-background p-4">
+                <h3 className="text-base font-semibold text-foreground mb-1">
+                  <a href="#evaluare-metoda-comparativa" className="hover:text-primary">Metoda comparativă</a>
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Analizăm 5–10 anunțuri active în raza de 500 m, ajustate pentru suprafață utilă,
                   etaj și finisaje. Util pentru stabilirea unui preț de listare realist.
                 </p>
               </div>
-              <div className="rounded-xl border border-border bg-background p-4">
-                <h3 className="text-base font-semibold text-foreground mb-1">Metoda capitalizării</h3>
+              <div id="evaluare-metoda-capitalizarii" className="scroll-mt-24 rounded-xl border border-border bg-background p-4">
+                <h3 className="text-base font-semibold text-foreground mb-1">
+                  <a href="#evaluare-metoda-capitalizarii" className="hover:text-primary">Metoda capitalizării</a>
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Calculăm valoarea pornind de la chiria potențială (clasică sau regim hotelier),
                   împărțită la rata de capitalizare a zonei (4–9%).
                 </p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              Pentru o evaluare gratuită, completează formularul de pe pagina{" "}
-              <Link to="/evaluare-gratuita" className="text-primary hover:underline">
-                Evaluare gratuită apartament Timișoara
+
+            {/* Factors anchor */}
+            <div id="evaluare-factori-pret" className="scroll-mt-24 mt-6 rounded-xl border border-border bg-card/40 p-4">
+              <h3 className="text-base font-semibold text-foreground mb-2">
+                <a href="#evaluare-factori-pret" className="hover:text-primary">
+                  Factori care influențează prețul
+                </a>
+              </h3>
+              <ul className="grid gap-1.5 sm:grid-cols-2 text-sm text-muted-foreground list-disc list-inside">
+                <li>Zona &amp; proximitate (UVT, Iulius Town, hub-uri industriale)</li>
+                <li>Anul construcției &amp; clasă energetică</li>
+                <li>Etaj, vedere, orientare, balcon</li>
+                <li>Finisaje, mobilare, electrocasnice</li>
+                <li>Parcare, lift, depozit</li>
+                <li>Potențial regim hotelier (rating &amp; ocupare)</li>
+              </ul>
+            </div>
+
+            {/* Direct CTA — link to free evaluation form */}
+            <div
+              id="evaluare-formular"
+              className="scroll-mt-24 mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div className="min-w-0">
+                <h3 className="text-lg font-serif font-semibold text-foreground mb-1">
+                  Solicită evaluarea gratuită a apartamentului
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Răspuns în 24 h cu preț estimat, randament chirie și potențial regim hotelier.
+                </p>
+              </div>
+              <Link
+                to="/evaluare-gratuita#formular"
+                className="shrink-0 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+              >
+                Completează formularul →
               </Link>
-              .
+            </div>
+
+            <p className="text-sm text-muted-foreground mt-4">
+              Vezi și{" "}
+              <Link to="/calculator-roi" className="text-primary hover:underline">
+                Calculatorul ROI
+              </Link>{" "}
+              pentru o estimare rapidă a randamentului.
             </p>
           </article>
+
 
           {/* Section 3 — Randament chirie */}
           <article id="randament-chirie" className="scroll-mt-24">
