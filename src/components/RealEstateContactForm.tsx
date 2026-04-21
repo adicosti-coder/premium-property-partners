@@ -236,7 +236,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
                 <div className="space-y-4">
                   <a 
-                    href="tel:+40723154520"
+                    href="tel:+40799069256"
                     className="flex items-center gap-4 p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
