@@ -117,10 +117,10 @@ const PentruProprietari = () => {
     },
     en: {
       badge: "Premium Management · Timișoara",
-      title: "Your apartment, operated",
-      titleHighlight: "like a 5-star hotel",
-      subtitle: "We take over your apartment in full hotel-style management — marketing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You get predictable net income. We handle the rest.",
-      cta: "See how much you can earn",
+      title: "Predictable monthly income from your apartment,",
+      titleHighlight: "with zero hassle",
+      subtitle: "We handle everything — listing on Booking & Airbnb, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You see the money in your account. We do the rest, 24/7.",
+      cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       stats: [
         { value: "9.4%", label: "Verified Net ROI", description: "Annual yield confirmed across our portfolio" },
