@@ -206,12 +206,12 @@ const Blog = () => {
 
   const seoContent = {
     ro: {
-      title: "Blog Imobiliar Timișoara | Sfaturi Proprietari",
-      description: "Blog RealTrust — articole despre investiții imobiliare, regim hotelier și randament în Timișoara. Sfaturi practice de la experți PropTech."
+      title: "Ghid Imobiliar Timișoara: Investiții, Vânzări & Regim Hotelier",
+      description: "Descoperă ghidul complet al pieței imobiliare din Timișoara: analize de randament, strategii de investiții și sfaturi pentru vânzări sau regim hotelier."
     },
     en: {
-      title: "Real Estate Blog Timișoara | Owner Tips",
-      description: "Articles, guides and practical tips for property owners and guests. Learn how to maximize your property returns in short-term rentals. Read our guides now!"
+      title: "Timișoara Real Estate Guide: Investments, Sales & Short-Term Rentals",
+      description: "Discover the complete Timișoara real estate market guide: yield analysis, investment strategies and practical tips for sales or short-term rentals."
     }
   };
 
