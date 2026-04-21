@@ -1,5 +1,6 @@
 import { BookOpen, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /**
