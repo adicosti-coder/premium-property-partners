@@ -77,6 +77,7 @@ const OwnerHowItWorks = () => {
 
   const [aptType, setAptType] = useState<ApartmentType>("2-camere");
   const [city, setCity] = useState<CityKey>("timisoara-iosefin");
+  const [currency, setCurrency] = useState<Currency>("EUR");
 
   const content = {
     ro: {
