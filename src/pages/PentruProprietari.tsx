@@ -276,9 +276,15 @@ const PentruProprietari = () => {
         "foundingDate": "2001",
         "founder": {
           "@type": "Person",
+          "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
           "name": "Adrian Costi",
           "jobTitle": "Founder & CEO",
           "url": "https://www.realtrust.ro/despre-noi",
+          "worksFor": { "@type": "Organization", "name": "RealTrust" },
+        },
+        "employee": {
+          "@type": "Person",
+          "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
         },
         "sameAs": [
           "https://www.facebook.com/realtrust.ro",

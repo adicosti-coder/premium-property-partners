@@ -78,6 +78,7 @@ const OwnerGuideHub = () => {
   const isoDate = new Date().toISOString().split("T")[0];
   const author = {
     "@type": "Person",
+    "@id": `${baseUrl}/despre-noi#adrian-costi`,
     "name": "Adrian Costi",
     "jobTitle": lang === "ro" ? "Fondator & CEO RealTrust" : "Founder & CEO RealTrust",
     "url": `${baseUrl}/despre-noi`,
