@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /**
@@ -10,6 +11,27 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const OwnerCoverageMap = () => {
   const { language } = useLanguage();
   const lang = language === "en" ? "en" : "ro";
+
+  // LCP optimization: only mount the heavy Google Maps iframe when the
+  // map container is about to enter the viewport. Until then we render a
+  // lightweight placeholder so the page stays fast on mobile.
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [showIframe, setShowIframe] = useState(false);
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el || showIframe) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowIframe(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [showIframe]);
 
   const neighborhoods = [
     "Centrul Istoric",
