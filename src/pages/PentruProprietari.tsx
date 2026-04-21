@@ -98,6 +98,9 @@ const PentruProprietari = () => {
       subtitle: "Listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF — totul gestionat impecabil. Tu primești venitul în cont.",
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Vorbește cu un consultant",
+      ctaB: "Calculează în 60 sec",
+      secondaryCtaB: "Vezi pachete fără costuri ascunse",
+      variantLabel: "Variantă CTA",
       stats: [
         { value: "9.4%", label: "ROI Net Verificat", description: "Randament anual confirmat în portofoliu" },
         { value: "15-25%", label: "Comision Transparent", description: "Fără costuri ascunse, fără surprize" },
