@@ -214,7 +214,7 @@ const Imobiliare = () => {
               <Button 
                 variant="hero" 
                 size="lg"
-                onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank', 'noopener,noreferrer')}
+                onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(realEstate.cta.whatsappMessage)}`, '_blank', 'noopener,noreferrer')}
                 className="group"
               >
                 <Phone className="w-5 h-5 mr-2" />
@@ -473,7 +473,7 @@ const Imobiliare = () => {
                   variant="outline"
                   size="sm"
                   className="w-full group"
-                  onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau o consultanță imobiliară." : "Hello, I'd like real estate consulting.")}`, '_blank', 'noopener,noreferrer')}
+                  onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau o consultanță imobiliară." : "Hello, I'd like real estate consulting.")}`, '_blank', 'noopener,noreferrer')}
                 >
                   <Phone className="w-4 h-4 mr-2" />
                   {language === "ro" ? "Discută cu un consultant" : "Talk to a consultant"}
@@ -576,10 +576,10 @@ const Imobiliare = () => {
                   {realEstate.cta.contact}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <a href="tel:+40723154520">
+                <a href="tel:+40799069256">
                   <Button variant="outline" size="lg">
                     <Phone className="w-5 h-5 mr-2" />
-                    0723 154 520
+                    0799 069 256
                   </Button>
                 </a>
               </div>

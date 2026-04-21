@@ -225,7 +225,7 @@ const Preturi = () => {
         ? "Bună ziua! Sunt interesat de pachetele de administrare și aș dori o evaluare gratuită."
         : "Hello! I'm interested in the management packages and would like a free evaluation."
     );
-    window.open(`https://wa.me/40723154520?text=${msg}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
   const seo = {
@@ -275,7 +275,7 @@ const Preturi = () => {
     "@id": `${BASE_URL}/preturi#org`,
     "name": "RealTrust Property Management Timișoara",
     "url": `${BASE_URL}/preturi`,
-    "telephone": "+40723154520",
+    "telephone": "+40799069256",
     "email": "info@realtrust.ro",
     "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
     "address": {

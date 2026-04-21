@@ -392,7 +392,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       name: 'RealTrust & ApArt Hotel Timișoara',
       description: 'Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!',
       url: `${BASE_URL}/`,
-      telephone: '+40723154520',
+      telephone: '+40799069256',
       address: {
         '@type': 'PostalAddress',
         streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
@@ -421,7 +421,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       name: 'RealTrust Imobiliare Timișoara',
       description: 'Agenție imobiliară premium din Timișoara specializată în vânzări, investiții și administrare apartamente în regim hotelier.',
       url: `${BASE_URL}/imobiliare-timisoara`,
-      telephone: '+40723154520',
+      telephone: '+40799069256',
       address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
     },
   });
@@ -458,7 +458,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
           '@type': 'RealEstateAgent',
           name: `RealTrust — ${n.fullName}, Timișoara`,
           url: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
-          telephone: '+40723154520',
+          telephone: '+40799069256',
           areaServed: { '@type': 'Place', name: `${n.fullName}, Timișoara` },
           address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
         },
@@ -553,7 +553,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@type': 'RealEstateAgent',
         name: 'RealTrust & ApArt Hotel',
         url: `${BASE_URL}/despre-noi`,
-        telephone: '+40723154520',
+        telephone: '+40799069256',
         areaServed: 'Timișoara',
         address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
         founder: { '@type': 'Person', name: 'Adrian Costi', jobTitle: 'Fondator & CEO' },
@@ -622,7 +622,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@type': 'RealEstateAgent',
         name: 'RealTrust & ApArt Hotel — Investiții Imobiliare Timișoara',
         url: `${BASE_URL}/investitii`,
-        telephone: '+40723154520',
+        telephone: '+40799069256',
         areaServed: 'Timișoara',
         address: {
           '@type': 'PostalAddress',
@@ -723,7 +723,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@type': 'RealEstateAgent',
         name: 'RealTrust & ApArt Hotel — Servicii Proprietari Timișoara',
         url: `${BASE_URL}/pentru-proprietari`,
-        telephone: '+40723154520',
+        telephone: '+40799069256',
         areaServed: 'Timișoara',
         address: {
           '@type': 'PostalAddress',

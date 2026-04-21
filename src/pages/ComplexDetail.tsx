@@ -214,7 +214,7 @@ const ComplexDetail = () => {
       "description": description,
       "image": images[0]?.image_path || "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
       "url": pageUrl,
-      "telephone": "+40723154520",
+      "telephone": "+40799069256",
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Timișoara",
@@ -361,14 +361,14 @@ const ComplexDetail = () => {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button asChild size="lg" className="flex-1">
-                  <a href="tel:+40723154520">
+                  <a href="tel:+40799069256">
                     <Phone className="w-4 h-4 mr-2" />
                     {t.contactUs}
                   </a>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="flex-1">
                   <a
-                    href={`https://wa.me/40723154520?text=Bună! Sunt interesat de serviciile de management pentru o proprietate în ${complex.name}.`}
+                    href={`https://wa.me/40799069256?text=Bună! Sunt interesat de serviciile de management pentru o proprietate în ${complex.name}.`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

@@ -29,7 +29,7 @@ Conținutul acestui site (texte, imagini, design, logo-uri) este protejat de dre
 RealTrust nu garantează acuratețea absolută a informațiilor prezentate pe site. Deciziiile de investiție trebuie luate după consultarea cu specialiști.
 
 ## 6. Contact
-Pentru orice întrebări legate de acești termeni, ne puteți contacta la info@realtrust.ro sau la telefon 0723 154 520.
+Pentru orice întrebări legate de acești termeni, ne puteți contacta la info@realtrust.ro sau la telefon 0799 069 256.
 
 *Ultima actualizare: Martie 2026*
       `,
@@ -93,7 +93,7 @@ Utilizăm cookie-uri esențiale pentru funcționarea site-ului și cookie-uri an
 Implementăm măsuri tehnice și organizatorice adecvate: criptare SSL/TLS, anonimizare IP, acces restricționat la date.
 
 ## 9. Contact DPO
-Pentru întrebări privind protecția datelor: info@realtrust.ro, tel. 0723 154 520.
+Pentru întrebări privind protecția datelor: info@realtrust.ro, tel. 0799 069 256.
 
 *Ultima actualizare: Martie 2026*
       `,

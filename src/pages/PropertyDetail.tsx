@@ -1190,7 +1190,7 @@ const PropertyDetail = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(language === 'ro' ? `Bună ziua, sunt interesat de serviciile de administrare pentru proprietatea ${property.name}` : `Hello, I'm interested in management services for ${property.name}`)}`, '_blank', 'noopener,noreferrer')}
+                    onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === 'ro' ? `Bună ziua, sunt interesat de serviciile de administrare pentru proprietatea ${property.name}` : `Hello, I'm interested in management services for ${property.name}`)}`, '_blank', 'noopener,noreferrer')}
                   >
                     {language === 'ro' ? 'Contactează-ne pe WhatsApp' : 'Contact Us on WhatsApp'}
                   </Button>
@@ -1299,7 +1299,7 @@ const PropertyDetail = () => {
                   <Button 
                     variant="hero" 
                     className="w-full"
-                    onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"} ${dbProperty?.property_code ? `[${dbProperty.property_code}]` : ""}: ${property.name}`)}`, '_blank', 'noopener,noreferrer')}
+                    onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(`${language === "ro" ? "Bună ziua, sunt interesat de proprietatea" : "Hello, I'm interested in the property"} ${dbProperty?.property_code ? `[${dbProperty.property_code}]` : ""}: ${property.name}`)}`, '_blank', 'noopener,noreferrer')}
                   >
                     {language === 'ro' ? 'Contactează-ne' : 'Contact Us'}
                   </Button>

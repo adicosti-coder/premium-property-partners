@@ -207,7 +207,7 @@ INFORMAȚII DESPRE COMPANIE:
 - Nume: ApArt Hotel Timișoara (parte din RealTrust)
 - Locație: Timișoara, România
 - Servicii: Administrare apartamente în regim hotelier, management proprietăți
-- Contact: WhatsApp +40723154520, email info@realtrust.ro
+- Contact: WhatsApp +40799069256, email info@realtrust.ro
 - Rată ocupare: 98%
 - Rating: 4.9/5 stele
 
@@ -239,7 +239,7 @@ COMPANY INFORMATION:
 - Name: ApArt Hotel Timișoara (part of RealTrust)
 - Location: Timișoara, Romania
 - Services: Short-term rental apartment management, property management
-- Contact: WhatsApp +40723154520, email info@realtrust.ro
+- Contact: WhatsApp +40799069256, email info@realtrust.ro
 - Occupancy rate: 98%
 - Rating: 4.9/5 stars
 
@@ -281,7 +281,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         error: "Too many requests",
-        response: "Ai trimis prea multe mesaje într-un timp scurt. Te rog așteaptă un moment sau contactează-ne pe WhatsApp: +40723154520",
+        response: "Ai trimis prea multe mesaje într-un timp scurt. Te rog așteaptă un moment sau contactează-ne pe WhatsApp: +40799069256",
         retryAfter: Math.ceil(rateLimit.resetIn / 1000)
       }),
       {
@@ -463,7 +463,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        response: "Îmi pare rău, a apărut o eroare. Te rog contactează-ne pe WhatsApp: +40723154520"
+        response: "Îmi pare rău, a apărut o eroare. Te rog contactează-ne pe WhatsApp: +40799069256"
       }),
       {
         status: 500,

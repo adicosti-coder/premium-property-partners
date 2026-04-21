@@ -150,7 +150,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
     // Open WhatsApp
     window.open(
-      `https://wa.me/40723154520?text=${encodeURIComponent(message)}`,
+      `https://wa.me/40799069256?text=${encodeURIComponent(message)}`,
       "_blank",
       "noopener,noreferrer"
     );
@@ -236,7 +236,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
                 <div className="space-y-4">
                   <a 
-                    href="tel:+40723154520"
+                    href="tel:+40799069256"
                     className="flex items-center gap-4 p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -244,7 +244,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">{form.contactInfo.phone}</p>
-                      <p className="text-foreground font-medium">0723 154 520</p>
+                      <p className="text-foreground font-medium">0799 069 256</p>
                     </div>
                   </a>
 

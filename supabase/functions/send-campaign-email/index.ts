@@ -47,7 +47,7 @@ const wrapContentInTemplate = (content: string, subject: string, campaignId: str
       </p>
       
       <div style="margin: 15px 0;">
-        <a href="https://wa.me/40723154520" style="color: #d4af37; text-decoration: none; margin: 0 10px; font-size: 13px;">
+        <a href="https://wa.me/40799069256" style="color: #d4af37; text-decoration: none; margin: 0 10px; font-size: 13px;">
           WhatsApp
         </a>
         <span style="color: #cbd5e1;">|</span>

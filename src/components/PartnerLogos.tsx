@@ -78,7 +78,7 @@ const partners = [
   { name: "TripAdvisor", Logo: TripAdvisorLogo, url: "https://www.tripadvisor.com", color: "#00AF87" },
   { name: "EuPlătesc", Logo: EuplatescLogo, url: "https://www.euplatesc.ro", color: "#E31837" },
   { name: "Pynbooking", Logo: PynbookingLogo, url: "https://www.pynbooking.com", color: "#6366F1" },
-  { name: "WhatsApp", Logo: WhatsAppLogo, url: "https://wa.me/40723154520", color: "#25D366" },
+  { name: "WhatsApp", Logo: WhatsAppLogo, url: "https://wa.me/40799069256", color: "#25D366" },
   { name: "Imobiliare.ro", Logo: ImobiliareRoLogo, url: "https://www.imobiliare.ro", color: "#E31837" },
 ];
 

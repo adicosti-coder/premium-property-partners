@@ -367,7 +367,7 @@ const AboutUs = () => {
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+40723154520",
+      "telephone": "+40799069256",
       "contactType": "customer service",
       "email": "info@realtrust.ro",
       "availableLanguage": ["Romanian", "English"]

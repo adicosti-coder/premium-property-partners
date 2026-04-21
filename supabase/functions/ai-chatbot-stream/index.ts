@@ -47,7 +47,7 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
     return `  • ${p.name} (${p.property_code}) – ${p.tag}${revenue} | Rezervare: ${bookingLink}`;
   }).join("\n");
 
-  const whatsapp = "https://wa.me/40723154520";
+  const whatsapp = "https://wa.me/40799069256";
   const fallbackBooking = "https://www.realtrust.ro/oaspeti";
 
   const base = language === "en"

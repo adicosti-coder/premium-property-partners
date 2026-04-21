@@ -16,14 +16,14 @@ const DesktopStickyContactBar = () => {
   const handleCall = () => {
     trackCall();
     fireContactClick("phone");
-    window.location.href = "tel:+40723154520";
+    window.location.href = "tel:+40799069256";
   };
 
   const handleWhatsApp = () => {
     trackWhatsApp();
     fireContactClick("whatsapp");
     const message = encodeURIComponent(t.floatingWhatsapp.message);
-    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleEmail = () => {
@@ -47,7 +47,7 @@ const DesktopStickyContactBar = () => {
               )}
             >
               <Phone className="w-4 h-4" />
-              <span className="font-medium">+40 723 154 520</span>
+              <span className="font-medium">0799 069 256</span>
             </button>
 
             {/* WhatsApp */}

@@ -1041,7 +1041,7 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
               : 'Contact us for personalized recommendations or availability questions.'}
           </p>
           <a 
-            href={`https://wa.me/40723154520?text=${encodeURIComponent(language === 'ro' ? 'Bună ziua! Sunt interesat de serviciile RealTrust & ApArt Hotel.' : 'Hello! I\'m interested in RealTrust & ApArt Hotel services.')}`}
+            href={`https://wa.me/40799069256?text=${encodeURIComponent(language === 'ro' ? 'Bună ziua! Sunt interesat de serviciile RealTrust & ApArt Hotel.' : 'Hello! I\'m interested in RealTrust & ApArt Hotel services.')}`}
             target="_blank" 
             rel="noopener noreferrer"
             className={`inline-block transition-all duration-700 ${

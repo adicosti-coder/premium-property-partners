@@ -114,9 +114,9 @@ const Footer = () => {
               300125, Timișoara, Timiș, România
             </address>
             <div className="space-y-2">
-              <a href="tel:+40723154520" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a href="tel:+40799069256" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Phone className="w-4 h-4" />
-                0723 154 520
+                0799 069 256
               </a>
               <a href="mailto:info@realtrust.ro" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="w-4 h-4" />

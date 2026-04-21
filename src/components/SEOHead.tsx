@@ -208,7 +208,7 @@ const SEOHead = ({
     "description": finalDescription,
     "@id": BASE_URL,
     "url": BASE_URL,
-    "telephone": "+40723154520",
+    "telephone": "+40799069256",
     "email": "info@realtrust.ro",
     "address": {
       "@type": "PostalAddress",

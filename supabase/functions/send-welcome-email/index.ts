@@ -125,7 +125,7 @@ const getWelcomeEmailHtml = (fullName: string, language: string = "ro") => {
       </p>
       
       <div style="margin: 20px 0;">
-        <a href="https://wa.me/40723154520" style="color: #d4af37; text-decoration: none; margin: 0 15px; font-size: 14px;">
+        <a href="https://wa.me/40799069256" style="color: #d4af37; text-decoration: none; margin: 0 15px; font-size: 14px;">
           📱 WhatsApp
         </a>
         <a href="mailto:info@realtrust.ro" style="color: #d4af37; text-decoration: none; margin: 0 15px; font-size: 14px;">

@@ -75,7 +75,7 @@ const ContactSection = () => {
                   <div>
                     <p className="text-sm text-foreground/60 dark:text-muted-foreground">{t.contactSection.phone}</p>
                     <p className="text-foreground font-medium group-hover:text-primary transition-colors">
-                      0723 154 520
+                      0799 069 256
                     </p>
                   </div>
                 </a>

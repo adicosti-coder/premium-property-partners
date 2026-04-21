@@ -393,7 +393,7 @@ const AdvancedRentalCalculator = () => {
       `Vreau o evaluare personalizată pentru proprietatea mea.`
     );
     
-    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const InputField = ({ 
