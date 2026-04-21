@@ -320,7 +320,31 @@ const OwnerHowItWorks = () => {
         ? `${typeLabel} apartment · ${cityLabel} · ${t.report.period}`
         : `Apartament ${typeLabel} · ${cityLabel} · ${t.report.period}`;
 
-    return { rows, title };
+    // ===== Auto-generated insights (3-5 puncte) =====
+    const occDelta = occAct - occEst;
+    const adrDelta = adrAct - adrEst;
+    const netDelta = netAct - netEst;
+    const netPctDelta = Math.round((netDelta / netEst) * 100);
+    const adrPctDelta = Math.round((adrDelta / adrEst) * 100);
+    const annualNet = netAct * 12;
+
+    const insights = lang === "en"
+      ? [
+          `Occupancy reached ${fmtPct(occAct)} vs. ${fmtPct(occEst)} estimated — ${occDelta >= 0 ? "above" : "below"} forecast by ${Math.abs(occDelta)} percentage points thanks to dynamic pricing and multi-channel distribution.`,
+          `Average nightly rate (ADR) climbed to ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% vs. estimate), driven by weekend and seasonal recalibration.`,
+          `Booking & Airbnb fees came in at 16% instead of the 18% modelled — direct bookings reduced platform commissions by roughly 2 percentage points.`,
+          `Cleaning & utilities ran ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)} above plan, an expected variance for a higher-occupancy month.`,
+          `Net owner income totalled ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% vs. estimate) — annualised that's about ${fmtMoney(annualNet, lang, currency)} in your account.`,
+        ]
+      : [
+          `Ocuparea a ajuns la ${fmtPct(occAct)} față de ${fmtPct(occEst)} estimat — ${occDelta >= 0 ? "peste" : "sub"} prognoză cu ${Math.abs(occDelta)} puncte procentuale, datorită pricing-ului dinamic și distribuției pe mai multe canale.`,
+          `Tariful mediu pe noapte (ADR) a urcat la ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% față de estimare), recalibrat pe tarife de weekend și sezon.`,
+          `Comisioanele Booking & Airbnb au fost de 16% în loc de 18% modelat — rezervările directe au redus comisioanele platformelor cu aproximativ 2 puncte procentuale.`,
+          `Curățenia și utilitățile au depășit estimarea cu ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)}, o variație normală pentru o lună cu ocupare ridicată.`,
+          `Venitul net al proprietarului a fost ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% față de estimare) — anualizat înseamnă circa ${fmtMoney(annualNet, lang, currency)} în contul tău.`,
+        ];
+
+    return { rows, title, insights };
   }, [aptType, city, language, t, currency]);
 
   const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
