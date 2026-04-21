@@ -100,6 +100,7 @@ const PreCalcMiniForm = ({
   className = "",
 }: PreCalcMiniFormProps) => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [form, setForm] = useState<FormState>({
     name: "",
     city: "Timișoara",
