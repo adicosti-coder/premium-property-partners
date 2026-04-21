@@ -337,16 +337,17 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            {/* Owners CTA - distinct gold button - visible only on 2xl+ */}
-            <Button 
-              variant="default" 
-              size="default" 
-              className="hidden 2xl:inline-flex bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-amber-500/25 border-0 transition-all duration-300 hover:scale-105 hover:-rotate-1 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/40"
-              onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              <span className="mr-1.5">🏠</span>
-              {t.nav.listProperty || 'Proprietari: Listează'}
-            </Button>
+            {/* Owners CTA - high-contrast Amber/Gold investor button */}
+            <Link to="/evaluare-gratuita" className="hidden 2xl:inline-flex">
+              <Button
+                variant="default"
+                size="default"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold shadow-lg shadow-amber-500/30 border-0 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-500/50 gap-1.5"
+              >
+                <span aria-hidden>📈</span>
+                {language === "ro" ? "Evaluează Profitul" : "Evaluate Profit"}
+              </Button>
+            </Link>
 
             {/* Add Listing CTA - prominent pill button */}
             <Link to="/adauga-anunt" className="hidden lg:inline-flex">
