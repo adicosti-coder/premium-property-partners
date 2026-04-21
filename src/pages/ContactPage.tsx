@@ -144,13 +144,19 @@ const ContactPage = () => {
             <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-3">
               {isRo ? "Contact & Locație — Sediu RealTrust Timișoara" : "Contact & Location — RealTrust Timișoara Office"}
             </h1>
-            <p className="text-base text-muted-foreground">
+            <p className="text-base text-muted-foreground mb-5">
               {isRo
                 ? "Adresă, telefon, program și hartă. Pentru detalii despre serviciile noastre, vezi pagina dedicată."
                 : "Address, phone, hours and map. For details about our services, see the dedicated page."}
             </p>
-            <Link to="/servicii-imobiliare-timisoara" className="inline-block mt-3 text-sm text-primary hover:underline">
-              {isRo ? "→ Toate serviciile imobiliare RealTrust" : "→ All RealTrust real estate services"}
+            <Link to="/servicii-imobiliare-timisoara" className="inline-block">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold shadow-lg shadow-amber-500/30 gap-2"
+              >
+                {isRo ? "→ Toate serviciile imobiliare" : "→ All real estate services"}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </Link>
           </section>
 
