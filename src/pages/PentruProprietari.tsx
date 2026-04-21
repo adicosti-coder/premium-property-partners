@@ -93,11 +93,11 @@ const PentruProprietari = () => {
   const content = {
     ro: {
       badge: "Administrare Premium · Timișoara",
-      title: "Apartamentul tău, operat",
-      titleHighlight: "ca un hotel de 5 stele",
-      subtitle: "Preluăm apartamentul tău în regim hotelier complet — marketing, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu primești venit net, predictibil. Noi facem restul.",
-      cta: "Vezi cât poți câștiga lunar",
-      secondaryCta: "Discută cu un consultant",
+      title: "Venit lunar predictibil din apartamentul tău,",
+      titleHighlight: "fără bătăi de cap",
+      subtitle: "Preluăm totul — listare pe Booking & Airbnb, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu vezi banii în cont. Noi ne ocupăm de restul, 24/7.",
+      cta: "Calculează venitul tău lunar",
+      secondaryCta: "Vorbește cu un consultant",
       stats: [
         { value: "9.4%", label: "ROI Net Verificat", description: "Randament anual confirmat în portofoliu" },
         { value: "15-25%", label: "Comision Transparent", description: "Fără costuri ascunse, fără surprize" },
@@ -117,10 +117,10 @@ const PentruProprietari = () => {
     },
     en: {
       badge: "Premium Management · Timișoara",
-      title: "Your apartment, operated",
-      titleHighlight: "like a 5-star hotel",
-      subtitle: "We take over your apartment in full hotel-style management — marketing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You get predictable net income. We handle the rest.",
-      cta: "See how much you can earn",
+      title: "Predictable monthly income from your apartment,",
+      titleHighlight: "with zero hassle",
+      subtitle: "We handle everything — listing on Booking & Airbnb, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You see the money in your account. We do the rest, 24/7.",
+      cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       stats: [
         { value: "9.4%", label: "Verified Net ROI", description: "Annual yield confirmed across our portfolio" },
@@ -373,13 +373,13 @@ const PentruProprietari = () => {
             <div className="max-w-3xl mb-10">
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
                 {language === "ro"
-                  ? "Administrare proprietăți pentru proprietari în Timișoara"
-                  : "Property management for owners in Timișoara"}
+                  ? "Un singur partener pentru tot ce ține de apartamentul tău"
+                  : "One partner for everything your apartment needs"}
               </h2>
               <p className="text-lg text-muted-foreground">
                 {language === "ro"
-                  ? "Pagina este dedicată exclusiv proprietarilor care vor un sistem complet de operare: preluare apartament în administrare, conformitate fiscală, mentenanță, relația cu chiriașii și creșterea profitului net."
-                  : "This page is built specifically for owners who want full-service operations, tax compliance, maintenance and tenant handling."}
+                  ? "Pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții — tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
+                  : "Built for owners who want monthly income, full transparency and zero daily involvement. We take over operations, tax compliance, maintenance and guest relations — you stay in control through clear reports and 24/7 portal access."}
               </p>
             </div>
 
