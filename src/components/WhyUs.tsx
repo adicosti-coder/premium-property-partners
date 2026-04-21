@@ -38,15 +38,15 @@ const WhyUs = () => {
       title: "The only hotel-style operator in Timișoara with verified net ROI",
       brandName: "RealTrust • ApArt Hotel",
       brandSubtitle: "Timișoara · premium hotel-style operation",
-      description: "We build a repeatable business for your property: hotel procedures, dynamic pricing, channel management and quality control. We don't bet on a good season — we deliver consistent performance, month after month.",
+      description: "We build a repeatable business for your property: hotel procedures, dynamic pricing, channel management and quality control. Our estimates are recalibrated quarterly on real data from our managed portfolio — we don't bet on a good season, we deliver consistent performance, month after month.",
       promiseTitle: "Honest promise",
-      promiseText: "We tell you straight whether your apartment is worth running hotel-style. If it is, you get clear next steps. If not, we explain why and what alternatives you have.",
+      promiseText: "The figures we show you come directly from comparable apartments we currently operate in Timișoara — not from optimistic projections. If hotel-style management is worth it, you get clear next steps. If not, we explain why and what alternatives you have.",
       reasons: [
         "Over 25 years of experience managing premium properties",
         "Verified 9.4% net annual ROI across our managed portfolio",
+        "Estimates recalibrated quarterly on real hotel-regime data (occupancy, rates, fees)",
         "Dedicated 24/7 team — for you and your guests",
-        "Professional photography and multi-channel listings included",
-        "Detailed monthly reporting and ANAF tax compliance handled"
+        "Professional photography, multi-channel listings and ANAF tax reporting — included"
       ],
       performanceLabel: "AVERAGE PERFORMANCE",
       revenueIncrease: "+45%",
