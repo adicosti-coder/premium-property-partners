@@ -61,7 +61,7 @@ const ViewingRequestModal = ({ open, onOpenChange, propertyName, propertyId }: V
     setIsSubmitting(true);
     try {
       const msg = `Vizionare: ${propertyName} (${propertyId})\nNume: ${name}\nTelefon: ${phone}\nInterval: ${timeSlot}`;
-      window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+      window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
       // GA4 lead event (consent-gated)
       try {
         const consent = localStorage.getItem("cookie_consent_v2");
