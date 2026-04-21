@@ -266,6 +266,10 @@ const BlogPillarHub = () => {
   );
   const { active, lockActive } = useActiveSection(allIds);
 
+  // Fires GA4 view events the first time each #evaluare-* section
+  // scrolls into view (separate from click tracking).
+  useEvaluareSectionViewTracking();
+
   return (
     <section className="mb-12" aria-label="Ghid imobiliar Timișoara — hub conținut">
       <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
