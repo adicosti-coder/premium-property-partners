@@ -15,15 +15,15 @@ const WhyUs = () => {
       title: "Singurul operator hotelier din Timișoara cu ROI net verificat",
       brandName: "RealTrust • ApArt Hotel",
       brandSubtitle: "Timișoara · operare premium în regim hotelier",
-      description: "Construim un business repetabil pentru proprietarul tău: proceduri hoteliere, pricing dinamic, channel management și quality control. Nu mizăm pe un sezon bun — livrăm performanță constantă, lună de lună.",
+      description: "Construim un business repetabil pentru proprietarul tău: proceduri hoteliere, pricing dinamic, channel management și quality control. Estimările noastre sunt recalibrate trimestrial pe datele reale din portofoliul administrat — nu mizăm pe un sezon bun, livrăm performanță constantă, lună de lună.",
       promiseTitle: "Promisiune onestă",
-      promiseText: "Îți spunem realist dacă apartamentul tău merită regim hotelier. Dacă merită, primești pași clari. Dacă nu, îți spunem de ce și ce alternative ai.",
+      promiseText: "Cifrele pe care ți le prezentăm vin direct din apartamente similare pe care le operăm acum în Timișoara — nu din proiecții optimiste. Dacă merită regimul hotelier, primești pași clari. Dacă nu, îți spunem de ce și ce alternative ai.",
       reasons: [
         "Peste 25 de ani de experiență în administrarea proprietăților premium",
         "ROI net 9.4% verificat anual în portofoliul administrat",
+        "Estimări recalibrate trimestrial pe date reale din regim hotelier (ocupare, tarife, comisioane)",
         "Echipă dedicată 24/7 — pentru tine și pentru oaspeți",
-        "Fotografii profesionale și listări multi-canal incluse",
-        "Raportare lunară detaliată și conformitate ANAF gestionată"
+        "Fotografii profesionale, listări multi-canal și raportare ANAF — incluse"
       ],
       performanceLabel: "PERFORMANȚĂ MEDIE",
       revenueIncrease: "+45%",
@@ -38,15 +38,15 @@ const WhyUs = () => {
       title: "The only hotel-style operator in Timișoara with verified net ROI",
       brandName: "RealTrust • ApArt Hotel",
       brandSubtitle: "Timișoara · premium hotel-style operation",
-      description: "We build a repeatable business for your property: hotel procedures, dynamic pricing, channel management and quality control. We don't bet on a good season — we deliver consistent performance, month after month.",
+      description: "We build a repeatable business for your property: hotel procedures, dynamic pricing, channel management and quality control. Our estimates are recalibrated quarterly on real data from our managed portfolio — we don't bet on a good season, we deliver consistent performance, month after month.",
       promiseTitle: "Honest promise",
-      promiseText: "We tell you straight whether your apartment is worth running hotel-style. If it is, you get clear next steps. If not, we explain why and what alternatives you have.",
+      promiseText: "The figures we show you come directly from comparable apartments we currently operate in Timișoara — not from optimistic projections. If hotel-style management is worth it, you get clear next steps. If not, we explain why and what alternatives you have.",
       reasons: [
         "Over 25 years of experience managing premium properties",
         "Verified 9.4% net annual ROI across our managed portfolio",
+        "Estimates recalibrated quarterly on real hotel-regime data (occupancy, rates, fees)",
         "Dedicated 24/7 team — for you and your guests",
-        "Professional photography and multi-channel listings included",
-        "Detailed monthly reporting and ANAF tax compliance handled"
+        "Professional photography, multi-channel listings and ANAF tax reporting — included"
       ],
       performanceLabel: "AVERAGE PERFORMANCE",
       revenueIncrease: "+45%",
