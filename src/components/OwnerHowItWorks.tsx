@@ -348,7 +348,7 @@ const OwnerHowItWorks = () => {
           net: `Venitul net al proprietarului a fost ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% față de estimare) — anualizat înseamnă circa ${fmtMoney(annualNet, lang, currency)} în contul tău.`,
         };
 
-    return { rows, title, insights };
+    return { rows, title, insightsByKey };
   }, [aptType, city, language, t, currency]);
 
   const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
