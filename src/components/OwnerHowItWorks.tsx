@@ -89,6 +89,30 @@ const OwnerHowItWorks = () => {
           detail: "Guaranteed monthly payments",
         },
       ],
+      report: {
+        eyebrow: "Monthly report · real example",
+        title: "1-bedroom apartment · Iosefin · October 2025",
+        subtitle: "This is the initial-estimate vs. actual comparison you receive every month:",
+        estimateLabel: "Initial estimate",
+        actualLabel: "Actual (verified)",
+        deltaLabel: "Delta",
+        rows: [
+          { metric: "Occupancy", estimate: "78%", actual: "84%", delta: "+6 pp", positive: true },
+          { metric: "ADR (avg. nightly rate)", estimate: "€92", actual: "€98", delta: "+€6", positive: true },
+          { metric: "Gross revenue", estimate: "€2,230", actual: "€2,555", delta: "+€325", positive: true },
+          { metric: "Booking/Airbnb fees", estimate: "−18%", actual: "−16.4%", delta: "+1.6 pp", positive: true },
+          { metric: "Cleaning & utilities", estimate: "−€380", actual: "−€395", delta: "−€15", positive: false },
+          { metric: "Net owner income", estimate: "€1,450", actual: "€1,690", delta: "+€240", positive: true },
+        ],
+        recalibrationLabel: "Indicators recalibrated quarterly",
+        recalibrationItems: [
+          "Average occupancy by apartment type & area",
+          "ADR & weekend / seasonal rates",
+          "Real Booking, Airbnb and Direct fees",
+          "Cleaning & utility costs per regime",
+        ],
+        footnote: "Figures come from our portfolio operated in Timișoara. Your initial estimate is calibrated on comparable apartments, then the monthly report shows you exactly where we delivered above or below forecast.",
+      },
     },
   };
 
