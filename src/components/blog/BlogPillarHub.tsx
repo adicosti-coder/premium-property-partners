@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, Calculator, Building2, MapPin, LineChart, Wallet, Home, Briefcase } from "lucide-react";
 
@@ -26,27 +26,55 @@ const tocItems: TocItem[] = [
   { id: "ghiduri-proprietari", label: "Ghiduri pentru proprietari și investitori" },
 ];
 
+/**
+ * Tracks the currently visible section AND the closest sub-section by
+ * comparing each observed element's distance to the top of the viewport
+ * (offset by ~25% to account for the sticky header). This is more reliable
+ * than picking max intersectionRatio when sections have different heights.
+ */
 const useActiveSection = (ids: string[]) => {
   const [active, setActive] = useState<string>(ids[0] ?? "");
+  const [manualLockId, setManualLockId] = useState<string | null>(null);
+
+  // When the user clicks a TOC link, lock the active state briefly so it
+  // doesn't flicker while the smooth scroll animation is running.
+  const lockActive = useCallback((id: string) => {
+    setActive(id);
+    setManualLockId(id);
+    window.setTimeout(() => setManualLockId(null), 800);
+  }, []);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]) setActive(visible[0].target.id);
-      },
-      { rootMargin: "-20% 0px -60% 0px", threshold: [0, 0.25, 0.5, 1] }
-    );
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, [ids]);
+    const compute = () => {
+      if (manualLockId) return;
+      const offset = window.innerHeight * 0.25;
+      let bestId = ids[0] ?? "";
+      let bestDelta = Number.POSITIVE_INFINITY;
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        // distance from the offset line; prefer sections whose top has crossed it
+        const delta = rect.top - offset;
+        // pick the section that has scrolled past the offset line and is closest to it
+        if (delta <= 0 && Math.abs(delta) < bestDelta) {
+          bestDelta = Math.abs(delta);
+          bestId = id;
+        }
+      });
+      setActive(bestId);
+    };
 
-  return active;
+    compute();
+    window.addEventListener("scroll", compute, { passive: true });
+    window.addEventListener("resize", compute);
+    return () => {
+      window.removeEventListener("scroll", compute);
+      window.removeEventListener("resize", compute);
+    };
+  }, [ids, manualLockId]);
+
+  return { active, lockActive };
 };
 
 const subAnchors: Record<string, { id: string; label: string }[]> = {
@@ -58,46 +86,92 @@ const subAnchors: Record<string, { id: string; label: string }[]> = {
   ],
 };
 
-const TocList = ({ active }: { active: string }) => (
-  <ol className="space-y-1.5 text-sm">
-    {tocItems.map((item, idx) => {
-      const isActive = active === item.id;
-      const subs = subAnchors[item.id];
-      return (
-        <li key={item.id}>
-          <a
-            href={`#${item.id}`}
-            className={`block rounded-md border-l-2 px-3 py-1.5 transition-colors ${
-              isActive
-                ? "border-primary bg-primary/5 text-primary font-medium"
-                : "border-transparent text-muted-foreground hover:border-primary/40 hover:text-primary"
-            }`}
-          >
-            <span className="mr-1 text-xs opacity-60">{idx + 1}.</span>
-            {item.label}
-          </a>
-          {isActive && subs && (
-            <ul className="mt-1 ml-4 space-y-1 border-l border-border pl-3">
-              {subs.map((s) => (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    className="block rounded px-2 py-1 text-xs text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    ↳ {s.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </li>
-      );
-    })}
-  </ol>
-);
+const TocList = ({
+  active,
+  onJump,
+}: {
+  active: string;
+  onJump: (id: string) => void;
+}) => {
+  // A section's sub-list is expanded when EITHER the section itself is active
+  // OR one of its sub-anchors is the currently active id.
+  const isExpanded = (sectionId: string) => {
+    if (active === sectionId) return true;
+    const subs = subAnchors[sectionId];
+    return !!subs?.some((s) => s.id === active);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (!el) return;
+    onJump(id);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Update the URL hash without triggering native jump
+    history.replaceState(null, "", `#${id}`);
+  };
+
+  return (
+    <ol className="space-y-1.5 text-sm">
+      {tocItems.map((item, idx) => {
+        const expanded = isExpanded(item.id);
+        const isActive = active === item.id;
+        const subs = subAnchors[item.id];
+        return (
+          <li key={item.id}>
+            <a
+              href={`#${item.id}`}
+              onClick={(e) => handleClick(e, item.id)}
+              aria-current={isActive ? "true" : undefined}
+              className={`block rounded-md border-l-2 px-3 py-1.5 transition-colors ${
+                isActive
+                  ? "border-primary bg-primary/5 text-primary font-medium"
+                  : "border-transparent text-muted-foreground hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <span className="mr-1 text-xs opacity-60">{idx + 1}.</span>
+              {item.label}
+            </a>
+            {expanded && subs && (
+              <ul className="mt-1 ml-4 space-y-1 border-l border-border pl-3">
+                {subs.map((s) => {
+                  const subActive = active === s.id;
+                  return (
+                    <li key={s.id}>
+                      <a
+                        href={`#${s.id}`}
+                        onClick={(e) => handleClick(e, s.id)}
+                        aria-current={subActive ? "true" : undefined}
+                        className={`block rounded px-2 py-1 text-xs transition-colors ${
+                          subActive
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                        }`}
+                      >
+                        ↳ {s.label}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+};
 
 const BlogPillarHub = () => {
-  const active = useActiveSection(tocItems.map((i) => i.id));
+  // Observe both parent sections AND their sub-anchors so the TOC reflects
+  // exactly which subsection (e.g. "Formular evaluare gratuită") is in view.
+  const allIds = useMemo(
+    () => [
+      ...tocItems.flatMap((i) => [i.id, ...(subAnchors[i.id]?.map((s) => s.id) ?? [])]),
+    ],
+    []
+  );
+  const { active, lockActive } = useActiveSection(allIds);
 
   return (
     <section className="mb-12" aria-label="Ghid imobiliar Timișoara — hub conținut">
@@ -106,13 +180,13 @@ const BlogPillarHub = () => {
         <aside className="hidden lg:block">
           <nav
             aria-label="Cuprins ghid imobiliar"
-            className="sticky top-24 rounded-2xl border border-border bg-card/60 p-5"
+            className="sticky top-24 rounded-2xl border border-border bg-card/60 p-5 max-h-[calc(100vh-7rem)] overflow-y-auto"
           >
             <h2 className="text-base font-serif font-semibold text-foreground mb-3 flex items-center gap-2">
               <LineChart className="w-4 h-4 text-primary" />
               Cuprins
             </h2>
-            <TocList active={active} />
+            <TocList active={active} onJump={lockActive} />
           </nav>
         </aside>
 
@@ -125,7 +199,7 @@ const BlogPillarHub = () => {
             <LineChart className="w-4 h-4 text-primary" />
             Cuprins — Ghid imobiliar Timișoara
           </h2>
-          <TocList active={active} />
+          <TocList active={active} onJump={lockActive} />
         </nav>
 
         {/* Content sections */}
