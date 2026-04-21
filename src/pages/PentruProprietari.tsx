@@ -93,11 +93,11 @@ const PentruProprietari = () => {
   const content = {
     ro: {
       badge: "Administrare Premium · Timișoara",
-      title: "Apartamentul tău, operat",
-      titleHighlight: "ca un hotel de 5 stele",
-      subtitle: "Preluăm apartamentul tău în regim hotelier complet — marketing, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu primești venit net, predictibil. Noi facem restul.",
-      cta: "Vezi cât poți câștiga lunar",
-      secondaryCta: "Discută cu un consultant",
+      title: "Venit lunar predictibil din apartamentul tău,",
+      titleHighlight: "fără bătăi de cap",
+      subtitle: "Preluăm totul — listare pe Booking & Airbnb, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu vezi banii în cont. Noi ne ocupăm de restul, 24/7.",
+      cta: "Calculează venitul tău lunar",
+      secondaryCta: "Vorbește cu un consultant",
       stats: [
         { value: "9.4%", label: "ROI Net Verificat", description: "Randament anual confirmat în portofoliu" },
         { value: "15-25%", label: "Comision Transparent", description: "Fără costuri ascunse, fără surprize" },
