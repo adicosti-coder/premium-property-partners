@@ -348,7 +348,7 @@ const PentruProprietari = () => {
                 <Button
                   variant="hero"
                   size="xl"
-                  onClick={scrollToCalculator}
+                  onClick={handlePrimaryCtaClick}
                   className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0"
                 >
                   <TrendingUp className="w-5 h-5 mr-2" />
