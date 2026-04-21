@@ -1,4 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+/**
+ * Fires a GA4 event for evaluation-section interactions.
+ * Mirrors the gtag pattern used across the project (CompareDrawer, Hero, etc.)
+ * and silently no-ops when consent isn't granted (gtag handles that itself).
+ */
+const trackEvaluationEvent = (label: string, extra: Record<string, string> = {}) => {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", "evaluare_apartament_click", {
+    event_category: "blog_pillar_hub",
+    event_label: label,
+    page_path: window.location.pathname,
+    ...extra,
+  });
+};
 import { Link } from "react-router-dom";
 import { TrendingUp, Calculator, Building2, MapPin, LineChart, Wallet, Home, Briefcase } from "lucide-react";
 
