@@ -238,6 +238,7 @@ const App = () => (
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
+                    <Route path="/servicii-imobiliare-timisoara" element={<ServiciiImobiliareTimisoara />} />
                     <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
