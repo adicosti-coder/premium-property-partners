@@ -244,7 +244,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">{form.contactInfo.phone}</p>
-                      <p className="text-foreground font-medium">0723 154 520</p>
+                      <p className="text-foreground font-medium">0799 069 256</p>
                     </div>
                   </a>
 

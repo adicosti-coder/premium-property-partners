@@ -62,7 +62,7 @@ const ImobiliareTimisoara = () => {
     name: "RealTrust Imobiliare Timișoara",
     description: "Agenție imobiliară premium din Timișoara specializată în vânzări, investiții și administrare apartamente în regim hotelier.",
     url: "https://www.realtrust.ro/imobiliare-timisoara",
-    telephone: "+40723154520",
+    telephone: "+40799069256",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Timișoara",

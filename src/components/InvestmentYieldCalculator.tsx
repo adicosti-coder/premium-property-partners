@@ -21,7 +21,7 @@ const InvestmentYieldCalculator = () => {
 
   const handleWhatsApp = useCallback(() => {
     const msg = `Bună ziua! Am simulat un randament imobiliar pe RealTrust.ro:%0A- Randament: ${yieldAnual.toFixed(2)}%%0A- Amortizare: ${aniAmortizare.toFixed(1)} ani%0A- Pagina: ${window.location.href}`;
-    window.open(`https://wa.me/40723154520?text=${msg}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${msg}`, '_blank', 'noopener,noreferrer');
   }, [yieldAnual, aniAmortizare]);
 
   const handleDownload = useCallback(() => {

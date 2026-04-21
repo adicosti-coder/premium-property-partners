@@ -55,7 +55,7 @@ const NeighborhoodDetail = () => {
             name: `RealTrust & ApArt Hotel — ${neighborhood.fullName}, Timișoara`,
             description: neighborhood.description.slice(0, 300),
             url: `https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
-            telephone: "+40723154520",
+            telephone: "+40799069256",
             email: "info@realtrust.ro",
             priceRange: "€€",
             areaServed: { "@type": "Place", name: `${neighborhood.fullName}, Timișoara` },
@@ -168,9 +168,9 @@ const NeighborhoodDetail = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button asChild>
-                <a href="tel:+40723154520">
+                <a href="tel:+40799069256">
                   <Phone className="w-4 h-4 mr-2" />
-                  Sună acum: 0723 154 520
+                  Sună acum: 0799 069 256
                 </a>
               </Button>
               <Button variant="outline" asChild>

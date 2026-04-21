@@ -579,7 +579,7 @@ const Imobiliare = () => {
                 <a href="tel:+40723154520">
                   <Button variant="outline" size="lg">
                     <Phone className="w-5 h-5 mr-2" />
-                    0723 154 520
+                    0799 069 256
                   </Button>
                 </a>
               </div>
