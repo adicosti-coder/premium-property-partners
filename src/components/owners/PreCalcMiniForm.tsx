@@ -390,25 +390,45 @@ const PreCalcMiniForm = ({
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                size="lg"
-                disabled={submitting}
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary group"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {t.submitting}
-                  </>
-                ) : (
-                  <>
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    {t.submit}
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary group"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      {t.submitting}
+                    </>
+                  ) : (
+                    <>
+                      <CalendarCheck className="w-5 h-5 mr-2" />
+                      {t.submit}
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </Button>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground">{t.or}</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  disabled={submitting}
+                  onClick={handleWhatsapp}
+                  className="w-full"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  {t.submitWhatsapp}
+                </Button>
+              </div>
 
               <p className="text-xs text-muted-foreground text-center">{t.privacy}</p>
             </form>
