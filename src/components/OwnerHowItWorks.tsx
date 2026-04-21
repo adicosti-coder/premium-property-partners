@@ -597,19 +597,43 @@ const OwnerHowItWorks = () => {
                       {t.report.summaryEyebrow}
                     </span>
                   </div>
-                  <h4 className="text-base sm:text-lg heading-premium text-foreground mb-4">
+                  <h4 className="text-base sm:text-lg heading-premium text-foreground mb-3">
                     {t.report.summaryTitle}
                   </h4>
+
+                  {/* Filter chips */}
+                  <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label={language === "en" ? "Filter summary points" : "Filtrează punctele rezumatului"}>
+                    {ALL_INSIGHT_KEYS.map((k) => {
+                      const active = selectedInsights.includes(k);
+                      const label = t.report.metrics[k];
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => toggleInsight(k)}
+                          aria-pressed={active}
+                          className={`text-[11px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                            active
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              : "bg-background/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   <ul className="space-y-2.5">
-                    {computed.insights.map((insight, idx) => (
+                    {ALL_INSIGHT_KEYS.filter((k) => selectedInsights.includes(k)).map((k, idx) => (
                       <li
-                        key={idx}
+                        key={k}
                         className="flex items-start gap-2.5 text-sm text-foreground/85 leading-relaxed"
                       >
                         <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center tabular-nums">
                           {idx + 1}
                         </span>
-                        <span>{insight}</span>
+                        <span>{computed.insightsByKey[k]}</span>
                       </li>
                     ))}
                   </ul>
