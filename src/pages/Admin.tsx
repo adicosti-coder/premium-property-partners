@@ -13,7 +13,7 @@ import {
   Mail, MailCheck, Megaphone, Play, MapPin, Film, Lightbulb,
   FlaskConical, Shield, ShieldCheck, PenLine, MousePointerClick,
   Target, TrendingUp, LinkIcon, Search, Euro, Building2, Hotel,
-  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen, Sparkles, Zap,
+  Calendar, CalendarDays, Phone, Home, MessageSquare, BookOpen, Sparkles, Zap, Activity,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
