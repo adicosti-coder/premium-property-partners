@@ -125,6 +125,9 @@ const PentruProprietari = () => {
       subtitle: "Premium listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance — flawlessly managed. You just receive the income.",
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
+      ctaB: "Calculate in 60 sec",
+      secondaryCtaB: "See packages — no hidden fees",
+      variantLabel: "CTA Variant",
       stats: [
         { value: "9.4%", label: "Verified Net ROI", description: "Annual yield confirmed across our portfolio" },
         { value: "15-25%", label: "Transparent Commission", description: "No hidden fees, no surprises" },
