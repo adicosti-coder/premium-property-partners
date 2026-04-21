@@ -212,7 +212,7 @@ const FloatingInvestorGuide = () => {
               ) : (
                 <>
                   <Download className="w-4 h-4 mr-2" />
-                  {isRo ? "Descarcă Ghidul Gratuit" : "Download Free Guide"}
+                  {isRo ? "Citește Ghidul 2026" : "Read the 2026 Guide"}
                 </>
               )}
             </Button>
