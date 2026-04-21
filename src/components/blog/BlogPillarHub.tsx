@@ -163,7 +163,15 @@ const TocList = ({
 };
 
 const BlogPillarHub = () => {
-  const active = useActiveSection(tocItems.map((i) => i.id));
+  // Observe both parent sections AND their sub-anchors so the TOC reflects
+  // exactly which subsection (e.g. "Formular evaluare gratuită") is in view.
+  const allIds = useMemo(
+    () => [
+      ...tocItems.flatMap((i) => [i.id, ...(subAnchors[i.id]?.map((s) => s.id) ?? [])]),
+    ],
+    []
+  );
+  const { active, lockActive } = useActiveSection(allIds);
 
   return (
     <section className="mb-12" aria-label="Ghid imobiliar Timișoara — hub conținut">
@@ -172,13 +180,13 @@ const BlogPillarHub = () => {
         <aside className="hidden lg:block">
           <nav
             aria-label="Cuprins ghid imobiliar"
-            className="sticky top-24 rounded-2xl border border-border bg-card/60 p-5"
+            className="sticky top-24 rounded-2xl border border-border bg-card/60 p-5 max-h-[calc(100vh-7rem)] overflow-y-auto"
           >
             <h2 className="text-base font-serif font-semibold text-foreground mb-3 flex items-center gap-2">
               <LineChart className="w-4 h-4 text-primary" />
               Cuprins
             </h2>
-            <TocList active={active} />
+            <TocList active={active} onJump={lockActive} />
           </nav>
         </aside>
 
@@ -191,7 +199,7 @@ const BlogPillarHub = () => {
             <LineChart className="w-4 h-4 text-primary" />
             Cuprins — Ghid imobiliar Timișoara
           </h2>
-          <TocList active={active} />
+          <TocList active={active} onJump={lockActive} />
         </nav>
 
         {/* Content sections */}
