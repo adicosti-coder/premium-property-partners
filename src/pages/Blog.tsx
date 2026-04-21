@@ -374,6 +374,9 @@ const Blog = () => {
             </section>
           )}
 
+          {/* Pillar Hub — ToC + structured H2/H3 sections covering missing keywords */}
+          {language === "ro" && <BlogPillarHub />}
+
           {/* Community Contest Banner */}
           <div className="mb-8 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
