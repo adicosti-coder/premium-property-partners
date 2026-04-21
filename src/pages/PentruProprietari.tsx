@@ -20,6 +20,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
