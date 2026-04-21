@@ -1,4 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+/**
+ * Fires a GA4 event for evaluation-section interactions.
+ * Mirrors the gtag pattern used across the project (CompareDrawer, Hero, etc.)
+ * and silently no-ops when consent isn't granted (gtag handles that itself).
+ */
+const trackEvaluationEvent = (label: string, extra: Record<string, string> = {}) => {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", "evaluare_apartament_click", {
+    event_category: "blog_pillar_hub",
+    event_label: label,
+    page_path: window.location.pathname,
+    ...extra,
+  });
+};
 import { Link } from "react-router-dom";
 import { TrendingUp, Calculator, Building2, MapPin, LineChart, Wallet, Home, Briefcase } from "lucide-react";
 
@@ -107,8 +122,11 @@ const TocList = ({
     if (!el) return;
     onJump(id);
     el.scrollIntoView({ behavior: "smooth", block: "start" });
-    // Update the URL hash without triggering native jump
     history.replaceState(null, "", `#${id}`);
+    // Distinct label per anchor for GA4 attribution
+    if (id.startsWith("evaluare-")) {
+      trackEvaluationEvent(`toc_${id}`, { source: "toc_sticky" });
+    }
   };
 
   return (
@@ -268,7 +286,13 @@ const BlogPillarHub = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <div id="evaluare-metoda-comparativa" className="scroll-mt-24 rounded-xl border border-border bg-background p-4">
                 <h3 className="text-base font-semibold text-foreground mb-1">
-                  <a href="#evaluare-metoda-comparativa" className="hover:text-primary">Metoda comparativă</a>
+                  <a
+                    href="#evaluare-metoda-comparativa"
+                    className="hover:text-primary"
+                    onClick={() => trackEvaluationEvent("inline_metoda_comparativa", { source: "inline_anchor" })}
+                  >
+                    Metoda comparativă
+                  </a>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Analizăm 5–10 anunțuri active în raza de 500 m, ajustate pentru suprafață utilă,
@@ -277,7 +301,13 @@ const BlogPillarHub = () => {
               </div>
               <div id="evaluare-metoda-capitalizarii" className="scroll-mt-24 rounded-xl border border-border bg-background p-4">
                 <h3 className="text-base font-semibold text-foreground mb-1">
-                  <a href="#evaluare-metoda-capitalizarii" className="hover:text-primary">Metoda capitalizării</a>
+                  <a
+                    href="#evaluare-metoda-capitalizarii"
+                    className="hover:text-primary"
+                    onClick={() => trackEvaluationEvent("inline_metoda_capitalizarii", { source: "inline_anchor" })}
+                  >
+                    Metoda capitalizării
+                  </a>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Calculăm valoarea pornind de la chiria potențială (clasică sau regim hotelier),
@@ -289,7 +319,11 @@ const BlogPillarHub = () => {
             {/* Factors anchor */}
             <div id="evaluare-factori-pret" className="scroll-mt-24 mt-6 rounded-xl border border-border bg-card/40 p-4">
               <h3 className="text-base font-semibold text-foreground mb-2">
-                <a href="#evaluare-factori-pret" className="hover:text-primary">
+                <a
+                  href="#evaluare-factori-pret"
+                  className="hover:text-primary"
+                  onClick={() => trackEvaluationEvent("inline_factori_pret", { source: "inline_anchor" })}
+                >
                   Factori care influențează prețul
                 </a>
               </h3>
@@ -318,6 +352,12 @@ const BlogPillarHub = () => {
               </div>
               <Link
                 to="/evaluare-gratuita#formular"
+                onClick={() =>
+                  trackEvaluationEvent("cta_formular_evaluare_gratuita", {
+                    source: "blog_pillar_cta",
+                    destination: "/evaluare-gratuita#formular",
+                  })
+                }
                 className="shrink-0 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
               >
                 Completează formularul →
