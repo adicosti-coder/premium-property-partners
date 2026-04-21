@@ -299,7 +299,7 @@ const PentruProprietari = () => {
               </p>
 
               {/* CTAs - CSS transitions only */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <Button
                   variant="hero"
                   size="xl"
@@ -307,18 +307,52 @@ const PentruProprietari = () => {
                   className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0"
                 >
                   <TrendingUp className="w-5 h-5 mr-2" />
-                  {t.cta}
+                  {ctaVariant === "A" ? t.cta : t.ctaB}
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <Button
-                  variant="heroOutline"
-                  size="xl"
-                  onClick={handleWhatsApp}
-                  className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
-                >
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  {t.secondaryCta}
-                </Button>
+                {ctaVariant === "B" ? (
+                  <Button
+                    asChild
+                    variant="heroOutline"
+                    size="xl"
+                    className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
+                  >
+                    <Link to="/preturi">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      {t.secondaryCtaB}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="heroOutline"
+                    size="xl"
+                    onClick={handleWhatsApp}
+                    className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    {t.secondaryCta}
+                  </Button>
+                )}
+              </div>
+
+              {/* A/B Variant Toggle */}
+              <div className="flex items-center gap-2 mb-8">
+                <span className="text-xs text-white/60 mr-1">{t.variantLabel}:</span>
+                {(["A", "B"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setCtaVariant(v)}
+                    aria-pressed={ctaVariant === v}
+                    className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
+                      ctaVariant === v
+                        ? "bg-amber-500 text-blue-950 border-amber-500"
+                        : "bg-transparent text-white/70 border-white/20 hover:border-amber-400/60 hover:text-amber-300"
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
               </div>
             </div>
 
