@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { 
@@ -98,11 +99,49 @@ const PartnershipTimeline = () => {
 
   const tr = translations[language] || translations.ro;
 
+  // HowTo JSON-LD schema for tutorial-style SERP visibility.
+  // Author linked to Adrian Costi via shared @id used in RealEstateAgent + BlogPosting.
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": tr.title,
+    "description": tr.subtitle,
+    "totalTime": "P7D",
+    "inLanguage": language === "en" ? "en-US" : "ro-RO",
+    "author": {
+      "@type": "Person",
+      "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
+      "name": "Adrian Costi",
+      "url": "https://www.realtrust.ro/despre-noi",
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "RealTrust & ApArt Hotel Timișoara",
+      "url": "https://www.realtrust.ro",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+        "width": 800,
+        "height": 450,
+      },
+    },
+    "step": tr.steps.map((s, i) => ({
+      "@type": "HowToStep",
+      "position": i + 1,
+      "name": s.title,
+      "text": s.description,
+      "url": `https://www.realtrust.ro/pentru-proprietari#step-${i + 1}`,
+    })),
+  };
+
   return (
     <section 
       ref={ref}
       className="py-20 md:py-28 bg-gradient-to-b from-background via-secondary/20 to-background relative overflow-hidden"
     >
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+      </Helmet>
       {/* Decorative elements */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
