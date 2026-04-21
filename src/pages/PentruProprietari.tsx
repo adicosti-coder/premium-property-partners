@@ -362,7 +362,7 @@ const PentruProprietari = () => {
                     size="xl"
                     className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
                   >
-                    <Link to="/preturi">
+                    <Link to="/preturi" onClick={handleSecondaryCtaClick}>
                       <Sparkles className="w-5 h-5 mr-2" />
                       {t.secondaryCtaB}
                     </Link>
@@ -371,7 +371,7 @@ const PentruProprietari = () => {
                   <Button
                     variant="heroOutline"
                     size="xl"
-                    onClick={handleWhatsApp}
+                    onClick={handleSecondaryCtaClick}
                     className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
