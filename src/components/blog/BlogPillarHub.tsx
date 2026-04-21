@@ -49,10 +49,20 @@ const useActiveSection = (ids: string[]) => {
   return active;
 };
 
+const subAnchors: Record<string, { id: string; label: string }[]> = {
+  "evaluare-pret": [
+    { id: "evaluare-metoda-comparativa", label: "Metoda comparativă" },
+    { id: "evaluare-metoda-capitalizarii", label: "Metoda capitalizării" },
+    { id: "evaluare-factori-pret", label: "Factori care influențează prețul" },
+    { id: "evaluare-formular", label: "Formular evaluare gratuită" },
+  ],
+};
+
 const TocList = ({ active }: { active: string }) => (
   <ol className="space-y-1.5 text-sm">
     {tocItems.map((item, idx) => {
       const isActive = active === item.id;
+      const subs = subAnchors[item.id];
       return (
         <li key={item.id}>
           <a
@@ -66,6 +76,20 @@ const TocList = ({ active }: { active: string }) => (
             <span className="mr-1 text-xs opacity-60">{idx + 1}.</span>
             {item.label}
           </a>
+          {isActive && subs && (
+            <ul className="mt-1 ml-4 space-y-1 border-l border-border pl-3">
+              {subs.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className="block rounded px-2 py-1 text-xs text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    ↳ {s.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </li>
       );
     })}
