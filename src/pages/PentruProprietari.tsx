@@ -54,6 +54,9 @@ const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
 const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
+const OwnerMarketingServices = lazy(() => import("@/components/owners/OwnerMarketingServices"));
+const OwnerCoverageMap = lazy(() => import("@/components/owners/OwnerCoverageMap"));
+const OwnerGuideHub = lazy(() => import("@/components/owners/OwnerGuideHub"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -242,6 +245,7 @@ const PentruProprietari = () => {
       const serviceSchemaFix3B = {
         "@context": "https://schema.org",
         "@type": "Service",
+        "serviceType": "PropertyManagement",
         "name": "Administrare Apartamente Regim Hotelier Timișoara",
         "provider": { "@type": "LocalBusiness", "name": "RealTrust" },
         "description": "Preluăm apartamentul tău în administrare completă pentru regim hotelier. Venit lunar garantat, self check-in, curățenie, oaspeți gestionați integral.",
@@ -251,7 +255,73 @@ const PentruProprietari = () => {
           "description": "ROI 9.4% net anual verificat. Pachete: Starter 15%, Esențial 18%, Standard 20%, Premium 25%."
         }
       };
-      setSchemas([serviceSchema, speakable, serviceSchemaFix3B]);
+      // RealEstateAgent schema with full property management service catalog
+      const realEstateAgentSchema = {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "name": "RealTrust",
+        "url": "https://www.realtrust.ro/pentru-proprietari",
+        "telephone": "+40799069256",
+        "areaServed": {
+          "@type": "City",
+          "name": "Timișoara",
+          "containedInPlace": { "@type": "Country", "name": "România" }
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Timișoara",
+          "addressCountry": "RO"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "9.7",
+          "bestRating": "10",
+          "ratingCount": "180"
+        },
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Servicii pentru Proprietari",
+          "itemListElement": [
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "serviceType": "PropertyManagement",
+                "name": "Administrare regim hotelier"
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Fotografii profesionale imobiliare Timișoara"
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Tur virtual 360 apartament"
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Consultanță fiscală imobiliare Timișoara"
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Evaluare gratuită proprietate"
+              }
+            }
+          ]
+        }
+      };
+      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema]);
     });
   }, [seo.title]);
 
@@ -678,6 +748,17 @@ const PentruProprietari = () => {
 
       {/* Partnership Timeline */}
       <PartnershipTimeline />
+
+      {/* Owner-focused: Marketing Premium + Consultanță Fiscală
+          (fotografii pro, tur 360, consultanță fiscală Timișoara) */}
+      <OwnerMarketingServices />
+
+      {/* Owner-focused: Coverage map cu toate cartierele Timișoarei
+          (include Mehala și Freidorf — geo-keywords lipsă) */}
+      <OwnerCoverageMap />
+
+      {/* Owner Guide content hub - internal linking blog + ansambluri */}
+      <OwnerGuideHub />
 
       {/* Owner guide CTA */}
       <section className="py-12 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
