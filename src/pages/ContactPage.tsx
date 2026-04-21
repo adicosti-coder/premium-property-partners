@@ -257,6 +257,11 @@ const ContactPage = () => {
             </div>
           </section>
 
+          {/* Quick Contact Form */}
+          <section id="formular" className="max-w-2xl mx-auto mb-12 scroll-mt-24">
+            <QuickContactForm />
+          </section>
+
           {/* FAQ — short */}
           <section className="max-w-3xl mx-auto mb-12">
             <h2 className="text-2xl font-serif font-semibold mb-6 text-center">
