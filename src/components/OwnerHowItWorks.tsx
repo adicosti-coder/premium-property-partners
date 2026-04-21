@@ -113,6 +113,20 @@ const OwnerHowItWorks = () => {
           cleaning: "Curățenie & utilități",
           net: "Venit net proprietar",
         },
+        metricsHelp: {
+          occupancy: "Procentul de nopți rezervate dintr-o lună (nopți ocupate ÷ nopți disponibile).",
+          adr: "Average Daily Rate — tariful mediu încasat pe noapte rezervată, fără taxa de curățenie.",
+          gross: "Suma totală încasată de la oaspeți într-o lună, înainte de comisioane și costuri.",
+          fees: "Comisionul reținut de platforme (Booking ~15%, Airbnb ~3–14%) calculat la venitul brut.",
+          cleaning: "Costurile lunare de curățenie între oaspeți + utilitățile aferente apartamentului.",
+          net: "Suma virată proprietarului = Venit brut − Comisioane platforme − Curățenie & utilități − Management.",
+        },
+        legendTitle: "Ce înseamnă indicatorii",
+        legend: [
+          { term: "ADR", definition: "Tariful mediu pe noapte rezervată (Average Daily Rate)." },
+          { term: "Comisioane Booking/Airbnb", definition: "Procent reținut de platforme la fiecare rezervare." },
+          { term: "Venit net proprietar", definition: "Banii viraţi în contul tău după toate cheltuielile operaționale." },
+        ],
         recalibrationLabel: "Indicatori recalibrați trimestrial",
         recalibrationItems: [
           "Ocupare medie pe tip de apartament & zonă",
