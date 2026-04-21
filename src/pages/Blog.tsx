@@ -248,7 +248,7 @@ const Blog = () => {
         { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
         { name: "Blog", url: "https://www.realtrust.ro/blog" },
       ]),
-      // Fix 3C - Blog schema
+      // Blog schema
       {
         "@context": "https://schema.org",
         "@type": "Blog",
@@ -258,6 +258,58 @@ const Blog = () => {
           "@type": "Organization",
           "name": "RealTrust & ApArt Hotel"
         }
+      },
+      // WebPage schema (pillar page semantics)
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "@id": "https://www.realtrust.ro/blog#webpage",
+        "url": "https://www.realtrust.ro/blog",
+        "name": "Ghid Imobiliar Timișoara — Investiții, Vânzări & Regim Hotelier",
+        "description": "Hub editorial RealTrust: analiza pieței imobiliare Timișoara, evaluare apartament, randament chirie clasic vs regim hotelier și ghiduri pe cartiere.",
+        "inLanguage": language === "ro" ? "ro-RO" : "en-US",
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://www.realtrust.ro/images/hero-optimized-1920w.webp"
+        },
+        "about": [
+          { "@type": "Thing", "name": "Investiții imobiliare Timișoara" },
+          { "@type": "Thing", "name": "Regim hotelier Timișoara" },
+          { "@type": "Thing", "name": "Evaluare apartament Timișoara" },
+          { "@type": "Thing", "name": "Randament chirie Timișoara" }
+        ]
+      },
+      // RealEstateAgent schema (entity consolidation)
+      {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "@id": "https://www.realtrust.ro/#realestateagent",
+        "name": "RealTrust Imobiliare Timișoara",
+        "url": "https://www.realtrust.ro",
+        "telephone": "+40799069256",
+        "email": "info@realtrust.ro",
+        "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+        "priceRange": "€€",
+        "areaServed": {
+          "@type": "City",
+          "name": "Timișoara",
+          "containedInPlace": { "@type": "AdministrativeArea", "name": "Timiș" }
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+          "addressLocality": "Timișoara",
+          "postalCode": "300125",
+          "addressCountry": "RO"
+        },
+        "knowsAbout": [
+          "Investiții imobiliare",
+          "Regim hotelier",
+          "Vânzări apartamente Timișoara",
+          "Închirieri pe termen lung",
+          "Evaluare proprietăți",
+          "Randament chirie"
+        ]
       },
     ];
     if (articles && articles.length > 0) {
