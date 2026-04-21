@@ -102,6 +102,50 @@ const PentruProprietari = () => {
     }
   }, [ctaVariant]);
 
+  // Analytics for CTA A/B test
+  const { trackCta, trackFormSubmit } = useCtaAnalytics();
+
+  // Track variant exposure (impression) once per variant per session
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const seenKey = `ownerCtaVariant_seen_${ctaVariant}`;
+    if (sessionStorage.getItem(seenKey)) return;
+    sessionStorage.setItem(seenKey, "1");
+    trackCta({
+      ctaType: "form_submit",
+      metadata: {
+        event: "owner_cta_variant_view",
+        variant: ctaVariant,
+        page: "pentru_proprietari",
+      },
+    });
+  }, [ctaVariant, trackCta]);
+
+  const handlePrimaryCtaClick = () => {
+    trackFormSubmit("owner_cta_primary_click", {
+      variant: ctaVariant,
+      page: "pentru_proprietari",
+      label: ctaVariant === "A" ? "calculate_monthly_income" : "calculate_60s",
+    });
+    scrollToCalculator();
+  };
+
+  const handleSecondaryCtaClick = () => {
+    trackCta({
+      ctaType: ctaVariant === "A" ? "whatsapp" : "form_submit",
+      metadata: {
+        event: "owner_cta_secondary_click",
+        variant: ctaVariant,
+        page: "pentru_proprietari",
+        label: ctaVariant === "A" ? "talk_to_consultant" : "see_packages_no_hidden_fees",
+      },
+    });
+    if (ctaVariant === "A") {
+      handleWhatsApp();
+    }
+    // Variant B uses <Link asChild> → navigation handled natively
+  };
+
   const content = {
     ro: {
       badge: "Administrare Premium · Timișoara",
