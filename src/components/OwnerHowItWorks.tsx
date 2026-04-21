@@ -465,7 +465,25 @@ const OwnerHowItWorks = () => {
                               isTotal ? "bg-primary/5 font-semibold" : ""
                             }`}
                           >
-                            <td className="py-3 px-3 text-foreground">{row.metric}</td>
+                            <td className="py-3 px-3 text-foreground">
+                              <span className="inline-flex items-center gap-1.5">
+                                <span>{row.metric}</span>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label={`${row.metric} — info`}
+                                      className="text-muted-foreground/70 hover:text-primary transition-colors focus:outline-none focus:text-primary"
+                                    >
+                                      <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+                                    {t.report.metricsHelp[row.key]}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </span>
+                            </td>
                             <td className="py-3 px-3 text-right text-muted-foreground tabular-nums">
                               {row.estimate}
                             </td>
