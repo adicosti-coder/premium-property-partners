@@ -1,5 +1,5 @@
-import { useState, lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { useState, lazy, Suspense, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2, FileCheck, MapPin, Clock, ShieldCheck } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { Progress } from "@/components/ui/progress";
@@ -61,7 +61,17 @@ const ZONES = [
   { value: "alta", label: "Altă zonă" },
 ];
 
+// Maps mini-form apartment types (from PreCalcMiniForm) to (propertyType, rooms).
+const APARTMENT_TYPE_MAP: Record<string, { propertyType: string; rooms: string }> = {
+  garsoniera: { propertyType: "apartament", rooms: "Garsonieră" },
+  "2-camere": { propertyType: "apartament", rooms: "2 camere" },
+  "3-camere": { propertyType: "apartament", rooms: "3 camere" },
+  "4-camere": { propertyType: "apartament", rooms: "4+ camere" },
+  casa: { propertyType: "casa", rooms: "" },
+};
+
 const EvaluareGratuita = () => {
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
@@ -72,6 +82,50 @@ const EvaluareGratuita = () => {
     phone: "",
     email: "",
   });
+
+  // Prefill from query params (e.g. coming from PreCalcMiniForm).
+  // Supported: ?nume=...&oras=...&tip=garsoniera|2-camere|3-camere|4-camere|casa&zona=<slug>&telefon=...&email=...
+  useEffect(() => {
+    const nume = searchParams.get("nume") ?? searchParams.get("name") ?? "";
+    const tip = searchParams.get("tip") ?? searchParams.get("type") ?? "";
+    const zona = searchParams.get("zona") ?? searchParams.get("zone") ?? "";
+    const telefon = searchParams.get("telefon") ?? searchParams.get("phone") ?? "";
+    const email = searchParams.get("email") ?? "";
+    const oras = searchParams.get("oras") ?? searchParams.get("city") ?? "";
+
+    const mapped = tip ? APARTMENT_TYPE_MAP[tip] : undefined;
+
+    // Try to match `oras` against neighborhood slugs/labels (case-insensitive).
+    let matchedZone = zona;
+    if (!matchedZone && oras) {
+      const lower = oras.toLowerCase();
+      const found = ZONES.find(
+        (z) => z.value.toLowerCase() === lower || z.label.toLowerCase().includes(lower),
+      );
+      matchedZone = found ? found.value : "alta";
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      name: nume || prev.name,
+      phone: telefon || prev.phone,
+      email: email || prev.email,
+      propertyType: mapped?.propertyType || prev.propertyType,
+      rooms: mapped?.rooms || prev.rooms,
+      zone: matchedZone || prev.zone,
+    }));
+
+    // If we have at least property type + zone, jump straight to step 3 (rooms) or 4 (contact).
+    if (mapped?.propertyType && matchedZone) {
+      if (mapped.rooms) {
+        setStep(4);
+      } else {
+        setStep(3);
+      }
+    } else if (mapped?.propertyType) {
+      setStep(2);
+    }
+  }, [searchParams]);
 
   useRegisterFAQs("evaluare-gratuita", EVAL_FAQS);
 

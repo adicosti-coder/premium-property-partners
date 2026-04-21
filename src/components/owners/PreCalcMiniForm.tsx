@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight } from "lucide-react";
+import { CalendarCheck, MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,6 +100,7 @@ const PreCalcMiniForm = ({
   className = "",
 }: PreCalcMiniFormProps) => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [form, setForm] = useState<FormState>({
     name: "",
     city: "Timișoara",
@@ -123,13 +125,19 @@ const PreCalcMiniForm = ({
     cityPlaceholder: language === "ro" ? "Selectează orașul" : "Select city",
     typeLabel: language === "ro" ? "Tip apartament" : "Apartment type",
     typePlaceholder: language === "ro" ? "Selectează tipul" : "Select type",
-    submit: language === "ro" ? "Trimite pe WhatsApp & rezervă slot" : "Send on WhatsApp & book slot",
+    submit: language === "ro" ? "Rezervă consultanță gratuită" : "Book free consultation",
+    submitWhatsapp: language === "ro" ? "Trimite pe WhatsApp" : "Send on WhatsApp",
     submitting: language === "ro" ? "Se procesează..." : "Processing...",
+    or: language === "ro" ? "sau" : "or",
     privacy:
       language === "ro"
         ? "Nu trimitem spam. Datele se folosesc doar pentru estimare și consultanță."
         : "No spam. Data is used only for estimation and consultancy.",
-    success:
+    successConsult:
+      language === "ro"
+        ? "Te redirecționăm către formularul de consultanță"
+        : "Redirecting you to the consultation form",
+    successWhatsapp:
       language === "ro"
         ? "Mesajul a fost generat — te redirecționăm către WhatsApp"
         : "Message generated — redirecting you to WhatsApp",
@@ -176,9 +184,16 @@ const PreCalcMiniForm = ({
     ].join("\n");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (submitting) return;
+  /**
+   * Validates the form, persists the lead and returns the parsed data
+   * along with the generated WhatsApp message + revenue range.
+   * Returns `null` if validation fails or the user is already submitting.
+   */
+  const validateAndPersist = async (): Promise<
+    | { data: FormState; message: string; range: [number, number] }
+    | null
+  > => {
+    if (submitting) return null;
 
     const parsed = formSchema.safeParse({
       name: form.name,
@@ -193,7 +208,7 @@ const PreCalcMiniForm = ({
         city: fieldErrors.city?.[0],
         apartmentType: fieldErrors.apartmentType?.[0],
       });
-      return;
+      return null;
     }
 
     setErrors({});
@@ -201,13 +216,12 @@ const PreCalcMiniForm = ({
 
     const data = parsed.data as FormState;
     const message = buildPrecalcMessage(data);
-    const range = MONTHLY_NET_RANGE[data.apartmentType] ?? [2000, 3000];
+    const range = (MONTHLY_NET_RANGE[data.apartmentType] ?? [2000, 3000]) as [number, number];
 
     try {
-      // Persist lead — even if WhatsApp redirect fails, we keep the contact.
       const { error } = await supabase.from("leads").insert({
         name: data.name,
-        whatsapp_number: "PRECALC_NO_PHONE", // sentinel — real number captured in WhatsApp chat
+        whatsapp_number: "PRECALC_NO_PHONE", // sentinel — real number captured downstream
         property_type: data.apartmentType,
         property_area: 0,
         message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
@@ -224,17 +238,40 @@ const PreCalcMiniForm = ({
 
       if (error) {
         console.error("[PreCalcMiniForm] insert error:", error.message);
-        // Non-blocking — still open WhatsApp so the user is not stuck.
       }
     } catch (err) {
       console.error("[PreCalcMiniForm] unexpected error:", err);
     }
 
-    toast.success(t.success);
+    return { data, message, range };
+  };
 
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  // Primary: redirect to /evaluare-gratuita with prefilled query params.
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await validateAndPersist();
+    if (!result) return;
+
+    const params = new URLSearchParams({
+      nume: result.data.name,
+      oras: result.data.city,
+      tip: result.data.apartmentType,
+      source,
+    });
+
+    toast.success(t.successConsult);
+    navigate(`/evaluare-gratuita?${params.toString()}`);
+    setSubmitting(false);
+  };
+
+  // Secondary: open WhatsApp with the pre-formatted ROI message.
+  const handleWhatsapp = async () => {
+    const result = await validateAndPersist();
+    if (!result) return;
+
+    toast.success(t.successWhatsapp);
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(result.message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
-
     setSubmitting(false);
   };
 
@@ -353,25 +390,45 @@ const PreCalcMiniForm = ({
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                size="lg"
-                disabled={submitting}
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary group"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {t.submitting}
-                  </>
-                ) : (
-                  <>
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    {t.submit}
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary group"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      {t.submitting}
+                    </>
+                  ) : (
+                    <>
+                      <CalendarCheck className="w-5 h-5 mr-2" />
+                      {t.submit}
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </Button>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground">{t.or}</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  disabled={submitting}
+                  onClick={handleWhatsapp}
+                  className="w-full"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  {t.submitWhatsapp}
+                </Button>
+              </div>
 
               <p className="text-xs text-muted-foreground text-center">{t.privacy}</p>
             </form>
