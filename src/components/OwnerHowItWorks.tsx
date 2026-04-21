@@ -188,6 +188,20 @@ const OwnerHowItWorks = () => {
           cleaning: "Cleaning & utilities",
           net: "Net owner income",
         },
+        metricsHelp: {
+          occupancy: "Share of nights booked in a month (booked nights ÷ available nights).",
+          adr: "Average Daily Rate — average price per booked night, excluding the cleaning fee.",
+          gross: "Total amount collected from guests in a month, before fees and costs.",
+          fees: "Commission kept by platforms (Booking ~15%, Airbnb ~3–14%) on gross revenue.",
+          cleaning: "Monthly cleaning costs between guests + utilities for the apartment.",
+          net: "Amount paid to the owner = Gross − Platform fees − Cleaning & utilities − Management.",
+        },
+        legendTitle: "What the indicators mean",
+        legend: [
+          { term: "ADR", definition: "Average price per booked night (Average Daily Rate)." },
+          { term: "Booking/Airbnb fees", definition: "Commission kept by the platform on every reservation." },
+          { term: "Net owner income", definition: "The money transferred to your account after all operational costs." },
+        ],
         recalibrationLabel: "Indicators recalibrated quarterly",
         recalibrationItems: [
           "Average occupancy by apartment type & area",
