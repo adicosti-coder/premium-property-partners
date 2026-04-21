@@ -98,7 +98,7 @@ const HostScanReportCard = ({ report, language, onSendEmail, isSendingEmail, ema
           className="w-full gap-2"
           onClick={() =>
             window.open(
-              `https://wa.me/40723154520?text=${encodeURIComponent(
+              `https://wa.me/40799069256?text=${encodeURIComponent(
                 `Scor HostScan: ${report.scor}/${report.max_scor} | ${report.zona} | ROI: ${report.roi_estimat}${ownerName ? ` | ${ownerName}` : ""}${ownerPhone ? ` - ${ownerPhone}` : ""}`
               )}`,
               '_blank',

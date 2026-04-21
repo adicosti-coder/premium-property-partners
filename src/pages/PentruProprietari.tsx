@@ -153,7 +153,7 @@ const PentruProprietari = () => {
         ? "Bună ziua! Sunt interesat de serviciile RealTrust & ApArt Hotel pentru administrarea apartamentului meu."
         : "Hello! I'm interested in RealTrust & ApArt Hotel services for managing my apartment."
     );
-    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const seoContent = {
@@ -634,10 +634,10 @@ const PentruProprietari = () => {
                 variant="outline"
                 size="xl"
                 className="bg-card text-foreground border-border hover:bg-muted font-semibold shadow-md"
-                onClick={() => window.location.href = "tel:+40723154520"}
+                onClick={() => window.location.href = "tel:+40799069256"}
               >
                 <Phone className="w-5 h-5 mr-2" />
-                +40 723 154 520
+                0799 069 256
               </Button>
             </div>
           </div>

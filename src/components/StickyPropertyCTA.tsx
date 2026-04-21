@@ -58,7 +58,7 @@ const StickyPropertyCTA = ({ propertyName, propertyId, price, onBookClick }: Sti
 
   const handleCall = () => {
     trackCall(propertyId, propertyName);
-    window.location.href = "tel:+40723154520";
+    window.location.href = "tel:+40799069256";
   };
 
   const handleWhatsApp = () => {
@@ -68,7 +68,7 @@ const StickyPropertyCTA = ({ propertyName, propertyId, price, onBookClick }: Sti
         ? `Bună! Sunt interesat de proprietatea "${propertyName}". Aș dori mai multe detalii.`
         : `Hello! I'm interested in the property "${propertyName}". I'd like more details.`
     );
-    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleBook = () => {

@@ -110,7 +110,7 @@ const InvestmentQuickCalculator = () => {
     const msg = language === "ro"
       ? `Bună ziua! Am finalizat analiza RealTrust (Randament: ${yieldText}). Doresc o consultanță.`
       : `Hello! I completed the RealTrust analysis (Yield: ${yieldText}). I'd like a consultation.`;
-    window.open(`https://wa.me/40723154520?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/40799069256?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   };
 
   const t = language === "ro" ? {
