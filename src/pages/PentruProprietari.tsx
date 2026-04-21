@@ -52,6 +52,7 @@ const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
+const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -459,6 +460,9 @@ const PentruProprietari = () => {
 
       {/* Channel Logos - pe ce platforme ești listat */}
       <ChannelLogos />
+
+      {/* Mini pre-calc form — captures owner intent BEFORE the heavy calculator */}
+      <PreCalcMiniForm source="pentru_proprietari_precalc" />
 
       {/* STEP 2: Calculator - deferred via IntersectionObserver */}
       <div ref={calcSentinel} />
