@@ -139,6 +139,8 @@ const OwnerHowItWorks = () => {
           cleaning: "Costurile lunare de curățenie între oaspeți + utilitățile aferente apartamentului.",
           net: "Suma virată proprietarului = Venit brut − Comisioane platforme − Curățenie & utilități − Management.",
         },
+        summaryEyebrow: "Rezumat automat",
+        summaryTitle: "Ce ne spun cifrele luna asta",
         legendTitle: "Ce înseamnă indicatorii",
         legend: [
           { term: "ADR", definition: "Tariful mediu pe noapte rezervată (Average Daily Rate)." },
