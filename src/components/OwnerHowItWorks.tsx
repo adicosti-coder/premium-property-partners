@@ -71,7 +71,7 @@ const fmtPct = (n: number) => `${Math.round(n)}%`;
 const fmtPctDelta = (n: number) => `${n >= 0 ? "+" : "−"}${Math.abs(Math.round(n))} pp`;
 
 const OwnerHowItWorks = () => {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
 
