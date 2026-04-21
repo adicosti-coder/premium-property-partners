@@ -27,6 +27,7 @@ import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageSummary from "@/components/PageSummary";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import BlogPillarHub from "@/components/blog/BlogPillarHub";
 
 interface BlogArticle {
   id: string;
