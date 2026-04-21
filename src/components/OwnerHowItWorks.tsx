@@ -237,8 +237,16 @@ const OwnerHowItWorks = () => {
     const netAct = BASE.net * tm.net * cp.adrMul * (occAct / 78) * 1.07;
 
     const lang = language;
-    const rows = [
+    const rows: Array<{
+      key: MetricKey;
+      metric: string;
+      estimate: string;
+      actual: string;
+      delta: string;
+      positive: boolean;
+    }> = [
       {
+        key: "occupancy",
         metric: t.report.metrics.occupancy,
         estimate: `${occEst}%`,
         actual: `${occAct}%`,
@@ -246,6 +254,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "adr",
         metric: t.report.metrics.adr,
         estimate: fmtAdr(adrEst, lang),
         actual: fmtAdr(adrAct, lang),
@@ -253,6 +262,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "gross",
         metric: t.report.metrics.gross,
         estimate: fmtEur(grossEst, lang),
         actual: fmtEur(grossAct, lang),
@@ -260,6 +270,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "fees",
         metric: t.report.metrics.fees,
         estimate: "−18%",
         actual: "−16,4%".replace(",", lang === "en" ? "." : ","),
@@ -267,6 +278,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "cleaning",
         metric: t.report.metrics.cleaning,
         estimate: `−${fmtEur(cleaningEst, lang)}`,
         actual: `−${fmtEur(cleaningAct, lang)}`,
@@ -274,6 +286,7 @@ const OwnerHowItWorks = () => {
         positive: false,
       },
       {
+        key: "net",
         metric: t.report.metrics.net,
         estimate: fmtEur(netEst, lang),
         actual: fmtEur(netAct, lang),
