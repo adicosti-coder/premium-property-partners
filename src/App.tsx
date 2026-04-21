@@ -104,6 +104,7 @@ const PageLoader = () => null;
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
 const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
 const ProcesulNostru = lazyWithRetry(() => import("./pages/ProcesulNostru"));
+const ServiciiImobiliareTimisoara = lazyWithRetry(() => import("./pages/ServiciiImobiliareTimisoara"));
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
