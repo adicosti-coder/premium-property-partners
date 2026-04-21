@@ -17,8 +17,8 @@ const OwnerHowItWorks = () => {
         {
           icon: ClipboardCheck,
           number: "01",
-          title: "Evaluare gratuită și onestă",
-          description: "Analizăm apartamentul, calculăm venitul realist pe baza datelor reale din zonă și îți spunem clar dacă merită regimul hotelier. Fără presiune, fără promisiuni umflate.",
+          title: "Evaluare gratuită, calibrată pe date reale",
+          description: "Estimăm venitul lunar pe intervale recalibrate trimestrial din portofoliul nostru în regim hotelier (75–85% ocupare, tarife 2025–2026, comisioane Booking/Airbnb deduse). Fără promisiuni umflate — doar cifre verificate pe apartamente similare din zona ta.",
           detail: "Răspuns în 24h",
         },
         {
@@ -32,7 +32,7 @@ const OwnerHowItWorks = () => {
           icon: TrendingUp,
           number: "03",
           title: "Încasezi lunar, fără bătăi de cap",
-          description: "Operăm tot: oaspeți, curățenie, mentenanță, comunicare. Tu primești banii direct în cont, cu raport financiar detaliat în fiecare lună.",
+          description: "Operăm tot: oaspeți, curățenie, mentenanță, comunicare. Tu primești banii direct în cont, cu raport financiar detaliat în fiecare lună — comparat cu estimarea inițială pentru transparență totală.",
           detail: "Plăți lunare garantate",
         },
       ],
