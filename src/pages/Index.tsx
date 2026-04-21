@@ -40,6 +40,7 @@ const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 // Instead, we dynamically import() ONLY on user click inside GalleryMapSection.
 import VerifiedReviewsBadges from "@/components/VerifiedReviewsBadges";
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
+const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -93,6 +94,7 @@ const TeaserSections = () => (
       <section id="beneficii">
         <OwnersTeaser />
       </section>
+      <PreCalcMiniForm source="homepage_owners_teaser" />
       <DIYvsProfessional />
       <ROICaseStudySection />
       <section id="oaspeti-preview">
