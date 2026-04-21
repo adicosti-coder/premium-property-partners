@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +18,7 @@ interface LeadMagnetBannerProps {
 
 const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerProps) => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,12 +92,11 @@ const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerPro
         event: "lead_magnet_pdf",
         source: "lead_magnet_guide_2026",
       });
-      // Reset form after delay
+
+      // Redirect to thank-you page after a short delay so user can see success state
       setTimeout(() => {
-        setName("");
-        setEmail("");
-        setIsSuccess(false);
-      }, 5000);
+        navigate("/multumim");
+      }, 1200);
 
     } catch (error) {
       console.error("Lead magnet submission error:", error);
