@@ -11,50 +11,50 @@ const WhyUs = () => {
 
   const translations = {
     ro: {
-      label: "AUTORITATE",
-      title: "De ce te poți baza pe noi",
+      label: "DE CE NOI",
+      title: "Singurul operator hotelier din Timișoara cu ROI net verificat",
       brandName: "RealTrust • ApArt Hotel",
       brandSubtitle: "Timișoara · operare premium în regim hotelier",
-      description: "Construim sisteme și standard: proceduri, checklists, QA, preț dinamic, poziționare și comunicare. Nu ne bazăm pe noroc sau pe un sezon bun. Construim un business repetabil.",
-      promiseTitle: "Promisiune simplă",
-      promiseText: "Îți spunem realist dacă merită. Dacă merită, îți dăm pași clari. Dacă nu merită, îți spunem de ce.",
+      description: "Construim un business repetabil pentru proprietarul tău: proceduri hoteliere, pricing dinamic, channel management și quality control. Nu mizăm pe un sezon bun — livrăm performanță constantă, lună de lună.",
+      promiseTitle: "Promisiune onestă",
+      promiseText: "Îți spunem realist dacă apartamentul tău merită regim hotelier. Dacă merită, primești pași clari. Dacă nu, îți spunem de ce și ce alternative ai.",
       reasons: [
-        "Experiență de peste 25 ani în administrarea de proprietăți",
-        "Rata medie de ocupare maximizată pentru proprietățile preluate",
-        "Suport pentru proprietari și oaspeți",
-        "Fotografii și listări profesionale incluse",
-        "Raportare lunară detaliată și transparentă"
+        "Peste 25 de ani de experiență în administrarea proprietăților premium",
+        "ROI net 9.4% verificat anual în portofoliul administrat",
+        "Echipă dedicată 24/7 — pentru tine și pentru oaspeți",
+        "Fotografii profesionale și listări multi-canal incluse",
+        "Raportare lunară detaliată și conformitate ANAF gestionată"
       ],
       performanceLabel: "PERFORMANȚĂ MEDIE",
       revenueIncrease: "+45%",
       revenueDescription: "creștere venituri vs. chirie clasică",
       listingTime: "24h",
-      listingTimeLabel: "timp de listare",
+      listingTimeLabel: "răspuns evaluare",
       commission: "15-25%",
-      commissionLabel: "comision management"
+      commissionLabel: "comision transparent"
     },
     en: {
-      label: "AUTHORITY",
-      title: "Why you can rely on us",
+      label: "WHY US",
+      title: "The only hotel-style operator in Timișoara with verified net ROI",
       brandName: "RealTrust • ApArt Hotel",
       brandSubtitle: "Timișoara · premium hotel-style operation",
-      description: "We build systems and standards: procedures, checklists, QA, dynamic pricing, positioning and communication. We don't rely on 'luck' or a good season. We build a repeatable business.",
-      promiseTitle: "Simple promise",
-      promiseText: "We tell you realistically if it's worth it. If it is, we give you clear steps. If not, we tell you why.",
+      description: "We build a repeatable business for your property: hotel procedures, dynamic pricing, channel management and quality control. We don't bet on a good season — we deliver consistent performance, month after month.",
+      promiseTitle: "Honest promise",
+      promiseText: "We tell you straight whether your apartment is worth running hotel-style. If it is, you get clear next steps. If not, we explain why and what alternatives you have.",
       reasons: [
-        "Over 25 years of property management experience",
-        "Maximized occupancy rate for managed properties",
-        "Support for owners and guests",
-        "Professional photos and listings included",
-        "Detailed and transparent monthly reporting"
+        "Over 25 years of experience managing premium properties",
+        "Verified 9.4% net annual ROI across our managed portfolio",
+        "Dedicated 24/7 team — for you and your guests",
+        "Professional photography and multi-channel listings included",
+        "Detailed monthly reporting and ANAF tax compliance handled"
       ],
       performanceLabel: "AVERAGE PERFORMANCE",
       revenueIncrease: "+45%",
       revenueDescription: "revenue increase vs. classic rent",
       listingTime: "24h",
-      listingTimeLabel: "listing time",
+      listingTimeLabel: "evaluation response",
       commission: "15-25%",
-      commissionLabel: "management fee"
+      commissionLabel: "transparent fee"
     }
   };
 
