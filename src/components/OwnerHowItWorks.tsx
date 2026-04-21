@@ -528,6 +528,28 @@ const OwnerHowItWorks = () => {
                   </ul>
                 </div>
 
+                <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">
+                    {t.report.legendTitle}
+                  </p>
+                  <dl className="grid sm:grid-cols-3 gap-4">
+                    {t.report.legend.map((item) => (
+                      <div
+                        key={item.term}
+                        className="rounded-xl border border-border/60 bg-background/50 p-3"
+                      >
+                        <dt className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                          <Info className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                          {item.term}
+                        </dt>
+                        <dd className="text-xs text-muted-foreground leading-relaxed">
+                          {item.definition}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
                 <p className="mt-6 text-xs text-muted-foreground italic leading-relaxed">
                   {t.report.footnote}
                 </p>
@@ -537,6 +559,7 @@ const OwnerHowItWorks = () => {
         </div>
       </div>
     </section>
+    </TooltipProvider>
   );
 };
 
