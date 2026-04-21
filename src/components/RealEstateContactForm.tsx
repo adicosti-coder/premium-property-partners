@@ -150,7 +150,7 @@ ${formData.message ? `${form.fields.message}: ${formData.message}` : ""}`;
 
     // Open WhatsApp
     window.open(
-      `https://wa.me/40723154520?text=${encodeURIComponent(message)}`,
+      `https://wa.me/40799069256?text=${encodeURIComponent(message)}`,
       "_blank",
       "noopener,noreferrer"
     );
