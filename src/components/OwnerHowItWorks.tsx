@@ -216,6 +216,8 @@ const OwnerHowItWorks = () => {
           cleaning: "Monthly cleaning costs between guests + utilities for the apartment.",
           net: "Amount paid to the owner = Gross − Platform fees − Cleaning & utilities − Management.",
         },
+        summaryEyebrow: "Auto-generated summary",
+        summaryTitle: "What the numbers tell us this month",
         legendTitle: "What the indicators mean",
         legend: [
           { term: "ADR", definition: "Average price per booked night (Average Daily Rate)." },
