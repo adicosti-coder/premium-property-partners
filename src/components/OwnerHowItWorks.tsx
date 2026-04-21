@@ -1,4 +1,4 @@
-import { ClipboardCheck, Cog, TrendingUp, ArrowRight } from "lucide-react";
+import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -36,6 +36,30 @@ const OwnerHowItWorks = () => {
           detail: "Plăți lunare garantate",
         },
       ],
+      report: {
+        eyebrow: "Raport lunar · exemplu real",
+        title: "Apartament 2 camere · Iosefin · octombrie 2025",
+        subtitle: "Așa arată comparația estimare inițială vs. realizat pe care o primești în fiecare lună:",
+        estimateLabel: "Estimare inițială",
+        actualLabel: "Realizat (verificat)",
+        deltaLabel: "Diferență",
+        rows: [
+          { metric: "Ocupare", estimate: "78%", actual: "84%", delta: "+6 pp", positive: true },
+          { metric: "ADR (tarif mediu/noapte)", estimate: "92 €", actual: "98 €", delta: "+6 €", positive: true },
+          { metric: "Venit brut", estimate: "2.230 €", actual: "2.555 €", delta: "+325 €", positive: true },
+          { metric: "Comisioane Booking/Airbnb", estimate: "−18%", actual: "−16,4%", delta: "+1,6 pp", positive: true },
+          { metric: "Curățenie & utilități", estimate: "−380 €", actual: "−395 €", delta: "−15 €", positive: false },
+          { metric: "Venit net proprietar", estimate: "1.450 €", actual: "1.690 €", delta: "+240 €", positive: true },
+        ],
+        recalibrationLabel: "Indicatori recalibrați trimestrial",
+        recalibrationItems: [
+          "Ocupare medie pe tip de apartament & zonă",
+          "ADR & tarife weekend / sezon",
+          "Comisioane reale Booking, Airbnb, Direct",
+          "Costuri curățenie & utilități pe regim",
+        ],
+        footnote: "Cifrele provin din portofoliul nostru operat în Timișoara. Estimarea ta inițială este calibrată pe apartamente comparabile, apoi raportul lunar îți arată exact unde am livrat peste sau sub prognoză.",
+      },
     },
     en: {
       label: "How It Works",
@@ -65,6 +89,30 @@ const OwnerHowItWorks = () => {
           detail: "Guaranteed monthly payments",
         },
       ],
+      report: {
+        eyebrow: "Monthly report · real example",
+        title: "1-bedroom apartment · Iosefin · October 2025",
+        subtitle: "This is the initial-estimate vs. actual comparison you receive every month:",
+        estimateLabel: "Initial estimate",
+        actualLabel: "Actual (verified)",
+        deltaLabel: "Delta",
+        rows: [
+          { metric: "Occupancy", estimate: "78%", actual: "84%", delta: "+6 pp", positive: true },
+          { metric: "ADR (avg. nightly rate)", estimate: "€92", actual: "€98", delta: "+€6", positive: true },
+          { metric: "Gross revenue", estimate: "€2,230", actual: "€2,555", delta: "+€325", positive: true },
+          { metric: "Booking/Airbnb fees", estimate: "−18%", actual: "−16.4%", delta: "+1.6 pp", positive: true },
+          { metric: "Cleaning & utilities", estimate: "−€380", actual: "−€395", delta: "−€15", positive: false },
+          { metric: "Net owner income", estimate: "€1,450", actual: "€1,690", delta: "+€240", positive: true },
+        ],
+        recalibrationLabel: "Indicators recalibrated quarterly",
+        recalibrationItems: [
+          "Average occupancy by apartment type & area",
+          "ADR & weekend / seasonal rates",
+          "Real Booking, Airbnb and Direct fees",
+          "Cleaning & utility costs per regime",
+        ],
+        footnote: "Figures come from our portfolio operated in Timișoara. Your initial estimate is calibrated on comparable apartments, then the monthly report shows you exactly where we delivered above or below forecast.",
+      },
     },
   };
 
@@ -137,6 +185,102 @@ const OwnerHowItWorks = () => {
                 </div>
               );
             })}
+          </div>
+
+          {/* Monthly report mini-example — estimate vs. actual + recalibrated indicators */}
+          <div
+            className={`mt-16 lg:mt-20 transition-all duration-700 ${
+              gridVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
+            style={{ transitionDelay: gridVisible ? "450ms" : "0ms" }}
+          >
+            <div className="rounded-3xl border border-primary/20 bg-card shadow-elegant overflow-hidden">
+              <div className="bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:p-8 border-b border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+                    {t.report.eyebrow}
+                  </span>
+                </div>
+                <h3 className="text-xl md:text-2xl heading-premium text-foreground mb-2">
+                  {t.report.title}
+                </h3>
+                <p className="text-muted-foreground text-sm md:text-base text-premium">
+                  {t.report.subtitle}
+                </p>
+              </div>
+
+              <div className="p-4 sm:p-6 lg:p-8">
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <table className="w-full text-sm min-w-[520px]">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+                        <th className="py-3 px-3 font-semibold">&nbsp;</th>
+                        <th className="py-3 px-3 font-semibold text-right">{t.report.estimateLabel}</th>
+                        <th className="py-3 px-3 font-semibold text-right">{t.report.actualLabel}</th>
+                        <th className="py-3 px-3 font-semibold text-right">{t.report.deltaLabel}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {t.report.rows.map((row, i) => {
+                        const isTotal = i === t.report.rows.length - 1;
+                        return (
+                          <tr
+                            key={row.metric}
+                            className={`border-b border-border/50 last:border-b-0 ${
+                              isTotal ? "bg-primary/5 font-semibold" : ""
+                            }`}
+                          >
+                            <td className="py-3 px-3 text-foreground">{row.metric}</td>
+                            <td className="py-3 px-3 text-right text-muted-foreground tabular-nums">
+                              {row.estimate}
+                            </td>
+                            <td className="py-3 px-3 text-right text-foreground tabular-nums">
+                              {row.actual}
+                            </td>
+                            <td
+                              className={`py-3 px-3 text-right tabular-nums font-medium ${
+                                row.positive ? "text-primary" : "text-muted-foreground"
+                              }`}
+                            >
+                              <span className="inline-flex items-center gap-1 justify-end">
+                                {row.positive ? (
+                                  <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+                                ) : (
+                                  <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
+                                )}
+                                {row.delta}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">
+                    {t.report.recalibrationLabel}
+                  </p>
+                  <ul className="grid sm:grid-cols-2 gap-3">
+                    {t.report.recalibrationItems.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2.5 text-sm text-foreground/80"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <p className="mt-6 text-xs text-muted-foreground italic leading-relaxed">
+                  {t.report.footnote}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
