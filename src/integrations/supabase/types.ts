@@ -1250,6 +1250,42 @@ export type Database = {
         }
         Relationships: []
       }
+      evaluare_section_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          label: string | null
+          page_path: string | null
+          section_id: string
+          session_id: string | null
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          label?: string | null
+          page_path?: string | null
+          section_id: string
+          session_id?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          label?: string | null
+          page_path?: string | null
+          section_id?: string
+          session_id?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       financial_records: {
         Row: {
           amount: number
