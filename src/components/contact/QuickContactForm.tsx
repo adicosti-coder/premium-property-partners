@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
@@ -7,25 +8,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Send, CheckCircle2 } from "lucide-react";
+import { Send, MessageCircle, AlertCircle } from "lucide-react";
+import {
+  trackConversion,
+  isValidWhatsAppNumber,
+  formatPhoneInput,
+} from "@/lib/conversionTracking";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "min").max(100, "max"),
-  whatsapp_number: z.string().trim().min(7, "min").max(30, "max"),
+  whatsapp_number: z
+    .string()
+    .trim()
+    .refine((v) => isValidWhatsAppNumber(v), { message: "invalid_whatsapp" }),
   email: z.string().trim().email("email").max(255).optional().or(z.literal("")),
   message: z.string().trim().min(5, "min").max(1000, "max"),
 });
 
 const QuickContactForm = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const isRo = language === "ro";
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+40 ");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+
+  const phoneValid = isValidWhatsAppNumber(phone);
+  const phoneTouched = phone.replace(/\D/g, "").length > 3;
 
   const t = {
     title: isRo ? "Trimite-ne un mesaj rapid" : "Send us a quick message",
@@ -41,13 +53,16 @@ const QuickContactForm = () => {
       : "How can we help? (sale, rental, short-term rental management...)",
     send: isRo ? "Trimite mesajul" : "Send message",
     sending: isRo ? "Se trimite..." : "Sending...",
-    success: isRo ? "Mesaj trimis! Te contactăm în curând." : "Message sent! We'll be in touch shortly.",
     error: isRo ? "Eroare la trimitere. Încearcă din nou sau sună-ne direct." : "Send failed. Please try again or call us directly.",
     invalid: isRo ? "Verifică datele introduse." : "Please check the entered data.",
-    successTitle: isRo ? "Mesaj înregistrat" : "Message received",
-    successDesc: isRo
-      ? "Mulțumim! Un consultant RealTrust te va contacta în maxim 1 oră lucrătoare."
-      : "Thank you! A RealTrust consultant will contact you within 1 business hour.",
+    invalidPhone: isRo
+      ? "Număr invalid. Folosește formatul internațional (+40 7XX XXX XXX)."
+      : "Invalid number. Use international format (+40 7XX XXX XXX).",
+    phoneValid: isRo ? "Număr WhatsApp valid" : "Valid WhatsApp number",
+  };
+
+  const handlePhoneChange = (raw: string) => {
+    setPhone(formatPhoneInput(raw));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +74,8 @@ const QuickContactForm = () => {
       message,
     });
     if (!parsed.success) {
-      toast.error(t.invalid);
+      const phoneIssue = parsed.error.issues.find((i) => i.path[0] === "whatsapp_number");
+      toast.error(phoneIssue ? t.invalidPhone : t.invalid);
       return;
     }
 
@@ -67,7 +83,7 @@ const QuickContactForm = () => {
     try {
       const { error } = await supabase.from("leads").insert({
         name: parsed.data.name,
-        whatsapp_number: parsed.data.whatsapp_number,
+        whatsapp_number: parsed.data.whatsapp_number.replace(/\s/g, ""),
         email: parsed.data.email || null,
         message: parsed.data.message,
         property_type: "general",
@@ -75,24 +91,20 @@ const QuickContactForm = () => {
         source: "pagina_contact",
       });
       if (error) throw error;
-      setDone(true);
-      toast.success(t.success);
+
+      // Push conversion event to dataLayer + GA4
+      trackConversion({
+        event: "contact_form_submit",
+        source: "pagina_contact",
+      });
+
+      navigate("/multumim");
     } catch {
       toast.error(t.error);
     } finally {
       setLoading(false);
     }
   };
-
-  if (done) {
-    return (
-      <div className="bg-card border rounded-2xl p-8 text-center">
-        <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-3" />
-        <h3 className="text-xl font-semibold mb-2">{t.successTitle}</h3>
-        <p className="text-sm text-muted-foreground">{t.successDesc}</p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border rounded-2xl p-6 sm:p-8 space-y-4">
@@ -118,13 +130,28 @@ const QuickContactForm = () => {
           <Input
             id="contact-phone"
             type="tel"
+            inputMode="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            maxLength={30}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            maxLength={20}
             required
             autoComplete="tel"
             placeholder="+40 7XX XXX XXX"
+            aria-invalid={phoneTouched && !phoneValid}
+            className={phoneTouched && !phoneValid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
+          {phoneTouched && !phoneValid && (
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {t.invalidPhone}
+            </p>
+          )}
+          {phoneValid && (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+              <MessageCircle className="w-3 h-3" />
+              {t.phoneValid}
+            </p>
+          )}
         </div>
       </div>
 
