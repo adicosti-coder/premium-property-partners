@@ -494,17 +494,39 @@ const OwnerHowItWorks = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      {language === "en" ? "Language" : "Limbă"}
+                    </label>
+                    <div className="inline-flex w-full rounded-lg border border-border bg-background/60 p-1">
+                      {(["ro", "en"] as const).map((l) => (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => setLanguage(l)}
+                          aria-pressed={language === l}
+                          className={`flex-1 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all uppercase tracking-wide ${
+                            language === l
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                       {language === "en" ? "Currency" : "Monedă"}
                     </label>
-                    <div className="inline-flex w-full sm:w-auto rounded-lg border border-border bg-background/60 p-1">
+                    <div className="inline-flex w-full rounded-lg border border-border bg-background/60 p-1">
                       {(["EUR", "RON"] as Currency[]).map((c) => (
                         <button
                           key={c}
                           type="button"
                           onClick={() => setCurrency(c)}
-                          className={`flex-1 sm:flex-none sm:min-w-[80px] px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
+                          className={`flex-1 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
                             currency === c
                               ? "bg-primary text-primary-foreground shadow-sm"
                               : "text-muted-foreground hover:text-foreground"
@@ -514,10 +536,10 @@ const OwnerHowItWorks = () => {
                           {c}
                         </button>
                       ))}
-                      <span className="hidden sm:inline-flex items-center px-3 text-[11px] text-muted-foreground">
-                        {language === "en" ? `1 € ≈ ${RON_RATE} lei` : `1 € ≈ ${RON_RATE} lei`}
-                      </span>
                     </div>
+                    <p className="mt-1.5 text-[10px] text-muted-foreground">
+                      1 € ≈ {RON_RATE} lei
+                    </p>
                   </div>
                 </div>
               </div>
