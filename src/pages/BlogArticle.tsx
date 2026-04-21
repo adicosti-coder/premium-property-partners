@@ -396,10 +396,27 @@ const BlogArticlePage = () => {
           <ArticleTableOfContents htmlContent={displayContent} />
 
           {/* Article Content - sanitized for XSS protection */}
-          <div
-            className="prose prose-lg dark:prose-invert max-w-none mb-8"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
-          />
+          {article.slug === 'ghid-investitii-imobiliare-timisoara-2026' ? (
+            <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
+              {(() => {
+                const chartMap: Record<string, JSX.Element> = {
+                  'roi-by-neighborhood': <RoiByNeighborhoodChart key="c1" />,
+                  'monthly-yield': <MonthlyYieldChart key="c2" />,
+                  'price-appreciation': <PriceAppreciationChart key="c3" />,
+                };
+                const parts = displayContent.split(/<div data-chart="([^"]+)"><\/div>/);
+                return parts.map((part, i) => {
+                  if (i % 2 === 1) return chartMap[part] ?? null;
+                  return <div key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part) }} />;
+                });
+              })()}
+            </div>
+          ) : (
+            <div
+              className="prose prose-lg dark:prose-invert max-w-none mb-8"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
+            />
+          )}
 
           {/* Expert Signature — E-E-A-T */}
           <ExpertSignature authorName={article.author_name} />
