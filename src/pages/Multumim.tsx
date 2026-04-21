@@ -32,7 +32,7 @@ const Multumim = () => {
       : "Your message has been sent to the RealTrust team. We'll be in touch shortly.",
     ctaProperties: isRo ? "Vezi apartamentele" : "See our apartments",
     ctaPropertiesDesc: isRo ? "Catalog premium regim hotelier" : "Premium short-term rentals",
-    ctaGuide: isRo ? "Descarcă Ghidul 2026" : "Download the 2026 Guide",
+    ctaGuide: isRo ? "Citește Ghidul 2026" : "Read the 2026 Guide",
     ctaGuideDesc: isRo ? "Investiții imobiliare Timișoara" : "Timișoara real estate investments",
     ctaEval: isRo ? "Evaluare Gratuită" : "Free Valuation",
     ctaEvalDesc: isRo ? "Află profitul potențial al proprietății tale" : "Discover your property's profit potential",
