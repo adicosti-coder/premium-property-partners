@@ -749,6 +749,17 @@ const PentruProprietari = () => {
       {/* Partnership Timeline */}
       <PartnershipTimeline />
 
+      {/* Owner-focused: Marketing Premium + Consultanță Fiscală
+          (fotografii pro, tur 360, consultanță fiscală Timișoara) */}
+      <OwnerMarketingServices />
+
+      {/* Owner-focused: Coverage map cu toate cartierele Timișoarei
+          (include Mehala și Freidorf — geo-keywords lipsă) */}
+      <OwnerCoverageMap />
+
+      {/* Owner Guide content hub - internal linking blog + ansambluri */}
+      <OwnerGuideHub />
+
       {/* Owner guide CTA */}
       <section className="py-12 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
         <div className="container mx-auto px-6 text-center">
