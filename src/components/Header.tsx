@@ -203,6 +203,7 @@ const Header = () => {
     {
       label: language === "ro" ? "Proprietari" : "Owners",
       links: [
+        { href: "/servicii-imobiliare-timisoara", label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", isPage: true, icon: <BuildingIcon /> },
         { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true, icon: <BuildingIcon /> },
         { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true, icon: <TrendingIcon /> },
         { href: "/analiza-proprietate", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
