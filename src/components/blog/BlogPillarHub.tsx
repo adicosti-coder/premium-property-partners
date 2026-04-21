@@ -122,8 +122,11 @@ const TocList = ({
     if (!el) return;
     onJump(id);
     el.scrollIntoView({ behavior: "smooth", block: "start" });
-    // Update the URL hash without triggering native jump
     history.replaceState(null, "", `#${id}`);
+    // Distinct label per anchor for GA4 attribution
+    if (id.startsWith("evaluare-")) {
+      trackEvaluationEvent(`toc_${id}`, { source: "toc_sticky" });
+    }
   };
 
   return (
