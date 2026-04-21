@@ -20,6 +20,7 @@ const InternalLinks = lazy(() => import("@/components/blog/InternalLinks"));
 const ArticleFAQ = lazy(() => import("@/components/blog/ArticleFAQ"));
 const ExpertSignature = lazy(() => import("@/components/ExpertSignature"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const TimisoaraInvestmentCharts = lazy(() => import("@/components/blog/TimisoaraInvestmentCharts"));
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
