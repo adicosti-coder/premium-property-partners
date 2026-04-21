@@ -47,7 +47,7 @@ const ContactPage = () => {
         ? "Sediu RealTrust Timișoara — agenție imobiliară și management proprietăți în regim hotelier. Vânzări, închirieri, administrare apartamente cu randament net 9.4% ROI. Acoperire Timișoara și județul Timiș (Giroc, Dumbrăvița, Moșnița)."
         : "RealTrust Timișoara office — real estate agency and short-term rental management. Sales, rentals, apartment management with 9.4% net ROI. Coverage in Timișoara and Timiș county (Giroc, Dumbrăvița, Moșnița).",
       "url": `${BASE_URL}/contact`,
-      "telephone": "+40723154520",
+      "telephone": "+40799069256",
       "email": "info@realtrust.ro",
       "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
       "address": {
@@ -141,8 +141,8 @@ const ContactPage = () => {
       <SEOHead
         title={isRo ? "Contact & Locație | Management Proprietăți Timișoara — RealTrust" : "Contact & Location | Property Management Timișoara — RealTrust"}
         description={isRo
-          ? "Contact RealTrust Timișoara: sediu Str. Samuil Micu 14, tel. +40723154520. Analiză prețuri apartamente Timișoara, piața imobiliară pe cartiere, ROI 9.4% net."
-          : "Contact RealTrust Timișoara: office Str. Samuil Micu 14, phone +40723154520. Apartment price analysis, local real estate market by neighborhood, 9.4% net ROI."}
+          ? "Contact RealTrust Timișoara: sediu Str. Samuil Micu 14, tel. +40799069256. Analiză prețuri apartamente Timișoara, piața imobiliară pe cartiere, ROI 9.4% net."
+          : "Contact RealTrust Timișoara: office Str. Samuil Micu 14, phone +40799069256. Apartment price analysis, local real estate market by neighborhood, 9.4% net ROI."}
         url={`${BASE_URL}/contact`}
         jsonLd={jsonLdSchemas}
       />
@@ -184,7 +184,7 @@ const ContactPage = () => {
             </ul>
           </nav>
           <section id="contact-rapid" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 scroll-mt-24">
-            <a href="tel:+40723154520" className="flex flex-col items-center p-6 bg-card border rounded-2xl hover:border-primary/50 transition-colors group">
+            <a href="tel:+40799069256" className="flex flex-col items-center p-6 bg-card border rounded-2xl hover:border-primary/50 transition-colors group">
               <Phone className="w-8 h-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
               <span className="font-semibold mb-1">{isRo ? "Telefon" : "Phone"}</span>
               <span className="text-sm text-muted-foreground">+40 723 154 520</span>
