@@ -22,6 +22,10 @@ const ExpertSignature = lazy(() => import("@/components/ExpertSignature"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import { RoiByNeighborhoodChart, MonthlyYieldChart, PriceAppreciationChart } from "@/components/blog/TimisoaraInvestmentCharts";
 import InvestorGuideButton from "@/components/InvestorGuideButton";
+const ReadingProgressBar = lazy(() => import("@/components/blog/ReadingProgressBar"));
+const FloatingShareRail = lazy(() => import("@/components/blog/FloatingShareRail"));
+const PdfLeadMagnetButton = lazy(() => import("@/components/blog/PdfLeadMagnetButton"));
+const InvestmentGuideLeadModal = lazy(() => import("@/components/blog/InvestmentGuideLeadModal"));
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { generateArticleSchema, generateBreadcrumbSchema, generateHowToSchema } from "@/utils/schemaGenerators";
@@ -316,6 +320,13 @@ const BlogArticlePage = () => {
       />
       <Header />
       <Suspense fallback={null}>
+        <ReadingProgressBar />
+        <FloatingShareRail url={articleUrl} title={displayTitle} />
+        {article.slug === "ghid-investitii-imobiliare-timisoara-2026" && (
+          <InvestmentGuideLeadModal triggerOrigin="blog_article" />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
 
       <main className="pt-24 pb-16">
         <article className="container mx-auto px-6 max-w-4xl">
@@ -420,6 +431,9 @@ const BlogArticlePage = () => {
 
           {/* Expert Signature — E-E-A-T */}
           <ExpertSignature authorName={article.author_name} />
+
+          {/* Lead Magnet — PDF download (only for the pillar investment guide) */}
+          {article.slug === "ghid-investitii-imobiliare-timisoara-2026" && <PdfLeadMagnetButton />}
 
           {/* Tags and Share */}
           <div className="pt-8 border-t border-border space-y-6">

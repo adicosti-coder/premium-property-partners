@@ -51,13 +51,30 @@ const priceData = [
   { an: 2026, centru: 2580, iosefin: 2060, fabric: 1820, dumbravita: 1750 },
 ];
 
-const ChartCard = ({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) => (
-  <figure className="my-8 p-4 sm:p-6 rounded-xl border border-border bg-card shadow-sm not-prose">
+const ChartCard = ({
+  title,
+  subtitle,
+  alt,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  alt: string;
+  children: React.ReactNode;
+}) => (
+  <figure
+    className="my-8 p-4 sm:p-6 rounded-xl border border-border bg-card shadow-sm not-prose"
+    role="img"
+    aria-label={alt}
+  >
     <figcaption className="mb-4">
       <h4 className="text-base sm:text-lg font-semibold text-foreground">{title}</h4>
       <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitle}</p>
     </figcaption>
-    <div className="w-full h-[320px] sm:h-[380px]">{children}</div>
+    <div className="w-full h-[320px] sm:h-[380px]" aria-hidden="true">
+      {children}
+    </div>
+    <span className="sr-only">{alt}</span>
   </figure>
 );
 
@@ -65,6 +82,7 @@ export const RoiByNeighborhoodChart = () => (
   <ChartCard
     title="ROI net anual: Regim Hotelier vs Chirie Clasică (2026)"
     subtitle="Date agregate din portofoliul RealTrust — randament % după management 27% și taxe"
+    alt="Grafic randament imobiliar Timișoara — ROI net anual pe cartiere, regim hotelier vs chirie clasică, 2026"
   >
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={roiData} margin={{ top: 10, right: 10, left: -10, bottom: 40 }}>
@@ -84,6 +102,7 @@ export const MonthlyYieldChart = () => (
   <ChartCard
     title="Yield lunar pe tip de apartament (€)"
     subtitle="Venit brut, costuri operaționale și venit net lunar — regim hotelier Timișoara"
+    alt="Grafic yield lunar regim hotelier Timișoara — venit brut, costuri și venit net pe tip de apartament"
   >
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={yieldData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
@@ -104,6 +123,7 @@ export const PriceAppreciationChart = () => (
   <ChartCard
     title="Apreciere preț €/mp pe cartiere (2020 → 2026)"
     subtitle="Evoluție preț mediu pe metru pătrat — surse: tranzacții reale + portofoliu RealTrust"
+    alt="Grafic apreciere preț imobiliar Timișoara €/mp pe cartiere între 2020 și 2026 — Centru, Iosefin, Fabric, Dumbrăvița"
   >
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={priceData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>

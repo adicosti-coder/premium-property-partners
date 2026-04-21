@@ -16,6 +16,7 @@ import { lazy, Suspense } from "react";
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const InvestorInsightLink = lazy(() => import("@/components/blog/InvestorInsightLink"));
 
 const NeighborhoodDetail = () => {
   const { zona } = useParams<{ zona: string }>();
@@ -157,6 +158,11 @@ const NeighborhoodDetail = () => {
               ))}
             </div>
           </div>
+
+          {/* Investor Insight — internal link to pillar guide */}
+          <Suspense fallback={null}>
+            <InvestorInsightLink zoneName={neighborhood.fullName} language="ro" />
+          </Suspense>
 
           {/* CTA */}
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 text-center mb-12">
