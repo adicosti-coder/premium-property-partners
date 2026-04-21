@@ -1,11 +1,90 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Fires a GA4 event for evaluation-section interactions.
- * Mirrors the gtag pattern used across the project (CompareDrawer, Hero, etc.)
- * and silently no-ops when consent isn't granted (gtag handles that itself).
+ * Stable per-tab session id used to dedupe events server-side later.
+ */
+const getEvaluareSessionId = (): string => {
+  if (typeof window === "undefined") return "ssr";
+  try {
+    const KEY = "evaluare_session_id";
+    let id = sessionStorage.getItem(KEY);
+    if (!id) {
+      id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem(KEY, id);
+    }
+    return id;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+};
+
+/**
+ * Mirrors a tracking event to the `evaluare_section_events` table so the
+ * in-app admin dashboard can compute view-vs-click engagement rates without
+ * depending on GA4 exports. Fire-and-forget — failures never block the UI.
+ */
+const logEvaluareEvent = (params: {
+  event_type: "view" | "click";
+  section_id: string;
+  label: string;
+  source?: string;
+}) => {
+  if (typeof window === "undefined") return;
+  try {
+    void supabase
+      .from("evaluare_section_events")
+      .insert({
+        event_type: params.event_type,
+        section_id: params.section_id,
+        label: params.label,
+        source: params.source ?? null,
+        session_id: getEvaluareSessionId(),
+        page_path: window.location.pathname,
+      })
+      .then(() => undefined, () => undefined);
+  } catch {
+    /* no-op */
+  }
+};
+
+/**
+ * Extracts the section id from a label/anchor convention used across the file.
+ * Inline labels (e.g. "inline_metoda_comparativa") and toc labels
+ * (e.g. "toc_evaluare-metoda-comparativa") are normalized to the canonical
+ * `evaluare-*` anchor id when possible.
+ */
+const resolveSectionId = (label: string, hint?: string): string => {
+  if (hint && hint.startsWith("evaluare-")) return hint;
+  if (label.startsWith("toc_evaluare-")) return label.replace(/^toc_/, "");
+  if (label.startsWith("toc_")) return label.replace(/^toc_/, "");
+  if (label.startsWith("inline_")) {
+    const map: Record<string, string> = {
+      inline_metoda_comparativa: "evaluare-metoda-comparativa",
+      inline_metoda_capitalizarii: "evaluare-metoda-capitalizarii",
+      inline_factori_pret: "evaluare-factori-pret",
+    };
+    return map[label] ?? label;
+  }
+  if (label === "cta_formular_evaluare_gratuita") return "evaluare-formular";
+  return label;
+};
+
+/**
+ * Fires a GA4 event for evaluation-section interactions and mirrors it to
+ * Supabase for the engagement dashboard.
  */
 const trackEvaluationEvent = (label: string, extra: Record<string, string> = {}) => {
+  const sectionId = resolveSectionId(label, extra.section_id);
+  logEvaluareEvent({
+    event_type: "click",
+    section_id: sectionId,
+    label,
+    source: extra.source,
+  });
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
   window.gtag("event", "evaluare_apartament_click", {
     event_category: "blog_pillar_hub",
@@ -59,6 +138,12 @@ const useEvaluareSectionViewTracking = () => {
           if (!id || viewed.has(id)) continue;
           viewed.add(id);
           persist();
+          logEvaluareEvent({
+            event_type: "view",
+            section_id: id,
+            label: `view_${id}`,
+            source: "scroll_intersection",
+          });
           if (typeof window.gtag === "function") {
             window.gtag("event", "evaluare_apartament_view", {
               event_category: "blog_pillar_hub",
@@ -71,8 +156,6 @@ const useEvaluareSectionViewTracking = () => {
           observer.unobserve(entry.target);
         }
       },
-      // Trigger when the element is meaningfully visible (50% in view OR
-      // top edge has crossed ~30% from the viewport top for tall sections).
       { threshold: [0.5], rootMargin: "-30% 0px -30% 0px" }
     );
 
