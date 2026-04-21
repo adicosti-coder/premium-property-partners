@@ -588,6 +588,31 @@ const Imobiliare = () => {
         </div>
       </section>
 
+      {/* SEO Footer Banner — internal link toward pillar investment article */}
+      <section className="container mx-auto px-6 pb-12">
+        <Link
+          to="/blog/ghid-investitii-imobiliare-timisoara-2026"
+          className="block max-w-5xl mx-auto rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-background to-primary/5 px-6 py-5 hover:border-amber-500/60 hover:shadow-md transition-all group"
+        >
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5 text-amber-600" />
+              </div>
+              <p className="text-sm md:text-base font-medium text-foreground">
+                {language === "ro"
+                  ? "Cauți investiții? Vezi topul cartierelor din Timișoara cu ROI de peste 9%"
+                  : "Looking to invest? See top Timișoara neighborhoods with 9%+ ROI"}
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:underline shrink-0">
+              {language === "ro" ? "Ghid Investiții 2026" : "2026 Investment Guide"}
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </span>
+          </div>
+        </Link>
+      </section>
+
       <SEOFooterText pageType="listings" city="Timișoara" />
       <Footer />
       <GlobalConversionWidgets />
