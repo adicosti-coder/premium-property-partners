@@ -297,6 +297,15 @@ const ZoneLanding = () => {
           </div>
         </section>
 
+        {/* Investor Insight — internal link to pillar guide */}
+        <section className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <Suspense fallback={null}>
+              <InvestorInsightLink zoneName={data.name} language={language as "ro" | "en"} />
+            </Suspense>
+          </div>
+        </section>
+
         {/* Properties */}
         <Suspense fallback={null}>
           <PropertyGallery />
