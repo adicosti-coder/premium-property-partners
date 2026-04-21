@@ -90,6 +90,17 @@ const PentruProprietari = () => {
   const [calcSentinel, calcReady] = useDeferredLoad("500px");
   const [faqSentinel, faqReady] = useDeferredLoad("500px");
 
+  // CTA A/B variant toggle (persisted in localStorage)
+  const [ctaVariant, setCtaVariant] = useState<"A" | "B">(() => {
+    if (typeof window === "undefined") return "A";
+    return (localStorage.getItem("ownerCtaVariant") as "A" | "B") || "A";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ownerCtaVariant", ctaVariant);
+    }
+  }, [ctaVariant]);
+
   const content = {
     ro: {
       badge: "Administrare Premium · Timișoara",
