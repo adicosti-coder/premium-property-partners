@@ -364,6 +364,55 @@ const PentruProprietari = () => {
         </div>
       </section>
 
+      {/* Top 3 Benefits Strip - concise conversion-oriented block */}
+      <section className="py-12 md:py-16 bg-background border-b border-border">
+        <div className="container mx-auto px-6">
+          <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+            {[
+              {
+                Icon: TrendingUp,
+                title: language === "ro" ? "Venit lunar mai mare" : "Higher monthly income",
+                description:
+                  language === "ro"
+                    ? "Până la +40% față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking & Airbnb."
+                    : "Up to +40% vs. classic rental, through dynamic pricing and optimized occupancy on Booking & Airbnb.",
+              },
+              {
+                Icon: Shield,
+                title: language === "ro" ? "Zero stres, zero implicare" : "Zero stress, zero involvement",
+                description:
+                  language === "ro"
+                    ? "Oaspeți verificați, curățenie hotelieră, mentenanță și ANAF — preluăm tot, 24/7."
+                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — we handle it all, 24/7.",
+              },
+              {
+                Icon: BarChart3,
+                title: language === "ro" ? "Transparență totală" : "Full transparency",
+                description:
+                  language === "ro"
+                    ? "Rapoarte lunare clare, plăți directe în contul tău și acces 24/7 în portalul proprietarului."
+                    : "Clear monthly reports, direct payments to your account and 24/7 access to the owner portal.",
+              },
+            ].map(({ Icon, title, description }, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-start p-6 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-elegant transition-all duration-300"
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-serif font-semibold text-foreground mb-2">
+                  {title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Quick Value Banner - Moved below Hero */}
       <QuickValueBanner onCtaClick={scrollToCalculator} />
 
