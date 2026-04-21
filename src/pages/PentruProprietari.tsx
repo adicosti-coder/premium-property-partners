@@ -351,7 +351,54 @@ const PentruProprietari = () => {
           ]
         }
       };
-      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema]);
+      // FAQPage schema — rich snippets pentru întrebările proprietarilor
+      const faqPageSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Ce comision percepe RealTrust pentru administrarea apartamentului în regim hotelier?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Comisionul de administrare este între 15% și 25% din încasările nete, în funcție de pachetul ales (Starter 15%, Esențial 18%, Standard 20%, Premium 25%). Nu există costuri ascunse, taxe de setup sau perioadă minimă de contract."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Care este randamentul net real al unui apartament administrat în regim hotelier în Timișoara?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "ROI-ul net mediu verificat în portofoliul nostru este de 9.4% anual, cu o ocupare medie de peste 80%. Acest randament este cu aproximativ 40% mai mare decât chiria clasică pe termen lung."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Trebuie să mă implic în administrarea zilnică a apartamentului?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nu. Operarea este 100% hands-off: noi gestionăm rezervările, oaspeții, curățenia, mentenanța, comunicarea și conformitatea ANAF. Tu primești raportul financiar lunar și venitul net direct în cont."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Ce este mai avantajos fiscal pentru veniturile din regim hotelier: PFA sau SRL?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Depinde de volumul anual al încasărilor. Pentru venituri sub 60.000 EUR/an, PFA cu normă de venit poate fi mai simplu și mai eficient fiscal. Peste acest prag sau pentru portofolii cu mai multe proprietăți, SRL-ul oferă deductibilități superioare (mentenanță, mobilier, marketing). Echipa RealTrust te ghidează în alegerea structurii potrivite."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Cum arată contractul de administrare imobiliară RealTrust?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Contractul de administrare este transparent, fără perioadă minimă obligatorie, cu clauze clare privind comisionul, raportarea lunară, responsabilitățile operaționale, drepturile proprietarului și posibilitatea de reziliere cu preaviz de 30 de zile."
+            }
+          }
+        ]
+      };
+      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, faqPageSchema]);
     });
   }, [seo.title]);
 
