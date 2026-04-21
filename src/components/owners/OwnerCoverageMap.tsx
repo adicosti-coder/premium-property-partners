@@ -65,9 +65,9 @@ const OwnerCoverageMap = () => {
           <p className="text-lg text-muted-foreground">{t.subtitle}</p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[2fr_1fr] max-w-6xl mx-auto items-start">
-          {/* Interactive map */}
-          <div className="rounded-2xl overflow-hidden border border-border shadow-elegant aspect-[4/3] lg:aspect-auto lg:h-[480px]">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-[2fr_1fr] max-w-6xl mx-auto items-start">
+          {/* Interactive map - mobile-friendly height */}
+          <div className="rounded-2xl overflow-hidden border border-border shadow-elegant h-[280px] sm:h-[360px] lg:h-[480px]">
             <iframe
               title={t.mapTitle}
               src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d22245.55!2d21.226!3d45.756!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x474567667be8a5cf%3A0x1f5ad8caf058b49a!2sTimi%C8%99oara!5e0!3m2!1sro!2sro!4v1700000000000"
@@ -80,19 +80,19 @@ const OwnerCoverageMap = () => {
             />
           </div>
 
-          {/* Neighborhoods list */}
-          <div className="rounded-2xl bg-card border border-border p-6">
-            <h3 className="text-lg font-serif font-semibold text-foreground mb-4">
+          {/* Neighborhoods list - scrollable on mobile to avoid overflow */}
+          <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 w-full">
+            <h3 className="text-base sm:text-lg font-serif font-semibold text-foreground mb-4">
               {lang === "ro" ? "Cartiere acoperite" : "Covered neighborhoods"}
             </h3>
-            <ul className="grid grid-cols-2 gap-2 mb-6">
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-2 mb-5 max-h-[260px] lg:max-h-none overflow-y-auto pr-1">
               {neighborhoods.map((n) => (
                 <li
                   key={n}
-                  className="flex items-center gap-1.5 text-sm text-foreground/80"
+                  className="flex items-center gap-1.5 text-sm text-foreground/80 min-w-0"
                 >
                   <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <span>{n}</span>
+                  <span className="truncate">{n}</span>
                 </li>
               ))}
             </ul>

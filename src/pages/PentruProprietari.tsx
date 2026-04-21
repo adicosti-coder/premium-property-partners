@@ -256,12 +256,34 @@ const PentruProprietari = () => {
         }
       };
       // RealEstateAgent schema with full property management service catalog
+      // E-E-A-T: explicit founder, valid logo (real asset), sameAs social links
       const realEstateAgentSchema = {
         "@context": "https://schema.org",
         "@type": "RealEstateAgent",
-        "name": "RealTrust",
+        "@id": "https://www.realtrust.ro/#realestateagent",
+        "name": "RealTrust & ApArt Hotel Timișoara",
+        "alternateName": "RealTrust",
         "url": "https://www.realtrust.ro/pentru-proprietari",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+          "width": 800,
+          "height": 450,
+        },
+        "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
         "telephone": "+40799069256",
+        "email": "info@realtrust.ro",
+        "foundingDate": "2001",
+        "founder": {
+          "@type": "Person",
+          "name": "Adrian Costi",
+          "jobTitle": "Founder & CEO",
+          "url": "https://www.realtrust.ro/despre-noi",
+        },
+        "sameAs": [
+          "https://www.facebook.com/realtrust.ro",
+          "https://www.instagram.com/realtrust_timisoara",
+        ],
         "areaServed": {
           "@type": "City",
           "name": "Timișoara",
@@ -270,6 +292,7 @@ const PentruProprietari = () => {
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Timișoara",
+          "addressRegion": "Timiș",
           "addressCountry": "RO"
         },
         "aggregateRating": {
