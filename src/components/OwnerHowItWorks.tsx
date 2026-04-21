@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown, Info } from "lucide-react";
+import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown, Info, Sparkles } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
