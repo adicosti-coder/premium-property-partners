@@ -1,11 +1,62 @@
+import { useMemo, useState } from "react";
 import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+type ApartmentType = "garsoniera" | "2-camere" | "3-camere";
+type CityKey =
+  | "timisoara-central"
+  | "timisoara-iosefin"
+  | "timisoara-cetate"
+  | "dumbravita"
+  | "giroc"
+  | "lugoj";
+
+// Baseline: 1-bedroom (2-camere) in Iosefin, October 2025.
+// Multipliers tuned to internal portfolio data (75–85% occupancy, 9.4% net annual ROI).
+const TYPE_MULTIPLIER: Record<ApartmentType, { adr: number; revenue: number; cleaning: number; net: number }> = {
+  garsoniera: { adr: 0.78, revenue: 0.72, cleaning: 0.85, net: 0.7 },
+  "2-camere": { adr: 1, revenue: 1, cleaning: 1, net: 1 },
+  "3-camere": { adr: 1.28, revenue: 1.32, cleaning: 1.18, net: 1.35 },
+};
+
+// Per city: occupancy points (estimate / actual) + ADR multiplier
+const CITY_PROFILE: Record<
+  CityKey,
+  { occEst: number; occAct: number; adrMul: number; labelRo: string; labelEn: string }
+> = {
+  "timisoara-central": { occEst: 80, occAct: 86, adrMul: 1.08, labelRo: "Timișoara · Centru", labelEn: "Timișoara · Center" },
+  "timisoara-iosefin": { occEst: 78, occAct: 84, adrMul: 1, labelRo: "Timișoara · Iosefin", labelEn: "Timișoara · Iosefin" },
+  "timisoara-cetate": { occEst: 79, occAct: 85, adrMul: 1.05, labelRo: "Timișoara · Cetate", labelEn: "Timișoara · Cetate" },
+  dumbravita: { occEst: 74, occAct: 80, adrMul: 0.92, labelRo: "Dumbrăvița", labelEn: "Dumbrăvița" },
+  giroc: { occEst: 72, occAct: 78, adrMul: 0.9, labelRo: "Giroc", labelEn: "Giroc" },
+  lugoj: { occEst: 68, occAct: 73, adrMul: 0.78, labelRo: "Lugoj", labelEn: "Lugoj" },
+};
+
+const BASE = { adr: 92, revenue: 2230, cleaning: 380, net: 1450 };
+
+const fmtEur = (n: number, lang: string) =>
+  lang === "en" ? `€${Math.round(n).toLocaleString("en-US")}` : `${Math.round(n).toLocaleString("ro-RO")} €`;
+const fmtAdr = (n: number, lang: string) =>
+  lang === "en" ? `€${Math.round(n)}` : `${Math.round(n)} €`;
+const fmtDeltaEur = (n: number, lang: string) => {
+  const sign = n >= 0 ? "+" : "−";
+  const abs = Math.abs(Math.round(n));
+  return lang === "en" ? `${sign}€${abs.toLocaleString("en-US")}` : `${sign}${abs.toLocaleString("ro-RO")} €`;
+};
+const fmtDeltaAdr = (n: number, lang: string) => {
+  const sign = n >= 0 ? "+" : "−";
+  const abs = Math.abs(Math.round(n));
+  return lang === "en" ? `${sign}€${abs}` : `${sign}${abs} €`;
+};
 
 const OwnerHowItWorks = () => {
   const { language } = useLanguage();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
+
+  const [aptType, setAptType] = useState<ApartmentType>("2-camere");
+  const [city, setCity] = useState<CityKey>("timisoara-iosefin");
 
   const content = {
     ro: {
@@ -37,20 +88,28 @@ const OwnerHowItWorks = () => {
         },
       ],
       report: {
-        eyebrow: "Raport lunar · exemplu real",
-        title: "Apartament 2 camere · Iosefin · octombrie 2025",
+        eyebrow: "Raport lunar · simulare interactivă",
+        switcherLabel: "Personalizează exemplul",
+        typeLabel: "Tip apartament",
+        cityLabel: "Oraș / Zonă",
+        types: [
+          { value: "garsoniera" as ApartmentType, label: "Garsonieră" },
+          { value: "2-camere" as ApartmentType, label: "2 camere" },
+          { value: "3-camere" as ApartmentType, label: "3 camere" },
+        ],
+        period: "octombrie 2025",
         subtitle: "Așa arată comparația estimare inițială vs. realizat pe care o primești în fiecare lună:",
         estimateLabel: "Estimare inițială",
         actualLabel: "Realizat (verificat)",
         deltaLabel: "Diferență",
-        rows: [
-          { metric: "Ocupare", estimate: "78%", actual: "84%", delta: "+6 pp", positive: true },
-          { metric: "ADR (tarif mediu/noapte)", estimate: "92 €", actual: "98 €", delta: "+6 €", positive: true },
-          { metric: "Venit brut", estimate: "2.230 €", actual: "2.555 €", delta: "+325 €", positive: true },
-          { metric: "Comisioane Booking/Airbnb", estimate: "−18%", actual: "−16,4%", delta: "+1,6 pp", positive: true },
-          { metric: "Curățenie & utilități", estimate: "−380 €", actual: "−395 €", delta: "−15 €", positive: false },
-          { metric: "Venit net proprietar", estimate: "1.450 €", actual: "1.690 €", delta: "+240 €", positive: true },
-        ],
+        metrics: {
+          occupancy: "Ocupare",
+          adr: "ADR (tarif mediu/noapte)",
+          gross: "Venit brut",
+          fees: "Comisioane Booking/Airbnb",
+          cleaning: "Curățenie & utilități",
+          net: "Venit net proprietar",
+        },
         recalibrationLabel: "Indicatori recalibrați trimestrial",
         recalibrationItems: [
           "Ocupare medie pe tip de apartament & zonă",
@@ -90,20 +149,28 @@ const OwnerHowItWorks = () => {
         },
       ],
       report: {
-        eyebrow: "Monthly report · real example",
-        title: "1-bedroom apartment · Iosefin · October 2025",
+        eyebrow: "Monthly report · interactive simulation",
+        switcherLabel: "Customize the example",
+        typeLabel: "Apartment type",
+        cityLabel: "City / Area",
+        types: [
+          { value: "garsoniera" as ApartmentType, label: "Studio" },
+          { value: "2-camere" as ApartmentType, label: "1-bedroom" },
+          { value: "3-camere" as ApartmentType, label: "2-bedroom" },
+        ],
+        period: "October 2025",
         subtitle: "This is the initial-estimate vs. actual comparison you receive every month:",
         estimateLabel: "Initial estimate",
         actualLabel: "Actual (verified)",
         deltaLabel: "Delta",
-        rows: [
-          { metric: "Occupancy", estimate: "78%", actual: "84%", delta: "+6 pp", positive: true },
-          { metric: "ADR (avg. nightly rate)", estimate: "€92", actual: "€98", delta: "+€6", positive: true },
-          { metric: "Gross revenue", estimate: "€2,230", actual: "€2,555", delta: "+€325", positive: true },
-          { metric: "Booking/Airbnb fees", estimate: "−18%", actual: "−16.4%", delta: "+1.6 pp", positive: true },
-          { metric: "Cleaning & utilities", estimate: "−€380", actual: "−€395", delta: "−€15", positive: false },
-          { metric: "Net owner income", estimate: "€1,450", actual: "€1,690", delta: "+€240", positive: true },
-        ],
+        metrics: {
+          occupancy: "Occupancy",
+          adr: "ADR (avg. nightly rate)",
+          gross: "Gross revenue",
+          fees: "Booking/Airbnb fees",
+          cleaning: "Cleaning & utilities",
+          net: "Net owner income",
+        },
         recalibrationLabel: "Indicators recalibrated quarterly",
         recalibrationItems: [
           "Average occupancy by apartment type & area",
@@ -117,6 +184,87 @@ const OwnerHowItWorks = () => {
   };
 
   const t = content[language as keyof typeof content] || content.ro;
+
+  const computed = useMemo(() => {
+    const tm = TYPE_MULTIPLIER[aptType];
+    const cp = CITY_PROFILE[city];
+
+    const occEst = cp.occEst;
+    const occAct = cp.occAct;
+    const adrEst = BASE.adr * tm.adr * cp.adrMul;
+    const adrAct = adrEst * 1.065;
+
+    // Scale gross around occupancy & adr deltas
+    const grossBase = BASE.revenue * tm.revenue * cp.adrMul;
+    const grossEst = grossBase * (occEst / 78);
+    const grossAct = grossBase * (occAct / 78) * 1.02;
+
+    const cleaningEst = BASE.cleaning * tm.cleaning;
+    const cleaningAct = cleaningEst * 1.04;
+
+    const netEst = BASE.net * tm.net * cp.adrMul * (occEst / 78);
+    const netAct = BASE.net * tm.net * cp.adrMul * (occAct / 78) * 1.07;
+
+    const lang = language;
+    const rows = [
+      {
+        metric: t.report.metrics.occupancy,
+        estimate: `${occEst}%`,
+        actual: `${occAct}%`,
+        delta: `+${occAct - occEst} pp`,
+        positive: true,
+      },
+      {
+        metric: t.report.metrics.adr,
+        estimate: fmtAdr(adrEst, lang),
+        actual: fmtAdr(adrAct, lang),
+        delta: fmtDeltaAdr(adrAct - adrEst, lang),
+        positive: true,
+      },
+      {
+        metric: t.report.metrics.gross,
+        estimate: fmtEur(grossEst, lang),
+        actual: fmtEur(grossAct, lang),
+        delta: fmtDeltaEur(grossAct - grossEst, lang),
+        positive: true,
+      },
+      {
+        metric: t.report.metrics.fees,
+        estimate: "−18%",
+        actual: "−16,4%".replace(",", lang === "en" ? "." : ","),
+        delta: lang === "en" ? "+1.6 pp" : "+1,6 pp",
+        positive: true,
+      },
+      {
+        metric: t.report.metrics.cleaning,
+        estimate: `−${fmtEur(cleaningEst, lang)}`,
+        actual: `−${fmtEur(cleaningAct, lang)}`,
+        delta: fmtDeltaEur(-(cleaningAct - cleaningEst), lang),
+        positive: false,
+      },
+      {
+        metric: t.report.metrics.net,
+        estimate: fmtEur(netEst, lang),
+        actual: fmtEur(netAct, lang),
+        delta: fmtDeltaEur(netAct - netEst, lang),
+        positive: true,
+      },
+    ];
+
+    const cityLabel = lang === "en" ? cp.labelEn : cp.labelRo;
+    const typeLabel = t.report.types.find((x) => x.value === aptType)?.label ?? "";
+    const title =
+      lang === "en"
+        ? `${typeLabel} apartment · ${cityLabel} · ${t.report.period}`
+        : `Apartament ${typeLabel} · ${cityLabel} · ${t.report.period}`;
+
+    return { rows, title };
+  }, [aptType, city, language, t]);
+
+  const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
+    value: k,
+    label: language === "en" ? CITY_PROFILE[k].labelEn : CITY_PROFILE[k].labelRo,
+  }));
 
   return (
     <section id="cum-functioneaza-proprietari" className="section-padding bg-gradient-subtle">
@@ -143,7 +291,6 @@ const OwnerHowItWorks = () => {
         {/* Steps */}
         <div ref={gridRef} className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
-            {/* Connector lines between steps (desktop) */}
             <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-px bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
 
             {t.steps.map((step, index) => {
@@ -156,7 +303,6 @@ const OwnerHowItWorks = () => {
                   }`}
                   style={{ transitionDelay: gridVisible ? `${index * 150}ms` : "0ms" }}
                 >
-                  {/* Icon with number */}
                   <div className="relative inline-flex items-center justify-center mb-8">
                     <div className="w-28 h-28 rounded-2xl bg-card border border-border shadow-card flex items-center justify-center group-hover:border-primary/40 group-hover:shadow-elegant transition-all duration-300">
                       <Icon className="w-12 h-12 text-primary group-hover:scale-110 transition-transform duration-300" />
@@ -164,7 +310,6 @@ const OwnerHowItWorks = () => {
                     <span className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center font-sans shadow-lg">
                       {step.number}
                     </span>
-                    {/* Arrow between steps (desktop) */}
                     {index < 2 && (
                       <ArrowRight className="hidden md:block absolute -right-10 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/40" />
                     )}
@@ -178,7 +323,6 @@ const OwnerHowItWorks = () => {
                     {step.description}
                   </p>
 
-                  {/* Detail badge */}
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                     {step.detail}
                   </span>
@@ -187,7 +331,7 @@ const OwnerHowItWorks = () => {
             })}
           </div>
 
-          {/* Monthly report mini-example — estimate vs. actual + recalibrated indicators */}
+          {/* Monthly report mini-example with interactive switcher */}
           <div
             className={`mt-16 lg:mt-20 transition-all duration-700 ${
               gridVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -203,11 +347,56 @@ const OwnerHowItWorks = () => {
                   </span>
                 </div>
                 <h3 className="text-xl md:text-2xl heading-premium text-foreground mb-2">
-                  {t.report.title}
+                  {computed.title}
                 </h3>
                 <p className="text-muted-foreground text-sm md:text-base text-premium">
                   {t.report.subtitle}
                 </p>
+
+                {/* Mini switcher */}
+                <div className="mt-6 grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      {t.report.typeLabel}
+                    </label>
+                    <div className="inline-flex w-full rounded-lg border border-border bg-background/60 p-1">
+                      {t.report.types.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setAptType(opt.value)}
+                          className={`flex-1 px-2 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
+                            aptType === opt.value
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="howitworks-city"
+                      className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2"
+                    >
+                      {t.report.cityLabel}
+                    </label>
+                    <select
+                      id="howitworks-city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value as CityKey)}
+                      className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    >
+                      {cityOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div className="p-4 sm:p-6 lg:p-8">
@@ -222,8 +411,8 @@ const OwnerHowItWorks = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {t.report.rows.map((row, i) => {
-                        const isTotal = i === t.report.rows.length - 1;
+                      {computed.rows.map((row, i) => {
+                        const isTotal = i === computed.rows.length - 1;
                         return (
                           <tr
                             key={row.metric}
