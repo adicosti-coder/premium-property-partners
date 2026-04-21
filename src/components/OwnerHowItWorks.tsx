@@ -311,6 +311,7 @@ const OwnerHowItWorks = () => {
   }));
 
   return (
+    <TooltipProvider delayDuration={150}>
     <section id="cum-functioneaza-proprietari" className="section-padding bg-gradient-subtle">
       <div className="container mx-auto px-6 lg:px-8">
         {/* Header */}
