@@ -1,5 +1,6 @@
 import { BookOpen, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 /**
@@ -71,8 +72,43 @@ const OwnerGuideHub = () => {
     },
   }[lang];
 
+  // Article schema (ItemList of BlogPosting) for the 4 owner-guide articles
+  const baseUrl = "https://www.realtrust.ro";
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": lang === "ro" ? "Ghidul Proprietarului 2026" : "The 2026 Owner's Guide",
+    "itemListElement": t.articles.map((a, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "item": {
+        "@type": "BlogPosting",
+        "headline": a.title,
+        "description": a.desc,
+        "url": `${baseUrl}${a.to}`,
+        "inLanguage": lang === "ro" ? "ro-RO" : "en-US",
+        "author": { "@type": "Organization", "name": "RealTrust" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "RealTrust",
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${baseUrl}/logo.png`,
+          },
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": `${baseUrl}${a.to}`,
+        },
+      },
+    })),
+  };
+
   return (
     <section className="py-16 md:py-20 bg-muted/30">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(itemListSchema)}</script>
+      </Helmet>
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-4">
