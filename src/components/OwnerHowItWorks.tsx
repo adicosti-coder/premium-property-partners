@@ -321,7 +321,7 @@ const OwnerHowItWorks = () => {
         : `Apartament ${typeLabel} · ${cityLabel} · ${t.report.period}`;
 
     return { rows, title };
-  }, [aptType, city, language, t]);
+  }, [aptType, city, language, t, currency]);
 
   const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
     value: k,
