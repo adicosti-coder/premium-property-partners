@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
-import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown } from "lucide-react";
+import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown, Info } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+type MetricKey = "occupancy" | "adr" | "gross" | "fees" | "cleaning" | "net";
 
 type ApartmentType = "garsoniera" | "2-camere" | "3-camere";
 type CityKey =
@@ -110,6 +113,20 @@ const OwnerHowItWorks = () => {
           cleaning: "Curățenie & utilități",
           net: "Venit net proprietar",
         },
+        metricsHelp: {
+          occupancy: "Procentul de nopți rezervate dintr-o lună (nopți ocupate ÷ nopți disponibile).",
+          adr: "Average Daily Rate — tariful mediu încasat pe noapte rezervată, fără taxa de curățenie.",
+          gross: "Suma totală încasată de la oaspeți într-o lună, înainte de comisioane și costuri.",
+          fees: "Comisionul reținut de platforme (Booking ~15%, Airbnb ~3–14%) calculat la venitul brut.",
+          cleaning: "Costurile lunare de curățenie între oaspeți + utilitățile aferente apartamentului.",
+          net: "Suma virată proprietarului = Venit brut − Comisioane platforme − Curățenie & utilități − Management.",
+        },
+        legendTitle: "Ce înseamnă indicatorii",
+        legend: [
+          { term: "ADR", definition: "Tariful mediu pe noapte rezervată (Average Daily Rate)." },
+          { term: "Comisioane Booking/Airbnb", definition: "Procent reținut de platforme la fiecare rezervare." },
+          { term: "Venit net proprietar", definition: "Banii viraţi în contul tău după toate cheltuielile operaționale." },
+        ],
         recalibrationLabel: "Indicatori recalibrați trimestrial",
         recalibrationItems: [
           "Ocupare medie pe tip de apartament & zonă",
@@ -171,6 +188,20 @@ const OwnerHowItWorks = () => {
           cleaning: "Cleaning & utilities",
           net: "Net owner income",
         },
+        metricsHelp: {
+          occupancy: "Share of nights booked in a month (booked nights ÷ available nights).",
+          adr: "Average Daily Rate — average price per booked night, excluding the cleaning fee.",
+          gross: "Total amount collected from guests in a month, before fees and costs.",
+          fees: "Commission kept by platforms (Booking ~15%, Airbnb ~3–14%) on gross revenue.",
+          cleaning: "Monthly cleaning costs between guests + utilities for the apartment.",
+          net: "Amount paid to the owner = Gross − Platform fees − Cleaning & utilities − Management.",
+        },
+        legendTitle: "What the indicators mean",
+        legend: [
+          { term: "ADR", definition: "Average price per booked night (Average Daily Rate)." },
+          { term: "Booking/Airbnb fees", definition: "Commission kept by the platform on every reservation." },
+          { term: "Net owner income", definition: "The money transferred to your account after all operational costs." },
+        ],
         recalibrationLabel: "Indicators recalibrated quarterly",
         recalibrationItems: [
           "Average occupancy by apartment type & area",
@@ -206,8 +237,16 @@ const OwnerHowItWorks = () => {
     const netAct = BASE.net * tm.net * cp.adrMul * (occAct / 78) * 1.07;
 
     const lang = language;
-    const rows = [
+    const rows: Array<{
+      key: MetricKey;
+      metric: string;
+      estimate: string;
+      actual: string;
+      delta: string;
+      positive: boolean;
+    }> = [
       {
+        key: "occupancy",
         metric: t.report.metrics.occupancy,
         estimate: `${occEst}%`,
         actual: `${occAct}%`,
@@ -215,6 +254,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "adr",
         metric: t.report.metrics.adr,
         estimate: fmtAdr(adrEst, lang),
         actual: fmtAdr(adrAct, lang),
@@ -222,6 +262,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "gross",
         metric: t.report.metrics.gross,
         estimate: fmtEur(grossEst, lang),
         actual: fmtEur(grossAct, lang),
@@ -229,6 +270,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "fees",
         metric: t.report.metrics.fees,
         estimate: "−18%",
         actual: "−16,4%".replace(",", lang === "en" ? "." : ","),
@@ -236,6 +278,7 @@ const OwnerHowItWorks = () => {
         positive: true,
       },
       {
+        key: "cleaning",
         metric: t.report.metrics.cleaning,
         estimate: `−${fmtEur(cleaningEst, lang)}`,
         actual: `−${fmtEur(cleaningAct, lang)}`,
@@ -243,6 +286,7 @@ const OwnerHowItWorks = () => {
         positive: false,
       },
       {
+        key: "net",
         metric: t.report.metrics.net,
         estimate: fmtEur(netEst, lang),
         actual: fmtEur(netAct, lang),
@@ -267,6 +311,7 @@ const OwnerHowItWorks = () => {
   }));
 
   return (
+    <TooltipProvider delayDuration={150}>
     <section id="cum-functioneaza-proprietari" className="section-padding bg-gradient-subtle">
       <div className="container mx-auto px-6 lg:px-8">
         {/* Header */}
@@ -420,7 +465,25 @@ const OwnerHowItWorks = () => {
                               isTotal ? "bg-primary/5 font-semibold" : ""
                             }`}
                           >
-                            <td className="py-3 px-3 text-foreground">{row.metric}</td>
+                            <td className="py-3 px-3 text-foreground">
+                              <span className="inline-flex items-center gap-1.5">
+                                <span>{row.metric}</span>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label={`${row.metric} — info`}
+                                      className="text-muted-foreground/70 hover:text-primary transition-colors focus:outline-none focus:text-primary"
+                                    >
+                                      <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+                                    {t.report.metricsHelp[row.key]}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </span>
+                            </td>
                             <td className="py-3 px-3 text-right text-muted-foreground tabular-nums">
                               {row.estimate}
                             </td>
@@ -465,6 +528,28 @@ const OwnerHowItWorks = () => {
                   </ul>
                 </div>
 
+                <div className="mt-8 pt-6 border-t border-border">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-4">
+                    {t.report.legendTitle}
+                  </p>
+                  <dl className="grid sm:grid-cols-3 gap-4">
+                    {t.report.legend.map((item) => (
+                      <div
+                        key={item.term}
+                        className="rounded-xl border border-border/60 bg-background/50 p-3"
+                      >
+                        <dt className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                          <Info className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                          {item.term}
+                        </dt>
+                        <dd className="text-xs text-muted-foreground leading-relaxed">
+                          {item.definition}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
                 <p className="mt-6 text-xs text-muted-foreground italic leading-relaxed">
                   {t.report.footnote}
                 </p>
@@ -474,6 +559,7 @@ const OwnerHowItWorks = () => {
         </div>
       </div>
     </section>
+    </TooltipProvider>
   );
 };
 
