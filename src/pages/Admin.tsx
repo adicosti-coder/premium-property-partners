@@ -37,6 +37,7 @@ import ReviewsManager from "@/components/admin/ReviewsManager";
 import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
 import CommunityManager from "@/components/admin/CommunityManager";
 import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
+import EvaluareEngagementManager from "@/components/admin/EvaluareEngagementManager";
 import SecurityChecklist from "@/components/admin/SecurityChecklist";
 import AdminMFAGuard from "@/components/admin/AdminMFAGuard";
 import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
@@ -311,6 +312,10 @@ const Admin = () => {
               <MousePointerClick className="w-4 h-4" />
               CTA Analytics
             </TabsTrigger>
+            <TabsTrigger value="evaluare-engagement" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Engagement Evaluare
+            </TabsTrigger>
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" />
               {t.admin.tabs?.dashboard || "Dashboard"}
@@ -473,6 +478,7 @@ const Admin = () => {
           <TabsContent value="captcha"><CaptchaLogsManager /></TabsContent>
           <TabsContent value="community"><CommunityManager /></TabsContent>
           <TabsContent value="cta-analytics"><CtaAnalyticsManager /></TabsContent>
+          <TabsContent value="evaluare-engagement"><EvaluareEngagementManager /></TabsContent>
           <TabsContent value="funnel-analytics"><FunnelAnalyticsManager /></TabsContent>
           <TabsContent value="security"><SecurityChecklist /></TabsContent>
           <TabsContent value="email-campaigns"><EmailCampaignManager /></TabsContent>
