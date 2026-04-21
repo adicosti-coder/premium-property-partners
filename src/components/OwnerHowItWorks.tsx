@@ -78,6 +78,13 @@ const OwnerHowItWorks = () => {
   const [aptType, setAptType] = useState<ApartmentType>("2-camere");
   const [city, setCity] = useState<CityKey>("timisoara-iosefin");
   const [currency, setCurrency] = useState<Currency>("EUR");
+  type InsightKey = "occupancy" | "adr" | "fees" | "cleaning" | "net";
+  const ALL_INSIGHT_KEYS: InsightKey[] = ["occupancy", "adr", "fees", "cleaning", "net"];
+  const [selectedInsights, setSelectedInsights] = useState<InsightKey[]>(ALL_INSIGHT_KEYS);
+  const toggleInsight = (k: InsightKey) =>
+    setSelectedInsights((prev) =>
+      prev.includes(k) ? (prev.length > 1 ? prev.filter((x) => x !== k) : prev) : [...prev, k]
+    );
 
   const content = {
     ro: {
@@ -332,23 +339,23 @@ const OwnerHowItWorks = () => {
     const adrPctDelta = Math.round((adrDelta / adrEst) * 100);
     const annualNet = netAct * 12;
 
-    const insights = lang === "en"
-      ? [
-          `Occupancy reached ${fmtPct(occAct)} vs. ${fmtPct(occEst)} estimated — ${occDelta >= 0 ? "above" : "below"} forecast by ${Math.abs(occDelta)} percentage points thanks to dynamic pricing and multi-channel distribution.`,
-          `Average nightly rate (ADR) climbed to ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% vs. estimate), driven by weekend and seasonal recalibration.`,
-          `Booking & Airbnb fees came in at 16% instead of the 18% modelled — direct bookings reduced platform commissions by roughly 2 percentage points.`,
-          `Cleaning & utilities ran ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)} above plan, an expected variance for a higher-occupancy month.`,
-          `Net owner income totalled ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% vs. estimate) — annualised that's about ${fmtMoney(annualNet, lang, currency)} in your account.`,
-        ]
-      : [
-          `Ocuparea a ajuns la ${fmtPct(occAct)} față de ${fmtPct(occEst)} estimat — ${occDelta >= 0 ? "peste" : "sub"} prognoză cu ${Math.abs(occDelta)} puncte procentuale, datorită pricing-ului dinamic și distribuției pe mai multe canale.`,
-          `Tariful mediu pe noapte (ADR) a urcat la ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% față de estimare), recalibrat pe tarife de weekend și sezon.`,
-          `Comisioanele Booking & Airbnb au fost de 16% în loc de 18% modelat — rezervările directe au redus comisioanele platformelor cu aproximativ 2 puncte procentuale.`,
-          `Curățenia și utilitățile au depășit estimarea cu ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)}, o variație normală pentru o lună cu ocupare ridicată.`,
-          `Venitul net al proprietarului a fost ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% față de estimare) — anualizat înseamnă circa ${fmtMoney(annualNet, lang, currency)} în contul tău.`,
-        ];
+    const insightsByKey: Record<Exclude<MetricKey, "gross">, string> = lang === "en"
+      ? {
+          occupancy: `Occupancy reached ${fmtPct(occAct)} vs. ${fmtPct(occEst)} estimated — ${occDelta >= 0 ? "above" : "below"} forecast by ${Math.abs(occDelta)} percentage points thanks to dynamic pricing and multi-channel distribution.`,
+          adr: `Average nightly rate (ADR) climbed to ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% vs. estimate), driven by weekend and seasonal recalibration.`,
+          fees: `Booking & Airbnb fees came in at 16% instead of the 18% modelled — direct bookings reduced platform commissions by roughly 2 percentage points.`,
+          cleaning: `Cleaning & utilities ran ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)} above plan, an expected variance for a higher-occupancy month.`,
+          net: `Net owner income totalled ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% vs. estimate) — annualised that's about ${fmtMoney(annualNet, lang, currency)} in your account.`,
+        }
+      : {
+          occupancy: `Ocuparea a ajuns la ${fmtPct(occAct)} față de ${fmtPct(occEst)} estimat — ${occDelta >= 0 ? "peste" : "sub"} prognoză cu ${Math.abs(occDelta)} puncte procentuale, datorită pricing-ului dinamic și distribuției pe mai multe canale.`,
+          adr: `Tariful mediu pe noapte (ADR) a urcat la ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% față de estimare), recalibrat pe tarife de weekend și sezon.`,
+          fees: `Comisioanele Booking & Airbnb au fost de 16% în loc de 18% modelat — rezervările directe au redus comisioanele platformelor cu aproximativ 2 puncte procentuale.`,
+          cleaning: `Curățenia și utilitățile au depășit estimarea cu ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)}, o variație normală pentru o lună cu ocupare ridicată.`,
+          net: `Venitul net al proprietarului a fost ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% față de estimare) — anualizat înseamnă circa ${fmtMoney(annualNet, lang, currency)} în contul tău.`,
+        };
 
-    return { rows, title, insights };
+    return { rows, title, insightsByKey };
   }, [aptType, city, language, t, currency]);
 
   const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
@@ -590,19 +597,43 @@ const OwnerHowItWorks = () => {
                       {t.report.summaryEyebrow}
                     </span>
                   </div>
-                  <h4 className="text-base sm:text-lg heading-premium text-foreground mb-4">
+                  <h4 className="text-base sm:text-lg heading-premium text-foreground mb-3">
                     {t.report.summaryTitle}
                   </h4>
+
+                  {/* Filter chips */}
+                  <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label={language === "en" ? "Filter summary points" : "Filtrează punctele rezumatului"}>
+                    {ALL_INSIGHT_KEYS.map((k) => {
+                      const active = selectedInsights.includes(k);
+                      const label = t.report.metrics[k];
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => toggleInsight(k)}
+                          aria-pressed={active}
+                          className={`text-[11px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                            active
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              : "bg-background/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   <ul className="space-y-2.5">
-                    {computed.insights.map((insight, idx) => (
+                    {ALL_INSIGHT_KEYS.filter((k) => selectedInsights.includes(k)).map((k, idx) => (
                       <li
-                        key={idx}
+                        key={k}
                         className="flex items-start gap-2.5 text-sm text-foreground/85 leading-relaxed"
                       >
                         <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center tabular-nums">
                           {idx + 1}
                         </span>
-                        <span>{insight}</span>
+                        <span>{computed.insightsByKey[k]}</span>
                       </li>
                     ))}
                   </ul>
