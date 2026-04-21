@@ -35,6 +35,7 @@ import { useParallax } from '@/hooks/useParallax';
 import { useAdvancedSimulations, AdvancedSimulationData } from '@/hooks/useAdvancedSimulations';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { withProvenientaTracking } from '@/lib/investmentReferralTracking';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ro, enUS } from 'date-fns/locale';
@@ -377,7 +378,7 @@ const AdvancedRentalCalculator = () => {
           calculated_net_profit: calculations.netWithSystem,
           calculated_yearly_profit: calculations.netWithSystem * 12,
           source: 'advanced-rental-calculator',
-          simulation_data: JSON.parse(JSON.stringify(simulationData)),
+          simulation_data: withProvenientaTracking(JSON.parse(JSON.stringify(simulationData))),
         },
       });
     } catch (err) {

@@ -11,6 +11,7 @@ import ConfettiEffect from "./ConfettiEffect";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
@@ -90,7 +91,9 @@ const QuickLeadForm = () => {
           property_area: 50,
           property_type: formData.propertyType,
           source: "quick_form",
-          simulation_data: formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+          simulation_data: withProvenientaTracking(
+            formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+          ),
           captcha_token: token,
         },
       });

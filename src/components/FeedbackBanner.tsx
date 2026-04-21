@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
+import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 
 const DISMISSED_KEY = "feedback_banner_dismissed";
 
@@ -58,6 +59,7 @@ const FeedbackBanner = () => {
         property_area: 0,
         message: feedback.trim(),
         source: "feedback_banner",
+        simulation_data: withProvenientaTracking(null),
       });
       toast({ title: txt.thanks });
       setFeedback("");
