@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { trackConversion } from "@/lib/conversionTracking";
 
 interface LeadMagnetBannerProps {
   variant?: "inline" | "hero" | "sidebar";
@@ -84,7 +85,11 @@ const LeadMagnetBanner = ({ variant = "inline", className }: LeadMagnetBannerPro
 
       setIsSuccess(true);
       toast.success(t.success);
-      
+
+      trackConversion({
+        event: "lead_magnet_pdf",
+        source: "lead_magnet_guide_2026",
+      });
       // Reset form after delay
       setTimeout(() => {
         setName("");

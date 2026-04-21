@@ -10,6 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { cn } from "@/lib/utils";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { trackConversion } from "@/lib/conversionTracking";
 
 const EVAL_FAQS = [
   {
@@ -140,7 +141,15 @@ const EvaluareGratuita = () => {
   };
 
   const handleSubmit = () => {
-    if (canNext()) setSubmitted(true);
+    if (canNext()) {
+      setSubmitted(true);
+      trackConversion({
+        event: "roi_calculator_lead",
+        source: "evaluare_gratuita",
+        property_type: form.propertyType,
+        zone: form.zone,
+      });
+    }
   };
 
   if (submitted) {

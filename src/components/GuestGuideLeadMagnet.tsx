@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browserStorage";
+import { trackConversion } from "@/lib/conversionTracking";
 
 const emailSchema = z.string().trim().email().max(255);
 
@@ -112,6 +113,10 @@ const GuestGuideLeadMagnet = () => {
       setIsSuccess(true);
       setSessionStorage("guestGuideAccessed", "true");
 
+      trackConversion({
+        event: "lead_magnet_pdf",
+        source: "guest_guide_tourist",
+      });
       // Redirect after short delay
       setTimeout(() => {
         window.open(`/blog/${GUIDE_SLUG}`, '_blank', 'noopener,noreferrer');
