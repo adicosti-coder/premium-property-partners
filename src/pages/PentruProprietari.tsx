@@ -20,6 +20,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
@@ -100,6 +101,50 @@ const PentruProprietari = () => {
       localStorage.setItem("ownerCtaVariant", ctaVariant);
     }
   }, [ctaVariant]);
+
+  // Analytics for CTA A/B test
+  const { trackCta, trackFormSubmit } = useCtaAnalytics();
+
+  // Track variant exposure (impression) once per variant per session
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const seenKey = `ownerCtaVariant_seen_${ctaVariant}`;
+    if (sessionStorage.getItem(seenKey)) return;
+    sessionStorage.setItem(seenKey, "1");
+    trackCta({
+      ctaType: "form_submit",
+      metadata: {
+        event: "owner_cta_variant_view",
+        variant: ctaVariant,
+        page: "pentru_proprietari",
+      },
+    });
+  }, [ctaVariant, trackCta]);
+
+  const handlePrimaryCtaClick = () => {
+    trackFormSubmit("owner_cta_primary_click", {
+      variant: ctaVariant,
+      page: "pentru_proprietari",
+      label: ctaVariant === "A" ? "calculate_monthly_income" : "calculate_60s",
+    });
+    scrollToCalculator();
+  };
+
+  const handleSecondaryCtaClick = () => {
+    trackCta({
+      ctaType: ctaVariant === "A" ? "whatsapp" : "form_submit",
+      metadata: {
+        event: "owner_cta_secondary_click",
+        variant: ctaVariant,
+        page: "pentru_proprietari",
+        label: ctaVariant === "A" ? "talk_to_consultant" : "see_packages_no_hidden_fees",
+      },
+    });
+    if (ctaVariant === "A") {
+      handleWhatsApp();
+    }
+    // Variant B uses <Link asChild> → navigation handled natively
+  };
 
   const content = {
     ro: {
@@ -303,7 +348,7 @@ const PentruProprietari = () => {
                 <Button
                   variant="hero"
                   size="xl"
-                  onClick={scrollToCalculator}
+                  onClick={handlePrimaryCtaClick}
                   className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0"
                 >
                   <TrendingUp className="w-5 h-5 mr-2" />
@@ -317,7 +362,7 @@ const PentruProprietari = () => {
                     size="xl"
                     className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
                   >
-                    <Link to="/preturi">
+                    <Link to="/preturi" onClick={handleSecondaryCtaClick}>
                       <Sparkles className="w-5 h-5 mr-2" />
                       {t.secondaryCtaB}
                     </Link>
@@ -326,7 +371,7 @@ const PentruProprietari = () => {
                   <Button
                     variant="heroOutline"
                     size="xl"
-                    onClick={handleWhatsApp}
+                    onClick={handleSecondaryCtaClick}
                     className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
@@ -342,7 +387,13 @@ const PentruProprietari = () => {
                   <button
                     key={v}
                     type="button"
-                    onClick={() => setCtaVariant(v)}
+                    onClick={() => {
+                      setCtaVariant(v);
+                      trackFormSubmit("owner_cta_variant_switch", {
+                        variant: v,
+                        page: "pentru_proprietari",
+                      });
+                    }}
                     aria-pressed={ctaVariant === v}
                     className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
                       ctaVariant === v
