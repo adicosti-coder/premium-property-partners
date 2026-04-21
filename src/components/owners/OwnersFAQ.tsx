@@ -32,23 +32,23 @@ const OwnersFAQ = () => {
         },
         {
           q: "Care este durata minimă a contractului de property management?",
-          a: "Contractul standard RealTrust este flexibil, fără perioadă minimă obligatorie. Poți renunța oricând cu un preaviz de 30 de zile. Această flexibilitate ne diferențiază de competiție și reflectă încrederea în calitatea serviciilor noastre.",
+          a: "Contractul standard RealTrust este flexibil, fără perioadă minimă obligatorie. Poți renunța oricând cu un preaviz de 30 de zile. Această flexibilitate ne diferențiază de competiție și reflectă încrederea în calitatea serviciilor noastre — proprietarii noștri obțin un ROI net verificat de 9.4%/an. Calculează venitul tău în 60 sec mai jos.",
         },
         {
           q: "Cum se gestionează daunele provocate de oaspeți?",
-          a: "Toate rezervările pe Booking.com și Airbnb includ AirCover/Booking Damage Protection (acoperire până la 3.000.000 USD pentru Airbnb, până la 6.500€ Booking). Suplimentar, percepem o garanție de daune (security deposit) de 100-300€ per rezervare și avem asigurare proprie pentru proprietățile administrate. Dauna este documentată foto/video și recuperată în 7-14 zile.",
+          a: "Toate rezervările pe Booking.com și Airbnb includ AirCover/Booking Damage Protection (acoperire până la 3.000.000 USD pentru Airbnb, până la 6.500€ Booking). Suplimentar, percepem o garanție de daune (security deposit) de 100-300€ per rezervare și avem asigurare proprie pentru proprietățile administrate. Dauna este documentată foto/video și recuperată în 7-14 zile — riscul tău rămâne aproape de zero.",
         },
         {
           q: "Ce servicii de property management Timișoara oferă RealTrust?",
-          a: "Pachet complet: listare multi-channel (Airbnb, Booking, Expedia), pricing dinamic AI, check-in/check-out automatizat (smart locks), curățenie profesională, schimbare lenjerie, mentenanță 24/7, suport oaspeți multilingv, rapoarte financiare lunare detaliate, fotografii profesionale și optimizare SEO listări.",
+          a: "Pachet complet: listare multi-channel (Airbnb, Booking, Expedia), pricing dinamic AI, check-in/check-out automatizat (smart locks), curățenie profesională, schimbare lenjerie, mentenanță 24/7, suport oaspeți multilingv, rapoarte financiare lunare detaliate, fotografii profesionale și optimizare SEO listări. Proprietarii noștri ating constant 9%+ ROI net cu zero implicare zilnică.",
         },
         {
           q: "Ce taxe locale plătesc pentru regim hotelier în Timișoara?",
-          a: "Taxa hotelieră locală în Timișoara este de 1% din valoarea cazării, colectată de la oaspete și virată lunar la Primărie. Suplimentar: impozit pe clădire (0.1-1.3% din valoarea impozabilă), taxa de salubritate și utilități. RealTrust gestionează declarațiile lunare pentru tine.",
+          a: "Taxa hotelieră locală în Timișoara este de 1% din valoarea cazării, colectată de la oaspete și virată lunar la Primărie. Suplimentar: impozit pe clădire (0.1-1.3% din valoarea impozabilă), taxa de salubritate și utilități. RealTrust gestionează declarațiile lunare pentru tine — incluse în comision, fără costuri ascunse.",
         },
         {
           q: "În cât timp pot începe să generez venituri?",
-          a: "Procesul de onboarding durează 5-7 zile lucrătoare: ședință foto profesională (ziua 1-2), configurare listări multi-platformă (ziua 3-4), instalare smart lock și verificare echipamente (ziua 5), go-live (ziua 6-7). Prima rezervare apare de obicei în primele 48 de ore după publicare.",
+          a: "Procesul de onboarding durează 5-7 zile lucrătoare: ședință foto profesională (ziua 1-2), configurare listări multi-platformă (ziua 3-4), instalare smart lock și verificare echipamente (ziua 5), go-live (ziua 6-7). Prima rezervare apare de obicei în primele 48 de ore după publicare, iar primul venit lunar este în contul tău în ~30 de zile.",
         },
       ],
     },
@@ -66,23 +66,23 @@ const OwnersFAQ = () => {
         },
         {
           q: "What is the minimum property management contract duration?",
-          a: "RealTrust's standard contract is flexible with no mandatory minimum period. You can opt out anytime with 30 days' notice. This flexibility differentiates us from competition and reflects confidence in our service quality.",
+          a: "RealTrust's standard contract is flexible with no mandatory minimum period. You can opt out anytime with 30 days' notice. This flexibility reflects our confidence — our owners earn a verified 9.4% net ROI per year. Calculate yours in 60 seconds below.",
         },
         {
           q: "How are guest-caused damages handled?",
-          a: "All Booking.com and Airbnb reservations include AirCover/Booking Damage Protection (up to $3M for Airbnb, up to €6,500 for Booking). Additionally, we charge a €100-300 security deposit per booking and carry our own insurance. Damages are documented photo/video and recovered within 7-14 days.",
+          a: "All Booking.com and Airbnb reservations include AirCover/Booking Damage Protection (up to $3M for Airbnb, up to €6,500 for Booking). Additionally, we charge a €100-300 security deposit per booking and carry our own insurance. Damages are documented photo/video and recovered within 7-14 days — your risk stays near zero.",
         },
         {
           q: "What property management services does RealTrust offer in Timișoara?",
-          a: "Full package: multi-channel listing (Airbnb, Booking, Expedia), AI dynamic pricing, automated check-in/out (smart locks), professional cleaning, linen change, 24/7 maintenance, multilingual guest support, detailed monthly financial reports, professional photography, and listing SEO optimization.",
+          a: "Full package: multi-channel listing (Airbnb, Booking, Expedia), AI dynamic pricing, automated check-in/out (smart locks), professional cleaning, linen change, 24/7 maintenance, multilingual guest support, detailed monthly financial reports, professional photography, and listing SEO optimization. Owners consistently hit 9%+ net ROI with zero daily involvement.",
         },
         {
           q: "What local taxes apply to short-term rentals in Timișoara?",
-          a: "The local hotel tax in Timișoara is 1% of accommodation value, collected from guests and remitted monthly to City Hall. Additionally: building tax (0.1-1.3% of taxable value), waste collection fee, and utilities. RealTrust handles monthly declarations for you.",
+          a: "The local hotel tax in Timișoara is 1% of accommodation value, collected from guests and remitted monthly to City Hall. Additionally: building tax (0.1-1.3% of taxable value), waste collection fee, and utilities. RealTrust handles monthly declarations for you — included in the commission, no hidden fees.",
         },
         {
           q: "How quickly can I start generating revenue?",
-          a: "Onboarding takes 5-7 business days: professional photo session (day 1-2), multi-platform listing setup (day 3-4), smart lock installation and equipment check (day 5), go-live (day 6-7). First booking typically arrives within 48 hours after publication.",
+          a: "Onboarding takes 5-7 business days: professional photo session (day 1-2), multi-platform listing setup (day 3-4), smart lock installation and equipment check (day 5), go-live (day 6-7). First booking typically arrives within 48 hours after publication, with the first monthly payout in ~30 days.",
         },
       ],
     },
