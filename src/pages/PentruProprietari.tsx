@@ -95,7 +95,7 @@ const PentruProprietari = () => {
       badge: "Administrare Premium · Timișoara",
       title: "Venit lunar predictibil din apartamentul tău,",
       titleHighlight: "fără bătăi de cap",
-      subtitle: "Preluăm totul — listare pe Booking & Airbnb, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu vezi banii în cont. Noi ne ocupăm de restul, 24/7.",
+      subtitle: "Listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF — totul gestionat impecabil. Tu primești venitul în cont.",
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Vorbește cu un consultant",
       stats: [
