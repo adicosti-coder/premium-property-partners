@@ -199,8 +199,9 @@ const PreCalcMiniForm = ({
     setErrors({});
     setSubmitting(true);
 
-    const message = buildPrecalcMessage(parsed.data);
-    const range = MONTHLY_NET_RANGE[parsed.data.apartmentType] ?? [2000, 3000];
+    const data = parsed.data as FormState;
+    const message = buildPrecalcMessage(data);
+    const range = MONTHLY_NET_RANGE[data.apartmentType] ?? [2000, 3000];
 
     try {
       // Persist lead — even if WhatsApp redirect fails, we keep the contact.
