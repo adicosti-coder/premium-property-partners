@@ -125,13 +125,19 @@ const PreCalcMiniForm = ({
     cityPlaceholder: language === "ro" ? "Selectează orașul" : "Select city",
     typeLabel: language === "ro" ? "Tip apartament" : "Apartment type",
     typePlaceholder: language === "ro" ? "Selectează tipul" : "Select type",
-    submit: language === "ro" ? "Trimite pe WhatsApp & rezervă slot" : "Send on WhatsApp & book slot",
+    submit: language === "ro" ? "Rezervă consultanță gratuită" : "Book free consultation",
+    submitWhatsapp: language === "ro" ? "Trimite pe WhatsApp" : "Send on WhatsApp",
     submitting: language === "ro" ? "Se procesează..." : "Processing...",
+    or: language === "ro" ? "sau" : "or",
     privacy:
       language === "ro"
         ? "Nu trimitem spam. Datele se folosesc doar pentru estimare și consultanță."
         : "No spam. Data is used only for estimation and consultancy.",
-    success:
+    successConsult:
+      language === "ro"
+        ? "Te redirecționăm către formularul de consultanță"
+        : "Redirecting you to the consultation form",
+    successWhatsapp:
       language === "ro"
         ? "Mesajul a fost generat — te redirecționăm către WhatsApp"
         : "Message generated — redirecting you to WhatsApp",
