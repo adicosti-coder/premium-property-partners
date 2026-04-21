@@ -38,20 +38,37 @@ const CITY_PROFILE: Record<
 
 const BASE = { adr: 92, revenue: 2230, cleaning: 380, net: 1450 };
 
-const fmtEur = (n: number, lang: string) =>
-  lang === "en" ? `€${Math.round(n).toLocaleString("en-US")}` : `${Math.round(n).toLocaleString("ro-RO")} €`;
-const fmtAdr = (n: number, lang: string) =>
-  lang === "en" ? `€${Math.round(n)}` : `${Math.round(n)} €`;
-const fmtDeltaEur = (n: number, lang: string) => {
-  const sign = n >= 0 ? "+" : "−";
-  const abs = Math.abs(Math.round(n));
-  return lang === "en" ? `${sign}€${abs.toLocaleString("en-US")}` : `${sign}${abs.toLocaleString("ro-RO")} €`;
+type Currency = "EUR" | "RON";
+const RON_RATE = 4.97; // EUR -> RON, calibrat pe BNR ~Q4 2025
+
+const symbol = (c: Currency) => (c === "EUR" ? "€" : "lei");
+const convert = (n: number, c: Currency) => (c === "EUR" ? n : n * RON_RATE);
+
+// Rotunjire coerentă: ADR la 1 €/5 lei, sume mari la 10 €/50 lei
+const roundAmount = (n: number, c: Currency, kind: "adr" | "amount") => {
+  if (kind === "adr") return c === "EUR" ? Math.round(n) : Math.round(n / 5) * 5;
+  return c === "EUR" ? Math.round(n / 10) * 10 : Math.round(n / 50) * 50;
 };
-const fmtDeltaAdr = (n: number, lang: string) => {
-  const sign = n >= 0 ? "+" : "−";
-  const abs = Math.abs(Math.round(n));
-  return lang === "en" ? `${sign}€${abs}` : `${sign}${abs} €`;
+
+const fmtMoney = (n: number, lang: string, c: Currency, kind: "adr" | "amount" = "amount") => {
+  const v = roundAmount(convert(n, c), c, kind);
+  const locale = lang === "en" ? "en-US" : "ro-RO";
+  const num = Math.abs(v).toLocaleString(locale);
+  if (c === "EUR") return v < 0 ? `−€${num}` : `€${num}`;
+  return v < 0 ? `−${num} lei` : `${num} lei`;
 };
+
+const fmtMoneyDelta = (n: number, lang: string, c: Currency, kind: "adr" | "amount" = "amount") => {
+  const v = roundAmount(convert(n, c), c, kind);
+  const sign = v >= 0 ? "+" : "−";
+  const locale = lang === "en" ? "en-US" : "ro-RO";
+  const num = Math.abs(v).toLocaleString(locale);
+  return c === "EUR" ? `${sign}€${num}` : `${sign}${num} lei`;
+};
+
+// Procentele rotunjite la întreg pentru claritate
+const fmtPct = (n: number) => `${Math.round(n)}%`;
+const fmtPctDelta = (n: number) => `${n >= 0 ? "+" : "−"}${Math.abs(Math.round(n))} pp`;
 
 const OwnerHowItWorks = () => {
   const { language } = useLanguage();
@@ -60,6 +77,7 @@ const OwnerHowItWorks = () => {
 
   const [aptType, setAptType] = useState<ApartmentType>("2-camere");
   const [city, setCity] = useState<CityKey>("timisoara-iosefin");
+  const [currency, setCurrency] = useState<Currency>("EUR");
 
   const content = {
     ro: {
@@ -248,49 +266,49 @@ const OwnerHowItWorks = () => {
       {
         key: "occupancy",
         metric: t.report.metrics.occupancy,
-        estimate: `${occEst}%`,
-        actual: `${occAct}%`,
-        delta: `+${occAct - occEst} pp`,
+        estimate: fmtPct(occEst),
+        actual: fmtPct(occAct),
+        delta: fmtPctDelta(occAct - occEst),
         positive: true,
       },
       {
         key: "adr",
         metric: t.report.metrics.adr,
-        estimate: fmtAdr(adrEst, lang),
-        actual: fmtAdr(adrAct, lang),
-        delta: fmtDeltaAdr(adrAct - adrEst, lang),
+        estimate: fmtMoney(adrEst, lang, currency, "adr"),
+        actual: fmtMoney(adrAct, lang, currency, "adr"),
+        delta: fmtMoneyDelta(adrAct - adrEst, lang, currency, "adr"),
         positive: true,
       },
       {
         key: "gross",
         metric: t.report.metrics.gross,
-        estimate: fmtEur(grossEst, lang),
-        actual: fmtEur(grossAct, lang),
-        delta: fmtDeltaEur(grossAct - grossEst, lang),
+        estimate: fmtMoney(grossEst, lang, currency),
+        actual: fmtMoney(grossAct, lang, currency),
+        delta: fmtMoneyDelta(grossAct - grossEst, lang, currency),
         positive: true,
       },
       {
         key: "fees",
         metric: t.report.metrics.fees,
         estimate: "−18%",
-        actual: "−16,4%".replace(",", lang === "en" ? "." : ","),
-        delta: lang === "en" ? "+1.6 pp" : "+1,6 pp",
+        actual: "−16%",
+        delta: fmtPctDelta(2),
         positive: true,
       },
       {
         key: "cleaning",
         metric: t.report.metrics.cleaning,
-        estimate: `−${fmtEur(cleaningEst, lang)}`,
-        actual: `−${fmtEur(cleaningAct, lang)}`,
-        delta: fmtDeltaEur(-(cleaningAct - cleaningEst), lang),
+        estimate: fmtMoney(-cleaningEst, lang, currency),
+        actual: fmtMoney(-cleaningAct, lang, currency),
+        delta: fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency),
         positive: false,
       },
       {
         key: "net",
         metric: t.report.metrics.net,
-        estimate: fmtEur(netEst, lang),
-        actual: fmtEur(netAct, lang),
-        delta: fmtDeltaEur(netAct - netEst, lang),
+        estimate: fmtMoney(netEst, lang, currency),
+        actual: fmtMoney(netAct, lang, currency),
+        delta: fmtMoneyDelta(netAct - netEst, lang, currency),
         positive: true,
       },
     ];
@@ -303,7 +321,7 @@ const OwnerHowItWorks = () => {
         : `Apartament ${typeLabel} · ${cityLabel} · ${t.report.period}`;
 
     return { rows, title };
-  }, [aptType, city, language, t]);
+  }, [aptType, city, language, t, currency]);
 
   const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
     value: k,
@@ -440,6 +458,31 @@ const OwnerHowItWorks = () => {
                         </option>
                       ))}
                     </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      {language === "en" ? "Currency" : "Monedă"}
+                    </label>
+                    <div className="inline-flex w-full sm:w-auto rounded-lg border border-border bg-background/60 p-1">
+                      {(["EUR", "RON"] as Currency[]).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setCurrency(c)}
+                          className={`flex-1 sm:flex-none sm:min-w-[80px] px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
+                            currency === c
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                          aria-pressed={currency === c}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                      <span className="hidden sm:inline-flex items-center px-3 text-[11px] text-muted-foreground">
+                        {language === "en" ? `1 € ≈ ${RON_RATE} lei` : `1 € ≈ ${RON_RATE} lei`}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
