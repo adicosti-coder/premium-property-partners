@@ -14,6 +14,81 @@ const trackEvaluationEvent = (label: string, extra: Record<string, string> = {})
     ...extra,
   });
 };
+
+/**
+ * Fires a distinct GA4 event when an `#evaluare-*` section actually enters
+ * the viewport (scroll-based view, not click). Deduped per anchor per session
+ * via sessionStorage so refresh re-arms tracking but scroll up/down does not
+ * spam events.
+ */
+const EVALUARE_VIEW_ANCHORS = [
+  "evaluare-pret",
+  "evaluare-metoda-comparativa",
+  "evaluare-metoda-capitalizarii",
+  "evaluare-factori-pret",
+  "evaluare-formular",
+] as const;
+
+const useEvaluareSectionViewTracking = () => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const sessionKey = "ga4_evaluare_section_viewed";
+    let viewed: Set<string>;
+    try {
+      const raw = sessionStorage.getItem(sessionKey);
+      viewed = new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+      viewed = new Set();
+    }
+
+    const persist = () => {
+      try {
+        sessionStorage.setItem(sessionKey, JSON.stringify(Array.from(viewed)));
+      } catch {
+        /* storage may be blocked — tracking still works in-memory */
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = entry.target.id;
+          if (!id || viewed.has(id)) continue;
+          viewed.add(id);
+          persist();
+          if (typeof window.gtag === "function") {
+            window.gtag("event", "evaluare_apartament_view", {
+              event_category: "blog_pillar_hub",
+              event_label: `view_${id}`,
+              section_id: id,
+              page_path: window.location.pathname,
+              source: "scroll_intersection",
+            });
+          }
+          observer.unobserve(entry.target);
+        }
+      },
+      // Trigger when the element is meaningfully visible (50% in view OR
+      // top edge has crossed ~30% from the viewport top for tall sections).
+      { threshold: [0.5], rootMargin: "-30% 0px -30% 0px" }
+    );
+
+    const observed: Element[] = [];
+    EVALUARE_VIEW_ANCHORS.forEach((id) => {
+      if (viewed.has(id)) return;
+      const el = document.getElementById(id);
+      if (el) {
+        observer.observe(el);
+        observed.push(el);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
+};
 import { Link } from "react-router-dom";
 import { TrendingUp, Calculator, Building2, MapPin, LineChart, Wallet, Home, Briefcase } from "lucide-react";
 
@@ -190,6 +265,10 @@ const BlogPillarHub = () => {
     []
   );
   const { active, lockActive } = useActiveSection(allIds);
+
+  // Fires GA4 view events the first time each #evaluare-* section
+  // scrolls into view (separate from click tracking).
+  useEvaluareSectionViewTracking();
 
   return (
     <section className="mb-12" aria-label="Ghid imobiliar Timișoara — hub conținut">
