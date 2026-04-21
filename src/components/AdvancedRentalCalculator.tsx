@@ -377,7 +377,7 @@ const AdvancedRentalCalculator = () => {
           calculated_net_profit: calculations.netWithSystem,
           calculated_yearly_profit: calculations.netWithSystem * 12,
           source: 'advanced-rental-calculator',
-          simulation_data: JSON.parse(JSON.stringify(simulationData)),
+          simulation_data: withProvenientaTracking(JSON.parse(JSON.stringify(simulationData))),
         },
       });
     } catch (err) {

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { compressImages } from "@/utils/imageCompression";
+import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -579,11 +580,11 @@ const QuickSelector = () => {
           property_area: 0,
           property_type: "cerere_rapida",
           source: "quick_form",
-          simulation_data: {
+          simulation_data: withProvenientaTracking({
             zone: formData.zone.trim(),
             photoUrls,
             source: "quick_form",
-          },
+          }),
         },
       });
 

@@ -8,6 +8,7 @@ import { useParallax } from '@/hooks/useParallax';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { withProvenientaTracking } from '@/lib/investmentReferralTracking';
 
 import { cn } from '@/lib/utils';
 import { User } from '@supabase/supabase-js';
@@ -162,7 +163,7 @@ const RentalIncomeCalculator = () => {
           calculated_net_profit: income.base,
           calculated_yearly_profit: income.base * 12,
           source: 'rental-calculator',
-          simulation_data: simulationData,
+          simulation_data: withProvenientaTracking(simulationData),
           send_notification: true,
         },
       });

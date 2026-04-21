@@ -14,6 +14,7 @@ import ConfettiEffect from "./ConfettiEffect";
 import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
@@ -197,10 +198,10 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
           calculated_net_profit: calculatedNetProfit,
           calculated_yearly_profit: calculatedYearlyProfit,
           source: "lead_capture_form",
-          simulation_data: {
+          simulation_data: withProvenientaTracking({
             ...simulationData,
             listingUrl: listingUrl.trim() || undefined,
-          },
+          }),
           captcha_token: captchaToken,
         },
       });

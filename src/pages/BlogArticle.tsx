@@ -38,6 +38,7 @@ import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { markInvestmentArticleVisit, INVESTMENT_ARTICLE_SLUG } from "@/lib/investmentReferralTracking";
 
 interface BlogArticle {
   id: string;
@@ -83,6 +84,14 @@ const BlogArticlePage = () => {
 
   // Track article view (must be before any conditionals)
   useArticleViewTracking(article?.id);
+
+  // Tag the visitor session if they're reading the pillar investment article
+  // so that any subsequent contact form carries `provenienta: articol_investitii_2026`.
+  useEffect(() => {
+    if (article?.slug === INVESTMENT_ARTICLE_SLUG) {
+      markInvestmentArticleVisit();
+    }
+  }, [article?.slug]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
