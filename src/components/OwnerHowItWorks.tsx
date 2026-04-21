@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown, Info } from "lucide-react";
+import { ClipboardCheck, Cog, TrendingUp, ArrowRight, BarChart3, CheckCircle2, TrendingDown, Info, Sparkles } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -139,6 +139,8 @@ const OwnerHowItWorks = () => {
           cleaning: "Costurile lunare de curățenie între oaspeți + utilitățile aferente apartamentului.",
           net: "Suma virată proprietarului = Venit brut − Comisioane platforme − Curățenie & utilități − Management.",
         },
+        summaryEyebrow: "Rezumat automat",
+        summaryTitle: "Ce ne spun cifrele luna asta",
         legendTitle: "Ce înseamnă indicatorii",
         legend: [
           { term: "ADR", definition: "Tariful mediu pe noapte rezervată (Average Daily Rate)." },
@@ -214,6 +216,8 @@ const OwnerHowItWorks = () => {
           cleaning: "Monthly cleaning costs between guests + utilities for the apartment.",
           net: "Amount paid to the owner = Gross − Platform fees − Cleaning & utilities − Management.",
         },
+        summaryEyebrow: "Auto-generated summary",
+        summaryTitle: "What the numbers tell us this month",
         legendTitle: "What the indicators mean",
         legend: [
           { term: "ADR", definition: "Average price per booked night (Average Daily Rate)." },
@@ -320,7 +324,31 @@ const OwnerHowItWorks = () => {
         ? `${typeLabel} apartment · ${cityLabel} · ${t.report.period}`
         : `Apartament ${typeLabel} · ${cityLabel} · ${t.report.period}`;
 
-    return { rows, title };
+    // ===== Auto-generated insights (3-5 puncte) =====
+    const occDelta = occAct - occEst;
+    const adrDelta = adrAct - adrEst;
+    const netDelta = netAct - netEst;
+    const netPctDelta = Math.round((netDelta / netEst) * 100);
+    const adrPctDelta = Math.round((adrDelta / adrEst) * 100);
+    const annualNet = netAct * 12;
+
+    const insights = lang === "en"
+      ? [
+          `Occupancy reached ${fmtPct(occAct)} vs. ${fmtPct(occEst)} estimated — ${occDelta >= 0 ? "above" : "below"} forecast by ${Math.abs(occDelta)} percentage points thanks to dynamic pricing and multi-channel distribution.`,
+          `Average nightly rate (ADR) climbed to ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% vs. estimate), driven by weekend and seasonal recalibration.`,
+          `Booking & Airbnb fees came in at 16% instead of the 18% modelled — direct bookings reduced platform commissions by roughly 2 percentage points.`,
+          `Cleaning & utilities ran ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)} above plan, an expected variance for a higher-occupancy month.`,
+          `Net owner income totalled ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% vs. estimate) — annualised that's about ${fmtMoney(annualNet, lang, currency)} in your account.`,
+        ]
+      : [
+          `Ocuparea a ajuns la ${fmtPct(occAct)} față de ${fmtPct(occEst)} estimat — ${occDelta >= 0 ? "peste" : "sub"} prognoză cu ${Math.abs(occDelta)} puncte procentuale, datorită pricing-ului dinamic și distribuției pe mai multe canale.`,
+          `Tariful mediu pe noapte (ADR) a urcat la ${fmtMoney(adrAct, lang, currency, "adr")} (+${adrPctDelta}% față de estimare), recalibrat pe tarife de weekend și sezon.`,
+          `Comisioanele Booking & Airbnb au fost de 16% în loc de 18% modelat — rezervările directe au redus comisioanele platformelor cu aproximativ 2 puncte procentuale.`,
+          `Curățenia și utilitățile au depășit estimarea cu ${fmtMoneyDelta(-(cleaningAct - cleaningEst), lang, currency)}, o variație normală pentru o lună cu ocupare ridicată.`,
+          `Venitul net al proprietarului a fost ${fmtMoney(netAct, lang, currency)} (${netPctDelta >= 0 ? "+" : ""}${netPctDelta}% față de estimare) — anualizat înseamnă circa ${fmtMoney(annualNet, lang, currency)} în contul tău.`,
+        ];
+
+    return { rows, title, insights };
   }, [aptType, city, language, t, currency]);
 
   const cityOptions = (Object.keys(CITY_PROFILE) as CityKey[]).map((k) => ({
@@ -552,6 +580,32 @@ const OwnerHowItWorks = () => {
                       })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Auto-generated summary insights */}
+                <div className="mt-8 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card p-5 sm:p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+                      {t.report.summaryEyebrow}
+                    </span>
+                  </div>
+                  <h4 className="text-base sm:text-lg heading-premium text-foreground mb-4">
+                    {t.report.summaryTitle}
+                  </h4>
+                  <ul className="space-y-2.5">
+                    {computed.insights.map((insight, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2.5 text-sm text-foreground/85 leading-relaxed"
+                      >
+                        <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center tabular-nums">
+                          {idx + 1}
+                        </span>
+                        <span>{insight}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-border">
