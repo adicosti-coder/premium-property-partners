@@ -238,7 +238,7 @@ const FastTrackScoring = ({ calculatorData, zone = "Timișoara", propertyType = 
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => { setShowReport(false); setReport(null); }}>
                     {text.close}
                   </Button>
-                  <Button variant="whatsapp" size="sm" className="flex-1 gap-1" onClick={() => window.open(`https://wa.me/40723154520?text=${encodeURIComponent(`Scor AI: ${report.scor}/${report.max_scor} | ROI: ${report.roi_estimat} | ${report.tarif_noapte}€/noapte`)}`, '_blank', 'noopener,noreferrer')}>
+                  <Button variant="whatsapp" size="sm" className="flex-1 gap-1" onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(`Scor AI: ${report.scor}/${report.max_scor} | ROI: ${report.roi_estimat} | ${report.tarif_noapte}€/noapte`)}`, '_blank', 'noopener,noreferrer')}>
                     <Phone className="w-3.5 h-3.5" /> {text.contact}
                   </Button>
                 </div>

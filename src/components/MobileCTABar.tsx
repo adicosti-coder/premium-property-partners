@@ -30,7 +30,7 @@ const MobileCTABar = () => {
     lightTap();
     trackCall();
     fireContactClick("phone");
-    window.location.href = "tel:+40723154520";
+    window.location.href = "tel:+40799069256";
   };
 
   const handleWhatsApp = () => {
@@ -40,7 +40,7 @@ const MobileCTABar = () => {
     const message = encodeURIComponent(language === 'ro' 
       ? "Bună! Sunt interesat de serviciile RealTrust." 
       : "Hello! I'm interested in RealTrust services.");
-    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const scrollToGuests = () => {

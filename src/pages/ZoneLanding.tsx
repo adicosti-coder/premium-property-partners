@@ -182,7 +182,7 @@ const ZoneLanding = () => {
     name: `ApArt Hotel Timișoara — ${data.name}`,
     description: language === "en" ? data.seoDescriptionEn : data.seoDescription,
     url: `https://realtrust.ro/zona/${data.slug}`,
-    telephone: "+40723154520",
+    telephone: "+40799069256",
     email: "info@realtrust.ro",
     address: {
       "@type": "PostalAddress",
@@ -323,7 +323,7 @@ const ZoneLanding = () => {
                 : "Contact us for a free evaluation of your property's income potential."}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="https://wa.me/40723154520" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/40799069256" target="_blank" rel="noopener noreferrer">
                 <Button variant="premium" size="xl">
                   <Phone className="w-5 h-5 mr-2" />
                   WhatsApp

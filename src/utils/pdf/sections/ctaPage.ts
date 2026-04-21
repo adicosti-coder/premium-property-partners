@@ -83,7 +83,7 @@ export const drawCtaPage = (ctx: PdfContext) => {
 
   const contactItems = [
     { icon: "📧", label: "Email:", value: "info@realtrust.ro", url: "mailto:info@realtrust.ro" },
-    { icon: "📞", label: "Tel:", value: "+40 723 154 520", url: "tel:+40723154520" },
+    { icon: "📞", label: "Tel:", value: "0799 069 256", url: "tel:+40799069256" },
     { icon: "🌐", label: "Web:", value: "www.realtrust.ro", url: "https://www.realtrust.ro" },
   ];
 
@@ -116,7 +116,7 @@ export const drawCtaPage = (ctx: PdfContext) => {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.white);
   doc.text("▶ WhatsApp", pageWidth / 2, waY + 12, { align: "center" });
-  doc.link(waBtnX, waY, waBtnW, 18, { url: "https://wa.me/40723154520" });
+  doc.link(waBtnX, waY, waBtnW, 18, { url: "https://wa.me/40799069256" });
 
   // Footer
   doc.setFontSize(7);
