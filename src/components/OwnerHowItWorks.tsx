@@ -38,20 +38,37 @@ const CITY_PROFILE: Record<
 
 const BASE = { adr: 92, revenue: 2230, cleaning: 380, net: 1450 };
 
-const fmtEur = (n: number, lang: string) =>
-  lang === "en" ? `€${Math.round(n).toLocaleString("en-US")}` : `${Math.round(n).toLocaleString("ro-RO")} €`;
-const fmtAdr = (n: number, lang: string) =>
-  lang === "en" ? `€${Math.round(n)}` : `${Math.round(n)} €`;
-const fmtDeltaEur = (n: number, lang: string) => {
-  const sign = n >= 0 ? "+" : "−";
-  const abs = Math.abs(Math.round(n));
-  return lang === "en" ? `${sign}€${abs.toLocaleString("en-US")}` : `${sign}${abs.toLocaleString("ro-RO")} €`;
+type Currency = "EUR" | "RON";
+const RON_RATE = 4.97; // EUR -> RON, calibrat pe BNR ~Q4 2025
+
+const symbol = (c: Currency) => (c === "EUR" ? "€" : "lei");
+const convert = (n: number, c: Currency) => (c === "EUR" ? n : n * RON_RATE);
+
+// Rotunjire coerentă: ADR la 1 €/5 lei, sume mari la 10 €/50 lei
+const roundAmount = (n: number, c: Currency, kind: "adr" | "amount") => {
+  if (kind === "adr") return c === "EUR" ? Math.round(n) : Math.round(n / 5) * 5;
+  return c === "EUR" ? Math.round(n / 10) * 10 : Math.round(n / 50) * 50;
 };
-const fmtDeltaAdr = (n: number, lang: string) => {
-  const sign = n >= 0 ? "+" : "−";
-  const abs = Math.abs(Math.round(n));
-  return lang === "en" ? `${sign}€${abs}` : `${sign}${abs} €`;
+
+const fmtMoney = (n: number, lang: string, c: Currency, kind: "adr" | "amount" = "amount") => {
+  const v = roundAmount(convert(n, c), c, kind);
+  const locale = lang === "en" ? "en-US" : "ro-RO";
+  const num = Math.abs(v).toLocaleString(locale);
+  if (c === "EUR") return v < 0 ? `−€${num}` : `€${num}`;
+  return v < 0 ? `−${num} lei` : `${num} lei`;
 };
+
+const fmtMoneyDelta = (n: number, lang: string, c: Currency, kind: "adr" | "amount" = "amount") => {
+  const v = roundAmount(convert(n, c), c, kind);
+  const sign = v >= 0 ? "+" : "−";
+  const locale = lang === "en" ? "en-US" : "ro-RO";
+  const num = Math.abs(v).toLocaleString(locale);
+  return c === "EUR" ? `${sign}€${num}` : `${sign}${num} lei`;
+};
+
+// Procentele rotunjite la întreg pentru claritate
+const fmtPct = (n: number) => `${Math.round(n)}%`;
+const fmtPctDelta = (n: number) => `${n >= 0 ? "+" : "−"}${Math.abs(Math.round(n))} pp`;
 
 const OwnerHowItWorks = () => {
   const { language } = useLanguage();
