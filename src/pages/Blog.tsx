@@ -27,6 +27,7 @@ import InvestorGuideButton from "@/components/InvestorGuideButton";
 import PageSummary from "@/components/PageSummary";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import BlogPillarHub from "@/components/blog/BlogPillarHub";
 
 interface BlogArticle {
   id: string;
@@ -206,12 +207,12 @@ const Blog = () => {
 
   const seoContent = {
     ro: {
-      title: "Blog Imobiliar Timișoara | Sfaturi Proprietari",
-      description: "Blog RealTrust — articole despre investiții imobiliare, regim hotelier și randament în Timișoara. Sfaturi practice de la experți PropTech."
+      title: "Ghid Imobiliar Timișoara: Investiții, Vânzări & Regim Hotelier",
+      description: "Descoperă ghidul complet al pieței imobiliare din Timișoara: analize de randament, strategii de investiții și sfaturi pentru vânzări sau regim hotelier."
     },
     en: {
-      title: "Real Estate Blog Timișoara | Owner Tips",
-      description: "Articles, guides and practical tips for property owners and guests. Learn how to maximize your property returns in short-term rentals. Read our guides now!"
+      title: "Timișoara Real Estate Guide: Investments, Sales & Short-Term Rentals",
+      description: "Discover the complete Timișoara real estate market guide: yield analysis, investment strategies and practical tips for sales or short-term rentals."
     }
   };
 
@@ -248,7 +249,7 @@ const Blog = () => {
         { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
         { name: "Blog", url: "https://www.realtrust.ro/blog" },
       ]),
-      // Fix 3C - Blog schema
+      // Blog schema
       {
         "@context": "https://schema.org",
         "@type": "Blog",
@@ -258,6 +259,58 @@ const Blog = () => {
           "@type": "Organization",
           "name": "RealTrust & ApArt Hotel"
         }
+      },
+      // WebPage schema (pillar page semantics)
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "@id": "https://www.realtrust.ro/blog#webpage",
+        "url": "https://www.realtrust.ro/blog",
+        "name": "Ghid Imobiliar Timișoara — Investiții, Vânzări & Regim Hotelier",
+        "description": "Hub editorial RealTrust: analiza pieței imobiliare Timișoara, evaluare apartament, randament chirie clasic vs regim hotelier și ghiduri pe cartiere.",
+        "inLanguage": language === "ro" ? "ro-RO" : "en-US",
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://www.realtrust.ro/images/hero-optimized-1920w.webp"
+        },
+        "about": [
+          { "@type": "Thing", "name": "Investiții imobiliare Timișoara" },
+          { "@type": "Thing", "name": "Regim hotelier Timișoara" },
+          { "@type": "Thing", "name": "Evaluare apartament Timișoara" },
+          { "@type": "Thing", "name": "Randament chirie Timișoara" }
+        ]
+      },
+      // RealEstateAgent schema (entity consolidation)
+      {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "@id": "https://www.realtrust.ro/#realestateagent",
+        "name": "RealTrust Imobiliare Timișoara",
+        "url": "https://www.realtrust.ro",
+        "telephone": "+40799069256",
+        "email": "info@realtrust.ro",
+        "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+        "priceRange": "€€",
+        "areaServed": {
+          "@type": "City",
+          "name": "Timișoara",
+          "containedInPlace": { "@type": "AdministrativeArea", "name": "Timiș" }
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+          "addressLocality": "Timișoara",
+          "postalCode": "300125",
+          "addressCountry": "RO"
+        },
+        "knowsAbout": [
+          "Investiții imobiliare",
+          "Regim hotelier",
+          "Vânzări apartamente Timișoara",
+          "Închirieri pe termen lung",
+          "Evaluare proprietăți",
+          "Randament chirie"
+        ]
       },
     ];
     if (articles && articles.length > 0) {
@@ -320,6 +373,9 @@ const Blog = () => {
               </div>
             </section>
           )}
+
+          {/* Pillar Hub — ToC + structured H2/H3 sections covering missing keywords */}
+          {language === "ro" && <BlogPillarHub />}
 
           {/* Community Contest Banner */}
           <div className="mb-8 p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 rounded-xl">
