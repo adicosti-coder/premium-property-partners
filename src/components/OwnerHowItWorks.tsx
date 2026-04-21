@@ -78,6 +78,13 @@ const OwnerHowItWorks = () => {
   const [aptType, setAptType] = useState<ApartmentType>("2-camere");
   const [city, setCity] = useState<CityKey>("timisoara-iosefin");
   const [currency, setCurrency] = useState<Currency>("EUR");
+  type InsightKey = "occupancy" | "adr" | "fees" | "cleaning" | "net";
+  const ALL_INSIGHT_KEYS: InsightKey[] = ["occupancy", "adr", "fees", "cleaning", "net"];
+  const [selectedInsights, setSelectedInsights] = useState<InsightKey[]>(ALL_INSIGHT_KEYS);
+  const toggleInsight = (k: InsightKey) =>
+    setSelectedInsights((prev) =>
+      prev.includes(k) ? (prev.length > 1 ? prev.filter((x) => x !== k) : prev) : [...prev, k]
+    );
 
   const content = {
     ro: {
