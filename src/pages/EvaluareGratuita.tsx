@@ -1,5 +1,5 @@
-import { useState, lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { useState, lazy, Suspense, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2, FileCheck, MapPin, Clock, ShieldCheck } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { Progress } from "@/components/ui/progress";
