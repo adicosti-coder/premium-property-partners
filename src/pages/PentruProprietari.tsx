@@ -741,6 +741,136 @@ const PentruProprietari = () => {
 
       {/* ========= CONVERSION FUNNEL: Beneficii → Calculator → Pachete → CTA ========= */}
 
+      {/* CTA Bar Amber/Gold pe Blue-Navy — vizual de impact pentru conversie */}
+      <section className="py-10 bg-[#0a1628] border-y border-amber-500/20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <p className="text-amber-300 text-sm font-semibold uppercase tracking-wider mb-2">
+                {language === "ro" ? "Decizie informată în 60 de secunde" : "Informed decision in 60 seconds"}
+              </p>
+              <h3 className="text-2xl md:text-3xl font-serif font-bold text-white">
+                {language === "ro"
+                  ? "Vezi exact cât poți câștiga lunar din apartamentul tău"
+                  : "See exactly how much you can earn monthly from your apartment"}
+              </h3>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              <Button
+                asChild
+                size="xl"
+                className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0 shadow-lg shadow-amber-500/30"
+                onClick={() => trackFormSubmit("owner_cta_bar_roi", { page: "pentru_proprietari", label: "calc_roi" })}
+              >
+                <Link to="/calculator-roi">
+                  <TrendingUp className="w-5 h-5 mr-2" />
+                  {language === "ro" ? "Calculează ROI Acum" : "Calculate ROI Now"}
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="heroOutline"
+                size="xl"
+                className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
+                onClick={() => trackFormSubmit("owner_cta_bar_offer", { page: "pentru_proprietari", label: "request_offer" })}
+              >
+                <Link to="/evaluare-gratuita">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  {language === "ro" ? "Cere Ofertă Administrare" : "Request Management Quote"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Section: Optimizare Fiscală PFA vs SRL — H3 cluster pentru keywords lipsă */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto">
+            <header className="mb-10">
+              <p className="text-primary text-sm font-semibold uppercase tracking-wider mb-3">
+                {language === "ro" ? "Ghid fiscal pentru proprietari" : "Tax guide for owners"}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                {language === "ro"
+                  ? "Optimizare Fiscală și Taxe pentru Proprietari"
+                  : "Tax Optimization for Property Owners"}
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                {language === "ro"
+                  ? "Serviciile noastre de administrare proprietăți (cunoscute internațional ca property management) în Timișoara acoperă întregul ciclu fiscal: de la alegerea formei juridice optime până la deducerea cheltuielilor și raportarea ANAF. Mai jos găsești ghidul complet pentru optimizare fiscală imobiliare Timișoara."
+                  : "Our property management services in Timișoara cover the full tax cycle: from choosing the right legal form to expense deductions and ANAF reporting."}
+              </p>
+            </header>
+
+            <div className="space-y-6">
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro"
+                    ? "PFA vs SRL pentru veniturile din regim hotelier"
+                    : "PFA vs SRL for short-term rental income"}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed mb-3">
+                  {language === "ro"
+                    ? "Pentru încasări sub 60.000 EUR/an dintr-o singură proprietate, PFA cu normă de venit este simplu și predictibil fiscal. Peste acest prag, sau pentru portofolii multiple, SRL-ul oferă deductibilități superioare: mobilier, mentenanță, marketing, comisioane platforme, curățenie și consultanță."
+                    : "For revenues under 60,000 EUR/year from a single property, PFA with income norm is simple. Above that threshold, SRL offers superior deductions."}
+                </p>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    {language === "ro" ? "Impozit pe venit 10% (PFA) vs 16% pe profit + 8% dividend (SRL)" : "10% income tax (PFA) vs 16% profit + 8% dividend (SRL)"}
+                  </li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    {language === "ro" ? "Deducerea cheltuielilor de administrare, mentenanță și marketing" : "Deductible management, maintenance and marketing expenses"}
+                  </li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    {language === "ro" ? "TVA: prag opțional 88.500 lei (PFA) / 300.000 lei (SRL)" : "VAT thresholds and optional registration"}
+                  </li>
+                </ul>
+              </article>
+
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro"
+                    ? "Contract administrare imobiliară — clauze cheie"
+                    : "Property management contract — key clauses"}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed mb-3">
+                  {language === "ro"
+                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: comisionul (15-25% din încasările nete), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
+                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers commission (15-25% of net income), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
+                </p>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    {language === "ro" ? "Fără taxe de setup sau comisioane ascunse" : "No setup fees or hidden commissions"}
+                  </li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    {language === "ro" ? "Plata venitului net direct în contul proprietarului, lunar" : "Net income paid directly to the owner's account, monthly"}
+                  </li>
+                  <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    {language === "ro" ? "Asigurare răspundere civilă pentru daune cauzate de oaspeți" : "Liability insurance for guest-caused damages"}
+                  </li>
+                </ul>
+              </article>
+
+              <article className="rounded-2xl border border-border bg-card p-6">
+                <h3 className="text-xl font-serif font-semibold text-foreground mb-3">
+                  {language === "ro"
+                    ? "Cheltuieli deductibile pentru regim hotelier"
+                    : "Deductible expenses for short-term rental"}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {language === "ro"
+                    ? "Pentru maximizarea randamentului net, recomandăm evidența clară a tuturor cheltuielilor deductibile: comisionul de administrare, curățenie, lenjerie, consumabile, utilități, comisioane Booking/Airbnb, fotografii profesionale, mentenanță și amortizarea mobilierului. Echipa noastră oferă rapoarte lunare structurate gata de prezentare către contabil."
+                    : "To maximize net returns, we recommend tracking all deductible expenses: management commission, cleaning, linens, supplies, utilities, Booking/Airbnb fees, professional photos, maintenance and furniture depreciation."}
+                </p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* STEP 1: Beneficii - convinge proprietarul */}
       <OwnerBenefits />
 
