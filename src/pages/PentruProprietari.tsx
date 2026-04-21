@@ -387,7 +387,13 @@ const PentruProprietari = () => {
                   <button
                     key={v}
                     type="button"
-                    onClick={() => setCtaVariant(v)}
+                    onClick={() => {
+                      setCtaVariant(v);
+                      trackFormSubmit("owner_cta_variant_switch", {
+                        variant: v,
+                        page: "pentru_proprietari",
+                      });
+                    }}
                     aria-pressed={ctaVariant === v}
                     className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
                       ctaVariant === v
