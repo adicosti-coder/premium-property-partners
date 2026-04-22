@@ -12,6 +12,7 @@ import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
+import { trackConversion } from "@/lib/conversionTracking";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
@@ -99,6 +100,11 @@ const QuickLeadForm = () => {
       });
 
       if (error) throw error;
+
+      trackConversion({
+        event: "contact_form_submit",
+        source: "quick_form_homepage",
+      });
 
       setIsSuccess(true);
       toast({

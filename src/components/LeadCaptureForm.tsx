@@ -15,6 +15,7 @@ import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
+import { trackConversion } from "@/lib/conversionTracking";
 
 const listingUrlSchema = z.string().trim().url().max(500).optional().or(z.literal(""));
 
@@ -207,6 +208,13 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       });
 
       if (error) throw error;
+
+      trackConversion({
+        event: "roi_calculator_lead",
+        source: "lead_capture_form",
+        value: calculatedYearlyProfit,
+        currency: "EUR",
+      });
 
       setIsSuccess(true);
       toast({
