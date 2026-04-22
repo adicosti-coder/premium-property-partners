@@ -456,6 +456,7 @@ const AboutUs = () => {
               {[
                 { id: "misiune", label: language === "ro" ? "Misiune" : "Mission" },
                 { id: "poveste", label: language === "ro" ? "Poveste" : "Story" },
+                { id: "servicii-extinse", label: language === "ro" ? "Servicii extinse" : "Extended services" },
                 { id: "branduri", label: language === "ro" ? "Branduri" : "Brands" },
                 { id: "valori", label: language === "ro" ? "Valori" : "Values" },
                 { id: "companie", label: language === "ro" ? "Date companie" : "Company info" },
