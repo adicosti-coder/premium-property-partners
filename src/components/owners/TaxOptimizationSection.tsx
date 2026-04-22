@@ -399,69 +399,168 @@ const TaxOptimizationSection = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50 bg-muted/20">
-                    <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">
-                      {isRo ? "Etapă fiscală" : "Tax step"}
-                    </th>
-                    <th className="text-right py-3 px-4 font-semibold text-foreground">PFA</th>
-                    <th className="text-right py-3 px-4 font-semibold text-primary">
-                      SRL <span className="text-[10px] font-normal opacity-80">★ {isRo ? "Recomandat" : "Recommended"}</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {t.comparison.steps.map((step, i) => {
-                    const isNet = step.type === "net";
-                    const isTax = step.type === "tax";
-                    const isDeduction = step.type === "deduction";
-                    const fmt = (n: number) => {
-                      if (n === 0) return "—";
-                      const abs = Math.abs(n).toLocaleString(isRo ? "ro-RO" : "en-US");
-                      const sign = n < 0 ? "−" : "";
-                      return `${sign}€${abs}`;
-                    };
-                    const valueClass = isNet
-                      ? "font-bold text-base"
-                      : isTax
-                      ? "text-destructive/80"
-                      : isDeduction
-                      ? "text-amber-600 dark:text-amber-500"
-                      : "text-foreground";
-                    return (
-                      <tr
-                        key={step.key}
-                        className={`border-b border-border/30 last:border-0 ${
-                          isNet ? "bg-primary/[0.04]" : i % 2 === 1 ? "bg-muted/10" : ""
-                        }`}
-                      >
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-foreground">{step.label}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{step.hint}</div>
-                        </td>
-                        <td className={`py-3 px-4 text-right tabular-nums ${valueClass}`}>
-                          {fmt(step.pfa)}
-                        </td>
-                        <td
-                          className={`py-3 px-4 text-right tabular-nums ${valueClass} ${
-                            isNet ? "text-primary" : ""
-                          }`}
-                        >
-                          <div>{fmt(step.srl)}</div>
-                          {step.note && (
-                            <div className="text-[10px] text-primary/80 font-normal mt-0.5">
-                              {step.note}
+            <TooltipProvider delayDuration={150}>
+              {(() => {
+                const fmt = (n: number) => {
+                  if (n === 0) return "—";
+                  const abs = Math.abs(n).toLocaleString(isRo ? "ro-RO" : "en-US");
+                  const sign = n < 0 ? "−" : "";
+                  return `${sign}€${abs}`;
+                };
+                const valueClassFor = (type: string) =>
+                  type === "net"
+                    ? "font-bold text-base"
+                    : type === "tax"
+                    ? "text-destructive/80"
+                    : type === "deduction"
+                    ? "text-amber-600 dark:text-amber-500"
+                    : "text-foreground";
+
+                return (
+                  <>
+                    {/* Desktop / tablet: table view with tooltips */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border/50 bg-muted/20">
+                            <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">
+                              {isRo ? "Etapă fiscală" : "Tax step"}
+                            </th>
+                            <th className="text-right py-3 px-4 font-semibold text-foreground">PFA</th>
+                            <th className="text-right py-3 px-4 font-semibold text-primary">
+                              SRL{" "}
+                              <span className="text-[10px] font-normal opacity-80">
+                                ★ {isRo ? "Recomandat" : "Recommended"}
+                              </span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {t.comparison.steps.map((step, i) => {
+                            const isNet = step.type === "net";
+                            const valueClass = valueClassFor(step.type);
+                            return (
+                              <tr
+                                key={step.key}
+                                className={`border-b border-border/30 last:border-0 ${
+                                  isNet ? "bg-primary/[0.04]" : i % 2 === 1 ? "bg-muted/10" : ""
+                                }`}
+                              >
+                                <td className="py-3 px-4">
+                                  <div className="flex items-start gap-1.5">
+                                    <span className="font-medium text-foreground">{step.label}</span>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          aria-label={isRo ? "Mai multe detalii" : "More details"}
+                                          className="text-muted-foreground hover:text-primary transition-colors mt-0.5 shrink-0"
+                                        >
+                                          <Info className="w-3.5 h-3.5" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs text-xs">
+                                        {step.hint}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                    {step.hint}
+                                  </div>
+                                </td>
+                                <td className={`py-3 px-4 text-right tabular-nums ${valueClass}`}>
+                                  {fmt(step.pfa)}
+                                </td>
+                                <td
+                                  className={`py-3 px-4 text-right tabular-nums ${valueClass} ${
+                                    isNet ? "text-primary" : ""
+                                  }`}
+                                >
+                                  <div>{fmt(step.srl)}</div>
+                                  {step.note && (
+                                    <div className="text-[10px] text-primary/80 font-normal mt-0.5">
+                                      {step.note}
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile: stacked cards (tap-friendly tooltips) */}
+                    <div className="md:hidden divide-y divide-border/30">
+                      {t.comparison.steps.map((step) => {
+                        const isNet = step.type === "net";
+                        const valueClass = valueClassFor(step.type);
+                        return (
+                          <div
+                            key={step.key}
+                            className={`p-4 ${isNet ? "bg-primary/[0.05]" : ""}`}
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="font-medium text-foreground text-sm leading-snug">
+                                {step.label}
+                              </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label={isRo ? "Mai multe detalii" : "More details"}
+                                    className="text-muted-foreground hover:text-primary transition-colors shrink-0 p-1 -m-1"
+                                  >
+                                    <Info className="w-4 h-4" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-[260px] text-xs">
+                                  {step.hint}
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                            <div className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+                              {step.hint}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="rounded-md bg-muted/30 p-2.5">
+                                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">
+                                  PFA
+                                </div>
+                                <div className={`tabular-nums ${valueClass}`}>{fmt(step.pfa)}</div>
+                              </div>
+                              <div
+                                className={`rounded-md p-2.5 ${
+                                  isNet
+                                    ? "bg-primary/10 border border-primary/30"
+                                    : "bg-primary/[0.04] border border-primary/15"
+                                }`}
+                              >
+                                <div className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1 flex items-center gap-1">
+                                  SRL <span className="opacity-70">★</span>
+                                </div>
+                                <div
+                                  className={`tabular-nums ${valueClass} ${
+                                    isNet ? "text-primary" : ""
+                                  }`}
+                                >
+                                  {fmt(step.srl)}
+                                </div>
+                                {step.note && (
+                                  <div className="text-[10px] text-primary/80 font-normal mt-1 leading-tight">
+                                    {step.note}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
+            </TooltipProvider>
             <p className="text-xs text-muted-foreground italic px-4 py-3 border-t border-border/30 bg-muted/10">
               {t.comparison.note}
             </p>
