@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "RealTrust <info@realtrust.ro>",
+              from: "RealTrust <info@notify.realtrust.ro>",
               to: adminEmails,
               subject: `⏰ ${pendingReferrals.length} recomandări în așteptare de 48+ ore`,
               html: emailHtml,

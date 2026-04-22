@@ -319,7 +319,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "RealTrust <info@realtrust.ro>",
+        from: "RealTrust <info@notify.realtrust.ro>",
         to: recipients,
         subject: `📊 Raport Săptămânal Follow-up: ${stats.conversionRate}% conversie (${formatDisplayDate(weekStart)} - ${formatDisplayDate(weekEnd)})`,
         html: emailHtml,

@@ -225,7 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "RealTrust <info@realtrust.ro>",
+          from: "RealTrust <info@notify.realtrust.ro>",
           to: adminEmails,
           subject: `📝 Review nou: ${rating}★ pentru ${propertyName} de la ${guestName}`,
           html: emailHtml,

@@ -755,8 +755,8 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "RealTrust <info@realtrust.ro>",
-        to: ["info@realtrust.ro"],
+        from: "RealTrust <info@notify.realtrust.ro>",
+        to: ["info@notify.realtrust.ro"],
         subject: emailSubject,
         html: htmlContent,
       }),

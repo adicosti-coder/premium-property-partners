@@ -217,7 +217,7 @@ function buildGuestEmail(data: BookingNotificationRequest): string {
   <!-- Footer -->
   <tr><td style="background:#2d2a26;padding:24px 32px;text-align:center">
     <p style="margin:0 0 4px;font-size:14px;color:#c9a961;font-weight:600">RealTrust & ApArt Hotel</p>
-    <p style="margin:0;font-size:12px;color:#8a7d6b">Timișoara, România • info@realtrust.ro</p>
+    <p style="margin:0;font-size:12px;color:#8a7d6b">Timișoara, România • info@notify.realtrust.ro</p>
     <p style="margin:8px 0 0;font-size:11px;color:#5a5550">Administrare profesională • Professional management</p>
   </td></tr>
 
@@ -286,7 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "RealTrust <info@realtrust.ro>",
+          from: "RealTrust <info@notify.realtrust.ro>",
           to,
           subject,
           html,

@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
         📞 Discută cu un Consultant
       </a>
       <p style="margin:12px 0 0;font-size:11px;color:#9ca3af;">
-        RealTrust · info@realtrust.ro · +40 723 154 520
+        RealTrust · info@notify.realtrust.ro · +40 723 154 520
       </p>
     </div>
   </div>
@@ -115,9 +115,9 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "RealTrust AI <info@realtrust.ro>",
+        from: "RealTrust AI <info@notify.realtrust.ro>",
         to: [recipientEmail],
-        cc: ["info@realtrust.ro"],
+        cc: ["info@notify.realtrust.ro"],
         subject: `📋 Raport HostScan AI - ${report.zona || zone} - Scor ${report.scor}/${report.max_scor}`,
         html: htmlContent,
       }),
