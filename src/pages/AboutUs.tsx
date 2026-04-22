@@ -29,6 +29,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import PageSummary from "@/components/PageSummary";
+import SEOAboutAdditionsStrip from "@/components/SEOAboutAdditionsStrip";
 
 const AboutUs = () => {
   const { language } = useLanguage();
