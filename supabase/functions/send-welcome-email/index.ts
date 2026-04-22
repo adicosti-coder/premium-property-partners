@@ -159,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send welcome email
     const emailResponse = await resend.emails.send({
-      from: "RealTrust <noreply@realtrustaparthotel.lovable.app>",
+      from: "RealTrust <info@realtrust.ro>",
       to: [email],
       subject: "🎉 Bine ai venit la RealTrust & ApArt Hotel!",
       html: getWelcomeEmailHtml(fullName || "", "ro"),
