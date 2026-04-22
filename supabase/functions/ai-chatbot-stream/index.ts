@@ -58,7 +58,7 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
 
 === COMPANY ===
 • ApArt Hotel Timișoara (RealTrust) — Administrare Premium Regim Hotelier
-• WhatsApp: ${whatsapp} | Email: info@realtrust.ro
+• WhatsApp: ${whatsapp} | Email: info@notify.realtrust.ro
 • Rating: 4.9/5 ⭐ | Ocupare medie: 98% | Experiență: 25+ ani
 • Pachete administrare: Starter (15%), Essential (18%), Standard (20%), Premium (25%)
 

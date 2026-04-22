@@ -128,7 +128,7 @@ const getWelcomeEmailHtml = (fullName: string, language: string = "ro") => {
         <a href="https://wa.me/40799069256" style="color: #d4af37; text-decoration: none; margin: 0 15px; font-size: 14px;">
           📱 WhatsApp
         </a>
-        <a href="mailto:info@realtrust.ro" style="color: #d4af37; text-decoration: none; margin: 0 15px; font-size: 14px;">
+        <a href="mailto:info@notify.realtrust.ro" style="color: #d4af37; text-decoration: none; margin: 0 15px; font-size: 14px;">
           ✉️ Email
         </a>
       </div>
@@ -159,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send welcome email
     const emailResponse = await resend.emails.send({
-      from: "RealTrust <info@realtrust.ro>",
+      from: "RealTrust <info@notify.realtrust.ro>",
       to: [email],
       subject: "🎉 Bine ai venit la RealTrust & ApArt Hotel!",
       html: getWelcomeEmailHtml(fullName || "", "ro"),

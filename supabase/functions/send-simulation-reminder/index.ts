@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "RealTrust <info@realtrust.ro>",
+              from: "RealTrust <info@notify.realtrust.ro>",
               to: [user.email],
               subject: `${firstName}, ai uitat de simularea ta? 🏠`,
               html: emailHtml,

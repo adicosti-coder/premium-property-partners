@@ -418,7 +418,7 @@ serve(async (req) => {
           );
 
           const { error: emailError } = await resend.emails.send({
-            from: "RealTrust <info@realtrust.ro>",
+            from: "RealTrust <info@notify.realtrust.ro>",
             to: [profile.email],
             subject: emailContent.subject,
             html: emailContent.html,

@@ -76,7 +76,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "RealTrust <info@realtrust.ro>",
+        from: "RealTrust <info@notify.realtrust.ro>",
         to: [user.email],
         subject: `Cod acces admin: ${code}`,
         html: `
