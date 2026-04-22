@@ -734,3 +734,22 @@
     transition: none !important;
   }
 }
+
+/* ============================================
+   HERO KEN BURNS — subtle slow zoom for premium cinematic feel.
+   GPU-accelerated transform only (no layout shift, no CLS impact).
+   Disabled on prefers-reduced-motion.
+   ============================================ */
+@keyframes hero-kenburns {
+  0%   { transform: scale(1.05) translate3d(0, 0, 0); }
+  50%  { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+  100% { transform: scale(1.05) translate3d(0, 0, 0); }
+}
+.hero-kenburns {
+  animation: hero-kenburns 24s ease-in-out infinite;
+  will-change: transform;
+  transform-origin: center center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns { animation: none; transform: scale(1.05); }
+}
