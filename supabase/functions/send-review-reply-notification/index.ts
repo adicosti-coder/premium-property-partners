@@ -126,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "RealTrust <onboarding@resend.dev>",
+        from: "RealTrust <info@realtrust.ro>",
         to: [guestEmail],
         subject: `Răspuns la recenzia ta pentru ${propertyName}`,
         html: emailHtml,

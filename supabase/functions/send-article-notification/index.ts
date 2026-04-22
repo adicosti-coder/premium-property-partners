@@ -194,7 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending ${type} email to ${userEmail}`);
 
     const emailResponse = await resend.emails.send({
-      from: "RealTrust <onboarding@resend.dev>",
+      from: "RealTrust <info@realtrust.ro>",
       to: [userEmail],
       subject,
       html,
