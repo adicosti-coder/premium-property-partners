@@ -596,14 +596,21 @@ const TaxOptimizationSection = () => {
                   <>
                     {/* Desktop / tablet: table view with tooltips */}
                     <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
+                      <table className="w-full text-sm table-fixed">
+                        <colgroup>
+                          <col className="w-[55%]" />
+                          <col className="w-[22%]" />
+                          <col className="w-[23%]" />
+                        </colgroup>
                         <thead>
                           <tr className="border-b border-border/50 bg-muted/20">
-                            <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-foreground">
                               {isRo ? "Etapă fiscală" : "Tax step"}
                             </th>
-                            <th className="text-right py-3 px-4 font-semibold text-foreground">PFA</th>
-                            <th className="text-right py-3 px-4 font-semibold text-primary">
+                            <th className="text-right py-3 px-3 lg:px-4 font-semibold text-foreground whitespace-nowrap">
+                              PFA
+                            </th>
+                            <th className="text-right py-3 px-3 lg:px-4 font-semibold text-primary whitespace-nowrap">
                               SRL{" "}
                               <span className="text-[10px] font-normal opacity-80">
                                 ★ {isRo ? "Recomandat" : "Recommended"}
@@ -622,7 +629,7 @@ const TaxOptimizationSection = () => {
                                   isNet ? "bg-primary/[0.04]" : i % 2 === 1 ? "bg-muted/10" : ""
                                 }`}
                               >
-                                <td className="py-3 px-4">
+                                <td className="py-3 px-3 lg:px-4 align-top">
                                   <div className="flex items-start gap-1.5">
                                     <span className="font-medium text-foreground">{step.label}</span>
                                     <Tooltip>
@@ -640,21 +647,21 @@ const TaxOptimizationSection = () => {
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                  <div className="hidden lg:block text-xs text-muted-foreground mt-0.5">
                                     {step.hint}
                                   </div>
                                 </td>
-                                <td className={`py-3 px-4 text-right tabular-nums ${valueClass}`}>
+                                <td className={`py-3 px-3 lg:px-4 text-right tabular-nums whitespace-nowrap align-top ${valueClass}`}>
                                   {fmt(step.pfa)}
                                 </td>
                                 <td
-                                  className={`py-3 px-4 text-right tabular-nums ${valueClass} ${
+                                  className={`py-3 px-3 lg:px-4 text-right tabular-nums align-top ${valueClass} ${
                                     isNet ? "text-primary" : ""
                                   }`}
                                 >
-                                  <div>{fmt(step.srl)}</div>
+                                  <div className="whitespace-nowrap">{fmt(step.srl)}</div>
                                   {step.note && (
-                                    <div className="text-[10px] text-primary/80 font-normal mt-0.5">
+                                    <div className="text-[10px] text-primary/80 font-normal mt-0.5 leading-tight">
                                       {step.note}
                                     </div>
                                   )}
