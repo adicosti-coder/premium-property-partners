@@ -10,13 +10,15 @@ import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schema
 
 import StatsCounters from "@/components/StatsCounters";
 import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
+// PageSummary is the LCP element — import directly (1KB) to avoid the
+// 2.5s render delay measured by Lighthouse when it was lazy + Suspense fallback null.
+import PageSummary from "@/components/PageSummary";
 
 // Header & Hero are lazy — the static shell in index.html already paints
 // instantly as LCP. Loading the React versions eagerly was adding ~134 KiB
 // JS to the critical path and delaying LCP element render by ~5.3s.
 const Header = lazy(() => import("@/components/Header"));
 const Hero = lazy(() => import("@/components/Hero"));
-const PageSummary = lazy(() => import("@/components/PageSummary"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -263,12 +265,10 @@ const Index = () => {
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
-        <Suspense fallback={null}>
-          <PageSummary
-            summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
-            summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
-          />
-        </Suspense>
+        <PageSummary
+          summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, cu apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
+          summaryEn="RealTrust & ApArt Hotel Timișoara — short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
+        />
 
         {/* Sentinel placed RIGHT AFTER hero+summary — moves EVERYTHING below
             (ServicesH2Strip, NeighborhoodsGrid, LocalLandmarksStrip, NearFold,
