@@ -2,7 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, Calculator, FileText, ArrowRight, Receipt, Info } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Calculator, FileText, ArrowRight, Receipt, Info, Download, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Tooltip,
