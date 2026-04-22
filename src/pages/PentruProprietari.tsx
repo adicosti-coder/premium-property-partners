@@ -58,6 +58,7 @@ const OwnerMarketingServices = lazy(() => import("@/components/owners/OwnerMarke
 const OwnerCoverageMap = lazy(() => import("@/components/owners/OwnerCoverageMap"));
 const OwnerGuideHub = lazy(() => import("@/components/owners/OwnerGuideHub"));
 const OwnerTestimonials = lazy(() => import("@/components/owners/OwnerTestimonials"));
+const TaxOptimizationSection = lazy(() => import("@/components/owners/TaxOptimizationSection"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -395,10 +396,38 @@ const PentruProprietari = () => {
               "@type": "Answer",
               "text": "Contractul de administrare este transparent, fără perioadă minimă obligatorie, cu clauze clare privind comisionul, raportarea lunară, responsabilitățile operaționale, drepturile proprietarului și posibilitatea de reziliere cu preaviz de 30 de zile."
             }
+          },
+          {
+            "@type": "Question",
+            "name": "Cum se impozitează veniturile din regim hotelier (PFA vs SRL)?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pentru un singur apartament cu venit sub 60.000 EUR/an, PFA cu normă de venit este eficient (impozit 10% pe norma stabilită + CAS/CASS la depășire plafoane). Pentru portofolii cu 2+ apartamente sau venituri mai mari, SRL microîntreprindere oferă 1-3% impozit pe venit + 8% pe dividende, cu deductibilități extinse pentru mobilier, marketing și comisioane platforme. Echipa RealTrust colaborează cu experți contabili specializați."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Ce cheltuieli sunt deductibile pentru un apartament în regim hotelier?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Cheltuielile deductibile includ: comisioane platforme (Booking 15-18%, Airbnb 3-15%), curățenie, lenjerie, utilități, mentenanță, mobilier și electrocasnice (amortizate), reparații, fotograf profesionist, marketing online, asigurare, contabilitate și amortizarea proprietății (în cazul SRL)."
+            }
           }
         ]
       };
-      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, faqPageSchema]);
+
+      // TaxAdvisory Service schema — autoritate pentru queries fiscale
+      const taxAdvisorySchema = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "serviceType": "TaxConsulting",
+        "name": "Consultanță Fiscală Regim Hotelier Timișoara — PFA & SRL",
+        "provider": { "@type": "RealEstateAgent", "@id": "https://www.realtrust.ro/#realestateagent" },
+        "description": "Consultanță fiscală specializată pentru proprietari de apartamente în regim hotelier: alegerea structurii optime (PFA vs SRL), optimizare deductibilități, conformitate ANAF.",
+        "areaServed": "Timișoara, România",
+        "audience": { "@type": "Audience", "audienceType": "Real estate investors, short-term rental owners" }
+      };
+      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, faqPageSchema, taxAdvisorySchema]);
     });
   }, [seo.title]);
 
@@ -1049,6 +1078,9 @@ const PentruProprietari = () => {
           <ReferralBanner variant="hero" />
         </div>
       </section>
+
+      {/* Tax Optimization — PFA vs SRL */}
+      {faqReady && <TaxOptimizationSection />}
 
       {/* Owner Testimonials - peace of mind + 9%+ ROI */}
       {faqReady && <OwnerTestimonials />}

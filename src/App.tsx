@@ -97,6 +97,7 @@ const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
+const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodCluster"));
 const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
@@ -221,6 +222,7 @@ const App = () => (
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
+                    <Route path="/cartier/:slug" element={<NeighborhoodCluster />} />
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
                     <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />
