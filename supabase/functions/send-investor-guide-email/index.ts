@@ -83,7 +83,7 @@ serve(async (req) => {
         </a>
       </div>
       <p style="margin:0;font-size:13px;color:#6b7280;text-align:center;">
-        ${isRo ? "Versiunea PDF descărcabilă este disponibilă direct în articol (buton „Descarcă PDF")." : "A downloadable PDF version is available in the article (\"Download PDF\" button)."}
+        ${isRo ? 'Versiunea PDF descărcabilă este disponibilă direct în articol (buton Descarcă PDF).' : 'A downloadable PDF version is available in the article (Download PDF button).'}
       </p>
     </div>
 
