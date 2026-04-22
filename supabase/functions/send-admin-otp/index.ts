@@ -75,21 +75,51 @@ serve(async (req) => {
       });
     }
 
-    // Send via Lovable Emails (transactional queue) — uses verified domain managed by Lovable
-    const { error: sendErr } = await supabaseAdmin.functions.invoke(
-      "send-transactional-email",
-      {
-        body: {
-          templateName: "admin-otp",
-          recipientEmail: user.email,
-          idempotencyKey: `admin-otp-${inserted.id}`,
-          templateData: { code },
-        },
-      }
-    );
+    // Send via Resend directly (bypass Lovable Emails queue while DNS is still verifying)
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY not set");
+      return new Response(JSON.stringify({ error: "Email service not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (sendErr) {
-      console.error("send-transactional-email error:", sendErr);
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #8B6914; font-family: Georgia, serif; margin: 0;">RealTrust</h1>
+        </div>
+        <h2 style="color: #1a1f36; font-size: 20px; margin: 0 0 16px;">Cod verificare Admin</h2>
+        <p style="color: #55575d; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
+          Folosește codul de mai jos pentru a accesa panoul de administrare. Codul expiră în 10 minute.
+        </p>
+        <div style="background: #f5efe4; border: 2px solid #8B6914; border-radius: 8px; padding: 20px; text-align: center; margin: 0 0 24px;">
+          <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #8B6914; font-family: monospace;">${code}</div>
+        </div>
+        <p style="color: #999; font-size: 12px; text-align: center; margin: 24px 0 0;">
+          Dacă nu ai cerut acest cod, ignoră acest email.
+        </p>
+      </div>
+    `;
+
+    const resendRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "RealTrust Admin <noreply@realtrust.ro>",
+        to: [user.email],
+        subject: `Cod admin RealTrust: ${code}`,
+        html: emailHtml,
+      }),
+    });
+
+    if (!resendRes.ok) {
+      const errText = await resendRes.text();
+      console.error("Resend error:", resendRes.status, errText);
       return new Response(JSON.stringify({ error: "Failed to send email" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
