@@ -33,17 +33,17 @@
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
-    <!-- Preload hero LCP image — single 800w file for ALL viewports (mobile-first).
-         No imagesrcset on link rel=preload because retina DPR would force browser
-         to fetch the 1920w (~150KB) variant on small phones. The static shell <img>
-         below also uses ONLY 800w so the byte cost is ~35KB instead of ~150KB. -->
+    <!-- Preload hero LCP image with HIGHEST priority — declared FIRST so the
+         preload scanner picks it up before any render-blocking CSS request.
+         Single 800w file (~15KB) used by both static shell <img> and React Hero. -->
     <link rel="preload" as="image" type="image/webp" fetchpriority="high"
           href="/images/hero-optimized-800w.webp" />
 
-    <!-- Preload ONLY the fonts used in the static hero shell to minimize font-swap CLS. -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin-ext.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
+    <!-- Preload ONLY the latin Playfair font used by the H1 in the LCP shell.
+         Inter is loaded via @font-face (font-display:swap) — preloading all 3
+         fonts was costing ~70KB of bandwidth contention against the LCP image
+         and pushing FCP from ~1s to 2.3s. System fallback metrics are matched. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait.
          Includes header + hero shell styles so first paint is complete before
@@ -75,9 +75,19 @@
       #root{min-height:880px;display:block}
       @media(min-width:768px){#root{min-height:100dvh}}
 
-      /* GUARD 2: Static LCP shell — must mirror <Hero> spacing exactly. */
-      #app-shell-placeholder{position:relative;min-height:880px;background:hsl(var(--background));overflow:hidden;display:flex;align-items:center;padding-top:7rem;contain:layout}
+      /* GUARD 2: Static LCP shell — must mirror <Hero> spacing exactly.
+         Background uses an INLINE gradient that paints at the FIRST frame
+         (0 bytes of network), eliminating the "white page" gap before the
+         hero WebP arrives. The gradient mimics the warm dark tone of the
+         hero photo so the swap is visually seamless. */
+      #app-shell-placeholder{position:relative;min-height:880px;overflow:hidden;display:flex;align-items:center;padding-top:7rem;contain:layout;background:radial-gradient(ellipse at 30% 40%,#3a2f1f 0%,#1f1812 55%,#100c08 100%)}
       @media(min-width:768px){#app-shell-placeholder{min-height:100dvh;padding-top:8rem}}
+      /* Hero shell text uses light tones so it reads against the warm gradient
+         BEFORE the photo loads. Once the WebP paints, foreground text stays
+         light because the photo overlay is dark on the left. */
+      #app-shell-placeholder .ash-h1,#app-shell-placeholder .ash-sub{color:#f5efe4}
+      #app-shell-placeholder .ash-h1 .mid{color:rgba(245,239,228,.92)}
+      #app-shell-placeholder .ash-h1 .pill{background:rgba(0,0,0,.35);border-color:rgba(245,239,228,.25);color:#e9c98a}
 
       /* GUARD 3: Font-swap metric matching — fallback fonts use overrides
          so glyph baselines do not shift when web fonts swap in.
