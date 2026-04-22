@@ -34,13 +34,15 @@ export const trackPdfFunnel = async (
   options?: { source?: string; email?: string; metadata?: Record<string, unknown> },
 ): Promise<void> => {
   try {
-    await supabase.from("pdf_funnel_events").insert({
-      session_id: getPdfFunnelSessionId(),
-      step,
-      source: options?.source ?? null,
-      email: options?.email ?? null,
-      metadata: options?.metadata ?? null,
-    });
+    await supabase.from("pdf_funnel_events").insert([
+      {
+        session_id: getPdfFunnelSessionId(),
+        step,
+        source: options?.source ?? null,
+        email: options?.email ?? null,
+        metadata: (options?.metadata ?? null) as never,
+      },
+    ]);
   } catch (err) {
     // Non-blocking — funnel tracking failures must never break UX
     console.warn("[pdfFunnel] failed to record step", step, err);
