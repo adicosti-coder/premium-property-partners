@@ -282,6 +282,9 @@ const Index = () => {
             {/* SEO H2 strip — explicit service headings (per audit) */}
             <ServicesH2Strip />
 
+            {/* SEO H3 strip — fills missing keywords (consultanță, evaluare, randament) */}
+            <SEOConsultingStrip />
+
             {/* Neighborhoods Grid - Critical for SEO internal linking */}
             <NeighborhoodsGrid />
 
