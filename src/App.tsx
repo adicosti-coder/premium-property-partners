@@ -107,6 +107,7 @@ const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
 const ProcesulNostru = lazyWithRetry(() => import("./pages/ProcesulNostru"));
 const ServiciiImobiliareTimisoara = lazyWithRetry(() => import("./pages/ServiciiImobiliareTimisoara"));
 const Multumim = lazyWithRetry(() => import("./pages/Multumim"));
+const SuccesCalcul = lazyWithRetry(() => import("./pages/SuccesCalcul"));
 
 // Client-side redirects for legacy .html URLs (server .htaccess not processed)
 const LegacyRedirect = ({ to }: { to: string }) => {
@@ -243,6 +244,7 @@ const App = () => (
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
                     <Route path="/servicii-imobiliare-timisoara" element={<ServiciiImobiliareTimisoara />} />
                     <Route path="/multumim" element={<Multumim />} />
+                    <Route path="/succes-calcul" element={<SuccesCalcul />} />
                     <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     <Route path="/index.html" element={<Navigate to="/" replace />} />

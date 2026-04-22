@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, Calculator, FileText, ArrowRight, Receipt, Info, Download, MessageCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { trackConversion } from "@/lib/conversionTracking";
+import { trackPdfFunnel } from "@/lib/pdfFunnelTracking";
 import {
   Tooltip,
   TooltipContent,
