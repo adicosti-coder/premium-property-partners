@@ -254,15 +254,12 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Suspense fallback={null}>
-        <Header />
-      </Suspense>
+      <Header />
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
-        {/* Hero - lazy-loaded to free the LCP critical path. The static
-            hero-shell painted by index.html stays visible until React mounts. */}
-        <Suspense fallback={null}>
-          <Hero />
-        </Suspense>
+        {/* Hero is eager — it's the LCP element. The static hero-shell in
+            index.html paints first; React Hero replaces it on mount with
+            an identical layout (#root has min-height to prevent CLS). */}
+        <Hero />
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
