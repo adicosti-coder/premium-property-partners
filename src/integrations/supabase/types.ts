@@ -1822,6 +1822,36 @@ export type Database = {
           },
         ]
       }
+      pdf_funnel_events: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          metadata: Json | null
+          session_id: string
+          source: string | null
+          step: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id: string
+          source?: string | null
+          step: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string
+          source?: string | null
+          step?: string
+        }
+        Relationships: []
+      }
       phone_intelligence: {
         Row: {
           category: string | null
