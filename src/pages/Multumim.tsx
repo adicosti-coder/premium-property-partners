@@ -7,6 +7,7 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { trackConversion } from "@/lib/conversionTracking";
+import { trackPdfFunnel } from "@/lib/pdfFunnelTracking";
 
 const Multumim = () => {
   const { language } = useLanguage();
@@ -18,6 +19,7 @@ const Multumim = () => {
       event: "contact_form_submit",
       source: "thank_you_page_view",
     });
+    void trackPdfFunnel("thankyou_view", { source: "multumim_page" });
   }, []);
 
   const t = {
@@ -70,7 +72,10 @@ const Multumim = () => {
           <div className="grid gap-4 sm:gap-5">
             <Link
               to="/oaspeti"
-              onClick={() => trackConversion({ event: "contact_form_submit", source: "thank_you_cta_properties" })}
+              onClick={() => {
+                trackConversion({ event: "contact_form_submit", source: "thank_you_cta_properties" });
+                void trackPdfFunnel("cta_properties", { source: "multumim_page" });
+              }}
               className="group flex items-center gap-4 p-5 sm:p-6 bg-card border-2 border-border hover:border-amber-500 rounded-2xl transition-all hover:shadow-lg"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
@@ -85,7 +90,10 @@ const Multumim = () => {
 
             <Link
               to="/blog/ghid-investitii-imobiliare-timisoara-2026"
-              onClick={() => trackConversion({ event: "lead_magnet_pdf", source: "thank_you_cta_guide" })}
+              onClick={() => {
+                trackConversion({ event: "lead_magnet_pdf", source: "thank_you_cta_guide" });
+                void trackPdfFunnel("cta_guide", { source: "multumim_page" });
+              }}
               className="group flex items-center gap-4 p-5 sm:p-6 bg-card border-2 border-border hover:border-amber-500 rounded-2xl transition-all hover:shadow-lg"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
@@ -100,7 +108,10 @@ const Multumim = () => {
 
             <Link
               to="/evaluare-gratuita"
-              onClick={() => trackConversion({ event: "roi_calculator_lead", source: "thank_you_cta_evaluation" })}
+              onClick={() => {
+                trackConversion({ event: "roi_calculator_lead", source: "thank_you_cta_evaluation" });
+                void trackPdfFunnel("cta_evaluation", { source: "multumim_page" });
+              }}
               className="group flex items-center gap-4 p-5 sm:p-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 rounded-2xl transition-all hover:shadow-xl shadow-amber-500/30"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-blue-950/10 flex items-center justify-center">

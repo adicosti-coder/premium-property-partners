@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Download, FileDown, TrendingUp } from "lucide-react";
 import { trackConversion } from "@/lib/conversionTracking";
+import { trackPdfFunnel } from "@/lib/pdfFunnelTracking";
 
 const TRACKING_TAG = "articol_investitii_2026";
 const STORAGE_KEY = "investment_guide_modal_seen_v1";
@@ -162,6 +163,17 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
         source: TRACKING_TAG,
         budget: parsed.data.budget,
         trigger_origin: triggerOrigin,
+      });
+
+      // Funnel step 1: lead submitted (and implicit "PDF unlocked")
+      void trackPdfFunnel("lead_submitted", {
+        source: TRACKING_TAG,
+        email: parsed.data.email,
+        metadata: { budget: parsed.data.budget, trigger_origin: triggerOrigin },
+      });
+      void trackPdfFunnel("pdf_downloaded", {
+        source: TRACKING_TAG,
+        email: parsed.data.email,
       });
 
       toast.success(t.success);
