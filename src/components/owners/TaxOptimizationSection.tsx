@@ -596,14 +596,21 @@ const TaxOptimizationSection = () => {
                   <>
                     {/* Desktop / tablet: table view with tooltips */}
                     <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
+                      <table className="w-full text-sm table-fixed">
+                        <colgroup>
+                          <col className="w-[55%]" />
+                          <col className="w-[22%]" />
+                          <col className="w-[23%]" />
+                        </colgroup>
                         <thead>
                           <tr className="border-b border-border/50 bg-muted/20">
-                            <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-foreground">
                               {isRo ? "Etapă fiscală" : "Tax step"}
                             </th>
-                            <th className="text-right py-3 px-4 font-semibold text-foreground">PFA</th>
-                            <th className="text-right py-3 px-4 font-semibold text-primary">
+                            <th className="text-right py-3 px-3 lg:px-4 font-semibold text-foreground whitespace-nowrap">
+                              PFA
+                            </th>
+                            <th className="text-right py-3 px-3 lg:px-4 font-semibold text-primary whitespace-nowrap">
                               SRL{" "}
                               <span className="text-[10px] font-normal opacity-80">
                                 ★ {isRo ? "Recomandat" : "Recommended"}
@@ -622,7 +629,7 @@ const TaxOptimizationSection = () => {
                                   isNet ? "bg-primary/[0.04]" : i % 2 === 1 ? "bg-muted/10" : ""
                                 }`}
                               >
-                                <td className="py-3 px-4">
+                                <td className="py-3 px-3 lg:px-4 align-top">
                                   <div className="flex items-start gap-1.5">
                                     <span className="font-medium text-foreground">{step.label}</span>
                                     <Tooltip>
@@ -640,21 +647,21 @@ const TaxOptimizationSection = () => {
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                  <div className="hidden lg:block text-xs text-muted-foreground mt-0.5">
                                     {step.hint}
                                   </div>
                                 </td>
-                                <td className={`py-3 px-4 text-right tabular-nums ${valueClass}`}>
+                                <td className={`py-3 px-3 lg:px-4 text-right tabular-nums whitespace-nowrap align-top ${valueClass}`}>
                                   {fmt(step.pfa)}
                                 </td>
                                 <td
-                                  className={`py-3 px-4 text-right tabular-nums ${valueClass} ${
+                                  className={`py-3 px-3 lg:px-4 text-right tabular-nums align-top ${valueClass} ${
                                     isNet ? "text-primary" : ""
                                   }`}
                                 >
-                                  <div>{fmt(step.srl)}</div>
+                                  <div className="whitespace-nowrap">{fmt(step.srl)}</div>
                                   {step.note && (
-                                    <div className="text-[10px] text-primary/80 font-normal mt-0.5">
+                                    <div className="text-[10px] text-primary/80 font-normal mt-0.5 leading-tight">
                                       {step.note}
                                     </div>
                                   )}
@@ -674,10 +681,10 @@ const TaxOptimizationSection = () => {
                         return (
                           <div
                             key={step.key}
-                            className={`p-4 ${isNet ? "bg-primary/[0.05]" : ""}`}
+                            className={`px-3 py-3 ${isNet ? "bg-primary/[0.05]" : ""}`}
                           >
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="font-medium text-foreground text-sm leading-snug">
+                              <div className="font-medium text-foreground text-[13px] leading-snug">
                                 {step.label}
                               </div>
                               <Tooltip>
@@ -690,33 +697,32 @@ const TaxOptimizationSection = () => {
                                     <Info className="w-4 h-4" />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-[260px] text-xs">
+                                <TooltipContent side="top" className="max-w-[240px] text-xs">
                                   {step.hint}
                                 </TooltipContent>
                               </Tooltip>
                             </div>
-                            <div className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
-                              {step.hint}
-                            </div>
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="rounded-md bg-muted/30 p-2.5">
-                                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">
+                              <div className="rounded-md bg-muted/30 px-2 py-2">
+                                <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">
                                   PFA
                                 </div>
-                                <div className={`tabular-nums ${valueClass}`}>{fmt(step.pfa)}</div>
+                                <div className={`tabular-nums text-sm ${valueClass}`}>
+                                  {fmt(step.pfa)}
+                                </div>
                               </div>
                               <div
-                                className={`rounded-md p-2.5 ${
+                                className={`rounded-md px-2 py-2 ${
                                   isNet
                                     ? "bg-primary/10 border border-primary/30"
                                     : "bg-primary/[0.04] border border-primary/15"
                                 }`}
                               >
-                                <div className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1 flex items-center gap-1">
+                                <div className="text-[9px] uppercase tracking-wide text-primary font-semibold mb-0.5 flex items-center gap-1">
                                   SRL <span className="opacity-70">★</span>
                                 </div>
                                 <div
-                                  className={`tabular-nums ${valueClass} ${
+                                  className={`tabular-nums text-sm ${valueClass} ${
                                     isNet ? "text-primary" : ""
                                   }`}
                                 >
