@@ -376,38 +376,89 @@ const TaxOptimizationSection = () => {
           </Card>
         </div>
 
-        {/* Comparison Table */}
-        <Card className="max-w-6xl mx-auto border-border/50 mb-10">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-primary" />
-              {t.comparison.title}
-            </CardTitle>
+        {/* Comparison Journey: Brut → Deduceri → Impozit → Net */}
+        <Card className="max-w-6xl mx-auto border-border/50 mb-10 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/40">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <CardTitle className="text-lg text-foreground flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-primary" />
+                  {t.comparison.title}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">{t.comparison.subtitle}</p>
+              </div>
+              <Badge className="bg-primary text-primary-foreground shrink-0">
+                {t.comparison.winnerLabel}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left py-3 px-2 font-semibold text-foreground">
-                      {isRo ? "Indicator" : "Metric"}
+                  <tr className="border-b border-border/50 bg-muted/20">
+                    <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">
+                      {isRo ? "Etapă fiscală" : "Tax step"}
                     </th>
-                    <th className="text-right py-3 px-2 font-semibold text-foreground">PFA</th>
-                    <th className="text-right py-3 px-2 font-semibold text-primary">SRL</th>
+                    <th className="text-right py-3 px-4 font-semibold text-foreground">PFA</th>
+                    <th className="text-right py-3 px-4 font-semibold text-primary">
+                      SRL <span className="text-[10px] font-normal opacity-80">★ {isRo ? "Recomandat" : "Recommended"}</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {t.comparison.rows.map((row, i) => (
-                    <tr key={i} className="border-b border-border/30 last:border-0">
-                      <td className="py-3 px-2 text-muted-foreground">{row.label}</td>
-                      <td className="py-3 px-2 text-right text-foreground">{row.pfa}</td>
-                      <td className="py-3 px-2 text-right text-foreground font-medium">{row.srl}</td>
-                    </tr>
-                  ))}
+                  {t.comparison.steps.map((step, i) => {
+                    const isNet = step.type === "net";
+                    const isTax = step.type === "tax";
+                    const isDeduction = step.type === "deduction";
+                    const fmt = (n: number) => {
+                      if (n === 0) return "—";
+                      const abs = Math.abs(n).toLocaleString(isRo ? "ro-RO" : "en-US");
+                      const sign = n < 0 ? "−" : "";
+                      return `${sign}€${abs}`;
+                    };
+                    const valueClass = isNet
+                      ? "font-bold text-base"
+                      : isTax
+                      ? "text-destructive/80"
+                      : isDeduction
+                      ? "text-amber-600 dark:text-amber-500"
+                      : "text-foreground";
+                    return (
+                      <tr
+                        key={step.key}
+                        className={`border-b border-border/30 last:border-0 ${
+                          isNet ? "bg-primary/[0.04]" : i % 2 === 1 ? "bg-muted/10" : ""
+                        }`}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-foreground">{step.label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{step.hint}</div>
+                        </td>
+                        <td className={`py-3 px-4 text-right tabular-nums ${valueClass}`}>
+                          {fmt(step.pfa)}
+                        </td>
+                        <td
+                          className={`py-3 px-4 text-right tabular-nums ${valueClass} ${
+                            isNet ? "text-primary" : ""
+                          }`}
+                        >
+                          <div>{fmt(step.srl)}</div>
+                          {step.note && (
+                            <div className="text-[10px] text-primary/80 font-normal mt-0.5">
+                              {step.note}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted-foreground mt-4 italic">{t.comparison.note}</p>
+            <p className="text-xs text-muted-foreground italic px-4 py-3 border-t border-border/30 bg-muted/10">
+              {t.comparison.note}
+            </p>
           </CardContent>
         </Card>
 
