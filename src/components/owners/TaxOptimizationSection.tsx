@@ -20,6 +20,7 @@ import {
  */
 const TaxOptimizationSection = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const isRo = language === "ro";
 
   const t = isRo
@@ -428,6 +429,13 @@ const TaxOptimizationSection = () => {
         ? "RealTrust-Calcul-PFA-vs-SRL.pdf"
         : "RealTrust-Tax-Comparison-PFA-vs-SRL.pdf",
     );
+
+    // Track conversion + redirect to dedicated success page
+    trackConversion({ event: "lead_magnet_pdf", source: "tax_pdf_export" });
+    void trackPdfFunnel("pdf_downloaded", { source: "tax_optimization_section" });
+    // eslint-disable-next-line no-console
+    console.info("[conversion] tax_pdf_downloaded — redirecting", { target: "/succes-calcul" });
+    setTimeout(() => navigate("/succes-calcul"), 600);
   };
 
   return (
@@ -748,33 +756,37 @@ const TaxOptimizationSection = () => {
             <p className="text-xs text-muted-foreground italic px-4 py-3 border-t border-border/30 bg-muted/10">
               {t.comparison.note}
             </p>
-            {/* In-table CTA: direct WhatsApp consultation */}
-            <div className="border-t border-border/40 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-4 py-4 sm:px-6 sm:py-5">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            {/* In-table CTA: highlights the profit message + free fiscal consultation */}
+            <div className="border-t border-border/40 bg-gradient-to-r from-primary/10 via-primary/15 to-primary/10 px-4 py-5 sm:px-6 sm:py-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 text-center sm:text-left">
-                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-primary/15 items-center justify-center shrink-0">
-                    <MessageCircle className="w-5 h-5 text-primary" />
+                  <div className="hidden sm:flex w-12 h-12 rounded-full bg-primary/20 items-center justify-center shrink-0">
+                    <MessageCircle className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold text-foreground text-sm sm:text-base">
+                    <div className="font-bold text-foreground text-base sm:text-lg">
                       {isRo
-                        ? "Vrei aceste cifre aplicate pe situația ta?"
-                        : "Want these numbers applied to your case?"}
+                        ? "Vrei acest profit?"
+                        : "Want this profit?"}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                    <div className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                       {isRo
-                        ? "15 minute pe WhatsApp cu un specialist fiscal RealTrust — gratuit."
-                        : "15 minutes on WhatsApp with a RealTrust tax specialist — free."}
+                        ? "15 minute pe WhatsApp cu un specialist fiscal RealTrust — gratuit, fără obligații."
+                        : "15 minutes on WhatsApp with a RealTrust tax specialist — free, no obligation."}
                     </div>
                   </div>
                 </div>
                 <Button
                   onClick={handleConsultWhatsApp}
-                  className="gap-2 shrink-0 w-full sm:w-auto"
-                  size="sm"
+                  className="gap-2 shrink-0 w-full sm:w-auto whitespace-normal h-auto py-3"
+                  size="lg"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  {isRo ? "Apel consultanță WhatsApp" : "WhatsApp consultation"}
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <span className="text-sm sm:text-base">
+                    {isRo
+                      ? "Programează o consultanță fiscală gratuită"
+                      : "Book a free fiscal consultation"}
+                  </span>
                 </Button>
               </div>
             </div>
