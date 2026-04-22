@@ -67,7 +67,7 @@ const BookingConfirmationEmail = ({
         </Section>
 
         <Text style={contactText}>
-          Ai întrebări? Contactează-ne pe WhatsApp sau la info@notify.realtrust.ro
+          Ai întrebări? Contactează-ne pe WhatsApp sau la info@realtrust.ro
         </Text>
 
         <Hr style={divider} />
