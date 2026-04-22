@@ -258,6 +258,26 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
             {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
           </div>
           <div>
+            <Label htmlFor="ig-phone">
+              <span className="inline-flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" />
+                {t.phone}
+              </span>
+            </Label>
+            <Input
+              id="ig-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              maxLength={30}
+              placeholder={t.phonePlaceholder}
+              autoComplete="tel"
+              aria-invalid={!!errors.phone}
+              required
+            />
+            {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
+          </div>
+          <div>
             <Label htmlFor="ig-budget">
               <span className="inline-flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5" />
