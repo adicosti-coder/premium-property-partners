@@ -207,8 +207,8 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
       setPhone("");
       setBudget("");
 
-      // Redirect to thank-you page
-      setTimeout(() => navigate("/multumim"), 400);
+      // Redirect to success page (post-PDF conversion funnel)
+      setTimeout(() => navigate("/succes-calcul"), 400);
     } catch (err) {
       console.error("Lead magnet submit error:", err);
       toast.error(t.error);
