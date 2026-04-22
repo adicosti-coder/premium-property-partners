@@ -741,11 +741,11 @@ const TaxOptimizationSection = () => {
               {t.comparison.note}
             </p>
             {/* In-table CTA: direct WhatsApp consultation */}
-            <div className="border-t border-border/40 bg-gradient-to-r from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 px-4 py-4 sm:px-6 sm:py-5">
+            <div className="border-t border-border/40 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-3 text-center sm:text-left">
-                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-emerald-500/15 items-center justify-center shrink-0">
-                    <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-primary/15 items-center justify-center shrink-0">
+                    <MessageCircle className="w-5 h-5 text-primary" />
                   </div>
                   <div>
                     <div className="font-semibold text-foreground text-sm sm:text-base">
@@ -762,7 +762,7 @@ const TaxOptimizationSection = () => {
                 </div>
                 <Button
                   onClick={handleConsultWhatsApp}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shrink-0 w-full sm:w-auto"
+                  className="gap-2 shrink-0 w-full sm:w-auto"
                   size="sm"
                 >
                   <MessageCircle className="w-4 h-4" />
