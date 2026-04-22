@@ -416,16 +416,55 @@ const PentruProprietari = () => {
         ]
       };
 
-      // TaxAdvisory Service schema — autoritate pentru queries fiscale
+      // TaxAdvisory Service schema — autoritate fiscală E-E-A-T (PFA vs SRL, optimizare ANAF)
       const taxAdvisorySchema = {
         "@context": "https://schema.org",
-        "@type": "Service",
+        "@type": ["Service", "FinancialProduct"],
+        "@id": "https://www.realtrust.ro/pentru-proprietari/#tax-advisory",
         "serviceType": "TaxConsulting",
-        "name": "Consultanță Fiscală Regim Hotelier Timișoara — PFA & SRL",
-        "provider": { "@type": "RealEstateAgent", "@id": "https://www.realtrust.ro/#realestateagent" },
-        "description": "Consultanță fiscală specializată pentru proprietari de apartamente în regim hotelier: alegerea structurii optime (PFA vs SRL), optimizare deductibilități, conformitate ANAF.",
-        "areaServed": "Timișoara, România",
-        "audience": { "@type": "Audience", "audienceType": "Real estate investors, short-term rental owners" }
+        "category": "Real Estate Tax Optimization",
+        "name": "Consultanță Fiscală Regim Hotelier Timișoara — PFA vs SRL",
+        "alternateName": "Tax Advisory for Short-Term Rentals (Romania)",
+        "provider": {
+          "@type": "RealEstateAgent",
+          "@id": "https://www.realtrust.ro/#realestateagent",
+          "name": "RealTrust Aparthotel",
+          "url": "https://www.realtrust.ro",
+          "areaServed": { "@type": "City", "name": "Timișoara" },
+          "knowsAbout": [
+            "PFA Cazare Turistică",
+            "SRL Microîntreprindere",
+            "Normă de Venit ANAF",
+            "Deductibilități Regim Hotelier",
+            "TVA pentru Cazare",
+            "Impozit Dividende",
+            "Cod Fiscal România 2026"
+          ]
+        },
+        "description": "Consultanță fiscală specializată pentru proprietari de apartamente în regim hotelier: alegerea structurii optime (PFA vs SRL), optimizare deductibilități, conformitate ANAF, calcul net în mână pentru venituri anuale 25.000 EUR+.",
+        "areaServed": { "@type": "City", "name": "Timișoara", "containedInPlace": "România" },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Real estate investors, short-term rental owners, Airbnb hosts"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "description": "Analiză fiscală gratuită — comparație PFA vs SRL personalizată pe portofoliu",
+          "url": "https://www.realtrust.ro/pentru-proprietari"
+        },
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Servicii Optimizare Fiscală",
+          "itemListElement": [
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Înființare PFA Cazare Turistică" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Înființare SRL Microîntreprindere" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Calcul comparativ net 25.000 EUR/an" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Optimizare deductibilități regim hotelier" } }
+          ]
+        }
       };
       setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, faqPageSchema, taxAdvisorySchema]);
     });

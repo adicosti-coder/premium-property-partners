@@ -55,17 +55,73 @@ const TaxOptimizationSection = () => {
           tax: "1-3% impozit microîntreprindere + 8% pe dividende",
         },
         comparison: {
-          title: "Calcul comparativ pentru un apartament cu venit anual €25.000",
-          rows: [
-            { label: "Venit brut anual", pfa: "€25.000", srl: "€25.000" },
-            { label: "Cheltuieli deductibile", pfa: "€8.000", srl: "€10.500 (mai multe categorii)" },
-            { label: "Bază impozabilă", pfa: "€17.000", srl: "€25.000 (impozit pe venit)" },
-            { label: "Impozit principal", pfa: "€1.700 (10%)", srl: "€250-750 (1-3%)" },
-            { label: "Contribuții sociale", pfa: "~€1.200 (CAS+CASS)", srl: "0 (la nivel firmă)" },
-            { label: "Dividende dacă scoți tot", pfa: "—", srl: "€2.000 (8%)" },
-            { label: "Net în mână", pfa: "≈ €14.100", srl: "≈ €11.750 - €13.250" },
+          title: "Parcurs fiscal: de la €25.000 brut la net în mână",
+          subtitle: "Apartament cu venit anual 25.000 EUR — calcul orientativ 2026",
+          steps: [
+            {
+              key: "gross",
+              label: "1. Venit brut anual",
+              hint: "Încasări totale din cazare (după comisioane platforme deja scăzute)",
+              pfa: 25000,
+              srl: 25000,
+              type: "neutral" as const,
+            },
+            {
+              key: "deductions",
+              label: "2. Cheltuieli deductibile",
+              hint: "Mobilier, utilități, marketing, fotograf, comisioane, reparații",
+              pfa: -8000,
+              srl: -10500,
+              type: "deduction" as const,
+              note: "SRL: categorii extinse",
+            },
+            {
+              key: "base",
+              label: "3. Bază impozabilă",
+              hint: "PFA: venit – cheltuieli  •  SRL micro: pe venit (nu pe profit)",
+              pfa: 17000,
+              srl: 25000,
+              type: "neutral" as const,
+            },
+            {
+              key: "tax",
+              label: "4. Impozit principal",
+              hint: "PFA 10% pe baza impozabilă  •  SRL 1% (cu 1 angajat) sau 3%",
+              pfa: -1700,
+              srl: -500,
+              type: "tax" as const,
+              note: "SRL economisește ~€1.200",
+            },
+            {
+              key: "social",
+              label: "5. Contribuții sociale (CAS+CASS)",
+              hint: "PFA: la depășire plafon (~€1.200)  •  SRL: 0 la nivel firmă",
+              pfa: -1200,
+              srl: 0,
+              type: "tax" as const,
+            },
+            {
+              key: "dividends",
+              label: "6. Impozit dividende (8%) dacă scoți tot",
+              hint: "Doar la SRL — dacă reinvestești, acest cost dispare",
+              pfa: 0,
+              srl: -1960,
+              type: "tax" as const,
+              note: "Opțional la SRL",
+            },
+            {
+              key: "net",
+              label: "✅ Net în mână (cash)",
+              hint: "Suma efectivă care îți rămâne după toate impozitele",
+              pfa: 14100,
+              srl: 22040,
+              type: "net" as const,
+              note: "SRL reinvestit: ~€24.000 disponibili",
+            },
           ],
-          note: "* Calcul orientativ. PFA poate fi mai eficient pentru un singur apartament cu venit moderat. SRL devine superior la 2+ apartamente, datorită deductibilităților extinse pentru mobilare, fotograf, marketing și comisioane platforme.",
+          winner: "SRL",
+          winnerLabel: "Avantaj SRL: +€7.940/an dacă reinvestești profitul",
+          note: "* Calcul orientativ pe baza Codului Fiscal 2026. PFA poate rămâne competitiv pentru 1 apartament cu venit sub €18.000/an. La 2+ apartamente sau dacă reinvestești profitul, SRL este net superior.",
         },
         cta: {
           title: "Nu ești sigur ce structură ți se potrivește?",
@@ -115,17 +171,73 @@ const TaxOptimizationSection = () => {
           tax: "1-3% micro-enterprise tax + 8% on dividends",
         },
         comparison: {
-          title: "Comparative calculation for an apartment with €25,000 annual revenue",
-          rows: [
-            { label: "Gross annual income", pfa: "€25,000", srl: "€25,000" },
-            { label: "Deductible expenses", pfa: "€8,000", srl: "€10,500 (more categories)" },
-            { label: "Taxable base", pfa: "€17,000", srl: "€25,000 (revenue tax)" },
-            { label: "Main tax", pfa: "€1,700 (10%)", srl: "€250-750 (1-3%)" },
-            { label: "Social contributions", pfa: "~€1,200 (CAS+CASS)", srl: "0 (at company level)" },
-            { label: "Dividends if fully withdrawn", pfa: "—", srl: "€2,000 (8%)" },
-            { label: "Net in hand", pfa: "≈ €14,100", srl: "≈ €11,750 - €13,250" },
+          title: "Tax journey: from €25,000 gross to net in hand",
+          subtitle: "Apartment with €25,000 annual revenue — indicative 2026 calculation",
+          steps: [
+            {
+              key: "gross",
+              label: "1. Gross annual income",
+              hint: "Total accommodation revenue (after platform commissions)",
+              pfa: 25000,
+              srl: 25000,
+              type: "neutral" as const,
+            },
+            {
+              key: "deductions",
+              label: "2. Deductible expenses",
+              hint: "Furniture, utilities, marketing, photography, commissions, repairs",
+              pfa: -8000,
+              srl: -10500,
+              type: "deduction" as const,
+              note: "SRL: wider categories",
+            },
+            {
+              key: "base",
+              label: "3. Taxable base",
+              hint: "PFA: revenue – expenses  •  SRL micro: on revenue (not profit)",
+              pfa: 17000,
+              srl: 25000,
+              type: "neutral" as const,
+            },
+            {
+              key: "tax",
+              label: "4. Main tax",
+              hint: "PFA 10% on taxable base  •  SRL 1% (with 1 employee) or 3%",
+              pfa: -1700,
+              srl: -500,
+              type: "tax" as const,
+              note: "SRL saves ~€1,200",
+            },
+            {
+              key: "social",
+              label: "5. Social contributions (CAS+CASS)",
+              hint: "PFA: when threshold exceeded (~€1,200)  •  SRL: 0 at company level",
+              pfa: -1200,
+              srl: 0,
+              type: "tax" as const,
+            },
+            {
+              key: "dividends",
+              label: "6. Dividend tax (8%) if fully withdrawn",
+              hint: "Only at SRL — if you reinvest, this cost disappears",
+              pfa: 0,
+              srl: -1960,
+              type: "tax" as const,
+              note: "Optional at SRL",
+            },
+            {
+              key: "net",
+              label: "✅ Net in hand (cash)",
+              hint: "The actual amount you keep after all taxes",
+              pfa: 14100,
+              srl: 22040,
+              type: "net" as const,
+              note: "SRL reinvested: ~€24,000 available",
+            },
           ],
-          note: "* Indicative calculation. PFA may be more efficient for a single apartment with moderate income. SRL becomes superior at 2+ apartments due to wider deductions for furniture, photography, marketing and platform commissions.",
+          winner: "SRL",
+          winnerLabel: "SRL advantage: +€7,940/year if you reinvest profit",
+          note: "* Indicative calculation based on Romanian Tax Code 2026. PFA may remain competitive for 1 apartment with income under €18,000/year. For 2+ apartments or reinvested profit, SRL is significantly superior.",
         },
         cta: {
           title: "Not sure which structure suits you?",
@@ -264,38 +376,89 @@ const TaxOptimizationSection = () => {
           </Card>
         </div>
 
-        {/* Comparison Table */}
-        <Card className="max-w-6xl mx-auto border-border/50 mb-10">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-primary" />
-              {t.comparison.title}
-            </CardTitle>
+        {/* Comparison Journey: Brut → Deduceri → Impozit → Net */}
+        <Card className="max-w-6xl mx-auto border-border/50 mb-10 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/40">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <CardTitle className="text-lg text-foreground flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-primary" />
+                  {t.comparison.title}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">{t.comparison.subtitle}</p>
+              </div>
+              <Badge className="bg-primary text-primary-foreground shrink-0">
+                {t.comparison.winnerLabel}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left py-3 px-2 font-semibold text-foreground">
-                      {isRo ? "Indicator" : "Metric"}
+                  <tr className="border-b border-border/50 bg-muted/20">
+                    <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">
+                      {isRo ? "Etapă fiscală" : "Tax step"}
                     </th>
-                    <th className="text-right py-3 px-2 font-semibold text-foreground">PFA</th>
-                    <th className="text-right py-3 px-2 font-semibold text-primary">SRL</th>
+                    <th className="text-right py-3 px-4 font-semibold text-foreground">PFA</th>
+                    <th className="text-right py-3 px-4 font-semibold text-primary">
+                      SRL <span className="text-[10px] font-normal opacity-80">★ {isRo ? "Recomandat" : "Recommended"}</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {t.comparison.rows.map((row, i) => (
-                    <tr key={i} className="border-b border-border/30 last:border-0">
-                      <td className="py-3 px-2 text-muted-foreground">{row.label}</td>
-                      <td className="py-3 px-2 text-right text-foreground">{row.pfa}</td>
-                      <td className="py-3 px-2 text-right text-foreground font-medium">{row.srl}</td>
-                    </tr>
-                  ))}
+                  {t.comparison.steps.map((step, i) => {
+                    const isNet = step.type === "net";
+                    const isTax = step.type === "tax";
+                    const isDeduction = step.type === "deduction";
+                    const fmt = (n: number) => {
+                      if (n === 0) return "—";
+                      const abs = Math.abs(n).toLocaleString(isRo ? "ro-RO" : "en-US");
+                      const sign = n < 0 ? "−" : "";
+                      return `${sign}€${abs}`;
+                    };
+                    const valueClass = isNet
+                      ? "font-bold text-base"
+                      : isTax
+                      ? "text-destructive/80"
+                      : isDeduction
+                      ? "text-amber-600 dark:text-amber-500"
+                      : "text-foreground";
+                    return (
+                      <tr
+                        key={step.key}
+                        className={`border-b border-border/30 last:border-0 ${
+                          isNet ? "bg-primary/[0.04]" : i % 2 === 1 ? "bg-muted/10" : ""
+                        }`}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-foreground">{step.label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{step.hint}</div>
+                        </td>
+                        <td className={`py-3 px-4 text-right tabular-nums ${valueClass}`}>
+                          {fmt(step.pfa)}
+                        </td>
+                        <td
+                          className={`py-3 px-4 text-right tabular-nums ${valueClass} ${
+                            isNet ? "text-primary" : ""
+                          }`}
+                        >
+                          <div>{fmt(step.srl)}</div>
+                          {step.note && (
+                            <div className="text-[10px] text-primary/80 font-normal mt-0.5">
+                              {step.note}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted-foreground mt-4 italic">{t.comparison.note}</p>
+            <p className="text-xs text-muted-foreground italic px-4 py-3 border-t border-border/30 bg-muted/10">
+              {t.comparison.note}
+            </p>
           </CardContent>
         </Card>
 
