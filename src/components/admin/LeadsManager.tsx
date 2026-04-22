@@ -991,6 +991,29 @@ const LeadsManager = () => {
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
+                        {(() => {
+                          const cleaned = (lead.whatsapp_number || "").replace(/\D/g, "");
+                          const valid = cleaned.length >= 8 && lead.whatsapp_number !== "pending";
+                          if (!valid) return null;
+                          const greeting = language === "ro"
+                            ? `Bună ziua, ${lead.name}! Vă contactez din partea RealTrust referitor la solicitarea dvs. pentru ${lead.property_type} (${lead.property_area} m²).`
+                            : `Hello ${lead.name}! I'm reaching out from RealTrust regarding your inquiry about ${lead.property_type} (${lead.property_area} m²).`;
+                          const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(greeting)}`;
+                          return (
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-400"
+                              title={language === "ro" ? "Contactează pe WhatsApp" : "Contact on WhatsApp"}
+                            >
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span className="hidden xl:inline text-xs font-medium">WhatsApp</span>
+                              </a>
+                            </Button>
+                          );
+                        })()}
                         <LeadNotesDialog 
                           leadId={lead.id} 
                           leadName={lead.name} 
