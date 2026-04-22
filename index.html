@@ -35,9 +35,11 @@
 
     <!-- Preload hero LCP image with HIGHEST priority — declared FIRST so the
          preload scanner picks it up before any render-blocking CSS request.
-         Single 800w file (~15KB) used by both static shell <img> and React Hero. -->
+         Mobile fetches 800w (~23KB), desktop fetches 1600w cinematic (~51KB). -->
     <link rel="preload" as="image" type="image/webp" fetchpriority="high"
-          href="/images/hero-optimized-800w.webp" />
+          href="/images/hero-optimized-800w.webp"
+          imagesrcset="/images/hero-optimized-800w.webp 800w, /images/hero-cinematic-1600w.webp 1600w"
+          imagesizes="100vw" />
 
     <!-- Preload ONLY the latin Playfair font used by the H1 in the LCP shell.
          Inter is loaded via @font-face (font-display:swap) — preloading all 3
