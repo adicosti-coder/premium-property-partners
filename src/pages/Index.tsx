@@ -4,6 +4,7 @@ import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
 import { ServicesH2Strip } from "@/components/ServicesH2Strip";
+import { SEOConsultingStrip } from "@/components/SEOConsultingStrip";
 import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
 import SEOLocalEntitiesBlock from "@/components/SEOLocalEntitiesBlock";
 import { generateHomepageSchemas, generateSpeakableSchema } from "@/utils/schemaGenerators";
