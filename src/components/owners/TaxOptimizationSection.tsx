@@ -263,6 +263,171 @@ const TaxOptimizationSection = () => {
     window.open(`https://wa.me/40799069256?text=${message}`, "_blank", "noopener,noreferrer");
   };
 
+  const handleConsultWhatsApp = () => {
+    const message = encodeURIComponent(
+      isRo
+        ? "Bună ziua! Am analizat tabelul comparativ PFA vs SRL pe RealTrust și aș dori să programez un apel de consultanță fiscală pentru regim hotelier. Mulțumesc!"
+        : "Hello! I reviewed the PFA vs SRL comparison table on RealTrust and would like to schedule a tax consultation call for short-term rentals. Thank you!",
+    );
+    window.open(`https://wa.me/40799069256?text=${message}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleExportPDF = async () => {
+    const [{ default: jsPDF }, autoTableMod] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
+    const autoTable = (autoTableMod as { default: typeof import("jspdf-autotable").default }).default;
+
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const brandPrimary: [number, number, number] = [23, 37, 84];
+    const brandAccent: [number, number, number] = [217, 119, 6];
+    const muted: [number, number, number] = [100, 116, 139];
+
+    // Header band
+    doc.setFillColor(...brandPrimary);
+    doc.rect(0, 0, pageWidth, 90, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("RealTrust & ApArt Hotel", 40, 42);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(
+      isRo
+        ? "Calcul Comparativ Fiscal — PFA vs SRL pentru Regim Hotelier"
+        : "Fiscal Comparison — PFA vs SRL for Short-Term Rentals",
+      40,
+      62,
+    );
+    doc.setFontSize(9);
+    doc.text("realtrust.ro  •  +40 799 069 256  •  info@realtrust.ro", 40, 78);
+
+    // Subtitle
+    doc.setTextColor(...brandPrimary);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text(t.comparison.title, 40, 125);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(...muted);
+    const subtitleLines = doc.splitTextToSize(t.comparison.subtitle, pageWidth - 80);
+    doc.text(subtitleLines, 40, 142);
+
+    // Winner badge
+    doc.setFillColor(...brandAccent);
+    doc.roundedRect(40, 165, pageWidth - 80, 28, 4, 4, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(t.comparison.winnerLabel, pageWidth / 2, 183, { align: "center" });
+
+    // Table
+    const fmtPdf = (n: number) => {
+      if (n === 0) return "—";
+      const abs = Math.abs(n).toLocaleString(isRo ? "ro-RO" : "en-US");
+      const sign = n < 0 ? "-" : "";
+      return `${sign}EUR ${abs}`;
+    };
+
+    autoTable(doc, {
+      startY: 215,
+      margin: { left: 40, right: 40 },
+      head: [[
+        isRo ? "Etapa fiscala" : "Tax step",
+        "PFA",
+        isRo ? "SRL (Recomandat)" : "SRL (Recommended)",
+      ]],
+      body: t.comparison.steps.map((s) => [
+        { content: s.label.replace(/✅\s*/g, ""), styles: { fontStyle: s.type === "net" ? "bold" : "normal" } },
+        { content: fmtPdf(s.pfa), styles: { halign: "right", fontStyle: s.type === "net" ? "bold" : "normal" } },
+        {
+          content: fmtPdf(s.srl) + (s.note ? `\n${s.note}` : ""),
+          styles: {
+            halign: "right",
+            fontStyle: s.type === "net" ? "bold" : "normal",
+            textColor: s.type === "net" ? brandPrimary : undefined,
+          },
+        },
+      ]),
+      headStyles: {
+        fillColor: brandPrimary,
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 10,
+      },
+      bodyStyles: { fontSize: 9.5, cellPadding: 7, valign: "middle" },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      didParseCell: (data) => {
+        if (data.section === "body") {
+          const step = t.comparison.steps[data.row.index];
+          if (step?.type === "net") data.cell.styles.fillColor = [240, 245, 255];
+        }
+      },
+      columnStyles: {
+        0: { cellWidth: "auto" },
+        1: { cellWidth: 110 },
+        2: { cellWidth: 130 },
+      },
+    });
+
+    // @ts-expect-error jspdf-autotable adds lastAutoTable
+    const finalY = (doc.lastAutoTable?.finalY ?? 400) + 20;
+    doc.setFontSize(8);
+    doc.setTextColor(...muted);
+    doc.setFont("helvetica", "italic");
+    const noteLines = doc.splitTextToSize(t.comparison.note, pageWidth - 80);
+    doc.text(noteLines, 40, finalY);
+
+    // CTA box
+    const ctaY = Math.min(finalY + noteLines.length * 10 + 20, pageHeight - 110);
+    doc.setFillColor(245, 247, 250);
+    doc.setDrawColor(...brandPrimary);
+    doc.roundedRect(40, ctaY, pageWidth - 80, 70, 6, 6, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...brandPrimary);
+    doc.text(
+      isRo
+        ? "Programeaza o consultanta fiscala gratuita"
+        : "Schedule a free tax consultation",
+      pageWidth / 2,
+      ctaY + 24,
+      { align: "center" },
+    );
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...muted);
+    doc.text("WhatsApp: +40 799 069 256  •  info@realtrust.ro", pageWidth / 2, ctaY + 44, {
+      align: "center",
+    });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...brandAccent);
+    doc.text("wa.me/40799069256", pageWidth / 2, ctaY + 60, { align: "center" });
+
+    // Footer
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...muted);
+    const today = new Date().toLocaleDateString(isRo ? "ro-RO" : "en-US");
+    doc.text(
+      `${isRo ? "Generat" : "Generated"}: ${today}  •  © RealTrust ${new Date().getFullYear()}`,
+      pageWidth / 2,
+      pageHeight - 20,
+      { align: "center" },
+    );
+
+    doc.save(
+      isRo
+        ? "RealTrust-Calcul-PFA-vs-SRL.pdf"
+        : "RealTrust-Tax-Comparison-PFA-vs-SRL.pdf",
+    );
+  };
+
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-background via-muted/20 to-background">
       <div className="container mx-auto px-6">
