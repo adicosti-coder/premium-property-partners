@@ -558,9 +558,20 @@ const TaxOptimizationSection = () => {
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">{t.comparison.subtitle}</p>
               </div>
-              <Badge className="bg-primary text-primary-foreground shrink-0">
-                {t.comparison.winnerLabel}
-              </Badge>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <Badge className="bg-primary text-primary-foreground">
+                  {t.comparison.winnerLabel}
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  className="gap-1.5 h-8"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {isRo ? "Export PDF calcul" : "Export PDF"}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
