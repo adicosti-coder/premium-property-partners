@@ -110,16 +110,36 @@ const Hero = () => {
     <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-28 md:pt-32">
       {/* Background: static image + video (desktop only) */}
       <div className="absolute inset-0 overflow-hidden">
-        <img
-          src={heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC}
-          alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, City of Mara — lângă Iulius Mall, Centrul Vechi. ROI 9.4% net verificat."
-          className="w-full h-full object-cover hero-kenburns"
-          width={800}
-          height={447}
-          fetchPriority="high"
-          decoding="async"
-          loading="eager"
-        />
+        {heroSettings.customFallbackImage ? (
+          <img
+            src={heroSettings.customFallbackImage}
+            alt="RealTrust Imobiliare Timișoara — apartamente premium regim hotelier, ROI 9.4% net verificat."
+            className="w-full h-full object-cover hero-kenburns"
+            width={1600}
+            height={894}
+            fetchPriority="high"
+            decoding="async"
+            loading="eager"
+          />
+        ) : (
+          <picture>
+            <source
+              media="(min-width: 768px)"
+              srcSet="/images/hero-cinematic-1600w.webp"
+              type="image/webp"
+            />
+            <img
+              src={HERO_IMAGE_PUBLIC}
+              alt="RealTrust Imobiliare Timișoara — apartament premium regim hotelier cu design cinematic, ROI 9.4% net verificat."
+              className="w-full h-full object-cover object-center hero-kenburns"
+              width={800}
+              height={447}
+              fetchPriority="high"
+              decoding="async"
+              loading="eager"
+            />
+          </picture>
+        )}
         {/* Video — desktop only */}
         {!isMobile && shouldLoadVideo && !videoError && !isSlowConnection && heroSettings.videoUrl && (
           <video
