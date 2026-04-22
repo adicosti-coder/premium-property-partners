@@ -157,6 +157,20 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
         throw new Error((data as { error?: string })?.error || error?.message || "submit failed");
       }
 
+      // Send investor guide email to the user (non-blocking — UX must not wait)
+      void supabase.functions
+        .invoke("send-investor-guide-email", {
+          body: {
+            name: parsed.data.name,
+            email: parsed.data.email,
+            language,
+            budget: parsed.data.budget,
+          },
+        })
+        .then(({ error: mailErr }) => {
+          if (mailErr) console.error("Investor guide email failed:", mailErr);
+        });
+
       // Track conversion in GA4 / dataLayer
       trackConversion({
         event: "lead_magnet_pdf",
