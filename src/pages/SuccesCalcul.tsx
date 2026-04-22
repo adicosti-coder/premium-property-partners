@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Home, BookOpen, MessageCircle, Quote, Star, ArrowLeft } from "lucide-react";
+import { CheckCircle2, MessageCircle, Quote, Star, ArrowLeft, Calculator } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -9,42 +9,51 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { trackConversion } from "@/lib/conversionTracking";
 import { trackPdfFunnel } from "@/lib/pdfFunnelTracking";
 
-const Multumim = () => {
+/**
+ * /succes-calcul — confirmation page after fiscal PDF download.
+ * Premium thank-you experience focused on converting the lead into a
+ * free on-site valuation via WhatsApp.
+ */
+const SuccesCalcul = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
 
   useEffect(() => {
-    // Conversion + funnel tracking. Console log is intentional to make
-    // future Pixel / 3rd-party integration trivial.
+    // Conversion + funnel tracking. Console log is intentional for
+    // future Pixel / 3rd-party integrations to hook into.
     trackConversion({
-      event: "contact_form_submit",
-      source: "thank_you_page_view",
+      event: "lead_magnet_pdf",
+      source: "succes_calcul_view",
     });
-    void trackPdfFunnel("thankyou_view", { source: "multumim_page" });
+    void trackPdfFunnel("thankyou_view", { source: "succes_calcul_page" });
     // eslint-disable-next-line no-console
-    console.info("[conversion] thank_you_view fired", {
-      page: "/multumim",
+    console.info("[conversion] succes_calcul_view fired", {
+      page: "/succes-calcul",
       lang: language,
     });
   }, [language]);
 
   const t = {
-    title: isRo ? "Am primit mesajul tău!" : "We received your message!",
-    subtitle: isRo
-      ? "Un consultant RealTrust te va contacta în maxim 1 oră lucrătoare."
-      : "A RealTrust consultant will reach out within 1 business hour.",
-    pageTitle: isRo ? "Mulțumim — RealTrust Timișoara" : "Thank You — RealTrust Timișoara",
+    pageTitle: isRo
+      ? "Calcul fiscal descărcat — RealTrust Timișoara"
+      : "Fiscal calculation downloaded — RealTrust Timișoara",
     pageDesc: isRo
-      ? "Mesajul tău a fost trimis către echipa RealTrust. Te contactăm în curând."
-      : "Your message has been sent to the RealTrust team. We'll be in touch shortly.",
-    badge: isRo ? "Confirmare primire" : "Confirmation received",
+      ? "Calculul comparativ PFA vs SRL a fost generat. Programează acum o evaluare gratuită la locație."
+      : "Your PFA vs SRL comparison has been generated. Book a free on-site valuation now.",
+    badge: isRo ? "PDF generat cu succes" : "PDF generated successfully",
+    title: isRo
+      ? "Calculul tău fiscal este gata!"
+      : "Your fiscal calculation is ready!",
+    subtitle: isRo
+      ? "Verifică folderul Descărcări. PDF-ul brandat RealTrust conține toate cifrele PFA vs SRL pentru venitul tău."
+      : "Check your Downloads folder. The RealTrust-branded PDF contains all PFA vs SRL figures for your income.",
     nextStep: isRo ? "Următorul pas recomandat" : "Recommended next step",
     nextStepTitle: isRo
-      ? "Vrei rezultate concrete? Hai la o evaluare la fața locului"
-      : "Want concrete results? Let's meet on-site",
+      ? "Hai să facem evaluarea reală a apartamentului tău"
+      : "Let's do the real valuation of your apartment",
     nextStepDesc: isRo
-      ? "Un specialist RealTrust vine la apartamentul tău, măsoară potențialul real (regim hotelier, ROI, setup) și îți construiește planul personalizat."
-      : "A RealTrust specialist visits your apartment, measures the real potential (short-term rentals, ROI, setup) and builds your personalized plan.",
+      ? "Un specialist RealTrust vine la locație, măsoară potențialul real (regim hotelier, setup interior, ROI), apoi îți construim împreună planul fiscal optim."
+      : "A RealTrust specialist visits on-site, measures the real potential (short-term rental, interior setup, ROI), and we build the optimal fiscal plan together.",
     ctaWhatsApp: isRo
       ? "Cere evaluare gratuită la locație"
       : "Request free on-site valuation",
@@ -52,27 +61,25 @@ const Multumim = () => {
       ? "Răspuns în maxim 1 oră lucrătoare · Fără obligații"
       : "Reply within 1 business hour · No obligation",
     testimonialQuote: isRo
-      ? "Am completat formularul, în 40 de minute mă suna echipa RealTrust. A doua zi erau la mine în apartament cu un plan complet. Acum încasez 2.100 EUR/lună fără să mai mișc un deget."
-      : "I filled out the form, and within 40 minutes the RealTrust team called me. The next day they were at my apartment with a complete plan. Now I earn €2,100/month without lifting a finger.",
-    testimonialAuthor: "Cristina P.",
+      ? "Am descărcat calculul, apoi am cerut evaluarea la locație. În 3 săptămâni apartamentul meu din Iulius Town genera deja 2.400 EUR/lună în regim hotelier prin RealTrust. Decizia SRL a meritat fiecare leu."
+      : "I downloaded the calculation, then requested the on-site valuation. Within 3 weeks my Iulius Town apartment was already generating €2,400/month under short-term rentals via RealTrust. The SRL decision was worth every penny.",
+    testimonialAuthor: "Andrei M.",
     testimonialRole: isRo
-      ? "Proprietar apartament · Centrul Vechi"
-      : "Apartment owner · Old Town",
-    explore: isRo ? "Sau explorează:" : "Or explore:",
-    ctaProperties: isRo ? "Vezi apartamentele" : "See our apartments",
-    ctaGuide: isRo ? "Citește Ghidul 2026" : "Read the 2026 Guide",
+      ? "Proprietar apartament · Iulius Town"
+      : "Apartment owner · Iulius Town",
     backHome: isRo ? "Înapoi la pagina principală" : "Back to home",
+    seeRoi: isRo ? "Calculator ROI complet" : "Full ROI calculator",
   };
 
   const handleWhatsApp = () => {
-    trackConversion({ event: "whatsapp_click", source: "thank_you_onsite_valuation" });
-    void trackPdfFunnel("cta_evaluation", { source: "multumim_page" });
+    trackConversion({ event: "whatsapp_click", source: "succes_calcul_onsite_valuation" });
+    void trackPdfFunnel("cta_evaluation", { source: "succes_calcul_page" });
     // eslint-disable-next-line no-console
-    console.info("[conversion] whatsapp_onsite_valuation_click", { page: "/multumim" });
+    console.info("[conversion] whatsapp_onsite_valuation_click", { page: "/succes-calcul" });
     const message = encodeURIComponent(
       isRo
-        ? "Bună ziua! Am trimis o solicitare pe RealTrust și aș dori să programez o evaluare gratuită la locație pentru apartamentul meu. Mulțumesc!"
-        : "Hello! I submitted a request on RealTrust and would like to schedule a free on-site valuation for my apartment. Thank you!",
+        ? "Bună ziua! Am descărcat calculul fiscal PFA vs SRL de pe RealTrust și aș dori să programez o evaluare gratuită la locație pentru apartamentul meu. Mulțumesc!"
+        : "Hello! I downloaded the PFA vs SRL fiscal calculation from RealTrust and would like to schedule a free on-site valuation for my apartment. Thank you!",
     );
     window.open(`https://wa.me/40799069256?text=${message}`, "_blank", "noopener,noreferrer");
   };
@@ -146,24 +153,14 @@ const Multumim = () => {
             </div>
           </div>
 
-          {/* Secondary explore */}
-          <p className="text-center text-sm text-muted-foreground mb-4">{t.explore}</p>
-          <div className="grid sm:grid-cols-2 gap-3 mb-8">
-            <Button asChild variant="outline" className="h-auto py-3">
-              <Link to="/oaspeti" className="flex items-center gap-2">
-                <Home className="w-4 h-4" />
-                {t.ctaProperties}
+          {/* Secondary actions */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/calculator-roi">
+                <Calculator className="w-4 h-4 mr-2" />
+                {t.seeRoi}
               </Link>
             </Button>
-            <Button asChild variant="outline" className="h-auto py-3">
-              <Link to="/blog/ghid-investitii-imobiliare-timisoara-2026" className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                {t.ctaGuide}
-              </Link>
-            </Button>
-          </div>
-
-          <div className="text-center">
             <Button asChild variant="ghost" size="sm">
               <Link to="/">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -178,4 +175,4 @@ const Multumim = () => {
   );
 };
 
-export default Multumim;
+export default SuccesCalcul;
