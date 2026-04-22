@@ -61,12 +61,21 @@
       .cv-auto{content-visibility:auto;contain-intrinsic-size:1px 600px}
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       [hidden]{display:none}
-      /* Static LCP shell — reserves the FULL height that React Hero will need
-         (CTAs + trust text + feature strip), measured at ~880px on a 412px-wide
-         viewport. Without this, React mount pushes the entire page down,
-         producing the catastrophic CLS=1.0 measured by Lighthouse on mobile. */
+      /* CRITICAL: reserve the full hero height on the ROOT element itself.
+         When React mount calls createRoot().render(), it wipes the static
+         shell — but the min-height on #root keeps the document height stable
+         until <Hero> paints, eliminating the CLS=1.0 jump.
+         880px matches the rendered hero on a 412px-wide viewport (mobile).
+         Desktop uses 100dvh which is also what <Hero> renders. */
+      #root{min-height:880px;display:block}
+      @media(min-width:768px){#root{min-height:100dvh}}
+      /* Static LCP shell — paints H1 + LCP image at ~400ms, identical
+         layout to the React <Hero> so swap is invisible. */
       #app-shell-placeholder{position:relative;min-height:880px;background:hsl(var(--background));overflow:hidden;display:flex;align-items:center;padding-top:7rem;contain:layout}
       @media(min-width:768px){#app-shell-placeholder{min-height:100dvh;padding-top:8rem}}
+      /* Fallback font metrics — match Inter & Playfair x-height/cap-height
+         so font-swap does not shift glyph baselines (eliminates 0.117 CLS). */
+      @font-face{font-family:'Inter Fallback';src:local('Arial');size-adjust:107%;ascent-override:90%;descent-override:22%;line-gap-override:0%}
       .ash-bg{position:absolute;inset:0;z-index:0}
       .ash-bg img{width:100%;height:100%;object-fit:cover;display:block}
       .ash-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(to right,hsl(var(--background)/.85),hsl(var(--background)/.45),transparent)}

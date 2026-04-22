@@ -15,11 +15,11 @@ import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 // 2.5s render delay measured by Lighthouse when it was lazy + Suspense fallback null.
 import PageSummary from "@/components/PageSummary";
 
-// Header & Hero are lazy — the static shell in index.html already paints
-// instantly as LCP. Loading the React versions eagerly was adding ~134 KiB
-// JS to the critical path and delaying LCP element render by ~5.3s.
-const Header = lazy(() => import("@/components/Header"));
-const Hero = lazy(() => import("@/components/Hero"));
+// Header & Hero MUST be eager: they are the LCP element and the static
+// shell in index.html is wiped by React mount. Any Suspense gap here
+// produces a blank viewport → catastrophic CLS=1.0 measured by Lighthouse.
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -254,15 +254,12 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Suspense fallback={null}>
-        <Header />
-      </Suspense>
+      <Header />
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
-        {/* Hero - lazy-loaded to free the LCP critical path. The static
-            hero-shell painted by index.html stays visible until React mounts. */}
-        <Suspense fallback={null}>
-          <Hero />
-        </Suspense>
+        {/* Hero is eager — it's the LCP element. The static hero-shell in
+            index.html paints first; React Hero replaces it on mount with
+            an identical layout (#root has min-height to prevent CLS). */}
+        <Hero />
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
