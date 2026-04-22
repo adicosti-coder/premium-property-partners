@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Download, FileDown, TrendingUp } from "lucide-react";
+import { Download, FileDown, TrendingUp, Phone } from "lucide-react";
 import { trackConversion } from "@/lib/conversionTracking";
 import { trackPdfFunnel } from "@/lib/pdfFunnelTracking";
 
@@ -29,6 +29,7 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [budget, setBudget] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -45,6 +46,11 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
       .trim()
       .email(isRo ? "Adresă de email invalidă" : "Invalid email address")
       .max(200),
+    phone: z
+      .string()
+      .trim()
+      .min(8, isRo ? "Introdu un număr de telefon valid (min. 8 cifre)" : "Enter a valid phone (min 8 digits)")
+      .max(30),
     budget: z.string().min(1, isRo ? "Selectează bugetul" : "Select a budget"),
   });
 
@@ -89,6 +95,8 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
         namePlaceholder: "ex: Adrian Popescu",
         email: "Email",
         emailPlaceholder: "nume@exemplu.ro",
+        phone: "Telefon / WhatsApp",
+        phonePlaceholder: "ex: 0722 123 456",
         budget: "Buget investiție",
         submit: "Trimite-mi PDF-ul",
         sending: "Se trimite...",
@@ -108,6 +116,8 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
         namePlaceholder: "e.g. Adrian Popescu",
         email: "Email",
         emailPlaceholder: "name@example.com",
+        phone: "Phone / WhatsApp",
+        phonePlaceholder: "e.g. +40 722 123 456",
         budget: "Investment budget",
         submit: "Send me the PDF",
         sending: "Sending...",
@@ -124,7 +134,7 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    const parsed = schema.safeParse({ name, email, budget });
+    const parsed = schema.safeParse({ name, email, phone, budget });
     if (!parsed.success) {
       const fe: Record<string, string> = {};
       parsed.error.issues.forEach((i) => (fe[String(i.path[0])] = i.message));
@@ -137,7 +147,7 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
       const { data, error } = await supabase.functions.invoke("submit-lead", {
         body: {
           name: parsed.data.name,
-          whatsapp_number: "pending",
+          whatsapp_number: parsed.data.phone,
           email: parsed.data.email,
           property_type: "cerere_rapida",
           property_area: 0,
@@ -194,6 +204,7 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
       setOpen(false);
       setName("");
       setEmail("");
+      setPhone("");
       setBudget("");
 
       // Redirect to thank-you page
@@ -245,6 +256,26 @@ const InvestmentGuideLeadModal = ({ triggerOrigin = "auto" }: InvestmentGuideLea
               required
             />
             {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+          </div>
+          <div>
+            <Label htmlFor="ig-phone">
+              <span className="inline-flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" />
+                {t.phone}
+              </span>
+            </Label>
+            <Input
+              id="ig-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              maxLength={30}
+              placeholder={t.phonePlaceholder}
+              autoComplete="tel"
+              aria-invalid={!!errors.phone}
+              required
+            />
+            {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
           </div>
           <div>
             <Label htmlFor="ig-budget">
