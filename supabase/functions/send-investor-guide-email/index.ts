@@ -133,7 +133,7 @@ serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "RealTrust <info@realtrust.ro>",
+        from: "RealTrust <info@notify.realtrust.ro>",
         to: [email],
         subject,
         html,
@@ -160,7 +160,7 @@ serve(async (req) => {
           Authorization: `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: "RealTrust Leads <info@realtrust.ro>",
+          from: "RealTrust Leads <info@notify.realtrust.ro>",
           to: ["info@realtrust.ro"],
           subject: `📊 Lead Ghid Investitor: ${name} (${budget ?? "buget necunoscut"})`,
           html: `<p><strong>Nume:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Buget:</strong> ${budget ?? "—"}</p><p><strong>Sursă:</strong> Ghid Investiții 2026 (blog)</p>`,
