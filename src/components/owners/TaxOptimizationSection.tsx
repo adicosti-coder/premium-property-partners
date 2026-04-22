@@ -681,10 +681,10 @@ const TaxOptimizationSection = () => {
                         return (
                           <div
                             key={step.key}
-                            className={`p-4 ${isNet ? "bg-primary/[0.05]" : ""}`}
+                            className={`px-3 py-3 ${isNet ? "bg-primary/[0.05]" : ""}`}
                           >
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="font-medium text-foreground text-sm leading-snug">
+                              <div className="font-medium text-foreground text-[13px] leading-snug">
                                 {step.label}
                               </div>
                               <Tooltip>
@@ -697,33 +697,32 @@ const TaxOptimizationSection = () => {
                                     <Info className="w-4 h-4" />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-[260px] text-xs">
+                                <TooltipContent side="top" className="max-w-[240px] text-xs">
                                   {step.hint}
                                 </TooltipContent>
                               </Tooltip>
                             </div>
-                            <div className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
-                              {step.hint}
-                            </div>
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="rounded-md bg-muted/30 p-2.5">
-                                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">
+                              <div className="rounded-md bg-muted/30 px-2 py-2">
+                                <div className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold mb-0.5">
                                   PFA
                                 </div>
-                                <div className={`tabular-nums ${valueClass}`}>{fmt(step.pfa)}</div>
+                                <div className={`tabular-nums text-sm ${valueClass}`}>
+                                  {fmt(step.pfa)}
+                                </div>
                               </div>
                               <div
-                                className={`rounded-md p-2.5 ${
+                                className={`rounded-md px-2 py-2 ${
                                   isNet
                                     ? "bg-primary/10 border border-primary/30"
                                     : "bg-primary/[0.04] border border-primary/15"
                                 }`}
                               >
-                                <div className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1 flex items-center gap-1">
+                                <div className="text-[9px] uppercase tracking-wide text-primary font-semibold mb-0.5 flex items-center gap-1">
                                   SRL <span className="opacity-70">★</span>
                                 </div>
                                 <div
-                                  className={`tabular-nums ${valueClass} ${
+                                  className={`tabular-nums text-sm ${valueClass} ${
                                     isNet ? "text-primary" : ""
                                   }`}
                                 >
