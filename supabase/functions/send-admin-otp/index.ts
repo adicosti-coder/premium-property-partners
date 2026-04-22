@@ -23,7 +23,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
 
     // Verify user
     const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
@@ -52,7 +51,7 @@ serve(async (req) => {
 
     // Generate 6-digit code
     const code = String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // Invalidate previous codes
     await supabaseAdmin
@@ -62,39 +61,35 @@ serve(async (req) => {
       .eq("used", false);
 
     // Store code
-    await supabaseAdmin.from("admin_otp_codes").insert({
-      user_id: user.id,
-      code,
-      expires_at: expiresAt,
-    });
+    const { data: inserted, error: insertErr } = await supabaseAdmin
+      .from("admin_otp_codes")
+      .insert({ user_id: user.id, code, expires_at: expiresAt })
+      .select("id")
+      .single();
 
-    // Send email via Resend
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "RealTrust <info@notify.realtrust.ro>",
-        to: [user.email],
-        subject: `Cod acces admin: ${code}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-            <h2 style="color: #1a1a2e; margin-bottom: 8px;">🔐 Cod de acces Admin</h2>
-            <p style="color: #555; margin-bottom: 24px;">Folosește codul de mai jos pentru a accesa panoul de administrare RealTrust:</p>
-            <div style="background: #f4f4f8; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-              <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a1a2e;">${code}</span>
-            </div>
-            <p style="color: #888; font-size: 13px;">Codul expiră în 10 minute. Dacă nu ai solicitat acest cod, ignoră acest email.</p>
-          </div>
-        `,
-      }),
-    });
+    if (insertErr) {
+      console.error("OTP insert error:", insertErr);
+      return new Response(JSON.stringify({ error: "Failed to store code" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!emailRes.ok) {
-      const errBody = await emailRes.text();
-      console.error("Resend error:", errBody);
+    // Send via Lovable Emails (transactional queue) — uses verified domain managed by Lovable
+    const { error: sendErr } = await supabaseAdmin.functions.invoke(
+      "send-transactional-email",
+      {
+        body: {
+          templateName: "admin-otp",
+          recipientEmail: user.email,
+          idempotencyKey: `admin-otp-${inserted.id}`,
+          templateData: { code },
+        },
+      }
+    );
+
+    if (sendErr) {
+      console.error("send-transactional-email error:", sendErr);
       return new Response(JSON.stringify({ error: "Failed to send email" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
