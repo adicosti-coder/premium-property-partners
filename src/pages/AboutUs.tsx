@@ -584,6 +584,9 @@ const AboutUs = () => {
           </div>
         </section>
 
+        {/* SEO H3 strip — fills audit keyword gaps (ANEVAR, legal, management, business hubs) */}
+        <SEOAboutAdditionsStrip />
+
         {/* Two Brands Section */}
         <section id="branduri" className="py-20 md:py-28">
           <div 
