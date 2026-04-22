@@ -15,11 +15,11 @@ import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 // 2.5s render delay measured by Lighthouse when it was lazy + Suspense fallback null.
 import PageSummary from "@/components/PageSummary";
 
-// Header & Hero are lazy — the static shell in index.html already paints
-// instantly as LCP. Loading the React versions eagerly was adding ~134 KiB
-// JS to the critical path and delaying LCP element render by ~5.3s.
-const Header = lazy(() => import("@/components/Header"));
-const Hero = lazy(() => import("@/components/Hero"));
+// Header & Hero MUST be eager: they are the LCP element and the static
+// shell in index.html is wiped by React mount. Any Suspense gap here
+// produces a blank viewport → catastrophic CLS=1.0 measured by Lighthouse.
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
