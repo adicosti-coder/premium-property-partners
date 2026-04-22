@@ -212,7 +212,7 @@ const handler = async (req: Request): Promise<Response> => {
             );
 
             await resend.emails.send({
-              from: "RealTrust <noreply@realtrustaparthotel.lovable.app>",
+              from: "RealTrust <info@realtrust.ro>",
               to: [email],
               subject: campaign.subject,
               html: htmlContent,

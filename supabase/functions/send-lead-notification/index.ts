@@ -885,10 +885,19 @@ const handler = async (req: Request): Promise<Response> => {
           };
         }
 
+        // Enrich payload with universal fields for downstream automation (Make/CRM)
+        const enrichedPayload = {
+          ...makePayload,
+          source: leadData.source,
+          language: (rawData as any).language || "ro",
+          budget: (rawData as any).budget || (leadData as any).budget || null,
+          timestamp: new Date().toISOString(),
+        };
+
         const makeResponse = await fetch(MAKE_WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(makePayload),
+          body: JSON.stringify(enrichedPayload),
         });
 
         makeResult = makeResponse.ok ? "sent" : "failed";
