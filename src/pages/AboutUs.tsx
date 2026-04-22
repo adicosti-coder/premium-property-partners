@@ -433,8 +433,8 @@ const AboutUs = () => {
       />
       <Header />
       <PageSummary
-        summaryRo="Despre RealTrust — echipă profesionistă din Timișoara specializată în administrarea apartamentelor în regim hotelier și servicii imobiliare complete. Misiunea, valorile și povestea companiei."
-        summaryEn="About RealTrust — professional team from Timișoara specialized in short-term rental management and complete real estate services. Company mission, values and story."
+        summaryRo="Despre RealTrust — echipă din Timișoara specializată în servicii imobiliare complete, regim hotelier și management imobiliar Timișoara. Colaborăm cu evaluator ANEVAR Timișoara și oferim consultanță juridică imobiliară Timișoara prin parteneri notari și avocați. Cazare corporate lângă City Business Centre, Bega Business Park, Vox Park și Iulius Town."
+        summaryEn="About RealTrust — Timișoara team specialized in full-service real estate, short-term rental and property management Timișoara. We work with ANEVAR appraisers and offer legal real estate consulting through notary and lawyer partners. Corporate stays near City Business Centre, Bega Business Park, Vox Park and Iulius Town."
       />
       
       <main className="pt-20">
