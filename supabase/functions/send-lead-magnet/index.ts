@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { name, email, source, language } = await req.json() as LeadMagnetRequest;
+    const { name, email, source, language, budget, phone } = await req.json() as LeadMagnetRequest & { budget?: string; phone?: string };
 
     console.log("Lead magnet request received:", { name, email, source, language });
 
@@ -99,6 +99,8 @@ serve(async (req) => {
           body: JSON.stringify({
             name,
             email,
+            phone: phone || null,
+            budget: budget || null,
             source,
             language,
             type: "lead_magnet",
@@ -125,7 +127,8 @@ serve(async (req) => {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: "RealTrust Leads <onboarding@resend.dev>",
+            from: "RealTrust <info@realtrust.ro>",
+            reply_to: "info@realtrust.ro",
             to: ["info@realtrust.ro"],
             subject: `🎯 Lead Magnet: ${name} vrea Ghidul Investitorului 2026`,
             html: `
@@ -133,6 +136,8 @@ serve(async (req) => {
                 <h1 style="color: #1e3a5f;">🎯 Lead Magnet Nou!</h1>
                 <p><strong>Nume:</strong> ${name}</p>
                 <p><strong>Email:</strong> ${email}</p>
+                ${phone ? `<p><strong>Telefon:</strong> ${phone}</p>` : ""}
+                ${budget ? `<p><strong>Buget:</strong> ${budget}</p>` : ""}
                 <p><strong>Sursă:</strong> ${source}</p>
                 <p><strong>Limbă:</strong> ${language === "ro" ? "Română" : "English"}</p>
               </div>
