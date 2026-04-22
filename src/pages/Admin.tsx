@@ -30,6 +30,7 @@ import POIManager from "@/components/admin/POIManager";
 import HeroVideoManager from "@/components/admin/HeroVideoManager";
 import HeroTextManager from "@/components/admin/HeroTextManager";
 import LeadsManager from "@/components/admin/LeadsManager";
+import LeadsAnalyticsDashboard from "@/components/admin/LeadsAnalyticsDashboard";
 import LocalTipsManager from "@/components/admin/LocalTipsManager";
 import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
 import ABTestManager from "@/components/admin/ABTestManager";
@@ -360,6 +361,10 @@ const Admin = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="leads-analytics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Funnel Lead-uri
+            </TabsTrigger>
             <TabsTrigger value="maintenance" className="flex items-center gap-2">
               <Wrench className="w-4 h-4" />
               {t.admin.tabs?.maintenance || "Mentenanță"}
@@ -454,6 +459,7 @@ const Admin = () => {
           <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
           <TabsContent value="dashboard"><AdminDashboard /></TabsContent>
           <TabsContent value="leads"><LeadsManager /></TabsContent>
+          <TabsContent value="leads-analytics"><LeadsAnalyticsDashboard /></TabsContent>
           <TabsContent value="bookings"><BookingManager /></TabsContent>
           <TabsContent value="cazare"><CazareManager /></TabsContent>
           <TabsContent value="properties"><PropertyManager /></TabsContent>
