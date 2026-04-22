@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { compressImages } from "@/utils/imageCompression";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
+import { trackConversion } from "@/lib/conversionTracking";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -589,6 +590,11 @@ const QuickSelector = () => {
       });
 
       if (leadError) throw leadError;
+
+      trackConversion({
+        event: "contact_form_submit",
+        source: "quick_selector_request",
+      });
 
       setIsSuccess(true);
       toast({
