@@ -1,24 +1,24 @@
+import { forwardRef } from "react";
 import { Sparkles, ZapOff } from "lucide-react";
 import { useAnimationPreference } from "@/hooks/useAnimationPreference";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 
-const AnimationToggle = () => {
+const AnimationToggle = forwardRef<HTMLButtonElement>((_props, ref) => {
   const { animationsEnabled, toggleAnimations } = useAnimationPreference();
   const { language } = useLanguage();
   const { toast } = useToast();
 
-  const label = animationsEnabled 
+  const label = animationsEnabled
     ? (language === 'ro' ? 'Dezactivează animațiile' : 'Disable animations')
     : (language === 'ro' ? 'Activează animațiile' : 'Enable animations');
 
   const handleToggle = () => {
     const newState = !animationsEnabled;
     toggleAnimations();
-    
     toast({
-      title: newState 
+      title: newState
         ? (language === 'ro' ? '✨ Animații activate' : '✨ Animations enabled')
         : (language === 'ro' ? '⚡ Animații dezactivate' : '⚡ Animations disabled'),
       description: newState
@@ -30,6 +30,7 @@ const AnimationToggle = () => {
 
   return (
     <Button
+      ref={ref}
       variant="ghost"
       size="sm"
       onClick={handleToggle}
@@ -37,44 +38,34 @@ const AnimationToggle = () => {
       aria-label={label}
       title={label}
     >
-      {/* Icon container with flip animation */}
       <div className="relative w-4 h-4">
-        <Sparkles 
+        <Sparkles
           className={`absolute inset-0 w-4 h-4 transition-all duration-300 ease-out ${
-            animationsEnabled 
-              ? 'opacity-100 rotate-0 scale-100' 
-              : 'opacity-0 -rotate-180 scale-50'
-          }`} 
+            animationsEnabled ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-180 scale-50'
+          }`}
         />
-        <ZapOff 
+        <ZapOff
           className={`absolute inset-0 w-4 h-4 transition-all duration-300 ease-out ${
-            animationsEnabled 
-              ? 'opacity-0 rotate-180 scale-50' 
-              : 'opacity-100 rotate-0 scale-100'
-          }`} 
+            animationsEnabled ? 'opacity-0 rotate-180 scale-50' : 'opacity-100 rotate-0 scale-100'
+          }`}
         />
       </div>
-      
-      {/* Status indicator dot with pulse animation on change */}
-      <span 
+      <span
         className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-background transition-all duration-300 ${
-          animationsEnabled 
-            ? 'bg-green-500 scale-100' 
-            : 'bg-muted-foreground/50 scale-90'
+          animationsEnabled ? 'bg-green-500 scale-100' : 'bg-muted-foreground/50 scale-90'
         }`}
       >
-        {/* Pulse ring effect */}
-        <span 
+        <span
           className={`absolute inset-0 rounded-full transition-all duration-500 ${
-            animationsEnabled 
-              ? 'bg-green-500/50 animate-ping' 
-              : ''
+            animationsEnabled ? 'bg-green-500/50 animate-ping' : ''
           }`}
           style={{ animationIterationCount: 1, animationDuration: '0.6s' }}
         />
       </span>
     </Button>
   );
-};
+});
+
+AnimationToggle.displayName = "AnimationToggle";
 
 export default AnimationToggle;
