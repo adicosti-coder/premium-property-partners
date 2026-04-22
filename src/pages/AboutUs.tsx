@@ -29,6 +29,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import PageSummary from "@/components/PageSummary";
+import SEOAboutAdditionsStrip from "@/components/SEOAboutAdditionsStrip";
 
 const AboutUs = () => {
   const { language } = useLanguage();
@@ -432,8 +433,8 @@ const AboutUs = () => {
       />
       <Header />
       <PageSummary
-        summaryRo="Despre RealTrust — echipă profesionistă din Timișoara specializată în administrarea apartamentelor în regim hotelier și servicii imobiliare complete. Misiunea, valorile și povestea companiei."
-        summaryEn="About RealTrust — professional team from Timișoara specialized in short-term rental management and complete real estate services. Company mission, values and story."
+        summaryRo="Despre RealTrust — echipă din Timișoara specializată în servicii imobiliare complete, regim hotelier și management imobiliar Timișoara. Colaborăm cu evaluator ANEVAR Timișoara și oferim consultanță juridică imobiliară Timișoara prin parteneri notari și avocați. Cazare corporate lângă City Business Centre, Bega Business Park, Vox Park și Iulius Town."
+        summaryEn="About RealTrust — Timișoara team specialized in full-service real estate, short-term rental and property management Timișoara. We work with ANEVAR appraisers and offer legal real estate consulting through notary and lawyer partners. Corporate stays near City Business Centre, Bega Business Park, Vox Park and Iulius Town."
       />
       
       <main className="pt-20">
@@ -455,6 +456,7 @@ const AboutUs = () => {
               {[
                 { id: "misiune", label: language === "ro" ? "Misiune" : "Mission" },
                 { id: "poveste", label: language === "ro" ? "Poveste" : "Story" },
+                { id: "servicii-extinse", label: language === "ro" ? "Servicii extinse" : "Extended services" },
                 { id: "branduri", label: language === "ro" ? "Branduri" : "Brands" },
                 { id: "valori", label: language === "ro" ? "Valori" : "Values" },
                 { id: "companie", label: language === "ro" ? "Date companie" : "Company info" },
@@ -582,6 +584,9 @@ const AboutUs = () => {
             </div>
           </div>
         </section>
+
+        {/* SEO H3 strip — fills audit keyword gaps (ANEVAR, legal, management, business hubs) */}
+        <SEOAboutAdditionsStrip />
 
         {/* Two Brands Section */}
         <section id="branduri" className="py-20 md:py-28">
