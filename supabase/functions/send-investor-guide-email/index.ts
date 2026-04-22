@@ -119,7 +119,7 @@ serve(async (req) => {
       ${isRo ? "Consultanță și Administrare Regim Hotelier" : "Real Estate Consulting & Short-Term Rental Management"}
     </p>
     <p style="font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;margin:0;">
-      +40 733 558 454 · info@notify.realtrust.ro · realtrust.ro<br>
+      +40 733 558 454 · info@realtrust.ro · realtrust.ro<br>
       ${isRo ? "Ai primit acest email pentru că ai solicitat Ghidul Investitorului pe realtrust.ro" : "You received this email because you requested the Investor Guide on realtrust.ro"}
     </p>
   </div>
@@ -137,7 +137,7 @@ serve(async (req) => {
         to: [email],
         subject,
         html,
-        reply_to: "info@notify.realtrust.ro",
+        reply_to: "info@realtrust.ro",
       }),
     });
 
@@ -161,7 +161,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           from: "RealTrust Leads <info@notify.realtrust.ro>",
-          to: ["info@notify.realtrust.ro"],
+          to: ["info@realtrust.ro"],
           subject: `📊 Lead Ghid Investitor: ${name} (${budget ?? "buget necunoscut"})`,
           html: `<p><strong>Nume:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Buget:</strong> ${budget ?? "—"}</p><p><strong>Sursă:</strong> Ghid Investiții 2026 (blog)</p>`,
         }),
