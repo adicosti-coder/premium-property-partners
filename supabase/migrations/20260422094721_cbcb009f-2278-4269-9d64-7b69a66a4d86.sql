@@ -1,0 +1,1 @@
+UPDATE public.blog_articles SET cover_image = '/blog/ghid-investitii-timisoara-2026.jpg', updated_at = now() WHERE slug = 'ghid-investitii-imobiliare-timisoara-2026';
