@@ -109,11 +109,11 @@ const Hero = () => {
   return (
     <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-28 md:pt-32">
       {/* Background: static image + video (desktop only) */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden">
         <img
           src={heroSettings.customFallbackImage || HERO_IMAGE_PUBLIC}
           alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. Apartamente regim hotelier ATENEO, GREEN FOREST, FullView Studio, City of Mara — lângă Iulius Mall, Centrul Vechi. ROI 9.4% net verificat."
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover hero-kenburns"
           width={800}
           height={447}
           fetchPriority="high"
@@ -140,11 +140,15 @@ const Hero = () => {
         )}
       </div>
       
-      {/* Content gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-transparent dark:from-background/70 dark:via-background/30 z-[1]" />
+      {/* Cinematic multi-layer overlay — depth + readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/92 via-background/60 to-background/10 dark:from-background/85 dark:via-background/40 dark:to-transparent z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/20 z-[1] pointer-events-none" />
+      {/* Subtle vignette for editorial feel */}
+      <div className="absolute inset-0 z-[1] pointer-events-none" style={{ boxShadow: 'inset 0 0 180px rgba(0,0,0,0.45)' }} />
       
       {/* Gold accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent z-[2]" />
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent z-[2]" />
       
       <div className="container relative z-10 mx-auto px-6 py-20 lg:py-32 min-h-[60vh] md:min-h-[50vh]">
         <div className="max-w-4xl">
