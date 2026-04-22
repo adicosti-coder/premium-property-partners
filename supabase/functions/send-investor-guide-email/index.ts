@@ -112,8 +112,14 @@ serve(async (req) => {
     </div>
 
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0;">
+    <p style="font-size:13px;color:#1f2937;text-align:center;line-height:1.6;margin:0 0 8px;font-weight:600;">
+      RealTrust &amp; ApArt Hotel Timișoara
+    </p>
+    <p style="font-size:12px;color:#6b7280;text-align:center;line-height:1.6;margin:0 0 12px;">
+      ${isRo ? "Consultanță și Administrare Regim Hotelier" : "Real Estate Consulting & Short-Term Rental Management"}
+    </p>
     <p style="font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;margin:0;">
-      RealTrust Imobiliare Timișoara · +40 733 558 454 · info@realtrust.ro<br>
+      +40 733 558 454 · info@realtrust.ro · realtrust.ro<br>
       ${isRo ? "Ai primit acest email pentru că ai solicitat Ghidul Investitorului pe realtrust.ro" : "You received this email because you requested the Investor Guide on realtrust.ro"}
     </p>
   </div>
