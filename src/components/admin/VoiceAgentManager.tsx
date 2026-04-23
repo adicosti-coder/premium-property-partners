@@ -316,6 +316,9 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      {/* SCRIPT EDITOR (system prompt AI) */}
+      <VoiceAgentScriptsEditor />
+
       {/* AUTO-DIAL SETTINGS */}
       <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
