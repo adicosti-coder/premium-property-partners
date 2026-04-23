@@ -168,6 +168,7 @@ export default function CallDashboard() {
   const [minScore, setMinScore] = useState<string>("0");
   const [sortByScore, setSortByScore] = useState(true);
   const [transcriptOpen, setTranscriptOpen] = useState<CallRow | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50); // incremental rendering for performance
 
   const fetchAll = async () => {
     setLoading(true);
