@@ -944,7 +944,7 @@ const ProspectListings = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-7 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select
               value={prospectTypeFilter}
@@ -1006,6 +1006,15 @@ const ProspectListings = () => {
                 <SelectItem value="all">📍 Toate zonele</SelectItem>
                 {availableZones.map((z) => (
                   <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger><SelectValue placeholder="Sursă" /></SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="all">🌐 Toate sursele</SelectItem>
+                {availableSources.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
