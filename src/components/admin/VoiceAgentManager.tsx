@@ -247,6 +247,127 @@ export default function VoiceAgentManager() {
         </CardContent>
       </Card>
 
+      {/* ELEVENLABS VOICE TUNING */}
+      <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Volume2 className="h-5 w-5 text-amber-600" />
+            Voce Premium ElevenLabs — Tuning & Preview
+            {autoSettings?.use_elevenlabs && <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/40">ACTIV</Badge>}
+          </CardTitle>
+          <CardDescription>
+            Înlocuiește vocea robotică Polly cu o voce naturală în română. Ajustează stabilitate, similaritate, stil și viteză, apoi ascultă preview înainte de a salva.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
+            <div>
+              <div className="font-medium text-sm">Folosește ElevenLabs în apeluri</div>
+              <div className="text-xs text-muted-foreground">Dacă e oprit, se folosește Amazon Polly (Carmen) ca fallback.</div>
+            </div>
+            <Switch
+              checked={!!autoSettings?.use_elevenlabs}
+              onCheckedChange={(v) => saveSettings({ use_elevenlabs: v })}
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Voce</label>
+              <Select
+                value={autoSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL"}
+                onValueChange={(v) => saveSettings({ elevenlabs_voice_id: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {VOICES.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block text-muted-foreground">Model</label>
+              <Select
+                value={autoSettings?.elevenlabs_model_id || "eleven_multilingual_v2"}
+                onValueChange={(v) => saveSettings({ elevenlabs_model_id: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="eleven_multilingual_v2">Multilingual v2 (calitate maximă)</SelectItem>
+                  <SelectItem value="eleven_turbo_v2_5">Turbo v2.5 (latență scăzută)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Stabilitate</span><span className="font-mono">{Number(autoSettings?.voice_stability ?? 0.6).toFixed(2)}</span></div>
+              <Slider min={0} max={1} step={0.05} value={[Number(autoSettings?.voice_stability ?? 0.6)]} onValueChange={([v]) => setAutoSettings({ ...autoSettings, voice_stability: v })} onValueCommit={([v]) => saveSettings({ voice_stability: v })} />
+              <div className="text-[10px] text-muted-foreground mt-1">Mai mic = mai expresiv, mai mare = mai constant</div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Similaritate</span><span className="font-mono">{Number(autoSettings?.voice_similarity_boost ?? 0.8).toFixed(2)}</span></div>
+              <Slider min={0} max={1} step={0.05} value={[Number(autoSettings?.voice_similarity_boost ?? 0.8)]} onValueChange={([v]) => setAutoSettings({ ...autoSettings, voice_similarity_boost: v })} onValueCommit={([v]) => saveSettings({ voice_similarity_boost: v })} />
+              <div className="text-[10px] text-muted-foreground mt-1">Cât de fidel păstrează caracteristicile vocii</div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Stil</span><span className="font-mono">{Number(autoSettings?.voice_style ?? 0.4).toFixed(2)}</span></div>
+              <Slider min={0} max={1} step={0.05} value={[Number(autoSettings?.voice_style ?? 0.4)]} onValueChange={([v]) => setAutoSettings({ ...autoSettings, voice_style: v })} onValueCommit={([v]) => saveSettings({ voice_style: v })} />
+              <div className="text-[10px] text-muted-foreground mt-1">Exagerare emoțională / inflexiuni</div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Viteză</span><span className="font-mono">{Number(autoSettings?.voice_speed ?? 1.0).toFixed(2)}x</span></div>
+              <Slider min={0.7} max={1.2} step={0.05} value={[Number(autoSettings?.voice_speed ?? 1.0)]} onValueChange={([v]) => setAutoSettings({ ...autoSettings, voice_speed: v })} onValueCommit={([v]) => saveSettings({ voice_speed: v })} />
+              <div className="text-[10px] text-muted-foreground mt-1">Ritmul vorbirii</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
+            <div className="text-sm font-medium">Speaker Boost (claritate suplimentară)</div>
+            <Switch checked={!!autoSettings?.voice_use_speaker_boost} onCheckedChange={(v) => saveSettings({ voice_use_speaker_boost: v })} />
+          </div>
+
+          <div className="space-y-2 p-3 rounded-lg border bg-background">
+            <label className="text-xs font-medium text-muted-foreground">Text preview</label>
+            <Textarea rows={2} value={previewText} onChange={(e) => setPreviewText(e.target.value)} />
+            <div className="flex gap-2">
+              <Button onClick={previewVoice} disabled={previewLoading} variant="outline" size="sm">
+                {previewLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <PlayIcon className="h-4 w-4 mr-2" />}
+                Ascultă preview
+              </Button>
+              {previewAudio && <audio controls src={previewAudio} className="flex-1 h-9" autoPlay />}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* NOTIFICATIONS */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-primary" />
+            Notificări post-apel
+          </CardTitle>
+          <CardDescription>Primești sumarul AI + link înregistrare după fiecare apel finalizat.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between p-3 rounded-lg border">
+            <div className="flex items-center gap-2"><Mail className="h-4 w-4" /><div><div className="text-sm font-medium">Email cu transcript + recording</div><div className="text-xs text-muted-foreground">Către {autoSettings?.notify_email || "adicosti@gmail.com"}</div></div></div>
+            <Switch checked={!!autoSettings?.notify_email_enabled} onCheckedChange={(v) => saveSettings({ notify_email_enabled: v })} />
+          </div>
+          <Input
+            placeholder="adresa@email.com"
+            value={autoSettings?.notify_email || ""}
+            onChange={(e) => setAutoSettings({ ...autoSettings, notify_email: e.target.value })}
+            onBlur={(e) => saveSettings({ notify_email: e.target.value })}
+          />
+          <div className="flex items-center justify-between p-3 rounded-lg border">
+            <div className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-green-600" /><div><div className="text-sm font-medium">WhatsApp cu rezumat scurt</div><div className="text-xs text-muted-foreground">Via webhook Make.com</div></div></div>
+            <Switch checked={!!autoSettings?.notify_whatsapp_enabled} onCheckedChange={(v) => saveSettings({ notify_whatsapp_enabled: v })} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
