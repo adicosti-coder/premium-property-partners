@@ -304,6 +304,14 @@ const ProspectListings = () => {
     <div className="min-h-screen bg-background p-4 md:p-6">
       <SEOHead title="Prospect Listings | Admin" description="AI-scored leads pipeline" />
 
+      {/* Debug banner — vizibil pe mobil pentru diagnoză */}
+      <div className="max-w-[1600px] mx-auto mb-3 p-3 rounded-md border border-blue-300 bg-blue-50 dark:bg-blue-950/30 text-xs space-y-1">
+        <div><strong>👤 User:</strong> {user?.email ?? "—"} <span className="text-muted-foreground">({user?.id?.slice(0, 8)}…)</span></div>
+        <div><strong>🔐 Admin:</strong> {isAdmin ? "✅ DA" : "❌ NU"} {adminLoading && "(loading…)"}</div>
+        <div><strong>📊 Prospecte încărcate:</strong> {prospects.length} | <strong>După filtre:</strong> {filtered.length} | {isLoading && "(loading…)"}</div>
+        {queryError ? <div className="text-destructive"><strong>❌ Eroare query:</strong> {(queryError as Error).message}</div> : null}
+      </div>
+
       <div className="max-w-[1600px] mx-auto space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
