@@ -23,6 +23,35 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function getSignedStorageUrl(supabase: any, filePath: string): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from("voice-recordings")
+    .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+  if (error) {
+    console.error("Storage signed URL failed:", error.message);
+    return null;
+  }
+
+  return data?.signedUrl || null;
+}
+
+function hasRomanianSignals(text: string): boolean {
+  const normalized = text.toLowerCase();
+  return /[ăâîșşțţ]/.test(normalized) || /\b(bună|mulțumesc|dumneavoastră|revedere|vă|și|este|sunt|ziua)\b/.test(normalized);
+}
+
+function hasEnglishSignals(text: string): boolean {
+  return /\b(hello|sorry|please|thank you|goodbye|good morning|good afternoon|application error|an error has occurred)\b/i.test(text);
+}
+
+function normalizeAiReply(text: string, fallback: string): string {
+  const cleaned = String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim();
+  if (!cleaned) return fallback;
+  if (!hasRomanianSignals(cleaned) && hasEnglishSignals(cleaned)) return fallback;
+  return cleaned;
+}
+
 interface VoiceSettings {
   voice_id: string;
   model_id: string;
@@ -52,8 +81,7 @@ async function ttsToCachedUrl(
       .list("tts-cache", { search: `${cacheKey}.mp3`, limit: 1 });
 
     if (existing && existing.length > 0) {
-      const { data: pub } = supabase.storage.from("voice-recordings").getPublicUrl(filePath);
-      return pub.publicUrl;
+      return await getSignedStorageUrl(supabase, filePath);
     }
 
     const res = await fetch(
@@ -87,8 +115,7 @@ async function ttsToCachedUrl(
       console.error("Storage upload failed:", upErr.message);
       return null;
     }
-    const { data: pub } = supabase.storage.from("voice-recordings").getPublicUrl(filePath);
-    return pub.publicUrl;
+    return await getSignedStorageUrl(supabase, filePath);
   } catch (e) {
     console.error("ttsToCachedUrl exception:", e);
     return null;
@@ -212,6 +239,18 @@ function extractCustomPrompt(prompt?: string | null): string {
   return prompt!.replace(/^__CUSTOM_PROMPT__\n/, "").trim();
 }
 
+function composeSystemPrompt(
+  branch: "vanzare" | "inchiriere" | "cazare",
+  leadContext: string,
+  objective: string,
+  sentimentBlock: string,
+  customInstructions?: string | null,
+): string {
+  const basePrompt = systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
+  if (!customInstructions) return basePrompt;
+  return `${basePrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customInstructions}`;
+}
+
 serve(async (req) => {
   try {
     const url = new URL(req.url);
@@ -306,6 +345,8 @@ serve(async (req) => {
 
     const objective = session.call_objective || "qualify";
     const customPrompt = extractCustomPrompt(session.voice_agent_prompt);
+    const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
+    const systemPrompt = composeSystemPrompt(branch, leadContext, objective, sentimentBlock, customPrompt || undefined);
 
     let userSpeech = "";
     if (req.method === "POST") {
@@ -322,15 +363,27 @@ serve(async (req) => {
     let shouldHangup = false;
 
     if (turn === 0) {
-      if (customPrompt) {
-        aiReply = customPrompt;
-        shouldHangup = true;
-      } else {
-      aiReply = openingLine(branch, contextSummary);
+      if (customPrompt && LOVABLE_API_KEY) {
+        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: "Începe apelul acum. Generează doar prima replică, foarte scurtă, exclusiv în română." },
+            ],
+          }),
+        });
+
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          aiReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+        }
       }
+
+      aiReply = normalizeAiReply(aiReply, openingLine(branch, contextSummary));
     } else if (LOVABLE_API_KEY) {
-      const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
-      const systemPrompt = customPrompt || session.voice_agent_prompt || systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
@@ -344,9 +397,12 @@ serve(async (req) => {
       });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
-        aiReply = aiData.choices?.[0]?.message?.content?.trim() || "Mulțumesc pentru timp. La revedere.";
+        aiReply = normalizeAiReply(
+          aiData.choices?.[0]?.message?.content?.trim() || "",
+          "Mulțumesc pentru timp. O zi frumoasă! La revedere.",
+        );
       } else {
-        aiReply = "Mulțumesc pentru timp. Vă voi contacta în curând. O zi bună!";
+        aiReply = "Mulțumesc pentru timp. O zi frumoasă! La revedere.";
         shouldHangup = true;
       }
     } else {
