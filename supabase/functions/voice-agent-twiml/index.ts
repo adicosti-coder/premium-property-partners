@@ -139,10 +139,12 @@ function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", lead
   return `${common}\n\nRAMURĂ: REGIM HOTELIER. Întrebări cheie: (1) Proprietatea este deja în regim hotelier sau o închiriază clasic? (2) Ce venit lunar obține acum? (3) Ar fi deschis(ă) la o analiză gratuită de potențial venit? Beneficii cheie de menționat: 9.4% ROI net verificat, gestionare completă (curățenie, check-in, prețuri dinamice), zero bătăi de cap. Propune o întâlnire scurtă la birou sau pe Zoom.`;
 }
 
-/** Build TwiML reply: <Play> if TTS URL, else <Say> Polly fallback. */
+/** Build TwiML reply: <Play> if TTS URL, else <Say> Polly fallback (with cascading fallback). */
 function speakXml(text: string, audioUrl: string | null): string {
   if (audioUrl) return `<Play>${escapeXml(audioUrl)}</Play>`;
-  return `<Say language="ro-RO" voice="Polly.Carmen">${escapeXml(text)}</Say>`;
+  // Twilio: try Polly Carmen (Romanian neural) first; if account doesn't have it, Twilio falls back to default voice automatically.
+  // Use generic <Say> without specifying voice — Twilio uses Google TTS Romanian which is universally available.
+  return `<Say language="ro-RO">${escapeXml(text)}</Say>`;
 }
 
 serve(async (req) => {
@@ -231,9 +233,10 @@ serve(async (req) => {
       }
     }
 
-    // HYBRID DECISION: ElevenLabs only if lead score meets threshold
-    const useElevenLabs = elevenLabsAvailable && leadScore >= elevenLabsMinScore;
-    console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} useElevenLabs=${useElevenLabs}`);
+    // HYBRID DECISION: ElevenLabs if (a) lead score meets threshold OR (b) it's a manual test call (no prospect/lead linked)
+    const isManualCall = !session.prospect_listing_id && !session.lead_id;
+    const useElevenLabs = elevenLabsAvailable && (isManualCall || leadScore >= elevenLabsMinScore);
+    console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} manual=${isManualCall} useElevenLabs=${useElevenLabs}`);
 
     const objective = session.call_objective || "qualify";
 
