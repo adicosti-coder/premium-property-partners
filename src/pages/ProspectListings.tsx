@@ -99,8 +99,16 @@ const ProspectListings = () => {
 
   useEffect(() => {
     if (!adminLoading && !isAdmin && user) {
-      toast({ title: "Acces interzis", description: "Doar admin.", variant: "destructive" });
+      console.warn("[ProspectListings] Access denied for user:", user.email, user.id);
+      toast({
+        title: "Acces interzis",
+        description: `Contul ${user.email ?? user.id} nu are rol admin.`,
+        variant: "destructive",
+      });
       navigate("/");
+    }
+    if (!adminLoading && !user) {
+      navigate("/auth?redirect=/prospect-listings");
     }
   }, [adminLoading, isAdmin, user, navigate]);
 
