@@ -644,12 +644,26 @@ const ProspectListings = () => {
         <Card>
           <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <Select value={prospectTypeFilter} onValueChange={(v) => setProspectTypeFilter(v as any)}>
-              <SelectTrigger><SelectValue placeholder="Tip prospect" /></SelectTrigger>
+            <Select
+              value={prospectTypeFilter}
+              onValueChange={(v) => {
+                const next = v as ProspectTypeFilter;
+                // Switching AWAY from "proprietar" requires explicit confirmation
+                // so agencies are never shown by accident.
+                if (prospectTypeFilter === "proprietar" && next !== "proprietar") {
+                  setPendingTypeFilter(next);
+                } else {
+                  setProspectTypeFilter(next);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tip prospect" />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="proprietar">🏠 Doar proprietari</SelectItem>
+                <SelectItem value="proprietar">🔒 🏠 Doar proprietari (lock)</SelectItem>
                 <SelectItem value="agentie">🏢 Doar agenții</SelectItem>
-                <SelectItem value="all">Toate (proprietari + agenții)</SelectItem>
+                <SelectItem value="all">⚠️ Toate (include agenții)</SelectItem>
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
