@@ -85,6 +85,33 @@ const sentimentEmoji: Record<string, string> = {
   neutru: "•",
 };
 
+// ── Agency detection (heuristic) ─────────────────────────────────────────────
+// Used to hide agency listings by default in the prospect pipeline.
+// We want to call OWNERS, not other agencies. Keep this list updated.
+const AGENCY_KEYWORDS = [
+  // RO labels
+  "agentie", "agenție", "agenti", "agenți", "agentia", "agenția",
+  "imobiliare", "real estate", "broker", "brokeraj",
+  "dezvoltator", "developer", "ansamblu rezidential", "ansamblu rezidențial",
+  // Legal forms
+  " srl", " s.r.l", " sa ", " s.a.", "p.f.a", "pfa ",
+  // Known TM agencies (extend over time)
+  "eximbroker", "blitz", "remax", "re/max", "century 21", "century21",
+  "imoneon", "imopedia", "edil", "imobitim", "esoplus",
+  // Generic clues in contact_name
+  "imo ", " imo", "estate", "consulting",
+];
+
+function detectIsAgency(p: { title?: string | null; description?: string | null; contact_name?: string | null; prospect_type?: string | null }): boolean {
+  if (p.prospect_type === "agentie" || p.prospect_type === "dezvoltator") return true;
+  if (p.prospect_type === "proprietar") return false; // explicit override wins
+  const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+  if (!blob.trim()) return false;
+  // 🏢 emoji is a strong signal
+  if (blob.includes("🏢")) return true;
+  return AGENCY_KEYWORDS.some((kw) => blob.includes(kw));
+}
+
 const ProspectListings = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -96,6 +123,11 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
+  // Default = only owners (hide agencies). Persisted.
+  const [prospectTypeFilter, setProspectTypeFilter] = useState<"proprietar" | "agentie" | "all">(
+    () => (localStorage.getItem("prospects:typeFilter") as any) || "proprietar"
+  );
+  useEffect(() => { localStorage.setItem("prospects:typeFilter", prospectTypeFilter); }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
@@ -179,12 +211,19 @@ const ProspectListings = () => {
       } catch (e) {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
-      return { ...p, geo };
+      const isAgency = detectIsAgency(p);
+      return { ...p, geo, isAgency };
     }),
     [prospects]
   );
 
+  // Count agencies before filtering, so we can show "X agenții ascunse"
+  const agencyCount = useMemo(() => enriched.filter((p) => p.isAgency).length, [enriched]);
+
   const filtered = enriched.filter((p) => {
+    // Owner / agency filter (default: hide agencies)
+    if (prospectTypeFilter === "proprietar" && p.isAgency) return false;
+    if (prospectTypeFilter === "agentie" && !p.isAgency) return false;
     if ((p.lead_score ?? p.score ?? 0) < parseInt(minScore || "0")) return false;
     if (zoneFilter !== "all") {
       const zoneBlob = `${p.zone || ""} ${p.location || ""} ${p.geo.primary || ""} ${(p.geo.found || []).join(" ")}`.toLowerCase();
@@ -207,9 +246,11 @@ const ProspectListings = () => {
     return Array.from(merged).sort();
   }, [enriched]);
 
-  // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling
+  // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling.
+  // Hard rule: never auto-call agencies, even if the view filter shows "all".
   const campaignTargets = useMemo(() => {
     return filtered
+      .filter((p) => !p.isAgency)
       .filter((p) => (p.phone_normalized || p.contact_phone))
       .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
       .slice(0, CAMPAIGN_LIMIT);
@@ -233,6 +274,27 @@ const ProspectListings = () => {
     interested: prospects.filter((p) => p.lifecycle_status === "interested").length,
     calling: prospects.filter((p) => p.lifecycle_status === "calling").length,
     pending: prospects.filter((p) => p.lifecycle_status === "pending_credentials").length,
+  };
+
+  const handleToggleProspectType = async (p: Prospect & { isAgency?: boolean }) => {
+    const next = p.isAgency ? "proprietar" : "agentie";
+    // Optimistic
+    qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
+      Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row) : old
+    );
+    const { error } = await supabase
+      .from("prospect_listings")
+      .update({ prospect_type: next })
+      .eq("id", p.id);
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+      refetch();
+    } else {
+      toast({
+        title: next === "agentie" ? "🏢 Marcat ca agenție" : "🏠 Marcat ca proprietar",
+        description: next === "agentie" ? "Lead-ul nu va mai apărea în filtrul Proprietari." : "Lead-ul va apărea în filtrul Proprietari.",
+      });
+    }
   };
 
   const handleAIScore = async (id: string) => {
@@ -563,8 +625,16 @@ const ProspectListings = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Select value={prospectTypeFilter} onValueChange={(v) => setProspectTypeFilter(v as any)}>
+              <SelectTrigger><SelectValue placeholder="Tip prospect" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="proprietar">🏠 Doar proprietari</SelectItem>
+                <SelectItem value="agentie">🏢 Doar agenții</SelectItem>
+                <SelectItem value="all">Toate (proprietari + agenții)</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -607,6 +677,16 @@ const ProspectListings = () => {
               </SelectContent>
             </Select>
           </CardContent>
+          {prospectTypeFilter === "proprietar" && agencyCount > 0 && (
+            <div className="px-4 pb-3 -mt-1 text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
+              <span>
+                🏢 <strong>{agencyCount}</strong> {agencyCount === 1 ? "anunț de agenție ascuns" : "anunțuri de agenție ascunse"} (detectat automat după titlu/contact).
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setProspectTypeFilter("all")}>
+                Arată tot
+              </Button>
+            </div>
+          )}
         </Card>
 
         {/* Table */}
@@ -682,8 +762,23 @@ const ProspectListings = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm font-medium">{p.contact_name || "—"}</div>
+                          <div className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
+                            {p.contact_name || "—"}
+                            {p.isAgency && (
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300">
+                                🏢 Agenție
+                              </Badge>
+                            )}
+                          </div>
                           {phone && <div className="text-xs text-muted-foreground font-mono">{phone}</div>}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProspectType(p)}
+                            className="text-[10px] text-muted-foreground hover:text-primary underline mt-0.5"
+                            title="Corectează clasificarea (proprietar / agenție)"
+                          >
+                            {p.isAgency ? "→ marchează ca proprietar" : "→ marchează ca agenție"}
+                          </button>
                         </TableCell>
                         <TableCell>
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
