@@ -288,7 +288,36 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const SOURCE_FILTER_LS_KEY = "prospects:sourceFilter";
+  const [sourceFilter, setSourceFilter] = useState<string>(() => {
+    try { return localStorage.getItem(SOURCE_FILTER_LS_KEY) || "all"; } catch { return "all"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(SOURCE_FILTER_LS_KEY, sourceFilter); } catch { /* ignore */ }
+  }, [sourceFilter]);
+
+  // ── Saved (favorite) filters ────────────────────────────────────────────────
+  type SavedFilter = {
+    id: string;
+    name: string;
+    statusFilter: string;
+    categoryFilter: string;
+    minScore: string;
+    zoneFilter: string;
+    sourceFilter: string;
+    prospectTypeFilter: "proprietar" | "agentie" | "all";
+    search: string;
+  };
+  const SAVED_FILTERS_LS_KEY = "prospects:savedFilters";
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_FILTERS_LS_KEY);
+      return raw ? (JSON.parse(raw) as SavedFilter[]) : [];
+    } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(SAVED_FILTERS_LS_KEY, JSON.stringify(savedFilters)); } catch { /* ignore */ }
+  }, [savedFilters]);
   // Default = only owners (hide agencies). Persisted in localStorage.
   // Hard rule: agencies are NEVER shown unless the admin explicitly switches to "all" or "agentie"
   // in the toolbar. We sanitize the stored value defensively.
