@@ -23,6 +23,21 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function pushDebugLog(supabase: any, sessionId: string, entry: Record<string, unknown>) {
+  try {
+    const { data } = await supabase
+      .from("voice_call_sessions")
+      .select("debug_log")
+      .eq("id", sessionId)
+      .maybeSingle();
+    const existing = Array.isArray(data?.debug_log) ? data!.debug_log : [];
+    const next = [...existing, { at: new Date().toISOString(), ...entry }].slice(-100);
+    await supabase.from("voice_call_sessions").update({ debug_log: next }).eq("id", sessionId);
+  } catch (e) {
+    console.error("pushDebugLog failed:", e);
+  }
+}
+
 async function getSignedStorageUrl(supabase: any, filePath: string): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from("voice-recordings")
