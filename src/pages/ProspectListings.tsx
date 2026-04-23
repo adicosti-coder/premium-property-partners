@@ -288,6 +288,7 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   // Default = only owners (hide agencies). Persisted in localStorage.
   // Hard rule: agencies are NEVER shown unless the admin explicitly switches to "all" or "agentie"
   // in the toolbar. We sanitize the stored value defensively.
