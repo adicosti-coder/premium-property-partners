@@ -129,6 +129,7 @@ export default function VoiceAgentScriptsEditor() {
     () => localStorage.getItem("voice_script_test_number") || "+40",
   );
   const [testing, setTesting] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const selected = scripts.find((s) => s.id === selectedId) || null;
   const activeScript = useMemo(
