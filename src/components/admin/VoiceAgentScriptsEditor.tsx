@@ -170,7 +170,7 @@ export default function VoiceAgentScriptsEditor() {
     [scripts, selected?.language],
   );
 
-  const validation = useMemo(() => validateScript(draft.name, draft.system_prompt), [draft.name, draft.system_prompt]);
+  const validation = useMemo(() => validateScript(draft.name, draft.system_prompt, draft.language), [draft.name, draft.system_prompt, draft.language]);
   const canSave = validation.errors.length === 0;
 
   const isDirty = selected
