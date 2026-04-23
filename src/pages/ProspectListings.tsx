@@ -558,6 +558,15 @@ const ProspectListings = () => {
                 <SelectItem value="90">⭐ Scor ≥ 90</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={zoneFilter} onValueChange={setZoneFilter}>
+              <SelectTrigger><SelectValue placeholder="Zonă" /></SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="all">📍 Toate zonele</SelectItem>
+                {availableZones.map((z) => (
+                  <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
 
