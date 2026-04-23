@@ -366,7 +366,30 @@ serve(async (req) => {
     const objective = session.call_objective || "qualify";
     const customPrompt = extractCustomPrompt(session.voice_agent_prompt);
     const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
-    const systemPrompt = composeSystemPrompt(branch, leadContext, objective, sentimentBlock, customPrompt || undefined);
+
+    // Load active system prompt override from voice_agent_scripts (admin-editable)
+    let dbSystemPromptOverride: string | null = null;
+    try {
+      const { data: activeScript } = await supabase
+        .from("voice_agent_scripts")
+        .select("system_prompt, name")
+        .eq("language", "ro")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (activeScript?.system_prompt && activeScript.system_prompt.trim().length > 0) {
+        dbSystemPromptOverride = activeScript.system_prompt.trim();
+        console.log(`[voice-twiml] Using DB system prompt: ${activeScript.name}`);
+      }
+    } catch (e) {
+      console.error("[voice-twiml] failed to load voice_agent_scripts:", e);
+    }
+
+    const baseSystemPrompt = dbSystemPromptOverride
+      ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}`
+      : systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
+    const systemPrompt = customPrompt
+      ? `${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
+      : baseSystemPrompt;
 
     let userSpeech = "";
     if (req.method === "POST") {
