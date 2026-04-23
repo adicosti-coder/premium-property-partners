@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Building2, Phone as PhoneIcon, Globe, Hash, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Bot, Building2, Phone as PhoneIcon, Globe, Hash, AlertTriangle, ShieldCheck, Loader2, Home } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export interface AgencyExplainerInput {
