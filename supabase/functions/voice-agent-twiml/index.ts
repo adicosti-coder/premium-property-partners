@@ -172,11 +172,12 @@ serve(async (req) => {
     // Load voice settings (single fetch)
     const { data: vSettings } = await supabase
       .from("voice_agent_settings")
-      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost")
+      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost, elevenlabs_min_score")
       .eq("id", 1)
       .maybeSingle();
 
-    const useElevenLabs = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
+    const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
+    const elevenLabsAvailable = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
       voice_id: vSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL",
       model_id: vSettings?.elevenlabs_model_id || "eleven_multilingual_v2",
