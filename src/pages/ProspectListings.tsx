@@ -335,9 +335,10 @@ const ProspectListings = () => {
         body: { prospect_ids: ids, zone: zoneFilter === "all" ? null : zoneFilter },
       });
       if (error) throw error;
+      if (data?.campaign_id) setCurrentCampaignId(data.campaign_id);
       toast({
-        title: `🚀 Campanie lansată`,
-        description: `${data?.dialed ?? 0}/${ids.length} apeluri inițiate${zoneFilter !== "all" ? ` în zona ${zoneFilter}` : ""}. Vezi Call Dashboard pentru rezultate.`,
+        title: data?.cancelled ? `🛑 Campanie oprită` : `🚀 Campanie finalizată`,
+        description: `${data?.dialed ?? 0}/${ids.length} apeluri inițiate${zoneFilter !== "all" ? ` în zona ${zoneFilter}` : ""}.`,
       });
       refetch();
     } catch (e: any) {
@@ -345,6 +346,27 @@ const ProspectListings = () => {
       refetch();
     } finally {
       setCampaignRunning(false);
+      setCurrentCampaignId(null);
+    }
+  };
+
+  const handleStopCampaign = async () => {
+    setStopping(true);
+    setStopOpen(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-stop-campaign", {
+        body: currentCampaignId ? { campaign_id: currentCampaignId } : {},
+      });
+      if (error) throw error;
+      toast({
+        title: "🛑 Campanie oprită",
+        description: `${data?.reverted_count ?? 0} lead-uri din coadă au fost resetate la statusul anterior. Apelurile deja în curs nu sunt întrerupte.`,
+      });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Oprire eșuată", description: e.message, variant: "destructive" });
+    } finally {
+      setStopping(false);
     }
   };
 
