@@ -7,10 +7,16 @@ export function useAdminRole(user: User | null) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAdminRole = async () => {
+      setIsLoading(true);
+
       if (!user) {
-        setIsAdmin(false);
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -22,20 +28,32 @@ export function useAdminRole(user: User | null) {
 
         if (error) {
           console.error("Error checking admin role:", error);
-          setIsAdmin(false);
+          if (!cancelled) {
+            setIsAdmin(false);
+          }
         } else {
-          setIsAdmin(data === true);
+          if (!cancelled) {
+            setIsAdmin(data === true);
+          }
         }
       } catch (err) {
         console.error("Error checking admin role:", err);
-        setIsAdmin(false);
+        if (!cancelled) {
+          setIsAdmin(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     checkAdminRole();
-  }, [user]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   return { isAdmin, isLoading };
 }
