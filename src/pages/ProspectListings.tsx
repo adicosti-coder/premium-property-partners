@@ -16,8 +16,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History,
 } from "lucide-react";
+import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import type { User } from "@supabase/supabase-js";
@@ -712,9 +713,21 @@ const ProspectListings = () => {
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
                               Re-scoring AI
                             </Button>
-                            <a href={p.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
-                              Sursă <ExternalLink className="h-3 w-3" />
-                            </a>
+                            <div className="flex items-center gap-2 w-full justify-end">
+                              <AuditLogViewer
+                                entityType="prospect_listing"
+                                entityId={p.id}
+                                title={`Istoric: ${(p.title || "lead").slice(0, 40)}`}
+                                trigger={
+                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Istoric lead">
+                                    <History className="h-3.5 w-3.5" />
+                                  </Button>
+                                }
+                              />
+                              <a href={p.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
+                                Sursă <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>

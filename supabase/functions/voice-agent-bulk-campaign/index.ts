@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logAudit } from "../_shared/auditLog.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Bulk Campaign — accepts an array of prospect IDs, creates a
@@ -37,12 +38,14 @@ serve(async (req) => {
 
     // Identify caller (admin) from Authorization header — best effort
     let createdBy: string | null = null;
+    let actorEmail: string | null = null;
     try {
       const authHeader = req.headers.get("Authorization") || "";
       const token = authHeader.replace("Bearer ", "");
       if (token && token !== SERVICE_KEY) {
         const { data: userRes } = await supabase.auth.getUser(token);
         createdBy = userRes?.user?.id ?? null;
+        actorEmail = userRes?.user?.email ?? null;
       }
     } catch (_) { /* ignore */ }
 
@@ -60,6 +63,17 @@ serve(async (req) => {
     if (runErr || !run) throw new Error(`run insert: ${runErr?.message}`);
 
     const campaignId: string = run.id;
+
+    // Audit: campaign launched
+    await logAudit(supabase, {
+      action: "campaign_launch",
+      actor_user_id: createdBy,
+      actor_label: actorEmail || (createdBy ? null : "system"),
+      entity_type: "campaign",
+      entity_id: campaignId,
+      details: { zone, total_targets: ids.length, prospect_ids: ids.slice(0, 50) },
+      severity: "info",
+    });
 
     // Snapshot current statuses so we can revert on cancel
     const { data: existing } = await supabase
@@ -140,6 +154,19 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq("id", campaignId);
+
+    // Audit: campaign finished (only if not stopped via stop endpoint)
+    if (!cancelledMid) {
+      await logAudit(supabase, {
+        action: "campaign_complete",
+        actor_user_id: createdBy,
+        actor_label: actorEmail || (createdBy ? null : "system"),
+        entity_type: "campaign",
+        entity_id: campaignId,
+        details: { zone, total: ids.length, dialed },
+        severity: "info",
+      });
+    }
 
     return jsonResp({
       success: true,

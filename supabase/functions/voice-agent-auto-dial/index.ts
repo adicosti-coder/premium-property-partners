@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logAudit } from "../_shared/auditLog.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Auto-Dial — reads from prospect_listings (lead_score>80, status=new).
@@ -230,6 +231,14 @@ serve(async (req) => {
         last_retry_at: new Date().toISOString(),
         admin_notes: `Auto-dial: invalid phone "${prospect.contact_phone}"`,
       }).eq("id", prospect.id);
+      await logAudit(supabase, {
+        action: "lead_failed_invalid_phone",
+        actor_label: "system",
+        entity_type: "prospect_listing",
+        entity_id: prospect.id,
+        details: { phone: prospect.contact_phone, title: prospect.title },
+        severity: "warning",
+      });
       return jsonResp({ skipped: `invalid phone: ${prospect.contact_phone}` });
     }
 
@@ -299,6 +308,22 @@ serve(async (req) => {
         voice_call_session_id: null,
         admin_notes: `Twilio failed (attempt ${nextRetry}/${MAX_RETRIES + 1}): ${JSON.stringify(twData).slice(0, 200)}`,
       }).eq("id", prospect.id);
+
+      await logAudit(supabase, {
+        action: exhausted ? "lead_failed_exhausted" : "retry_auto",
+        actor_label: "system",
+        entity_type: "prospect_listing",
+        entity_id: prospect.id,
+        details: {
+          attempt: nextRetry,
+          max_attempts: MAX_RETRIES + 1,
+          source: "twilio_submit_failed",
+          twilio_status: twRes.status,
+          reason: failureReason,
+          session_id: session.id,
+        },
+        severity: exhausted ? "error" : "warning",
+      });
 
       return jsonResp({
         error: "Twilio failed",

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logAudit } from "../_shared/auditLog.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Stop Campaign — marks a campaign run as cancelled and reverts
@@ -37,9 +38,11 @@ serve(async (req) => {
     if (!token) return jsonResp({ error: "unauthorized" }, 401);
 
     let userId: string | null = null;
+    let actorEmail: string | null = null;
     try {
       const { data: userRes } = await supabase.auth.getUser(token);
       userId = userRes?.user?.id ?? null;
+      actorEmail = userRes?.user?.email ?? null;
     } catch (_) { /* ignore */ }
     if (!userId) return jsonResp({ error: "unauthorized" }, 401);
 
@@ -105,6 +108,17 @@ serve(async (req) => {
         .eq("id", (row as any).id);
       if (!error) reverted.push((row as any).id);
     }
+
+    // Audit: forced campaign stop
+    await logAudit(supabase, {
+      action: "campaign_stop",
+      actor_user_id: userId,
+      actor_label: actorEmail,
+      entity_type: "campaign",
+      entity_id: campaignId,
+      details: { reverted_count: reverted.length, reverted_ids: reverted.slice(0, 50) },
+      severity: "warning",
+    });
 
     return jsonResp({
       success: true,

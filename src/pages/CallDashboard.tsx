@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
+import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 
 // Compute a 0-100 hotness score based on outcome + sentiment + lead_score
 const computeHotScore = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }): number => {
@@ -475,6 +476,7 @@ export default function CallDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <AuditLogViewer />
             <Button onClick={exportCSV} variant="outline" size="sm" disabled={filtered.length === 0}>
               <Download className="w-4 h-4 mr-2" /> Export CSV ({filtered.length})
             </Button>

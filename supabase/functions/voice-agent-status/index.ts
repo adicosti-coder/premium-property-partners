@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logAudit } from "../_shared/auditLog.ts";
 
 async function pushDebugLog(supabase: any, sessionId: string, entry: Record<string, unknown>) {
   try {
@@ -347,6 +348,22 @@ serve(async (req) => {
             voice_call_session_id: exhausted ? session.id : null,
           })
           .eq("id", session.prospect_listing_id);
+
+        await logAudit(supabase, {
+          action: exhausted ? "lead_failed_exhausted" : "retry_auto",
+          actor_label: "system",
+          entity_type: "prospect_listing",
+          entity_id: session.prospect_listing_id,
+          details: {
+            attempt: nextRetry,
+            max_attempts: MAX_RETRIES + 1,
+            source: "call_no_answer",
+            call_status: derivedStatus,
+            session_id: session.id,
+            to_number: session.to_number,
+          },
+          severity: exhausted ? "error" : "warning",
+        });
 
         // Schedule async re-dial (don't block status callback)
         if (!exhausted) {
