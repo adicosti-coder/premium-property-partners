@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   FileText, Save, Plus, Trash2, CheckCircle2, Loader2,
   Eye, PhoneCall, History, RotateCcw, FlaskConical, AlertTriangle, RefreshCw,
-  Sparkles, Wand2, FileDown, HelpCircle, User2,
+  Sparkles, Wand2, FileDown, HelpCircle, User2, Globe2, LayoutPanelTop, Activity,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -74,9 +74,37 @@ const SAMPLE_SENTIMENT_BLOCK = `\nTON: empatic, cald, direct. Recunoaște situa�
 interface ValidationResult {
   errors: string[];
   warnings: string[];
+  flowScore: number; // 0-100, higher = better conversational flow
+  flowLabel: string;
+  avgSentenceLen: number;
 }
 
-function validateScript(name: string, prompt: string): ValidationResult {
+function computeFlowScore(prompt: string): { score: number; label: string; avg: number } {
+  const text = prompt.replace(/```[\s\S]*?```/g, " ").replace(/[#*_>`-]/g, " ").trim();
+  if (!text) return { score: 0, label: "—", avg: 0 };
+  // Split on sentence terminators while keeping things simple
+  const sentences = text.split(/[.!?]+\s+/).map((s) => s.trim()).filter((s) => s.length > 3);
+  if (sentences.length === 0) return { score: 0, label: "—", avg: 0 };
+  const lens = sentences.map((s) => s.split(/\s+/).filter(Boolean).length);
+  const avg = lens.reduce((a, b) => a + b, 0) / lens.length;
+  const longRatio = lens.filter((l) => l > 25).length / lens.length;
+  const veryLongRatio = lens.filter((l) => l > 40).length / lens.length;
+  // Optimal conversational sentence: 8-16 words. Penalize >25, heavily >40, also penalize <4 (choppy)
+  let score = 100;
+  if (avg < 6) score -= (6 - avg) * 6;
+  if (avg > 18) score -= (avg - 18) * 4;
+  score -= longRatio * 30;
+  score -= veryLongRatio * 40;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const label =
+    score >= 85 ? "Excelent" :
+    score >= 70 ? "Bun" :
+    score >= 50 ? "Acceptabil" :
+    score >= 30 ? "Slab — fraze prea lungi" : "Foarte slab";
+  return { score, label, avg: Math.round(avg * 10) / 10 };
+}
+
+function validateScript(name: string, prompt: string, language: string = "ro"): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   if (!name.trim()) errors.push("Numele este obligatoriu.");
@@ -91,13 +119,18 @@ function validateScript(name: string, prompt: string): ValidationResult {
   if (openBraces !== closeBraces) warnings.push(`Acolade neechilibrate: ${openBraces} { vs ${closeBraces} }.`);
   const backticks = (p.match(/`/g) || []).length;
   if (backticks % 2 !== 0) warnings.push(`Număr impar de backtick-uri (${backticks}).`);
-  // Romanian heuristic for ro scripts
-  const hasDiacritics = /[ăâîșțĂÂÎȘȚ]/.test(p);
-  if (!hasDiacritics) warnings.push("Promptul nu conține diacritice — verifică dacă e într-adevăr în română.");
-  if (!/română|romana/i.test(p) && !hasDiacritics) {
-    warnings.push("Nu se menționează limba română explicit. AI-ul ar putea derapa în engleză.");
+  // Romanian heuristic only for ro scripts
+  if (language === "ro") {
+    const hasDiacritics = /[ăâîșțĂÂÎȘȚ]/.test(p);
+    if (!hasDiacritics) warnings.push("Promptul nu conține diacritice — verifică dacă e într-adevăr în română.");
+    if (!/română|romana/i.test(p) && !hasDiacritics) {
+      warnings.push("Nu se menționează limba română explicit. AI-ul ar putea derapa în engleză.");
+    }
   }
-  return { errors, warnings };
+  // Conversational flow score
+  const { score, label, avg } = computeFlowScore(p);
+  if (score < 50) warnings.push(`Conversational Flow scăzut (${score}/100, ${label}). Media lungime frază: ${avg} cuvinte. Sparge frazele lungi.`);
+  return { errors, warnings, flowScore: score, flowLabel: label, avgSentenceLen: avg };
 }
 
 const STATUS_VARIANT: Record<string, { label: string; cls: string }> = {
@@ -137,7 +170,7 @@ export default function VoiceAgentScriptsEditor() {
     [scripts, selected?.language],
   );
 
-  const validation = useMemo(() => validateScript(draft.name, draft.system_prompt), [draft.name, draft.system_prompt]);
+  const validation = useMemo(() => validateScript(draft.name, draft.system_prompt, draft.language), [draft.name, draft.system_prompt, draft.language]);
   const canSave = validation.errors.length === 0;
 
   const isDirty = selected
@@ -369,8 +402,16 @@ export default function VoiceAgentScriptsEditor() {
     toast({ title: "Macro inserat", description: "Salvează scriptul ca să persiste." });
   };
 
-  // ──────────── AI: Generează variantă premium A/B ────────────
-  const handleGenerateVariant = async () => {
+  // ──────────── AI: Generează variantă (mai multe moduri) ────────────
+  type AIMode = "premium_variant" | "microcopy_cta" | "british_premium" | "layout_sections";
+  const MODE_LABELS: Record<AIMode, string> = {
+    premium_variant: "variantă premium A/B",
+    microcopy_cta: "variantă A/B microcopy CTA",
+    british_premium: "variantă British premium (EN)",
+    layout_sections: "layout pe secțiuni",
+  };
+
+  const handleGenerateVariant = async (mode: AIMode = "premium_variant") => {
     if (!selected) {
       toast({ title: "Selectează un script", description: "Folosesc scriptul selectat ca bază.", variant: "destructive" });
       return;
@@ -378,7 +419,7 @@ export default function VoiceAgentScriptsEditor() {
     setGeneratingAI(true);
     try {
       const { data, error } = await supabase.functions.invoke("voice-agent-script-generate", {
-        body: { script_id: selected.id, mode: "premium_variant" },
+        body: { script_id: selected.id, mode },
       });
       if (error || (data as any)?.error) {
         toast({
@@ -388,7 +429,7 @@ export default function VoiceAgentScriptsEditor() {
         });
       } else {
         const newScript = (data as any)?.script;
-        toast({ title: "Variantă AI creată ✨", description: `"${newScript?.name}" — selecteaz-o ca varianta B în tab-ul A/B.` });
+        toast({ title: "Variantă AI creată ✨", description: `"${newScript?.name}" (${MODE_LABELS[mode]}). Verific-o în Editor.` });
         await load();
         if (newScript?.id) setSelectedId(newScript.id);
       }
@@ -544,16 +585,44 @@ export default function VoiceAgentScriptsEditor() {
                   <Input value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Ce variantă e asta..." />
                 </div>
 
-                {/* Validation panel */}
-                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
-                  <div className={`rounded-md border p-3 text-xs space-y-1 ${validation.errors.length ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+                {/* Validation panel — always visible (shows flow score even without errors) */}
+                <div className={`rounded-md border p-3 text-xs space-y-2 ${
+                  validation.errors.length ? "bg-red-50 border-red-200" :
+                  validation.warnings.length ? "bg-amber-50 border-amber-200" :
+                  "bg-emerald-50 border-emerald-200"
+                }`}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="font-semibold flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" /> Validare
+                      <AlertTriangle className="h-3 w-3" /> Validare pre-save
                     </div>
-                    {validation.errors.map((e, i) => <div key={`e${i}`} className="text-red-700">❌ {e}</div>)}
-                    {validation.warnings.map((w, i) => <div key={`w${i}`} className="text-amber-700">⚠️ {w}</div>)}
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-3 w-3" />
+                      <span className="font-medium">Conversational Flow:</span>
+                      <span className={`font-bold ${
+                        validation.flowScore >= 70 ? "text-emerald-700" :
+                        validation.flowScore >= 50 ? "text-amber-700" : "text-red-700"
+                      }`}>
+                        {validation.flowScore}/100 — {validation.flowLabel}
+                      </span>
+                      <span className="text-muted-foreground">(media {validation.avgSentenceLen} cuvinte/frază)</span>
+                    </div>
                   </div>
-                )}
+                  {/* Score progress bar */}
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${
+                        validation.flowScore >= 70 ? "bg-emerald-500" :
+                        validation.flowScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                      }`}
+                      style={{ width: `${validation.flowScore}%` }}
+                    />
+                  </div>
+                  {validation.errors.map((e, i) => <div key={`e${i}`} className="text-red-700">❌ {e}</div>)}
+                  {validation.warnings.map((w, i) => <div key={`w${i}`} className="text-amber-700">⚠️ {w}</div>)}
+                  {validation.errors.length === 0 && validation.warnings.length === 0 && (
+                    <div className="text-emerald-700">✅ Scriptul trece toate verificările.</div>
+                  )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
@@ -578,9 +647,21 @@ export default function VoiceAgentScriptsEditor() {
                   <Button onClick={() => insertMacro(FAQ_MACRO)} variant="outline" size="sm" title="Inserează 5 întrebări frecvente cu răspunsuri-șablon">
                     <HelpCircle className="h-4 w-4 mr-1" /> Macro: FAQ scurtă
                   </Button>
-                  <Button onClick={handleGenerateVariant} variant="outline" size="sm" disabled={generatingAI || !selected} title="Folosește AI ca să creeze o variantă A/B premium a scriptului selectat">
+                  <Button onClick={() => handleGenerateVariant("premium_variant")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: variantă A/B premium (ton concierge, calificare BANT, social proof)">
                     {generatingAI ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Generează variantă premium A/B
+                  </Button>
+                  <Button onClick={() => handleGenerateVariant("microcopy_cta")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: variantă A/B optimizată pe microcopy CTA (rate de conversie)">
+                    <Wand2 className="h-4 w-4 mr-1" />
+                    Creează variantă A/B texte (CTA)
+                  </Button>
+                  <Button onClick={() => handleGenerateVariant("british_premium")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: variantă British tone premium pentru clientelă internațională / lux">
+                    <Globe2 className="h-4 w-4 mr-1" />
+                    British tone premium (EN)
+                  </Button>
+                  <Button onClick={() => handleGenerateVariant("layout_sections")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: reorganizează promptul în secțiuni Markdown (## INTRO, ## CALIFICARE, ## FAQ, ## CTA)">
+                    <LayoutPanelTop className="h-4 w-4 mr-1" />
+                    Generează layout pe secțiuni
                   </Button>
                   {selected && !selected.is_active && (
                     <AlertDialog>
