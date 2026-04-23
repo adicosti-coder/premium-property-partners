@@ -151,7 +151,7 @@ export default function VoiceAgentManager() {
   useEffect(() => {
     if (!testSessionId) return;
     const found = calls.find((c) => c.id === testSessionId);
-    if (found && ["completed", "failed", "busy", "no-answer", "canceled"].includes(found.status)) {
+    if (found && ["completed", "failed", "busy", "no-answer", "canceled", "unknown"].includes(found.status)) {
       setSelectedCall(found);
       setTestSessionId(null);
       toast({

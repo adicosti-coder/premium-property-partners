@@ -203,11 +203,21 @@ function speakXml(text: string, audioUrl: string | null): string {
   return `<Say language="ro-RO">${escapeXml(text)}</Say>`;
 }
 
+function isCustomPrompt(prompt?: string | null): boolean {
+  return typeof prompt === "string" && prompt.startsWith("__CUSTOM_PROMPT__\n");
+}
+
+function extractCustomPrompt(prompt?: string | null): string {
+  if (!isCustomPrompt(prompt)) return "";
+  return prompt!.replace(/^__CUSTOM_PROMPT__\n/, "").trim();
+}
+
 serve(async (req) => {
   try {
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("sessionId");
     const turn = parseInt(url.searchParams.get("turn") || "0", 10);
+    const forceElevenLabs = url.searchParams.get("forceElevenLabs") === "1";
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -291,10 +301,11 @@ serve(async (req) => {
 
     // HYBRID DECISION: ElevenLabs if (a) lead score meets threshold OR (b) it's a manual test call (no prospect/lead linked)
     const isManualCall = !session.prospect_listing_id && !session.lead_id;
-    const useElevenLabs = elevenLabsAvailable && (isManualCall || leadScore >= elevenLabsMinScore);
+    const useElevenLabs = elevenLabsAvailable && (forceElevenLabs || isManualCall || leadScore >= elevenLabsMinScore);
     console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} manual=${isManualCall} useElevenLabs=${useElevenLabs}`);
 
     const objective = session.call_objective || "qualify";
+    const customPrompt = extractCustomPrompt(session.voice_agent_prompt);
 
     let userSpeech = "";
     if (req.method === "POST") {
@@ -311,10 +322,15 @@ serve(async (req) => {
     let shouldHangup = false;
 
     if (turn === 0) {
+      if (customPrompt) {
+        aiReply = customPrompt;
+        shouldHangup = true;
+      } else {
       aiReply = openingLine(branch, contextSummary);
+      }
     } else if (LOVABLE_API_KEY) {
       const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
-      const systemPrompt = session.voice_agent_prompt || systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
+      const systemPrompt = customPrompt || session.voice_agent_prompt || systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
@@ -358,11 +374,11 @@ serve(async (req) => {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
-    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${sessionId}&turn=${turn + 1}`;
+    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${sessionId}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
     return xmlResponse(
       `<Response>
         ${speakXml(aiReply, audioUrl)}
-        <Gather input="speech" language="ro-RO" speechTimeout="2" timeout="5" action="${nextUrl}" method="POST"/>
+        <Gather input="speech" language="ro-RO" speechModel="phone_call" speechTimeout="auto" timeout="6" action="${nextUrl}" method="POST"/>
         <Redirect method="POST">${nextUrl}</Redirect>
       </Response>`
     );
