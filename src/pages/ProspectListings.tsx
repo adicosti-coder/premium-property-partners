@@ -460,6 +460,15 @@ const ProspectListings = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              onClick={() => setCampaignOpen(true)}
+              disabled={campaignRunning || campaignTargets.length === 0}
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl font-semibold border-2 border-orange-300/50"
+            >
+              {campaignRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Rocket className="h-4 w-4 mr-1" />}
+              🚀 Lansează Campanie AI (Top {Math.min(CAMPAIGN_LIMIT, campaignTargets.length)})
+            </Button>
             {stats.pending > 0 && (
               <Button variant="default" size="sm" onClick={handleResumePending} disabled={resuming} className="bg-amber-600 hover:bg-amber-500 text-white">
                 {resuming ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-1" />}
@@ -468,6 +477,9 @@ const ProspectListings = () => {
             )}
             <Button variant="outline" size="sm" onClick={handleExportCSV}>
               <Download className="h-4 w-4 mr-1" /> Export CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/call-dashboard")}>
+              <Phone className="h-4 w-4 mr-1" /> Call Dashboard
             </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-1" /> Refresh
@@ -512,7 +524,7 @@ const ProspectListings = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
