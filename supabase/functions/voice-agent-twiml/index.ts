@@ -429,15 +429,18 @@ serve(async (req) => {
       });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
+        aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
         aiReply = normalizeAiReply(
-          aiData.choices?.[0]?.message?.content?.trim() || "",
+          aiRawReply,
           "Mulțumesc pentru timp. O zi frumoasă! La revedere.",
         );
       } else {
+        aiError = `AI HTTP ${aiRes.status}: ${(await aiRes.text()).slice(0, 200)}`;
         aiReply = "Mulțumesc pentru timp. O zi frumoasă! La revedere.";
         shouldHangup = true;
       }
     } else {
+      aiError = "LOVABLE_API_KEY missing";
       aiReply = "Mulțumesc pentru timp. La revedere.";
       shouldHangup = true;
     }
@@ -454,9 +457,28 @@ serve(async (req) => {
     }).eq("id", sessionId);
 
     // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
-    const audioUrl = useElevenLabs
-      ? await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!)
-      : null;
+    let audioUrl: string | null = null;
+    let ttsError: string | null = null;
+    if (useElevenLabs) {
+      try {
+        audioUrl = await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!);
+        if (!audioUrl) ttsError = "ElevenLabs returned no URL (see function logs)";
+      } catch (e: any) {
+        ttsError = String(e?.message || e);
+      }
+    }
+
+    await pushDebugLog(supabase, sessionId, {
+      stage: "twiml_turn_end",
+      turn,
+      aiRawReply: aiRawReply || null,
+      aiReply,
+      aiError,
+      audioUrl,
+      ttsError,
+      voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
+      shouldHangup,
+    });
 
     if (shouldHangup) {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
