@@ -557,7 +557,7 @@ export default function CallDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((r: any) => (
+                  {visible.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="text-xs whitespace-nowrap">{formatDate(r.created_at)}</TableCell>
                       <TableCell>
