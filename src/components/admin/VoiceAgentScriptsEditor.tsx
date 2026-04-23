@@ -572,6 +572,16 @@ export default function VoiceAgentScriptsEditor() {
                   <Button onClick={() => setShowPreview(true)} variant="outline" size="sm">
                     <Eye className="h-4 w-4 mr-1" /> Vizualizează prompt activ
                   </Button>
+                  <Button onClick={() => insertMacro(LEAD_CONTEXT_MACRO)} variant="outline" size="sm" title="Adaugă placeholder-e {{lead_name}}, {{property_*}} etc.">
+                    <User2 className="h-4 w-4 mr-1" /> Macro: Lead context
+                  </Button>
+                  <Button onClick={() => insertMacro(FAQ_MACRO)} variant="outline" size="sm" title="Inserează 5 întrebări frecvente cu răspunsuri-șablon">
+                    <HelpCircle className="h-4 w-4 mr-1" /> Macro: FAQ scurtă
+                  </Button>
+                  <Button onClick={handleGenerateVariant} variant="outline" size="sm" disabled={generatingAI || !selected} title="Folosește AI ca să creeze o variantă A/B premium a scriptului selectat">
+                    {generatingAI ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Generează variantă premium A/B
+                  </Button>
                   {selected && !selected.is_active && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
