@@ -316,6 +316,19 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      {/* QUICK LINK to unified dashboard */}
+      <Card className="border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+        <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2"><Phone className="w-4 h-4 text-primary" /> Dashboard Apeluri Unificat</h3>
+            <p className="text-sm text-muted-foreground">Toate apelurile (Voice Agent + Scraper + Prospecți) într-o singură vedere cu filtre și acțiuni rapide.</p>
+          </div>
+          <Button asChild variant="default">
+            <a href="/admin/call-dashboard">Deschide Dashboard →</a>
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* SCRIPT EDITOR (system prompt AI) */}
       <VoiceAgentScriptsEditor />
 
