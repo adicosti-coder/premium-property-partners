@@ -107,7 +107,6 @@ const ProspectListings = () => {
       setAuthReady(true);
     });
 
-    return () => subscription.unsubscribe();
     return () => {
       mounted = false;
       subscription.unsubscribe();
