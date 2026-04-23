@@ -112,7 +112,7 @@ const ProspectListings = () => {
     }
   }, [adminLoading, isAdmin, user, navigate]);
 
-  const { data: prospects = [], isLoading, refetch } = useQuery({
+  const { data: prospects = [], isLoading, refetch, error: queryError } = useQuery({
     queryKey: ["prospect-listings", statusFilter, categoryFilter],
     queryFn: async () => {
       let q = supabase
@@ -124,12 +124,27 @@ const ProspectListings = () => {
       if (statusFilter !== "all") q = q.eq("lifecycle_status", statusFilter as any);
       if (categoryFilter !== "all") q = q.eq("category", categoryFilter as any);
       const { data, error } = await q;
-      if (error) throw error;
+      if (error) {
+        console.error("[ProspectListings] Query error:", error);
+        throw error;
+      }
+      console.log("[ProspectListings] Loaded", data?.length ?? 0, "rows");
       return (data || []) as Prospect[];
     },
     enabled: isAdmin,
     refetchInterval: 30_000,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (queryError) {
+      toast({
+        title: "Eroare la încărcare prospecte",
+        description: (queryError as Error).message,
+        variant: "destructive",
+      });
+    }
+  }, [queryError]);
 
   // Compute geo match per prospect (memoized)
   const enriched = useMemo(
