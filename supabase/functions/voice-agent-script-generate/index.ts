@@ -177,7 +177,7 @@ Reguli stricte:
         name: newName,
         system_prompt: parsed.system_prompt,
         notes: parsed.notes || `AI-generated A/B variant of "${script.name}" (mode: ${mode})`,
-        language: script.language,
+        language: mode === "british_premium" ? "en" : script.language,
         is_active: false,
         created_by: user.id,
       })
