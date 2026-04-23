@@ -99,6 +99,7 @@ const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"))
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodCluster"));
 const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
+const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
 
@@ -239,6 +240,7 @@ const App = () => (
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/admin/prospect-listings" element={<ProspectListings />} />
+                    <Route path="/admin/call-dashboard" element={<CallDashboard />} />
                     <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
