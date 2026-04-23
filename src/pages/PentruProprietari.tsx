@@ -156,7 +156,7 @@ const PentruProprietari = () => {
       badge: "Administrare Premium · Timișoara",
       title: "Venit lunar predictibil din apartamentul tău,",
       titleHighlight: "fără bătăi de cap",
-      subtitle: "Listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF — totul gestionat impecabil. Tu primești venitul în cont.",
+      subtitle: "RealTrust este firma de administrare imobile Timișoara care îți gestionează apartamentul în regim hotelier: listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul în cont.",
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Vorbește cu un consultant",
       ctaB: "Calculează în 60 sec",
