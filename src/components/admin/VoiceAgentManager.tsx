@@ -240,6 +240,71 @@ export default function VoiceAgentManager() {
     }
   };
 
+  const replayTest = async (call: VoiceCall) => {
+    setRunningTest(true);
+    setTestSessionId(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-initiate", {
+        body: {
+          toNumber: call.to_number,
+          objective: call.call_objective || "qualify",
+          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+        },
+      });
+      if (error || data?.error) {
+        toast({ title: "Replay eșuat", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        setTestSessionId(data.sessionId);
+        toast({ title: "🔁 Replay inițiat", description: `Răspunde la ${call.to_number}. Pașii apar live mai jos.` });
+        loadCalls();
+      }
+    } finally {
+      setRunningTest(false);
+    }
+  };
+
+  const computeSteps = (call: VoiceCall) => {
+    const transcript = call.transcript || [];
+    const debugLog = (call.debug_log || []) as any[];
+    const lastTwiml = [...debugLog].reverse().find((e) => e.stage === "twiml_turn_end");
+    const statusEntry = [...debugLog].reverse().find((e) => e.stage === "status_callback");
+
+    const inProgress = ["queued", "initiating", "ringing", "in-progress", "completing"].includes(call.status);
+    const lang = call.detected_language;
+    const ttsUrl = lastTwiml?.audioUrl || null;
+    const ttsErr = lastTwiml?.ttsError || null;
+    const reportSkip = statusEntry?.reportSkipReason || null;
+
+    return [
+      { label: "Apel inițiat", state: call.twilio_call_sid ? "ok" : "pending", detail: call.twilio_call_sid || "—" },
+      {
+        label: "Limbă detectată",
+        state: lang === "ro" ? "ok" : lang === "en" ? "err" : inProgress ? "pending" : "warn",
+        detail: lang === "ro" ? "🇷🇴 Română" : lang === "en" ? "⚠️ Engleză" : "necunoscută",
+      },
+      {
+        label: "TTS audio Twilio",
+        state: ttsErr ? "err" : ttsUrl ? "ok" : inProgress ? "pending" : "warn",
+        detail: ttsErr ? ttsErr : ttsUrl ? `ElevenLabs URL semnat (${ttsUrl.slice(0, 50)}…)` : "Twilio Say (fallback)",
+      },
+      {
+        label: "Transcript",
+        state: transcript.length >= 2 ? "ok" : transcript.length === 1 ? "warn" : inProgress ? "pending" : "err",
+        detail: `${transcript.length} replici`,
+      },
+      {
+        label: "Înregistrare audio",
+        state: call.recording_url ? "ok" : inProgress ? "pending" : "warn",
+        detail: call.recording_url ? "disponibilă" : "lipsă",
+      },
+      {
+        label: "Raport AI",
+        state: call.ai_summary ? "ok" : reportSkip ? "warn" : inProgress ? "pending" : "err",
+        detail: call.ai_summary ? (call.ai_outcome || "creat") : reportSkip || "în curs",
+      },
+    ];
+  };
+
   const stats = {
     total: calls.length,
     completed: calls.filter(c => c.status === "completed").length,
