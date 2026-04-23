@@ -494,6 +494,18 @@ const ProspectListings = () => {
               {campaignRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Rocket className="h-4 w-4 mr-1" />}
               🚀 Lansează Campanie AI (Top {Math.min(CAMPAIGN_LIMIT, campaignTargets.length)})
             </Button>
+            {campaignRunning && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setStopOpen(true)}
+                disabled={stopping}
+                className="shadow-lg font-semibold"
+              >
+                {stopping ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <StopCircle className="h-4 w-4 mr-1" />}
+                Oprește campania
+              </Button>
+            )}
             {stats.pending > 0 && (
               <Button variant="default" size="sm" onClick={handleResumePending} disabled={resuming} className="bg-amber-600 hover:bg-amber-500 text-white">
                 {resuming ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-1" />}
