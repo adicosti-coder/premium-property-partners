@@ -688,6 +688,40 @@ const ProspectListings = () => {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={campaignOpen} onOpenChange={setCampaignOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-orange-500" />
+              Lansare Campanie AI
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Ești sigur că vrei să suni <strong>{campaignTargets.length} proprietari</strong>
+                  {zoneFilter !== "all" ? <> din zona <strong>{zoneFilter}</strong></> : <> din toate zonele filtrate</>}?
+                </p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>📞 Voice Agent va apela secvențial cu pauză de 1.5s</div>
+                  <div>🔒 Lead-urile vor fi marcate <code className="bg-background px-1 rounded">calling</code> imediat</div>
+                  <div>📊 Rezultatele apar în <strong>Call Dashboard</strong> live</div>
+                  <div>⚠️ Acțiunea <strong>nu poate fi anulată</strong> odată inițiată</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLaunchCampaign}
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+            >
+              <Rocket className="h-4 w-4 mr-1" /> Da, lansează campania
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
