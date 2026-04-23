@@ -224,6 +224,39 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_blocklist: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          domain: string | null
+          id: string
+          notes: string | null
+          phone_normalized: string | null
+          reason: string
+          source_prospect_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          notes?: string | null
+          phone_normalized?: string | null
+          reason?: string
+          source_prospect_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          notes?: string | null
+          phone_normalized?: string | null
+          reason?: string
+          source_prospect_id?: string | null
+        }
+        Relationships: []
+      }
       article_votes: {
         Row: {
           created_at: string
@@ -4541,6 +4574,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      extract_url_domain: { Args: { p_url: string }; Returns: string }
       get_public_profile: {
         Args: { p_user_id: string }
         Returns: {
