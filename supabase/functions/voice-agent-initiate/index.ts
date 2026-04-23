@@ -36,29 +36,38 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Verify caller is admin
+    // Verify caller is admin OR is an internal language-retry call (server-to-server)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Auth required" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user } } = await supabase.auth.getUser(token);
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Admin required" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const languageRetryHeader = req.headers.get("x-language-retry");
+    const isInternalRetry = !!languageRetryHeader && authHeader === `Bearer ${SERVICE_KEY}`;
+
+    if (!isInternalRetry) {
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Auth required" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (!user) {
+        return new Response(JSON.stringify({ error: "Invalid token" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Admin required" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      (globalThis as any).__initiator_user_id = user.id;
     }
 
     const body = await req.json();
-    const { toNumber, scraperLeadId, leadId, objective = "qualify", customPrompt } = body;
+    const { toNumber, scraperLeadId, leadId, objective = "qualify", customPrompt, languageRetryOf, forceElevenLabs } = body;
+    const initiatorUserId: string | null = isInternalRetry
+      ? null
+      : (globalThis as any).__initiator_user_id || null;
 
     if (!toNumber || !/^\+[1-9]\d{6,14}$/.test(toNumber)) {
       return new Response(JSON.stringify({ error: "toNumber invalid (format E.164: +407...)" }), {
