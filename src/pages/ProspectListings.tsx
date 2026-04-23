@@ -1265,6 +1265,84 @@ const ProspectListings = () => {
         open={explainerOpen}
         onOpenChange={setExplainerOpen}
         data={explainerData}
+        onForceOwner={async (d) => {
+          // 1) Update prospect → owner
+          const { error: upErr } = await supabase
+            .from("prospect_listings")
+            .update({ prospect_type: "proprietar", is_active: true })
+            .eq("id", d.prospectId);
+          if (upErr) {
+            toast({ title: "Eroare", description: upErr.message, variant: "destructive" });
+            return;
+          }
+
+          // 2) Insert into whitelist (phone + domain), idempotent
+          if (d.phoneNormalized) {
+            await supabase.from("agency_whitelist" as any).insert({
+              phone_normalized: d.phoneNormalized,
+              reason: "manual_admin",
+              notes: `Override din Explainer (${d.contactName || "—"})`,
+              source_prospect_id: d.prospectId,
+              created_by: user?.id ?? null,
+            }).then(({ error }) => {
+              if (error && !error.message?.toLowerCase().includes("duplicate")) {
+                console.warn("[whitelist] phone insert:", error.message);
+              }
+            });
+          }
+          if (d.domain) {
+            await supabase.from("agency_whitelist" as any).insert({
+              domain: d.domain,
+              reason: "manual_admin",
+              notes: `Override din Explainer (${d.contactName || "—"})`,
+              source_prospect_id: d.prospectId,
+              created_by: user?.id ?? null,
+            }).then(({ error }) => {
+              if (error && !error.message?.toLowerCase().includes("duplicate")) {
+                console.warn("[whitelist] domain insert:", error.message);
+              }
+            });
+          }
+
+          // 3) Remove from blocklist (phone + domain) so it stops being blocked
+          if (d.phoneNormalized) {
+            await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", d.phoneNormalized);
+          }
+          if (d.domain) {
+            await supabase.from("agency_blocklist" as any).delete().eq("domain", d.domain);
+          }
+
+          // 4) Audit log
+          await supabase.from("admin_audit_log").insert({
+            actor_user_id: user?.id ?? null,
+            actor_label: user?.email ?? null,
+            action: "agency_manual_override",
+            entity_type: "prospect_listing",
+            entity_id: d.prospectId,
+            severity: "info",
+            details: {
+              reason: "Manual override din Explainer",
+              from: d.isAgency ? "agentie" : "suspect",
+              to: "proprietar",
+              suspicion_level: d.suspicion.level,
+              suspicion_reasons: d.suspicion.reasons,
+              hard_keyword_hits: d.hardKeywordHits,
+              soft_keyword_hits: d.softKeywordHits,
+              phone_count: d.phoneCount,
+              phone_normalized: d.phoneNormalized,
+              domain: d.domain,
+              whitelisted_phone: !!d.phoneNormalized,
+              whitelisted_domain: !!d.domain,
+            },
+          });
+
+          toast({
+            title: "🏠 Marcat ca proprietar (whitelist)",
+            description: "Telefonul și domeniul au fost adăugate permanent în whitelist. Acțiunea a fost înregistrată în audit log.",
+          });
+          setExplainerOpen(false);
+          refetch();
+        }}
       />
     </div>
   );
