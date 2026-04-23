@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Trash2, FlaskConical, Save, Settings2, ShieldAlert, ShieldCheck, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Trash2, FlaskConical, Save, Settings2, ShieldAlert, ShieldCheck, AlertCircle, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { useAgencyDetectionSettings, useAgencyKeywords } from "@/hooks/useAgencyDetectionSettings";
 
@@ -249,6 +249,22 @@ export const AgencyDetectionSettings = () => {
                 />
                 <p className="text-xs text-muted-foreground">Default: 14 zile</p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* ── BULK ARCHIVE ─────────────────────────────────────────── */}
+          <Card className="border-amber-300/60 bg-amber-50/40 dark:bg-amber-950/10">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Archive className="h-4 w-4 text-amber-600" /> Arhivare Retroactivă (Bulk)
+              </CardTitle>
+              <CardDescription>
+                Marchează ca <strong>arhivate</strong> toate agențiile deja detectate (excepție: numerele de pe whitelist).
+                Acțiunea adaugă automat numerele în blacklist și înregistrează un audit log.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BulkArchiveButton />
             </CardContent>
           </Card>
 
