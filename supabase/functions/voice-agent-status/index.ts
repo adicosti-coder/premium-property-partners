@@ -1,6 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+async function pushDebugLog(supabase: any, sessionId: string, entry: Record<string, unknown>) {
+  try {
+    const { data } = await supabase
+      .from("voice_call_sessions")
+      .select("debug_log")
+      .eq("id", sessionId)
+      .maybeSingle();
+    const existing = Array.isArray(data?.debug_log) ? data!.debug_log : [];
+    const next = [...existing, { at: new Date().toISOString(), ...entry }].slice(-100);
+    await supabase.from("voice_call_sessions").update({ debug_log: next }).eq("id", sessionId);
+  } catch (e) {
+    console.error("status pushDebugLog failed:", e);
+  }
+}
+
 /* ──────────────────────────────────────────────────────────────
    Twilio status callback — final summary + notifications
 ─────────────────────────────────────────────────────────────── */
