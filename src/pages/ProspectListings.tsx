@@ -211,12 +211,19 @@ const ProspectListings = () => {
       } catch (e) {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
-      return { ...p, geo };
+      const isAgency = detectIsAgency(p);
+      return { ...p, geo, isAgency };
     }),
     [prospects]
   );
 
+  // Count agencies before filtering, so we can show "X agenții ascunse"
+  const agencyCount = useMemo(() => enriched.filter((p) => p.isAgency).length, [enriched]);
+
   const filtered = enriched.filter((p) => {
+    // Owner / agency filter (default: hide agencies)
+    if (prospectTypeFilter === "proprietar" && p.isAgency) return false;
+    if (prospectTypeFilter === "agentie" && !p.isAgency) return false;
     if ((p.lead_score ?? p.score ?? 0) < parseInt(minScore || "0")) return false;
     if (zoneFilter !== "all") {
       const zoneBlob = `${p.zone || ""} ${p.location || ""} ${p.geo.primary || ""} ${(p.geo.found || []).join(" ")}`.toLowerCase();
