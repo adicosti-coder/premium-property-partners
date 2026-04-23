@@ -144,6 +144,20 @@ export default function VoiceAgentManager() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Auto-open dialog when test call finishes
+  useEffect(() => {
+    if (!testSessionId) return;
+    const found = calls.find((c) => c.id === testSessionId);
+    if (found && ["completed", "failed", "busy", "no-answer", "canceled"].includes(found.status)) {
+      setSelectedCall(found);
+      setTestSessionId(null);
+      toast({
+        title: found.status === "completed" ? "✅ Test finalizat" : `⚠️ Test ${found.status}`,
+        description: `Durată: ${found.call_duration_seconds || 0}s. Verifică audio + transcript în dialog.`,
+      });
+    }
+  }, [calls, testSessionId]);
+
   const initiateCall = async () => {
     if (!/^\+[1-9]\d{6,14}$/.test(toNumber)) {
       toast({ title: "Număr invalid", description: "Format E.164 (ex: +407...)", variant: "destructive" });
