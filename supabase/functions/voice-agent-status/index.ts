@@ -1,6 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+async function pushDebugLog(supabase: any, sessionId: string, entry: Record<string, unknown>) {
+  try {
+    const { data } = await supabase
+      .from("voice_call_sessions")
+      .select("debug_log")
+      .eq("id", sessionId)
+      .maybeSingle();
+    const existing = Array.isArray(data?.debug_log) ? data!.debug_log : [];
+    const next = [...existing, { at: new Date().toISOString(), ...entry }].slice(-100);
+    await supabase.from("voice_call_sessions").update({ debug_log: next }).eq("id", sessionId);
+  } catch (e) {
+    console.error("status pushDebugLog failed:", e);
+  }
+}
+
 /* ──────────────────────────────────────────────────────────────
    Twilio status callback — final summary + notifications
 ─────────────────────────────────────────────────────────────── */
@@ -91,6 +106,26 @@ serve(async (req) => {
     const latestRecordingUrl = recordingReady ? `${recordingUrl}.mp3` : session.recording_url || null;
     const reportStatusReached = finalStatuses.includes(derivedStatus);
     const shouldCreateReport = !session.ai_summary && (reportStatusReached || recordingReady);
+
+    await pushDebugLog(supabase, sessionId, {
+      stage: "status_callback",
+      callbackType,
+      callStatus,
+      recordingStatus,
+      hasRecording,
+      recordingReady,
+      duration,
+      derivedStatus,
+      reportStatusReached,
+      detectedLanguage,
+      transcriptLen: transcript.length,
+      hasExistingSummary: !!session.ai_summary,
+      shouldCreateReport,
+      reportSkipReason: !shouldCreateReport
+        ? (session.ai_summary ? "report_already_exists" : `not_final_yet (status=${derivedStatus}, recordingReady=${recordingReady})`)
+        : null,
+      recordingUrl: latestRecordingUrl,
+    });
 
     if (shouldCreateReport) {
       if (detectedLanguage === "en" && (session.language_retry_count || 0) < 1) {

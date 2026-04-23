@@ -4096,6 +4096,7 @@ export type Database = {
           call_objective: string | null
           cost_estimate_usd: number | null
           created_at: string
+          debug_log: Json
           detected_language: string | null
           direction: string
           ended_at: string | null
@@ -4127,6 +4128,7 @@ export type Database = {
           call_objective?: string | null
           cost_estimate_usd?: number | null
           created_at?: string
+          debug_log?: Json
           detected_language?: string | null
           direction?: string
           ended_at?: string | null
@@ -4158,6 +4160,7 @@ export type Database = {
           call_objective?: string | null
           cost_estimate_usd?: number | null
           created_at?: string
+          debug_log?: Json
           detected_language?: string | null
           direction?: string
           ended_at?: string | null

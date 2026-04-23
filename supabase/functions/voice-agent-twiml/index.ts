@@ -23,6 +23,21 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function pushDebugLog(supabase: any, sessionId: string, entry: Record<string, unknown>) {
+  try {
+    const { data } = await supabase
+      .from("voice_call_sessions")
+      .select("debug_log")
+      .eq("id", sessionId)
+      .maybeSingle();
+    const existing = Array.isArray(data?.debug_log) ? data!.debug_log : [];
+    const next = [...existing, { at: new Date().toISOString(), ...entry }].slice(-100);
+    await supabase.from("voice_call_sessions").update({ debug_log: next }).eq("id", sessionId);
+  } catch (e) {
+    console.error("pushDebugLog failed:", e);
+  }
+}
+
 async function getSignedStorageUrl(supabase: any, filePath: string): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from("voice-recordings")
@@ -359,7 +374,21 @@ serve(async (req) => {
       transcript.push({ role: "user", text: userSpeech, at: new Date().toISOString() });
     }
 
+    await pushDebugLog(supabase, sessionId, {
+      stage: "twiml_turn_start",
+      turn,
+      branch,
+      useElevenLabs,
+      leadScore,
+      manual: isManualCall,
+      userSpeech: userSpeech || null,
+      systemPromptPreview: systemPrompt.slice(0, 600),
+      hasCustomPrompt: !!customPrompt,
+    });
+
     let aiReply = "";
+    let aiRawReply = "";
+    let aiError: string | null = null;
     let shouldHangup = false;
 
     if (turn === 0) {
@@ -378,7 +407,10 @@ serve(async (req) => {
 
         if (aiRes.ok) {
           const aiData = await aiRes.json();
-          aiReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+          aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+          aiReply = aiRawReply;
+        } else {
+          aiError = `AI HTTP ${aiRes.status}: ${(await aiRes.text()).slice(0, 200)}`;
         }
       }
 
@@ -397,15 +429,18 @@ serve(async (req) => {
       });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
+        aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
         aiReply = normalizeAiReply(
-          aiData.choices?.[0]?.message?.content?.trim() || "",
+          aiRawReply,
           "Mulțumesc pentru timp. O zi frumoasă! La revedere.",
         );
       } else {
+        aiError = `AI HTTP ${aiRes.status}: ${(await aiRes.text()).slice(0, 200)}`;
         aiReply = "Mulțumesc pentru timp. O zi frumoasă! La revedere.";
         shouldHangup = true;
       }
     } else {
+      aiError = "LOVABLE_API_KEY missing";
       aiReply = "Mulțumesc pentru timp. La revedere.";
       shouldHangup = true;
     }
@@ -422,9 +457,28 @@ serve(async (req) => {
     }).eq("id", sessionId);
 
     // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
-    const audioUrl = useElevenLabs
-      ? await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!)
-      : null;
+    let audioUrl: string | null = null;
+    let ttsError: string | null = null;
+    if (useElevenLabs) {
+      try {
+        audioUrl = await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!);
+        if (!audioUrl) ttsError = "ElevenLabs returned no URL (see function logs)";
+      } catch (e: any) {
+        ttsError = String(e?.message || e);
+      }
+    }
+
+    await pushDebugLog(supabase, sessionId, {
+      stage: "twiml_turn_end",
+      turn,
+      aiRawReply: aiRawReply || null,
+      aiReply,
+      aiError,
+      audioUrl,
+      ttsError,
+      voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
+      shouldHangup,
+    });
 
     if (shouldHangup) {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);

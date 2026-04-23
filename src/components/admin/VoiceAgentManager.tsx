@@ -33,6 +33,7 @@ interface VoiceCall {
   detected_language?: string | null;
   language_retry_count?: number | null;
   language_retry_of?: string | null;
+  debug_log?: any[] | null;
 }
 
 const statusColor = (s: string) => {
@@ -649,6 +650,57 @@ export default function VoiceAgentManager() {
                   )}
                 </ScrollArea>
               </div>
+
+              <details className="border rounded-lg" open>
+                <summary className="cursor-pointer px-3 py-2 text-sm font-medium bg-muted/40 rounded-lg">
+                  🔬 Debug log detaliat ({(selectedCall.debug_log || []).length} evenimente)
+                </summary>
+                <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
+                  {(selectedCall.debug_log || []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Niciun log încă. Logurile apar pe măsură ce apelul se desfășoară (system prompt, răspuns AI brut, URL audio Twilio, motiv lipsă raport).</p>
+                  ) : (
+                    (selectedCall.debug_log || []).map((entry: any, i: number) => (
+                      <div key={i} className="border rounded p-2 bg-card">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-xs font-mono font-semibold text-primary">{entry.stage || "log"}</span>
+                          <span className="text-[10px] text-muted-foreground">{entry.at ? new Date(entry.at).toLocaleTimeString("ro-RO") : ""}</span>
+                        </div>
+                        {entry.aiReply && (
+                          <div className="text-xs mb-1"><strong>AI reply:</strong> <span className="text-foreground">{entry.aiReply}</span></div>
+                        )}
+                        {entry.aiRawReply && entry.aiRawReply !== entry.aiReply && (
+                          <div className="text-xs mb-1"><strong>AI raw:</strong> <span className="text-muted-foreground italic">{entry.aiRawReply}</span></div>
+                        )}
+                        {entry.userSpeech && (
+                          <div className="text-xs mb-1"><strong>User a spus:</strong> {entry.userSpeech}</div>
+                        )}
+                        {entry.audioUrl && (
+                          <div className="text-xs mb-1 break-all"><strong>Audio URL Twilio:</strong> <a href={entry.audioUrl} target="_blank" rel="noreferrer" className="text-primary underline">{entry.audioUrl.slice(0, 90)}…</a></div>
+                        )}
+                        {entry.ttsError && (
+                          <div className="text-xs mb-1 text-destructive"><strong>TTS error:</strong> {entry.ttsError}</div>
+                        )}
+                        {entry.aiError && (
+                          <div className="text-xs mb-1 text-destructive"><strong>AI error:</strong> {entry.aiError}</div>
+                        )}
+                        {entry.reportSkipReason && (
+                          <div className="text-xs mb-1 text-amber-600"><strong>Raport sărit:</strong> {entry.reportSkipReason}</div>
+                        )}
+                        {entry.systemPromptPreview && (
+                          <details className="mt-1">
+                            <summary className="text-[11px] cursor-pointer text-muted-foreground">System prompt preview</summary>
+                            <pre className="text-[10px] mt-1 whitespace-pre-wrap bg-muted/50 p-2 rounded">{entry.systemPromptPreview}</pre>
+                          </details>
+                        )}
+                        <details className="mt-1">
+                          <summary className="text-[11px] cursor-pointer text-muted-foreground">JSON complet</summary>
+                          <pre className="text-[10px] mt-1 whitespace-pre-wrap bg-muted/50 p-2 rounded">{JSON.stringify(entry, null, 2)}</pre>
+                        </details>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </details>
             </div>
           )}
         </DialogContent>
