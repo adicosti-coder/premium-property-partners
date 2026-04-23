@@ -146,12 +146,17 @@ const ProspectListings = () => {
     }
   }, [queryError]);
 
-  // Compute geo match per prospect (memoized)
+  // Compute geo match per prospect (memoized) - safe fallback if function throws
   const enriched = useMemo(
-    () => prospects.map((p) => ({
-      ...p,
-      geo: computeProspectGeoMatch([p.title, p.location, p.zone, p.description]),
-    })),
+    () => prospects.map((p) => {
+      let geo: { score: number; found: string[]; primary: string | null } = { score: 0, found: [], primary: null };
+      try {
+        geo = computeProspectGeoMatch([p.title, p.location, p.zone, p.description]);
+      } catch (e) {
+        console.warn("[ProspectListings] geo match failed for", p.id, e);
+      }
+      return { ...p, geo };
+    }),
     [prospects]
   );
 
@@ -161,6 +166,18 @@ const ProspectListings = () => {
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
   });
+
+  // Debug: log render state
+  useEffect(() => {
+    console.log("[ProspectListings] State:", {
+      isAdmin,
+      adminLoading,
+      userEmail: user?.email,
+      prospectsLoaded: prospects.length,
+      filtered: filtered.length,
+      isLoading,
+    });
+  }, [isAdmin, adminLoading, user, prospects.length, filtered.length, isLoading]);
 
   const stats = {
     total: prospects.length,
