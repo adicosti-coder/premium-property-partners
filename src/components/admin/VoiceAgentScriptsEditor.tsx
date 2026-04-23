@@ -7,12 +7,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Save, Plus, Trash2, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  FileText, Save, Plus, Trash2, CheckCircle2, Loader2,
+  Eye, PhoneCall, History, RotateCcw,
+} from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface VoiceScript {
   id: string;
@@ -24,6 +31,20 @@ interface VoiceScript {
   updated_at: string;
 }
 
+interface ScriptVersion {
+  id: string;
+  script_id: string;
+  version_number: number;
+  name: string;
+  system_prompt: string;
+  notes: string | null;
+  language: string;
+  created_at: string;
+}
+
+const SAMPLE_LEAD_CONTEXT = `Vorbești cu dl/dna Ionescu. Context lead: Apartament 3 camere, Iosefin — preț listat 95000 EUR — categorie: vanzare. Sugestie pitch: scoate-i în evidență că avem cumpărători cu finanțare pre-aprobată.`;
+const SAMPLE_SENTIMENT_BLOCK = `\nTON: empatic, cald, direct. Recunoaște situația ("înțeleg că aveți nevoie rapid"). Propune vizionare în 24-48h. Urgență 7/10.`;
+
 export default function VoiceAgentScriptsEditor() {
   const [scripts, setScripts] = useState<VoiceScript[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -33,7 +54,23 @@ export default function VoiceAgentScriptsEditor() {
     name: "", system_prompt: "", notes: "", language: "ro",
   });
 
+  // Preview
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Versions
+  const [showHistory, setShowHistory] = useState(false);
+  const [versions, setVersions] = useState<ScriptVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+
+  // Test call
+  const [testNumber, setTestNumber] = useState<string>(
+    () => localStorage.getItem("voice_script_test_number") || "+40",
+  );
+  const [testing, setTesting] = useState(false);
+
   const selected = scripts.find((s) => s.id === selectedId) || null;
+  const activeScript = scripts.find((s) => s.is_active && s.language === (selected?.language || "ro")) || null;
+
   const isDirty = selected
     ? draft.name !== selected.name ||
       draft.system_prompt !== selected.system_prompt ||
@@ -96,7 +133,7 @@ export default function VoiceAgentScriptsEditor() {
       if (error) {
         toast({ title: "Eroare salvare", description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Salvat", description: "Scriptul a fost actualizat." });
+        toast({ title: "Salvat ✓", description: "O versiune nouă a fost creată automat în istoric." });
         await load();
       }
     } else {
@@ -127,7 +164,6 @@ export default function VoiceAgentScriptsEditor() {
   const handleActivate = async () => {
     if (!selected) return;
     setSaving(true);
-    // Deactivate all others in this language, then activate selected (unique index handles enforcement)
     const { error: deactErr } = await supabase
       .from("voice_agent_scripts")
       .update({ is_active: false })
@@ -170,6 +206,89 @@ export default function VoiceAgentScriptsEditor() {
     setSaving(false);
   };
 
+  // ──────────── Versions / Rollback ────────────
+  const loadVersions = async () => {
+    if (!selected) return;
+    setVersionsLoading(true);
+    const { data, error } = await supabase
+      .from("voice_agent_script_versions")
+      .select("*")
+      .eq("script_id", selected.id)
+      .order("version_number", { ascending: false });
+    if (error) {
+      toast({ title: "Eroare istoric", description: error.message, variant: "destructive" });
+    } else {
+      setVersions((data || []) as ScriptVersion[]);
+    }
+    setVersionsLoading(false);
+  };
+
+  const openHistory = async () => {
+    setShowHistory(true);
+    await loadVersions();
+  };
+
+  const handleRollback = async (v: ScriptVersion) => {
+    if (!selected) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("voice_agent_scripts")
+      .update({
+        name: v.name,
+        system_prompt: v.system_prompt,
+        notes: v.notes,
+        language: v.language,
+      })
+      .eq("id", selected.id);
+    if (error) {
+      toast({ title: "Eroare rollback", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Rollback ✓", description: `Restaurat la versiunea v${v.version_number}. O versiune nouă a fost creată automat.` });
+      await load();
+      await loadVersions();
+    }
+    setSaving(false);
+  };
+
+  // ──────────── Preview compus ────────────
+  const composedPreview = (() => {
+    const base = (draft.system_prompt || "").trim();
+    return `${base}\n\n${SAMPLE_LEAD_CONTEXT}${SAMPLE_SENTIMENT_BLOCK}`;
+  })();
+
+  // ──────────── Test Call ────────────
+  const handleTestCall = async () => {
+    if (!/^\+[1-9]\d{6,14}$/.test(testNumber)) {
+      toast({ title: "Număr invalid", description: "Format E.164 (ex: +407...)", variant: "destructive" });
+      return;
+    }
+    if (!activeScript) {
+      toast({ title: "Niciun script activ", description: "Activează un script înainte de a face un test call.", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("voice_script_test_number", testNumber);
+    setTesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-initiate", {
+        body: { toNumber: testNumber, objective: "qualify" },
+      });
+      if (error || (data as any)?.error) {
+        toast({
+          title: "Test eșuat",
+          description: (data as any)?.error || error?.message || "Eroare necunoscută",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "📞 Test call inițiat",
+          description: `Folosește scriptul "${activeScript.name}". Verifică panoul Voice Agent pentru transcript și raport.`,
+        });
+      }
+    } finally {
+      setTesting(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -178,7 +297,9 @@ export default function VoiceAgentScriptsEditor() {
           Scripturi Voice Agent (System Prompt)
         </CardTitle>
         <CardDescription>
-          Editează instrucțiunile AI folosite în apelurile vocale. Scriptul marcat <strong>activ</strong> per limbă este folosit live de Ana în toate apelurile.
+          Editează instrucțiunile AI folosite în apelurile vocale. Scriptul marcat <strong>activ</strong> per limbă este folosit live.
+          Lead context-ul și sentimentul proprietarului se adaugă automat la final.
+          {!activeScript && <span className="text-amber-600"> ⚠️ Niciun script activ — se folosește fallback-ul hardcodat.</span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -254,7 +375,7 @@ export default function VoiceAgentScriptsEditor() {
                 className="font-mono text-xs"
               />
               <div className="text-[10px] text-muted-foreground mt-1">
-                {draft.system_prompt.length} caractere • lead context și sentiment se adaugă automat la final.
+                {draft.system_prompt.length} caractere • lead context și sentiment se concatenează automat la rulare.
               </div>
             </div>
 
@@ -267,23 +388,33 @@ export default function VoiceAgentScriptsEditor() {
               />
             </div>
 
+            {/* Action bar */}
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
               <Button onClick={handleSave} disabled={saving || !isDirty}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                {selectedId ? "Salvează modificările" : "Creează script"}
+                {selectedId ? "Salvează" : "Creează"}
               </Button>
 
               {selected && !selected.is_active && (
                 <Button onClick={handleActivate} disabled={saving || isDirty} variant="default" className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  Activează live
+                  <CheckCircle2 className="h-4 w-4 mr-1" /> Activează
                 </Button>
               )}
 
               {selected && selected.is_active && (
                 <Badge variant="default" className="gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> Folosit live în apeluri
+                  <CheckCircle2 className="h-3 w-3" /> Folosit live
                 </Badge>
+              )}
+
+              <Button onClick={() => setShowPreview(true)} variant="outline" size="sm">
+                <Eye className="h-4 w-4 mr-1" /> Vizualizează prompt activ
+              </Button>
+
+              {selected && (
+                <Button onClick={openHistory} variant="outline" size="sm">
+                  <History className="h-4 w-4 mr-1" /> Istoric versiuni
+                </Button>
               )}
 
               {selected && !selected.is_active && (
@@ -297,7 +428,7 @@ export default function VoiceAgentScriptsEditor() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Ștergi scriptul "{selected.name}"?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Această acțiune nu poate fi anulată.
+                        Se vor șterge și toate versiunile din istoric. Acțiunea nu poate fi anulată.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -309,11 +440,127 @@ export default function VoiceAgentScriptsEditor() {
               )}
 
               {isDirty && (
-                <span className="text-[10px] text-amber-600 ml-2">Modificări nesalvate</span>
+                <span className="text-[10px] text-amber-600">Modificări nesalvate</span>
+              )}
+            </div>
+
+            {/* Test call bar */}
+            <div className="flex flex-wrap items-end gap-2 pt-3 border-t border-border bg-muted/30 -mx-6 px-6 py-3 rounded-b-lg">
+              <div className="flex-1 min-w-[180px]">
+                <label className="text-xs font-medium mb-1 block">Test Call — număr destinație</label>
+                <Input
+                  value={testNumber}
+                  onChange={(e) => setTestNumber(e.target.value)}
+                  placeholder="+407..."
+                  className="bg-background"
+                />
+              </div>
+              <Button
+                onClick={handleTestCall}
+                disabled={testing || !activeScript}
+                className="bg-primary"
+              >
+                {testing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <PhoneCall className="h-4 w-4 mr-1" />}
+                Test Call cu scriptul activ
+              </Button>
+              {!activeScript && (
+                <span className="text-[10px] text-amber-600">Activează un script ca să poți testa</span>
+              )}
+              {activeScript && (
+                <span className="text-[10px] text-muted-foreground">
+                  Va folosi: <strong>{activeScript.name}</strong>
+                </span>
               )}
             </div>
           </div>
         </div>
+
+        {/* Preview Dialog */}
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-3xl max-h-[85vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" /> Prompt final compus
+              </DialogTitle>
+              <DialogDescription>
+                Așa va arăta system prompt-ul trimis la AI: scriptul tău + lead context (exemplu) + sentiment block (exemplu).
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] border border-border rounded-md p-4 bg-muted/30">
+              <pre className="text-xs font-mono whitespace-pre-wrap break-words">{composedPreview}</pre>
+            </ScrollArea>
+            <div className="text-[10px] text-muted-foreground">
+              💡 În producție, lead context și sentimentul sunt înlocuite cu date reale din baza de date pentru fiecare apel.
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* History Dialog */}
+        <Dialog open={showHistory} onOpenChange={setShowHistory}>
+          <DialogContent className="max-w-3xl max-h-[85vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" /> Istoric versiuni — {selected?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Fiecare salvare creează automat o versiune nouă. Apasă <strong>Restore</strong> pentru rollback.
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              {versionsLoading && (
+                <div className="p-6 text-center text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 inline animate-spin mr-2" /> Încarc versiuni...
+                </div>
+              )}
+              {!versionsLoading && versions.length === 0 && (
+                <div className="p-6 text-center text-xs text-muted-foreground">Nicio versiune înregistrată încă.</div>
+              )}
+              <div className="space-y-3">
+                {versions.map((v) => (
+                  <div key={v.id} className="border border-border rounded-md p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-semibold text-sm">v{v.version_number}</span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {new Date(v.created_at).toLocaleString("ro-RO")}
+                        </span>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <RotateCcw className="h-3 w-3 mr-1" /> Restore
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Rollback la v{v.version_number}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Conținutul curent va fi înlocuit cu această versiune. Modificările actuale vor rămâne în istoric (nu le pierzi).
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Anulează</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleRollback(v)}>
+                              Restore v{v.version_number}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                    <div className="text-xs"><strong>Nume:</strong> {v.name} • <strong>Limbă:</strong> {v.language.toUpperCase()}</div>
+                    {v.notes && <div className="text-xs text-muted-foreground"><strong>Notițe:</strong> {v.notes}</div>}
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-primary hover:underline">Vezi system prompt</summary>
+                      <pre className="mt-2 p-2 bg-muted/30 rounded text-[11px] font-mono whitespace-pre-wrap break-words max-h-60 overflow-y-auto">
+                        {v.system_prompt}
+                      </pre>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
