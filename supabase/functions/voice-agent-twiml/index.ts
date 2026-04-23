@@ -374,7 +374,21 @@ serve(async (req) => {
       transcript.push({ role: "user", text: userSpeech, at: new Date().toISOString() });
     }
 
+    await pushDebugLog(supabase, sessionId, {
+      stage: "twiml_turn_start",
+      turn,
+      branch,
+      useElevenLabs,
+      leadScore,
+      manual: isManualCall,
+      userSpeech: userSpeech || null,
+      systemPromptPreview: systemPrompt.slice(0, 600),
+      hasCustomPrompt: !!customPrompt,
+    });
+
     let aiReply = "";
+    let aiRawReply = "";
+    let aiError: string | null = null;
     let shouldHangup = false;
 
     if (turn === 0) {
@@ -393,7 +407,10 @@ serve(async (req) => {
 
         if (aiRes.ok) {
           const aiData = await aiRes.json();
-          aiReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+          aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+          aiReply = aiRawReply;
+        } else {
+          aiError = `AI HTTP ${aiRes.status}: ${(await aiRes.text()).slice(0, 200)}`;
         }
       }
 
