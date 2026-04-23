@@ -672,6 +672,24 @@ export default function CallDashboard() {
                 <p className="text-center text-muted-foreground py-8 text-sm">Niciun apel găsit</p>
               )}
             </div>
+
+            {/* Incremental loading: Load more */}
+            {visible.length < filtered.length && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVisibleCount((c) => c + 50)}
+                >
+                  Încarcă încă 50 ({filtered.length - visible.length} rămase)
+                </Button>
+              </div>
+            )}
+            {visible.length > 0 && (
+              <p className="text-center text-[10px] text-muted-foreground mt-3">
+                Afișat {visible.length} din {filtered.length} (cache local pentru performanță)
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
