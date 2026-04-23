@@ -123,11 +123,27 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
-  // Default = only owners (hide agencies). Persisted.
-  const [prospectTypeFilter, setProspectTypeFilter] = useState<"proprietar" | "agentie" | "all">(
-    () => (localStorage.getItem("prospects:typeFilter") as any) || "proprietar"
-  );
-  useEffect(() => { localStorage.setItem("prospects:typeFilter", prospectTypeFilter); }, [prospectTypeFilter]);
+  // Default = only owners (hide agencies). Persisted in localStorage.
+  // Hard rule: agencies are NEVER shown unless the admin explicitly switches to "all" or "agentie"
+  // in the toolbar. We sanitize the stored value defensively.
+  type ProspectTypeFilter = "proprietar" | "agentie" | "all";
+  const PROSPECT_TYPE_LS_KEY = "prospects:typeFilter";
+  const readPersistedTypeFilter = (): ProspectTypeFilter => {
+    try {
+      const v = localStorage.getItem(PROSPECT_TYPE_LS_KEY);
+      return v === "all" || v === "agentie" || v === "proprietar" ? v : "proprietar";
+    } catch {
+      return "proprietar";
+    }
+  };
+  const [prospectTypeFilter, setProspectTypeFilterRaw] = useState<ProspectTypeFilter>(readPersistedTypeFilter);
+  const setProspectTypeFilter = (v: ProspectTypeFilter) => {
+    const safe: ProspectTypeFilter = v === "all" || v === "agentie" || v === "proprietar" ? v : "proprietar";
+    setProspectTypeFilterRaw(safe);
+  };
+  useEffect(() => {
+    try { localStorage.setItem(PROSPECT_TYPE_LS_KEY, prospectTypeFilter); } catch { /* ignore */ }
+  }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
