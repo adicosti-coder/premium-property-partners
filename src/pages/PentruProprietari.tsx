@@ -156,7 +156,7 @@ const PentruProprietari = () => {
       badge: "Administrare Premium · Timișoara",
       title: "Venit lunar predictibil din apartamentul tău,",
       titleHighlight: "fără bătăi de cap",
-      subtitle: "Listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF — totul gestionat impecabil. Tu primești venitul în cont.",
+      subtitle: "RealTrust este firma de administrare imobile Timișoara care îți gestionează apartamentul în regim hotelier: listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul în cont.",
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Vorbește cu un consultant",
       ctaB: "Calculează în 60 sec",
@@ -183,7 +183,7 @@ const PentruProprietari = () => {
       badge: "Premium Management · Timișoara",
       title: "Predictable monthly income from your apartment,",
       titleHighlight: "with zero hassle",
-      subtitle: "Premium listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance — flawlessly managed. You just receive the income.",
+      subtitle: "RealTrust is the Timișoara property management company that runs your apartment as a short-term rental: premium listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You just receive the income.",
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       ctaB: "Calculate in 60 sec",
@@ -742,10 +742,10 @@ const PentruProprietari = () => {
                   ? "Un singur partener pentru tot ce ține de apartamentul tău"
                   : "One partner for everything your apartment needs"}
               </h2>
-              <p className="text-lg text-muted-foreground">
+             <p className="text-lg text-muted-foreground">
                 {language === "ro"
-                  ? "Pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții — tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
-                  : "Built for owners who want monthly income, full transparency and zero daily involvement. We take over operations, tax compliance, maintenance and guest relations — you stay in control through clear reports and 24/7 portal access."}
+                  ? "Pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Comparăm onest randament chirie Timișoara pe termen lung vs. regim hotelier și aplicăm yield management pentru optimizare venituri Airbnb Timișoara — preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții, iar tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
+                  : "Built for owners who want monthly income, full transparency and zero daily involvement. We honestly compare long-term rental yield in Timișoara vs. short-term rentals and apply yield management to optimize your Airbnb revenue in Timișoara — we take over operations, tax compliance, maintenance and guest relations while you stay in control through clear reports and 24/7 portal access."}
               </p>
             </div>
 
