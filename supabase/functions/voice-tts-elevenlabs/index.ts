@@ -20,6 +20,18 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function getSignedStorageUrl(supabase: any, filePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from("voice-recordings")
+    .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+  if (error || !data?.signedUrl) {
+    throw new Error(`Signed URL failed: ${error?.message || "missing signed URL"}`);
+  }
+
+  return data.signedUrl;
+}
+
 interface VoiceSettings {
   voice_id: string;
   model_id: string;
@@ -133,8 +145,8 @@ serve(async (req) => {
       .list("tts-cache", { search: `${cacheKey}.mp3`, limit: 1 });
 
     if (existing && existing.length > 0) {
-      const { data: pub } = supabase.storage.from("voice-recordings").getPublicUrl(filePath);
-      return new Response(JSON.stringify({ url: pub.publicUrl, cached: true }), {
+      const signedUrl = await getSignedStorageUrl(supabase, filePath);
+      return new Response(JSON.stringify({ url: signedUrl, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -151,8 +163,8 @@ serve(async (req) => {
 
     if (upErr) throw new Error(`Storage upload: ${upErr.message}`);
 
-    const { data: pub } = supabase.storage.from("voice-recordings").getPublicUrl(filePath);
-    return new Response(JSON.stringify({ url: pub.publicUrl, cached: false }), {
+    const signedUrl = await getSignedStorageUrl(supabase, filePath);
+    return new Response(JSON.stringify({ url: signedUrl, cached: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
