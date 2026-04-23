@@ -109,6 +109,17 @@ serve(async (req) => {
       if (!error) reverted.push((row as any).id);
     }
 
+    // Audit: forced campaign stop
+    await logAudit(supabase, {
+      action: "campaign_stop",
+      actor_user_id: userId,
+      actor_label: actorEmail,
+      entity_type: "campaign",
+      entity_id: campaignId,
+      details: { reverted_count: reverted.length, reverted_ids: reverted.slice(0, 50) },
+      severity: "warning",
+    });
+
     return jsonResp({
       success: true,
       campaign_id: campaignId,
