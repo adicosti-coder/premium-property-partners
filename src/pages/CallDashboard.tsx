@@ -489,20 +489,21 @@ export default function CallDashboard() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3 pt-3 border-t">
               <div className="lg:col-span-2">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">
                   Scor minim hot lead: <span className="text-foreground font-bold">{minScore}</span>
+                  {parseInt(minScore) >= 70 && <span className="ml-2 text-[10px] text-amber-600">🔥 doar lead-uri fierbinți</span>}
                 </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={minScore}
-                  onChange={(e) => setMinScore(e.target.value)}
-                  className="w-full accent-primary"
+                <Slider
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={[parseInt(minScore) || 0]}
+                  onValueChange={(v) => setMinScore(String(v[0]))}
+                  aria-label="Scor minim"
+                  className="py-1"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                  <span>0</span><span>50</span><span>100 🔥</span>
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span>0 (toate)</span><span>50</span><span>100 🔥</span>
                 </div>
               </div>
               <Button
