@@ -21,6 +21,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
+import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import type { User } from "@supabase/supabase-js";
@@ -78,6 +79,7 @@ interface Prospect {
   owner_sentiment: string | null;
   urgency_level: number | null;
   auto_call_triggered_at: string | null;
+  search_keywords: string[] | null;
 }
 
 const sentimentEmoji: Record<string, string> = {
@@ -385,7 +387,7 @@ const ProspectListings = () => {
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
@@ -1036,6 +1038,15 @@ const ProspectListings = () => {
                           {p.call_summary && (
                             <div className="text-xs text-green-700 mt-1 line-clamp-2">📞 {p.call_summary}</div>
                           )}
+                          <ProspectKeywordsEditor
+                            prospectId={p.id}
+                            keywords={p.search_keywords || []}
+                            onChange={(next) => {
+                              qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) =>
+                                old?.map((row) => (row.id === p.id ? { ...row, search_keywords: next } : row)) || old
+                              );
+                            }}
+                          />
                         </TableCell>
                         <TableCell>
                           {p.category && (

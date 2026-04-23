@@ -2816,6 +2816,7 @@ export type Database = {
           score: number | null
           score_breakdown: Json | null
           scraped_at: string | null
+          search_keywords: string[]
           size: number | null
           source_platform: string
           source_url: string
@@ -2868,6 +2869,7 @@ export type Database = {
           score?: number | null
           score_breakdown?: Json | null
           scraped_at?: string | null
+          search_keywords?: string[]
           size?: number | null
           source_platform: string
           source_url: string
@@ -2920,6 +2922,7 @@ export type Database = {
           score?: number | null
           score_breakdown?: Json | null
           scraped_at?: string | null
+          search_keywords?: string[]
           size?: number | null
           source_platform?: string
           source_url?: string
