@@ -152,6 +152,7 @@ const ProspectListings = () => {
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
   const [stopping, setStopping] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
+  const [pendingTypeFilter, setPendingTypeFilter] = useState<ProspectTypeFilter | null>(null);
   const CAMPAIGN_LIMIT = 30;
 
   useEffect(() => {
