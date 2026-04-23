@@ -1143,7 +1143,21 @@ const ProspectListings = () => {
                           {p.geo.found.length > 1 && <div className="text-[10px] text-muted-foreground">+{p.geo.found.length - 1}</div>}
                         </TableCell>
                         <TableCell className="max-w-xs">
-                          <div className="font-medium text-sm truncate">{p.title || "(fără titlu)"}</div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {(() => {
+                              const s = getSourceStyle(p.source_platform);
+                              return s ? (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[9px] py-0 px-1.5 font-semibold ${s.cls}`}
+                                  title={`Sursă: ${s.label}`}
+                                >
+                                  {s.emoji} {s.label}
+                                </Badge>
+                              ) : null;
+                            })()}
+                            <div className="font-medium text-sm truncate">{p.title || "(fără titlu)"}</div>
+                          </div>
                           <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1 flex-wrap">
                             {p.location && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{p.location}</span>}
                             {p.price && <span className="flex items-center gap-0.5"><Euro className="h-3 w-3" />{p.price.toLocaleString()}</span>}
