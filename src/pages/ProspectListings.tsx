@@ -16,8 +16,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
