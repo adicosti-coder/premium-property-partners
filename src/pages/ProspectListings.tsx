@@ -16,8 +16,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
@@ -115,6 +116,21 @@ const AGENCY_KEYWORDS = [
   "m&g design", "m & g design",
   // Generic clues
   " imo ", " imo,", " imo.", "estate", "consulting", "properties",
+];
+
+// "Soft" agency signals — high-suspicion phrases used in agency listings even
+// when the brand isn't named. Trigger the 🤖 badge but NOT a hard block.
+const AGENCY_SOFT_KEYWORDS = [
+  "comision", "comision 0", "comision agentie", "comision agenție",
+  "intermedi", "intermediere", "intermediar",
+  "vizionari prin agentie", "vizionări prin agenție", "vizionari prin agenție",
+  "reprezentare exclusiva", "reprezentare exclusivă", "exclusivitate",
+  "contract de reprezentare", "mandat exclusiv", "mandat de vanzare", "mandat de vânzare",
+  "portofoliul nostru", "echipa noastra", "echipa noastră",
+  "consultantul tau", "consultantul tău", "consultant imobiliar",
+  "oferta noastra", "oferta noastră", "agent imobiliar",
+  "comisionul agentiei", "comisionul agenției",
+  "tva inclus", "tva neinclus",
 ];
 
 // Domains that are entirely agencies / aggregators / portals → mark as agency.
@@ -230,6 +246,31 @@ export function detectIsAgency(p: {
   return AGENCY_KEYWORDS.some((kw) => blob.includes(kw));
 }
 
+// Soft agency suspicion (0..3). 0=clean, 3=very likely agency but not blocked yet.
+// Inputs: phone recurrence count across current dataset + soft keyword hits.
+export function computeAgencySuspicion(p: {
+  title?: string | null;
+  description?: string | null;
+  contact_name?: string | null;
+  source_url?: string | null;
+}, phoneCount: number = 0): { level: 0 | 1 | 2 | 3; reasons: string[] } {
+  const reasons: string[] = [];
+  let level: 0 | 1 | 2 | 3 = 0;
+
+  if (phoneCount >= 4) { reasons.push(`Telefon asociat cu ${phoneCount} anunțuri (≥4)`); level = 3; }
+  else if (phoneCount === 3) { reasons.push(`Telefon asociat cu 3 anunțuri`); level = 2; }
+  else if (phoneCount === 2) { reasons.push(`Telefon asociat cu 2 anunțuri`); level = 1; }
+
+  const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+  const softHits = AGENCY_SOFT_KEYWORDS.filter((kw) => blob.includes(kw));
+  if (softHits.length > 0) {
+    reasons.push(`Cuvinte suspecte: ${softHits.slice(0, 3).join(", ")}`);
+    level = Math.min(3, (level as number) + (softHits.length >= 2 ? 2 : 1)) as 0 | 1 | 2 | 3;
+  }
+
+  return { level, reasons };
+}
+
 const ProspectListings = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -337,7 +378,18 @@ const ProspectListings = () => {
     }
   }, [queryError]);
 
-  // Compute geo match per prospect (memoized) - safe fallback if function throws
+  // Phone recurrence map across the loaded dataset (multi-listing detection).
+  const phoneCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    prospects.forEach((p) => {
+      const key = p.phone_normalized || p.contact_phone;
+      if (!key) return;
+      m.set(key, (m.get(key) || 0) + 1);
+    });
+    return m;
+  }, [prospects]);
+
+  // Compute geo match + agency suspicion per prospect.
   const enriched = useMemo(
     () => prospects.map((p) => {
       let geo: { score: number; found: string[]; primary: string | null } = { score: 0, found: [], primary: null };
@@ -347,9 +399,12 @@ const ProspectListings = () => {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
       const isAgency = detectIsAgency(p);
-      return { ...p, geo, isAgency };
+      const phoneKey = p.phone_normalized || p.contact_phone || "";
+      const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
+      const suspicion = computeAgencySuspicion(p, phoneCount);
+      return { ...p, geo, isAgency, phoneCount, suspicion };
     }),
-    [prospects]
+    [prospects, phoneCounts]
   );
 
   // Count agencies before filtering, so we can show "X agenții ascunse"
@@ -424,10 +479,41 @@ const ProspectListings = () => {
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
       refetch();
-    } else {
+      return;
+    }
+
+    // Recurrence flag: when marking as agency, add the phone & domain to the
+    // permanent blocklist so any future re-import is auto-classified & blocked.
+    if (next === "agentie") {
+      const phone = p.phone_normalized || null;
+      let domain: string | null = null;
+      try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; } catch { domain = null; }
+      if (phone || domain) {
+        const { error: blockErr } = await supabase
+          .from("agency_blocklist" as any)
+          .insert({
+            phone_normalized: phone,
+            domain,
+            reason: "manual_admin",
+            notes: `Marcat manual din /admin/prospect-listings (${p.contact_name || "—"})`,
+            source_prospect_id: p.id,
+          });
+        if (blockErr && !blockErr.message?.includes("duplicate")) {
+          console.warn("[blocklist] insert failed:", blockErr.message);
+        }
+      }
       toast({
-        title: next === "agentie" ? "🏢 Marcat ca agenție" : "🏠 Marcat ca proprietar",
-        description: next === "agentie" ? "Lead-ul nu va mai apărea în filtrul Proprietari." : "Lead-ul va apărea în filtrul Proprietari.",
+        title: "🏢 Marcat ca agenție (blocat permanent)",
+        description: "Telefonul și domeniul au fost adăugate în lista neagră — orice import viitor va fi blocat automat.",
+      });
+    } else {
+      // Marked back as owner — remove from blocklist if present.
+      if (p.phone_normalized) {
+        await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", p.phone_normalized);
+      }
+      toast({
+        title: "🏠 Marcat ca proprietar",
+        description: "Lead-ul va apărea în filtrul Proprietari.",
       });
     }
   };
@@ -931,8 +1017,49 @@ const ProspectListings = () => {
                                 🏢 Agenție
                               </Badge>
                             )}
+                            {!p.isAgency && p.suspicion && p.suspicion.level >= 2 && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-[10px] py-0 px-1.5 gap-1 cursor-help ${
+                                        p.suspicion.level === 3
+                                          ? "border-red-400 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30"
+                                          : "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30"
+                                      }`}
+                                    >
+                                      <Bot className="h-3 w-3" />
+                                      {p.suspicion.level === 3 ? "AI: probabil agenție" : "AI: suspect"}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <div className="text-xs font-semibold mb-1">Semnale AI:</div>
+                                    <ul className="text-xs list-disc list-inside space-y-0.5">
+                                      {p.suspicion.reasons.map((r, i) => <li key={i}>{r}</li>)}
+                                    </ul>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
-                          {phone && <div className="text-xs text-muted-foreground font-mono">{phone}</div>}
+                          {phone && (
+                            <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+                              {phone}
+                              {p.phoneCount > 1 && (
+                                <span
+                                  className={`text-[9px] px-1 py-0 rounded ${
+                                    p.phoneCount >= 4
+                                      ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                                      : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                                  }`}
+                                  title={`Acest telefon apare pe ${p.phoneCount} anunțuri în lista curentă`}
+                                >
+                                  ×{p.phoneCount}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <button
                             type="button"
                             onClick={() => handleToggleProspectType(p)}
