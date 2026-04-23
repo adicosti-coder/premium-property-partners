@@ -240,6 +240,71 @@ export default function VoiceAgentManager() {
     }
   };
 
+  const replayTest = async (call: VoiceCall) => {
+    setRunningTest(true);
+    setTestSessionId(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-initiate", {
+        body: {
+          toNumber: call.to_number,
+          objective: call.call_objective || "qualify",
+          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+        },
+      });
+      if (error || data?.error) {
+        toast({ title: "Replay eșuat", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        setTestSessionId(data.sessionId);
+        toast({ title: "🔁 Replay inițiat", description: `Răspunde la ${call.to_number}. Pașii apar live mai jos.` });
+        loadCalls();
+      }
+    } finally {
+      setRunningTest(false);
+    }
+  };
+
+  const computeSteps = (call: VoiceCall) => {
+    const transcript = call.transcript || [];
+    const debugLog = (call.debug_log || []) as any[];
+    const lastTwiml = [...debugLog].reverse().find((e) => e.stage === "twiml_turn_end");
+    const statusEntry = [...debugLog].reverse().find((e) => e.stage === "status_callback");
+
+    const inProgress = ["queued", "initiating", "ringing", "in-progress", "completing"].includes(call.status);
+    const lang = call.detected_language;
+    const ttsUrl = lastTwiml?.audioUrl || null;
+    const ttsErr = lastTwiml?.ttsError || null;
+    const reportSkip = statusEntry?.reportSkipReason || null;
+
+    return [
+      { label: "Apel inițiat", state: call.twilio_call_sid ? "ok" : "pending", detail: call.twilio_call_sid || "—" },
+      {
+        label: "Limbă detectată",
+        state: lang === "ro" ? "ok" : lang === "en" ? "err" : inProgress ? "pending" : "warn",
+        detail: lang === "ro" ? "🇷🇴 Română" : lang === "en" ? "⚠️ Engleză" : "necunoscută",
+      },
+      {
+        label: "TTS audio Twilio",
+        state: ttsErr ? "err" : ttsUrl ? "ok" : inProgress ? "pending" : "warn",
+        detail: ttsErr ? ttsErr : ttsUrl ? `ElevenLabs URL semnat (${ttsUrl.slice(0, 50)}…)` : "Twilio Say (fallback)",
+      },
+      {
+        label: "Transcript",
+        state: transcript.length >= 2 ? "ok" : transcript.length === 1 ? "warn" : inProgress ? "pending" : "err",
+        detail: `${transcript.length} replici`,
+      },
+      {
+        label: "Înregistrare audio",
+        state: call.recording_url ? "ok" : inProgress ? "pending" : "warn",
+        detail: call.recording_url ? "disponibilă" : "lipsă",
+      },
+      {
+        label: "Raport AI",
+        state: call.ai_summary ? "ok" : reportSkip ? "warn" : inProgress ? "pending" : "err",
+        detail: call.ai_summary ? (call.ai_outcome || "creat") : reportSkip || "în curs",
+      },
+    ];
+  };
+
   const stats = {
     total: calls.length,
     completed: calls.filter(c => c.status === "completed").length,
@@ -589,6 +654,15 @@ export default function VoiceAgentManager() {
                       </div>
                       <div className="text-muted-foreground">{new Date(c.created_at).toLocaleString("ro-RO", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</div>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      disabled={runningTest}
+                      onClick={(e) => { e.stopPropagation(); replayTest(c); }}
+                    >
+                      🔁 Reia test
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -608,6 +682,29 @@ export default function VoiceAgentManager() {
           </DialogHeader>
           {selectedCall && (
             <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2 pb-2 border-b">
+                <div className="text-xs text-muted-foreground">Pași monitorizați live</div>
+                <Button size="sm" variant="default" disabled={runningTest} onClick={() => replayTest(selectedCall)}>
+                  🔁 Reia test pe acest număr
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {computeSteps(selectedCall).map((s, i) => {
+                  const color =
+                    s.state === "ok" ? "border-emerald-300 bg-emerald-50 text-emerald-900" :
+                    s.state === "err" ? "border-red-300 bg-red-50 text-red-900" :
+                    s.state === "warn" ? "border-amber-300 bg-amber-50 text-amber-900" :
+                    "border-muted bg-muted/40 text-muted-foreground animate-pulse";
+                  const icon =
+                    s.state === "ok" ? "✅" : s.state === "err" ? "❌" : s.state === "warn" ? "⚠️" : "⏳";
+                  return (
+                    <div key={i} className={`rounded-lg border p-2 text-xs ${color}`}>
+                      <div className="font-semibold flex items-center gap-1">{icon} {s.label}</div>
+                      <div className="text-[11px] mt-0.5 break-words opacity-90">{s.detail}</div>
+                    </div>
+                  );
+                })}
+              </div>
               {selectedCall.error_message && (
                 <div className="flex gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
