@@ -274,6 +274,27 @@ const ProspectListings = () => {
     pending: prospects.filter((p) => p.lifecycle_status === "pending_credentials").length,
   };
 
+  const handleToggleProspectType = async (p: Prospect & { isAgency?: boolean }) => {
+    const next = p.isAgency ? "proprietar" : "agentie";
+    // Optimistic
+    qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
+      Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row) : old
+    );
+    const { error } = await supabase
+      .from("prospect_listings")
+      .update({ prospect_type: next })
+      .eq("id", p.id);
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+      refetch();
+    } else {
+      toast({
+        title: next === "agentie" ? "🏢 Marcat ca agenție" : "🏠 Marcat ca proprietar",
+        description: next === "agentie" ? "Lead-ul nu va mai apărea în filtrul Proprietari." : "Lead-ul va apărea în filtrul Proprietari.",
+      });
+    }
+  };
+
   const handleAIScore = async (id: string) => {
     setScoringId(id);
     try {
