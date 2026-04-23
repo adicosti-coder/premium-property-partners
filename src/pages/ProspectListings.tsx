@@ -112,7 +112,7 @@ const ProspectListings = () => {
     }
   }, [adminLoading, isAdmin, user, navigate]);
 
-  const { data: prospects = [], isLoading, refetch } = useQuery({
+  const { data: prospects = [], isLoading, refetch, error: queryError } = useQuery({
     queryKey: ["prospect-listings", statusFilter, categoryFilter],
     queryFn: async () => {
       let q = supabase
@@ -124,19 +124,39 @@ const ProspectListings = () => {
       if (statusFilter !== "all") q = q.eq("lifecycle_status", statusFilter as any);
       if (categoryFilter !== "all") q = q.eq("category", categoryFilter as any);
       const { data, error } = await q;
-      if (error) throw error;
+      if (error) {
+        console.error("[ProspectListings] Query error:", error);
+        throw error;
+      }
+      console.log("[ProspectListings] Loaded", data?.length ?? 0, "rows");
       return (data || []) as Prospect[];
     },
     enabled: isAdmin,
     refetchInterval: 30_000,
+    retry: 1,
   });
 
-  // Compute geo match per prospect (memoized)
+  useEffect(() => {
+    if (queryError) {
+      toast({
+        title: "Eroare la încărcare prospecte",
+        description: (queryError as Error).message,
+        variant: "destructive",
+      });
+    }
+  }, [queryError]);
+
+  // Compute geo match per prospect (memoized) - safe fallback if function throws
   const enriched = useMemo(
-    () => prospects.map((p) => ({
-      ...p,
-      geo: computeProspectGeoMatch([p.title, p.location, p.zone, p.description]),
-    })),
+    () => prospects.map((p) => {
+      let geo: { score: number; found: string[]; primary: string | null } = { score: 0, found: [], primary: null };
+      try {
+        geo = computeProspectGeoMatch([p.title, p.location, p.zone, p.description]);
+      } catch (e) {
+        console.warn("[ProspectListings] geo match failed for", p.id, e);
+      }
+      return { ...p, geo };
+    }),
     [prospects]
   );
 
@@ -146,6 +166,18 @@ const ProspectListings = () => {
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
   });
+
+  // Debug: log render state
+  useEffect(() => {
+    console.log("[ProspectListings] State:", {
+      isAdmin,
+      adminLoading,
+      userEmail: user?.email,
+      prospectsLoaded: prospects.length,
+      filtered: filtered.length,
+      isLoading,
+    });
+  }, [isAdmin, adminLoading, user, prospects.length, filtered.length, isLoading]);
 
   const stats = {
     total: prospects.length,
