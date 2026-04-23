@@ -16,7 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
@@ -99,6 +99,9 @@ const ProspectListings = () => {
   const [resuming, setResuming] = useState(false);
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [campaignRunning, setCampaignRunning] = useState(false);
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
+  const [stopping, setStopping] = useState(false);
+  const [stopOpen, setStopOpen] = useState(false);
   const CAMPAIGN_LIMIT = 30;
 
   useEffect(() => {
