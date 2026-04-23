@@ -14,7 +14,10 @@ import { toast } from "@/hooks/use-toast";
 import {
   FileText, Save, Plus, Trash2, CheckCircle2, Loader2,
   Eye, PhoneCall, History, RotateCcw, FlaskConical, AlertTriangle, RefreshCw,
+  Sparkles, Wand2, FileDown, HelpCircle, User2,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -126,6 +129,7 @@ export default function VoiceAgentScriptsEditor() {
     () => localStorage.getItem("voice_script_test_number") || "+40",
   );
   const [testing, setTesting] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const selected = scripts.find((s) => s.id === selectedId) || null;
   const activeScript = useMemo(
@@ -356,7 +360,92 @@ export default function VoiceAgentScriptsEditor() {
     }
   };
 
-  // ──────────── Render ────────────
+  // ──────────── Macros ────────────
+  const LEAD_CONTEXT_MACRO = `\n\n## CONTEXT LEAD (se completează automat la rulare)\nVorbești cu: {{lead_name}}\nProprietate: {{property_title}} — {{property_location}}\nPreț: {{property_price}} EUR — Categorie: {{listing_category}}\nNotițe scoring AI: {{lead_notes}}\nObiectiv apel: {{objective}}\n`;
+  const FAQ_MACRO = `\n\n## FAQ SCURT (răspunsuri-șablon)\n- "Cine sunteți?" → "Sunt asistentul digital RealTrust, sun în numele agentului care v-a contactat anterior."\n- "De unde aveți numărul?" → "Din anunțul publicat sau dintr-o solicitare anterioară pe RealTrust.ro. Dacă doriți, vă scot din lista noastră."\n- "Nu am timp acum." → "Înțeleg. Vă pot suna la o oră convenabilă astăzi sau mâine. Care vă convine?"\n- "Trimiteți pe WhatsApp." → "Sigur, vă trimit imediat detaliile pe WhatsApp la acest număr."\n- "Care e comisionul?" → "Comisionul se discută cu agentul după vizionare, în funcție de tip tranzacție. Pot să vă programez o discuție?"\n`;
+
+  const insertMacro = (macro: string) => {
+    setDraft((d) => ({ ...d, system_prompt: (d.system_prompt || "").trimEnd() + macro }));
+    toast({ title: "Macro inserat", description: "Salvează scriptul ca să persiste." });
+  };
+
+  // ──────────── AI: Generează variantă premium A/B ────────────
+  const handleGenerateVariant = async () => {
+    if (!selected) {
+      toast({ title: "Selectează un script", description: "Folosesc scriptul selectat ca bază.", variant: "destructive" });
+      return;
+    }
+    setGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-script-generate", {
+        body: { script_id: selected.id, mode: "premium_variant" },
+      });
+      if (error || (data as any)?.error) {
+        toast({
+          title: "Generare eșuată",
+          description: (data as any)?.error || error?.message || "Eroare necunoscută",
+          variant: "destructive",
+        });
+      } else {
+        const newScript = (data as any)?.script;
+        toast({ title: "Variantă AI creată ✨", description: `"${newScript?.name}" — selecteaz-o ca varianta B în tab-ul A/B.` });
+        await load();
+        if (newScript?.id) setSelectedId(newScript.id);
+      }
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
+  // ──────────── Export PDF (raport teste) ────────────
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+      const now = new Date();
+      doc.setFontSize(16);
+      doc.text("Voice Agent — Raport Loguri Teste", 40, 40);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generat: ${now.toLocaleString("ro-RO")}`, 40, 58);
+      doc.text(`Scope: ${logsScopeAll ? "Toate scripturile" : `Doar "${selected?.name || "—"}"`}`, 40, 72);
+      doc.text(`Total intrări: ${logs.length}`, 40, 86);
+
+      const head = [["Data", "Script", "v", "A/B", "Număr", "Status", "Outcome", "Durată", "Replici", "Fallback motiv"]];
+      const body = logs.map((l) => [
+        new Date(l.created_at).toLocaleString("ro-RO"),
+        l.script_name || "—",
+        l.script_version ?? "—",
+        l.ab_variant || "—",
+        l.to_number || "—",
+        l.status,
+        l.outcome || "—",
+        l.call_duration_seconds ? `${l.call_duration_seconds}s` : "—",
+        l.transcript_turns ?? "—",
+        l.fallback_reason || "—",
+      ]);
+
+      autoTable(doc, {
+        startY: 105,
+        head,
+        body,
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 95 }, 1: { cellWidth: 90 }, 2: { cellWidth: 25 },
+          3: { cellWidth: 35 }, 4: { cellWidth: 80 }, 5: { cellWidth: 55 },
+          6: { cellWidth: 80 }, 7: { cellWidth: 45 }, 8: { cellWidth: 40 },
+          9: { cellWidth: 220 },
+        },
+      });
+
+      doc.save(`voice-agent-test-logs-${now.toISOString().slice(0, 19).replace(/[:T]/g, "-")}.pdf`);
+      toast({ title: "PDF exportat ✓", description: `${logs.length} intrări.` });
+    } catch (e) {
+      toast({ title: "Eroare export", description: e instanceof Error ? e.message : "Necunoscută", variant: "destructive" });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -482,6 +571,16 @@ export default function VoiceAgentScriptsEditor() {
                   )}
                   <Button onClick={() => setShowPreview(true)} variant="outline" size="sm">
                     <Eye className="h-4 w-4 mr-1" /> Vizualizează prompt activ
+                  </Button>
+                  <Button onClick={() => insertMacro(LEAD_CONTEXT_MACRO)} variant="outline" size="sm" title="Adaugă placeholder-e {{lead_name}}, {{property_*}} etc.">
+                    <User2 className="h-4 w-4 mr-1" /> Macro: Lead context
+                  </Button>
+                  <Button onClick={() => insertMacro(FAQ_MACRO)} variant="outline" size="sm" title="Inserează 5 întrebări frecvente cu răspunsuri-șablon">
+                    <HelpCircle className="h-4 w-4 mr-1" /> Macro: FAQ scurtă
+                  </Button>
+                  <Button onClick={handleGenerateVariant} variant="outline" size="sm" disabled={generatingAI || !selected} title="Folosește AI ca să creeze o variantă A/B premium a scriptului selectat">
+                    {generatingAI ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Generează variantă premium A/B
                   </Button>
                   {selected && !selected.is_active && (
                     <AlertDialog>
@@ -663,9 +762,14 @@ export default function VoiceAgentScriptsEditor() {
                 <Switch checked={logsScopeAll} onCheckedChange={setLogsScopeAll} id="logs-all" />
                 <label htmlFor="logs-all" className="text-xs">Arată toate scripturile (nu doar cel selectat)</label>
               </div>
-              <Button variant="ghost" size="sm" onClick={loadLogs}>
-                <RefreshCw className="h-4 w-4 mr-1" /> Reîmprospătează
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={logs.length === 0} title="Descarcă raport PDF cu logurile curente">
+                  <FileDown className="h-4 w-4 mr-1" /> Exportă pagina ca PDF
+                </Button>
+                <Button variant="ghost" size="sm" onClick={loadLogs}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Reîmprospătează
+                </Button>
+              </div>
             </div>
 
             <div className="border border-border rounded-md overflow-hidden">
