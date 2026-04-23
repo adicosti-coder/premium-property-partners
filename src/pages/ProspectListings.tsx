@@ -249,6 +249,15 @@ const ProspectListings = () => {
     }
   };
 
+  const isCallLocked = (p: Prospect) => {
+    if (p.lifecycle_status !== "calling") return false;
+    if (p.voice_call_session_id) return true;
+    if (!p.auto_call_triggered_at) return false;
+
+    const ageMs = Date.now() - new Date(p.auto_call_triggered_at).getTime();
+    return ageMs < 5 * 60 * 1000;
+  };
+
   const handleResumePending = async () => {
     setResuming(true);
     try {
@@ -509,6 +518,7 @@ const ProspectListings = () => {
                     const sentiment = p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment;
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
+                    const callLocked = isCallLocked(p);
                     return (
                       <TableRow key={p.id}>
                         <TableCell>
@@ -565,7 +575,7 @@ const ProspectListings = () => {
                               size="sm"
                               variant={score > 80 ? "default" : "outline"}
                               onClick={() => handleCall(p)}
-                              disabled={!phone || callingId === p.id || p.lifecycle_status === "calling"}
+                              disabled={!phone || callingId === p.id || callLocked}
                               className="w-full"
                             >
                               {callingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Phone className="h-3 w-3 mr-1" />}
