@@ -51,6 +51,26 @@ const categoryLabels: Record<string, string> = {
   hotelier: "Regim Hotelier",
 };
 
+// Visual palette for source platforms — used as a colored badge in the row.
+const sourceStyles: Record<string, { label: string; emoji: string; cls: string }> = {
+  olx: { label: "OLX", emoji: "🟣", cls: "border-purple-400 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30" },
+  storia: { label: "Storia", emoji: "🟢", cls: "border-green-400 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30" },
+  "imobiliare.ro": { label: "Imobiliare.ro", emoji: "🔵", cls: "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30" },
+  publi24: { label: "Publi24", emoji: "🟠", cls: "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30" },
+  facebook: { label: "Facebook", emoji: "🔷", cls: "border-sky-400 text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/30" },
+  anuntul: { label: "Anunțul.ro", emoji: "⚪", cls: "border-slate-400 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/30" },
+};
+function getSourceStyle(platform?: string | null) {
+  if (!platform) return null;
+  const key = platform.toLowerCase().trim();
+  if (sourceStyles[key]) return sourceStyles[key];
+  // Fuzzy match
+  for (const k of Object.keys(sourceStyles)) {
+    if (key.includes(k) || k.includes(key)) return sourceStyles[k];
+  }
+  return { label: platform, emoji: "🌐", cls: "border-muted-foreground/40 text-muted-foreground bg-muted/30" };
+}
+
 interface Prospect {
   id: string;
   title: string | null;
@@ -288,7 +308,36 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const SOURCE_FILTER_LS_KEY = "prospects:sourceFilter";
+  const [sourceFilter, setSourceFilter] = useState<string>(() => {
+    try { return localStorage.getItem(SOURCE_FILTER_LS_KEY) || "all"; } catch { return "all"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(SOURCE_FILTER_LS_KEY, sourceFilter); } catch { /* ignore */ }
+  }, [sourceFilter]);
+
+  // ── Saved (favorite) filters ────────────────────────────────────────────────
+  type SavedFilter = {
+    id: string;
+    name: string;
+    statusFilter: string;
+    categoryFilter: string;
+    minScore: string;
+    zoneFilter: string;
+    sourceFilter: string;
+    prospectTypeFilter: "proprietar" | "agentie" | "all";
+    search: string;
+  };
+  const SAVED_FILTERS_LS_KEY = "prospects:savedFilters";
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_FILTERS_LS_KEY);
+      return raw ? (JSON.parse(raw) as SavedFilter[]) : [];
+    } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(SAVED_FILTERS_LS_KEY, JSON.stringify(savedFilters)); } catch { /* ignore */ }
+  }, [savedFilters]);
   // Default = only owners (hide agencies). Persisted in localStorage.
   // Hard rule: agencies are NEVER shown unless the admin explicitly switches to "all" or "agentie"
   // in the toolbar. We sanitize the stored value defensively.
@@ -1019,6 +1068,72 @@ const ProspectListings = () => {
               </SelectContent>
             </Select>
           </CardContent>
+          {/* Saved (favorite) filters bar */}
+          <div className="px-4 pb-3 -mt-2 flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-medium text-muted-foreground">⭐ Filtre salvate:</span>
+            {savedFilters.length === 0 && (
+              <span className="text-xs text-muted-foreground italic">Niciun filtru salvat încă.</span>
+            )}
+            {savedFilters.map((f) => (
+              <span key={f.id} className="inline-flex items-center gap-0.5 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 text-amber-800 dark:text-amber-200 text-xs pl-2">
+                <button
+                  type="button"
+                  className="hover:underline"
+                  title="Aplică acest filtru"
+                  onClick={() => {
+                    setStatusFilter(f.statusFilter);
+                    setCategoryFilter(f.categoryFilter);
+                    setMinScore(f.minScore);
+                    setZoneFilter(f.zoneFilter);
+                    setSourceFilter(f.sourceFilter);
+                    setProspectTypeFilter(f.prospectTypeFilter);
+                    setSearch(f.search || "");
+                    toast({ title: "Filtru aplicat", description: f.name });
+                  }}
+                >
+                  {f.name}
+                </button>
+                <button
+                  type="button"
+                  className="px-1.5 py-0.5 hover:text-destructive"
+                  title="Șterge filtrul"
+                  onClick={() => {
+                    setSavedFilters((prev) => prev.filter((x) => x.id !== f.id));
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs ml-auto"
+              onClick={() => {
+                const defaultName =
+                  sourceFilter !== "all"
+                    ? `${sourceFilter}${zoneFilter !== "all" ? ` · ${zoneFilter}` : ""}`
+                    : `Filtru ${savedFilters.length + 1}`;
+                const name = window.prompt("Nume pentru acest filtru:", defaultName)?.trim();
+                if (!name) return;
+                const entry: SavedFilter = {
+                  id: crypto.randomUUID(),
+                  name,
+                  statusFilter,
+                  categoryFilter,
+                  minScore,
+                  zoneFilter,
+                  sourceFilter,
+                  prospectTypeFilter,
+                  search,
+                };
+                setSavedFilters((prev) => [...prev.filter((x) => x.name !== name), entry]);
+                toast({ title: "Filtru salvat", description: name });
+              }}
+            >
+              💾 Salvează filtru curent
+            </Button>
+          </div>
           {prospectTypeFilter === "proprietar" && (
             <div className="px-4 pb-3 -mt-1 text-xs flex items-center justify-between flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-300/60 text-green-800 dark:text-green-300 font-medium">
@@ -1094,7 +1209,21 @@ const ProspectListings = () => {
                           {p.geo.found.length > 1 && <div className="text-[10px] text-muted-foreground">+{p.geo.found.length - 1}</div>}
                         </TableCell>
                         <TableCell className="max-w-xs">
-                          <div className="font-medium text-sm truncate">{p.title || "(fără titlu)"}</div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {(() => {
+                              const s = getSourceStyle(p.source_platform);
+                              return s ? (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[9px] py-0 px-1.5 font-semibold ${s.cls}`}
+                                  title={`Sursă: ${s.label}`}
+                                >
+                                  {s.emoji} {s.label}
+                                </Badge>
+                              ) : null;
+                            })()}
+                            <div className="font-medium text-sm truncate">{p.title || "(fără titlu)"}</div>
+                          </div>
                           <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1 flex-wrap">
                             {p.location && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{p.location}</span>}
                             {p.price && <span className="flex items-center gap-0.5"><Euro className="h-3 w-3" />{p.price.toLocaleString()}</span>}
