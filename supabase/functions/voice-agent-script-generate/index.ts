@@ -54,17 +54,55 @@ Deno.serve(async (req) => {
       });
     }
 
-    const sysInstruction = `Ești un expert în conversational AI pentru imobiliare în România. Vei primi un system prompt existent pentru un voice agent telefonic și vei genera o VARIANTĂ A/B PREMIUM îmbunătățită. 
+    // Mode-specific system instruction
+    const MODE_INSTRUCTIONS: Record<string, string> = {
+      premium_variant: `Ești un expert în conversational AI pentru imobiliare în România. Vei primi un system prompt existent pentru un voice agent telefonic și vei genera o VARIANTĂ A/B PREMIUM îmbunătățită.
 Schimbări țintă:
 - Ton mai cald, mai natural, ca un concierge de hotel 5*.
 - Întrebări de calificare mai inteligente (BANT light: buget, timeline, motivație).
 - Tehnici subtile de social proof ("alți proprietari din zonă au ales...").
 - Gestionare obiecții ("nu mă interesează", "sunt la lucru", "mai gândesc").
 - Încheiere cu CTA clar (vizionare în 24-48h).
-Păstrează: limba (română), structura turn-based, regulile anti-derapaj.
-Returnează JSON strict: {"name": "<sub 60 caractere>", "system_prompt": "<text complet>", "notes": "<ce ai schimbat, max 200 caractere>"}.`;
+Păstrează: limba (română), structura turn-based, regulile anti-derapaj.`,
 
-    const userMessage = `SCRIPT EXISTENT (numit "${script.name}"):\n\n${script.system_prompt}\n\nGenerează varianta premium A/B în JSON.`;
+      microcopy_cta: `Ești un copywriter expert în Conversion Rate Optimization pentru voice agents imobiliari. Vei primi un system prompt existent și vei genera o VARIANTĂ A/B optimizată EXCLUSIV pe MICROCOPY-ul de CTA / încheiere apel.
+Schimbări țintă:
+- Reformulează frazele de încheiere ca să maximizeze conversia (programare vizionare, confirmare WhatsApp, follow-up).
+- Aplică tehnici de microcopy: alternativă forțată ("preferați marți la 14 sau miercuri la 10?"), commitment & consistency, low-friction asks ("îmi confirmați WhatsApp-ul?").
+- Elimină frazele pasive ("v-ar interesa eventual"). Înlocuiește cu acțiune directă.
+- Maxim 1-2 întrebări CTA pe finalul apelului. Niciodată mai multe.
+- Păstrează totul în afara secțiunii de CTA (calificare, ton) la fel — DOAR microcopy-ul de încheiere se schimbă.
+Păstrează limba (română) și structura turn-based.`,
+
+      british_premium: `You are an expert in conversational AI for luxury & international real estate. You will receive an existing voice agent system prompt and generate a PREMIUM A/B VARIANT in BRITISH ENGLISH with a refined, upscale tone suited for high-end and international clientele.
+Targeted changes:
+- Switch language to polished British English (use "shall", "would you mind", "perhaps", "do let me know").
+- Tone: discreet, confident, concierge-grade — think Claridge's or Mandarin Oriental.
+- Replace any Romanian-specific cultural references with internationally neutral equivalents.
+- Qualification questions framed politely (timeline, intent, budget brackets in EUR/GBP).
+- CTA: offer a private viewing or video walkthrough within 24-48h.
+Keep the turn-based structure and anti-derail rules.`,
+
+      layout_sections: `Ești un editor structural pentru system prompts. Vei primi un prompt existent și îl vei REORGANIZA într-un layout clar cu secțiuni Markdown, FĂRĂ a schimba conținutul de fond sau tonul.
+Reguli stricte:
+- Păstrează exact aceeași limbă, ton și informație ca în original.
+- Reorganizează conținutul în următoarele secțiuni (în ordine), folosind heading-uri Markdown ## :
+  ## ROL & PERSONA
+  ## REGULI ANTI-DERAPAJ
+  ## INTRO (primele 2 replici)
+  ## CALIFICARE (întrebări BANT light)
+  ## OBIECȚII FRECVENTE
+  ## FAQ
+  ## CTA & ÎNCHEIERE
+- Dacă o secțiune nu există în original, las-o cu placeholder "_(de completat)_" — nu inventa conținut nou.
+- Folosește bullet points (- ) pentru liste.
+- Numele scriptului = numele original + " — Layout".`,
+    };
+
+    const sysInstruction = (MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.premium_variant) +
+      `\n\nReturnează JSON strict prin tool call: {"name": "<sub 80 caractere>", "system_prompt": "<text complet>", "notes": "<ce ai schimbat, max 200 caractere>"}.`;
+
+    const userMessage = `SCRIPT EXISTENT (numit "${script.name}", limbă "${script.language}"):\n\n${script.system_prompt}\n\nGenerează varianta în JSON (mode=${mode}).`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
