@@ -183,7 +183,7 @@ const PentruProprietari = () => {
       badge: "Premium Management · Timișoara",
       title: "Predictable monthly income from your apartment,",
       titleHighlight: "with zero hassle",
-      subtitle: "Premium listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance — flawlessly managed. You just receive the income.",
+      subtitle: "RealTrust is the Timișoara property management company that runs your apartment as a short-term rental: premium listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You just receive the income.",
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       ctaB: "Calculate in 60 sec",
