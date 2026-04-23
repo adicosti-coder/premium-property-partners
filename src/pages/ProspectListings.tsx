@@ -246,6 +246,31 @@ export function detectIsAgency(p: {
   return AGENCY_KEYWORDS.some((kw) => blob.includes(kw));
 }
 
+// Soft agency suspicion (0..3). 0=clean, 3=very likely agency but not blocked yet.
+// Inputs: phone recurrence count across current dataset + soft keyword hits.
+export function computeAgencySuspicion(p: {
+  title?: string | null;
+  description?: string | null;
+  contact_name?: string | null;
+  source_url?: string | null;
+}, phoneCount: number = 0): { level: 0 | 1 | 2 | 3; reasons: string[] } {
+  const reasons: string[] = [];
+  let level: 0 | 1 | 2 | 3 = 0;
+
+  if (phoneCount >= 4) { reasons.push(`Telefon asociat cu ${phoneCount} anunțuri (≥4)`); level = 3; }
+  else if (phoneCount === 3) { reasons.push(`Telefon asociat cu 3 anunțuri`); level = 2; }
+  else if (phoneCount === 2) { reasons.push(`Telefon asociat cu 2 anunțuri`); level = 1; }
+
+  const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+  const softHits = AGENCY_SOFT_KEYWORDS.filter((kw) => blob.includes(kw));
+  if (softHits.length > 0) {
+    reasons.push(`Cuvinte suspecte: ${softHits.slice(0, 3).join(", ")}`);
+    level = Math.min(3, (level as number) + (softHits.length >= 2 ? 2 : 1)) as 0 | 1 | 2 | 3;
+  }
+
+  return { level, reasons };
+}
+
 const ProspectListings = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
