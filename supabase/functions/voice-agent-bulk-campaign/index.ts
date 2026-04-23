@@ -64,6 +64,17 @@ serve(async (req) => {
 
     const campaignId: string = run.id;
 
+    // Audit: campaign launched
+    await logAudit(supabase, {
+      action: "campaign_launch",
+      actor_user_id: createdBy,
+      actor_label: actorEmail || (createdBy ? null : "system"),
+      entity_type: "campaign",
+      entity_id: campaignId,
+      details: { zone, total_targets: ids.length, prospect_ids: ids.slice(0, 50) },
+      severity: "info",
+    });
+
     // Snapshot current statuses so we can revert on cancel
     const { data: existing } = await supabase
       .from("prospect_listings")
@@ -143,6 +154,19 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq("id", campaignId);
+
+    // Audit: campaign finished (only if not stopped via stop endpoint)
+    if (!cancelledMid) {
+      await logAudit(supabase, {
+        action: "campaign_complete",
+        actor_user_id: createdBy,
+        actor_label: actorEmail || (createdBy ? null : "system"),
+        entity_type: "campaign",
+        entity_id: campaignId,
+        details: { zone, total: ids.length, dialed },
+        severity: "info",
+      });
+    }
 
     return jsonResp({
       success: true,
