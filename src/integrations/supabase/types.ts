@@ -2841,6 +2841,8 @@ export type Database = {
           ai_score_breakdown: Json | null
           ai_scored_at: string | null
           assigned_to: string | null
+          auto_blacklist_reason: string | null
+          auto_blacklisted_at: string | null
           auto_call_triggered_at: string | null
           call_summary: string | null
           campaign_run_id: string | null
@@ -2894,6 +2896,8 @@ export type Database = {
           ai_score_breakdown?: Json | null
           ai_scored_at?: string | null
           assigned_to?: string | null
+          auto_blacklist_reason?: string | null
+          auto_blacklisted_at?: string | null
           auto_call_triggered_at?: string | null
           call_summary?: string | null
           campaign_run_id?: string | null
@@ -2947,6 +2951,8 @@ export type Database = {
           ai_score_breakdown?: Json | null
           ai_scored_at?: string | null
           assigned_to?: string | null
+          auto_blacklist_reason?: string | null
+          auto_blacklisted_at?: string | null
           auto_call_triggered_at?: string | null
           call_summary?: string | null
           campaign_run_id?: string | null
@@ -4656,6 +4662,11 @@ export type Database = {
     }
     Functions: {
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
+      auto_blacklist_prospect: {
+        Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
+        Returns: Json
+      }
+      bulk_archive_detected_agencies: { Args: never; Returns: Json }
       check_and_award_badges: {
         Args: { p_user_id: string }
         Returns: undefined

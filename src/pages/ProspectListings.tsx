@@ -16,7 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
@@ -24,6 +24,7 @@ import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/a
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
+import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
 import type { User } from "@supabase/supabase-js";
 
 const lifecycleColors: Record<string, string> = {
@@ -80,6 +81,8 @@ interface Prospect {
   urgency_level: number | null;
   auto_call_triggered_at: string | null;
   search_keywords: string[] | null;
+  auto_blacklisted_at: string | null;
+  auto_blacklist_reason: string | null;
 }
 
 const sentimentEmoji: Record<string, string> = {
@@ -387,7 +390,7 @@ const ProspectListings = () => {
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
@@ -447,6 +450,52 @@ const ProspectListings = () => {
 
   // Count agencies before filtering, so we can show "X agenții ascunse"
   const agencyCount = useMemo(() => enriched.filter((p) => p.isAgency).length, [enriched]);
+
+  // ─── AUTO-BLACKLIST ──────────────────────────────────────────────
+  // When a prospect's suspicion crosses the configured threshold, fire the
+  // backend RPC which (a) re-checks the threshold, (b) skips whitelisted
+  // numbers/domains, (c) marks the prospect as agency, (d) inserts in the
+  // blocklist with reason 'Auto-detected (High Suspicion)' and (e) writes
+  // an admin_audit_log row. The RPC is idempotent — already-blacklisted
+  // prospects return early. We dedupe per session to avoid spamming.
+  const { data: detectionSettings } = useAgencyDetectionSettings();
+  const triggeredRef = useMemo(() => new Set<string>(), []);
+  useEffect(() => {
+    if (!detectionSettings?.enabled) return;
+    const threshold = detectionSettings.suspicion_threshold ?? 70;
+    // Map suspicion level (0..3) → coarse score (0/33/66/99) so the slider
+    // semantics in the settings panel keep working for the auto-trigger.
+    const candidates = enriched.filter((p) => {
+      if (p.auto_blacklisted_at) return false;
+      if (triggeredRef.has(p.id)) return false;
+      if (p.prospect_type === "proprietar") return false; // manual override
+      const score = (p.suspicion?.level ?? 0) * 33;
+      return score >= threshold;
+    });
+    if (candidates.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const p of candidates) {
+        if (cancelled) break;
+        triggeredRef.add(p.id);
+        const score = (p.suspicion?.level ?? 0) * 33;
+        try {
+          await supabase.rpc("auto_blacklist_prospect" as any, {
+            p_prospect_id: p.id,
+            p_score: score,
+            p_reasons: p.suspicion?.reasons ?? [],
+          });
+        } catch (e) {
+          console.warn("[ProspectListings] auto_blacklist_prospect failed:", (e as Error).message);
+        }
+      }
+      if (!cancelled) {
+        // Refresh once at the end to pull updated auto_blacklisted_at.
+        qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
 
   const filtered = enriched.filter((p) => {
     // Owner / agency filter (default: hide agencies)
@@ -1063,10 +1112,15 @@ const ProspectListings = () => {
                               <button
                                 type="button"
                                 onClick={() => openAgencyExplainer(p)}
-                                title="Vezi de ce a fost marcat"
+                                title={p.auto_blacklisted_at
+                                  ? `Auto-blacklist (High Suspicion) la ${new Date(p.auto_blacklisted_at).toLocaleString("ro-RO")}`
+                                  : "Vezi de ce a fost marcat"}
                               >
-                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 cursor-pointer">
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 cursor-pointer inline-flex items-center gap-0.5">
                                   🏢 Agenție
+                                  {p.auto_blacklisted_at && (
+                                    <Zap className="h-3 w-3 text-red-500 ml-0.5" aria-label="Auto-blocat" />
+                                  )}
                                 </Badge>
                               </button>
                             )}

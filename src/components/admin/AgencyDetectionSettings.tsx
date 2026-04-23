@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Trash2, FlaskConical, Save, Settings2, ShieldAlert, ShieldCheck, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Trash2, FlaskConical, Save, Settings2, ShieldAlert, ShieldCheck, AlertCircle, Archive } from "lucide-react";
 import { toast } from "sonner";
 import { useAgencyDetectionSettings, useAgencyKeywords } from "@/hooks/useAgencyDetectionSettings";
 
@@ -252,6 +252,22 @@ export const AgencyDetectionSettings = () => {
             </CardContent>
           </Card>
 
+          {/* ── BULK ARCHIVE ─────────────────────────────────────────── */}
+          <Card className="border-amber-300/60 bg-amber-50/40 dark:bg-amber-950/10">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Archive className="h-4 w-4 text-amber-600" /> Arhivare Retroactivă (Bulk)
+              </CardTitle>
+              <CardDescription>
+                Marchează ca <strong>arhivate</strong> toate agențiile deja detectate (excepție: numerele de pe whitelist).
+                Acțiunea adaugă automat numerele în blacklist și înregistrează un audit log.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BulkArchiveButton />
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end gap-2 sticky bottom-2 bg-background/80 backdrop-blur p-2 rounded-lg border">
             <Button variant="outline" disabled={!dirty} onClick={() => setDraft(null)}>
               Resetează
@@ -448,6 +464,53 @@ const KeywordEditor = ({ type, keywords, loading, onChange }: { type: KwType; ke
         )}
       </CardContent>
     </Card>
+  );
+};
+
+const BulkArchiveButton = () => {
+  const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [lastResult, setLastResult] = useState<number | null>(null);
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("bulk_archive_detected_agencies" as any);
+      if (error) throw error;
+      const archived = (data as any)?.archived ?? 0;
+      setLastResult(archived);
+      toast.success(archived > 0
+        ? `✅ ${archived} agenții arhivate retroactiv.`
+        : "Nimic de arhivat — nu există agenții active neprotejate de whitelist.");
+    } catch (e: any) {
+      toast.error("Arhivare eșuată: " + (e.message || e));
+    } finally {
+      setBusy(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-xs text-muted-foreground">
+        {lastResult !== null && (
+          <span className="font-medium text-foreground">Ultima rulare: {lastResult} înregistrări arhivate.</span>
+        )}
+      </div>
+      {confirmOpen ? (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)} disabled={busy}>Anulează</Button>
+          <Button variant="destructive" size="sm" onClick={run} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Archive className="h-4 w-4 mr-2" />}
+            Confirmă arhivarea
+          </Button>
+        </div>
+      ) : (
+        <Button variant="outline" size="sm" onClick={() => setConfirmOpen(true)} className="border-amber-400 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40">
+          <Archive className="h-4 w-4 mr-2" /> Arhivează toate agențiile detectate
+        </Button>
+      )}
+    </div>
   );
 };
 
