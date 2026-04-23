@@ -264,6 +264,39 @@ export default function CallDashboard() {
     toast.success("WhatsApp deschis cu mesaj pre-completat");
   };
 
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("Nimic de exportat — modifică filtrele");
+      return;
+    }
+    const headers = ["Data", "Sursa", "Contact", "Telefon", "Proprietate", "Outcome", "Sentiment", "Tip Interes", "Lead Score", "Hot Score", "Sumar"];
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    const lines = [headers.join(",")];
+    filtered.forEach((r: any) => {
+      lines.push([
+        formatDate(r.created_at),
+        r.source,
+        r.contact_name || "",
+        r.contact_phone || "",
+        r.property_title || "",
+        OUTCOME_LABEL[r.outcome || ""] || r.outcome || "",
+        r.sentiment || "",
+        INTEREST_LABEL[r.interest_type || ""] || r.interest_type || "",
+        r.lead_score ?? "",
+        r.hot_score ?? "",
+        r.ai_summary || "",
+      ].map(escape).join(","));
+    });
+    const csv = "\uFEFF" + lines.join("\n"); // BOM for Excel UTF-8
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `apeluri-realtrust-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success(`Exportat ${filtered.length} apeluri`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
