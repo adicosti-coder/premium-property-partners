@@ -38,10 +38,6 @@ serve(async (req) => {
       if (duration) updates.cost_estimate_usd = +((duration / 60) * 0.015).toFixed(4);
     }
 
-    if (recordingSid && !callStatus) {
-      updates.recording_status = "completed";
-    }
-
     if (Object.keys(updates).length > 0) {
       await supabase.from("voice_call_sessions").update(updates).eq("id", sessionId);
     }
