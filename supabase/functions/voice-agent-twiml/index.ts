@@ -172,11 +172,12 @@ serve(async (req) => {
     // Load voice settings (single fetch)
     const { data: vSettings } = await supabase
       .from("voice_agent_settings")
-      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost")
+      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost, elevenlabs_min_score")
       .eq("id", 1)
       .maybeSingle();
 
-    const useElevenLabs = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
+    const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
+    const elevenLabsAvailable = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
       voice_id: vSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL",
       model_id: vSettings?.elevenlabs_model_id || "eleven_multilingual_v2",
@@ -193,11 +194,12 @@ serve(async (req) => {
     let leadContext = "";
     let ownerSentiment: string | null = null;
     let urgencyLevel: number | null = null;
+    let leadScore = 0;
 
     if (session.prospect_listing_id) {
       const { data: prospect } = await supabase
         .from("prospect_listings")
-        .select("title, category, prospect_type, contact_name, price, currency, location, zone, ai_score_breakdown, owner_sentiment, urgency_level")
+        .select("title, category, prospect_type, contact_name, price, currency, location, zone, ai_score_breakdown, owner_sentiment, urgency_level, lead_score, score")
         .eq("id", session.prospect_listing_id)
         .maybeSingle();
       if (prospect) {
@@ -208,6 +210,7 @@ serve(async (req) => {
 
         ownerSentiment = prospect.owner_sentiment || (prospect.ai_score_breakdown as any)?.owner_sentiment || null;
         urgencyLevel = prospect.urgency_level ?? (prospect.ai_score_breakdown as any)?.urgency_level ?? null;
+        leadScore = Number(prospect.lead_score ?? prospect.score ?? 0);
 
         const ownerLabel = prospect.contact_name ? `dl/dna ${prospect.contact_name}` : "stimat proprietar";
         contextSummary = `${prospect.title || "anunțul dvs"}${prospect.location ? ", " + prospect.location : ""}`;
@@ -217,15 +220,20 @@ serve(async (req) => {
     } else if (session.lead_id) {
       const { data: lead } = await supabase
         .from("leads")
-        .select("name, property_type, property_area, message")
+        .select("name, property_type, property_area, message, lead_score")
         .eq("id", session.lead_id)
         .maybeSingle();
       if (lead) {
         branch = detectBranch(null, lead.property_type);
         contextSummary = `${lead.property_type || "proprietatea"} de ${lead.property_area || "?"}mp`;
         leadContext = `Context lead: ${lead.name} — ${lead.property_type} ${lead.property_area}mp. Mesaj: ${(lead.message || "").slice(0, 200)}`;
+        leadScore = Number((lead as any).lead_score ?? 0);
       }
     }
+
+    // HYBRID DECISION: ElevenLabs only if lead score meets threshold
+    const useElevenLabs = elevenLabsAvailable && leadScore >= elevenLabsMinScore;
+    console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} useElevenLabs=${useElevenLabs}`);
 
     const objective = session.call_objective || "qualify";
 

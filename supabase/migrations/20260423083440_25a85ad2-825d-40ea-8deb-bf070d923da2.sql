@@ -1,0 +1,1 @@
+ALTER TABLE public.voice_agent_settings ADD COLUMN IF NOT EXISTS elevenlabs_min_score INTEGER NOT NULL DEFAULT 90;

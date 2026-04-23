@@ -256,19 +256,35 @@ export default function VoiceAgentManager() {
             {autoSettings?.tts_provider === "elevenlabs" && <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/40">ACTIV</Badge>}
           </CardTitle>
           <CardDescription>
-            Înlocuiește vocea robotică Polly cu o voce naturală în română. Ajustează stabilitate, similaritate, stil și viteză, apoi ascultă preview înainte de a salva.
+            Mod hibrid: ElevenLabs se folosește DOAR pentru lead-urile cu scor mare. Sub prag, se folosește vocea Polly Carmen (gratis). Economisești ~$0.30/apel pe leads slabe.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
             <div>
-              <div className="font-medium text-sm">Folosește ElevenLabs în apeluri</div>
-              <div className="text-xs text-muted-foreground">Dacă e oprit, se folosește Amazon Polly (Carmen) ca fallback.</div>
+              <div className="font-medium text-sm">Activează ElevenLabs (mod hibrid)</div>
+              <div className="text-xs text-muted-foreground">Dacă e oprit, toate apelurile folosesc Polly (robotic, dar gratis).</div>
             </div>
             <Switch
               checked={autoSettings?.tts_provider === "elevenlabs"}
               onCheckedChange={(v) => saveSettings({ tts_provider: v ? "elevenlabs" : "polly" })}
             />
+          </div>
+
+          <div className="p-3 rounded-lg border bg-amber-50/40 dark:bg-amber-950/10">
+            <div className="flex justify-between text-xs mb-2">
+              <span className="font-medium">Prag scor pentru ElevenLabs</span>
+              <span className="font-mono text-amber-700">≥ {autoSettings?.elevenlabs_min_score ?? 90}</span>
+            </div>
+            <Slider
+              min={50} max={100} step={5}
+              value={[Number(autoSettings?.elevenlabs_min_score ?? 90)]}
+              onValueChange={([v]) => setAutoSettings({ ...autoSettings, elevenlabs_min_score: v })}
+              onValueCommit={([v]) => saveSettings({ elevenlabs_min_score: v })}
+            />
+            <div className="text-[11px] text-muted-foreground mt-2">
+              Lead-urile cu scor ≥ acest prag → voce premium ElevenLabs (~$0.34/apel). Sub prag → Polly Carmen (~$0.04/apel).
+            </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">

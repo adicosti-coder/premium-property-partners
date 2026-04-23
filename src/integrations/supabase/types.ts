@@ -4020,6 +4020,7 @@ export type Database = {
           allowed_hours_start: number
           auto_dial_enabled: boolean
           default_objective: string
+          elevenlabs_min_score: number
           elevenlabs_model_id: string
           elevenlabs_voice_id: string
           id: number
@@ -4042,6 +4043,7 @@ export type Database = {
           allowed_hours_start?: number
           auto_dial_enabled?: boolean
           default_objective?: string
+          elevenlabs_min_score?: number
           elevenlabs_model_id?: string
           elevenlabs_voice_id?: string
           id?: number
@@ -4064,6 +4066,7 @@ export type Database = {
           allowed_hours_start?: number
           auto_dial_enabled?: boolean
           default_objective?: string
+          elevenlabs_min_score?: number
           elevenlabs_model_id?: string
           elevenlabs_voice_id?: string
           id?: number
