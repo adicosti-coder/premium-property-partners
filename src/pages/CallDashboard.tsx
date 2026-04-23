@@ -10,7 +10,9 @@ import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter } from "@/components/ui/drawer";
 import { Slider } from "@/components/ui/slider";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
@@ -42,29 +44,40 @@ const computeHotScore = (r: { outcome: string | null; sentiment: string | null; 
   return Math.min(100, Math.max(0, Math.round(score)));
 };
 
-// Detailed breakdown for tooltip explanation
-const scoreBreakdown = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }) => {
-  const parts: { label: string; pts: number }[] = [];
+// Detailed breakdown for tooltip explanation — with icon + semantic color
+type BreakdownItem = { label: string; pts: number; icon: string; tone: "success" | "warning" | "danger" | "neutral" };
+
+const scoreBreakdown = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null; interest_type?: string | null; source?: string }): BreakdownItem[] => {
+  const parts: BreakdownItem[] = [];
   const o = (r.outcome || "").toLowerCase();
   const s = (r.sentiment || "").toLowerCase();
+  const it = (r.interest_type || "").toLowerCase();
 
-  if (["interested", "qualified", "viewing"].includes(o)) parts.push({ label: `Outcome: ${OUTCOME_LABEL[o] || o}`, pts: 60 });
-  else if (o === "callback") parts.push({ label: "Outcome: Callback solicitat", pts: 45 });
-  else if (["contacted", "calling"].includes(o)) parts.push({ label: "Outcome: În contact", pts: 25 });
-  else if (["voicemail", "no_answer"].includes(o)) parts.push({ label: "Outcome: Fără răspuns / voicemail", pts: 15 });
-  else if (["rejected", "not_qualified"].includes(o)) parts.push({ label: "Outcome: Respins", pts: 5 });
-  else parts.push({ label: "Outcome: Necunoscut / nou", pts: 20 });
+  // Outcome
+  if (["interested", "qualified", "viewing"].includes(o)) parts.push({ label: `Interes ridicat (${OUTCOME_LABEL[o] || o})`, pts: 60, icon: "🎯", tone: "success" });
+  else if (o === "callback") parts.push({ label: "Callback solicitat", pts: 45, icon: "📞", tone: "success" });
+  else if (["contacted", "calling"].includes(o)) parts.push({ label: "În contact activ", pts: 25, icon: "💬", tone: "warning" });
+  else if (["voicemail", "no_answer"].includes(o)) parts.push({ label: "Fără răspuns / voicemail", pts: 15, icon: "🔕", tone: "warning" });
+  else if (["rejected", "not_qualified"].includes(o)) parts.push({ label: "Respins / necalificat", pts: 5, icon: "⛔", tone: "danger" });
+  else parts.push({ label: "Status nou / necunoscut", pts: 20, icon: "🆕", tone: "neutral" });
 
-  if (["positive", "pozitiv"].includes(s)) parts.push({ label: "Sentiment pozitiv", pts: 25 });
-  else if (["neutral", "neutru"].includes(s)) parts.push({ label: "Sentiment neutru", pts: 12 });
-  else if (["negative", "negativ"].includes(s)) parts.push({ label: "Sentiment negativ", pts: 0 });
-  else parts.push({ label: "Sentiment necunoscut", pts: 8 });
+  // Sentiment
+  if (["positive", "pozitiv"].includes(s)) parts.push({ label: "Sentiment pozitiv", pts: 25, icon: "📈", tone: "success" });
+  else if (["neutral", "neutru"].includes(s)) parts.push({ label: "Sentiment neutru", pts: 12, icon: "➖", tone: "warning" });
+  else if (["negative", "negativ"].includes(s)) parts.push({ label: "Sentiment negativ", pts: 0, icon: "📉", tone: "danger" });
+  else parts.push({ label: "Sentiment nedetectat", pts: 8, icon: "❔", tone: "neutral" });
 
+  // Interest type bonus visualization
+  if (it === "hotelier") parts.push({ label: "Interes Administrare 🏨", pts: 0, icon: "🏨", tone: "neutral" });
+  else if (it === "vanzare") parts.push({ label: "Interes Vânzare", pts: 0, icon: "💰", tone: "neutral" });
+  else if (it === "investitie") parts.push({ label: "Interes Investiție", pts: 0, icon: "📊", tone: "neutral" });
+
+  // Lead score
   if (r.lead_score != null) {
     const pts = Math.round((Math.min(100, Math.max(0, r.lead_score)) / 100) * 15);
-    parts.push({ label: `Lead score (${r.lead_score}/100)`, pts });
+    parts.push({ label: `Lead score (${r.lead_score}/100)`, pts, icon: "⭐", tone: pts >= 10 ? "success" : "neutral" });
   } else {
-    parts.push({ label: "Lead score lipsă", pts: 5 });
+    parts.push({ label: "Lead score lipsă", pts: 5, icon: "⭐", tone: "neutral" });
   }
   return parts;
 };
@@ -75,38 +88,109 @@ const scoreClasses = (score: number) => {
   return "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40";
 };
 
-// Popover with score explanation — works on hover (desktop) and click (mobile)
-function ScoreBadge({ row, mobile = false }: { row: any; mobile?: boolean }) {
+const toneDot: Record<BreakdownItem["tone"], string> = {
+  success: "bg-green-500",
+  warning: "bg-amber-500",
+  danger: "bg-red-500",
+  neutral: "bg-muted-foreground/40",
+};
+
+// Shared body of the breakdown panel — used by both desktop popover and mobile drawer
+function ScoreBreakdownBody({ row, parts, onOpenTranscript }: { row: any; parts: BreakdownItem[]; onOpenTranscript?: () => void }) {
+  const tier = row.hot_score >= 80 ? "Fierbinte" : row.hot_score >= 40 ? "Cald" : "Rece";
+  const canTranscript = !!(row.transcript || row.ai_summary);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">Hot Score</div>
+          <div className="text-2xl font-bold leading-none mt-0.5">{row.hot_score}<span className="text-sm text-muted-foreground font-normal">/100</span></div>
+        </div>
+        <Badge variant="outline" className={`font-semibold ${scoreClasses(row.hot_score)}`}>
+          {row.hot_score >= 80 ? "🔥" : row.hot_score >= 40 ? "✨" : "❄️"} {tier}
+        </Badge>
+      </div>
+
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full transition-all ${row.hot_score >= 80 ? "bg-green-500" : row.hot_score >= 40 ? "bg-amber-500" : "bg-red-500"}`}
+          style={{ width: `${row.hot_score}%` }}
+        />
+      </div>
+
+      <ul className="space-y-1.5 text-xs">
+        {parts.map((p, i) => (
+          <li key={i} className="flex items-center gap-2 py-0.5">
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${toneDot[p.tone]}`} aria-hidden />
+            <span className="text-base leading-none" aria-hidden>{p.icon}</span>
+            <span className="flex-1 truncate text-foreground/90">{p.label}</span>
+            <span className={`font-bold tabular-nums shrink-0 ${
+              p.pts >= 20 ? "text-green-600 dark:text-green-400"
+              : p.pts > 0 ? "text-amber-600 dark:text-amber-400"
+              : "text-muted-foreground"
+            }`}>
+              {p.pts > 0 ? `+${p.pts}` : "0"}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {onOpenTranscript && (
+        <div className="pt-2 border-t">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-center text-primary hover:text-primary h-8"
+            disabled={!canTranscript}
+            onClick={onOpenTranscript}
+          >
+            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            {canTranscript ? "Vezi transcript complet" : "Transcript indisponibil"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Popover (desktop) / Bottom drawer (mobile) with score explanation
+function ScoreBadge({ row, mobile = false, onOpenTranscript }: { row: any; mobile?: boolean; onOpenTranscript?: () => void }) {
+  const isMobile = useIsMobile();
   const parts = scoreBreakdown(row);
+
+  const trigger = (
+    <button
+      type="button"
+      className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold cursor-pointer hover:opacity-80 transition ${scoreClasses(row.hot_score)}`}
+      aria-label={`Hot score ${row.hot_score} din 100 — apasă pentru detalii`}
+    >
+      {mobile && <span aria-hidden>🔥</span>}{row.hot_score}
+      <Info className="w-3 h-3 opacity-60" />
+    </button>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Detalii scor lead</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-2">
+            <ScoreBreakdownBody row={row} parts={parts} onOpenTranscript={onOpenTranscript} />
+          </div>
+          <DrawerFooter className="pt-2" />
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold cursor-help hover:opacity-80 transition ${scoreClasses(row.hot_score)}`}
-          aria-label={`Hot score ${row.hot_score} din 100 — apasă pentru detalii`}
-        >
-          {mobile && <span>🔥</span>}{row.hot_score}
-          <Info className="w-3 h-3 opacity-60" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-3" align="end">
-        <div className="text-xs font-semibold mb-2 flex items-center justify-between">
-          <span>Hot Score: {row.hot_score}/100</span>
-          <Badge variant="outline" className={scoreClasses(row.hot_score)}>
-            {row.hot_score >= 80 ? "Fierbinte" : row.hot_score >= 40 ? "Cald" : "Rece"}
-          </Badge>
-        </div>
-        <ul className="space-y-1 text-xs">
-          {parts.map((p, i) => (
-            <li key={i} className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground truncate">{p.label}</span>
-              <span className={`font-semibold ${p.pts > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                +{p.pts}
-              </span>
-            </li>
-          ))}
-        </ul>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent className="w-72 p-3" align="end">
+        <ScoreBreakdownBody row={row} parts={parts} onOpenTranscript={onOpenTranscript} />
       </PopoverContent>
     </Popover>
   );
@@ -590,7 +674,7 @@ export default function CallDashboard() {
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
-                        <ScoreBadge row={r} />
+                        <ScoreBadge row={r} onOpenTranscript={() => setTranscriptOpen(r)} />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-0.5">
@@ -645,7 +729,7 @@ export default function CallDashboard() {
                         {r.contact_phone && <div className="text-xs text-muted-foreground">{r.contact_phone}</div>}
                         <div className="text-[10px] text-muted-foreground mt-0.5">{formatDate(r.created_at)}</div>
                       </div>
-                      <ScoreBadge row={r} mobile />
+                      <ScoreBadge row={r} mobile onOpenTranscript={() => setTranscriptOpen(r)} />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant="outline" className="text-[10px]">{r.source}</Badge>
