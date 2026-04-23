@@ -200,6 +200,8 @@ export default function VoiceAgentManager() {
       setRunningTest(false);
     }
   };
+
+  const stats = {
     total: calls.length,
     completed: calls.filter(c => c.status === "completed").length,
     interested: calls.filter(c => c.ai_outcome === "interesat" || c.ai_outcome === "programare").length,
