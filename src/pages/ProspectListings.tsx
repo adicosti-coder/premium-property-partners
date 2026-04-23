@@ -313,7 +313,42 @@ const ProspectListings = () => {
   const [stopping, setStopping] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
   const [pendingTypeFilter, setPendingTypeFilter] = useState<ProspectTypeFilter | null>(null);
+  const [explainerOpen, setExplainerOpen] = useState(false);
+  const [explainerData, setExplainerData] = useState<AgencyExplainerInput | null>(null);
   const CAMPAIGN_LIMIT = 30;
+
+  const openAgencyExplainer = (p: any) => {
+    const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+    const url = (p.source_url || "").toLowerCase();
+    const hardKeywordHits = AGENCY_KEYWORDS.filter((kw) => blob.includes(kw));
+    const softKeywordHits = AGENCY_SOFT_KEYWORDS.filter((kw) => blob.includes(kw));
+    const ownerSignalHits = OWNER_SIGNALS.filter((s) => url.includes(s) || blob.includes(s));
+    let domain: string | null = null;
+    try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; }
+    catch { domain = null; }
+    const domainBlocked = !!(domain && AGENCY_DOMAINS.has(domain));
+    const urlPatternBlocked = AGENCY_URL_PATTERNS.some((pat) => url.includes(pat));
+
+    setExplainerData({
+      prospectId: p.id,
+      contactName: p.contact_name ?? null,
+      phone: p.phone_normalized || p.contact_phone || null,
+      phoneNormalized: p.phone_normalized ?? null,
+      sourceUrl: p.source_url ?? null,
+      isAgency: !!p.isAgency,
+      prospectType: p.prospect_type ?? null,
+      phoneCount: p.phoneCount ?? 0,
+      suspicion: p.suspicion ?? { level: 0, reasons: [] },
+      hardKeywordHits,
+      softKeywordHits,
+      domain,
+      domainBlocked,
+      urlPatternBlocked,
+      ownerSignalHits,
+    });
+    setExplainerOpen(true);
+  };
+
 
   useEffect(() => {
     let mounted = true;
