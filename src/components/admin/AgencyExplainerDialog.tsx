@@ -148,7 +148,7 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data }: Props) => {
 
           {/* Owner signals (whitelist) */}
           {data.ownerSignalHits.length > 0 && (
-            <Section icon={<ShieldCheck className="h-4 w-4 text-green-600" />} title="Semnale „proprietar" (protejează lead-ul)">
+            <Section icon={<ShieldCheck className="h-4 w-4 text-green-600" />} title={'Semnale „proprietar" (protejează lead-ul)'}>
               <KeywordList items={data.ownerSignalHits} tone="green" />
               <p className="text-xs text-muted-foreground mt-1">
                 Aceste semnale sunt prezente în URL/titlu/descriere și împiedică marcarea automată ca agenție.
