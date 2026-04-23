@@ -231,9 +231,10 @@ serve(async (req) => {
       }
     }
 
-    // HYBRID DECISION: ElevenLabs only if lead score meets threshold
-    const useElevenLabs = elevenLabsAvailable && leadScore >= elevenLabsMinScore;
-    console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} useElevenLabs=${useElevenLabs}`);
+    // HYBRID DECISION: ElevenLabs if (a) lead score meets threshold OR (b) it's a manual test call (no prospect/lead linked)
+    const isManualCall = !session.prospect_listing_id && !session.lead_id;
+    const useElevenLabs = elevenLabsAvailable && (isManualCall || leadScore >= elevenLabsMinScore);
+    console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} manual=${isManualCall} useElevenLabs=${useElevenLabs}`);
 
     const objective = session.call_objective || "qualify";
 
