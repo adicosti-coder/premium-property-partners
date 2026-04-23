@@ -65,6 +65,7 @@ serve(async (req) => {
 
     const body = await req.json();
     const { toNumber, scraperLeadId, leadId, objective = "qualify", customPrompt, languageRetryOf, forceElevenLabs } = body;
+    const hasCustomPrompt = typeof customPrompt === "string" && customPrompt.trim().length > 0;
     const initiatorUserId: string | null = isInternalRetry
       ? null
       : (globalThis as any).__initiator_user_id || null;
@@ -97,7 +98,9 @@ serve(async (req) => {
       }
     }
 
-    const agentPrompt = customPrompt || `Ești Ana, un asistent vocal al RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
+    const agentPrompt = hasCustomPrompt
+      ? `__CUSTOM_PROMPT__\n${customPrompt.trim()}`
+      : `Ești Ana, un asistent vocal al RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
 
     // Create session row first (so webhook can find it via call_sid)
     const { data: session, error: sessErr } = await supabase
@@ -120,7 +123,7 @@ serve(async (req) => {
     if (sessErr || !session) throw new Error(`DB insert failed: ${sessErr?.message}`);
 
     // Build TwiML webhook URL with session id
-    const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}`;
+    const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
     const statusUrl = `${SUPABASE_URL}/functions/v1/voice-agent-status?sessionId=${session.id}`;
 
     // Initiate call via Twilio gateway
