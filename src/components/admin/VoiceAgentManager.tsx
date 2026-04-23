@@ -56,6 +56,9 @@ export default function VoiceAgentManager() {
   const [previewText, setPreviewText] = useState("Bună ziua, sunt Ana de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+  const [testNumber, setTestNumber] = useState<string>(() => localStorage.getItem("voice_test_number") || "+40");
+  const [runningTest, setRunningTest] = useState(false);
+  const [testSessionId, setTestSessionId] = useState<string | null>(null);
 
   const VOICES = [
     { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
@@ -141,6 +144,20 @@ export default function VoiceAgentManager() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Auto-open dialog when test call finishes
+  useEffect(() => {
+    if (!testSessionId) return;
+    const found = calls.find((c) => c.id === testSessionId);
+    if (found && ["completed", "failed", "busy", "no-answer", "canceled"].includes(found.status)) {
+      setSelectedCall(found);
+      setTestSessionId(null);
+      toast({
+        title: found.status === "completed" ? "✅ Test finalizat" : `⚠️ Test ${found.status}`,
+        description: `Durată: ${found.call_duration_seconds || 0}s. Verifică audio + transcript în dialog.`,
+      });
+    }
+  }, [calls, testSessionId]);
+
   const initiateCall = async () => {
     if (!/^\+[1-9]\d{6,14}$/.test(toNumber)) {
       toast({ title: "Număr invalid", description: "Format E.164 (ex: +407...)", variant: "destructive" });
@@ -164,6 +181,37 @@ export default function VoiceAgentManager() {
       }
     } finally {
       setDialing(false);
+    }
+  };
+
+  const runFullTest = async () => {
+    if (!/^\+[1-9]\d{6,14}$/.test(testNumber)) {
+      toast({ title: "Număr invalid", description: "Introdu numărul tău în format E.164 (ex: +407...)", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("voice_test_number", testNumber);
+    setRunningTest(true);
+    setTestSessionId(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-initiate", {
+        body: {
+          toNumber: testNumber,
+          objective: "qualify",
+          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+        },
+      });
+      if (error || data?.error) {
+        toast({ title: "Test eșuat", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        setTestSessionId(data.sessionId);
+        toast({
+          title: "🧪 Test inițiat — răspunde la telefon",
+          description: `Audio + transcript se salvează automat. Dialogul se va deschide când apelul se termină.`,
+        });
+        loadCalls();
+      }
+    } finally {
+      setRunningTest(false);
     }
   };
 
@@ -381,6 +429,44 @@ export default function VoiceAgentManager() {
             <div className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-green-600" /><div><div className="text-sm font-medium">WhatsApp cu rezumat scurt</div><div className="text-xs text-muted-foreground">Via webhook Make.com</div></div></div>
             <Switch checked={!!autoSettings?.notify_whatsapp_enabled} onCheckedChange={(v) => saveSettings({ notify_whatsapp_enabled: v })} />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* FULL DIAGNOSTIC TEST */}
+      <Card className="border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50/40 to-transparent dark:from-emerald-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-emerald-600" />
+            Test complet end-to-end
+            {testSessionId && <Badge className="bg-emerald-500/15 text-emerald-700 border border-emerald-500/40 animate-pulse">ÎN CURS</Badge>}
+          </CardTitle>
+          <CardDescription>
+            Te sună ACUM cu un script scurt în română. Audio-ul, transcriptul și durata se salvează automat. Dialogul cu rezultatul se deschide singur la final.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Numărul tău (E.164)</label>
+            <Input
+              value={testNumber}
+              onChange={(e) => setTestNumber(e.target.value)}
+              placeholder="+40712345678"
+              disabled={runningTest || !!testSessionId}
+            />
+          </div>
+          <Button
+            onClick={runFullTest}
+            disabled={runningTest || !!testSessionId}
+            size="lg"
+            variant="premium"
+            className="w-full"
+          >
+            {runningTest || testSessionId ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+            {testSessionId ? "Aștept finalizarea apelului..." : "🧪 Rulează Test Complet (mă sună acum)"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            ✓ Forțează ElevenLabs RO &nbsp; ✓ Recording activ &nbsp; ✓ Status callback &nbsp; ✓ Auto-deschide rezultat
+          </p>
         </CardContent>
       </Card>
 
