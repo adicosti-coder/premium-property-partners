@@ -375,8 +375,9 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
             {onForceOwner && data.prospectType !== "proprietar" && (
               <Button
                 onClick={() => setConfirmOpen(true)}
-                disabled={forceLoading}
-                className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                disabled={forceLoading || !data.phoneNormalized}
+                title={!data.phoneNormalized ? "Lipsă număr de telefon — whitelist indisponibil" : undefined}
+                className="bg-green-600 hover:bg-green-700 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 size="lg"
               >
                 {forceLoading ? (
@@ -384,7 +385,9 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                 )}
-                ✅ Confirmă ca Proprietar (Whitelist)
+                {!data.phoneNormalized
+                  ? "✅ Confirmă ca Proprietar (fără telefon)"
+                  : "✅ Confirmă ca Proprietar (Whitelist)"}
               </Button>
             )}
           </div>
