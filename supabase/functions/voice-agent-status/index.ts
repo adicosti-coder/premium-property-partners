@@ -349,6 +349,22 @@ serve(async (req) => {
           })
           .eq("id", session.prospect_listing_id);
 
+        await logAudit(supabase, {
+          action: exhausted ? "lead_failed_exhausted" : "retry_auto",
+          actor_label: "system",
+          entity_type: "prospect_listing",
+          entity_id: session.prospect_listing_id,
+          details: {
+            attempt: nextRetry,
+            max_attempts: MAX_RETRIES + 1,
+            source: "call_no_answer",
+            call_status: derivedStatus,
+            session_id: session.id,
+            to_number: session.to_number,
+          },
+          severity: exhausted ? "error" : "warning",
+        });
+
         // Schedule async re-dial (don't block status callback)
         if (!exhausted) {
           const retryDelayMs = 30_000; // 30s breathing room
