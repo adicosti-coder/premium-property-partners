@@ -318,9 +318,14 @@ export default function CallDashboard() {
               Vedere unificată: Voice Agent AI + Scraper Leads + Prospecți
             </p>
           </div>
-          <Button onClick={fetchAll} variant="outline" size="sm" disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={exportCSV} variant="outline" size="sm" disabled={filtered.length === 0}>
+              <Download className="w-4 h-4 mr-2" /> Export CSV ({filtered.length})
+            </Button>
+            <Button onClick={fetchAll} variant="outline" size="sm" disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
+            </Button>
+          </div>
         </div>
 
         {/* Mini stats */}
