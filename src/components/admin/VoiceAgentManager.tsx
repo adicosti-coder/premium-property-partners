@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import VoiceAgentScriptsEditor from "./VoiceAgentScriptsEditor";
 
 interface VoiceCall {
   id: string;
