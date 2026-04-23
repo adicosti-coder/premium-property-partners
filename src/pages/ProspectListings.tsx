@@ -29,6 +29,7 @@ const lifecycleColors: Record<string, string> = {
   interested: "border-green-400 text-green-700 dark:text-green-300",
   callback: "border-orange-400 text-orange-700 dark:text-orange-300",
   rejected: "border-destructive/40 text-destructive",
+  failed: "border-destructive/60 text-destructive bg-destructive/5",
   posted: "border-muted-foreground/40 text-muted-foreground",
   pending_credentials: "border-amber-500/60 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30",
 };

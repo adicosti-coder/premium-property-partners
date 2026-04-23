@@ -320,13 +320,62 @@ serve(async (req) => {
         console.error("Post-call notification error:", notifyErr);
       }
     } else if (session.prospect_listing_id && finalStatuses.includes(derivedStatus)) {
-      await supabase
+      const MAX_RETRIES = 2;
+      const transientStatuses = ["failed", "busy", "no-answer", "canceled"];
+      const isTransient = transientStatuses.includes(derivedStatus);
+
+      const { data: prospectRow } = await supabase
         .from("prospect_listings")
-        .update({
-          lifecycle_status: derivedStatus === "completed" ? "callback" as any : "rejected" as any,
-          auto_call_triggered_at: null,
-        })
-        .eq("id", session.prospect_listing_id);
+        .select("retry_count")
+        .eq("id", session.prospect_listing_id)
+        .maybeSingle();
+      const currentRetries = Number((prospectRow as any)?.retry_count || 0);
+
+      if (isTransient) {
+        const nextRetry = currentRetries + 1;
+        const exhausted = nextRetry > MAX_RETRIES;
+        const failureReason = `call_${derivedStatus} (attempt ${nextRetry}/${MAX_RETRIES + 1})`;
+
+        await supabase
+          .from("prospect_listings")
+          .update({
+            lifecycle_status: exhausted ? ("failed" as any) : ("new" as any),
+            auto_call_triggered_at: null,
+            retry_count: nextRetry,
+            last_retry_at: new Date().toISOString(),
+            last_failure_reason: failureReason,
+            voice_call_session_id: exhausted ? session.id : null,
+          })
+          .eq("id", session.prospect_listing_id);
+
+        // Schedule async re-dial (don't block status callback)
+        if (!exhausted) {
+          const retryDelayMs = 30_000; // 30s breathing room
+          setTimeout(() => {
+            fetch(`${SUPABASE_URL}/functions/v1/voice-agent-auto-dial`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SERVICE_KEY}`,
+              },
+              body: JSON.stringify({
+                prospect_id: session.prospect_listing_id,
+                manual: true,
+                retry: true,
+              }),
+            }).catch((e) => console.error("[voice-status] retry dial failed", e));
+          }, retryDelayMs);
+        }
+      } else {
+        // Completed without report (edge case) — leave as callback for human review
+        await supabase
+          .from("prospect_listings")
+          .update({
+            lifecycle_status: "callback" as any,
+            auto_call_triggered_at: null,
+          })
+          .eq("id", session.prospect_listing_id);
+      }
     }
 
     return new Response("ok");
