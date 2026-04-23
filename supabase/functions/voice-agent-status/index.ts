@@ -201,6 +201,29 @@ serve(async (req) => {
         appointment_scheduled_at: parsed.appointment_iso || null,
       }).eq("id", sessionId);
 
+      if (session.prospect_listing_id) {
+        const outcomeToLifecycle: Record<string, string> = {
+          interesat: "interested",
+          programare: "interested",
+          callback: "callback",
+          neinteresat: "rejected",
+          robot: "rejected",
+          nicio_legatura: "rejected",
+        };
+
+        const nextLifecycle = outcomeToLifecycle[parsed.outcome] || (derivedStatus === "completed" ? "callback" : "rejected");
+        const summaryText = String(parsed.summary || fallbackReport.summary || "").slice(0, 500);
+
+        await supabase
+          .from("prospect_listings")
+          .update({
+            lifecycle_status: nextLifecycle as any,
+            call_summary: summaryText,
+            auto_call_triggered_at: null,
+          })
+          .eq("id", session.prospect_listing_id);
+      }
+
       try {
         const { data: notifySettings } = await supabase
           .from("voice_agent_settings")
@@ -277,6 +300,14 @@ serve(async (req) => {
       } catch (notifyErr) {
         console.error("Post-call notification error:", notifyErr);
       }
+    } else if (session.prospect_listing_id && finalStatuses.includes(derivedStatus)) {
+      await supabase
+        .from("prospect_listings")
+        .update({
+          lifecycle_status: derivedStatus === "completed" ? "callback" as any : "rejected" as any,
+          auto_call_triggered_at: null,
+        })
+        .eq("id", session.prospect_listing_id);
     }
 
     return new Response("ok");
