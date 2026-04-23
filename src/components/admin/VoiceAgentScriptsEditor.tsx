@@ -402,8 +402,16 @@ export default function VoiceAgentScriptsEditor() {
     toast({ title: "Macro inserat", description: "Salvează scriptul ca să persiste." });
   };
 
-  // ──────────── AI: Generează variantă premium A/B ────────────
-  const handleGenerateVariant = async () => {
+  // ──────────── AI: Generează variantă (mai multe moduri) ────────────
+  type AIMode = "premium_variant" | "microcopy_cta" | "british_premium" | "layout_sections";
+  const MODE_LABELS: Record<AIMode, string> = {
+    premium_variant: "variantă premium A/B",
+    microcopy_cta: "variantă A/B microcopy CTA",
+    british_premium: "variantă British premium (EN)",
+    layout_sections: "layout pe secțiuni",
+  };
+
+  const handleGenerateVariant = async (mode: AIMode = "premium_variant") => {
     if (!selected) {
       toast({ title: "Selectează un script", description: "Folosesc scriptul selectat ca bază.", variant: "destructive" });
       return;
@@ -411,7 +419,7 @@ export default function VoiceAgentScriptsEditor() {
     setGeneratingAI(true);
     try {
       const { data, error } = await supabase.functions.invoke("voice-agent-script-generate", {
-        body: { script_id: selected.id, mode: "premium_variant" },
+        body: { script_id: selected.id, mode },
       });
       if (error || (data as any)?.error) {
         toast({
@@ -421,7 +429,7 @@ export default function VoiceAgentScriptsEditor() {
         });
       } else {
         const newScript = (data as any)?.script;
-        toast({ title: "Variantă AI creată ✨", description: `"${newScript?.name}" — selecteaz-o ca varianta B în tab-ul A/B.` });
+        toast({ title: "Variantă AI creată ✨", description: `"${newScript?.name}" (${MODE_LABELS[mode]}). Verific-o în Editor.` });
         await load();
         if (newScript?.id) setSelectedId(newScript.id);
       }
