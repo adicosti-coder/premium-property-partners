@@ -253,7 +253,7 @@ export default function VoiceAgentManager() {
           <CardTitle className="flex items-center gap-2">
             <Volume2 className="h-5 w-5 text-amber-600" />
             Voce Premium ElevenLabs — Tuning & Preview
-            {autoSettings?.use_elevenlabs && <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/40">ACTIV</Badge>}
+            {autoSettings?.tts_provider === "elevenlabs" && <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/40">ACTIV</Badge>}
           </CardTitle>
           <CardDescription>
             Înlocuiește vocea robotică Polly cu o voce naturală în română. Ajustează stabilitate, similaritate, stil și viteză, apoi ascultă preview înainte de a salva.
@@ -266,8 +266,8 @@ export default function VoiceAgentManager() {
               <div className="text-xs text-muted-foreground">Dacă e oprit, se folosește Amazon Polly (Carmen) ca fallback.</div>
             </div>
             <Switch
-              checked={!!autoSettings?.use_elevenlabs}
-              onCheckedChange={(v) => saveSettings({ use_elevenlabs: v })}
+              checked={autoSettings?.tts_provider === "elevenlabs"}
+              onCheckedChange={(v) => saveSettings({ tts_provider: v ? "elevenlabs" : "polly" })}
             />
           </div>
 
