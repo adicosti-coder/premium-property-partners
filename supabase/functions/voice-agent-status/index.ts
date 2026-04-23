@@ -201,6 +201,25 @@ serve(async (req) => {
         appointment_scheduled_at: parsed.appointment_iso || null,
       }).eq("id", sessionId);
 
+      // Finalize script test log (if any was created at turn 0)
+      try {
+        const finalLogStatus = reportStatusReached
+          ? (derivedStatus === "completed" ? "success" : "failed")
+          : "pending";
+        await supabase
+          .from("voice_agent_script_test_logs")
+          .update({
+            status: finalLogStatus,
+            outcome: parsed.outcome || fallbackReport.outcome,
+            call_duration_seconds: duration || session.call_duration_seconds || 0,
+            transcript_turns: transcript.length,
+          })
+          .eq("session_id", sessionId);
+      } catch (logErr) {
+        console.error("[voice-status] failed to finalize test log:", logErr);
+      }
+
+
       if (session.prospect_listing_id) {
         const outcomeToLifecycle: Record<string, string> = {
           interesat: "interested",

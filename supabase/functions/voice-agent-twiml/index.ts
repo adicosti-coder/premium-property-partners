@@ -367,20 +367,59 @@ serve(async (req) => {
     const customPrompt = extractCustomPrompt(session.voice_agent_prompt);
     const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
 
-    // Load active system prompt override from voice_agent_scripts (admin-editable)
+    // Load active system prompt + (optional) A/B variant from voice_agent_scripts
     let dbSystemPromptOverride: string | null = null;
+    let usedScriptId: string | null = null;
+    let usedScriptName: string | null = null;
+    let usedAbVariant: "A" | "B" | null = null;
+    let fallbackReason: string | null = null;
     try {
-      const { data: activeScript } = await supabase
+      const { data: activeScript, error: activeErr } = await supabase
         .from("voice_agent_scripts")
-        .select("system_prompt, name")
+        .select("id, name, system_prompt, ab_variant_script_id, ab_traffic_split")
         .eq("language", "ro")
         .eq("is_active", true)
         .maybeSingle();
-      if (activeScript?.system_prompt && activeScript.system_prompt.trim().length > 0) {
-        dbSystemPromptOverride = activeScript.system_prompt.trim();
-        console.log(`[voice-twiml] Using DB system prompt: ${activeScript.name}`);
+
+      if (activeErr) {
+        fallbackReason = `db error loading active script: ${activeErr.message}`;
+      } else if (!activeScript) {
+        fallbackReason = "no active script in voice_agent_scripts (language=ro)";
+      } else {
+        // A/B routing: deterministic per session so repeated turns use the same variant
+        const split = Math.max(0, Math.min(100, Number(activeScript.ab_traffic_split || 0)));
+        let chosen: { id: string; name: string; system_prompt: string } = activeScript as any;
+        let variantTag: "A" | "B" = "A";
+        if (split > 0 && activeScript.ab_variant_script_id) {
+          // hash sessionId → 0..99
+          const hash = [...sessionId].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 0) % 100;
+          if (hash < split) {
+            const { data: variantB } = await supabase
+              .from("voice_agent_scripts")
+              .select("id, name, system_prompt")
+              .eq("id", activeScript.ab_variant_script_id)
+              .maybeSingle();
+            if (variantB?.system_prompt?.trim()) {
+              chosen = variantB as any;
+              variantTag = "B";
+            } else {
+              fallbackReason = "A/B variant B not loadable, using A";
+            }
+          }
+        }
+
+        if (chosen.system_prompt && chosen.system_prompt.trim().length > 0) {
+          dbSystemPromptOverride = chosen.system_prompt.trim();
+          usedScriptId = chosen.id;
+          usedScriptName = chosen.name;
+          usedAbVariant = variantTag;
+          console.log(`[voice-twiml] Using DB script: ${chosen.name} (variant=${variantTag})`);
+        } else {
+          fallbackReason = "active script has empty system_prompt";
+        }
       }
     } catch (e) {
+      fallbackReason = `exception loading scripts: ${e instanceof Error ? e.message : String(e)}`;
       console.error("[voice-twiml] failed to load voice_agent_scripts:", e);
     }
 
@@ -390,6 +429,40 @@ serve(async (req) => {
     const systemPrompt = customPrompt
       ? `${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
       : baseSystemPrompt;
+
+    // Upsert test log row at turn 0 — finalized later by voice-agent-status
+    if (turn === 0) {
+      try {
+        // Look up latest version_number for the script (informational)
+        let scriptVersion: number | null = null;
+        if (usedScriptId) {
+          const { data: latestV } = await supabase
+            .from("voice_agent_script_versions")
+            .select("version_number")
+            .eq("script_id", usedScriptId)
+            .order("version_number", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          scriptVersion = latestV?.version_number ?? null;
+        }
+        await supabase
+          .from("voice_agent_script_test_logs")
+          .upsert({
+            session_id: sessionId,
+            script_id: usedScriptId,
+            script_name: usedScriptName,
+            script_version: scriptVersion,
+            ab_variant: usedAbVariant,
+            to_number: session.to_number || null,
+            status: dbSystemPromptOverride ? "pending" : "fallback",
+            fallback_reason: fallbackReason,
+            is_test_call: !session.prospect_listing_id && !session.lead_id,
+          }, { onConflict: "session_id" });
+      } catch (e) {
+        console.error("[voice-twiml] test log upsert failed:", e);
+      }
+    }
+
 
     let userSpeech = "";
     if (req.method === "POST") {
