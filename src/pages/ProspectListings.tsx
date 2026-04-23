@@ -506,7 +506,9 @@ const ProspectListings = () => {
     if (zoneFilter !== "all") {
       const zoneBlob = `${p.zone || ""} ${p.location || ""} ${p.geo.primary || ""} ${(p.geo.found || []).join(" ")}`.toLowerCase();
       if (!zoneBlob.includes(zoneFilter.toLowerCase())) return false;
+    }
     if (sourceFilter !== "all" && (p.source_platform || "") !== sourceFilter) return false;
+    if (!search) return true;
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
   });
