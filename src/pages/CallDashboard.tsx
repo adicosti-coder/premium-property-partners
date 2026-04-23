@@ -42,11 +42,75 @@ const computeHotScore = (r: { outcome: string | null; sentiment: string | null; 
   return Math.min(100, Math.max(0, Math.round(score)));
 };
 
+// Detailed breakdown for tooltip explanation
+const scoreBreakdown = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }) => {
+  const parts: { label: string; pts: number }[] = [];
+  const o = (r.outcome || "").toLowerCase();
+  const s = (r.sentiment || "").toLowerCase();
+
+  if (["interested", "qualified", "viewing"].includes(o)) parts.push({ label: `Outcome: ${OUTCOME_LABEL[o] || o}`, pts: 60 });
+  else if (o === "callback") parts.push({ label: "Outcome: Callback solicitat", pts: 45 });
+  else if (["contacted", "calling"].includes(o)) parts.push({ label: "Outcome: În contact", pts: 25 });
+  else if (["voicemail", "no_answer"].includes(o)) parts.push({ label: "Outcome: Fără răspuns / voicemail", pts: 15 });
+  else if (["rejected", "not_qualified"].includes(o)) parts.push({ label: "Outcome: Respins", pts: 5 });
+  else parts.push({ label: "Outcome: Necunoscut / nou", pts: 20 });
+
+  if (["positive", "pozitiv"].includes(s)) parts.push({ label: "Sentiment pozitiv", pts: 25 });
+  else if (["neutral", "neutru"].includes(s)) parts.push({ label: "Sentiment neutru", pts: 12 });
+  else if (["negative", "negativ"].includes(s)) parts.push({ label: "Sentiment negativ", pts: 0 });
+  else parts.push({ label: "Sentiment necunoscut", pts: 8 });
+
+  if (r.lead_score != null) {
+    const pts = Math.round((Math.min(100, Math.max(0, r.lead_score)) / 100) * 15);
+    parts.push({ label: `Lead score (${r.lead_score}/100)`, pts });
+  } else {
+    parts.push({ label: "Lead score lipsă", pts: 5 });
+  }
+  return parts;
+};
+
 const scoreClasses = (score: number) => {
   if (score >= 80) return "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40";
   if (score >= 40) return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40";
   return "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40";
 };
+
+// Popover with score explanation — works on hover (desktop) and click (mobile)
+function ScoreBadge({ row, mobile = false }: { row: any; mobile?: boolean }) {
+  const parts = scoreBreakdown(row);
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold cursor-help hover:opacity-80 transition ${scoreClasses(row.hot_score)}`}
+          aria-label={`Hot score ${row.hot_score} din 100 — apasă pentru detalii`}
+        >
+          {mobile && <span>🔥</span>}{row.hot_score}
+          <Info className="w-3 h-3 opacity-60" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3" align="end">
+        <div className="text-xs font-semibold mb-2 flex items-center justify-between">
+          <span>Hot Score: {row.hot_score}/100</span>
+          <Badge variant="outline" className={scoreClasses(row.hot_score)}>
+            {row.hot_score >= 80 ? "Fierbinte" : row.hot_score >= 40 ? "Cald" : "Rece"}
+          </Badge>
+        </div>
+        <ul className="space-y-1 text-xs">
+          {parts.map((p, i) => (
+            <li key={i} className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground truncate">{p.label}</span>
+              <span className={`font-semibold ${p.pts > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                +{p.pts}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 type CallRow = {
   id: string;
