@@ -107,11 +107,12 @@ serve(async (req) => {
         from_number: TWILIO_FROM_NUMBER,
         scraper_lead_id: scraperLeadId || null,
         lead_id: leadId || null,
-        initiated_by: user.id,
+        initiated_by: initiatorUserId,
         status: "initiating",
         call_objective: objective,
         voice_agent_prompt: agentPrompt,
         direction: "outbound",
+        language_retry_of: languageRetryOf || null,
       })
       .select()
       .single();
