@@ -231,6 +231,14 @@ serve(async (req) => {
         last_retry_at: new Date().toISOString(),
         admin_notes: `Auto-dial: invalid phone "${prospect.contact_phone}"`,
       }).eq("id", prospect.id);
+      await logAudit(supabase, {
+        action: "lead_failed_invalid_phone",
+        actor_label: "system",
+        entity_type: "prospect_listing",
+        entity_id: prospect.id,
+        details: { phone: prospect.contact_phone, title: prospect.title },
+        severity: "warning",
+      });
       return jsonResp({ skipped: `invalid phone: ${prospect.contact_phone}` });
     }
 
