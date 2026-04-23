@@ -348,6 +348,40 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
             </Section>
           )}
         </div>
+
+        <DialogFooter className="border-t pt-3 flex-col sm:flex-row gap-2">
+          <div className="text-xs text-muted-foreground flex-1 text-left">
+            {data.prospectType === "proprietar" ? (
+              <span className="text-green-700 dark:text-green-300">
+                ✅ Acest prospect este deja marcat manual ca proprietar.
+              </span>
+            ) : (
+              <span>
+                Dacă AI-ul a greșit, marchează acest contact ca proprietar verificat.
+                Telefonul și domeniul vor fi adăugate în <strong>whitelist</strong> permanent.
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={forceLoading}>
+              Închide
+            </Button>
+            {onForceOwner && data.prospectType !== "proprietar" && (
+              <Button
+                onClick={handleForceOwner}
+                disabled={forceLoading}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {forceLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Home className="h-4 w-4 mr-2" />
+                )}
+                Marchează ca Proprietar
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
