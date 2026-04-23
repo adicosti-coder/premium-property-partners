@@ -674,7 +674,7 @@ export default function CallDashboard() {
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
-                        <ScoreBadge row={r} />
+                        <ScoreBadge row={r} onOpenTranscript={() => setTranscriptOpen(r)} />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-0.5">
