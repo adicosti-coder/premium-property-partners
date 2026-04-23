@@ -145,16 +145,41 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Verdict */}
-          <div className={`rounded-lg border-2 p-3 ${toneClass[verdict.tone]}`}>
+          {/* Verdict + confidence bar */}
+          <div className={`rounded-lg border-2 p-3 space-y-2 ${toneClass[verdict.tone]}`}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="font-semibold">{verdict.label}</div>
               <Badge variant="outline" className="text-xs">
                 Nivel suspiciune: {data.suspicion.level} / 3
               </Badge>
             </div>
-            <div className="text-xs mt-1 opacity-80">
+            <div className="text-xs opacity-80">
               Contact: {data.contactName || "—"} · {data.phone || "fără telefon"}
+            </div>
+            {/* Confidence bar with thresholds */}
+            <div className="space-y-1 pt-1">
+              <Progress
+                value={(data.suspicion.level / 3) * 100}
+                className={`h-2 ${
+                  data.suspicion.level >= 3
+                    ? "[&>div]:bg-red-500"
+                    : data.suspicion.level === 2
+                    ? "[&>div]:bg-orange-500"
+                    : data.suspicion.level === 1
+                    ? "[&>div]:bg-amber-400"
+                    : "[&>div]:bg-green-500"
+                }`}
+              />
+              <div className="flex items-center justify-between text-[10px] font-mono opacity-70">
+                <span>0 · curat</span>
+                <span>1 · slab</span>
+                <span className="text-orange-700 dark:text-orange-300 font-semibold">
+                  ▲ 2 · prag „suspect"
+                </span>
+                <span className="text-red-700 dark:text-red-300 font-semibold">
+                  ▲ 3 · marcat agenție
+                </span>
+              </div>
             </div>
           </div>
 
