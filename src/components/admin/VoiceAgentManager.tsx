@@ -30,6 +30,9 @@ interface VoiceCall {
   created_at: string;
   ended_at: string | null;
   error_message: string | null;
+  detected_language?: string | null;
+  language_retry_count?: number | null;
+  language_retry_of?: string | null;
 }
 
 const statusColor = (s: string) => {
