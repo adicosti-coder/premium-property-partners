@@ -82,6 +82,87 @@ serve(async (req) => {
             appointment_scheduled_at: parsed.appointment_iso || null,
           }).eq("id", sessionId);
 
+          // ─── Post-call admin notifications (email + WhatsApp) ───
+          try {
+            const { data: notifySettings } = await supabase
+              .from("voice_agent_settings")
+              .select("notify_email, notify_email_enabled, notify_whatsapp_enabled")
+              .eq("id", 1)
+              .maybeSingle();
+
+            const transcriptShort = (session.transcript as any[])
+              .slice(-12)
+              .map((t) => `${t.role === "user" ? "👤 Client" : "🤖 Ana"}: ${t.text}`)
+              .join("\n");
+
+            const recordingLink = recordingUrl ? `${recordingUrl}.mp3` : null;
+            const outcomeEmoji: Record<string, string> = {
+              interesat: "✅", programare: "📅", callback: "🔁",
+              neinteresat: "❌", robot: "🤖", nicio_legatura: "🚫",
+            };
+            const subject = `${outcomeEmoji[parsed.outcome] || "📞"} Apel AI ${parsed.outcome || "finalizat"} — ${session.to_number}`;
+
+            // Email via send-transactional-email
+            if (notifySettings?.notify_email_enabled !== false && notifySettings?.notify_email) {
+              const html = `
+                <div style="font-family: -apple-system, sans-serif; max-width: 600px; padding: 24px; background: #fafafa;">
+                  <h2 style="color: #1a1a1a;">${outcomeEmoji[parsed.outcome] || "📞"} Apel AI finalizat</h2>
+                  <p><strong>Către:</strong> ${session.to_number}</p>
+                  <p><strong>Durata:</strong> ${duration}s</p>
+                  <p><strong>Rezultat:</strong> ${parsed.outcome || "—"} (${parsed.sentiment || "—"})</p>
+                  <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; margin: 16px 0;">
+                    <strong>Sinteză AI:</strong><br/>${parsed.summary || "—"}
+                  </div>
+                  ${parsed.next_action ? `<p><strong>Următoarea acțiune:</strong> ${parsed.next_action}</p>` : ""}
+                  ${parsed.appointment_iso ? `<p><strong>📅 Programare:</strong> ${parsed.appointment_iso}</p>` : ""}
+                  ${recordingLink ? `<p><a href="${recordingLink}" style="background: #2563eb; color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; display: inline-block;">🎧 Ascultă înregistrarea</a></p>` : ""}
+                  <h3 style="margin-top: 24px;">Transcript</h3>
+                  <pre style="background: #f5f5f5; padding: 12px; border-radius: 6px; white-space: pre-wrap; font-size: 13px; line-height: 1.5;">${transcriptShort}</pre>
+                  <p style="color: #666; font-size: 12px; margin-top: 24px;">RealTrust Voice Agent · Session ${sessionId.slice(0, 8)}</p>
+                </div>
+              `;
+              fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${SERVICE_KEY}`,
+                },
+                body: JSON.stringify({
+                  to: notifySettings.notify_email,
+                  subject,
+                  html,
+                  purpose: "transactional",
+                  idempotency_key: `voice-call-${sessionId}`,
+                }),
+              }).catch((e) => console.error("Email notify failed:", e));
+            }
+
+            // WhatsApp summary via MAKE_WEBHOOK_URL
+            const MAKE_WEBHOOK_URL_ADMIN = Deno.env.get("MAKE_WEBHOOK_URL");
+            if (notifySettings?.notify_whatsapp_enabled !== false && MAKE_WEBHOOK_URL_ADMIN) {
+              fetch(MAKE_WEBHOOK_URL_ADMIN, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: "voice_call_admin_summary",
+                  admin_phone: "+40752149999",
+                  to_number: session.to_number,
+                  duration_seconds: duration,
+                  outcome: parsed.outcome,
+                  sentiment: parsed.sentiment,
+                  summary: parsed.summary,
+                  next_action: parsed.next_action,
+                  appointment_iso: parsed.appointment_iso,
+                  recording_url: recordingLink,
+                  session_id: sessionId,
+                  message: `${outcomeEmoji[parsed.outcome] || "📞"} Apel AI ${session.to_number} (${duration}s)\n*Rezultat:* ${parsed.outcome}\n*Sinteză:* ${parsed.summary}${parsed.next_action ? `\n*Acțiune:* ${parsed.next_action}` : ""}${recordingLink ? `\n🎧 ${recordingLink}` : ""}`,
+                }),
+              }).catch((e) => console.error("WhatsApp admin notify failed:", e));
+            }
+          } catch (notifyErr) {
+            console.error("Post-call notification error:", notifyErr);
+          }
+
           // Map outcome → lifecycle status
           const outcomeMap: Record<string, string> = {
             interesat: "interested",
