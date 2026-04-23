@@ -1155,9 +1155,27 @@ const ProspectListings = () => {
                                   </Button>
                                 }
                               />
-                              <a href={p.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
-                                Sursă <ExternalLink className="h-3 w-3" />
-                              </a>
+                              <div className="flex flex-col items-end gap-0.5">
+                                <a href={p.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
+                                  {p.source_platform || "Sursă"} <ExternalLink className="h-3 w-3" />
+                                </a>
+                                <Badge
+                                  variant="outline"
+                                  className="text-[9px] py-0 px-1 border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30"
+                                  title="Filtru aplicat global: doar Proprietari / Persoane fizice / Privați"
+                                >
+                                  👤 Doar Proprietari
+                                </Badge>
+                                {(p.search_keywords?.length ?? 0) > 0 && (
+                                  <span
+                                    className="text-[9px] text-muted-foreground font-mono max-w-[160px] truncate"
+                                    title={`Filtre căutare: ${p.search_keywords!.join(" • ")}`}
+                                  >
+                                    🔎 {p.search_keywords!.slice(0, 2).join(", ")}
+                                    {p.search_keywords!.length > 2 ? ` +${p.search_keywords!.length - 2}` : ""}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
