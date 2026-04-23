@@ -470,12 +470,21 @@ export default function CallDashboard() {
                     <TableHead>Outcome</TableHead>
                     <TableHead>Interes</TableHead>
                     <TableHead>Sentiment</TableHead>
-                    <TableHead>Scor</TableHead>
+                    <TableHead>Lead</TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => setSortByScore(true)}
+                        className="flex items-center gap-1 hover:text-primary transition"
+                        title="Sortare după hot score"
+                      >
+                        🔥 Hot {sortByScore && <ArrowUpDown className="w-3 h-3" />}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((r) => (
+                  {filtered.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="text-xs whitespace-nowrap">{formatDate(r.created_at)}</TableCell>
                       <TableCell>
@@ -504,45 +513,51 @@ export default function CallDashboard() {
                       </TableCell>
                       <TableCell>
                         {r.lead_score != null ? (
-                          <span className={`font-semibold ${r.lead_score > 80 ? "text-green-600" : r.lead_score > 50 ? "text-amber-600" : "text-muted-foreground"}`}>
-                            {r.lead_score}
-                          </span>
+                          <span className="text-sm text-muted-foreground">{r.lead_score}</span>
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`font-bold ${scoreClasses(r.hot_score)}`}>
+                          {r.hot_score}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-0.5">
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
                             disabled={!r.transcript && !r.ai_summary}
                             onClick={() => setTranscriptOpen(r)}
                             title="Vezi transcript"
                           >
-                            <FileText className="w-4 h-4" />
+                            <FileText className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
                             disabled={!r.recording_url}
                             onClick={() => r.recording_url && window.open(r.recording_url, "_blank")}
                             title="Ascultă audio"
                           >
-                            <Headphones className="w-4 h-4" />
+                            <Headphones className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
                             onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}
                             title="Trimite catalog WhatsApp"
                           >
-                            <MessageCircle className="w-4 h-4 text-green-600" />
+                            <MessageCircle className="w-3.5 h-3.5 text-green-600" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
                   {filtered.length === 0 && !loading && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Niciun apel găsit pentru filtrele selectate</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Niciun apel găsit pentru filtrele selectate</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -550,7 +565,7 @@ export default function CallDashboard() {
 
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
-              {filtered.map((r) => (
+              {filtered.map((r: any) => (
                 <Card key={r.id} className="border">
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -559,23 +574,26 @@ export default function CallDashboard() {
                         {r.contact_phone && <div className="text-xs text-muted-foreground">{r.contact_phone}</div>}
                         <div className="text-[10px] text-muted-foreground mt-0.5">{formatDate(r.created_at)}</div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">{r.source}</Badge>
+                      <Badge variant="outline" className={`font-bold shrink-0 ${scoreClasses(r.hot_score)}`}>
+                        🔥 {r.hot_score}
+                      </Badge>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">{r.source}</Badge>
                       {r.outcome && <Badge variant="secondary" className="text-xs">{OUTCOME_LABEL[r.outcome] || r.outcome}</Badge>}
                       {r.interest_type && <Badge variant="outline" className="text-xs">{INTEREST_LABEL[r.interest_type] || r.interest_type}</Badge>}
                       {r.sentiment && <Badge className={`text-xs ${SENTIMENT_COLOR[r.sentiment] || ""}`} variant="outline">{r.sentiment}</Badge>}
-                      {r.lead_score != null && <Badge variant="outline" className="text-xs">Scor: {r.lead_score}</Badge>}
+                      {r.lead_score != null && <Badge variant="outline" className="text-xs">Lead: {r.lead_score}</Badge>}
                     </div>
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button size="sm" variant="outline" className="flex-1" disabled={!r.transcript && !r.ai_summary} onClick={() => setTranscriptOpen(r)}>
-                        <FileText className="w-3.5 h-3.5 mr-1" /> Transcript
+                    <div className="flex gap-1 pt-2 border-t">
+                      <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" disabled={!r.transcript && !r.ai_summary} onClick={() => setTranscriptOpen(r)}>
+                        <FileText className="w-3.5 h-3.5 mr-1" /> <span className="text-xs">Transcript</span>
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1" disabled={!r.recording_url} onClick={() => r.recording_url && window.open(r.recording_url, "_blank")}>
-                        <Headphones className="w-3.5 h-3.5 mr-1" /> Audio
+                      <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" disabled={!r.recording_url} onClick={() => r.recording_url && window.open(r.recording_url, "_blank")}>
+                        <Headphones className="w-3.5 h-3.5 mr-1" /> <span className="text-xs">Audio</span>
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}>
-                        <MessageCircle className="w-3.5 h-3.5 mr-1 text-green-600" /> WA
+                      <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}>
+                        <MessageCircle className="w-3.5 h-3.5 mr-1 text-green-600" /> <span className="text-xs">WA</span>
                       </Button>
                     </div>
                   </CardContent>
