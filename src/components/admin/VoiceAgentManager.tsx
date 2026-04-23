@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import VoiceAgentScriptsEditor from "./VoiceAgentScriptsEditor";
 
 interface VoiceCall {
   id: string;
@@ -315,6 +316,9 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      {/* SCRIPT EDITOR (system prompt AI) */}
+      <VoiceAgentScriptsEditor />
+
       {/* AUTO-DIAL SETTINGS */}
       <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
