@@ -467,4 +467,51 @@ const KeywordEditor = ({ type, keywords, loading, onChange }: { type: KwType; ke
   );
 };
 
+const BulkArchiveButton = () => {
+  const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [lastResult, setLastResult] = useState<number | null>(null);
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("bulk_archive_detected_agencies" as any);
+      if (error) throw error;
+      const archived = (data as any)?.archived ?? 0;
+      setLastResult(archived);
+      toast.success(archived > 0
+        ? `✅ ${archived} agenții arhivate retroactiv.`
+        : "Nimic de arhivat — nu există agenții active neprotejate de whitelist.");
+    } catch (e: any) {
+      toast.error("Arhivare eșuată: " + (e.message || e));
+    } finally {
+      setBusy(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-xs text-muted-foreground">
+        {lastResult !== null && (
+          <span className="font-medium text-foreground">Ultima rulare: {lastResult} înregistrări arhivate.</span>
+        )}
+      </div>
+      {confirmOpen ? (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(false)} disabled={busy}>Anulează</Button>
+          <Button variant="destructive" size="sm" onClick={run} disabled={busy}>
+            {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Archive className="h-4 w-4 mr-2" />}
+            Confirmă arhivarea
+          </Button>
+        </div>
+      ) : (
+        <Button variant="outline" size="sm" onClick={() => setConfirmOpen(true)} className="border-amber-400 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40">
+          <Archive className="h-4 w-4 mr-2" /> Arhivează toate agențiile detectate
+        </Button>
+      )}
+    </div>
+  );
+};
+
 export default AgencyDetectionSettings;
