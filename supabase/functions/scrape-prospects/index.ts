@@ -122,6 +122,72 @@ const DEFAULT_SEARCH_QUERIES = [
 ];
 
 /**
+ * GLOBAL RULE — "Doar Proprietari"
+ * Aplicăm pe TOATE căutările (default + custom + DB) un set de filtre care
+ * forțează rezultate de la persoane fizice / proprietari și exclud agențiile.
+ *
+ * Două straturi:
+ *  1) `OWNER_TEXT_FILTER` — textul Google-style care se concatenează la query
+ *     (cuvinte „proprietar/persoană fizică” + excludere „agenție/imobiliare/comision”).
+ *  2) `OWNER_URL_FILTERS` — query string specific platformei (ex. OLX
+ *     `?search[private_business]=private`, Storia `?ownerTypeSingleSelect=PRIVATE`),
+ *     adăugat ca parte a operatorului `inurl:` ca să forțeze pagini-listă filtrate.
+ */
+const OWNER_TEXT_FILTER =
+  ' (proprietar OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar")' +
+  ' -agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker';
+
+const OWNER_URL_FILTERS: Record<string, string> = {
+  'OLX': 'inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private',
+  'Storia.ro': 'inurl:ownerTypeSingleSelect=PRIVATE',
+  'imobiliare.ro': 'inurl:persoane-fizice OR inurl:proprietari',
+  'Publi24': 'inurl:tip-anunt-persoane-fizice OR inurl:proprietari',
+  'BursaImobiliara.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+};
+
+/** Detect platform name from a free-text query (best-effort). */
+function detectPlatformFromQuery(query: string): string | null {
+  const q = query.toLowerCase();
+  if (q.includes('olx.ro')) return 'OLX';
+  if (q.includes('storia.ro')) return 'Storia.ro';
+  if (q.includes('imobiliare.ro')) return 'imobiliare.ro';
+  if (q.includes('publi24.ro')) return 'Publi24';
+  if (q.includes('bursaimobiliara.ro')) return 'BursaImobiliara.ro';
+  if (q.includes('facebook.com')) return 'Facebook Marketplace';
+  return null;
+}
+
+/** Apply the global "Doar Proprietari" filter to a query, idempotent. */
+function applyOwnerOnlyFilter(platform: string, query: string): string {
+  const lower = query.toLowerCase();
+  // Idempotent: don't double-apply if already contains owner markers
+  const alreadyHasOwner =
+    lower.includes('proprietar') ||
+    lower.includes('persoana fizica') ||
+    lower.includes('persoană fizică') ||
+    lower.includes('private_business=private') ||
+    lower.includes('ownertypesingleselect=private');
+
+  let result = query.trim();
+
+  // 1) Always add the negative+positive text filter (unless already present)
+  if (!alreadyHasOwner) {
+    result = `${result}${OWNER_TEXT_FILTER}`;
+  }
+
+  // 2) Add platform-specific URL hint if known
+  const platformKey = OWNER_URL_FILTERS[platform]
+    ? platform
+    : detectPlatformFromQuery(query) ?? '';
+  const urlHint = OWNER_URL_FILTERS[platformKey];
+  if (urlHint && !lower.includes(urlHint.split(' ')[0].toLowerCase())) {
+    result = `${result} (${urlHint})`;
+  }
+
+  return result;
+}
+
+/**
  * Remove diacritics from a string (ă→a, ș→s, ț→t, î→i, â→a).
  */
 function removeDiacritics(text: string): string {
@@ -288,7 +354,13 @@ Deno.serve(async (req) => {
 
     // Expand keywords with diacritics-free variants for fuzzy matching
     queries = expandKeywordsWithoutDiacritics(queries);
-    console.log(`Expanded to ${queries.length} search queries (with diacritics-free variants)`);
+
+    // GLOBAL RULE: force "Doar Proprietari" filter on every single query
+    queries = queries.map((q) => ({
+      platform: q.platform,
+      query: applyOwnerOnlyFilter(q.platform, q.query),
+    }));
+    console.log(`Expanded to ${queries.length} owner-only search queries`);
 
     // Process queries in parallel batches of 5 to avoid timeout
     const BATCH_SIZE = 5;
