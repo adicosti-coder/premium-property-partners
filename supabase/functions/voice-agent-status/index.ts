@@ -103,7 +103,7 @@ serve(async (req) => {
       appointment_iso: null,
     };
 
-    const latestRecordingUrl_dbg = recordingReady ? `${recordingUrl}.mp3` : session.recording_url || null;
+    const latestRecordingUrl = recordingReady ? `${recordingUrl}.mp3` : session.recording_url || null;
     const reportStatusReached = finalStatuses.includes(derivedStatus);
     const shouldCreateReport = !session.ai_summary && (reportStatusReached || recordingReady);
 
@@ -124,7 +124,7 @@ serve(async (req) => {
       reportSkipReason: !shouldCreateReport
         ? (session.ai_summary ? "report_already_exists" : `not_final_yet (status=${derivedStatus}, recordingReady=${recordingReady})`)
         : null,
-      recordingUrl: latestRecordingUrl_dbg,
+      recordingUrl: latestRecordingUrl,
     });
 
     if (shouldCreateReport) {
