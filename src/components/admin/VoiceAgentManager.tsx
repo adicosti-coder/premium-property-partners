@@ -654,6 +654,15 @@ export default function VoiceAgentManager() {
                       </div>
                       <div className="text-muted-foreground">{new Date(c.created_at).toLocaleString("ro-RO", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</div>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      disabled={runningTest}
+                      onClick={(e) => { e.stopPropagation(); replayTest(c); }}
+                    >
+                      🔁 Reia test
+                    </Button>
                   </div>
                 ))}
               </div>
