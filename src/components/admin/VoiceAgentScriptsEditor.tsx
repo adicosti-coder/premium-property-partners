@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   FileText, Save, Plus, Trash2, CheckCircle2, Loader2,
   Eye, PhoneCall, History, RotateCcw, FlaskConical, AlertTriangle, RefreshCw,
-  Sparkles, Wand2, FileDown, HelpCircle, User2,
+  Sparkles, Wand2, FileDown, HelpCircle, User2, Globe2, LayoutPanelTop, Activity,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -585,16 +585,44 @@ export default function VoiceAgentScriptsEditor() {
                   <Input value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Ce variantă e asta..." />
                 </div>
 
-                {/* Validation panel */}
-                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
-                  <div className={`rounded-md border p-3 text-xs space-y-1 ${validation.errors.length ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+                {/* Validation panel — always visible (shows flow score even without errors) */}
+                <div className={`rounded-md border p-3 text-xs space-y-2 ${
+                  validation.errors.length ? "bg-red-50 border-red-200" :
+                  validation.warnings.length ? "bg-amber-50 border-amber-200" :
+                  "bg-emerald-50 border-emerald-200"
+                }`}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="font-semibold flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" /> Validare
+                      <AlertTriangle className="h-3 w-3" /> Validare pre-save
                     </div>
-                    {validation.errors.map((e, i) => <div key={`e${i}`} className="text-red-700">❌ {e}</div>)}
-                    {validation.warnings.map((w, i) => <div key={`w${i}`} className="text-amber-700">⚠️ {w}</div>)}
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-3 w-3" />
+                      <span className="font-medium">Conversational Flow:</span>
+                      <span className={`font-bold ${
+                        validation.flowScore >= 70 ? "text-emerald-700" :
+                        validation.flowScore >= 50 ? "text-amber-700" : "text-red-700"
+                      }`}>
+                        {validation.flowScore}/100 — {validation.flowLabel}
+                      </span>
+                      <span className="text-muted-foreground">(media {validation.avgSentenceLen} cuvinte/frază)</span>
+                    </div>
                   </div>
-                )}
+                  {/* Score progress bar */}
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${
+                        validation.flowScore >= 70 ? "bg-emerald-500" :
+                        validation.flowScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                      }`}
+                      style={{ width: `${validation.flowScore}%` }}
+                    />
+                  </div>
+                  {validation.errors.map((e, i) => <div key={`e${i}`} className="text-red-700">❌ {e}</div>)}
+                  {validation.warnings.map((w, i) => <div key={`w${i}`} className="text-amber-700">⚠️ {w}</div>)}
+                  {validation.errors.length === 0 && validation.warnings.length === 0 && (
+                    <div className="text-emerald-700">✅ Scriptul trece toate verificările.</div>
+                  )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
@@ -619,9 +647,21 @@ export default function VoiceAgentScriptsEditor() {
                   <Button onClick={() => insertMacro(FAQ_MACRO)} variant="outline" size="sm" title="Inserează 5 întrebări frecvente cu răspunsuri-șablon">
                     <HelpCircle className="h-4 w-4 mr-1" /> Macro: FAQ scurtă
                   </Button>
-                  <Button onClick={handleGenerateVariant} variant="outline" size="sm" disabled={generatingAI || !selected} title="Folosește AI ca să creeze o variantă A/B premium a scriptului selectat">
+                  <Button onClick={() => handleGenerateVariant("premium_variant")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: variantă A/B premium (ton concierge, calificare BANT, social proof)">
                     {generatingAI ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Generează variantă premium A/B
+                  </Button>
+                  <Button onClick={() => handleGenerateVariant("microcopy_cta")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: variantă A/B optimizată pe microcopy CTA (rate de conversie)">
+                    <Wand2 className="h-4 w-4 mr-1" />
+                    Creează variantă A/B texte (CTA)
+                  </Button>
+                  <Button onClick={() => handleGenerateVariant("british_premium")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: variantă British tone premium pentru clientelă internațională / lux">
+                    <Globe2 className="h-4 w-4 mr-1" />
+                    British tone premium (EN)
+                  </Button>
+                  <Button onClick={() => handleGenerateVariant("layout_sections")} variant="outline" size="sm" disabled={generatingAI || !selected} title="AI: reorganizează promptul în secțiuni Markdown (## INTRO, ## CALIFICARE, ## FAQ, ## CTA)">
+                    <LayoutPanelTop className="h-4 w-4 mr-1" />
+                    Generează layout pe secțiuni
                   </Button>
                   {selected && !selected.is_active && (
                     <AlertDialog>
