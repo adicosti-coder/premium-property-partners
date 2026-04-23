@@ -1042,7 +1042,7 @@ const ProspectListings = () => {
                             prospectId={p.id}
                             keywords={p.search_keywords || []}
                             onChange={(next) => {
-                              qc.setQueryData<any[]>(["prospect-listings"], (old) =>
+                              qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) =>
                                 old?.map((row) => (row.id === p.id ? { ...row, search_keywords: next } : row)) || old
                               );
                             }}
