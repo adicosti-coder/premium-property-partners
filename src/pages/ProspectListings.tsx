@@ -83,7 +83,7 @@ const ProspectListings = () => {
   const qc = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const { isAdmin, isLoading: adminLoading } = useAdminRole(user);
+  const { isAdmin, isLoading: adminLoading, error: adminError, recheck } = useAdminRole(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -113,22 +113,14 @@ const ProspectListings = () => {
     };
   }, []);
 
+  // NU mai redirectăm automat dacă isAdmin=false — afișăm un panou cu Recheck.
+  // Doar dacă nu există user, trimitem la login.
   useEffect(() => {
     if (!authReady || adminLoading) return;
-
-    if (!adminLoading && !isAdmin && user) {
-      console.warn("[ProspectListings] Access denied for user:", user.email, user.id);
-      toast({
-        title: "Acces interzis",
-        description: `Contul ${user.email ?? user.id} nu are rol admin.`,
-        variant: "destructive",
-      });
-      navigate("/");
+    if (!user) {
+      navigate("/auth?redirect=/admin/prospect-listings");
     }
-    if (!adminLoading && !user) {
-      navigate("/auth?redirect=/prospect-listings");
-    }
-  }, [authReady, adminLoading, isAdmin, user, navigate]);
+  }, [authReady, adminLoading, user, navigate]);
 
   const { data: prospects = [], isLoading, refetch, error: queryError } = useQuery({
     queryKey: ["prospect-listings", statusFilter, categoryFilter],
