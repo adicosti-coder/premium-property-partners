@@ -729,7 +729,7 @@ export default function CallDashboard() {
                         {r.contact_phone && <div className="text-xs text-muted-foreground">{r.contact_phone}</div>}
                         <div className="text-[10px] text-muted-foreground mt-0.5">{formatDate(r.created_at)}</div>
                       </div>
-                      <ScoreBadge row={r} mobile />
+                      <ScoreBadge row={r} mobile onOpenTranscript={() => setTranscriptOpen(r)} />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant="outline" className="text-[10px]">{r.source}</Badge>
