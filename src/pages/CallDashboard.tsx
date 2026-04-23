@@ -99,6 +99,8 @@ export default function CallDashboard() {
   const [sentimentFilter, setSentimentFilter] = useState<string>("all");
   const [interestFilter, setInterestFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("7"); // days
+  const [minScore, setMinScore] = useState<string>("0");
+  const [sortByScore, setSortByScore] = useState(true);
   const [transcriptOpen, setTranscriptOpen] = useState<CallRow | null>(null);
 
   const fetchAll = async () => {
