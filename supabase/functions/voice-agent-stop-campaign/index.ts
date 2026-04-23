@@ -38,9 +38,11 @@ serve(async (req) => {
     if (!token) return jsonResp({ error: "unauthorized" }, 401);
 
     let userId: string | null = null;
+    let actorEmail: string | null = null;
     try {
       const { data: userRes } = await supabase.auth.getUser(token);
       userId = userRes?.user?.id ?? null;
+      actorEmail = userRes?.user?.email ?? null;
     } catch (_) { /* ignore */ }
     if (!userId) return jsonResp({ error: "unauthorized" }, 401);
 
