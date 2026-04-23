@@ -708,13 +708,26 @@ const ProspectListings = () => {
               </SelectContent>
             </Select>
           </CardContent>
-          {prospectTypeFilter === "proprietar" && agencyCount > 0 && (
-            <div className="px-4 pb-3 -mt-1 text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
-              <span>
-                🏢 <strong>{agencyCount}</strong> {agencyCount === 1 ? "anunț de agenție ascuns" : "anunțuri de agenție ascunse"} (detectat automat după titlu/contact).
+          {prospectTypeFilter === "proprietar" && (
+            <div className="px-4 pb-3 -mt-1 text-xs flex items-center justify-between flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-300/60 text-green-800 dark:text-green-300 font-medium">
+                🔒 Mod „Doar proprietari" activ — agențiile sunt blocate
+                {agencyCount > 0 && <span className="font-normal opacity-80">· {agencyCount} ascunse</span>}
               </span>
-              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setProspectTypeFilter("all")}>
-                Arată tot
+              {agencyCount > 0 && (
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setPendingTypeFilter("all")}>
+                  Arată tot (cere confirmare)
+                </Button>
+              )}
+            </div>
+          )}
+          {prospectTypeFilter !== "proprietar" && (
+            <div className="px-4 pb-3 -mt-1 text-xs flex items-center justify-between flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-300/60 text-amber-800 dark:text-amber-300 font-medium">
+                ⚠️ Agențiile sunt vizibile ({prospectTypeFilter === "agentie" ? "doar agenții" : "toate"}). Reactivează lock-ul pentru siguranță.
+              </span>
+              <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setProspectTypeFilter("proprietar")}>
+                🔒 Reactivează „Doar proprietari"
               </Button>
             </div>
           )}
