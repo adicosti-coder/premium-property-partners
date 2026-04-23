@@ -58,6 +58,7 @@ import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
 import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
+import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
