@@ -123,11 +123,27 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
-  // Default = only owners (hide agencies). Persisted.
-  const [prospectTypeFilter, setProspectTypeFilter] = useState<"proprietar" | "agentie" | "all">(
-    () => (localStorage.getItem("prospects:typeFilter") as any) || "proprietar"
-  );
-  useEffect(() => { localStorage.setItem("prospects:typeFilter", prospectTypeFilter); }, [prospectTypeFilter]);
+  // Default = only owners (hide agencies). Persisted in localStorage.
+  // Hard rule: agencies are NEVER shown unless the admin explicitly switches to "all" or "agentie"
+  // in the toolbar. We sanitize the stored value defensively.
+  type ProspectTypeFilter = "proprietar" | "agentie" | "all";
+  const PROSPECT_TYPE_LS_KEY = "prospects:typeFilter";
+  const readPersistedTypeFilter = (): ProspectTypeFilter => {
+    try {
+      const v = localStorage.getItem(PROSPECT_TYPE_LS_KEY);
+      return v === "all" || v === "agentie" || v === "proprietar" ? v : "proprietar";
+    } catch {
+      return "proprietar";
+    }
+  };
+  const [prospectTypeFilter, setProspectTypeFilterRaw] = useState<ProspectTypeFilter>(readPersistedTypeFilter);
+  const setProspectTypeFilter = (v: ProspectTypeFilter) => {
+    const safe: ProspectTypeFilter = v === "all" || v === "agentie" || v === "proprietar" ? v : "proprietar";
+    setProspectTypeFilterRaw(safe);
+  };
+  useEffect(() => {
+    try { localStorage.setItem(PROSPECT_TYPE_LS_KEY, prospectTypeFilter); } catch { /* ignore */ }
+  }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
@@ -136,6 +152,7 @@ const ProspectListings = () => {
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
   const [stopping, setStopping] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
+  const [pendingTypeFilter, setPendingTypeFilter] = useState<ProspectTypeFilter | null>(null);
   const CAMPAIGN_LIMIT = 30;
 
   useEffect(() => {
@@ -627,12 +644,26 @@ const ProspectListings = () => {
         <Card>
           <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <Select value={prospectTypeFilter} onValueChange={(v) => setProspectTypeFilter(v as any)}>
-              <SelectTrigger><SelectValue placeholder="Tip prospect" /></SelectTrigger>
+            <Select
+              value={prospectTypeFilter}
+              onValueChange={(v) => {
+                const next = v as ProspectTypeFilter;
+                // Switching AWAY from "proprietar" requires explicit confirmation
+                // so agencies are never shown by accident.
+                if (prospectTypeFilter === "proprietar" && next !== "proprietar") {
+                  setPendingTypeFilter(next);
+                } else {
+                  setProspectTypeFilter(next);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tip prospect" />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="proprietar">🏠 Doar proprietari</SelectItem>
+                <SelectItem value="proprietar">🔒 🏠 Doar proprietari (lock)</SelectItem>
                 <SelectItem value="agentie">🏢 Doar agenții</SelectItem>
-                <SelectItem value="all">Toate (proprietari + agenții)</SelectItem>
+                <SelectItem value="all">⚠️ Toate (include agenții)</SelectItem>
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -677,13 +708,26 @@ const ProspectListings = () => {
               </SelectContent>
             </Select>
           </CardContent>
-          {prospectTypeFilter === "proprietar" && agencyCount > 0 && (
-            <div className="px-4 pb-3 -mt-1 text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
-              <span>
-                🏢 <strong>{agencyCount}</strong> {agencyCount === 1 ? "anunț de agenție ascuns" : "anunțuri de agenție ascunse"} (detectat automat după titlu/contact).
+          {prospectTypeFilter === "proprietar" && (
+            <div className="px-4 pb-3 -mt-1 text-xs flex items-center justify-between flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-300/60 text-green-800 dark:text-green-300 font-medium">
+                🔒 Mod „Doar proprietari" activ — agențiile sunt blocate
+                {agencyCount > 0 && <span className="font-normal opacity-80">· {agencyCount} ascunse</span>}
               </span>
-              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setProspectTypeFilter("all")}>
-                Arată tot
+              {agencyCount > 0 && (
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setPendingTypeFilter("all")}>
+                  Arată tot (cere confirmare)
+                </Button>
+              )}
+            </div>
+          )}
+          {prospectTypeFilter !== "proprietar" && (
+            <div className="px-4 pb-3 -mt-1 text-xs flex items-center justify-between flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-300/60 text-amber-800 dark:text-amber-300 font-medium">
+                ⚠️ Agențiile sunt vizibile ({prospectTypeFilter === "agentie" ? "doar agenții" : "toate"}). Reactivează lock-ul pentru siguranță.
+              </span>
+              <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setProspectTypeFilter("proprietar")}>
+                🔒 Reactivează „Doar proprietari"
               </Button>
             </div>
           )}
@@ -894,6 +938,43 @@ const ProspectListings = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <StopCircle className="h-4 w-4 mr-1" /> Da, oprește campania
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pendingTypeFilter !== null} onOpenChange={(o) => { if (!o) setPendingTypeFilter(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Deblochezi afișarea agențiilor?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  În prezent ești în modul <strong>🔒 Doar proprietari</strong>. Vei trece la
+                  {pendingTypeFilter === "all"
+                    ? <> <strong>„Toate"</strong> — vor apărea și anunțurile de agenție.</>
+                    : <> <strong>„Doar agenții"</strong> — vor apărea exclusiv agențiile.</>}
+                </p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>🛡️ Campania AI tot <strong>nu va apela</strong> agențiile, indiferent de filtru.</div>
+                  <div>🔄 Poți reactiva oricând lock-ul „Doar proprietari" cu un click.</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Păstrează lock-ul</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingTypeFilter) setProspectTypeFilter(pendingTypeFilter);
+                setPendingTypeFilter(null);
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Da, deblochează
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
