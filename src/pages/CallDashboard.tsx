@@ -9,9 +9,42 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
+
+// Compute a 0-100 hotness score based on outcome + sentiment + lead_score
+const computeHotScore = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }): number => {
+  let score = 0;
+  const o = (r.outcome || "").toLowerCase();
+  const s = (r.sentiment || "").toLowerCase();
+
+  // Outcome weight (max 60)
+  if (["interested", "qualified", "viewing"].includes(o)) score += 60;
+  else if (o === "callback") score += 45;
+  else if (["contacted", "calling"].includes(o)) score += 25;
+  else if (["voicemail", "no_answer"].includes(o)) score += 15;
+  else if (["rejected", "not_qualified"].includes(o)) score += 5;
+  else score += 20; // unknown / new
+
+  // Sentiment weight (max 25)
+  if (["positive", "pozitiv"].includes(s)) score += 25;
+  else if (["neutral", "neutru"].includes(s)) score += 12;
+  else if (["negative", "negativ"].includes(s)) score += 0;
+  else score += 8;
+
+  // Lead score blend (max 15)
+  if (r.lead_score != null) score += Math.round((Math.min(100, Math.max(0, r.lead_score)) / 100) * 15);
+  else score += 5;
+
+  return Math.min(100, Math.max(0, Math.round(score)));
+};
+
+const scoreClasses = (score: number) => {
+  if (score >= 80) return "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40";
+  if (score >= 40) return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40";
+  return "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40";
+};
 
 type CallRow = {
   id: string;
