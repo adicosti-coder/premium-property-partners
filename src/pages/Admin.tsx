@@ -520,6 +520,7 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
           <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
+          <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>
