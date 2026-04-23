@@ -218,10 +218,16 @@ serve(async (req) => {
       }
     }
 
+    const MAX_RETRIES = 2; // total attempts allowed = MAX_RETRIES + 1 (initial)
+    const currentRetries = Number(prospect.retry_count || 0);
+
     const toNumber = prospect.phone_normalized || prospect.contact_phone;
     if (!toNumber || !/^\+[1-9]\d{6,14}$/.test(toNumber)) {
+      // Invalid phone is terminal — retries cannot fix the number itself.
       await supabase.from("prospect_listings").update({
-        lifecycle_status: "rejected",
+        lifecycle_status: "failed" as any,
+        last_failure_reason: `invalid_phone: "${prospect.contact_phone}"`,
+        last_retry_at: new Date().toISOString(),
         admin_notes: `Auto-dial: invalid phone "${prospect.contact_phone}"`,
       }).eq("id", prospect.id);
       return jsonResp({ skipped: `invalid phone: ${prospect.contact_phone}` });
@@ -279,12 +285,27 @@ serve(async (req) => {
         error_message: `Twilio ${twRes.status}: ${JSON.stringify(twData).slice(0, 500)}`,
         ended_at: new Date().toISOString(),
       }).eq("id", session.id);
+
+      const nextRetry = currentRetries + 1;
+      const exhausted = nextRetry > MAX_RETRIES;
+      const failureReason = `twilio_${twRes.status}: ${(twData?.message || JSON.stringify(twData)).toString().slice(0, 160)}`;
+
       await supabase.from("prospect_listings").update({
-        lifecycle_status: "new",
+        lifecycle_status: exhausted ? ("failed" as any) : ("new" as any),
         auto_call_triggered_at: null,
-        admin_notes: `Twilio failed: ${JSON.stringify(twData).slice(0, 200)}`,
+        retry_count: nextRetry,
+        last_retry_at: new Date().toISOString(),
+        last_failure_reason: failureReason,
+        voice_call_session_id: null,
+        admin_notes: `Twilio failed (attempt ${nextRetry}/${MAX_RETRIES + 1}): ${JSON.stringify(twData).slice(0, 200)}`,
       }).eq("id", prospect.id);
-      return jsonResp({ error: "Twilio failed", details: twData }, twRes.status);
+
+      return jsonResp({
+        error: "Twilio failed",
+        retry_count: nextRetry,
+        will_retry: !exhausted,
+        details: twData,
+      }, twRes.status);
     }
 
     await supabase.from("voice_call_sessions").update({
