@@ -20,8 +20,16 @@ serve(async (req) => {
     const callStatus = (form.get("CallStatus") as string) || "";
     const duration = parseInt((form.get("CallDuration") as string) || "0", 10);
     const recordingUrl = (form.get("RecordingUrl") as string) || "";
+    const recordingSid = (form.get("RecordingSid") as string) || "";
 
-    const updates: any = { status: callStatus || "unknown" };
+    const { data: existingSession } = await supabase
+      .from("voice_call_sessions")
+      .select("status, ai_summary, transcript, call_objective, scraper_lead_id, prospect_listing_id, lead_id, to_number, voice_agent_prompt, language_retry_count, initiated_by")
+      .eq("id", sessionId)
+      .maybeSingle();
+
+    const updates: any = {};
+    if (callStatus) updates.status = callStatus;
     if (duration) updates.call_duration_seconds = duration;
     if (recordingUrl) updates.recording_url = `${recordingUrl}.mp3`;
     if (["completed", "failed", "busy", "no-answer", "canceled"].includes(callStatus)) {
@@ -30,17 +38,22 @@ serve(async (req) => {
       if (duration) updates.cost_estimate_usd = +((duration / 60) * 0.015).toFixed(4);
     }
 
-    await supabase.from("voice_call_sessions").update(updates).eq("id", sessionId);
+    if (recordingSid && !callStatus) {
+      updates.recording_status = "completed";
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase.from("voice_call_sessions").update(updates).eq("id", sessionId);
+    }
 
     // Generate AI summary on completion
-    if (callStatus === "completed" && LOVABLE_API_KEY) {
-      const { data: session } = await supabase
-        .from("voice_call_sessions")
-        .select("transcript, call_objective, scraper_lead_id, prospect_listing_id, lead_id, to_number, voice_agent_prompt, language_retry_count, initiated_by")
-        .eq("id", sessionId)
-        .maybeSingle();
+    const finalStatus = callStatus || existingSession?.status || "";
+    const shouldCreateReport = ["completed", "failed", "busy", "no-answer", "canceled"].includes(finalStatus) && !existingSession?.ai_summary;
 
-      if (session?.transcript && Array.isArray(session.transcript) && session.transcript.length > 1) {
+    if (shouldCreateReport) {
+      const session = existingSession;
+
+      if (session?.transcript && Array.isArray(session.transcript) && session.transcript.length > 0) {
         const transcriptText = (session.transcript as any[])
           .map((t) => `${t.role === "user" ? "Client" : "Ana"}: ${t.text}`)
           .join("\n")
@@ -103,15 +116,28 @@ serve(async (req) => {
         }
         // ─── END LANGUAGE DETECTION ───
 
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              {
-                role: "system",
-                content: `Analizează acest apel telefonic AI și returnează STRICT JSON:
+        const fallbackReport = {
+          summary: finalStatus === "completed"
+            ? "Apel foarte scurt. S-a redat mesajul inițial, dar conversația nu a continuat suficient pentru o calificare completă."
+            : `Apel încheiat cu status ${finalStatus}. Nu s-a strâns suficient conținut pentru o conversație completă.`,
+          outcome: finalStatus === "completed" ? "callback" : finalStatus === "no-answer" ? "nicio_legatura" : finalStatus === "busy" ? "callback" : "neinteresat",
+          sentiment: "neutru",
+          next_action: "Reîncearcă apelul cu un script român scurt și verifică răspunsul interlocutorului.",
+          appointment_iso: null,
+        };
+
+        let parsed: any = fallbackReport;
+
+        if (LOVABLE_API_KEY && transcriptText.trim().length > 0) {
+          const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content: `Analizează acest apel telefonic AI și returnează STRICT JSON:
 {
   "summary": "1-2 propoziții despre ce a vrut clientul",
   "outcome": "interesat|neinteresat|callback|programare|robot|nicio_legatura",
@@ -119,28 +145,33 @@ serve(async (req) => {
   "next_action": "acțiune recomandată următoare (max 1 propoziție)",
   "appointment_iso": "ISO date dacă s-a stabilit întâlnire, altfel null"
 }`,
-              },
-              { role: "user", content: transcriptText },
-            ],
-          }),
-        });
+                },
+                { role: "user", content: transcriptText },
+              ],
+            }),
+          });
 
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          const raw = aiData.choices?.[0]?.message?.content?.trim() || "{}";
-          let parsed: any = {};
-          try { parsed = JSON.parse(raw.replace(/```json\n?|```/g, "").trim()); } catch {}
+          if (aiRes.ok) {
+            const aiData = await aiRes.json();
+            const raw = aiData.choices?.[0]?.message?.content?.trim() || "{}";
+            try {
+              parsed = { ...fallbackReport, ...JSON.parse(raw.replace(/```json\n?|```/g, "").trim()) };
+            } catch {
+              parsed = fallbackReport;
+            }
+          }
+        }
 
-          await supabase.from("voice_call_sessions").update({
-            ai_summary: parsed.summary || null,
-            ai_outcome: parsed.outcome || null,
-            ai_sentiment: parsed.sentiment || null,
-            next_action: parsed.next_action || null,
-            appointment_scheduled_at: parsed.appointment_iso || null,
-          }).eq("id", sessionId);
+        await supabase.from("voice_call_sessions").update({
+          ai_summary: parsed.summary || fallbackReport.summary,
+          ai_outcome: parsed.outcome || fallbackReport.outcome,
+          ai_sentiment: parsed.sentiment || fallbackReport.sentiment,
+          next_action: parsed.next_action || fallbackReport.next_action,
+          appointment_scheduled_at: parsed.appointment_iso || null,
+        }).eq("id", sessionId);
 
-          // ─── Post-call admin notifications (email + WhatsApp) ───
-          try {
+        // ─── Post-call admin notifications (email + WhatsApp) ───
+        try {
             const { data: notifySettings } = await supabase
               .from("voice_agent_settings")
               .select("notify_email, notify_email_enabled, notify_whatsapp_enabled")
@@ -339,6 +370,14 @@ serve(async (req) => {
             }
           }
         }
+      } else {
+        await supabase.from("voice_call_sessions").update({
+          ai_summary: `Apel încheiat cu status ${finalStatus || "necunoscut"}, fără transcript disponibil.`,
+          ai_outcome: finalStatus === "busy" ? "callback" : "nicio_legatura",
+          ai_sentiment: "neutru",
+          next_action: "Rulează din nou testul complet și verifică răspunsul audio.",
+          detected_language: "unknown",
+        }).eq("id", sessionId);
       }
     }
 
