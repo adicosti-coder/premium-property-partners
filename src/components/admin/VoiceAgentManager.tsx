@@ -551,6 +551,10 @@ export default function VoiceAgentManager() {
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
                         {c.ai_outcome && <Badge variant="outline">{c.ai_outcome}</Badge>}
                         {c.ai_sentiment && <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span>}
+                        {c.detected_language === "en" && <Badge className="bg-red-100 text-red-800 border border-red-300">⚠️ EN detectat</Badge>}
+                        {c.detected_language === "ro" && <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">🇷🇴 RO ✓</Badge>}
+                        {(c.language_retry_count || 0) > 0 && <Badge variant="outline" className="text-xs">↻ retry RO trimis</Badge>}
+                        {c.language_retry_of && <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-xs">🔁 retry pentru apel anterior</Badge>}
                       </div>
                       <div className="text-xs text-muted-foreground truncate mt-0.5">
                         {c.ai_summary || c.error_message || "Nicio sinteză încă"}
