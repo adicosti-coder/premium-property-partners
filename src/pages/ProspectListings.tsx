@@ -451,6 +451,52 @@ const ProspectListings = () => {
   // Count agencies before filtering, so we can show "X agenții ascunse"
   const agencyCount = useMemo(() => enriched.filter((p) => p.isAgency).length, [enriched]);
 
+  // ─── AUTO-BLACKLIST ──────────────────────────────────────────────
+  // When a prospect's suspicion crosses the configured threshold, fire the
+  // backend RPC which (a) re-checks the threshold, (b) skips whitelisted
+  // numbers/domains, (c) marks the prospect as agency, (d) inserts in the
+  // blocklist with reason 'Auto-detected (High Suspicion)' and (e) writes
+  // an admin_audit_log row. The RPC is idempotent — already-blacklisted
+  // prospects return early. We dedupe per session to avoid spamming.
+  const { data: detectionSettings } = useAgencyDetectionSettings();
+  const triggeredRef = useMemo(() => new Set<string>(), []);
+  useEffect(() => {
+    if (!detectionSettings?.enabled) return;
+    const threshold = detectionSettings.suspicion_threshold ?? 70;
+    // Map suspicion level (0..3) → coarse score (0/33/66/99) so the slider
+    // semantics in the settings panel keep working for the auto-trigger.
+    const candidates = enriched.filter((p) => {
+      if (p.auto_blacklisted_at) return false;
+      if (triggeredRef.has(p.id)) return false;
+      if (p.prospect_type === "proprietar") return false; // manual override
+      const score = (p.suspicion?.level ?? 0) * 33;
+      return score >= threshold;
+    });
+    if (candidates.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const p of candidates) {
+        if (cancelled) break;
+        triggeredRef.add(p.id);
+        const score = (p.suspicion?.level ?? 0) * 33;
+        try {
+          await supabase.rpc("auto_blacklist_prospect" as any, {
+            p_prospect_id: p.id,
+            p_score: score,
+            p_reasons: p.suspicion?.reasons ?? [],
+          });
+        } catch (e) {
+          console.warn("[ProspectListings] auto_blacklist_prospect failed:", (e as Error).message);
+        }
+      }
+      if (!cancelled) {
+        // Refresh once at the end to pull updated auto_blacklisted_at.
+        qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
+
   const filtered = enriched.filter((p) => {
     // Owner / agency filter (default: hide agencies)
     if (prospectTypeFilter === "proprietar" && p.isAgency) return false;
