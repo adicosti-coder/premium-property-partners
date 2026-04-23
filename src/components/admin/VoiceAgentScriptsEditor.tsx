@@ -14,7 +14,10 @@ import { toast } from "@/hooks/use-toast";
 import {
   FileText, Save, Plus, Trash2, CheckCircle2, Loader2,
   Eye, PhoneCall, History, RotateCcw, FlaskConical, AlertTriangle, RefreshCw,
+  Sparkles, Wand2, FileDown, HelpCircle, User2,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
