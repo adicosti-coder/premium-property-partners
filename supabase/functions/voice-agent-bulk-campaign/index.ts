@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logAudit } from "../_shared/auditLog.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Bulk Campaign — accepts an array of prospect IDs, creates a
@@ -37,12 +38,14 @@ serve(async (req) => {
 
     // Identify caller (admin) from Authorization header — best effort
     let createdBy: string | null = null;
+    let actorEmail: string | null = null;
     try {
       const authHeader = req.headers.get("Authorization") || "";
       const token = authHeader.replace("Bearer ", "");
       if (token && token !== SERVICE_KEY) {
         const { data: userRes } = await supabase.auth.getUser(token);
         createdBy = userRes?.user?.id ?? null;
+        actorEmail = userRes?.user?.email ?? null;
       }
     } catch (_) { /* ignore */ }
 
