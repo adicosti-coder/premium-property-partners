@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Bot, Building2, Phone as PhoneIcon, Globe, Hash, AlertTriangle, ShieldCheck, Loader2, Home } from "lucide-react";
+import { Bot, Building2, Phone as PhoneIcon, Globe, Hash, AlertTriangle, ShieldCheck, Loader2, Home, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export interface AgencyExplainerInput {
@@ -63,12 +67,14 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
   const [blockRows, setBlockRows] = useState<BlocklistRow[]>([]);
   const [loadingBlock, setLoadingBlock] = useState(false);
   const [forceLoading, setForceLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleForceOwner = async () => {
     if (!data || !onForceOwner) return;
     setForceLoading(true);
     try {
       await onForceOwner(data);
+      setConfirmOpen(false);
     } finally {
       setForceLoading(false);
     }
@@ -368,21 +374,63 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
             </Button>
             {onForceOwner && data.prospectType !== "proprietar" && (
               <Button
-                onClick={handleForceOwner}
+                onClick={() => setConfirmOpen(true)}
                 disabled={forceLoading}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                size="lg"
               >
                 {forceLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Home className="h-4 w-4 mr-2" />
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
                 )}
-                Marchează ca Proprietar
+                ✅ Confirmă ca Proprietar (Whitelist)
               </Button>
             )}
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {/* Intermediate confirmation to prevent accidental clicks */}
+      <AlertDialog open={confirmOpen} onOpenChange={(o) => !forceLoading && setConfirmOpen(o)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-green-600" />
+              Confirmă deblocarea ca proprietar
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <div>
+                  Ești pe cale să marchezi <strong>{data.contactName || data.phone || "acest prospect"}</strong>{" "}
+                  ca <strong className="text-green-700 dark:text-green-300">proprietar verificat</strong>.
+                </div>
+                <div className="text-xs bg-muted/50 rounded p-2 space-y-1">
+                  <div>✅ Telefonul {data.phoneNormalized && (<span className="font-mono">({data.phoneNormalized})</span>)} va fi adăugat în <strong>whitelist</strong>.</div>
+                  {data.domain && <div>✅ Domeniul <span className="font-mono">{data.domain}</span> va fi adăugat în whitelist.</div>}
+                  <div>🗑️ Va fi eliminat din lista neagră (dacă există).</div>
+                  <div>📝 Se va adăuga o notă în <span className="font-mono">admin_notes</span>.</div>
+                  <div>📜 Acțiunea va fi înregistrată în audit log.</div>
+                </div>
+                <div className="text-xs text-amber-700 dark:text-amber-300">
+                  ⚠️ Această acțiune este permanentă — orice viitor re-import al acestui telefon va fi clasificat automat ca proprietar.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={forceLoading}>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleForceOwner(); }}
+              disabled={forceLoading}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {forceLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+              Da, confirmă proprietar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

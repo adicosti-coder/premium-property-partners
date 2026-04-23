@@ -1266,10 +1266,26 @@ const ProspectListings = () => {
         onOpenChange={setExplainerOpen}
         data={explainerData}
         onForceOwner={async (d) => {
-          // 1) Update prospect → owner
+          // 1) Read existing admin_notes to append (don't overwrite history)
+          const { data: existing } = await supabase
+            .from("prospect_listings")
+            .select("admin_notes")
+            .eq("id", d.prospectId)
+            .maybeSingle();
+          const stamp = new Date().toISOString();
+          const noteLine = `[${stamp}] Deblocat manual din Explainer (${user?.email || "admin"}) — suspicion=${d.suspicion.level}/3`;
+          const newNotes = existing?.admin_notes
+            ? `${existing.admin_notes}\n${noteLine}`
+            : noteLine;
+
+          // 2) Update prospect → owner + append admin_notes
           const { error: upErr } = await supabase
             .from("prospect_listings")
-            .update({ prospect_type: "proprietar", is_active: true })
+            .update({
+              prospect_type: "proprietar",
+              is_active: true,
+              admin_notes: newNotes,
+            })
             .eq("id", d.prospectId);
           if (upErr) {
             toast({ title: "Eroare", description: upErr.message, variant: "destructive" });
