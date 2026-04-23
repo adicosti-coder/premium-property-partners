@@ -524,6 +524,15 @@ const ProspectListings = () => {
     return Array.from(merged).sort();
   }, [enriched]);
 
+  // Available sources (platforms) — derived from current dataset.
+  const availableSources = useMemo(() => {
+    const set = new Set<string>();
+    enriched.forEach((p) => {
+      if (p.source_platform) set.add(p.source_platform);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [enriched]);
+
   // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling.
   // Hard rule: never auto-call agencies, even if the view filter shows "all".
   const campaignTargets = useMemo(() => {
