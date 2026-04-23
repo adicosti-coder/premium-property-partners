@@ -479,10 +479,41 @@ const ProspectListings = () => {
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
       refetch();
-    } else {
+      return;
+    }
+
+    // Recurrence flag: when marking as agency, add the phone & domain to the
+    // permanent blocklist so any future re-import is auto-classified & blocked.
+    if (next === "agentie") {
+      const phone = p.phone_normalized || null;
+      let domain: string | null = null;
+      try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; } catch { domain = null; }
+      if (phone || domain) {
+        const { error: blockErr } = await supabase
+          .from("agency_blocklist" as any)
+          .insert({
+            phone_normalized: phone,
+            domain,
+            reason: "manual_admin",
+            notes: `Marcat manual din /admin/prospect-listings (${p.contact_name || "—"})`,
+            source_prospect_id: p.id,
+          });
+        if (blockErr && !blockErr.message?.includes("duplicate")) {
+          console.warn("[blocklist] insert failed:", blockErr.message);
+        }
+      }
       toast({
-        title: next === "agentie" ? "🏢 Marcat ca agenție" : "🏠 Marcat ca proprietar",
-        description: next === "agentie" ? "Lead-ul nu va mai apărea în filtrul Proprietari." : "Lead-ul va apărea în filtrul Proprietari.",
+        title: "🏢 Marcat ca agenție (blocat permanent)",
+        description: "Telefonul și domeniul au fost adăugate în lista neagră — orice import viitor va fi blocat automat.",
+      });
+    } else {
+      // Marked back as owner — remove from blocklist if present.
+      if (p.phone_normalized) {
+        await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", p.phone_normalized);
+      }
+      toast({
+        title: "🏠 Marcat ca proprietar",
+        description: "Lead-ul va apărea în filtrul Proprietari.",
       });
     }
   };
