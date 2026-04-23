@@ -1068,6 +1068,72 @@ const ProspectListings = () => {
               </SelectContent>
             </Select>
           </CardContent>
+          {/* Saved (favorite) filters bar */}
+          <div className="px-4 pb-3 -mt-2 flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-medium text-muted-foreground">⭐ Filtre salvate:</span>
+            {savedFilters.length === 0 && (
+              <span className="text-xs text-muted-foreground italic">Niciun filtru salvat încă.</span>
+            )}
+            {savedFilters.map((f) => (
+              <span key={f.id} className="inline-flex items-center gap-0.5 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 text-amber-800 dark:text-amber-200 text-xs pl-2">
+                <button
+                  type="button"
+                  className="hover:underline"
+                  title="Aplică acest filtru"
+                  onClick={() => {
+                    setStatusFilter(f.statusFilter);
+                    setCategoryFilter(f.categoryFilter);
+                    setMinScore(f.minScore);
+                    setZoneFilter(f.zoneFilter);
+                    setSourceFilter(f.sourceFilter);
+                    setProspectTypeFilter(f.prospectTypeFilter);
+                    setSearch(f.search || "");
+                    toast({ title: "Filtru aplicat", description: f.name });
+                  }}
+                >
+                  {f.name}
+                </button>
+                <button
+                  type="button"
+                  className="px-1.5 py-0.5 hover:text-destructive"
+                  title="Șterge filtrul"
+                  onClick={() => {
+                    setSavedFilters((prev) => prev.filter((x) => x.id !== f.id));
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs ml-auto"
+              onClick={() => {
+                const defaultName =
+                  sourceFilter !== "all"
+                    ? `${sourceFilter}${zoneFilter !== "all" ? ` · ${zoneFilter}` : ""}`
+                    : `Filtru ${savedFilters.length + 1}`;
+                const name = window.prompt("Nume pentru acest filtru:", defaultName)?.trim();
+                if (!name) return;
+                const entry: SavedFilter = {
+                  id: crypto.randomUUID(),
+                  name,
+                  statusFilter,
+                  categoryFilter,
+                  minScore,
+                  zoneFilter,
+                  sourceFilter,
+                  prospectTypeFilter,
+                  search,
+                };
+                setSavedFilters((prev) => [...prev.filter((x) => x.name !== name), entry]);
+                toast({ title: "Filtru salvat", description: name });
+              }}
+            >
+              💾 Salvează filtru curent
+            </Button>
+          </div>
           {prospectTypeFilter === "proprietar" && (
             <div className="px-4 pb-3 -mt-1 text-xs flex items-center justify-between flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-300/60 text-green-800 dark:text-green-300 font-medium">
