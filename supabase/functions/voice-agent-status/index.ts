@@ -36,7 +36,7 @@ serve(async (req) => {
     if (callStatus === "completed" && LOVABLE_API_KEY) {
       const { data: session } = await supabase
         .from("voice_call_sessions")
-        .select("transcript, call_objective, scraper_lead_id, prospect_listing_id, to_number")
+        .select("transcript, call_objective, scraper_lead_id, prospect_listing_id, lead_id, to_number, voice_agent_prompt, language_retry_count, initiated_by")
         .eq("id", sessionId)
         .maybeSingle();
 
@@ -45,6 +45,63 @@ serve(async (req) => {
           .map((t) => `${t.role === "user" ? "Client" : "Ana"}: ${t.text}`)
           .join("\n")
           .slice(0, 6000);
+
+        // ─── LANGUAGE DETECTION (heuristic + auto-retry if not Romanian) ───
+        const assistantText = (session.transcript as any[])
+          .filter((t) => t.role === "assistant")
+          .map((t) => String(t.text || ""))
+          .join(" ")
+          .toLowerCase();
+
+        // Romanian markers: diacritics OR common RO words
+        const roDiacritics = /[ăâîșşțţ]/.test(assistantText);
+        const roWords = (assistantText.match(/\b(și|sau|este|sunt|pentru|dumneavoastră|bună|mulțumesc|revedere|proprietate|vă|vânzare|închiriere|imobiliare|salut|ziua|programare)\b/g) || []).length;
+        // English markers (false-positive guard)
+        const enWords = (assistantText.match(/\b(the|and|you|are|hello|sorry|thank|please|property|good|day|morning|today)\b/g) || []).length;
+
+        let detectedLanguage: "ro" | "en" | "unknown" = "unknown";
+        if (assistantText.length >= 30) {
+          if (roDiacritics || roWords >= 3) detectedLanguage = "ro";
+          else if (enWords >= 3 && roWords === 0) detectedLanguage = "en";
+        }
+
+        await supabase.from("voice_call_sessions").update({
+          detected_language: detectedLanguage,
+        }).eq("id", sessionId);
+
+        console.log(`[voice-status] sessionId=${sessionId} detectedLanguage=${detectedLanguage} roWords=${roWords} enWords=${enWords} retryCount=${session.language_retry_count || 0}`);
+
+        // Auto-retry once if not Romanian
+        if (detectedLanguage === "en" && (session.language_retry_count || 0) < 1) {
+          console.log(`[voice-status] Triggering RO-forced retry for session ${sessionId}`);
+          // Force ElevenLabs RO + strict Romanian-only prompt
+          const ROForcedPrompt = `ATENȚIE CRITICĂ: Vorbești EXCLUSIV în limba ROMÂNĂ. Este STRICT INTERZIS să folosești engleza sau orice altă limbă. Toate replicile tale trebuie să conțină diacritice românești (ă, â, î, ș, ț). Ești Ana de la RealTrust Timișoara. Începe cu: "Bună ziua, sunt Ana de la RealTrust Timișoara. Vă rog să mă scuzați pentru apelul anterior. Îmi cer iertare și aș vrea să continuăm discuția în limba română." Apoi continuă obiectivul: ${session.call_objective || "calificare interes"}. Maxim 2 propoziții per replică. Dacă nu răspunde, închizi politicos cu "Vă mulțumesc, o zi bună!"`;
+
+          // Fire async retry via voice-agent-initiate (non-blocking)
+          fetch(`${SUPABASE_URL}/functions/v1/voice-agent-initiate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${SERVICE_KEY}`,
+              "x-language-retry": sessionId,
+            },
+            body: JSON.stringify({
+              toNumber: session.to_number,
+              scraperLeadId: session.scraper_lead_id || undefined,
+              leadId: session.lead_id || undefined,
+              objective: session.call_objective || "qualify",
+              customPrompt: ROForcedPrompt,
+              languageRetryOf: sessionId,
+              forceElevenLabs: true,
+            }),
+          }).catch((e) => console.error("[voice-status] Language retry failed:", e));
+
+          // Mark this session as having triggered a retry (so we don't loop)
+          await supabase.from("voice_call_sessions").update({
+            language_retry_count: (session.language_retry_count || 0) + 1,
+          }).eq("id", sessionId);
+        }
+        // ─── END LANGUAGE DETECTION ───
 
         const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
