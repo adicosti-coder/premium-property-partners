@@ -181,10 +181,34 @@ const ProspectListings = () => {
 
   const filtered = enriched.filter((p) => {
     if ((p.lead_score ?? p.score ?? 0) < parseInt(minScore || "0")) return false;
+    if (zoneFilter !== "all") {
+      const zoneBlob = `${p.zone || ""} ${p.location || ""} ${p.geo.primary || ""} ${(p.geo.found || []).join(" ")}`.toLowerCase();
+      if (!zoneBlob.includes(zoneFilter.toLowerCase())) return false;
+    }
     if (!search) return true;
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
   });
+
+  // Available zones (from current data + canonical Timișoara list)
+  const availableZones = useMemo(() => {
+    const canonical = ["Centru", "Aradului", "Girocului", "Iosefin", "Fabric", "Elisabetin", "Cetate", "Dumbrăvița", "Lipovei", "Soarelui", "Complex Studențesc", "Take Ionescu", "Circumvalațiunii", "Torontalului", "Mehala"];
+    const fromData = new Set<string>();
+    enriched.forEach((p) => {
+      if (p.geo.primary) fromData.add(p.geo.primary);
+      if (p.zone) fromData.add(p.zone);
+    });
+    const merged = new Set<string>([...canonical, ...fromData]);
+    return Array.from(merged).sort();
+  }, [enriched]);
+
+  // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling
+  const campaignTargets = useMemo(() => {
+    return filtered
+      .filter((p) => (p.phone_normalized || p.contact_phone))
+      .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
+      .slice(0, CAMPAIGN_LIMIT);
+  }, [filtered]);
 
   // Debug: log render state
   useEffect(() => {
