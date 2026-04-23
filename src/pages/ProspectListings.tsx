@@ -1260,6 +1260,12 @@ const ProspectListings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AgencyExplainerDialog
+        open={explainerOpen}
+        onOpenChange={setExplainerOpen}
+        data={explainerData}
+      />
     </div>
   );
 };
