@@ -56,6 +56,9 @@ export default function VoiceAgentManager() {
   const [previewText, setPreviewText] = useState("Bună ziua, sunt Ana de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+  const [testNumber, setTestNumber] = useState<string>(() => localStorage.getItem("voice_test_number") || "+40");
+  const [runningTest, setRunningTest] = useState(false);
+  const [testSessionId, setTestSessionId] = useState<string | null>(null);
 
   const VOICES = [
     { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
