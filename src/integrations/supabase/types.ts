@@ -4014,6 +4014,78 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_script_test_logs: {
+        Row: {
+          ab_variant: string | null
+          call_duration_seconds: number | null
+          created_at: string
+          fallback_reason: string | null
+          id: string
+          is_test_call: boolean
+          outcome: string | null
+          script_id: string | null
+          script_name: string | null
+          script_version: number | null
+          session_id: string | null
+          status: string
+          to_number: string | null
+          transcript_turns: number | null
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          ab_variant?: string | null
+          call_duration_seconds?: number | null
+          created_at?: string
+          fallback_reason?: string | null
+          id?: string
+          is_test_call?: boolean
+          outcome?: string | null
+          script_id?: string | null
+          script_name?: string | null
+          script_version?: number | null
+          session_id?: string | null
+          status?: string
+          to_number?: string | null
+          transcript_turns?: number | null
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ab_variant?: string | null
+          call_duration_seconds?: number | null
+          created_at?: string
+          fallback_reason?: string | null
+          id?: string
+          is_test_call?: boolean
+          outcome?: string | null
+          script_id?: string | null
+          script_name?: string | null
+          script_version?: number | null
+          session_id?: string | null
+          status?: string
+          to_number?: string | null
+          transcript_turns?: number | null
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_agent_script_test_logs_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_scripts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_agent_script_test_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_agent_script_versions: {
         Row: {
           created_at: string
@@ -4060,6 +4132,8 @@ export type Database = {
       }
       voice_agent_scripts: {
         Row: {
+          ab_traffic_split: number
+          ab_variant_script_id: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -4071,6 +4145,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ab_traffic_split?: number
+          ab_variant_script_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -4082,6 +4158,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ab_traffic_split?: number
+          ab_variant_script_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -4092,7 +4170,15 @@ export type Database = {
           system_prompt?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "voice_agent_scripts_ab_variant_script_id_fkey"
+            columns: ["ab_variant_script_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_scripts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       voice_agent_settings: {
         Row: {
