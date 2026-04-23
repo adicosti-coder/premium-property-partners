@@ -16,7 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
@@ -24,6 +24,7 @@ import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/a
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
+import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
 import type { User } from "@supabase/supabase-js";
 
 const lifecycleColors: Record<string, string> = {
