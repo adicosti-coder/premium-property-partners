@@ -21,6 +21,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
+import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import type { User } from "@supabase/supabase-js";
@@ -1037,6 +1038,15 @@ const ProspectListings = () => {
                           {p.call_summary && (
                             <div className="text-xs text-green-700 mt-1 line-clamp-2">📞 {p.call_summary}</div>
                           )}
+                          <ProspectKeywordsEditor
+                            prospectId={p.id}
+                            keywords={p.search_keywords || []}
+                            onChange={(next) => {
+                              qc.setQueryData<any[]>(["prospect-listings"], (old) =>
+                                old?.map((row) => (row.id === p.id ? { ...row, search_keywords: next } : row)) || old
+                              );
+                            }}
+                          />
                         </TableCell>
                         <TableCell>
                           {p.category && (
