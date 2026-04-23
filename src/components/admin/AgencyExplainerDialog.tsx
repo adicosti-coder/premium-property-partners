@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Building2, Phone as PhoneIcon, Globe, Hash, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Bot, Building2, Phone as PhoneIcon, Globe, Hash, AlertTriangle, ShieldCheck, Loader2, Home } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export interface AgencyExplainerInput {
@@ -38,6 +40,16 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   data: AgencyExplainerInput | null;
+  /**
+   * Called when admin clicks "Marchează ca Proprietar". The parent should:
+   *  - update prospect_listings.prospect_type = 'proprietar'
+   *  - INSERT into agency_whitelist (phone + domain)
+   *  - DELETE from agency_blocklist (phone + domain)
+   *  - INSERT into admin_audit_log with action 'agency_manual_override'
+   *  - close the dialog
+   * Receives the explainer payload back so the parent has full context.
+   */
+  onForceOwner?: (data: AgencyExplainerInput) => Promise<void> | void;
 }
 
 const reasonLabels: Record<string, string> = {
@@ -47,9 +59,20 @@ const reasonLabels: Record<string, string> = {
   static_list: "Domeniu cunoscut din listă statică",
 };
 
-export const AgencyExplainerDialog = ({ open, onOpenChange, data }: Props) => {
+export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }: Props) => {
   const [blockRows, setBlockRows] = useState<BlocklistRow[]>([]);
   const [loadingBlock, setLoadingBlock] = useState(false);
+  const [forceLoading, setForceLoading] = useState(false);
+
+  const handleForceOwner = async () => {
+    if (!data || !onForceOwner) return;
+    setForceLoading(true);
+    try {
+      await onForceOwner(data);
+    } finally {
+      setForceLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!open || !data) return;
@@ -122,16 +145,41 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data }: Props) => {
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Verdict */}
-          <div className={`rounded-lg border-2 p-3 ${toneClass[verdict.tone]}`}>
+          {/* Verdict + confidence bar */}
+          <div className={`rounded-lg border-2 p-3 space-y-2 ${toneClass[verdict.tone]}`}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="font-semibold">{verdict.label}</div>
               <Badge variant="outline" className="text-xs">
                 Nivel suspiciune: {data.suspicion.level} / 3
               </Badge>
             </div>
-            <div className="text-xs mt-1 opacity-80">
+            <div className="text-xs opacity-80">
               Contact: {data.contactName || "—"} · {data.phone || "fără telefon"}
+            </div>
+            {/* Confidence bar with thresholds */}
+            <div className="space-y-1 pt-1">
+              <Progress
+                value={(data.suspicion.level / 3) * 100}
+                className={`h-2 ${
+                  data.suspicion.level >= 3
+                    ? "[&>div]:bg-red-500"
+                    : data.suspicion.level === 2
+                    ? "[&>div]:bg-orange-500"
+                    : data.suspicion.level === 1
+                    ? "[&>div]:bg-amber-400"
+                    : "[&>div]:bg-green-500"
+                }`}
+              />
+              <div className="flex items-center justify-between text-[10px] font-mono opacity-70">
+                <span>0 · curat</span>
+                <span>1 · slab</span>
+                <span className="text-orange-700 dark:text-orange-300 font-semibold">
+                  ▲ 2 · prag „suspect"
+                </span>
+                <span className="text-red-700 dark:text-red-300 font-semibold">
+                  ▲ 3 · marcat agenție
+                </span>
+              </div>
             </div>
           </div>
 
@@ -300,6 +348,40 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data }: Props) => {
             </Section>
           )}
         </div>
+
+        <DialogFooter className="border-t pt-3 flex-col sm:flex-row gap-2">
+          <div className="text-xs text-muted-foreground flex-1 text-left">
+            {data.prospectType === "proprietar" ? (
+              <span className="text-green-700 dark:text-green-300">
+                ✅ Acest prospect este deja marcat manual ca proprietar.
+              </span>
+            ) : (
+              <span>
+                Dacă AI-ul a greșit, marchează acest contact ca proprietar verificat.
+                Telefonul și domeniul vor fi adăugate în <strong>whitelist</strong> permanent.
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={forceLoading}>
+              Închide
+            </Button>
+            {onForceOwner && data.prospectType !== "proprietar" && (
+              <Button
+                onClick={handleForceOwner}
+                disabled={forceLoading}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {forceLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Home className="h-4 w-4 mr-2" />
+                )}
+                Marchează ca Proprietar
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -322,9 +404,13 @@ const KeywordList = ({ items, tone }: { items: string[]; tone: "red" | "orange" 
     green: "border-green-400 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30",
   };
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
       {items.map((kw, i) => (
-        <Badge key={i} variant="outline" className={`text-[10px] font-mono ${cls[tone]}`}>
+        <Badge
+          key={i}
+          variant="outline"
+          className={`text-[10px] font-mono leading-tight px-1.5 py-0 ${cls[tone]}`}
+        >
           {kw.trim()}
         </Badge>
       ))}

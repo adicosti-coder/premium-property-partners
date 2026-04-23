@@ -257,6 +257,39 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_whitelist: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          domain: string | null
+          id: string
+          notes: string | null
+          phone_normalized: string | null
+          reason: string
+          source_prospect_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          notes?: string | null
+          phone_normalized?: string | null
+          reason?: string
+          source_prospect_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          notes?: string | null
+          phone_normalized?: string | null
+          reason?: string
+          source_prospect_id?: string | null
+        }
+        Relationships: []
+      }
       article_votes: {
         Row: {
           created_at: string
