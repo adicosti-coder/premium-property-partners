@@ -62,6 +62,7 @@ export default function VoiceAgentManager() {
   const [testNumber, setTestNumber] = useState<string>(() => localStorage.getItem("voice_test_number") || "+40");
   const [runningTest, setRunningTest] = useState(false);
   const [testSessionId, setTestSessionId] = useState<string | null>(null);
+  const [reportPolling, setReportPolling] = useState(false);
 
   const VOICES = [
     { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
@@ -151,15 +152,35 @@ export default function VoiceAgentManager() {
   useEffect(() => {
     if (!testSessionId) return;
     const found = calls.find((c) => c.id === testSessionId);
-    if (found && ["completed", "failed", "busy", "no-answer", "canceled", "unknown"].includes(found.status)) {
+    const hasFinalReport = !!(found?.ai_summary || found?.recording_url || (found?.transcript || []).length);
+    if (found && ["completed", "failed", "busy", "no-answer", "canceled", "unknown"].includes(found.status) && hasFinalReport) {
       setSelectedCall(found);
       setTestSessionId(null);
+      setReportPolling(false);
       toast({
         title: found.status === "completed" ? "✅ Test finalizat" : `⚠️ Test ${found.status}`,
         description: `Durată: ${found.call_duration_seconds || 0}s. Verifică audio + transcript în dialog.`,
       });
     }
   }, [calls, testSessionId]);
+
+  useEffect(() => {
+    if (!testSessionId) return;
+    setReportPolling(true);
+    const interval = window.setInterval(() => {
+      loadCalls();
+    }, 2500);
+
+    const timeout = window.setTimeout(() => {
+      setReportPolling(false);
+      window.clearInterval(interval);
+    }, 90000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [testSessionId]);
 
   const initiateCall = async () => {
     if (!/^\+[1-9]\d{6,14}$/.test(toNumber)) {
@@ -470,6 +491,7 @@ export default function VoiceAgentManager() {
           <p className="text-xs text-muted-foreground">
             ✓ Forțează ElevenLabs RO &nbsp; ✓ Recording activ &nbsp; ✓ Status callback &nbsp; ✓ Auto-deschide rezultat
           </p>
+          {reportPolling && <p className="text-xs text-primary">Se așteaptă automat raportul complet, transcriptul și audio-ul…</p>}
         </CardContent>
       </Card>
 
