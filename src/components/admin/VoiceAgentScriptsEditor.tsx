@@ -762,9 +762,14 @@ export default function VoiceAgentScriptsEditor() {
                 <Switch checked={logsScopeAll} onCheckedChange={setLogsScopeAll} id="logs-all" />
                 <label htmlFor="logs-all" className="text-xs">Arată toate scripturile (nu doar cel selectat)</label>
               </div>
-              <Button variant="ghost" size="sm" onClick={loadLogs}>
-                <RefreshCw className="h-4 w-4 mr-1" /> Reîmprospătează
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={logs.length === 0} title="Descarcă raport PDF cu logurile curente">
+                  <FileDown className="h-4 w-4 mr-1" /> Exportă pagina ca PDF
+                </Button>
+                <Button variant="ghost" size="sm" onClick={loadLogs}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Reîmprospătează
+                </Button>
+              </div>
             </div>
 
             <div className="border border-border rounded-md overflow-hidden">
