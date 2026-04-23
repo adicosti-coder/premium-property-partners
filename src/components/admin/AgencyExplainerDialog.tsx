@@ -57,7 +57,7 @@ const reasonLabels: Record<string, string> = {
   static_list: "Domeniu cunoscut din listă statică",
 };
 
-export const AgencyExplainerDialog = ({ open, onOpenChange, data }: Props) => {
+export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }: Props) => {
   const [blockRows, setBlockRows] = useState<BlocklistRow[]>([]);
   const [loadingBlock, setLoadingBlock] = useState(false);
 
