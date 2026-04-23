@@ -1112,10 +1112,15 @@ const ProspectListings = () => {
                               <button
                                 type="button"
                                 onClick={() => openAgencyExplainer(p)}
-                                title="Vezi de ce a fost marcat"
+                                title={p.auto_blacklisted_at
+                                  ? `Auto-blacklist (High Suspicion) la ${new Date(p.auto_blacklisted_at).toLocaleString("ro-RO")}`
+                                  : "Vezi de ce a fost marcat"}
                               >
-                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 cursor-pointer">
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 cursor-pointer inline-flex items-center gap-0.5">
                                   🏢 Agenție
+                                  {p.auto_blacklisted_at && (
+                                    <Zap className="h-3 w-3 text-red-500 ml-0.5" aria-label="Auto-blocat" />
+                                  )}
                                 </Badge>
                               </button>
                             )}
