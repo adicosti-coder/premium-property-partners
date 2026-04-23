@@ -432,6 +432,44 @@ export default function VoiceAgentManager() {
         </CardContent>
       </Card>
 
+      {/* FULL DIAGNOSTIC TEST */}
+      <Card className="border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50/40 to-transparent dark:from-emerald-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-emerald-600" />
+            Test complet end-to-end
+            {testSessionId && <Badge className="bg-emerald-500/15 text-emerald-700 border border-emerald-500/40 animate-pulse">ÎN CURS</Badge>}
+          </CardTitle>
+          <CardDescription>
+            Te sună ACUM cu un script scurt în română. Audio-ul, transcriptul și durata se salvează automat. Dialogul cu rezultatul se deschide singur la final.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Numărul tău (E.164)</label>
+            <Input
+              value={testNumber}
+              onChange={(e) => setTestNumber(e.target.value)}
+              placeholder="+40712345678"
+              disabled={runningTest || !!testSessionId}
+            />
+          </div>
+          <Button
+            onClick={runFullTest}
+            disabled={runningTest || !!testSessionId}
+            size="lg"
+            variant="premium"
+            className="w-full"
+          >
+            {runningTest || testSessionId ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+            {testSessionId ? "Aștept finalizarea apelului..." : "🧪 Rulează Test Complet (mă sună acum)"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            ✓ Forțează ElevenLabs RO &nbsp; ✓ Recording activ &nbsp; ✓ Status callback &nbsp; ✓ Auto-deschide rezultat
+          </p>
+        </CardContent>
+      </Card>
+
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
