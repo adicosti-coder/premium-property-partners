@@ -1017,8 +1017,49 @@ const ProspectListings = () => {
                                 🏢 Agenție
                               </Badge>
                             )}
+                            {!p.isAgency && p.suspicion && p.suspicion.level >= 2 && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-[10px] py-0 px-1.5 gap-1 cursor-help ${
+                                        p.suspicion.level === 3
+                                          ? "border-red-400 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30"
+                                          : "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30"
+                                      }`}
+                                    >
+                                      <Bot className="h-3 w-3" />
+                                      {p.suspicion.level === 3 ? "AI: probabil agenție" : "AI: suspect"}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <div className="text-xs font-semibold mb-1">Semnale AI:</div>
+                                    <ul className="text-xs list-disc list-inside space-y-0.5">
+                                      {p.suspicion.reasons.map((r, i) => <li key={i}>{r}</li>)}
+                                    </ul>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
-                          {phone && <div className="text-xs text-muted-foreground font-mono">{phone}</div>}
+                          {phone && (
+                            <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+                              {phone}
+                              {p.phoneCount > 1 && (
+                                <span
+                                  className={`text-[9px] px-1 py-0 rounded ${
+                                    p.phoneCount >= 4
+                                      ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                                      : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                                  }`}
+                                  title={`Acest telefon apare pe ${p.phoneCount} anunțuri în lista curentă`}
+                                >
+                                  ×{p.phoneCount}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <button
                             type="button"
                             onClick={() => handleToggleProspectType(p)}
