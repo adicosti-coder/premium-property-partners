@@ -378,7 +378,18 @@ const ProspectListings = () => {
     }
   }, [queryError]);
 
-  // Compute geo match per prospect (memoized) - safe fallback if function throws
+  // Phone recurrence map across the loaded dataset (multi-listing detection).
+  const phoneCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    prospects.forEach((p) => {
+      const key = p.phone_normalized || p.contact_phone;
+      if (!key) return;
+      m.set(key, (m.get(key) || 0) + 1);
+    });
+    return m;
+  }, [prospects]);
+
+  // Compute geo match + agency suspicion per prospect.
   const enriched = useMemo(
     () => prospects.map((p) => {
       let geo: { score: number; found: string[]; primary: string | null } = { score: 0, found: [], primary: null };
@@ -388,9 +399,12 @@ const ProspectListings = () => {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
       const isAgency = detectIsAgency(p);
-      return { ...p, geo, isAgency };
+      const phoneKey = p.phone_normalized || p.contact_phone || "";
+      const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
+      const suspicion = computeAgencySuspicion(p, phoneCount);
+      return { ...p, geo, isAgency, phoneCount, suspicion };
     }),
-    [prospects]
+    [prospects, phoneCounts]
   );
 
   // Count agencies before filtering, so we can show "X agenții ascunse"
