@@ -82,6 +82,7 @@ const ProspectListings = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const { isAdmin, isLoading: adminLoading } = useAdminRole(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -92,12 +93,30 @@ const ProspectListings = () => {
   const [resuming, setResuming] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
+      setAuthReady(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (!mounted) return;
+      setUser(s?.user ?? null);
+      setAuthReady(true);
+    });
+
     return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
+    if (!authReady || adminLoading) return;
+
     if (!adminLoading && !isAdmin && user) {
       console.warn("[ProspectListings] Access denied for user:", user.email, user.id);
       toast({
@@ -110,7 +129,7 @@ const ProspectListings = () => {
     if (!adminLoading && !user) {
       navigate("/auth?redirect=/prospect-listings");
     }
-  }, [adminLoading, isAdmin, user, navigate]);
+  }, [authReady, adminLoading, isAdmin, user, navigate]);
 
   const { data: prospects = [], isLoading, refetch, error: queryError } = useQuery({
     queryKey: ["prospect-listings", statusFilter, categoryFilter],
@@ -131,7 +150,7 @@ const ProspectListings = () => {
       console.log("[ProspectListings] Loaded", data?.length ?? 0, "rows");
       return (data || []) as Prospect[];
     },
-    enabled: isAdmin,
+    enabled: authReady && isAdmin,
     refetchInterval: 30_000,
     retry: 1,
   });
@@ -292,7 +311,7 @@ const ProspectListings = () => {
     toast({ title: `Export CSV`, description: `${rows.length} prospecte exportate.` });
   };
 
-  if (adminLoading) {
+  if (!authReady || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
