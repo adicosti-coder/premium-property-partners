@@ -4020,33 +4020,66 @@ export type Database = {
           allowed_hours_start: number
           auto_dial_enabled: boolean
           default_objective: string
+          elevenlabs_model_id: string
+          elevenlabs_voice_id: string
           id: number
           max_calls_per_day: number
           min_lead_score: number
+          notify_email: string | null
+          notify_email_enabled: boolean
+          notify_whatsapp_enabled: boolean
+          tts_provider: string
           updated_at: string
           updated_by: string | null
+          voice_similarity_boost: number
+          voice_speed: number
+          voice_stability: number
+          voice_style: number
+          voice_use_speaker_boost: boolean
         }
         Insert: {
           allowed_hours_end?: number
           allowed_hours_start?: number
           auto_dial_enabled?: boolean
           default_objective?: string
+          elevenlabs_model_id?: string
+          elevenlabs_voice_id?: string
           id?: number
           max_calls_per_day?: number
           min_lead_score?: number
+          notify_email?: string | null
+          notify_email_enabled?: boolean
+          notify_whatsapp_enabled?: boolean
+          tts_provider?: string
           updated_at?: string
           updated_by?: string | null
+          voice_similarity_boost?: number
+          voice_speed?: number
+          voice_stability?: number
+          voice_style?: number
+          voice_use_speaker_boost?: boolean
         }
         Update: {
           allowed_hours_end?: number
           allowed_hours_start?: number
           auto_dial_enabled?: boolean
           default_objective?: string
+          elevenlabs_model_id?: string
+          elevenlabs_voice_id?: string
           id?: number
           max_calls_per_day?: number
           min_lead_score?: number
+          notify_email?: string | null
+          notify_email_enabled?: boolean
+          notify_whatsapp_enabled?: boolean
+          tts_provider?: string
           updated_at?: string
           updated_by?: string | null
+          voice_similarity_boost?: number
+          voice_speed?: number
+          voice_stability?: number
+          voice_style?: number
+          voice_use_speaker_boost?: boolean
         }
         Relationships: []
       }
