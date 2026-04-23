@@ -103,9 +103,29 @@ serve(async (req) => {
       appointment_iso: null,
     };
 
-    const latestRecordingUrl = recordingReady ? `${recordingUrl}.mp3` : session.recording_url || null;
+    const latestRecordingUrl_dbg = recordingReady ? `${recordingUrl}.mp3` : session.recording_url || null;
     const reportStatusReached = finalStatuses.includes(derivedStatus);
     const shouldCreateReport = !session.ai_summary && (reportStatusReached || recordingReady);
+
+    await pushDebugLog(supabase, sessionId, {
+      stage: "status_callback",
+      callbackType,
+      callStatus,
+      recordingStatus,
+      hasRecording,
+      recordingReady,
+      duration,
+      derivedStatus,
+      reportStatusReached,
+      detectedLanguage,
+      transcriptLen: transcript.length,
+      hasExistingSummary: !!session.ai_summary,
+      shouldCreateReport,
+      reportSkipReason: !shouldCreateReport
+        ? (session.ai_summary ? "report_already_exists" : `not_final_yet (status=${derivedStatus}, recordingReady=${recordingReady})`)
+        : null,
+      recordingUrl: latestRecordingUrl_dbg,
+    });
 
     if (shouldCreateReport) {
       if (detectedLanguage === "en" && (session.language_retry_count || 0) < 1) {
