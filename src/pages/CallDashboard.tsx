@@ -215,10 +215,13 @@ export default function CallDashboard() {
   }, [dateFilter]);
 
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
+    const min = parseInt(minScore) || 0;
+    const enriched = rows.map((r) => ({ ...r, hot_score: computeHotScore(r) }));
+    const list = enriched.filter((r) => {
       if (outcomeFilter !== "all" && r.outcome !== outcomeFilter) return false;
       if (sentimentFilter !== "all" && r.sentiment !== sentimentFilter) return false;
       if (interestFilter !== "all" && r.interest_type !== interestFilter) return false;
+      if (r.hot_score < min) return false;
       if (search) {
         const q = search.toLowerCase();
         const blob = `${r.contact_name || ""} ${r.contact_phone || ""} ${r.property_title || ""} ${r.ai_summary || ""}`.toLowerCase();
@@ -226,7 +229,10 @@ export default function CallDashboard() {
       }
       return true;
     });
-  }, [rows, outcomeFilter, sentimentFilter, interestFilter, search]);
+    if (sortByScore) list.sort((a, b) => b.hot_score - a.hot_score);
+    else list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    return list;
+  }, [rows, outcomeFilter, sentimentFilter, interestFilter, search, minScore, sortByScore]);
 
   const stats = useMemo(() => {
     const total = filtered.length;
