@@ -9,7 +9,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
+import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 
@@ -40,11 +42,75 @@ const computeHotScore = (r: { outcome: string | null; sentiment: string | null; 
   return Math.min(100, Math.max(0, Math.round(score)));
 };
 
+// Detailed breakdown for tooltip explanation
+const scoreBreakdown = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }) => {
+  const parts: { label: string; pts: number }[] = [];
+  const o = (r.outcome || "").toLowerCase();
+  const s = (r.sentiment || "").toLowerCase();
+
+  if (["interested", "qualified", "viewing"].includes(o)) parts.push({ label: `Outcome: ${OUTCOME_LABEL[o] || o}`, pts: 60 });
+  else if (o === "callback") parts.push({ label: "Outcome: Callback solicitat", pts: 45 });
+  else if (["contacted", "calling"].includes(o)) parts.push({ label: "Outcome: În contact", pts: 25 });
+  else if (["voicemail", "no_answer"].includes(o)) parts.push({ label: "Outcome: Fără răspuns / voicemail", pts: 15 });
+  else if (["rejected", "not_qualified"].includes(o)) parts.push({ label: "Outcome: Respins", pts: 5 });
+  else parts.push({ label: "Outcome: Necunoscut / nou", pts: 20 });
+
+  if (["positive", "pozitiv"].includes(s)) parts.push({ label: "Sentiment pozitiv", pts: 25 });
+  else if (["neutral", "neutru"].includes(s)) parts.push({ label: "Sentiment neutru", pts: 12 });
+  else if (["negative", "negativ"].includes(s)) parts.push({ label: "Sentiment negativ", pts: 0 });
+  else parts.push({ label: "Sentiment necunoscut", pts: 8 });
+
+  if (r.lead_score != null) {
+    const pts = Math.round((Math.min(100, Math.max(0, r.lead_score)) / 100) * 15);
+    parts.push({ label: `Lead score (${r.lead_score}/100)`, pts });
+  } else {
+    parts.push({ label: "Lead score lipsă", pts: 5 });
+  }
+  return parts;
+};
+
 const scoreClasses = (score: number) => {
   if (score >= 80) return "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40";
   if (score >= 40) return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40";
   return "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40";
 };
+
+// Popover with score explanation — works on hover (desktop) and click (mobile)
+function ScoreBadge({ row, mobile = false }: { row: any; mobile?: boolean }) {
+  const parts = scoreBreakdown(row);
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold cursor-help hover:opacity-80 transition ${scoreClasses(row.hot_score)}`}
+          aria-label={`Hot score ${row.hot_score} din 100 — apasă pentru detalii`}
+        >
+          {mobile && <span>🔥</span>}{row.hot_score}
+          <Info className="w-3 h-3 opacity-60" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3" align="end">
+        <div className="text-xs font-semibold mb-2 flex items-center justify-between">
+          <span>Hot Score: {row.hot_score}/100</span>
+          <Badge variant="outline" className={scoreClasses(row.hot_score)}>
+            {row.hot_score >= 80 ? "Fierbinte" : row.hot_score >= 40 ? "Cald" : "Rece"}
+          </Badge>
+        </div>
+        <ul className="space-y-1 text-xs">
+          {parts.map((p, i) => (
+            <li key={i} className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground truncate">{p.label}</span>
+              <span className={`font-semibold ${p.pts > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                +{p.pts}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 type CallRow = {
   id: string;
@@ -102,6 +168,7 @@ export default function CallDashboard() {
   const [minScore, setMinScore] = useState<string>("0");
   const [sortByScore, setSortByScore] = useState(true);
   const [transcriptOpen, setTranscriptOpen] = useState<CallRow | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50); // incremental rendering for performance
 
   const fetchAll = async () => {
     setLoading(true);
@@ -233,6 +300,11 @@ export default function CallDashboard() {
     else list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     return list;
   }, [rows, outcomeFilter, sentimentFilter, interestFilter, search, minScore, sortByScore]);
+
+  // Reset visible count when filters change → page stays light
+  useEffect(() => { setVisibleCount(50); }, [outcomeFilter, sentimentFilter, interestFilter, search, minScore, sortByScore, dateFilter]);
+
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   const stats = useMemo(() => {
     const total = filtered.length;
@@ -417,20 +489,21 @@ export default function CallDashboard() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3 pt-3 border-t">
               <div className="lg:col-span-2">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">
                   Scor minim hot lead: <span className="text-foreground font-bold">{minScore}</span>
+                  {parseInt(minScore) >= 70 && <span className="ml-2 text-[10px] text-amber-600">🔥 doar lead-uri fierbinți</span>}
                 </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={minScore}
-                  onChange={(e) => setMinScore(e.target.value)}
-                  className="w-full accent-primary"
+                <Slider
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={[parseInt(minScore) || 0]}
+                  onValueChange={(v) => setMinScore(String(v[0]))}
+                  aria-label="Scor minim"
+                  className="py-1"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                  <span>0</span><span>50</span><span>100 🔥</span>
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span>0 (toate)</span><span>50</span><span>100 🔥</span>
                 </div>
               </div>
               <Button
@@ -484,7 +557,7 @@ export default function CallDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((r: any) => (
+                  {visible.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="text-xs whitespace-nowrap">{formatDate(r.created_at)}</TableCell>
                       <TableCell>
@@ -517,9 +590,7 @@ export default function CallDashboard() {
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`font-bold ${scoreClasses(r.hot_score)}`}>
-                          {r.hot_score}
-                        </Badge>
+                        <ScoreBadge row={r} />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-0.5">
@@ -565,7 +636,7 @@ export default function CallDashboard() {
 
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
-              {filtered.map((r: any) => (
+              {visible.map((r: any) => (
                 <Card key={r.id} className="border">
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -574,9 +645,7 @@ export default function CallDashboard() {
                         {r.contact_phone && <div className="text-xs text-muted-foreground">{r.contact_phone}</div>}
                         <div className="text-[10px] text-muted-foreground mt-0.5">{formatDate(r.created_at)}</div>
                       </div>
-                      <Badge variant="outline" className={`font-bold shrink-0 ${scoreClasses(r.hot_score)}`}>
-                        🔥 {r.hot_score}
-                      </Badge>
+                      <ScoreBadge row={r} mobile />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant="outline" className="text-[10px]">{r.source}</Badge>
@@ -603,6 +672,24 @@ export default function CallDashboard() {
                 <p className="text-center text-muted-foreground py-8 text-sm">Niciun apel găsit</p>
               )}
             </div>
+
+            {/* Incremental loading: Load more */}
+            {visible.length < filtered.length && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVisibleCount((c) => c + 50)}
+                >
+                  Încarcă încă 50 ({filtered.length - visible.length} rămase)
+                </Button>
+              </div>
+            )}
+            {visible.length > 0 && (
+              <p className="text-center text-[10px] text-muted-foreground mt-3">
+                Afișat {visible.length} din {filtered.length} (cache local pentru performanță)
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
