@@ -315,7 +315,35 @@ const ProspectListings = () => {
     }
   };
 
-  const handleExportCSV = () => {
+  const handleLaunchCampaign = async () => {
+    if (!campaignTargets.length) {
+      toast({ title: "Niciun lead eligibil", description: "Ajustează filtrele.", variant: "destructive" });
+      return;
+    }
+    setCampaignRunning(true);
+    setCampaignOpen(false);
+    try {
+      const ids = campaignTargets.map((p) => p.id);
+      // Optimistically mark in queue locally for instant UI feedback
+      qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
+        (old || []).map((p) => ids.includes(p.id) ? { ...p, lifecycle_status: "calling", auto_call_triggered_at: new Date().toISOString() } : p)
+      );
+      const { data, error } = await supabase.functions.invoke("voice-agent-bulk-campaign", {
+        body: { prospect_ids: ids, zone: zoneFilter === "all" ? null : zoneFilter },
+      });
+      if (error) throw error;
+      toast({
+        title: `🚀 Campanie lansată`,
+        description: `${data?.dialed ?? 0}/${ids.length} apeluri inițiate${zoneFilter !== "all" ? ` în zona ${zoneFilter}` : ""}. Vezi Call Dashboard pentru rezultate.`,
+      });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Campanie eșuată", description: e.message, variant: "destructive" });
+      refetch();
+    } finally {
+      setCampaignRunning(false);
+    }
+  };
     const headers = ["Score", "AI Score", "Geo Score", "Sentiment", "Urgency", "Title", "Category", "Phone", "Contact", "Location", "Zone", "Price", "Status", "Source URL"];
     const rows = filtered.map((p) => [
       p.score ?? "",
