@@ -245,6 +245,11 @@ function speakXml(text: string, audioUrl: string | null): string {
   return `<Say language="ro-RO">${escapeXml(text)}</Say>`;
 }
 
+function gatherXml(actionUrl: string): string {
+  const safeUrl = escapeXml(actionUrl);
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" speechTimeout="auto" timeout="6" action="${safeUrl}" method="POST"/>`;
+}
+
 function isCustomPrompt(prompt?: string | null): boolean {
   return typeof prompt === "string" && prompt.startsWith("__CUSTOM_PROMPT__\n");
 }
@@ -484,12 +489,12 @@ serve(async (req) => {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
-    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${sessionId}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
     return xmlResponse(
       `<Response>
         ${speakXml(aiReply, audioUrl)}
-        <Gather input="speech" language="ro-RO" speechModel="phone_call" speechTimeout="auto" timeout="6" action="${nextUrl}" method="POST"/>
-        <Redirect method="POST">${nextUrl}</Redirect>
+        ${gatherXml(nextUrl)}
+        <Redirect method="POST">${escapeXml(nextUrl)}</Redirect>
       </Response>`
     );
   } catch (e: any) {
