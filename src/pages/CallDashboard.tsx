@@ -301,6 +301,11 @@ export default function CallDashboard() {
     return list;
   }, [rows, outcomeFilter, sentimentFilter, interestFilter, search, minScore, sortByScore]);
 
+  // Reset visible count when filters change → page stays light
+  useEffect(() => { setVisibleCount(50); }, [outcomeFilter, sentimentFilter, interestFilter, search, minScore, sortByScore, dateFilter]);
+
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
   const stats = useMemo(() => {
     const total = filtered.length;
     const interested = filtered.filter((r) => ["interested", "qualified", "viewing", "callback"].includes(r.outcome || "")).length;
