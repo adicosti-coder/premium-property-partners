@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import type { User } from "@supabase/supabase-js";
@@ -97,7 +98,7 @@ const sentimentEmoji: Record<string, string> = {
 // cubimobiliare.ro, cauta-imobiliare.ro, hitchmosher.ro, necesit.ro, etc.
 
 // Keywords found in title / description / contact_name → agency.
-const AGENCY_KEYWORDS = [
+export const AGENCY_KEYWORDS = [
   // RO labels
   "agentie", "agenție", "agenti", "agenți", "agentia", "agenția",
   "agentie imobiliara", "agenție imobiliară",
@@ -120,7 +121,7 @@ const AGENCY_KEYWORDS = [
 
 // "Soft" agency signals — high-suspicion phrases used in agency listings even
 // when the brand isn't named. Trigger the 🤖 badge but NOT a hard block.
-const AGENCY_SOFT_KEYWORDS = [
+export const AGENCY_SOFT_KEYWORDS = [
   "comision", "comision 0", "comision agentie", "comision agenție",
   "intermedi", "intermediere", "intermediar",
   "vizionari prin agentie", "vizionări prin agenție", "vizionari prin agenție",
@@ -134,7 +135,7 @@ const AGENCY_SOFT_KEYWORDS = [
 ];
 
 // Domains that are entirely agencies / aggregators / portals → mark as agency.
-const AGENCY_DOMAINS = new Set([
+export const AGENCY_DOMAINS = new Set([
   "blitz.ro", "www.blitz.ro",
   "remax.ro", "www.remax.ro",
   "designimobiliare.ro", "www.designimobiliare.ro",
@@ -183,7 +184,7 @@ const AGENCY_DOMAINS = new Set([
 ]);
 
 // URL substrings that always mean "agency profile / developer page / aggregator".
-const AGENCY_URL_PATTERNS = [
+export const AGENCY_URL_PATTERNS = [
   "/agentie/", "/agentii/", "/companii/agentii/", "/companii/dezvoltatori/",
   "/dezvoltator/", "/developer/", "/agency/",
 ];
@@ -200,7 +201,7 @@ const NOISE_URL_PATTERNS = [
 ];
 
 // Strong "this IS an owner" signals in URL or title — override agency hits.
-const OWNER_SIGNALS = [
+export const OWNER_SIGNALS = [
   "proprietar", "direct-de-la-proprietar", "direct proprietar",
   "de la proprietar", "fara comision", "fără comision", "fara intermediar",
 ];
@@ -312,7 +313,42 @@ const ProspectListings = () => {
   const [stopping, setStopping] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
   const [pendingTypeFilter, setPendingTypeFilter] = useState<ProspectTypeFilter | null>(null);
+  const [explainerOpen, setExplainerOpen] = useState(false);
+  const [explainerData, setExplainerData] = useState<AgencyExplainerInput | null>(null);
   const CAMPAIGN_LIMIT = 30;
+
+  const openAgencyExplainer = (p: any) => {
+    const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+    const url = (p.source_url || "").toLowerCase();
+    const hardKeywordHits = AGENCY_KEYWORDS.filter((kw) => blob.includes(kw));
+    const softKeywordHits = AGENCY_SOFT_KEYWORDS.filter((kw) => blob.includes(kw));
+    const ownerSignalHits = OWNER_SIGNALS.filter((s) => url.includes(s) || blob.includes(s));
+    let domain: string | null = null;
+    try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; }
+    catch { domain = null; }
+    const domainBlocked = !!(domain && AGENCY_DOMAINS.has(domain));
+    const urlPatternBlocked = AGENCY_URL_PATTERNS.some((pat) => url.includes(pat));
+
+    setExplainerData({
+      prospectId: p.id,
+      contactName: p.contact_name ?? null,
+      phone: p.phone_normalized || p.contact_phone || null,
+      phoneNormalized: p.phone_normalized ?? null,
+      sourceUrl: p.source_url ?? null,
+      isAgency: !!p.isAgency,
+      prospectType: p.prospect_type ?? null,
+      phoneCount: p.phoneCount ?? 0,
+      suspicion: p.suspicion ?? { level: 0, reasons: [] },
+      hardKeywordHits,
+      softKeywordHits,
+      domain,
+      domainBlocked,
+      urlPatternBlocked,
+      ownerSignalHits,
+    });
+    setExplainerOpen(true);
+  };
+
 
   useEffect(() => {
     let mounted = true;
@@ -1013,34 +1049,34 @@ const ProspectListings = () => {
                           <div className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
                             {p.contact_name || "—"}
                             {p.isAgency && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300">
-                                🏢 Agenție
-                              </Badge>
+                              <button
+                                type="button"
+                                onClick={() => openAgencyExplainer(p)}
+                                title="Vezi de ce a fost marcat"
+                              >
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 cursor-pointer">
+                                  🏢 Agenție
+                                </Badge>
+                              </button>
                             )}
                             {!p.isAgency && p.suspicion && p.suspicion.level >= 2 && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge
-                                      variant="outline"
-                                      className={`text-[10px] py-0 px-1.5 gap-1 cursor-help ${
-                                        p.suspicion.level === 3
-                                          ? "border-red-400 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30"
-                                          : "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30"
-                                      }`}
-                                    >
-                                      <Bot className="h-3 w-3" />
-                                      {p.suspicion.level === 3 ? "AI: probabil agenție" : "AI: suspect"}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-xs">
-                                    <div className="text-xs font-semibold mb-1">Semnale AI:</div>
-                                    <ul className="text-xs list-disc list-inside space-y-0.5">
-                                      {p.suspicion.reasons.map((r, i) => <li key={i}>{r}</li>)}
-                                    </ul>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <button
+                                type="button"
+                                onClick={() => openAgencyExplainer(p)}
+                                title="Vezi semnalele AI"
+                              >
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] py-0 px-1.5 gap-1 cursor-pointer hover:opacity-80 ${
+                                    p.suspicion.level === 3
+                                      ? "border-red-400 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30"
+                                      : "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30"
+                                  }`}
+                                >
+                                  <Bot className="h-3 w-3" />
+                                  {p.suspicion.level === 3 ? "AI: probabil agenție" : "AI: suspect"}
+                                </Badge>
+                              </button>
                             )}
                           </div>
                           {phone && (
@@ -1224,6 +1260,12 @@ const ProspectListings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AgencyExplainerDialog
+        open={explainerOpen}
+        onOpenChange={setExplainerOpen}
+        data={explainerData}
+      />
     </div>
   );
 };
