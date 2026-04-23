@@ -404,9 +404,13 @@ const KeywordList = ({ items, tone }: { items: string[]; tone: "red" | "orange" 
     green: "border-green-400 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30",
   };
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
       {items.map((kw, i) => (
-        <Badge key={i} variant="outline" className={`text-[10px] font-mono ${cls[tone]}`}>
+        <Badge
+          key={i}
+          variant="outline"
+          className={`text-[10px] font-mono leading-tight px-1.5 py-0 ${cls[tone]}`}
+        >
           {kw.trim()}
         </Badge>
       ))}
