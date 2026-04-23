@@ -62,6 +62,17 @@ const reasonLabels: Record<string, string> = {
 export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }: Props) => {
   const [blockRows, setBlockRows] = useState<BlocklistRow[]>([]);
   const [loadingBlock, setLoadingBlock] = useState(false);
+  const [forceLoading, setForceLoading] = useState(false);
+
+  const handleForceOwner = async () => {
+    if (!data || !onForceOwner) return;
+    setForceLoading(true);
+    try {
+      await onForceOwner(data);
+    } finally {
+      setForceLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!open || !data) return;
