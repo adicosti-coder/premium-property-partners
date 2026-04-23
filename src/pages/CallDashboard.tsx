@@ -9,9 +9,42 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, Phone, RefreshCw, Search, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
+
+// Compute a 0-100 hotness score based on outcome + sentiment + lead_score
+const computeHotScore = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }): number => {
+  let score = 0;
+  const o = (r.outcome || "").toLowerCase();
+  const s = (r.sentiment || "").toLowerCase();
+
+  // Outcome weight (max 60)
+  if (["interested", "qualified", "viewing"].includes(o)) score += 60;
+  else if (o === "callback") score += 45;
+  else if (["contacted", "calling"].includes(o)) score += 25;
+  else if (["voicemail", "no_answer"].includes(o)) score += 15;
+  else if (["rejected", "not_qualified"].includes(o)) score += 5;
+  else score += 20; // unknown / new
+
+  // Sentiment weight (max 25)
+  if (["positive", "pozitiv"].includes(s)) score += 25;
+  else if (["neutral", "neutru"].includes(s)) score += 12;
+  else if (["negative", "negativ"].includes(s)) score += 0;
+  else score += 8;
+
+  // Lead score blend (max 15)
+  if (r.lead_score != null) score += Math.round((Math.min(100, Math.max(0, r.lead_score)) / 100) * 15);
+  else score += 5;
+
+  return Math.min(100, Math.max(0, Math.round(score)));
+};
+
+const scoreClasses = (score: number) => {
+  if (score >= 80) return "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40";
+  if (score >= 40) return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40";
+  return "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40";
+};
 
 type CallRow = {
   id: string;
@@ -66,6 +99,8 @@ export default function CallDashboard() {
   const [sentimentFilter, setSentimentFilter] = useState<string>("all");
   const [interestFilter, setInterestFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("7"); // days
+  const [minScore, setMinScore] = useState<string>("0");
+  const [sortByScore, setSortByScore] = useState(true);
   const [transcriptOpen, setTranscriptOpen] = useState<CallRow | null>(null);
 
   const fetchAll = async () => {
@@ -180,10 +215,13 @@ export default function CallDashboard() {
   }, [dateFilter]);
 
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
+    const min = parseInt(minScore) || 0;
+    const enriched = rows.map((r) => ({ ...r, hot_score: computeHotScore(r) }));
+    const list = enriched.filter((r) => {
       if (outcomeFilter !== "all" && r.outcome !== outcomeFilter) return false;
       if (sentimentFilter !== "all" && r.sentiment !== sentimentFilter) return false;
       if (interestFilter !== "all" && r.interest_type !== interestFilter) return false;
+      if (r.hot_score < min) return false;
       if (search) {
         const q = search.toLowerCase();
         const blob = `${r.contact_name || ""} ${r.contact_phone || ""} ${r.property_title || ""} ${r.ai_summary || ""}`.toLowerCase();
@@ -191,7 +229,10 @@ export default function CallDashboard() {
       }
       return true;
     });
-  }, [rows, outcomeFilter, sentimentFilter, interestFilter, search]);
+    if (sortByScore) list.sort((a, b) => b.hot_score - a.hot_score);
+    else list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    return list;
+  }, [rows, outcomeFilter, sentimentFilter, interestFilter, search, minScore, sortByScore]);
 
   const stats = useMemo(() => {
     const total = filtered.length;
@@ -223,6 +264,39 @@ export default function CallDashboard() {
     toast.success("WhatsApp deschis cu mesaj pre-completat");
   };
 
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("Nimic de exportat — modifică filtrele");
+      return;
+    }
+    const headers = ["Data", "Sursa", "Contact", "Telefon", "Proprietate", "Outcome", "Sentiment", "Tip Interes", "Lead Score", "Hot Score", "Sumar"];
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    const lines = [headers.join(",")];
+    filtered.forEach((r: any) => {
+      lines.push([
+        formatDate(r.created_at),
+        r.source,
+        r.contact_name || "",
+        r.contact_phone || "",
+        r.property_title || "",
+        OUTCOME_LABEL[r.outcome || ""] || r.outcome || "",
+        r.sentiment || "",
+        INTEREST_LABEL[r.interest_type || ""] || r.interest_type || "",
+        r.lead_score ?? "",
+        r.hot_score ?? "",
+        r.ai_summary || "",
+      ].map(escape).join(","));
+    });
+    const csv = "\uFEFF" + lines.join("\n"); // BOM for Excel UTF-8
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `apeluri-realtrust-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success(`Exportat ${filtered.length} apeluri`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -244,9 +318,14 @@ export default function CallDashboard() {
               Vedere unificată: Voice Agent AI + Scraper Leads + Prospecți
             </p>
           </div>
-          <Button onClick={fetchAll} variant="outline" size="sm" disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={exportCSV} variant="outline" size="sm" disabled={filtered.length === 0}>
+              <Download className="w-4 h-4 mr-2" /> Export CSV ({filtered.length})
+            </Button>
+            <Button onClick={fetchAll} variant="outline" size="sm" disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
+            </Button>
+          </div>
         </div>
 
         {/* Mini stats */}
@@ -336,6 +415,41 @@ export default function CallDashboard() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3 pt-3 border-t">
+              <div className="lg:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Scor minim hot lead: <span className="text-foreground font-bold">{minScore}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={minScore}
+                  onChange={(e) => setMinScore(e.target.value)}
+                  className="w-full accent-primary"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                  <span>0</span><span>50</span><span>100 🔥</span>
+                </div>
+              </div>
+              <Button
+                variant={sortByScore ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortByScore(true)}
+                className="h-9"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1" /> Sortare după scor
+              </Button>
+              <Button
+                variant={!sortByScore ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortByScore(false)}
+                className="h-9"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1" /> Sortare după dată
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -356,12 +470,21 @@ export default function CallDashboard() {
                     <TableHead>Outcome</TableHead>
                     <TableHead>Interes</TableHead>
                     <TableHead>Sentiment</TableHead>
-                    <TableHead>Scor</TableHead>
+                    <TableHead>Lead</TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => setSortByScore(true)}
+                        className="flex items-center gap-1 hover:text-primary transition"
+                        title="Sortare după hot score"
+                      >
+                        🔥 Hot {sortByScore && <ArrowUpDown className="w-3 h-3" />}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((r) => (
+                  {filtered.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="text-xs whitespace-nowrap">{formatDate(r.created_at)}</TableCell>
                       <TableCell>
@@ -390,45 +513,51 @@ export default function CallDashboard() {
                       </TableCell>
                       <TableCell>
                         {r.lead_score != null ? (
-                          <span className={`font-semibold ${r.lead_score > 80 ? "text-green-600" : r.lead_score > 50 ? "text-amber-600" : "text-muted-foreground"}`}>
-                            {r.lead_score}
-                          </span>
+                          <span className="text-sm text-muted-foreground">{r.lead_score}</span>
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`font-bold ${scoreClasses(r.hot_score)}`}>
+                          {r.hot_score}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-0.5">
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
                             disabled={!r.transcript && !r.ai_summary}
                             onClick={() => setTranscriptOpen(r)}
                             title="Vezi transcript"
                           >
-                            <FileText className="w-4 h-4" />
+                            <FileText className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
                             disabled={!r.recording_url}
                             onClick={() => r.recording_url && window.open(r.recording_url, "_blank")}
                             title="Ascultă audio"
                           >
-                            <Headphones className="w-4 h-4" />
+                            <Headphones className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
                             onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}
                             title="Trimite catalog WhatsApp"
                           >
-                            <MessageCircle className="w-4 h-4 text-green-600" />
+                            <MessageCircle className="w-3.5 h-3.5 text-green-600" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
                   {filtered.length === 0 && !loading && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Niciun apel găsit pentru filtrele selectate</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Niciun apel găsit pentru filtrele selectate</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -436,7 +565,7 @@ export default function CallDashboard() {
 
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
-              {filtered.map((r) => (
+              {filtered.map((r: any) => (
                 <Card key={r.id} className="border">
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -445,23 +574,26 @@ export default function CallDashboard() {
                         {r.contact_phone && <div className="text-xs text-muted-foreground">{r.contact_phone}</div>}
                         <div className="text-[10px] text-muted-foreground mt-0.5">{formatDate(r.created_at)}</div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">{r.source}</Badge>
+                      <Badge variant="outline" className={`font-bold shrink-0 ${scoreClasses(r.hot_score)}`}>
+                        🔥 {r.hot_score}
+                      </Badge>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">{r.source}</Badge>
                       {r.outcome && <Badge variant="secondary" className="text-xs">{OUTCOME_LABEL[r.outcome] || r.outcome}</Badge>}
                       {r.interest_type && <Badge variant="outline" className="text-xs">{INTEREST_LABEL[r.interest_type] || r.interest_type}</Badge>}
                       {r.sentiment && <Badge className={`text-xs ${SENTIMENT_COLOR[r.sentiment] || ""}`} variant="outline">{r.sentiment}</Badge>}
-                      {r.lead_score != null && <Badge variant="outline" className="text-xs">Scor: {r.lead_score}</Badge>}
+                      {r.lead_score != null && <Badge variant="outline" className="text-xs">Lead: {r.lead_score}</Badge>}
                     </div>
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button size="sm" variant="outline" className="flex-1" disabled={!r.transcript && !r.ai_summary} onClick={() => setTranscriptOpen(r)}>
-                        <FileText className="w-3.5 h-3.5 mr-1" /> Transcript
+                    <div className="flex gap-1 pt-2 border-t">
+                      <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" disabled={!r.transcript && !r.ai_summary} onClick={() => setTranscriptOpen(r)}>
+                        <FileText className="w-3.5 h-3.5 mr-1" /> <span className="text-xs">Transcript</span>
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1" disabled={!r.recording_url} onClick={() => r.recording_url && window.open(r.recording_url, "_blank")}>
-                        <Headphones className="w-3.5 h-3.5 mr-1" /> Audio
+                      <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" disabled={!r.recording_url} onClick={() => r.recording_url && window.open(r.recording_url, "_blank")}>
+                        <Headphones className="w-3.5 h-3.5 mr-1" /> <span className="text-xs">Audio</span>
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}>
-                        <MessageCircle className="w-3.5 h-3.5 mr-1 text-green-600" /> WA
+                      <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}>
+                        <MessageCircle className="w-3.5 h-3.5 mr-1 text-green-600" /> <span className="text-xs">WA</span>
                       </Button>
                     </div>
                   </CardContent>
