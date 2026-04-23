@@ -1049,34 +1049,34 @@ const ProspectListings = () => {
                           <div className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
                             {p.contact_name || "—"}
                             {p.isAgency && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300">
-                                🏢 Agenție
-                              </Badge>
+                              <button
+                                type="button"
+                                onClick={() => openAgencyExplainer(p)}
+                                title="Vezi de ce a fost marcat"
+                              >
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 cursor-pointer">
+                                  🏢 Agenție
+                                </Badge>
+                              </button>
                             )}
                             {!p.isAgency && p.suspicion && p.suspicion.level >= 2 && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge
-                                      variant="outline"
-                                      className={`text-[10px] py-0 px-1.5 gap-1 cursor-help ${
-                                        p.suspicion.level === 3
-                                          ? "border-red-400 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30"
-                                          : "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30"
-                                      }`}
-                                    >
-                                      <Bot className="h-3 w-3" />
-                                      {p.suspicion.level === 3 ? "AI: probabil agenție" : "AI: suspect"}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-xs">
-                                    <div className="text-xs font-semibold mb-1">Semnale AI:</div>
-                                    <ul className="text-xs list-disc list-inside space-y-0.5">
-                                      {p.suspicion.reasons.map((r, i) => <li key={i}>{r}</li>)}
-                                    </ul>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <button
+                                type="button"
+                                onClick={() => openAgencyExplainer(p)}
+                                title="Vezi semnalele AI"
+                              >
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] py-0 px-1.5 gap-1 cursor-pointer hover:opacity-80 ${
+                                    p.suspicion.level === 3
+                                      ? "border-red-400 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/30"
+                                      : "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30"
+                                  }`}
+                                >
+                                  <Bot className="h-3 w-3" />
+                                  {p.suspicion.level === 3 ? "AI: probabil agenție" : "AI: suspect"}
+                                </Badge>
+                              </button>
                             )}
                           </div>
                           {phone && (
