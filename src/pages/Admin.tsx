@@ -58,6 +58,7 @@ import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
 import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
+import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -441,6 +442,10 @@ const Admin = () => {
               <Phone className="w-4 h-4" />
               Voice Agent
             </TabsTrigger>
+            <TabsTrigger value="agency-ai" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Configurare AI
+            </TabsTrigger>
             <TabsTrigger value="prospect-listings" className="flex items-center gap-2 relative" onClick={() => navigate("/admin/prospect-listings")}>
               <Phone className="w-4 h-4" />
               Prospect Listings
@@ -515,6 +520,7 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
           <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
+          <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
         </Tabs>
       </div>
       </AdminMFAGuard>

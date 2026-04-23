@@ -257,6 +257,66 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_detection_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          multi_listing_threshold: number
+          multi_listing_window_days: number
+          suspicion_threshold: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          multi_listing_threshold?: number
+          multi_listing_window_days?: number
+          suspicion_threshold?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          multi_listing_threshold?: number
+          multi_listing_window_days?: number
+          suspicion_threshold?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      agency_keywords: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          keyword: string
+          notes: string | null
+          type: Database["public"]["Enums"]["agency_keyword_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          keyword: string
+          notes?: string | null
+          type: Database["public"]["Enums"]["agency_keyword_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          keyword?: string
+          notes?: string | null
+          type?: Database["public"]["Enums"]["agency_keyword_type"]
+        }
+        Relationships: []
+      }
       agency_whitelist: {
         Row: {
           created_at: string
@@ -4671,6 +4731,7 @@ export type Database = {
       }
     }
     Enums: {
+      agency_keyword_type: "hard" | "soft" | "owner"
       app_role: "admin" | "moderator" | "user" | "owner"
       lead_lifecycle_status:
         | "new"
@@ -4819,6 +4880,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agency_keyword_type: ["hard", "soft", "owner"],
       app_role: ["admin", "moderator", "user", "owner"],
       lead_lifecycle_status: [
         "new",
