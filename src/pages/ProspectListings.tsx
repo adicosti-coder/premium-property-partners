@@ -739,8 +739,23 @@ const ProspectListings = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm font-medium">{p.contact_name || "—"}</div>
+                          <div className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
+                            {p.contact_name || "—"}
+                            {p.isAgency && (
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-400 text-amber-700 dark:text-amber-300">
+                                🏢 Agenție
+                              </Badge>
+                            )}
+                          </div>
                           {phone && <div className="text-xs text-muted-foreground font-mono">{phone}</div>}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProspectType(p)}
+                            className="text-[10px] text-muted-foreground hover:text-primary underline mt-0.5"
+                            title="Corectează clasificarea (proprietar / agenție)"
+                          >
+                            {p.isAgency ? "→ marchează ca proprietar" : "→ marchează ca agenție"}
+                          </button>
                         </TableCell>
                         <TableCell>
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
