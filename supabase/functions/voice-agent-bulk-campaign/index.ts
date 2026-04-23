@@ -2,10 +2,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 /* ──────────────────────────────────────────────────────────────
-   Bulk Campaign — accepts an array of prospect IDs and triggers
-   the auto-dial flow for each, sequentially with a small delay.
-   Marks each lead as 'calling' (queue) immediately to prevent
-   double-dialing. Returns per-id status.
+   Bulk Campaign — accepts an array of prospect IDs, creates a
+   campaign run record, and triggers auto-dial sequentially.
+   Between each dial it checks the run's `cancelled` flag so the
+   admin can stop the queue mid-flight from the UI.
 ─────────────────────────────────────────────────────────────── */
 
 const corsHeaders = {
@@ -35,20 +35,75 @@ serve(async (req) => {
     if (!ids.length) return jsonResp({ error: "prospect_ids required" }, 400);
     if (ids.length > 50) return jsonResp({ error: "max 50 per campaign" }, 400);
 
-    // Pre-mark all as 'calling' to lock them from concurrent runs
-    const { error: lockErr } = await supabase
-      .from("prospect_listings")
-      .update({
-        lifecycle_status: "calling",
-        auto_call_triggered_at: new Date().toISOString(),
-        admin_notes: `[BulkCampaign] zone=${zone || "all"} ${new Date().toISOString()}`,
+    // Identify caller (admin) from Authorization header — best effort
+    let createdBy: string | null = null;
+    try {
+      const authHeader = req.headers.get("Authorization") || "";
+      const token = authHeader.replace("Bearer ", "");
+      if (token && token !== SERVICE_KEY) {
+        const { data: userRes } = await supabase.auth.getUser(token);
+        createdBy = userRes?.user?.id ?? null;
+      }
+    } catch (_) { /* ignore */ }
+
+    // Create campaign run
+    const { data: run, error: runErr } = await supabase
+      .from("voice_campaign_runs")
+      .insert({
+        zone,
+        total_targets: ids.length,
+        status: "running",
+        created_by: createdBy,
       })
-      .in("id", ids)
-      .in("lifecycle_status", ["new", "callback", "pending_credentials"]);
-    if (lockErr) console.warn("lock error (continuing):", lockErr.message);
+      .select()
+      .single();
+    if (runErr || !run) throw new Error(`run insert: ${runErr?.message}`);
+
+    const campaignId: string = run.id;
+
+    // Snapshot current statuses so we can revert on cancel
+    const { data: existing } = await supabase
+      .from("prospect_listings")
+      .select("id, lifecycle_status")
+      .in("id", ids);
+
+    // Pre-mark targets as 'calling' + attach campaign_run_id + remember pre_campaign_status
+    if (existing?.length) {
+      const eligible = existing.filter((r: any) =>
+        ["new", "callback", "pending_credentials"].includes(r.lifecycle_status)
+      );
+      // Bulk update per status group to preserve `pre_campaign_status`
+      for (const row of eligible) {
+        await supabase
+          .from("prospect_listings")
+          .update({
+            lifecycle_status: "calling",
+            auto_call_triggered_at: new Date().toISOString(),
+            campaign_run_id: campaignId,
+            pre_campaign_status: row.lifecycle_status,
+            admin_notes: `[BulkCampaign ${campaignId.slice(0, 8)}] zone=${zone || "all"}`,
+          })
+          .eq("id", row.id);
+      }
+    }
 
     const results: any[] = [];
+    let dialed = 0;
+    let cancelledMid = false;
+
     for (const id of ids) {
+      // Check cancel flag before each dial
+      const { data: state } = await supabase
+        .from("voice_campaign_runs")
+        .select("cancelled")
+        .eq("id", campaignId)
+        .maybeSingle();
+      if (state?.cancelled) {
+        cancelledMid = true;
+        results.push({ id, ok: false, skipped: "campaign_cancelled" });
+        continue;
+      }
+
       try {
         const r = await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-auto-dial`, {
           method: "POST",
@@ -59,19 +114,39 @@ serve(async (req) => {
           body: JSON.stringify({ prospect_id: id, manual: true }),
         });
         const data = await r.json().catch(() => ({}));
-        results.push({ id, ok: r.ok, ...data });
+        const ok = r.ok && (data?.success === true);
+        if (ok) dialed++;
+        results.push({ id, ok, ...data });
+
+        // Periodically persist progress
+        if (dialed % 5 === 0) {
+          await supabase
+            .from("voice_campaign_runs")
+            .update({ dialed_count: dialed, updated_at: new Date().toISOString() })
+            .eq("id", campaignId);
+        }
       } catch (e: any) {
         results.push({ id, ok: false, error: e.message });
       }
-      // small delay between dials
       await new Promise((res) => setTimeout(res, 1500));
     }
 
-    const ok = results.filter((r) => r.success || r.ok).length;
+    // Finalize
+    await supabase
+      .from("voice_campaign_runs")
+      .update({
+        dialed_count: dialed,
+        status: cancelledMid ? "cancelled" : "completed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", campaignId);
+
     return jsonResp({
       success: true,
+      campaign_id: campaignId,
       total: ids.length,
-      dialed: ok,
+      dialed,
+      cancelled: cancelledMid,
       zone,
       results,
     });

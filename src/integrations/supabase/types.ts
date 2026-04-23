@@ -2681,6 +2681,7 @@ export type Database = {
           assigned_to: string | null
           auto_call_triggered_at: string | null
           call_summary: string | null
+          campaign_run_id: string | null
           category: Database["public"]["Enums"]["offer_category"] | null
           contact_name: string | null
           contact_phone: string | null
@@ -2700,6 +2701,7 @@ export type Database = {
           migrated_from_scraper_id: string | null
           owner_sentiment: string | null
           phone_normalized: string | null
+          pre_campaign_status: string | null
           price: number | null
           price_per_sqm: number | null
           prospect_type: string
@@ -2728,6 +2730,7 @@ export type Database = {
           assigned_to?: string | null
           auto_call_triggered_at?: string | null
           call_summary?: string | null
+          campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -2747,6 +2750,7 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           owner_sentiment?: string | null
           phone_normalized?: string | null
+          pre_campaign_status?: string | null
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
@@ -2775,6 +2779,7 @@ export type Database = {
           assigned_to?: string | null
           auto_call_triggered_at?: string | null
           call_summary?: string | null
+          campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -2794,6 +2799,7 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           owner_sentiment?: string | null
           phone_normalized?: string | null
+          pre_campaign_status?: string | null
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
@@ -4379,6 +4385,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voice_campaign_runs: {
+        Row: {
+          cancelled: boolean
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          dialed_count: number
+          id: string
+          status: string
+          total_targets: number
+          updated_at: string
+          zone: string | null
+        }
+        Insert: {
+          cancelled?: boolean
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          dialed_count?: number
+          id?: string
+          status?: string
+          total_targets?: number
+          updated_at?: string
+          zone?: string | null
+        }
+        Update: {
+          cancelled?: boolean
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          dialed_count?: number
+          id?: string
+          status?: string
+          total_targets?: number
+          updated_at?: string
+          zone?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

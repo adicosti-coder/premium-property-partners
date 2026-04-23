@@ -16,7 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
@@ -99,6 +99,9 @@ const ProspectListings = () => {
   const [resuming, setResuming] = useState(false);
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [campaignRunning, setCampaignRunning] = useState(false);
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
+  const [stopping, setStopping] = useState(false);
+  const [stopOpen, setStopOpen] = useState(false);
   const CAMPAIGN_LIMIT = 30;
 
   useEffect(() => {
@@ -332,9 +335,10 @@ const ProspectListings = () => {
         body: { prospect_ids: ids, zone: zoneFilter === "all" ? null : zoneFilter },
       });
       if (error) throw error;
+      if (data?.campaign_id) setCurrentCampaignId(data.campaign_id);
       toast({
-        title: `🚀 Campanie lansată`,
-        description: `${data?.dialed ?? 0}/${ids.length} apeluri inițiate${zoneFilter !== "all" ? ` în zona ${zoneFilter}` : ""}. Vezi Call Dashboard pentru rezultate.`,
+        title: data?.cancelled ? `🛑 Campanie oprită` : `🚀 Campanie finalizată`,
+        description: `${data?.dialed ?? 0}/${ids.length} apeluri inițiate${zoneFilter !== "all" ? ` în zona ${zoneFilter}` : ""}.`,
       });
       refetch();
     } catch (e: any) {
@@ -342,6 +346,27 @@ const ProspectListings = () => {
       refetch();
     } finally {
       setCampaignRunning(false);
+      setCurrentCampaignId(null);
+    }
+  };
+
+  const handleStopCampaign = async () => {
+    setStopping(true);
+    setStopOpen(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-stop-campaign", {
+        body: currentCampaignId ? { campaign_id: currentCampaignId } : {},
+      });
+      if (error) throw error;
+      toast({
+        title: "🛑 Campanie oprită",
+        description: `${data?.reverted_count ?? 0} lead-uri din coadă au fost resetate la statusul anterior. Apelurile deja în curs nu sunt întrerupte.`,
+      });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Oprire eșuată", description: e.message, variant: "destructive" });
+    } finally {
+      setStopping(false);
     }
   };
 
@@ -469,6 +494,18 @@ const ProspectListings = () => {
               {campaignRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Rocket className="h-4 w-4 mr-1" />}
               🚀 Lansează Campanie AI (Top {Math.min(CAMPAIGN_LIMIT, campaignTargets.length)})
             </Button>
+            {campaignRunning && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setStopOpen(true)}
+                disabled={stopping}
+                className="shadow-lg font-semibold"
+              >
+                {stopping ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <StopCircle className="h-4 w-4 mr-1" />}
+                Oprește campania
+              </Button>
+            )}
             {stats.pending > 0 && (
               <Button variant="default" size="sm" onClick={handleResumePending} disabled={resuming} className="bg-amber-600 hover:bg-amber-500 text-white">
                 {resuming ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-1" />}
@@ -718,6 +755,36 @@ const ProspectListings = () => {
               className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
             >
               <Rocket className="h-4 w-4 mr-1" /> Da, lansează campania
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={stopOpen} onOpenChange={setStopOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <StopCircle className="h-5 w-5 text-destructive" />
+              Oprește campania activă
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Sigur vrei să oprești campania în curs?</p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>🛑 Apelurile rămase din coadă vor fi <strong>anulate</strong></div>
+                  <div>↩️ Lead-urile neapelate revin la statusul <strong>anterior</strong> (ex: <code className="bg-background px-1 rounded">new</code>)</div>
+                  <div>📞 Apelurile <strong>deja în desfășurare</strong> nu sunt întrerupte</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuă campania</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleStopCampaign}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <StopCircle className="h-4 w-4 mr-1" /> Da, oprește campania
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
