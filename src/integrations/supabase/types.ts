@@ -4014,6 +4014,42 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_scripts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          language: string
+          name: string
+          notes: string | null
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          name: string
+          notes?: string | null
+          system_prompt: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          name?: string
+          notes?: string | null
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       voice_agent_settings: {
         Row: {
           allowed_hours_end: number
