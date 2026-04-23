@@ -54,8 +54,10 @@ serve(async (req) => {
 
     if (callbackType === "call") {
       if (callStatus) updates.status = callStatus;
-    } else if (recordingReady && !session.status) {
-      updates.status = "completed";
+    } else if (recordingReady) {
+      updates.status = finalStatuses.includes(session.status || "")
+        ? session.status
+        : "completed";
     }
 
     if (duration > 0) updates.call_duration_seconds = duration;
@@ -63,7 +65,9 @@ serve(async (req) => {
 
     const derivedStatus = callbackType === "call"
       ? (callStatus || session.status || "unknown")
-      : (session.status && session.status !== "queued" && session.status !== "initiating" ? session.status : (recordingReady ? "completed" : session.status || "unknown"));
+      : (recordingReady
+          ? (finalStatuses.includes(session.status || "") ? session.status : "completed")
+          : (session.status || "unknown"));
 
     if (finalStatuses.includes(derivedStatus)) {
       updates.status = derivedStatus;
