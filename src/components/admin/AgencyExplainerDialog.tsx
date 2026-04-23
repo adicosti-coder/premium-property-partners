@@ -67,12 +67,14 @@ export const AgencyExplainerDialog = ({ open, onOpenChange, data, onForceOwner }
   const [blockRows, setBlockRows] = useState<BlocklistRow[]>([]);
   const [loadingBlock, setLoadingBlock] = useState(false);
   const [forceLoading, setForceLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleForceOwner = async () => {
     if (!data || !onForceOwner) return;
     setForceLoading(true);
     try {
       await onForceOwner(data);
+      setConfirmOpen(false);
     } finally {
       setForceLoading(false);
     }
