@@ -682,6 +682,29 @@ export default function VoiceAgentManager() {
           </DialogHeader>
           {selectedCall && (
             <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2 pb-2 border-b">
+                <div className="text-xs text-muted-foreground">Pași monitorizați live</div>
+                <Button size="sm" variant="default" disabled={runningTest} onClick={() => replayTest(selectedCall)}>
+                  🔁 Reia test pe acest număr
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {computeSteps(selectedCall).map((s, i) => {
+                  const color =
+                    s.state === "ok" ? "border-emerald-300 bg-emerald-50 text-emerald-900" :
+                    s.state === "err" ? "border-red-300 bg-red-50 text-red-900" :
+                    s.state === "warn" ? "border-amber-300 bg-amber-50 text-amber-900" :
+                    "border-muted bg-muted/40 text-muted-foreground animate-pulse";
+                  const icon =
+                    s.state === "ok" ? "✅" : s.state === "err" ? "❌" : s.state === "warn" ? "⚠️" : "⏳";
+                  return (
+                    <div key={i} className={`rounded-lg border p-2 text-xs ${color}`}>
+                      <div className="font-semibold flex items-center gap-1">{icon} {s.label}</div>
+                      <div className="text-[11px] mt-0.5 break-words opacity-90">{s.detail}</div>
+                    </div>
+                  );
+                })}
+              </div>
               {selectedCall.error_message && (
                 <div className="flex gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
