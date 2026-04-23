@@ -246,9 +246,11 @@ const ProspectListings = () => {
     return Array.from(merged).sort();
   }, [enriched]);
 
-  // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling
+  // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling.
+  // Hard rule: never auto-call agencies, even if the view filter shows "all".
   const campaignTargets = useMemo(() => {
     return filtered
+      .filter((p) => !p.isAgency)
       .filter((p) => (p.phone_normalized || p.contact_phone))
       .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
       .slice(0, CAMPAIGN_LIMIT);
