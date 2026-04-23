@@ -9,10 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
@@ -89,9 +93,13 @@ const ProspectListings = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
+  const [zoneFilter, setZoneFilter] = useState<string>("all");
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
+  const [campaignOpen, setCampaignOpen] = useState(false);
+  const [campaignRunning, setCampaignRunning] = useState(false);
+  const CAMPAIGN_LIMIT = 30;
 
   useEffect(() => {
     let mounted = true;
@@ -173,10 +181,34 @@ const ProspectListings = () => {
 
   const filtered = enriched.filter((p) => {
     if ((p.lead_score ?? p.score ?? 0) < parseInt(minScore || "0")) return false;
+    if (zoneFilter !== "all") {
+      const zoneBlob = `${p.zone || ""} ${p.location || ""} ${p.geo.primary || ""} ${(p.geo.found || []).join(" ")}`.toLowerCase();
+      if (!zoneBlob.includes(zoneFilter.toLowerCase())) return false;
+    }
     if (!search) return true;
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
   });
+
+  // Available zones (from current data + canonical Timișoara list)
+  const availableZones = useMemo(() => {
+    const canonical = ["Centru", "Aradului", "Girocului", "Iosefin", "Fabric", "Elisabetin", "Cetate", "Dumbrăvița", "Lipovei", "Soarelui", "Complex Studențesc", "Take Ionescu", "Circumvalațiunii", "Torontalului", "Mehala"];
+    const fromData = new Set<string>();
+    enriched.forEach((p) => {
+      if (p.geo.primary) fromData.add(p.geo.primary);
+      if (p.zone) fromData.add(p.zone);
+    });
+    const merged = new Set<string>([...canonical, ...fromData]);
+    return Array.from(merged).sort();
+  }, [enriched]);
+
+  // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling
+  const campaignTargets = useMemo(() => {
+    return filtered
+      .filter((p) => (p.phone_normalized || p.contact_phone))
+      .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
+      .slice(0, CAMPAIGN_LIMIT);
+  }, [filtered]);
 
   // Debug: log render state
   useEffect(() => {
@@ -280,6 +312,36 @@ const ProspectListings = () => {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
     } finally {
       setResuming(false);
+    }
+  };
+
+  const handleLaunchCampaign = async () => {
+    if (!campaignTargets.length) {
+      toast({ title: "Niciun lead eligibil", description: "Ajustează filtrele.", variant: "destructive" });
+      return;
+    }
+    setCampaignRunning(true);
+    setCampaignOpen(false);
+    try {
+      const ids = campaignTargets.map((p) => p.id);
+      // Optimistically mark in queue locally for instant UI feedback
+      qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
+        (old || []).map((p) => ids.includes(p.id) ? { ...p, lifecycle_status: "calling", auto_call_triggered_at: new Date().toISOString() } : p)
+      );
+      const { data, error } = await supabase.functions.invoke("voice-agent-bulk-campaign", {
+        body: { prospect_ids: ids, zone: zoneFilter === "all" ? null : zoneFilter },
+      });
+      if (error) throw error;
+      toast({
+        title: `🚀 Campanie lansată`,
+        description: `${data?.dialed ?? 0}/${ids.length} apeluri inițiate${zoneFilter !== "all" ? ` în zona ${zoneFilter}` : ""}. Vezi Call Dashboard pentru rezultate.`,
+      });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Campanie eșuată", description: e.message, variant: "destructive" });
+      refetch();
+    } finally {
+      setCampaignRunning(false);
     }
   };
 
@@ -398,6 +460,15 @@ const ProspectListings = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              onClick={() => setCampaignOpen(true)}
+              disabled={campaignRunning || campaignTargets.length === 0}
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl font-semibold border-2 border-orange-300/50"
+            >
+              {campaignRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Rocket className="h-4 w-4 mr-1" />}
+              🚀 Lansează Campanie AI (Top {Math.min(CAMPAIGN_LIMIT, campaignTargets.length)})
+            </Button>
             {stats.pending > 0 && (
               <Button variant="default" size="sm" onClick={handleResumePending} disabled={resuming} className="bg-amber-600 hover:bg-amber-500 text-white">
                 {resuming ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-1" />}
@@ -406,6 +477,9 @@ const ProspectListings = () => {
             )}
             <Button variant="outline" size="sm" onClick={handleExportCSV}>
               <Download className="h-4 w-4 mr-1" /> Export CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/call-dashboard")}>
+              <Phone className="h-4 w-4 mr-1" /> Call Dashboard
             </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-1" /> Refresh
@@ -450,7 +524,7 @@ const ProspectListings = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
@@ -482,6 +556,15 @@ const ProspectListings = () => {
                 <SelectItem value="70">Scor ≥ 70</SelectItem>
                 <SelectItem value="80">🔥 Scor &gt; 80 (hot)</SelectItem>
                 <SelectItem value="90">⭐ Scor ≥ 90</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={zoneFilter} onValueChange={setZoneFilter}>
+              <SelectTrigger><SelectValue placeholder="Zonă" /></SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="all">📍 Toate zonele</SelectItem>
+                {availableZones.map((z) => (
+                  <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </CardContent>
@@ -605,6 +688,40 @@ const ProspectListings = () => {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={campaignOpen} onOpenChange={setCampaignOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-orange-500" />
+              Lansare Campanie AI
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Ești sigur că vrei să suni <strong>{campaignTargets.length} proprietari</strong>
+                  {zoneFilter !== "all" ? <> din zona <strong>{zoneFilter}</strong></> : <> din toate zonele filtrate</>}?
+                </p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>📞 Voice Agent va apela secvențial cu pauză de 1.5s</div>
+                  <div>🔒 Lead-urile vor fi marcate <code className="bg-background px-1 rounded">calling</code> imediat</div>
+                  <div>📊 Rezultatele apar în <strong>Call Dashboard</strong> live</div>
+                  <div>⚠️ Acțiunea <strong>nu poate fi anulată</strong> odată inițiată</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLaunchCampaign}
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+            >
+              <Rocket className="h-4 w-4 mr-1" /> Da, lansează campania
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
