@@ -74,9 +74,37 @@ const SAMPLE_SENTIMENT_BLOCK = `\nTON: empatic, cald, direct. Recunoaște situa�
 interface ValidationResult {
   errors: string[];
   warnings: string[];
+  flowScore: number; // 0-100, higher = better conversational flow
+  flowLabel: string;
+  avgSentenceLen: number;
 }
 
-function validateScript(name: string, prompt: string): ValidationResult {
+function computeFlowScore(prompt: string): { score: number; label: string; avg: number } {
+  const text = prompt.replace(/```[\s\S]*?```/g, " ").replace(/[#*_>`-]/g, " ").trim();
+  if (!text) return { score: 0, label: "—", avg: 0 };
+  // Split on sentence terminators while keeping things simple
+  const sentences = text.split(/[.!?]+\s+/).map((s) => s.trim()).filter((s) => s.length > 3);
+  if (sentences.length === 0) return { score: 0, label: "—", avg: 0 };
+  const lens = sentences.map((s) => s.split(/\s+/).filter(Boolean).length);
+  const avg = lens.reduce((a, b) => a + b, 0) / lens.length;
+  const longRatio = lens.filter((l) => l > 25).length / lens.length;
+  const veryLongRatio = lens.filter((l) => l > 40).length / lens.length;
+  // Optimal conversational sentence: 8-16 words. Penalize >25, heavily >40, also penalize <4 (choppy)
+  let score = 100;
+  if (avg < 6) score -= (6 - avg) * 6;
+  if (avg > 18) score -= (avg - 18) * 4;
+  score -= longRatio * 30;
+  score -= veryLongRatio * 40;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const label =
+    score >= 85 ? "Excelent" :
+    score >= 70 ? "Bun" :
+    score >= 50 ? "Acceptabil" :
+    score >= 30 ? "Slab — fraze prea lungi" : "Foarte slab";
+  return { score, label, avg: Math.round(avg * 10) / 10 };
+}
+
+function validateScript(name: string, prompt: string, language: string = "ro"): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   if (!name.trim()) errors.push("Numele este obligatoriu.");
@@ -91,13 +119,18 @@ function validateScript(name: string, prompt: string): ValidationResult {
   if (openBraces !== closeBraces) warnings.push(`Acolade neechilibrate: ${openBraces} { vs ${closeBraces} }.`);
   const backticks = (p.match(/`/g) || []).length;
   if (backticks % 2 !== 0) warnings.push(`Număr impar de backtick-uri (${backticks}).`);
-  // Romanian heuristic for ro scripts
-  const hasDiacritics = /[ăâîșțĂÂÎȘȚ]/.test(p);
-  if (!hasDiacritics) warnings.push("Promptul nu conține diacritice — verifică dacă e într-adevăr în română.");
-  if (!/română|romana/i.test(p) && !hasDiacritics) {
-    warnings.push("Nu se menționează limba română explicit. AI-ul ar putea derapa în engleză.");
+  // Romanian heuristic only for ro scripts
+  if (language === "ro") {
+    const hasDiacritics = /[ăâîșțĂÂÎȘȚ]/.test(p);
+    if (!hasDiacritics) warnings.push("Promptul nu conține diacritice — verifică dacă e într-adevăr în română.");
+    if (!/română|romana/i.test(p) && !hasDiacritics) {
+      warnings.push("Nu se menționează limba română explicit. AI-ul ar putea derapa în engleză.");
+    }
   }
-  return { errors, warnings };
+  // Conversational flow score
+  const { score, label, avg } = computeFlowScore(p);
+  if (score < 50) warnings.push(`Conversational Flow scăzut (${score}/100, ${label}). Media lungime frază: ${avg} cuvinte. Sparge frazele lungi.`);
+  return { errors, warnings, flowScore: score, flowLabel: label, avgSentenceLen: avg };
 }
 
 const STATUS_VARIANT: Record<string, { label: string; cls: string }> = {
