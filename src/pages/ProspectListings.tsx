@@ -288,6 +288,7 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   // Default = only owners (hide agencies). Persisted in localStorage.
   // Hard rule: agencies are NEVER shown unless the admin explicitly switches to "all" or "agentie"
   // in the toolbar. We sanitize the stored value defensively.
@@ -506,6 +507,7 @@ const ProspectListings = () => {
       const zoneBlob = `${p.zone || ""} ${p.location || ""} ${p.geo.primary || ""} ${(p.geo.found || []).join(" ")}`.toLowerCase();
       if (!zoneBlob.includes(zoneFilter.toLowerCase())) return false;
     }
+    if (sourceFilter !== "all" && (p.source_platform || "") !== sourceFilter) return false;
     if (!search) return true;
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
@@ -521,6 +523,15 @@ const ProspectListings = () => {
     });
     const merged = new Set<string>([...canonical, ...fromData]);
     return Array.from(merged).sort();
+  }, [enriched]);
+
+  // Available sources (platforms) — derived from current dataset.
+  const availableSources = useMemo(() => {
+    const set = new Set<string>();
+    enriched.forEach((p) => {
+      if (p.source_platform) set.add(p.source_platform);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [enriched]);
 
   // Eligible prospects for the bulk campaign — top N filtered, with phone, not currently calling.
@@ -933,7 +944,7 @@ const ProspectListings = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-7 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select
               value={prospectTypeFilter}
@@ -995,6 +1006,15 @@ const ProspectListings = () => {
                 <SelectItem value="all">📍 Toate zonele</SelectItem>
                 {availableZones.map((z) => (
                   <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger><SelectValue placeholder="Sursă" /></SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="all">🌐 Toate sursele</SelectItem>
+                {availableSources.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
