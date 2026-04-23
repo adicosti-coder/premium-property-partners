@@ -344,6 +344,8 @@ const ProspectListings = () => {
       setCampaignRunning(false);
     }
   };
+
+  const handleExportCSV = () => {
     const headers = ["Score", "AI Score", "Geo Score", "Sentiment", "Urgency", "Title", "Category", "Phone", "Contact", "Location", "Zone", "Price", "Status", "Source URL"];
     const rows = filtered.map((p) => [
       p.score ?? "",
