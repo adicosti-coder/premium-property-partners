@@ -942,6 +942,43 @@ const ProspectListings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={pendingTypeFilter !== null} onOpenChange={(o) => { if (!o) setPendingTypeFilter(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Deblochezi afișarea agențiilor?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  În prezent ești în modul <strong>🔒 Doar proprietari</strong>. Vei trece la
+                  {pendingTypeFilter === "all"
+                    ? <> <strong>„Toate"</strong> — vor apărea și anunțurile de agenție.</>
+                    : <> <strong>„Doar agenții"</strong> — vor apărea exclusiv agențiile.</>}
+                </p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>🛡️ Campania AI tot <strong>nu va apela</strong> agențiile, indiferent de filtru.</div>
+                  <div>🔄 Poți reactiva oricând lock-ul „Doar proprietari" cu un click.</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Păstrează lock-ul</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingTypeFilter) setProspectTypeFilter(pendingTypeFilter);
+                setPendingTypeFilter(null);
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Da, deblochează
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
