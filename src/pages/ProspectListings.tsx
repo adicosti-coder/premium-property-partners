@@ -602,8 +602,16 @@ const ProspectListings = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+          <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-3">
             <Input placeholder="Caută titlu, locație, contact…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Select value={prospectTypeFilter} onValueChange={(v) => setProspectTypeFilter(v as any)}>
+              <SelectTrigger><SelectValue placeholder="Tip prospect" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="proprietar">🏠 Doar proprietari</SelectItem>
+                <SelectItem value="agentie">🏢 Doar agenții</SelectItem>
+                <SelectItem value="all">Toate (proprietari + agenții)</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -646,6 +654,16 @@ const ProspectListings = () => {
               </SelectContent>
             </Select>
           </CardContent>
+          {prospectTypeFilter === "proprietar" && agencyCount > 0 && (
+            <div className="px-4 pb-3 -mt-1 text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
+              <span>
+                🏢 <strong>{agencyCount}</strong> {agencyCount === 1 ? "anunț de agenție ascuns" : "anunțuri de agenție ascunse"} (detectat automat după titlu/contact).
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setProspectTypeFilter("all")}>
+                Arată tot
+              </Button>
+            </div>
+          )}
         </Card>
 
         {/* Table */}
