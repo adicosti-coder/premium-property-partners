@@ -4014,6 +4014,50 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_script_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          language: string
+          name: string
+          notes: string | null
+          script_id: string
+          system_prompt: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language: string
+          name: string
+          notes?: string | null
+          script_id: string
+          system_prompt: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          name?: string
+          notes?: string | null
+          script_id?: string
+          system_prompt?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_agent_script_versions_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_agent_scripts: {
         Row: {
           created_at: string
