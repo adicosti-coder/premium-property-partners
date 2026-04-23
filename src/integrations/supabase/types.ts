@@ -2694,6 +2694,8 @@ export type Database = {
           id: string
           images: string[] | null
           is_active: boolean | null
+          last_failure_reason: string | null
+          last_retry_at: string | null
           last_seen_at: string | null
           lead_score: number | null
           lifecycle_status: Database["public"]["Enums"]["lead_lifecycle_status"]
@@ -2706,6 +2708,7 @@ export type Database = {
           price_per_sqm: number | null
           prospect_type: string
           rating: number | null
+          retry_count: number
           review_count: number | null
           rooms: number | null
           score: number | null
@@ -2743,6 +2746,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          last_failure_reason?: string | null
+          last_retry_at?: string | null
           last_seen_at?: string | null
           lead_score?: number | null
           lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
@@ -2755,6 +2760,7 @@ export type Database = {
           price_per_sqm?: number | null
           prospect_type?: string
           rating?: number | null
+          retry_count?: number
           review_count?: number | null
           rooms?: number | null
           score?: number | null
@@ -2792,6 +2798,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          last_failure_reason?: string | null
+          last_retry_at?: string | null
           last_seen_at?: string | null
           lead_score?: number | null
           lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
@@ -2804,6 +2812,7 @@ export type Database = {
           price_per_sqm?: number | null
           prospect_type?: string
           rating?: number | null
+          retry_count?: number
           review_count?: number | null
           rooms?: number | null
           score?: number | null
@@ -4566,6 +4575,7 @@ export type Database = {
         | "posted"
         | "callback"
         | "pending_credentials"
+        | "failed"
       listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
       listing_status: "pending_inspection" | "approved" | "rejected"
       offer_category: "vanzare" | "inchiriere" | "hotelier"
@@ -4713,6 +4723,7 @@ export const Constants = {
         "posted",
         "callback",
         "pending_credentials",
+        "failed",
       ],
       listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
       listing_status: ["pending_inspection", "approved", "rejected"],
