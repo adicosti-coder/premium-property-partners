@@ -4096,12 +4096,15 @@ export type Database = {
           call_objective: string | null
           cost_estimate_usd: number | null
           created_at: string
+          detected_language: string | null
           direction: string
           ended_at: string | null
           error_message: string | null
           from_number: string | null
           id: string
           initiated_by: string | null
+          language_retry_count: number
+          language_retry_of: string | null
           lead_id: string | null
           next_action: string | null
           prospect_listing_id: string | null
@@ -4124,12 +4127,15 @@ export type Database = {
           call_objective?: string | null
           cost_estimate_usd?: number | null
           created_at?: string
+          detected_language?: string | null
           direction?: string
           ended_at?: string | null
           error_message?: string | null
           from_number?: string | null
           id?: string
           initiated_by?: string | null
+          language_retry_count?: number
+          language_retry_of?: string | null
           lead_id?: string | null
           next_action?: string | null
           prospect_listing_id?: string | null
@@ -4152,12 +4158,15 @@ export type Database = {
           call_objective?: string | null
           cost_estimate_usd?: number | null
           created_at?: string
+          detected_language?: string | null
           direction?: string
           ended_at?: string | null
           error_message?: string | null
           from_number?: string | null
           id?: string
           initiated_by?: string | null
+          language_retry_count?: number
+          language_retry_of?: string | null
           lead_id?: string | null
           next_action?: string | null
           prospect_listing_id?: string | null
@@ -4172,6 +4181,13 @@ export type Database = {
           voice_agent_prompt?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "voice_call_sessions_language_retry_of_fkey"
+            columns: ["language_retry_of"]
+            isOneToOne: false
+            referencedRelation: "voice_call_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "voice_call_sessions_lead_id_fkey"
             columns: ["lead_id"]
