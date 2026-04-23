@@ -309,6 +309,22 @@ serve(async (req) => {
         admin_notes: `Twilio failed (attempt ${nextRetry}/${MAX_RETRIES + 1}): ${JSON.stringify(twData).slice(0, 200)}`,
       }).eq("id", prospect.id);
 
+      await logAudit(supabase, {
+        action: exhausted ? "lead_failed_exhausted" : "retry_auto",
+        actor_label: "system",
+        entity_type: "prospect_listing",
+        entity_id: prospect.id,
+        details: {
+          attempt: nextRetry,
+          max_attempts: MAX_RETRIES + 1,
+          source: "twilio_submit_failed",
+          twilio_status: twRes.status,
+          reason: failureReason,
+          session_id: session.id,
+        },
+        severity: exhausted ? "error" : "warning",
+      });
+
       return jsonResp({
         error: "Twilio failed",
         retry_count: nextRetry,
