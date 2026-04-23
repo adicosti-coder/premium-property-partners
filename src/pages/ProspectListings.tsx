@@ -759,6 +759,36 @@ const ProspectListings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={stopOpen} onOpenChange={setStopOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <StopCircle className="h-5 w-5 text-destructive" />
+              Oprește campania activă
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Sigur vrei să oprești campania în curs?</p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>🛑 Apelurile rămase din coadă vor fi <strong>anulate</strong></div>
+                  <div>↩️ Lead-urile neapelate revin la statusul <strong>anterior</strong> (ex: <code className="bg-background px-1 rounded">new</code>)</div>
+                  <div>📞 Apelurile <strong>deja în desfășurare</strong> nu sunt întrerupte</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuă campania</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleStopCampaign}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <StopCircle className="h-4 w-4 mr-1" /> Da, oprește campania
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
