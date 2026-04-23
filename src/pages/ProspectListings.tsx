@@ -86,28 +86,146 @@ const sentimentEmoji: Record<string, string> = {
 };
 
 // ── Agency detection (heuristic) ─────────────────────────────────────────────
-// Used to hide agency listings by default in the prospect pipeline.
-// We want to call OWNERS, not other agencies. Keep this list updated.
+// Goal: keep the prospect pipeline focused on OWNERS, hide agencies by default.
+// Tuned against real data observed in `prospect_listings` (Apr 2026):
+// imobiliare.ro/agentie/*, storia.ro/companii/agentii/*, blitz.ro, remax.ro,
+// designimobiliare.ro, renaissanceestate.ro, romimo.ro, voxpropertygroup.ro,
+// luxuryimob.ro, eficientestate.ro, premier-estate.eu, iconic-properties.ro,
+// iulius-imobiliare.ro, sodolescu.ro, foxfort.ro, brig.ro, paltim.ro,
+// minervaimobiliare.ro, lux-life-imobily, sedako, primum.ro, oxia.ro,
+// cubimobiliare.ro, cauta-imobiliare.ro, hitchmosher.ro, necesit.ro, etc.
+
+// Keywords found in title / description / contact_name → agency.
 const AGENCY_KEYWORDS = [
   // RO labels
   "agentie", "agenție", "agenti", "agenți", "agentia", "agenția",
-  "imobiliare", "real estate", "broker", "brokeraj",
+  "agentie imobiliara", "agenție imobiliară",
+  "real estate", "broker", "brokeraj", "brokerage",
   "dezvoltator", "developer", "ansamblu rezidential", "ansamblu rezidențial",
+  "design imobiliare", "imobily", "imobil grup", "grup imobiliar",
   // Legal forms
   " srl", " s.r.l", " sa ", " s.a.", "p.f.a", "pfa ",
-  // Known TM agencies (extend over time)
+  // Known TM/RO agency brands (extend over time)
   "eximbroker", "blitz", "remax", "re/max", "century 21", "century21",
   "imoneon", "imopedia", "edil", "imobitim", "esoplus",
-  // Generic clues in contact_name
-  "imo ", " imo", "estate", "consulting",
+  "renaissance estate", "vox property", "lux life", "sedako",
+  "iconic properties", "premier estate", "minerva imobiliare",
+  "luxury imob", "eficient estate", "primum", "foxfort",
+  "iulius imobiliare", "sodolescu", "apostu estate", "cub imobiliare",
+  "m&g design", "m & g design",
+  // Generic clues
+  " imo ", " imo,", " imo.", "estate", "consulting", "properties",
 ];
 
-function detectIsAgency(p: { title?: string | null; description?: string | null; contact_name?: string | null; prospect_type?: string | null }): boolean {
+// Domains that are entirely agencies / aggregators / portals → mark as agency.
+const AGENCY_DOMAINS = new Set([
+  "blitz.ro", "www.blitz.ro",
+  "remax.ro", "www.remax.ro",
+  "designimobiliare.ro", "www.designimobiliare.ro",
+  "renaissanceestate.ro", "www.renaissanceestate.ro",
+  "romimo.ro", "www.romimo.ro",
+  "voxpropertygroup.ro", "www.voxpropertygroup.ro",
+  "voxverticalvillage.ro",
+  "luxuryimob.ro", "www.luxuryimob.ro",
+  "eficientestate.ro", "www.eficientestate.ro",
+  "premier-estate.eu", "www.premier-estate.eu",
+  "iconic-properties.ro", "www.iconic-properties.ro",
+  "iulius-imobiliare.ro", "www.iulius-imobiliare.ro",
+  "sodolescu.ro", "www.sodolescu.ro",
+  "foxfort.ro", "www.foxfort.ro",
+  "brig.ro", "www.brig.ro",
+  "paltim.ro", "www.paltim.ro",
+  "minervaimobiliare.ro", "www.minervaimobiliare.ro",
+  "apostuestate.ro", "www.apostuestate.ro",
+  "primum.ro", "www.primum.ro",
+  "oxia.ro", "www.oxia.ro",
+  "cubimobiliare.ro", "www.cubimobiliare.ro",
+  "cauta-imobiliare.ro", "www.cauta-imobiliare.ro",
+  "hitchmosher.ro", "www.hitchmosher.ro",
+  "necesit.ro", "www.necesit.ro",
+  "imoradar24.ro", "www.imoradar24.ro",
+  "compariimobiliare.ro", "www.compariimobiliare.ro",
+  "mitula.ro", "apartamente.mitula.ro",
+  "trovit.ro", "case.trovit.ro",
+  "homezz.ro", "www.homezz.ro",
+  "lajumate.ro", "www.lajumate.ro",
+  "homerun.ro", "www.homerun.ro",
+  "korter.ro", "www.korter.ro",
+  "properstar.com", "www.properstar.com", "www.properstar.ro", "www.properstar.ie",
+  "rentbyowner.com", "www.rentbyowner.com",
+  "vrbo.com", "www.vrbo.com",
+  "booking.com", "www.booking.com",
+  "agoda.com", "www.agoda.com",
+  "airbnb.com", "www.airbnb.com", "www.airbnb.com.ro",
+  "expedia.com", "www.expedia.com",
+  // Big developer projects (not single-owner sales)
+  "isho.ro",
+  "xcitytowers.ro",
+  "nord-one.ro",
+  "ateneo.ro",
+  "cityofmara.ro", "www.cityofmara.ro",
+]);
+
+// URL substrings that always mean "agency profile / developer page / aggregator".
+const AGENCY_URL_PATTERNS = [
+  "/agentie/", "/agentii/", "/companii/agentii/", "/companii/dezvoltatori/",
+  "/dezvoltator/", "/developer/", "/agency/",
+];
+
+// URL substrings that mean "search / listing / category page" (not a real ad).
+// These should be flagged as noise; we treat them as agencies so they're hidden
+// from the owner pipeline by default (they cannot be called anyway).
+const NOISE_URL_PATTERNS = [
+  "/imobiliare/q-", "/imobiliare/timisoara/q-", "/imobiliare/apartamente",
+  "/ro/rezultate/", "/ro/companii/",
+  "/vanzare-imobiliare/", "/vanzare-apartamente/", "/vanzare-penthouses/",
+  "/inchiriere-imobiliare/", "/inchirieri-apartamente",
+  "/anunturi/imobiliare/de-vanzare/", "/anunturi/imobiliare/de-inchiriat/",
+];
+
+// Strong "this IS an owner" signals in URL or title — override agency hits.
+const OWNER_SIGNALS = [
+  "proprietar", "direct-de-la-proprietar", "direct proprietar",
+  "de la proprietar", "fara comision", "fără comision", "fara intermediar",
+];
+
+function extractDomain(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    const m = url.match(/^https?:\/\/([^/]+)/i);
+    return m ? m[1].toLowerCase() : null;
+  }
+}
+
+export function detectIsAgency(p: {
+  title?: string | null;
+  description?: string | null;
+  contact_name?: string | null;
+  prospect_type?: string | null;
+  source_url?: string | null;
+}): boolean {
+  // 1. Manual override always wins.
   if (p.prospect_type === "agentie" || p.prospect_type === "dezvoltator") return true;
-  if (p.prospect_type === "proprietar") return false; // explicit override wins
+  if (p.prospect_type === "proprietar") return false;
+
+  const url = (p.source_url || "").toLowerCase();
   const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+
+  // 2. Strong owner signals in URL/title → trust the owner claim, even if domain is mixed.
+  if (OWNER_SIGNALS.some((s) => url.includes(s) || blob.includes(s))) return false;
+
+  // 3. URL-based detection (highest confidence).
+  if (AGENCY_URL_PATTERNS.some((pat) => url.includes(pat))) return true;
+  if (NOISE_URL_PATTERNS.some((pat) => url.includes(pat))) return true;
+
+  // 4. Domain-based detection.
+  const domain = extractDomain(url);
+  if (domain && AGENCY_DOMAINS.has(domain)) return true;
+
+  // 5. Keyword detection in title/desc/contact.
   if (!blob.trim()) return false;
-  // 🏢 emoji is a strong signal
   if (blob.includes("🏢")) return true;
   return AGENCY_KEYWORDS.some((kw) => blob.includes(kw));
 }
