@@ -354,7 +354,13 @@ Deno.serve(async (req) => {
 
     // Expand keywords with diacritics-free variants for fuzzy matching
     queries = expandKeywordsWithoutDiacritics(queries);
-    console.log(`Expanded to ${queries.length} search queries (with diacritics-free variants)`);
+
+    // GLOBAL RULE: force "Doar Proprietari" filter on every single query
+    queries = queries.map((q) => ({
+      platform: q.platform,
+      query: applyOwnerOnlyFilter(q.platform, q.query),
+    }));
+    console.log(`Expanded to ${queries.length} owner-only search queries`);
 
     // Process queries in parallel batches of 5 to avoid timeout
     const BATCH_SIZE = 5;
