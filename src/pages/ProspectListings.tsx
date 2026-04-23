@@ -51,6 +51,26 @@ const categoryLabels: Record<string, string> = {
   hotelier: "Regim Hotelier",
 };
 
+// Visual palette for source platforms — used as a colored badge in the row.
+const sourceStyles: Record<string, { label: string; emoji: string; cls: string }> = {
+  olx: { label: "OLX", emoji: "🟣", cls: "border-purple-400 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30" },
+  storia: { label: "Storia", emoji: "🟢", cls: "border-green-400 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30" },
+  "imobiliare.ro": { label: "Imobiliare.ro", emoji: "🔵", cls: "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30" },
+  publi24: { label: "Publi24", emoji: "🟠", cls: "border-orange-400 text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/30" },
+  facebook: { label: "Facebook", emoji: "🔷", cls: "border-sky-400 text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/30" },
+  anuntul: { label: "Anunțul.ro", emoji: "⚪", cls: "border-slate-400 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/30" },
+};
+function getSourceStyle(platform?: string | null) {
+  if (!platform) return null;
+  const key = platform.toLowerCase().trim();
+  if (sourceStyles[key]) return sourceStyles[key];
+  // Fuzzy match
+  for (const k of Object.keys(sourceStyles)) {
+    if (key.includes(k) || k.includes(key)) return sourceStyles[k];
+  }
+  return { label: platform, emoji: "🌐", cls: "border-muted-foreground/40 text-muted-foreground bg-muted/30" };
+}
+
 interface Prospect {
   id: string;
   title: string | null;
