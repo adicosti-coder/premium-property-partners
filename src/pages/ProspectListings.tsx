@@ -69,6 +69,7 @@ interface Prospect {
   followup_sent_at: string | null;
   owner_sentiment: string | null;
   urgency_level: number | null;
+  auto_call_triggered_at: string | null;
 }
 
 const sentimentEmoji: Record<string, string> = {
@@ -127,7 +128,7 @@ const ProspectListings = () => {
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
