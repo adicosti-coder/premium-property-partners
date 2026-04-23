@@ -53,6 +53,47 @@ export default function VoiceAgentManager() {
   const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null);
   const [autoSettings, setAutoSettings] = useState<any>(null);
   const [testingAuto, setTestingAuto] = useState(false);
+  const [previewText, setPreviewText] = useState("Bună ziua, sunt Ana de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+
+  const VOICES = [
+    { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
+    { id: "XrExE9yKIg1WjnnlVkGX", name: "Matilda (feminin, profesional)" },
+    { id: "FGY2WhTYpPnrIDTdsKH5", name: "Laura (feminin, energic)" },
+    { id: "cgSgspJ2msm6clMCkdW9", name: "Jessica (feminin, expresiv)" },
+    { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice (feminin, britanic)" },
+    { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily (feminin, suav)" },
+  ];
+
+  const previewVoice = async () => {
+    setPreviewLoading(true);
+    setPreviewAudio(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-tts-elevenlabs", {
+        body: {
+          text: previewText,
+          mode: "preview",
+          voice: {
+            voice_id: autoSettings?.elevenlabs_voice_id,
+            model_id: autoSettings?.elevenlabs_model_id,
+            stability: Number(autoSettings?.voice_stability),
+            similarity_boost: Number(autoSettings?.voice_similarity_boost),
+            style: Number(autoSettings?.voice_style),
+            speed: Number(autoSettings?.voice_speed),
+            use_speaker_boost: autoSettings?.voice_use_speaker_boost,
+          },
+        },
+      });
+      if (error || data?.error) {
+        toast({ title: "Eroare preview", description: data?.error || error?.message, variant: "destructive" });
+      } else if (data?.audioContent) {
+        setPreviewAudio(`data:audio/mpeg;base64,${data.audioContent}`);
+      }
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const loadSettings = async () => {
     const { data } = await supabase.from("voice_agent_settings" as any).select("*").eq("id", 1).maybeSingle();
