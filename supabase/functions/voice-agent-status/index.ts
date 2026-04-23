@@ -22,6 +22,8 @@ serve(async (req) => {
     const duration = parseInt(String(form.get("CallDuration") || "0"), 10);
     const recordingUrl = String(form.get("RecordingUrl") || "");
     const hasRecording = !!recordingUrl;
+    const recordingStatus = String(form.get("RecordingStatus") || "");
+    const callbackType = hasRecording || recordingStatus ? "recording" : "call";
 
     const { data: session } = await supabase
       .from("voice_call_sessions")
@@ -32,14 +34,21 @@ serve(async (req) => {
     if (!session) return new Response("ok");
 
     const updates: Record<string, unknown> = {};
-    if (callStatus) updates.status = callStatus;
-    else if (hasRecording && !session.status) updates.status = "completed";
+    const finalStatuses = ["completed", "failed", "busy", "no-answer", "canceled", "unknown"];
+    const recordingReady = hasRecording && (!recordingStatus || ["completed", "absent"].includes(recordingStatus));
+
+    if (callbackType === "call") {
+      if (callStatus) updates.status = callStatus;
+    } else if (recordingReady && !session.status) {
+      updates.status = "completed";
+    }
 
     if (duration > 0) updates.call_duration_seconds = duration;
-    if (hasRecording) updates.recording_url = `${recordingUrl}.mp3`;
+    if (recordingReady) updates.recording_url = `${recordingUrl}.mp3`;
 
-    const finalStatuses = ["completed", "failed", "busy", "no-answer", "canceled", "unknown"];
-    const derivedStatus = callStatus || (hasRecording ? "completed" : session.status || "unknown");
+    const derivedStatus = callbackType === "call"
+      ? (callStatus || session.status || "unknown")
+      : (session.status && session.status !== "queued" && session.status !== "initiating" ? session.status : (recordingReady ? "completed" : session.status || "unknown"));
 
     if (finalStatuses.includes(derivedStatus)) {
       updates.status = derivedStatus;
@@ -79,7 +88,9 @@ serve(async (req) => {
       appointment_iso: null,
     };
 
-    const shouldCreateReport = !session.ai_summary && (finalStatuses.includes(derivedStatus) || hasRecording);
+    const latestRecordingUrl = recordingReady ? `${recordingUrl}.mp3` : session.recording_url || null;
+    const reportStatusReached = finalStatuses.includes(derivedStatus);
+    const shouldCreateReport = !session.ai_summary && (reportStatusReached || recordingReady);
 
     if (shouldCreateReport) {
       if (detectedLanguage === "en" && (session.language_retry_count || 0) < 1) {
@@ -163,7 +174,7 @@ serve(async (req) => {
           .map((t: any) => `${t.role === "user" ? "👤 Client" : "🤖 Ana"}: ${t.text}`)
           .join("\n");
 
-        const recordingLink = hasRecording ? `${recordingUrl}.mp3` : session.recording_url || null;
+        const recordingLink = latestRecordingUrl;
         const outcomeEmoji: Record<string, string> = {
           interesat: "✅",
           programare: "📅",
