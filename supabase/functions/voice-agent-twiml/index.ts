@@ -4,6 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 /* ──────────────────────────────────────────────────────────────
    Twilio TwiML webhook — drives the conversational flow.
    3 branches: Vânzare / Închiriere / Regim Hotelier (cazare).
+   Voice: ElevenLabs (Sarah) cached MP3 via <Play>.
+   Fallback: Polly.Carmen <Say> if TTS fails.
 ─────────────────────────────────────────────────────────────── */
 
 const xmlResponse = (xml: string) =>
@@ -15,10 +17,84 @@ function escapeXml(s: string) {
   return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]!));
 }
 
+async function sha256(text: string): Promise<string> {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+interface VoiceSettings {
+  voice_id: string;
+  model_id: string;
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  speed: number;
+  use_speaker_boost: boolean;
+}
+
 /**
- * Detectează ramura conversației pe baza listing_type / property_type.
- * Returnează: "vanzare" | "inchiriere" | "cazare"
+ * Generate or fetch cached MP3, return public URL.
+ * Returns null on failure → caller falls back to <Say>.
  */
+async function ttsToCachedUrl(
+  text: string,
+  v: VoiceSettings,
+  supabase: any,
+  apiKey: string
+): Promise<string | null> {
+  try {
+    const cacheKey = await sha256(JSON.stringify({ text, ...v }));
+    const filePath = `tts-cache/${cacheKey}.mp3`;
+
+    const { data: existing } = await supabase.storage
+      .from("voice-recordings")
+      .list("tts-cache", { search: `${cacheKey}.mp3`, limit: 1 });
+
+    if (existing && existing.length > 0) {
+      const { data: pub } = supabase.storage.from("voice-recordings").getPublicUrl(filePath);
+      return pub.publicUrl;
+    }
+
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=mp3_22050_32`,
+      {
+        method: "POST",
+        headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          model_id: v.model_id,
+          voice_settings: {
+            stability: v.stability,
+            similarity_boost: v.similarity_boost,
+            style: v.style,
+            use_speaker_boost: v.use_speaker_boost,
+            speed: v.speed,
+          },
+        }),
+      }
+    );
+    if (!res.ok) {
+      console.error("ElevenLabs TTS failed:", res.status, await res.text());
+      return null;
+    }
+    const audioBuffer = await res.arrayBuffer();
+
+    const { error: upErr } = await supabase.storage
+      .from("voice-recordings")
+      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/mpeg", upsert: true });
+    if (upErr) {
+      console.error("Storage upload failed:", upErr.message);
+      return null;
+    }
+    const { data: pub } = supabase.storage.from("voice-recordings").getPublicUrl(filePath);
+    return pub.publicUrl;
+  } catch (e) {
+    console.error("ttsToCachedUrl exception:", e);
+    return null;
+  }
+}
+
 function detectBranch(listingType?: string | null, propertyType?: string | null): "vanzare" | "inchiriere" | "cazare" {
   const t = (listingType || propertyType || "").toLowerCase();
   if (/cazare|hotel|regim|noapte|airbnb|booking/.test(t)) return "cazare";
@@ -26,9 +102,6 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
   return "vanzare";
 }
 
-/**
- * Salutul inițial — diferit per ramură.
- */
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
   const intro = "Bună ziua, sunt Ana de la RealTrust Timișoara";
   if (branch === "vanzare") {
@@ -40,9 +113,6 @@ function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary
   return `${intro}, agenție specializată în regim hotelier. V-am contactat în legătură cu proprietatea pe care o gestionați${contextSummary ? " — " + contextSummary : ""}. Aveți un minut? Putem crește veniturile cu peste 40% față de chiria clasică, fără bătăi de cap.`;
 }
 
-/**
- * Adaptează tonul în funcție de sentimentul proprietarului.
- */
 function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
   const u = typeof urgency === "number" ? urgency : 0;
   switch (sentiment) {
@@ -57,9 +127,6 @@ function sentimentDirective(sentiment?: string | null, urgency?: number | null):
   }
 }
 
-/**
- * System prompt-ul AI pentru fiecare ramură.
- */
 function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", leadContext: string, objective: string, sentimentBlock: string): string {
   const common = `Ești Ana, asistent vocal al RealTrust, agenție de imobiliare premium din Timișoara. Vorbești NUMAI în limba română, scurt, natural, cu maxim 2-3 propoziții per replică. ${leadContext}${sentimentBlock}\n\nObiectiv principal: ${objective === "qualify" ? "calificare interes (buget, timeline, urgență)" : objective === "schedule" ? "programare vizionare/întâlnire la birou" : "follow-up amabil"}. Dacă persoana pare deranjată sau spune că nu este interesată, închizi politicos cu „Mulțumesc pentru timp, vă doresc o zi bună. La revedere."`;
 
@@ -72,6 +139,12 @@ function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", lead
   return `${common}\n\nRAMURĂ: REGIM HOTELIER. Întrebări cheie: (1) Proprietatea este deja în regim hotelier sau o închiriază clasic? (2) Ce venit lunar obține acum? (3) Ar fi deschis(ă) la o analiză gratuită de potențial venit? Beneficii cheie de menționat: 9.4% ROI net verificat, gestionare completă (curățenie, check-in, prețuri dinamice), zero bătăi de cap. Propune o întâlnire scurtă la birou sau pe Zoom.`;
 }
 
+/** Build TwiML reply: <Play> if TTS URL, else <Say> Polly fallback. */
+function speakXml(text: string, audioUrl: string | null): string {
+  if (audioUrl) return `<Play>${escapeXml(audioUrl)}</Play>`;
+  return `<Say language="ro-RO" voice="Polly.Carmen">${escapeXml(text)}</Say>`;
+}
+
 serve(async (req) => {
   try {
     const url = new URL(req.url);
@@ -81,6 +154,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     if (!sessionId) {
@@ -95,6 +169,24 @@ serve(async (req) => {
 
     if (!session) return xmlResponse(`<Response><Hangup/></Response>`);
 
+    // Load voice settings (single fetch)
+    const { data: vSettings } = await supabase
+      .from("voice_agent_settings")
+      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost")
+      .eq("id", 1)
+      .maybeSingle();
+
+    const useElevenLabs = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
+    const voice: VoiceSettings = {
+      voice_id: vSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL",
+      model_id: vSettings?.elevenlabs_model_id || "eleven_multilingual_v2",
+      stability: Number(vSettings?.voice_stability) || 0.55,
+      similarity_boost: Number(vSettings?.voice_similarity_boost) || 0.80,
+      style: Number(vSettings?.voice_style) || 0.40,
+      speed: Number(vSettings?.voice_speed) || 1.0,
+      use_speaker_boost: vSettings?.voice_use_speaker_boost !== false,
+    };
+
     // Determine branch + context
     let branch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
     let contextSummary = "";
@@ -102,7 +194,6 @@ serve(async (req) => {
     let ownerSentiment: string | null = null;
     let urgencyLevel: number | null = null;
 
-    // Priority 1: prospect_listings (new pipeline)
     if (session.prospect_listing_id) {
       const { data: prospect } = await supabase
         .from("prospect_listings")
@@ -138,7 +229,6 @@ serve(async (req) => {
 
     const objective = session.call_objective || "qualify";
 
-    // Parse user speech
     let userSpeech = "";
     if (req.method === "POST") {
       const form = await req.formData();
@@ -192,19 +282,20 @@ serve(async (req) => {
       status: shouldHangup ? "completing" : "in-progress",
     }).eq("id", sessionId);
 
+    // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
+    const audioUrl = useElevenLabs
+      ? await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!)
+      : null;
+
     if (shouldHangup) {
-      return xmlResponse(
-        `<Response><Say language="ro-RO" voice="Polly.Carmen">${escapeXml(aiReply)}</Say><Hangup/></Response>`
-      );
+      return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
     const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${sessionId}&turn=${turn + 1}`;
     return xmlResponse(
       `<Response>
-        <Say language="ro-RO" voice="Polly.Carmen">${escapeXml(aiReply)}</Say>
-        <Gather input="speech" language="ro-RO" speechTimeout="2" timeout="5" action="${nextUrl}" method="POST">
-          <Say language="ro-RO" voice="Polly.Carmen">Vă ascult.</Say>
-        </Gather>
+        ${speakXml(aiReply, audioUrl)}
+        <Gather input="speech" language="ro-RO" speechTimeout="2" timeout="5" action="${nextUrl}" method="POST"/>
         <Redirect method="POST">${nextUrl}</Redirect>
       </Response>`
     );
