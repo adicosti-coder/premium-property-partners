@@ -590,9 +590,7 @@ export default function CallDashboard() {
                         ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`font-bold ${scoreClasses(r.hot_score)}`}>
-                          {r.hot_score}
-                        </Badge>
+                        <ScoreBadge row={r} />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-0.5">
