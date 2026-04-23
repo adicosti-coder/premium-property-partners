@@ -85,6 +85,33 @@ const sentimentEmoji: Record<string, string> = {
   neutru: "•",
 };
 
+// ── Agency detection (heuristic) ─────────────────────────────────────────────
+// Used to hide agency listings by default in the prospect pipeline.
+// We want to call OWNERS, not other agencies. Keep this list updated.
+const AGENCY_KEYWORDS = [
+  // RO labels
+  "agentie", "agenție", "agenti", "agenți", "agentia", "agenția",
+  "imobiliare", "real estate", "broker", "brokeraj",
+  "dezvoltator", "developer", "ansamblu rezidential", "ansamblu rezidențial",
+  // Legal forms
+  " srl", " s.r.l", " sa ", " s.a.", "p.f.a", "pfa ",
+  // Known TM agencies (extend over time)
+  "eximbroker", "blitz", "remax", "re/max", "century 21", "century21",
+  "imoneon", "imopedia", "edil", "imobitim", "esoplus",
+  // Generic clues in contact_name
+  "imo ", " imo", "estate", "consulting",
+];
+
+function detectIsAgency(p: { title?: string | null; description?: string | null; contact_name?: string | null; prospect_type?: string | null }): boolean {
+  if (p.prospect_type === "agentie" || p.prospect_type === "dezvoltator") return true;
+  if (p.prospect_type === "proprietar") return false; // explicit override wins
+  const blob = `${p.title || ""}  ${p.description || ""}  ${p.contact_name || ""}`.toLowerCase();
+  if (!blob.trim()) return false;
+  // 🏢 emoji is a strong signal
+  if (blob.includes("🏢")) return true;
+  return AGENCY_KEYWORDS.some((kw) => blob.includes(kw));
+}
+
 const ProspectListings = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -96,6 +123,11 @@ const ProspectListings = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
+  // Default = only owners (hide agencies). Persisted.
+  const [prospectTypeFilter, setProspectTypeFilter] = useState<"proprietar" | "agentie" | "all">(
+    () => (localStorage.getItem("prospects:typeFilter") as any) || "proprietar"
+  );
+  useEffect(() => { localStorage.setItem("prospects:typeFilter", prospectTypeFilter); }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
