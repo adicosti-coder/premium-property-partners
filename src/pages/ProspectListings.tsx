@@ -97,7 +97,7 @@ const sentimentEmoji: Record<string, string> = {
 // cubimobiliare.ro, cauta-imobiliare.ro, hitchmosher.ro, necesit.ro, etc.
 
 // Keywords found in title / description / contact_name → agency.
-const AGENCY_KEYWORDS = [
+export const AGENCY_KEYWORDS = [
   // RO labels
   "agentie", "agenție", "agenti", "agenți", "agentia", "agenția",
   "agentie imobiliara", "agenție imobiliară",
@@ -120,7 +120,7 @@ const AGENCY_KEYWORDS = [
 
 // "Soft" agency signals — high-suspicion phrases used in agency listings even
 // when the brand isn't named. Trigger the 🤖 badge but NOT a hard block.
-const AGENCY_SOFT_KEYWORDS = [
+export const AGENCY_SOFT_KEYWORDS = [
   "comision", "comision 0", "comision agentie", "comision agenție",
   "intermedi", "intermediere", "intermediar",
   "vizionari prin agentie", "vizionări prin agenție", "vizionari prin agenție",
@@ -134,7 +134,7 @@ const AGENCY_SOFT_KEYWORDS = [
 ];
 
 // Domains that are entirely agencies / aggregators / portals → mark as agency.
-const AGENCY_DOMAINS = new Set([
+export const AGENCY_DOMAINS = new Set([
   "blitz.ro", "www.blitz.ro",
   "remax.ro", "www.remax.ro",
   "designimobiliare.ro", "www.designimobiliare.ro",
@@ -183,7 +183,7 @@ const AGENCY_DOMAINS = new Set([
 ]);
 
 // URL substrings that always mean "agency profile / developer page / aggregator".
-const AGENCY_URL_PATTERNS = [
+export const AGENCY_URL_PATTERNS = [
   "/agentie/", "/agentii/", "/companii/agentii/", "/companii/dezvoltatori/",
   "/dezvoltator/", "/developer/", "/agency/",
 ];
@@ -200,7 +200,7 @@ const NOISE_URL_PATTERNS = [
 ];
 
 // Strong "this IS an owner" signals in URL or title — override agency hits.
-const OWNER_SIGNALS = [
+export const OWNER_SIGNALS = [
   "proprietar", "direct-de-la-proprietar", "direct proprietar",
   "de la proprietar", "fara comision", "fără comision", "fara intermediar",
 ];
