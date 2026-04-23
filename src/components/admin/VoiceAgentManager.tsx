@@ -170,7 +170,36 @@ export default function VoiceAgentManager() {
     }
   };
 
-  const stats = {
+  const runFullTest = async () => {
+    if (!/^\+[1-9]\d{6,14}$/.test(testNumber)) {
+      toast({ title: "Număr invalid", description: "Introdu numărul tău în format E.164 (ex: +407...)", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("voice_test_number", testNumber);
+    setRunningTest(true);
+    setTestSessionId(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-initiate", {
+        body: {
+          toNumber: testNumber,
+          objective: "qualify",
+          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+        },
+      });
+      if (error || data?.error) {
+        toast({ title: "Test eșuat", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        setTestSessionId(data.sessionId);
+        toast({
+          title: "🧪 Test inițiat — răspunde la telefon",
+          description: `Audio + transcript se salvează automat. Dialogul se va deschide când apelul se termină.`,
+        });
+        loadCalls();
+      }
+    } finally {
+      setRunningTest(false);
+    }
+  };
     total: calls.length,
     completed: calls.filter(c => c.status === "completed").length,
     interested: calls.filter(c => c.ai_outcome === "interesat" || c.ai_outcome === "programare").length,
