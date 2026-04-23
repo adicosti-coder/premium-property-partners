@@ -636,7 +636,7 @@ export default function CallDashboard() {
 
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
-              {filtered.map((r: any) => (
+              {visible.map((r: any) => (
                 <Card key={r.id} className="border">
                   <CardContent className="pt-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -645,9 +645,7 @@ export default function CallDashboard() {
                         {r.contact_phone && <div className="text-xs text-muted-foreground">{r.contact_phone}</div>}
                         <div className="text-[10px] text-muted-foreground mt-0.5">{formatDate(r.created_at)}</div>
                       </div>
-                      <Badge variant="outline" className={`font-bold shrink-0 ${scoreClasses(r.hot_score)}`}>
-                        🔥 {r.hot_score}
-                      </Badge>
+                      <ScoreBadge row={r} mobile />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant="outline" className="text-[10px]">{r.source}</Badge>
