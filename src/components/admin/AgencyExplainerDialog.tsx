@@ -38,6 +38,16 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   data: AgencyExplainerInput | null;
+  /**
+   * Called when admin clicks "Marchează ca Proprietar". The parent should:
+   *  - update prospect_listings.prospect_type = 'proprietar'
+   *  - INSERT into agency_whitelist (phone + domain)
+   *  - DELETE from agency_blocklist (phone + domain)
+   *  - INSERT into admin_audit_log with action 'agency_manual_override'
+   *  - close the dialog
+   * Receives the explainer payload back so the parent has full context.
+   */
+  onForceOwner?: (data: AgencyExplainerInput) => Promise<void> | void;
 }
 
 const reasonLabels: Record<string, string> = {
