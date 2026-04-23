@@ -310,6 +310,55 @@ const ProspectListings = () => {
     );
   }
 
+  // Dacă userul este logat dar nu e admin (sau verificarea a eșuat), arătăm un panou
+  // explicit cu Recheck + Relogin în loc să redirectăm — pe mobil tokenul poate fi stale.
+  if (user && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Card className="max-w-lg w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Verificare admin
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div>
+              <strong>Email:</strong> {user.email ?? "—"}<br />
+              <strong>User ID:</strong> <code className="text-xs">{user.id}</code>
+            </div>
+            {adminError ? (
+              <div className="text-destructive">⚠️ {adminError}</div>
+            ) : (
+              <div className="text-muted-foreground">
+                Backend-ul confirmă rolul admin pentru contul tău, dar sesiunea curentă din browser
+                nu a returnat încă rolul. Cel mai probabil tokenul JWT e expirat — apasă „Reîncearcă"
+                sau „Relogheaza-te".
+              </div>
+            )}
+            <div className="flex gap-2 flex-wrap pt-2">
+              <Button onClick={() => recheck()} size="sm">
+                <RefreshCw className="h-4 w-4 mr-1" /> Reîncearcă
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate("/auth?redirect=/admin/prospect-listings");
+                }}
+              >
+                Relogheaza-te
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+                Înapoi acasă
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       <SEOHead title="Prospect Listings | Admin" description="AI-scored leads pipeline" />
