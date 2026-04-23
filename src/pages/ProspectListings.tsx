@@ -118,6 +118,21 @@ const AGENCY_KEYWORDS = [
   " imo ", " imo,", " imo.", "estate", "consulting", "properties",
 ];
 
+// "Soft" agency signals — high-suspicion phrases used in agency listings even
+// when the brand isn't named. Trigger the 🤖 badge but NOT a hard block.
+const AGENCY_SOFT_KEYWORDS = [
+  "comision", "comision 0", "comision agentie", "comision agenție",
+  "intermedi", "intermediere", "intermediar",
+  "vizionari prin agentie", "vizionări prin agenție", "vizionari prin agenție",
+  "reprezentare exclusiva", "reprezentare exclusivă", "exclusivitate",
+  "contract de reprezentare", "mandat exclusiv", "mandat de vanzare", "mandat de vânzare",
+  "portofoliul nostru", "echipa noastra", "echipa noastră",
+  "consultantul tau", "consultantul tău", "consultant imobiliar",
+  "oferta noastra", "oferta noastră", "agent imobiliar",
+  "comisionul agentiei", "comisionul agenției",
+  "tva inclus", "tva neinclus",
+];
+
 // Domains that are entirely agencies / aggregators / portals → mark as agency.
 const AGENCY_DOMAINS = new Set([
   "blitz.ro", "www.blitz.ro",
