@@ -124,11 +124,12 @@ serve(async (req) => {
     const twilioReady = !!(LOVABLE_API_KEY && TWILIO_API_KEY && TWILIO_FROM_NUMBER);
 
     // Resolve prospect to call
+    const PROSPECT_COLS = "id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url, retry_count";
     let prospect: any = null;
     if (triggeredId) {
       const { data } = await supabase
         .from("prospect_listings")
-        .select("id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url")
+        .select(PROSPECT_COLS)
         .eq("id", triggeredId)
         .maybeSingle();
       prospect = data;
@@ -136,7 +137,7 @@ serve(async (req) => {
       // Pick top pending_credentials prospect
       const { data: leads } = await supabase
         .from("prospect_listings")
-        .select("id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url")
+        .select(PROSPECT_COLS)
         .eq("lifecycle_status", "pending_credentials" as any)
         .order("lead_score", { ascending: false })
         .limit(1);
@@ -145,7 +146,7 @@ serve(async (req) => {
       const minScore = (settings?.min_lead_score ?? 81);
       const { data: leads } = await supabase
         .from("prospect_listings")
-        .select("id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url")
+        .select(PROSPECT_COLS)
         .gt("lead_score", Math.max(80, minScore - 1))
         .eq("lifecycle_status", "new")
         .not("phone_normalized", "is", null)
