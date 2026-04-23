@@ -415,6 +415,41 @@ export default function CallDashboard() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3 pt-3 border-t">
+              <div className="lg:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Scor minim hot lead: <span className="text-foreground font-bold">{minScore}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={minScore}
+                  onChange={(e) => setMinScore(e.target.value)}
+                  className="w-full accent-primary"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                  <span>0</span><span>50</span><span>100 🔥</span>
+                </div>
+              </div>
+              <Button
+                variant={sortByScore ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortByScore(true)}
+                className="h-9"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1" /> Sortare după scor
+              </Button>
+              <Button
+                variant={!sortByScore ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortByScore(false)}
+                className="h-9"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1" /> Sortare după dată
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
