@@ -1977,6 +1977,16 @@ const ScraperLeads = () => {
                             {isCustomized && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                             {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-1.5 gap-1 text-[10px] text-muted-foreground hover:text-primary"
+                            title="Preview rezultate cu filtrele aplicate (fără salvare în DB)"
+                            onClick={() => navigate(`/admin/scraper-preview?kw=${kw.id}`)}
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span className="hidden sm:inline">Preview</span>
+                          </Button>
                           {editingKeywordId !== kw.id && (
                             <Button
                               size="sm"
