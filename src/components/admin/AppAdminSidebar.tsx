@@ -102,6 +102,25 @@ export function AppAdminSidebar({
 
         {ADMIN_GROUPS.map((group) => {
           const GroupIcon = group.icon;
+          // Build ordered chunks: items grouped by `subgroup` (preserving insertion / subgroupOrder)
+          const chunks: Array<{ label: string | null; items: AdminTab[] }> = [];
+          if (group.items.some((i) => i.subgroup)) {
+            const order =
+              group.subgroupOrder ??
+              Array.from(new Set(group.items.map((i) => i.subgroup ?? "")));
+            for (const sg of order) {
+              const items = group.items.filter((i) => (i.subgroup ?? "") === sg);
+              if (items.length) chunks.push({ label: sg || null, items });
+            }
+            // Items without any subgroup (defensive)
+            const orphan = group.items.filter(
+              (i) => !i.subgroup && !order.includes(""),
+            );
+            if (orphan.length) chunks.unshift({ label: null, items: orphan });
+          } else {
+            chunks.push({ label: null, items: group.items });
+          }
+
           return (
             <SidebarGroup key={group.id}>
               <SidebarGroupLabel>
@@ -109,8 +128,15 @@ export function AppAdminSidebar({
                 {group.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((tab) => {
+                {chunks.map((chunk, ci) => (
+                  <div key={`${group.id}-chunk-${ci}`}>
+                    {chunk.label && !collapsed && (
+                      <div className="mt-1 px-2 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
+                        {chunk.label}
+                      </div>
+                    )}
+                    <SidebarMenu>
+                      {chunk.items.map((tab) => {
                     const Icon = tab.icon;
                     const count = getCount(tab, counters);
                     const isActive = activeTab === tab.value;
@@ -158,6 +184,8 @@ export function AppAdminSidebar({
                     );
                   })}
                 </SidebarMenu>
+                  </div>
+                ))}
               </SidebarGroupContent>
             </SidebarGroup>
           );
