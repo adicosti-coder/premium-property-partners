@@ -603,22 +603,30 @@ export default function ScraperPreview() {
                       </Button>
                     )}
                   </div>
-                  {distinctReasons.length > 0 && (
+                  {reasonCounts.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {distinctReasons.map((r) => (
+                      {reasonCounts.map(({ reason, count }) => (
                         <button
-                          key={r}
+                          key={reason}
                           type="button"
-                          onClick={() => setReasonFilter(r)}
+                          onClick={() => setReasonFilter(reason)}
                           className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded border transition-colors",
-                            reasonFilter === r
+                            "text-[10px] px-1.5 py-0.5 rounded border transition-colors inline-flex items-center gap-1",
+                            reasonFilter === reason
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-border/60 bg-muted/40 text-muted-foreground hover:border-primary/40"
                           )}
-                          title={`Filtrează după: ${r}`}
+                          title={`Filtrează după: ${reason} (${count} anunțuri)`}
                         >
-                          {r}
+                          <span>{reason}</span>
+                          <span className={cn(
+                            "px-1 rounded-sm tabular-nums text-[9px]",
+                            reasonFilter === reason
+                              ? "bg-primary/20"
+                              : "bg-background/80 border border-border/60"
+                          )}>
+                            {count}
+                          </span>
                         </button>
                       ))}
                     </div>
