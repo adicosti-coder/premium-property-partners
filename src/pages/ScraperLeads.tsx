@@ -1866,7 +1866,7 @@ const ScraperLeads = () => {
                   </div>
 
                   {/* Keywords list */}
-                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+                  <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
                     {searchKeywords.map((kw) => {
                       const defaults = getDefaultOwnerFilters(kw.platform);
                       const hasCustomFilters =
