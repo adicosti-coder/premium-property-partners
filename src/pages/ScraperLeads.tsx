@@ -2324,6 +2324,15 @@ const ScraperLeads = () => {
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="h-8 w-8 p-0 text-orange-500 hover:text-orange-400 hover:bg-orange-500/10"
+                              onClick={(e) => { e.stopPropagation(); handleMarkAsAgency(lead); }}
+                              title="Marchează ca Agenție (blocklist + arhivă)"
+                            >
+                              <Building2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="h-8 w-8 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
                               onClick={(e) => { e.stopPropagation(); handleBlacklist(lead); }}
                               title={lead.phone ? `Blacklist ${lead.phone}` : "Fără telefon"}
