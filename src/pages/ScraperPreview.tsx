@@ -151,8 +151,17 @@ export default function ScraperPreview() {
 
   // Quick filter by reason / keyword in title/url/reasons
   const [reasonFilter, setReasonFilter] = useState("");
-  // Pagination
-  const PAGE_SIZE = 10;
+  // Pagination — page size is persisted in localStorage (admin preference).
+  const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+  const PAGE_SIZE_STORAGE_KEY = "scraper-preview:page-size";
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === "undefined") return 10;
+    const saved = Number(localStorage.getItem(PAGE_SIZE_STORAGE_KEY));
+    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 10;
+  });
+  useEffect(() => {
+    try { localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(pageSize)); } catch { /* ignore */ }
+  }, [pageSize]);
   const [pageFiltered, setPageFiltered] = useState(1);
   const [pageRemoved, setPageRemoved] = useState(1);
 
@@ -235,11 +244,14 @@ export default function ScraperPreview() {
     }
   }
 
-  function downloadCsv(rows: string[][], filename: string) {
+  function downloadCsv(rows: string[][], filename: string, opts?: { bom?: boolean }) {
     const csv = rows
       .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
       .join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const includeBom = opts?.bom !== false; // default = with BOM (Excel-friendly)
+    const blob = new Blob(includeBom ? ["\uFEFF" + csv] : [csv], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -267,7 +279,31 @@ export default function ScraperPreview() {
     push("after_filters", data.filtered_results);
     push("removed_by_filters", data.removed_by_filters);
     downloadCsv(rows, `scraper-preview-${data.keyword.platform}-${Date.now()}.csv`);
-    toast.success("CSV exportat");
+    toast.success("CSV exportat (cu BOM)");
+  }
+
+  function exportCsvNoBom() {
+    if (!data) return;
+    const rows: string[][] = [
+      ["section", "platform", "title", "url", "owner_signal", "reasons", "description"],
+    ];
+    const push = (section: string, items: PreviewResult[]) => {
+      for (const it of items) {
+        rows.push([
+          section, data.keyword.platform, it.title, it.url,
+          it.owner_signal.isOwner ? "Proprietar" : "Suspect/Necunoscut",
+          it.owner_signal.reasons.join(" | "), it.description,
+        ]);
+      }
+    };
+    push("after_filters", data.filtered_results);
+    push("removed_by_filters", data.removed_by_filters);
+    downloadCsv(
+      rows,
+      `scraper-preview-${data.keyword.platform}-${Date.now()}-nobom.csv`,
+      { bom: false },
+    );
+    toast.success("CSV exportat fără BOM (compatibil scripturi)");
   }
 
   function exportRemovedCsv() {
@@ -314,6 +350,62 @@ export default function ScraperPreview() {
     }
   }
 
+  /**
+   * "Finalizează ca ultim pas" — closes the preview session:
+   *   1. POSTs `mode: "finalize"` with `last_step: true` to mark the batch
+   *      as Processed on the server (stamp under owner_filters.last_preview_verified).
+   *   2. Saves the full preview log to localStorage under a `:log` key
+   *      (results, stats, applied hints) for later audit/debug.
+   *   3. Clears the live session cache so a fresh preview can be started.
+   */
+  async function finalizeAsLastStep() {
+    if (!data) return;
+    setFinalizing(true);
+    try {
+      const { error: fnErr } = await supabase.functions.invoke(
+        "scraper-preview-keyword",
+        {
+          body: {
+            mode: "finalize",
+            last_step: true,
+            keyword_id: data.keyword.id,
+            stats: data.stats,
+            applied_hints: data.applied_hints.map((h) => h.id),
+            final_query: data.final_query,
+          },
+        },
+      );
+      if (fnErr) throw fnErr;
+
+      // Persist a one-shot audit log entry locally
+      try {
+        const logKey = `scraper-preview:log:${data.keyword.id}:${Date.now()}`;
+        localStorage.setItem(logKey, JSON.stringify({
+          processed_at: new Date().toISOString(),
+          keyword: data.keyword,
+          stats: data.stats,
+          applied_hints: data.applied_hints,
+          final_query: data.final_query,
+          filtered_count: data.filtered_results.length,
+          removed_count: data.removed_by_filters.length,
+        }));
+      } catch { /* quota — ignore */ }
+
+      // Clear live session so the next visit starts fresh
+      if (sessionKey) {
+        try { localStorage.removeItem(sessionKey); } catch { /* ignore */ }
+      }
+
+      setFinalized(true);
+      toast.success("Batch marcat ca Procesat ✓ — log salvat, sesiune închisă");
+    } catch (e: any) {
+      setFinalized(true);
+      toast.warning("Marcat local ca ultim pas. Server: " + (e?.message || "indisponibil"));
+    } finally {
+      setFinalizing(false);
+    }
+  }
+
   function clearSession() {
     if (!sessionKey) return;
     localStorage.removeItem(sessionKey);
@@ -353,22 +445,37 @@ export default function ScraperPreview() {
   );
 
   // Reset pagination when filter or data changes
-  useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data]);
+  useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data, pageSize]);
 
-  const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / PAGE_SIZE));
-  const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / PAGE_SIZE));
-  const filteredPaged = filteredVisible.slice((pageFiltered - 1) * PAGE_SIZE, pageFiltered * PAGE_SIZE);
-  const removedPaged = removedVisible.slice((pageRemoved - 1) * PAGE_SIZE, pageRemoved * PAGE_SIZE);
+  const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / pageSize));
+  const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / pageSize));
+  const filteredPaged = filteredVisible.slice((pageFiltered - 1) * pageSize, pageFiltered * pageSize);
+  const removedPaged = removedVisible.slice((pageRemoved - 1) * pageSize, pageRemoved * pageSize);
 
-  // Collect distinct reasons across both lists for quick-pick chips
-  const distinctReasons = useMemo(() => {
-    if (!data) return [] as string[];
-    const set = new Set<string>();
+  // Collect distinct reasons + counts across both lists for quick-pick chips
+  const reasonCounts = useMemo(() => {
+    if (!data) return [] as { reason: string; count: number }[];
+    const map = new Map<string, number>();
     [...data.filtered_results, ...data.removed_by_filters].forEach((it) => {
-      it.owner_signal.reasons.forEach((r) => set.add(r));
+      it.owner_signal.reasons.forEach((r) => map.set(r, (map.get(r) || 0) + 1));
     });
-    return [...set].slice(0, 12);
+    return [...map.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([reason, count]) => ({ reason, count }));
   }, [data]);
+
+  // Per-category counts (for chip badges in lists)
+  const ownerCount = useMemo(
+    () => (data?.filtered_results || []).filter((it) => it.owner_signal.isOwner).length,
+    [data],
+  );
+  const suspectCount = useMemo(
+    () => (data?.filtered_results || []).filter(
+      (it) => !it.owner_signal.isOwner && it.owner_signal.reasons.some((r) => r.startsWith("⚠️"))
+    ).length,
+    [data],
+  );
 
   const stats = data?.stats;
   const ownerPct = useMemo(() => {
@@ -428,6 +535,15 @@ export default function ScraperPreview() {
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={exportCsv}>
                     <Download className="w-3.5 h-3.5" /> Export rezultate preview
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={exportCsvNoBom}
+                    title="Fără Byte Order Mark — pentru scripturi externe (Python, Node, jq)"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Export fără BOM
+                  </Button>
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={exportRemovedCsv}>
                     <Download className="w-3.5 h-3.5" /> Export CSV listă exclusă
                     <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
@@ -460,13 +576,43 @@ export default function ScraperPreview() {
                     )}
                     {finalized ? "Verificat pe server ✓" : "Finalizează cu status server"}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant={finalized ? "secondary" : "default"}
+                    className="gap-1.5"
+                    onClick={finalizeAsLastStep}
+                    disabled={finalized || finalizing}
+                    title="Marchează batch-ul ca Procesat, salvează log și închide sesiunea"
+                  >
+                    {finalizing ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <CheckCheck className="w-3.5 h-3.5" />
+                    )}
+                    {finalized ? "Procesat ✓" : "Finalizează ca ultim pas"}
+                  </Button>
                   <Button size="sm" variant="ghost" className="gap-1.5 text-xs" onClick={clearSession}>
                     <X className="w-3.5 h-3.5" /> Șterge sesiunea salvată
                   </Button>
-                  <div className="ml-auto flex items-center gap-2 text-xs">
-                    <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">Afișaj pe cuvânt</span>
-                    <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+                  <div className="ml-auto flex items-center gap-3 text-xs">
+                    <label className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Pe pagină:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        className="h-7 rounded border border-border/60 bg-background px-1 text-xs"
+                        title="Numărul de elemente pe pagină (salvat automat)"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">Afișaj pe cuvânt</span>
+                      <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+                    </div>
                   </div>
                 </div>
 
@@ -496,22 +642,30 @@ export default function ScraperPreview() {
                       </Button>
                     )}
                   </div>
-                  {distinctReasons.length > 0 && (
+                  {reasonCounts.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {distinctReasons.map((r) => (
+                      {reasonCounts.map(({ reason, count }) => (
                         <button
-                          key={r}
+                          key={reason}
                           type="button"
-                          onClick={() => setReasonFilter(r)}
+                          onClick={() => setReasonFilter(reason)}
                           className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded border transition-colors",
-                            reasonFilter === r
+                            "text-[10px] px-1.5 py-0.5 rounded border transition-colors inline-flex items-center gap-1",
+                            reasonFilter === reason
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-border/60 bg-muted/40 text-muted-foreground hover:border-primary/40"
                           )}
-                          title={`Filtrează după: ${r}`}
+                          title={`Filtrează după: ${reason} (${count} anunțuri)`}
                         >
-                          {r}
+                          <span>{reason}</span>
+                          <span className={cn(
+                            "px-1 rounded-sm tabular-nums text-[9px]",
+                            reasonFilter === reason
+                              ? "bg-primary/20"
+                              : "bg-background/80 border border-border/60"
+                          )}>
+                            {count}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -675,10 +829,16 @@ export default function ScraperPreview() {
               {/* Filtered results */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
+                  <CardTitle className="text-base flex items-center gap-2 flex-wrap">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     Anunțuri rămase după filtre ({filteredVisible.length}
                     {reasonFilter && ` din ${data.filtered_results.length}`})
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                      <ShieldCheck className="w-3 h-3" /> 🛡️ {ownerCount}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                      <ShieldAlert className="w-3 h-3" /> ⚠️ {suspectCount}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -697,7 +857,7 @@ export default function ScraperPreview() {
                     page={pageFiltered}
                     pageCount={filteredPageCount}
                     total={filteredVisible.length}
-                    pageSize={PAGE_SIZE}
+                    pageSize={pageSize}
                     onChange={setPageFiltered}
                   />
                 </CardContent>
@@ -751,7 +911,7 @@ export default function ScraperPreview() {
                       page={pageRemoved}
                       pageCount={removedPageCount}
                       total={removedVisible.length}
-                      pageSize={PAGE_SIZE}
+                      pageSize={pageSize}
                       onChange={setPageRemoved}
                     />
                   </CardContent>
@@ -912,7 +1072,7 @@ function ResultList({
                           : "border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/5"
                       )}
                     >
-                      {r}
+                      <HighlightedText text={r} positive={positive} negative={negative} enabled={highlight} />
                     </span>
                   ))}
                 </div>
