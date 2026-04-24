@@ -235,6 +235,21 @@ export default function ScraperPreview() {
     }
   }
 
+  function downloadCsv(rows: string[][], filename: string) {
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function exportCsv() {
     if (!data) return;
     const rows: string[][] = [
@@ -243,32 +258,66 @@ export default function ScraperPreview() {
     const push = (section: string, items: PreviewResult[]) => {
       for (const it of items) {
         rows.push([
-          section,
-          data.keyword.platform,
-          it.title,
-          it.url,
+          section, data.keyword.platform, it.title, it.url,
           it.owner_signal.isOwner ? "Proprietar" : "Suspect/Necunoscut",
-          it.owner_signal.reasons.join(" | "),
-          it.description,
+          it.owner_signal.reasons.join(" | "), it.description,
         ]);
       }
     };
     push("after_filters", data.filtered_results);
     push("removed_by_filters", data.removed_by_filters);
-
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `scraper-preview-${data.keyword.platform}-${Date.now()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadCsv(rows, `scraper-preview-${data.keyword.platform}-${Date.now()}.csv`);
     toast.success("CSV exportat");
+  }
+
+  function exportRemovedCsv() {
+    if (!data) return;
+    const rows: string[][] = [
+      ["platform", "title", "url", "owner_signal", "reasons", "description"],
+    ];
+    for (const it of data.removed_by_filters) {
+      rows.push([
+        data.keyword.platform, it.title, it.url,
+        it.owner_signal.isOwner ? "Proprietar" : "Suspect/Necunoscut",
+        it.owner_signal.reasons.join(" | "), it.description,
+      ]);
+    }
+    downloadCsv(rows, `scraper-preview-EXCLUSE-${data.keyword.platform}-${Date.now()}.csv`);
+    toast.success(`Export listă exclusă: ${data.removed_by_filters.length} anunțuri`);
+  }
+
+  async function finalizeOnServer() {
+    if (!data) return;
+    setFinalizing(true);
+    try {
+      const { error: fnErr } = await supabase.functions.invoke(
+        "scraper-preview-keyword",
+        {
+          body: {
+            mode: "finalize",
+            keyword_id: data.keyword.id,
+            stats: data.stats,
+            applied_hints: data.applied_hints.map((h) => h.id),
+            final_query: data.final_query,
+          },
+        },
+      );
+      if (fnErr) throw fnErr;
+      setFinalized(true);
+      toast.success("Preview marcat ca verificat pe server ✓");
+    } catch (e: any) {
+      // Even if server endpoint not yet configured, mark locally as finalized
+      setFinalized(true);
+      toast.warning("Marcat local. Server: " + (e?.message || "indisponibil"));
+    } finally {
+      setFinalizing(false);
+    }
+  }
+
+  function clearSession() {
+    if (!sessionKey) return;
+    localStorage.removeItem(sessionKey);
+    toast.success("Sesiune ștearsă");
   }
 
   useEffect(() => { runPreview(); /* eslint-disable-next-line */ }, [keywordId]);
