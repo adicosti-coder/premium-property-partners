@@ -22,7 +22,7 @@ import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
   Eye, CheckCircle, Phone, LayoutList, Columns3, Star, Copy, Clock, CalendarCheck,
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
-  Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
+  Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive, Building2,
   Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
   ChevronDown, ChevronUp, Pencil, Building2, Check, X,
 } from "lucide-react";
