@@ -825,7 +825,89 @@ const ScraperLeads = () => {
     toast.success(`☠️ ${lead.phone} adăugat pe blacklist. Lead-ul a fost arhivat.`);
   };
 
-  // ── Archive Lead (instead of delete) ─────────────
+  // ── Mark lead as Agency: blocklist (phone+domain) + archive ─────────
+  const handleMarkAsAgency = async (lead: ScraperLead) => {
+    const url = lead.url || "";
+    const domain = url
+      ? url.replace(/^https?:\/\//i, "").split("/")[0].replace(/^www\./i, "").toLowerCase() || null
+      : null;
+    const phone = lead.phone || null;
+
+    if (!phone && !domain) {
+      toast.error("Anunțul nu are telefon sau URL pentru blocare");
+      return;
+    }
+
+    // Optimistic remove
+    queryClient.setQueryData(["scraper-leads"], (old: any) =>
+      Array.isArray(old) ? old.filter((l: any) => l.id !== lead.id) : old
+    );
+    if (selectedLead?.id === lead.id) setSelectedLead(null);
+
+    // Check existing blocklist entries to avoid duplicates
+    const orParts: string[] = [];
+    if (phone) orParts.push(`phone_normalized.eq.${phone}`);
+    if (domain) orParts.push(`domain.eq.${domain}`);
+    const { data: existing } = await supabase
+      .from("agency_blocklist")
+      .select("phone_normalized, domain")
+      .or(orParts.join(","));
+
+    const phoneExists = !!existing?.some((e: any) => phone && e.phone_normalized === phone);
+    const domainExists = !!existing?.some((e: any) => domain && e.domain === domain);
+
+    const rows: any[] = [];
+    if (phone && !phoneExists) {
+      rows.push({
+        phone_normalized: phone,
+        reason: "manual_scraper_leads",
+        notes: `Marcat manual din Oportunități AI · ${(lead.title || "").slice(0, 80)}`,
+      });
+    }
+    if (domain && !domainExists) {
+      rows.push({
+        domain,
+        reason: "manual_scraper_leads",
+        notes: `Marcat manual din Oportunități AI · ${url.slice(0, 120)}`,
+      });
+    }
+
+    if (rows.length > 0) {
+      const { error: blErr } = await supabase.from("agency_blocklist").insert(rows);
+      if (blErr) {
+        queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+        toast.error(`Eroare blocklist: ${blErr.message}`);
+        return;
+      }
+    }
+
+    // Update lead: prospect_category=agentie + archive
+    const { error: updErr } = await supabase
+      .from("scraper_leads_archive_2026" as any)
+      .update({ prospect_category: "agentie", status: "archived" } as any)
+      .eq("id", lead.id);
+
+    if (updErr) {
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.error(`Eroare la arhivare: ${updErr.message}`);
+      return;
+    }
+
+    const added = rows.length > 0 ? rows.map((r) => r.phone_normalized || r.domain).join(" · ") : "—";
+    const skipped = [
+      phone && phoneExists ? phone : null,
+      domain && domainExists ? domain : null,
+    ].filter(Boolean).join(" · ");
+
+    if (rows.length === 0) {
+      toast.info(`🏢 Deja în blocklist (${skipped}). Lead arhivat.`);
+    } else if (skipped) {
+      toast.success(`🏢 Adăugat: ${added} · Existent: ${skipped}`);
+    } else {
+      toast.success(`🏢 Marcat agenție: ${added}. Lead arhivat.`);
+    }
+    queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+  };
   const handleArchive = async (leadId: string) => {
     queryClient.setQueryData(["scraper-leads"], (old: any) =>
       Array.isArray(old) ? old.filter((l: any) => l.id !== leadId) : old
