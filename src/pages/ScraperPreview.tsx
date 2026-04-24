@@ -829,10 +829,16 @@ export default function ScraperPreview() {
               {/* Filtered results */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
+                  <CardTitle className="text-base flex items-center gap-2 flex-wrap">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     Anunțuri rămase după filtre ({filteredVisible.length}
                     {reasonFilter && ` din ${data.filtered_results.length}`})
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                      <ShieldCheck className="w-3 h-3" /> 🛡️ {ownerCount}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                      <ShieldAlert className="w-3 h-3" /> ⚠️ {suspectCount}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
