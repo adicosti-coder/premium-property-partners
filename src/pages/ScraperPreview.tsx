@@ -933,3 +933,49 @@ function ResultList({
     </ul>
   );
 }
+
+function Pager({
+  page, pageCount, total, pageSize, onChange,
+}: {
+  page: number;
+  pageCount: number;
+  total: number;
+  pageSize: number;
+  onChange: (p: number) => void;
+}) {
+  if (total <= pageSize) return null;
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+  return (
+    <div className="flex items-center justify-between gap-2 pt-1 text-[11px] text-muted-foreground">
+      <span>
+        {from}–{to} din {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 w-7 p-0"
+          onClick={() => onChange(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          aria-label="Pagina anterioară"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </Button>
+        <span className="px-2 tabular-nums">
+          {page} / {pageCount}
+        </span>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 w-7 p-0"
+          onClick={() => onChange(Math.min(pageCount, page + 1))}
+          disabled={page >= pageCount}
+          aria-label="Pagina următoare"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
