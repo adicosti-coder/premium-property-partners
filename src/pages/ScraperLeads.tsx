@@ -306,6 +306,10 @@ const ScraperLeads = () => {
   const [newPlatform, setNewPlatform] = useState("General");
   const [editingKeywordId, setEditingKeywordId] = useState<string | null>(null);
   const [editingKeywordText, setEditingKeywordText] = useState("");
+  const [filtersEditingId, setFiltersEditingId] = useState<string | null>(null);
+  const [filtersDraftText, setFiltersDraftText] = useState("");
+  const [filtersDraftUrl, setFiltersDraftUrl] = useState("");
+  const [filtersSavingId, setFiltersSavingId] = useState<string | null>(null);
   const [editingAgencyName, setEditingAgencyName] = useState(false);
   const [agencyNameValue, setAgencyNameValue] = useState("");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
