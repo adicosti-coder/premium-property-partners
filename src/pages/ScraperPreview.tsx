@@ -423,46 +423,105 @@ export default function ScraperPreview() {
           {/* Admin actions toolbar */}
           {data && (
             <Card className="bg-muted/20 border-border/60">
-              <CardContent className="p-3 flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={exportCsv}>
-                  <Download className="w-3.5 h-3.5" /> Export rezultate preview
-                </Button>
-                <Button
-                  size="sm"
-                  variant={compareOn ? "default" : "outline"}
-                  className="gap-1.5"
-                  onClick={() => setCompareOn((v) => !v)}
-                >
-                  <GitCompare className="w-3.5 h-3.5" />
-                  {compareOn ? "Ascunde comparare" : "Adaugă comparare înainte/după"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={loadOverview}
-                >
-                  <Code2 className="w-3.5 h-3.5" /> Arată query final pe platforme
-                </Button>
-                <Button
-                  size="sm"
-                  variant={finalized ? "secondary" : "default"}
-                  className="gap-1.5"
-                  onClick={() => {
-                    setFinalized(true);
-                    toast.success(
-                      "Preview finalizat — filtrele rămân active pe scraperul real.",
-                    );
-                  }}
-                  disabled={finalized}
-                >
-                  <CheckCheck className="w-3.5 h-3.5" />
-                  {finalized ? "Preview finalizat ✓" : "Finalizează preview rezultate"}
-                </Button>
-                <div className="ml-auto flex items-center gap-2 text-xs">
-                  <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">Afișaj pe cuvânt</span>
-                  <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+              <CardContent className="p-3 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={exportCsv}>
+                    <Download className="w-3.5 h-3.5" /> Export rezultate preview
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={exportRemovedCsv}>
+                    <Download className="w-3.5 h-3.5" /> Export CSV listă exclusă
+                    <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
+                      {data.removed_by_filters.length}
+                    </Badge>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={compareOn ? "default" : "outline"}
+                    className="gap-1.5"
+                    onClick={() => setCompareOn((v) => !v)}
+                  >
+                    <GitCompare className="w-3.5 h-3.5" />
+                    {compareOn ? "Ascunde comparare" : "Adaugă comparare înainte/după"}
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={loadOverview}>
+                    <Code2 className="w-3.5 h-3.5" /> Arată query final pe platforme
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={finalized ? "secondary" : "default"}
+                    className="gap-1.5"
+                    onClick={finalizeOnServer}
+                    disabled={finalized || finalizing}
+                  >
+                    {finalizing ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Server className="w-3.5 h-3.5" />
+                    )}
+                    {finalized ? "Verificat pe server ✓" : "Finalizează cu status server"}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="gap-1.5 text-xs" onClick={clearSession}>
+                    <X className="w-3.5 h-3.5" /> Șterge sesiunea salvată
+                  </Button>
+                  <div className="ml-auto flex items-center gap-2 text-xs">
+                    <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">Afișaj pe cuvânt</span>
+                    <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+                  </div>
+                </div>
+
+                {/* Quick reason filter */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      Filtru rapid după motiv / cuvânt cheie (titlu, URL, descriere, motiv)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={reasonFilter}
+                      onChange={(e) => setReasonFilter(e.target.value)}
+                      placeholder="ex: agentie, /reprezentare-exclusiva/, broker, privat…"
+                      className="h-8 text-xs"
+                    />
+                    {reasonFilter && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 gap-1"
+                        onClick={() => setReasonFilter("")}
+                      >
+                        <X className="w-3 h-3" /> Reset
+                      </Button>
+                    )}
+                  </div>
+                  {distinctReasons.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {distinctReasons.map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setReasonFilter(r)}
+                          className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded border transition-colors",
+                            reasonFilter === r
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border/60 bg-muted/40 text-muted-foreground hover:border-primary/40"
+                          )}
+                          title={`Filtrează după: ${r}`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {reasonFilter && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Vizibile: {filteredVisible.length} rămase + {removedVisible.length} excluse
+                      (din {data.filtered_results.length} + {data.removed_by_filters.length})
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
