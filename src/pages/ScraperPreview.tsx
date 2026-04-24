@@ -1056,15 +1056,31 @@ function ResultList({
 
     setBlockingUrl(item.url);
     try {
+      // 1. Verifică ce există deja în blocklist
+      const orFilters: string[] = [];
+      if (phone) orFilters.push(`phone_normalized.eq.${phone}`);
+      if (domain) orFilters.push(`domain.eq.${domain}`);
+
+      const { data: existing, error: checkError } = await supabase
+        .from("agency_blocklist")
+        .select("phone_normalized, domain")
+        .or(orFilters.join(","));
+
+      if (checkError) throw checkError;
+
+      const phoneExists = !!existing?.some((r) => phone && r.phone_normalized === phone);
+      const domainExists = !!existing?.some((r) => domain && r.domain === domain);
+
+      // 2. Construiește doar rândurile noi
       const rows: Array<{ phone_normalized?: string; domain?: string; reason: string; notes: string }> = [];
-      if (phone) {
+      if (phone && !phoneExists) {
         rows.push({
           phone_normalized: phone,
           reason: "manual_preview",
           notes: `Marcat manual din Preview Scraper: ${item.title.slice(0, 80)}`,
         });
       }
-      if (domain) {
+      if (domain && !domainExists) {
         rows.push({
           domain,
           reason: "manual_preview",
@@ -1072,12 +1088,34 @@ function ResultList({
         });
       }
 
+      // 3. Dacă totul există deja → mesaj informativ
+      if (rows.length === 0) {
+        setBlockedUrls((prev) => new Set(prev).add(item.url));
+        const dupParts = [
+          phoneExists ? `📱 ${phone}` : null,
+          domainExists ? `🌐 ${domain}` : null,
+        ].filter(Boolean).join(" · ");
+        toast.info(`Deja în blocklist: ${dupParts}`);
+        return;
+      }
+
+      // 4. Inserează doar noutățile
       const { error } = await supabase.from("agency_blocklist").insert(rows);
       if (error) throw error;
 
       setBlockedUrls((prev) => new Set(prev).add(item.url));
-      const parts = [phone ? `📱 ${phone}` : null, domain ? `🌐 ${domain}` : null].filter(Boolean).join(" · ");
-      toast.success(`Adăugat în blocklist: ${parts}`);
+      const addedParts = [
+        phone && !phoneExists ? `📱 ${phone}` : null,
+        domain && !domainExists ? `🌐 ${domain}` : null,
+      ].filter(Boolean).join(" · ");
+      const skippedParts = [
+        phoneExists ? `📱 ${phone}` : null,
+        domainExists ? `🌐 ${domain}` : null,
+      ].filter(Boolean).join(" · ");
+      const msg = skippedParts
+        ? `Adăugat: ${addedParts} · Existent: ${skippedParts}`
+        : `Adăugat în blocklist: ${addedParts}`;
+      toast.success(msg);
     } catch (err: any) {
       console.error("Block error:", err);
       toast.error(err?.message || "Eroare la adăugarea în blocklist.");
@@ -1085,6 +1123,7 @@ function ResultList({
       setBlockingUrl(null);
     }
   };
+
 
   if (items.length === 0) {
     return <p className="text-xs text-muted-foreground italic py-4 text-center">{emptyText}</p>;
