@@ -2038,8 +2038,8 @@ const ScraperLeads = () => {
                       <p className="text-xs text-muted-foreground text-center py-4">Niciun cuvânt cheie configurat.</p>
                     )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    💡 Dublu-click pe un cuvânt cheie sau apasă ✏️ pentru a-l edita. Dezactivează sau șterge cele pe care nu le mai dorești.
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    💡 Dublu-click pe un cuvânt cheie sau apasă ✏️ pentru a-l edita. Apasă <Filter className="w-2.5 h-2.5 inline -mt-0.5" /> <strong>Filtre</strong> pentru a personaliza filtrele „Doar Proprietari / Privați / Persoane fizice" pentru fiecare platformă (text Google + parametri URL specifici). Dacă lași gol, scraper-ul folosește setările implicite per platformă.
                   </p>
                 </CardContent>
               </Card>
