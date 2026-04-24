@@ -4,7 +4,7 @@ import {
   Sparkles, Search, BarChart3,
   Mail, MailCheck, Megaphone, Euro, PenLine, BookOpen, Lightbulb, Play,
   MousePointerClick, Target, Activity, FlaskConical,
-  Film, MapPin, Wrench, Shield, ShieldCheck,
+  Film, MapPin, Wrench, Shield, ShieldCheck, Brain, Radar,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,6 +18,8 @@ export interface AdminTab {
   badgeKey?: "newLeads" | "newScraper" | "hotProspects";
   /** Keywords for command palette search */
   keywords?: string[];
+  /** Optional sub-section label inside the parent group (visual divider only) */
+  subgroup?: string;
 }
 
 export interface AdminGroup {
@@ -25,6 +27,8 @@ export interface AdminGroup {
   label: string;
   icon: LucideIcon;
   items: AdminTab[];
+  /** Ordered list of subgroup labels (for rendering order). Optional. */
+  subgroupOrder?: string[];
 }
 
 export const ADMIN_GROUPS: AdminGroup[] = [
@@ -35,8 +39,6 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     items: [
       { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, keywords: ["home", "start", "overview"] },
       { value: "leads", label: "Lead-uri", icon: Users, badgeKey: "newLeads" },
-      { value: "prospect-listings", label: "Prospect Listings", icon: Phone, externalRoute: "/admin/prospect-listings", badgeKey: "hotProspects" },
-      { value: "scraper-leads", label: "Oportunități AI", icon: Zap, externalRoute: "/scraper-leads", badgeKey: "newScraper" },
       { value: "bookings", label: "Rezervări", icon: CalendarDays },
       { value: "ical-sync", label: "iCal Sync", icon: Calendar },
       { value: "reviews", label: "Reviews", icon: MessageSquare },
@@ -60,15 +62,21 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     id: "ai-scraper",
     label: "AI & Scraper",
     icon: Sparkles,
+    subgroupOrder: ["AI Tools", "Scraper Pipeline"],
     items: [
-      { value: "ai-cache", label: "AI Cache", icon: Sparkles },
-      { value: "voice-agent", label: "Voice Agent", icon: Phone },
-      { value: "photo-studio", label: "Studio Foto AI", icon: Sparkles },
-      { value: "seo-optimizer", label: "SEO AI", icon: Sparkles },
-      { value: "agency-ai", label: "Configurare AI", icon: Sparkles },
-      { value: "ai-memory", label: "AI Memory", icon: Sparkles },
-      { value: "scraper-status", label: "Scraper Status", icon: BarChart3 },
-      { value: "prospects", label: "Bot Prospectare", icon: Search },
+      // 🧠 AI Tools — utilitare AI pentru conținut și asistență
+      { value: "ai-cache", label: "AI Cache", icon: Sparkles, subgroup: "AI Tools", keywords: ["cache", "ai content"] },
+      { value: "voice-agent", label: "Voice Agent", icon: Phone, subgroup: "AI Tools", keywords: ["voice", "apel ai"] },
+      { value: "photo-studio", label: "Studio Foto AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["foto", "image"] },
+      { value: "seo-optimizer", label: "SEO AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["seo"] },
+      { value: "ai-memory", label: "AI Memory", icon: Brain, subgroup: "AI Tools", keywords: ["memorie", "context"] },
+
+      // 🔍 Scraper Pipeline — întregul flux de prospectare imobiliară
+      { value: "scraper-leads", label: "Oportunități AI", icon: Zap, externalRoute: "/scraper-leads", badgeKey: "newScraper", subgroup: "Scraper Pipeline", keywords: ["leads scraper", "oportunitati"] },
+      { value: "prospect-listings", label: "Prospect Listings", icon: Phone, externalRoute: "/admin/prospect-listings", badgeKey: "hotProspects", subgroup: "Scraper Pipeline", keywords: ["prospects", "anunturi"] },
+      { value: "prospects", label: "Bot Prospectare", icon: Search, subgroup: "Scraper Pipeline", keywords: ["bot", "scan", "scrape"] },
+      { value: "scraper-status", label: "Scraper Status", icon: Radar, subgroup: "Scraper Pipeline", keywords: ["status", "monitoring", "health"] },
+      { value: "agency-ai", label: "Detecție Agenții", icon: ShieldCheck, subgroup: "Scraper Pipeline", keywords: ["agentie", "blocklist", "filtrare"] },
     ],
   },
   {
