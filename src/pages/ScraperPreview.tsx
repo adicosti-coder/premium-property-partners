@@ -535,6 +535,15 @@ export default function ScraperPreview() {
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={exportCsv}>
                     <Download className="w-3.5 h-3.5" /> Export rezultate preview
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={exportCsvNoBom}
+                    title="Fără Byte Order Mark — pentru scripturi externe (Python, Node, jq)"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Export fără BOM
+                  </Button>
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={exportRemovedCsv}>
                     <Download className="w-3.5 h-3.5" /> Export CSV listă exclusă
                     <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
@@ -567,13 +576,43 @@ export default function ScraperPreview() {
                     )}
                     {finalized ? "Verificat pe server ✓" : "Finalizează cu status server"}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant={finalized ? "secondary" : "default"}
+                    className="gap-1.5"
+                    onClick={finalizeAsLastStep}
+                    disabled={finalized || finalizing}
+                    title="Marchează batch-ul ca Procesat, salvează log și închide sesiunea"
+                  >
+                    {finalizing ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <CheckCheck className="w-3.5 h-3.5" />
+                    )}
+                    {finalized ? "Procesat ✓" : "Finalizează ca ultim pas"}
+                  </Button>
                   <Button size="sm" variant="ghost" className="gap-1.5 text-xs" onClick={clearSession}>
                     <X className="w-3.5 h-3.5" /> Șterge sesiunea salvată
                   </Button>
-                  <div className="ml-auto flex items-center gap-2 text-xs">
-                    <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">Afișaj pe cuvânt</span>
-                    <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+                  <div className="ml-auto flex items-center gap-3 text-xs">
+                    <label className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Pe pagină:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        className="h-7 rounded border border-border/60 bg-background px-1 text-xs"
+                        title="Numărul de elemente pe pagină (salvat automat)"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">Afișaj pe cuvânt</span>
+                      <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+                    </div>
                   </div>
                 </div>
 
