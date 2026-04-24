@@ -576,7 +576,7 @@ const ScraperLeads = () => {
     // Smart filters
     if (smartFilter === "premium") result = result.filter((l) => isPremiumLead(l.title));
     if (smartFilter === "topROI") result = result.filter((l) => l.lead_score >= 90).sort((a, b) => b.lead_score - a.lead_score);
-    if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
+    if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type !== "agentie" && l._prospect_type !== "dezvoltator" && l.prospect_category !== "agentie" && l.prospect_category !== "dezvoltator");
     if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
     if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
     if (debouncedSearch) {
