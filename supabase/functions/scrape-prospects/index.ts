@@ -392,7 +392,7 @@ Deno.serve(async (req) => {
     let blacklistedSkipped = 0;
 
     // Load keywords from DB, fallback to hardcoded defaults
-    let queries: { platform: string; query: string; ownerFilters?: { text?: string; url_hint?: string } }[];
+    let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
     if (customQuery) {
       queries = [{ platform: 'Custom', query: customQuery }];
     } else {
