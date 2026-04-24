@@ -418,6 +418,7 @@ const ScraperLeads = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [hideSnoozed, setHideSnoozed] = useState(true);
   const [hideSearchPages, setHideSearchPages] = useState(true);
+  const [hideAgencies, setHideAgencies] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Debounced search to reduce filter recalcs
@@ -623,6 +624,16 @@ const ScraperLeads = () => {
     if (hideSearchPages) {
       result = result.filter((l) => !isSearchPageLead(l.url, l.title));
     }
+    // Global rule: keep only owner / private-person leads (hide agencies & developers)
+    if (hideAgencies) {
+      result = result.filter(
+        (l) =>
+          l._prospect_type !== "agentie" &&
+          l._prospect_type !== "dezvoltator" &&
+          l.prospect_category !== "agentie" &&
+          l.prospect_category !== "dezvoltator"
+      );
+    }
 
     // ── Advanced filters ──
     const af = appliedFilters;
@@ -683,7 +694,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages]);
+  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages, hideAgencies]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -1969,8 +1980,21 @@ const ScraperLeads = () => {
             >
               {hideSearchPages ? "✅" : "⬜"} Doar anunțuri individuale
             </button>
+            <button
+              type="button"
+              onClick={() => setHideAgencies((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors ${
+                hideAgencies
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+              }`}
+              aria-pressed={hideAgencies}
+              title="Ascunde lead-urile clasificate ca agenții sau dezvoltatori — păstrează doar persoane fizice / proprietari"
+            >
+              {hideAgencies ? "✅" : "⬜"} Doar Proprietari (persoane fizice)
+            </button>
             <span className="text-[10px] text-muted-foreground">
-              (ascunde paginile de tip „/q-…" și categoriile OLX)
+              (ascunde paginile de listare + agențiile/dezvoltatorii)
             </span>
           </div>
 
