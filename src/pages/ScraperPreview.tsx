@@ -364,10 +364,10 @@ export default function ScraperPreview() {
   // Reset pagination when filter or data changes
   useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data]);
 
-  const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / PAGE_SIZE));
-  const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / PAGE_SIZE));
-  const filteredPaged = filteredVisible.slice((pageFiltered - 1) * PAGE_SIZE, pageFiltered * PAGE_SIZE);
-  const removedPaged = removedVisible.slice((pageRemoved - 1) * PAGE_SIZE, pageRemoved * PAGE_SIZE);
+  const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / pageSize));
+  const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / pageSize));
+  const filteredPaged = filteredVisible.slice((pageFiltered - 1) * pageSize, pageFiltered * pageSize);
+  const removedPaged = removedVisible.slice((pageRemoved - 1) * pageSize, pageRemoved * pageSize);
 
   // Collect distinct reasons across both lists for quick-pick chips
   const distinctReasons = useMemo(() => {
@@ -706,7 +706,7 @@ export default function ScraperPreview() {
                     page={pageFiltered}
                     pageCount={filteredPageCount}
                     total={filteredVisible.length}
-                    pageSize={PAGE_SIZE}
+                    pageSize={pageSize}
                     onChange={setPageFiltered}
                   />
                 </CardContent>
@@ -760,7 +760,7 @@ export default function ScraperPreview() {
                       page={pageRemoved}
                       pageCount={removedPageCount}
                       total={removedVisible.length}
-                      pageSize={PAGE_SIZE}
+                      pageSize={pageSize}
                       onChange={setPageRemoved}
                     />
                   </CardContent>
