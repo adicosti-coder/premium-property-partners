@@ -131,11 +131,11 @@ export function AppAdminSidebar({
                 {chunks.map((chunk, ci) => (
                   <div key={`${group.id}-chunk-${ci}`}>
                     {chunk.label && !collapsed && (
-                      <div className="mt-1 px-2 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
+                      <div className="mt-1.5 px-2 pb-0.5 pt-1 text-[9px] font-medium uppercase tracking-[0.12em] text-sidebar-foreground/40">
                         {chunk.label}
                       </div>
                     )}
-                    <SidebarMenu>
+                    <SidebarMenu className={chunk.label && !collapsed ? "pl-1" : undefined}>
                       {chunk.items.map((tab) => {
                     const Icon = tab.icon;
                     const count = getCount(tab, counters);
