@@ -615,7 +615,12 @@ const ProspectListings = () => {
   };
 
   const handleToggleProspectType = async (p: Prospect & { isAgency?: boolean }) => {
+    const previous = p.isAgency ? "agentie" : "proprietar";
     const next = p.isAgency ? "proprietar" : "agentie";
+    let domain: string | null = null;
+    try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; } catch { domain = null; }
+    const phone = p.phone_normalized || null;
+
     // Optimistic
     qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
       Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row) : old
@@ -630,12 +635,8 @@ const ProspectListings = () => {
       return;
     }
 
-    // Recurrence flag: when marking as agency, add the phone & domain to the
-    // permanent blocklist so any future re-import is auto-classified & blocked.
+    // Apply blocklist side-effect for the new state
     if (next === "agentie") {
-      const phone = p.phone_normalized || null;
-      let domain: string | null = null;
-      try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; } catch { domain = null; }
       if (phone || domain) {
         const { error: blockErr } = await supabase
           .from("agency_blocklist" as any)
@@ -650,18 +651,63 @@ const ProspectListings = () => {
           console.warn("[blocklist] insert failed:", blockErr.message);
         }
       }
-      toast({
-        title: "🏢 Marcat ca agenție (blocat permanent)",
-        description: "Telefonul și domeniul au fost adăugate în lista neagră — orice import viitor va fi blocat automat.",
+    } else {
+      if (phone) {
+        await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", phone);
+      }
+      if (domain) {
+        await supabase.from("agency_blocklist" as any).delete().eq("domain", domain);
+      }
+    }
+
+    // Undo handler: reverts everything (prospect_type + blocklist side-effects)
+    const undo = async () => {
+      qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
+        Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: previous } : row) : old
+      );
+      await supabase.from("prospect_listings").update({ prospect_type: previous }).eq("id", p.id);
+      if (previous === "agentie") {
+        // Re-add to blocklist
+        if (phone || domain) {
+          await supabase.from("agency_blocklist" as any).insert({
+            phone_normalized: phone,
+            domain,
+            reason: "manual_admin",
+            notes: `Restabilit (undo) din /admin/prospect-listings`,
+            source_prospect_id: p.id,
+          });
+        }
+      } else {
+        // Remove from blocklist
+        if (phone) await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", phone);
+        if (domain) await supabase.from("agency_blocklist" as any).delete().eq("domain", domain);
+      }
+      sonnerToast.success("Acțiune anulată", {
+        description: previous === "agentie"
+          ? "Lead-ul a fost re-marcat ca Agenție și re-adăugat în blocklist."
+          : "Lead-ul a fost restabilit ca Proprietar și scos din blocklist.",
+      });
+      refetch();
+    };
+
+    if (next === "agentie") {
+      sonnerToast.success("🏢 Marcat ca agenție (blocat permanent)", {
+        description: [
+          phone ? `📞 Telefon adăugat în blocklist: ${phone}` : null,
+          domain ? `🌐 Domeniu adăugat în blocklist: ${domain}` : null,
+          !phone && !domain ? "Niciun telefon/domeniu de blocat — doar tipul a fost schimbat." : "Orice import viitor va fi blocat automat.",
+        ].filter(Boolean).join("\n"),
+        duration: 8000,
+        action: { label: "↩️ Anulează", onClick: undo },
       });
     } else {
-      // Marked back as owner — remove from blocklist if present.
-      if (p.phone_normalized) {
-        await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", p.phone_normalized);
-      }
-      toast({
-        title: "🏠 Marcat ca proprietar",
-        description: "Lead-ul va apărea în filtrul Proprietari.",
+      sonnerToast.success("🏠 Marcat ca proprietar", {
+        description: [
+          "Lead-ul va apărea în filtrul Proprietari.",
+          phone || domain ? "Scos din blocklist (telefon + domeniu)." : null,
+        ].filter(Boolean).join("\n"),
+        duration: 8000,
+        action: { label: "↩️ Anulează", onClick: undo },
       });
     }
   };
