@@ -44,7 +44,7 @@ const PWAInstallPrompt = () => {
     return isIOS && isSafari;
   })();
 
-  // Listen for FAB menu trigger instead of auto-showing
+  // Listen for FAB menu trigger
   useEffect(() => {
     const handleOpen = () => {
       const dismissed = safeLocalStorage.getItem("pwa-prompt-dismissed");
@@ -55,6 +55,30 @@ const PWAInstallPrompt = () => {
     window.addEventListener('open-pwa-prompt', handleOpen);
     return () => window.removeEventListener('open-pwa-prompt', handleOpen);
   }, [isInstalled]);
+
+  // Auto-show on mobile, first visit only, after 12s delay
+  useEffect(() => {
+    if (!isBrowser() || typeof window === "undefined") return;
+    if (isInstalled) return;
+
+    const dismissed = safeLocalStorage.getItem("pwa-prompt-dismissed");
+    const alreadyShown = safeLocalStorage.getItem("pwa-prompt-auto-shown");
+    if (dismissed || alreadyShown) return;
+
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (!isMobile) return;
+
+    // Only show if installable (Android/Chrome) or iOS Safari (manual instructions)
+    const canShow = canPrompt || isIOSSafari;
+    if (!canShow) return;
+
+    const timer = window.setTimeout(() => {
+      setIsVisible(true);
+      safeLocalStorage.setItem("pwa-prompt-auto-shown", "true");
+    }, 12000);
+
+    return () => window.clearTimeout(timer);
+  }, [isInstalled, canPrompt, isIOSSafari]);
   
 
   const handleInstall = async () => {
