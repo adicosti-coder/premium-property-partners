@@ -2281,7 +2281,21 @@ const ScraperLeads = () => {
           ) : viewMode === "analytics" ? (
             <ScraperAnalyticsDashboard leads={(leads || []) as any} />
           ) : filteredLeads.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">{t.noData}</div>
+            <div className="text-center py-20 px-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center text-3xl">
+                {filterType === "proprietar" ? "🏠" : "🔍"}
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {filterType === "proprietar"
+                  ? "Momentan nu sunt lead-uri noi de la proprietari"
+                  : "Niciun lead găsit"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {filterType === "proprietar"
+                  ? "Revenim imediat ce apar oferte noi de la persoane fizice. Între timp, poți rula un scan nou sau ajusta filtrele."
+                  : t.noData}
+              </p>
+            </div>
           ) : viewMode === "pipeline" ? (
             <>
               <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
