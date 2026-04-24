@@ -1156,15 +1156,34 @@ function ResultList({
                 </div>
               )}
             </div>
-            <a
-              href={it.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-muted-foreground hover:text-primary"
-              title="Deschide anunțul"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            <div className="shrink-0 flex flex-col items-end gap-1.5">
+              <a
+                href={it.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary"
+                title="Deschide anunțul"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={blockingUrl === it.url || blockedUrls.has(it.url)}
+                onClick={() => handleMarkAsAgency(it)}
+                className="h-7 px-2 text-[10px] gap-1 border-red-500/40 text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400"
+                title="Adaugă telefon și domeniu în agency_blocklist"
+              >
+                {blockingUrl === it.url ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : blockedUrls.has(it.url) ? (
+                  <CheckCheck className="w-3 h-3" />
+                ) : (
+                  <Ban className="w-3 h-3" />
+                )}
+                {blockedUrls.has(it.url) ? "Blocat" : "Marchează agenție"}
+              </Button>
+            </div>
           </div>
         </li>
       ))}
