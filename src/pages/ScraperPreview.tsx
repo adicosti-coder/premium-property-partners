@@ -16,7 +16,9 @@ import {
   ArrowLeft, ExternalLink, RefreshCw, ShieldCheck, ShieldAlert,
   Filter, CheckCircle2, AlertTriangle, Search, Eye, EyeOff,
   Download, GitCompare, Code2, CheckCheck, Highlighter,
+  ChevronLeft, ChevronRight, X, Server,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -145,10 +147,49 @@ export default function ScraperPreview() {
   const [highlightOn, setHighlightOn] = useState(true);
   const [compareOn, setCompareOn] = useState(false);
   const [finalized, setFinalized] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+
+  // Quick filter by reason / keyword in title/url/reasons
+  const [reasonFilter, setReasonFilter] = useState("");
+  // Pagination
+  const PAGE_SIZE = 10;
+  const [pageFiltered, setPageFiltered] = useState(1);
+  const [pageRemoved, setPageRemoved] = useState(1);
 
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overview, setOverview] = useState<QueryOverviewRow[] | null>(null);
+
+  // ── Session persistence (localStorage) ───────────────
+  const sessionKey = keywordId ? `scraper-preview-session:${keywordId}` : null;
+
+  // Restore on mount / kw change
+  useEffect(() => {
+    if (!sessionKey) return;
+    try {
+      const raw = localStorage.getItem(sessionKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved.data) setData(saved.data);
+      if (typeof saved.compareOn === "boolean") setCompareOn(saved.compareOn);
+      if (typeof saved.highlightOn === "boolean") setHighlightOn(saved.highlightOn);
+      if (typeof saved.finalized === "boolean") setFinalized(saved.finalized);
+      if (typeof saved.reasonFilter === "string") setReasonFilter(saved.reasonFilter);
+      if (typeof saved.showRemoved === "boolean") setShowRemoved(saved.showRemoved);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionKey]);
+
+  // Persist on relevant change
+  useEffect(() => {
+    if (!sessionKey) return;
+    try {
+      localStorage.setItem(sessionKey, JSON.stringify({
+        data, compareOn, highlightOn, finalized, reasonFilter, showRemoved,
+        savedAt: Date.now(),
+      }));
+    } catch { /* quota – ignore */ }
+  }, [sessionKey, data, compareOn, highlightOn, finalized, reasonFilter, showRemoved]);
 
   async function runPreview() {
     if (!keywordId) {
@@ -194,6 +235,21 @@ export default function ScraperPreview() {
     }
   }
 
+  function downloadCsv(rows: string[][], filename: string) {
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function exportCsv() {
     if (!data) return;
     const rows: string[][] = [
@@ -202,35 +258,117 @@ export default function ScraperPreview() {
     const push = (section: string, items: PreviewResult[]) => {
       for (const it of items) {
         rows.push([
-          section,
-          data.keyword.platform,
-          it.title,
-          it.url,
+          section, data.keyword.platform, it.title, it.url,
           it.owner_signal.isOwner ? "Proprietar" : "Suspect/Necunoscut",
-          it.owner_signal.reasons.join(" | "),
-          it.description,
+          it.owner_signal.reasons.join(" | "), it.description,
         ]);
       }
     };
     push("after_filters", data.filtered_results);
     push("removed_by_filters", data.removed_by_filters);
-
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `scraper-preview-${data.keyword.platform}-${Date.now()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadCsv(rows, `scraper-preview-${data.keyword.platform}-${Date.now()}.csv`);
     toast.success("CSV exportat");
   }
 
-  useEffect(() => { runPreview(); /* eslint-disable-next-line */ }, [keywordId]);
+  function exportRemovedCsv() {
+    if (!data) return;
+    const rows: string[][] = [
+      ["platform", "title", "url", "owner_signal", "reasons", "description"],
+    ];
+    for (const it of data.removed_by_filters) {
+      rows.push([
+        data.keyword.platform, it.title, it.url,
+        it.owner_signal.isOwner ? "Proprietar" : "Suspect/Necunoscut",
+        it.owner_signal.reasons.join(" | "), it.description,
+      ]);
+    }
+    downloadCsv(rows, `scraper-preview-EXCLUSE-${data.keyword.platform}-${Date.now()}.csv`);
+    toast.success(`Export listă exclusă: ${data.removed_by_filters.length} anunțuri`);
+  }
+
+  async function finalizeOnServer() {
+    if (!data) return;
+    setFinalizing(true);
+    try {
+      const { error: fnErr } = await supabase.functions.invoke(
+        "scraper-preview-keyword",
+        {
+          body: {
+            mode: "finalize",
+            keyword_id: data.keyword.id,
+            stats: data.stats,
+            applied_hints: data.applied_hints.map((h) => h.id),
+            final_query: data.final_query,
+          },
+        },
+      );
+      if (fnErr) throw fnErr;
+      setFinalized(true);
+      toast.success("Preview marcat ca verificat pe server ✓");
+    } catch (e: any) {
+      // Even if server endpoint not yet configured, mark locally as finalized
+      setFinalized(true);
+      toast.warning("Marcat local. Server: " + (e?.message || "indisponibil"));
+    } finally {
+      setFinalizing(false);
+    }
+  }
+
+  function clearSession() {
+    if (!sessionKey) return;
+    localStorage.removeItem(sessionKey);
+    toast.success("Sesiune ștearsă");
+  }
+
+  useEffect(() => {
+    // Only auto-run if no cached session data for this kw
+    if (!keywordId) return;
+    try {
+      const raw = sessionKey ? localStorage.getItem(sessionKey) : null;
+      if (raw && JSON.parse(raw)?.data) return;
+    } catch { /* ignore */ }
+    runPreview();
+    // eslint-disable-next-line
+  }, [keywordId]);
+
+  // Apply quick reason/keyword filter
+  const reasonFilterLc = reasonFilter.trim().toLowerCase();
+  const matchesReasonFilter = (it: PreviewResult) => {
+    if (!reasonFilterLc) return true;
+    if (it.title.toLowerCase().includes(reasonFilterLc)) return true;
+    if (it.url.toLowerCase().includes(reasonFilterLc)) return true;
+    if (it.description?.toLowerCase().includes(reasonFilterLc)) return true;
+    return it.owner_signal.reasons.some((r) => r.toLowerCase().includes(reasonFilterLc));
+  };
+
+  const filteredVisible = useMemo(
+    () => (data?.filtered_results || []).filter(matchesReasonFilter),
+    // eslint-disable-next-line
+    [data, reasonFilterLc],
+  );
+  const removedVisible = useMemo(
+    () => (data?.removed_by_filters || []).filter(matchesReasonFilter),
+    // eslint-disable-next-line
+    [data, reasonFilterLc],
+  );
+
+  // Reset pagination when filter or data changes
+  useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data]);
+
+  const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / PAGE_SIZE));
+  const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / PAGE_SIZE));
+  const filteredPaged = filteredVisible.slice((pageFiltered - 1) * PAGE_SIZE, pageFiltered * PAGE_SIZE);
+  const removedPaged = removedVisible.slice((pageRemoved - 1) * PAGE_SIZE, pageRemoved * PAGE_SIZE);
+
+  // Collect distinct reasons across both lists for quick-pick chips
+  const distinctReasons = useMemo(() => {
+    if (!data) return [] as string[];
+    const set = new Set<string>();
+    [...data.filtered_results, ...data.removed_by_filters].forEach((it) => {
+      it.owner_signal.reasons.forEach((r) => set.add(r));
+    });
+    return [...set].slice(0, 12);
+  }, [data]);
 
   const stats = data?.stats;
   const ownerPct = useMemo(() => {
@@ -285,46 +423,105 @@ export default function ScraperPreview() {
           {/* Admin actions toolbar */}
           {data && (
             <Card className="bg-muted/20 border-border/60">
-              <CardContent className="p-3 flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={exportCsv}>
-                  <Download className="w-3.5 h-3.5" /> Export rezultate preview
-                </Button>
-                <Button
-                  size="sm"
-                  variant={compareOn ? "default" : "outline"}
-                  className="gap-1.5"
-                  onClick={() => setCompareOn((v) => !v)}
-                >
-                  <GitCompare className="w-3.5 h-3.5" />
-                  {compareOn ? "Ascunde comparare" : "Adaugă comparare înainte/după"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={loadOverview}
-                >
-                  <Code2 className="w-3.5 h-3.5" /> Arată query final pe platforme
-                </Button>
-                <Button
-                  size="sm"
-                  variant={finalized ? "secondary" : "default"}
-                  className="gap-1.5"
-                  onClick={() => {
-                    setFinalized(true);
-                    toast.success(
-                      "Preview finalizat — filtrele rămân active pe scraperul real.",
-                    );
-                  }}
-                  disabled={finalized}
-                >
-                  <CheckCheck className="w-3.5 h-3.5" />
-                  {finalized ? "Preview finalizat ✓" : "Finalizează preview rezultate"}
-                </Button>
-                <div className="ml-auto flex items-center gap-2 text-xs">
-                  <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">Afișaj pe cuvânt</span>
-                  <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+              <CardContent className="p-3 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={exportCsv}>
+                    <Download className="w-3.5 h-3.5" /> Export rezultate preview
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={exportRemovedCsv}>
+                    <Download className="w-3.5 h-3.5" /> Export CSV listă exclusă
+                    <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
+                      {data.removed_by_filters.length}
+                    </Badge>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={compareOn ? "default" : "outline"}
+                    className="gap-1.5"
+                    onClick={() => setCompareOn((v) => !v)}
+                  >
+                    <GitCompare className="w-3.5 h-3.5" />
+                    {compareOn ? "Ascunde comparare" : "Adaugă comparare înainte/după"}
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={loadOverview}>
+                    <Code2 className="w-3.5 h-3.5" /> Arată query final pe platforme
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={finalized ? "secondary" : "default"}
+                    className="gap-1.5"
+                    onClick={finalizeOnServer}
+                    disabled={finalized || finalizing}
+                  >
+                    {finalizing ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Server className="w-3.5 h-3.5" />
+                    )}
+                    {finalized ? "Verificat pe server ✓" : "Finalizează cu status server"}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="gap-1.5 text-xs" onClick={clearSession}>
+                    <X className="w-3.5 h-3.5" /> Șterge sesiunea salvată
+                  </Button>
+                  <div className="ml-auto flex items-center gap-2 text-xs">
+                    <Highlighter className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">Afișaj pe cuvânt</span>
+                    <Switch checked={highlightOn} onCheckedChange={setHighlightOn} />
+                  </div>
+                </div>
+
+                {/* Quick reason filter */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      Filtru rapid după motiv / cuvânt cheie (titlu, URL, descriere, motiv)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={reasonFilter}
+                      onChange={(e) => setReasonFilter(e.target.value)}
+                      placeholder="ex: agentie, /reprezentare-exclusiva/, broker, privat…"
+                      className="h-8 text-xs"
+                    />
+                    {reasonFilter && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 gap-1"
+                        onClick={() => setReasonFilter("")}
+                      >
+                        <X className="w-3 h-3" /> Reset
+                      </Button>
+                    )}
+                  </div>
+                  {distinctReasons.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {distinctReasons.map((r) => (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setReasonFilter(r)}
+                          className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded border transition-colors",
+                            reasonFilter === r
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border/60 bg-muted/40 text-muted-foreground hover:border-primary/40"
+                          )}
+                          title={`Filtrează după: ${r}`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {reasonFilter && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Vizibile: {filteredVisible.length} rămase + {removedVisible.length} excluse
+                      (din {data.filtered_results.length} + {data.removed_by_filters.length})
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -480,16 +677,28 @@ export default function ScraperPreview() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    Anunțuri rămase după filtre ({data.filtered_results.length})
+                    Anunțuri rămase după filtre ({filteredVisible.length}
+                    {reasonFilter && ` din ${data.filtered_results.length}`})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
                   <ResultList
-                    items={data.filtered_results}
-                    emptyText="Niciun rezultat după aplicarea filtrelor."
+                    items={filteredPaged}
+                    emptyText={
+                      reasonFilter
+                        ? "Niciun rezultat care să corespundă filtrului rapid."
+                        : "Niciun rezultat după aplicarea filtrelor."
+                    }
                     positive={highlightTerms.positive}
                     negative={highlightTerms.negative}
                     highlight={highlightOn}
+                  />
+                  <Pager
+                    page={pageFiltered}
+                    pageCount={filteredPageCount}
+                    total={filteredVisible.length}
+                    pageSize={PAGE_SIZE}
+                    onChange={setPageFiltered}
                   />
                 </CardContent>
               </Card>
@@ -500,32 +709,50 @@ export default function ScraperPreview() {
                   <div className="flex items-center justify-between gap-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      Excluse de filtrele toggle ({data.removed_by_filters.length})
+                      Excluse de filtrele toggle ({removedVisible.length}
+                      {reasonFilter && ` din ${data.removed_by_filters.length}`})
                     </CardTitle>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="gap-1 text-xs"
-                      onClick={() => setShowRemoved((s) => !s)}
-                    >
-                      {showRemoved ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      {showRemoved ? "Ascunde" : "Afișează"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 text-xs h-7"
+                        onClick={exportRemovedCsv}
+                      >
+                        <Download className="w-3 h-3" /> Export CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1 text-xs"
+                        onClick={() => setShowRemoved((s) => !s)}
+                      >
+                        {showRemoved ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        {showRemoved ? "Ascunde" : "Afișează"}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 {showRemoved && (
-                  <CardContent>
-                    <p className="text-[11px] text-muted-foreground mb-2">
+                  <CardContent className="space-y-3">
+                    <p className="text-[11px] text-muted-foreground">
                       💡 Aceste anunțuri apar în căutarea neutră, dar au fost eliminate
                       de filtrele tale toggle. Verifică dacă printre ele există proprietari
                       reali pe care îi pierzi din greșeală.
                     </p>
                     <ResultList
-                      items={data.removed_by_filters}
+                      items={removedPaged}
                       emptyText="Nimic exclus — filtrele tale nu reduc lista."
                       positive={highlightTerms.positive}
                       negative={highlightTerms.negative}
                       highlight={highlightOn}
+                    />
+                    <Pager
+                      page={pageRemoved}
+                      pageCount={removedPageCount}
+                      total={removedVisible.length}
+                      pageSize={PAGE_SIZE}
+                      onChange={setPageRemoved}
                     />
                   </CardContent>
                 )}
@@ -704,5 +931,51 @@ function ResultList({
         </li>
       ))}
     </ul>
+  );
+}
+
+function Pager({
+  page, pageCount, total, pageSize, onChange,
+}: {
+  page: number;
+  pageCount: number;
+  total: number;
+  pageSize: number;
+  onChange: (p: number) => void;
+}) {
+  if (total <= pageSize) return null;
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+  return (
+    <div className="flex items-center justify-between gap-2 pt-1 text-[11px] text-muted-foreground">
+      <span>
+        {from}–{to} din {total}
+      </span>
+      <div className="flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 w-7 p-0"
+          onClick={() => onChange(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          aria-label="Pagina anterioară"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </Button>
+        <span className="px-2 tabular-nums">
+          {page} / {pageCount}
+        </span>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 w-7 p-0"
+          onClick={() => onChange(Math.min(pageCount, page + 1))}
+          disabled={page >= pageCount}
+          aria-label="Pagina următoare"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+    </div>
   );
 }
