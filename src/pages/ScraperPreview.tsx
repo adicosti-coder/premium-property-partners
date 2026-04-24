@@ -452,15 +452,30 @@ export default function ScraperPreview() {
   const filteredPaged = filteredVisible.slice((pageFiltered - 1) * pageSize, pageFiltered * pageSize);
   const removedPaged = removedVisible.slice((pageRemoved - 1) * pageSize, pageRemoved * pageSize);
 
-  // Collect distinct reasons across both lists for quick-pick chips
-  const distinctReasons = useMemo(() => {
-    if (!data) return [] as string[];
-    const set = new Set<string>();
+  // Collect distinct reasons + counts across both lists for quick-pick chips
+  const reasonCounts = useMemo(() => {
+    if (!data) return [] as { reason: string; count: number }[];
+    const map = new Map<string, number>();
     [...data.filtered_results, ...data.removed_by_filters].forEach((it) => {
-      it.owner_signal.reasons.forEach((r) => set.add(r));
+      it.owner_signal.reasons.forEach((r) => map.set(r, (map.get(r) || 0) + 1));
     });
-    return [...set].slice(0, 12);
+    return [...map.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([reason, count]) => ({ reason, count }));
   }, [data]);
+
+  // Per-category counts (for chip badges in lists)
+  const ownerCount = useMemo(
+    () => (data?.filtered_results || []).filter((it) => it.owner_signal.isOwner).length,
+    [data],
+  );
+  const suspectCount = useMemo(
+    () => (data?.filtered_results || []).filter(
+      (it) => !it.owner_signal.isOwner && it.owner_signal.reasons.some((r) => r.startsWith("⚠️"))
+    ).length,
+    [data],
+  );
 
   const stats = data?.stats;
   const ownerPct = useMemo(() => {
