@@ -1072,7 +1072,7 @@ function ResultList({
                           : "border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/5"
                       )}
                     >
-                      {r}
+                      <HighlightedText text={r} positive={positive} negative={negative} enabled={highlight} />
                     </span>
                   ))}
                 </div>
