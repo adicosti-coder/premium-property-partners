@@ -335,6 +335,26 @@ function cleanTitleStatic(title: string) {
   return title.replace(/🏢|🏰/g, "").replace(/\|/g, "").replace(/\s{2,}/g, " ").trim();
 }
 
+/**
+ * Detects if a lead is a search/listing page (e.g. OLX category or query result page)
+ * rather than an individual property ad. Used to hide noise from the leads table.
+ */
+function isSearchPageLead(url?: string | null, title?: string | null): boolean {
+  const u = (url || "").toLowerCase();
+  const t = (title || "").toLowerCase();
+  if (!u && !t) return false;
+  // OLX search/category pages contain /q-... or end at category level (no /d/oferta/ slug)
+  if (u.includes("/q-")) return true;
+  if (u.includes("olx.ro") && !u.includes("/d/oferta/") && !u.includes("/oferta/")) return true;
+  // imobiliare.ro / storia listing pages
+  if (u.match(/imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/)) return true;
+  if (u.match(/storia\.ro\/ro\/rezultate\//)) return true;
+  // Title heuristics for OLX-style search result pages
+  if (t.includes("anunturi gratuite") || t.includes("anunturi imobiliare")) return true;
+  if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro")) return true;
+  return false;
+}
+
 function deriveListingType(title: string, dbType: string): string {
   const upper = (title || "").toUpperCase();
   if (upper.includes("INCHIRIERE") || upper.includes("ÎNCHIRIERE") || upper.includes("CHIRIE")) return "inchiriere";
@@ -387,6 +407,7 @@ const ScraperLeads = () => {
   const [appliedFilters, setAppliedFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
   const [showArchived, setShowArchived] = useState(false);
   const [hideSnoozed, setHideSnoozed] = useState(true);
+  const [hideSearchPages, setHideSearchPages] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Debounced search to reduce filter recalcs
@@ -588,6 +609,10 @@ const ScraperLeads = () => {
       const now = Date.now();
       result = result.filter((l) => !l.snoozed_until || new Date(l.snoozed_until).getTime() <= now);
     }
+    // Hide search/listing pages (not individual ads) — show only real listings
+    if (hideSearchPages) {
+      result = result.filter((l) => !isSearchPageLead(l.url, l.title));
+    }
 
     // ── Advanced filters ──
     const af = appliedFilters;
@@ -648,7 +673,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed]);
+  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -1917,6 +1942,26 @@ const ScraperLeads = () => {
             {renderStatCard("Interesați", pipelineStats.interested, <Handshake className="w-4 h-4 text-white" />, "bg-emerald-500")}
             {renderStatCard("Clienți", pipelineStats.converted, <CheckCircle className="w-4 h-4 text-white" />, "bg-green-600")}
             {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
+          </div>
+
+          {/* Hide search/listing pages toggle — keeps the table focused on individual ads */}
+          <div className="flex items-center gap-2 text-xs px-1 mb-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setHideSearchPages((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors ${
+                hideSearchPages
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+              }`}
+              aria-pressed={hideSearchPages}
+              title="Ascunde paginile de listare/căutare (ex. categorii OLX) și afișează doar anunțurile individuale"
+            >
+              {hideSearchPages ? "✅" : "⬜"} Doar anunțuri individuale
+            </button>
+            <span className="text-[10px] text-muted-foreground">
+              (ascunde paginile de tip „/q-…" și categoriile OLX)
+            </span>
           </div>
 
           {/* Active filters indicator */}
