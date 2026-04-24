@@ -340,18 +340,28 @@ function cleanTitleStatic(title: string) {
  * rather than an individual property ad. Used to hide noise from the leads table.
  */
 function isSearchPageLead(url?: string | null, title?: string | null): boolean {
-  const u = (url || "").toLowerCase();
-  const t = (title || "").toLowerCase();
+  const u = (url || "").toLowerCase().split("?")[0]; // strip query string
+  const t = (title || "").toLowerCase().trim();
   if (!u && !t) return false;
-  // OLX search/category pages contain /q-... or end at category level (no /d/oferta/ slug)
+
+  // ── Allow-list: known individual-ad URL patterns ──
+  const isIndividualAd =
+    u.includes("/d/oferta/") ||              // OLX individual ad
+    /storia\.ro\/ro\/oferta\//.test(u) ||    // Storia individual ad
+    /imobiliare\.ro\/oferta-/.test(u) ||     // imobiliare.ro individual ad
+    /imobiliare\.ro\/[^/]+\/[^/]+\/[A-Z0-9]{6,}/i.test(url || ""); // imobiliare.ro slug-id pattern
+  if (isIndividualAd) return false;
+
+  // ── URL-based search/category page detection ──
   if (u.includes("/q-")) return true;
-  if (u.includes("olx.ro") && !u.includes("/d/oferta/") && !u.includes("/oferta/")) return true;
-  // imobiliare.ro / storia listing pages
-  if (u.match(/imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/)) return true;
-  if (u.match(/storia\.ro\/ro\/rezultate\//)) return true;
-  // Title heuristics for OLX-style search result pages
+  if (u.includes("olx.ro/imobiliare")) return true; // OLX category root
+  if (/imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u)) return true;
+  if (/storia\.ro\/ro\/rezultate\//.test(u)) return true;
+
+  // ── Title-based heuristics (OLX-style result pages) ──
   if (t.includes("anunturi gratuite") || t.includes("anunturi imobiliare")) return true;
   if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro")) return true;
+
   return false;
 }
 
