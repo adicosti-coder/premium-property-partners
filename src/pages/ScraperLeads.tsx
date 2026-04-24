@@ -333,6 +333,7 @@ const ScraperLeads = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [listingTab, setListingTab] = useState<"all" | "vanzare" | "inchiriere">("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "pipeline" | "analytics">(() => (localStorage.getItem("scraper:viewMode") as any) || "table");
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
