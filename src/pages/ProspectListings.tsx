@@ -23,6 +23,7 @@ import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import SEOHead from "@/components/SEOHead";
+import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
 import type { User } from "@supabase/supabase-js";
