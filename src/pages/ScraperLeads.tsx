@@ -1297,8 +1297,8 @@ const ScraperLeads = () => {
                 <Phone className="w-3.5 h-3.5" /> {selectedLead.phone}
               </a>
             )}
-            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[selectedLead.source] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
-              {selectedLead.source ?? 'OLX'}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[normalizePlatformLabel(selectedLead.source)] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+              {normalizePlatformLabel(selectedLead.source)}
             </span>
             <span className="text-[10px] text-muted-foreground">
               {getRelativeDate(selectedLead.created_at)}
