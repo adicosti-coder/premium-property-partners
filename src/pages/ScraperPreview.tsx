@@ -147,10 +147,49 @@ export default function ScraperPreview() {
   const [highlightOn, setHighlightOn] = useState(true);
   const [compareOn, setCompareOn] = useState(false);
   const [finalized, setFinalized] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+
+  // Quick filter by reason / keyword in title/url/reasons
+  const [reasonFilter, setReasonFilter] = useState("");
+  // Pagination
+  const PAGE_SIZE = 10;
+  const [pageFiltered, setPageFiltered] = useState(1);
+  const [pageRemoved, setPageRemoved] = useState(1);
 
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overview, setOverview] = useState<QueryOverviewRow[] | null>(null);
+
+  // ── Session persistence (localStorage) ───────────────
+  const sessionKey = keywordId ? `scraper-preview-session:${keywordId}` : null;
+
+  // Restore on mount / kw change
+  useEffect(() => {
+    if (!sessionKey) return;
+    try {
+      const raw = localStorage.getItem(sessionKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved.data) setData(saved.data);
+      if (typeof saved.compareOn === "boolean") setCompareOn(saved.compareOn);
+      if (typeof saved.highlightOn === "boolean") setHighlightOn(saved.highlightOn);
+      if (typeof saved.finalized === "boolean") setFinalized(saved.finalized);
+      if (typeof saved.reasonFilter === "string") setReasonFilter(saved.reasonFilter);
+      if (typeof saved.showRemoved === "boolean") setShowRemoved(saved.showRemoved);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionKey]);
+
+  // Persist on relevant change
+  useEffect(() => {
+    if (!sessionKey) return;
+    try {
+      localStorage.setItem(sessionKey, JSON.stringify({
+        data, compareOn, highlightOn, finalized, reasonFilter, showRemoved,
+        savedAt: Date.now(),
+      }));
+    } catch { /* quota – ignore */ }
+  }, [sessionKey, data, compareOn, highlightOn, finalized, reasonFilter, showRemoved]);
 
   async function runPreview() {
     if (!keywordId) {
