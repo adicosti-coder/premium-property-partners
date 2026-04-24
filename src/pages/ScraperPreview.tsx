@@ -677,16 +677,28 @@ export default function ScraperPreview() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    Anunțuri rămase după filtre ({data.filtered_results.length})
+                    Anunțuri rămase după filtre ({filteredVisible.length}
+                    {reasonFilter && ` din ${data.filtered_results.length}`})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
                   <ResultList
-                    items={data.filtered_results}
-                    emptyText="Niciun rezultat după aplicarea filtrelor."
+                    items={filteredPaged}
+                    emptyText={
+                      reasonFilter
+                        ? "Niciun rezultat care să corespundă filtrului rapid."
+                        : "Niciun rezultat după aplicarea filtrelor."
+                    }
                     positive={highlightTerms.positive}
                     negative={highlightTerms.negative}
                     highlight={highlightOn}
+                  />
+                  <Pager
+                    page={pageFiltered}
+                    pageCount={filteredPageCount}
+                    total={filteredVisible.length}
+                    pageSize={PAGE_SIZE}
+                    onChange={setPageFiltered}
                   />
                 </CardContent>
               </Card>
@@ -697,32 +709,50 @@ export default function ScraperPreview() {
                   <div className="flex items-center justify-between gap-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      Excluse de filtrele toggle ({data.removed_by_filters.length})
+                      Excluse de filtrele toggle ({removedVisible.length}
+                      {reasonFilter && ` din ${data.removed_by_filters.length}`})
                     </CardTitle>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="gap-1 text-xs"
-                      onClick={() => setShowRemoved((s) => !s)}
-                    >
-                      {showRemoved ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      {showRemoved ? "Ascunde" : "Afișează"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 text-xs h-7"
+                        onClick={exportRemovedCsv}
+                      >
+                        <Download className="w-3 h-3" /> Export CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1 text-xs"
+                        onClick={() => setShowRemoved((s) => !s)}
+                      >
+                        {showRemoved ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        {showRemoved ? "Ascunde" : "Afișează"}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 {showRemoved && (
-                  <CardContent>
-                    <p className="text-[11px] text-muted-foreground mb-2">
+                  <CardContent className="space-y-3">
+                    <p className="text-[11px] text-muted-foreground">
                       💡 Aceste anunțuri apar în căutarea neutră, dar au fost eliminate
                       de filtrele tale toggle. Verifică dacă printre ele există proprietari
                       reali pe care îi pierzi din greșeală.
                     </p>
                     <ResultList
-                      items={data.removed_by_filters}
+                      items={removedPaged}
                       emptyText="Nimic exclus — filtrele tale nu reduc lista."
                       positive={highlightTerms.positive}
                       negative={highlightTerms.negative}
                       highlight={highlightOn}
+                    />
+                    <Pager
+                      page={pageRemoved}
+                      pageCount={removedPageCount}
+                      total={removedVisible.length}
+                      pageSize={PAGE_SIZE}
+                      onChange={setPageRemoved}
                     />
                   </CardContent>
                 )}
