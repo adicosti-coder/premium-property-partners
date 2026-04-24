@@ -335,6 +335,26 @@ function cleanTitleStatic(title: string) {
   return title.replace(/🏢|🏰/g, "").replace(/\|/g, "").replace(/\s{2,}/g, " ").trim();
 }
 
+/**
+ * Detects if a lead is a search/listing page (e.g. OLX category or query result page)
+ * rather than an individual property ad. Used to hide noise from the leads table.
+ */
+function isSearchPageLead(url?: string | null, title?: string | null): boolean {
+  const u = (url || "").toLowerCase();
+  const t = (title || "").toLowerCase();
+  if (!u && !t) return false;
+  // OLX search/category pages contain /q-... or end at category level (no /d/oferta/ slug)
+  if (u.includes("/q-")) return true;
+  if (u.includes("olx.ro") && !u.includes("/d/oferta/") && !u.includes("/oferta/")) return true;
+  // imobiliare.ro / storia listing pages
+  if (u.match(/imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/)) return true;
+  if (u.match(/storia\.ro\/ro\/rezultate\//)) return true;
+  // Title heuristics for OLX-style search result pages
+  if (t.includes("anunturi gratuite") || t.includes("anunturi imobiliare")) return true;
+  if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro")) return true;
+  return false;
+}
+
 function deriveListingType(title: string, dbType: string): string {
   const upper = (title || "").toUpperCase();
   if (upper.includes("INCHIRIERE") || upper.includes("ÎNCHIRIERE") || upper.includes("CHIRIE")) return "inchiriere";
