@@ -1649,7 +1649,15 @@ const ScraperLeads = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+                      {filterType === "proprietar"
+                        ? "Oportunități Direct de la Proprietari"
+                        : filterType === "agentie"
+                        ? "Lead-uri Agenții Imobiliare"
+                        : filterType === "dezvoltator"
+                        ? "Lead-uri Dezvoltatori"
+                        : t.title}
+                    </h1>
                     {(isScraping || recentScanPulse) && (
                       <Badge className={cn(
                         "text-[10px] px-2 py-0.5 gap-1",
@@ -1662,7 +1670,11 @@ const ScraperLeads = () => {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {filterType === "proprietar"
+                      ? "Lead-uri verificate de la persoane fizice. Agențiile și dezvoltatorii sunt filtrați automat ca să economisești timp."
+                      : t.subtitle}
+                  </p>
                 </div>
               </div>
             </div>
