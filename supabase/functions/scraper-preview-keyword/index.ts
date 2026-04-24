@@ -186,11 +186,16 @@ Deno.serve(async (req) => {
       const currentFilters = (existing?.owner_filters && typeof existing.owner_filters === "object")
         ? existing.owner_filters as Record<string, unknown>
         : {};
+      const isLastStep: boolean = body?.last_step === true;
       const verification = {
         verified_at: new Date().toISOString(),
         applied_hints: Array.isArray(body?.applied_hints) ? body.applied_hints : [],
         final_query: typeof body?.final_query === "string" ? body.final_query : null,
         stats: body?.stats ?? null,
+        last_step: isLastStep,
+        // When admin clicks "Finalizează ca ultim pas" we also tag the batch
+        // as Processed so dashboards can filter on it.
+        status: isLastStep ? "processed" : "verified",
       };
       const nextFilters = { ...currentFilters, last_preview_verified: verification };
       const { error: upErr } = await supabase
