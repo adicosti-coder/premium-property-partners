@@ -1980,8 +1980,21 @@ const ScraperLeads = () => {
             >
               {hideSearchPages ? "✅" : "⬜"} Doar anunțuri individuale
             </button>
+            <button
+              type="button"
+              onClick={() => setHideAgencies((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors ${
+                hideAgencies
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+              }`}
+              aria-pressed={hideAgencies}
+              title="Ascunde lead-urile clasificate ca agenții sau dezvoltatori — păstrează doar persoane fizice / proprietari"
+            >
+              {hideAgencies ? "✅" : "⬜"} Doar Proprietari (persoane fizice)
+            </button>
             <span className="text-[10px] text-muted-foreground">
-              (ascunde paginile de tip „/q-…" și categoriile OLX)
+              (ascunde paginile de listare + agențiile/dezvoltatorii)
             </span>
           </div>
 
