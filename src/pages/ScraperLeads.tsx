@@ -1944,6 +1944,26 @@ const ScraperLeads = () => {
             {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
           </div>
 
+          {/* Hide search/listing pages toggle — keeps the table focused on individual ads */}
+          <div className="flex items-center gap-2 text-xs px-1 mb-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setHideSearchPages((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors ${
+                hideSearchPages
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+              }`}
+              aria-pressed={hideSearchPages}
+              title="Ascunde paginile de listare/căutare (ex. categorii OLX) și afișează doar anunțurile individuale"
+            >
+              {hideSearchPages ? "✅" : "⬜"} Doar anunțuri individuale
+            </button>
+            <span className="text-[10px] text-muted-foreground">
+              (ascunde paginile de tip „/q-…" și categoriile OLX)
+            </span>
+          </div>
+
           {/* Active filters indicator */}
           {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || platformFilter !== 'all' || smartFilter !== 'all' || countActiveFilters(advancedFilters) > 0) && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
