@@ -1501,8 +1501,12 @@ const ScraperLeads = () => {
             </Button>
           </div>
 
-          {/* Blacklist + Archive */}
-          <div className="flex gap-2">
+          {/* Mark as Agency + Blacklist + Archive */}
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" className="flex-1 gap-2 text-orange-500 border-orange-500/30 hover:bg-orange-500/10" onClick={() => handleMarkAsAgency(selectedLead)}>
+              <Building2 className="w-4 h-4" />
+              Marchează Agenție
+            </Button>
             {selectedLead.phone && (
               <Button variant="outline" className="flex-1 gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10" onClick={() => handleBlacklist(selectedLead)}>
                 <Ban className="w-4 h-4" />
