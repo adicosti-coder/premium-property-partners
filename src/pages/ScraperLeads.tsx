@@ -624,6 +624,16 @@ const ScraperLeads = () => {
     if (hideSearchPages) {
       result = result.filter((l) => !isSearchPageLead(l.url, l.title));
     }
+    // Global rule: keep only owner / private-person leads (hide agencies & developers)
+    if (hideAgencies) {
+      result = result.filter(
+        (l) =>
+          l._prospect_type !== "agentie" &&
+          l._prospect_type !== "dezvoltator" &&
+          l.prospect_category !== "agentie" &&
+          l.prospect_category !== "dezvoltator"
+      );
+    }
 
     // ── Advanced filters ──
     const af = appliedFilters;
