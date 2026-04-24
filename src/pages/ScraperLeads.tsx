@@ -930,6 +930,50 @@ const ScraperLeads = () => {
     toast.success("Cuvânt cheie actualizat");
   };
 
+  // ── Owner-only filters per keyword (Doar Proprietari / Privați / Persoane fizice)
+  const startEditingFilters = (kw: SearchKeyword) => {
+    const defaults = getDefaultOwnerFilters(kw.platform);
+    setFiltersEditingId(kw.id);
+    setFiltersDraftText(kw.owner_filters?.text ?? defaults.text ?? "");
+    setFiltersDraftUrl(kw.owner_filters?.url_hint ?? defaults.url_hint ?? "");
+  };
+
+  const cancelEditingFilters = () => {
+    setFiltersEditingId(null);
+    setFiltersDraftText("");
+    setFiltersDraftUrl("");
+  };
+
+  const handleSaveOwnerFilters = async (id: string) => {
+    setFiltersSavingId(id);
+    const payload = {
+      text: filtersDraftText.trim(),
+      url_hint: filtersDraftUrl.trim(),
+    };
+    const { error } = await supabase
+      .from("scraper_search_keywords")
+      .update({ owner_filters: payload } as any)
+      .eq("id", id);
+    setFiltersSavingId(null);
+    if (error) { toast.error("Eroare la salvarea filtrelor"); return; }
+    cancelEditingFilters();
+    refetchKeywords();
+    toast.success("Filtre Proprietari actualizate");
+  };
+
+  const handleResetOwnerFilters = async (id: string) => {
+    setFiltersSavingId(id);
+    const { error } = await supabase
+      .from("scraper_search_keywords")
+      .update({ owner_filters: {} } as any)
+      .eq("id", id);
+    setFiltersSavingId(null);
+    if (error) { toast.error("Eroare la resetare"); return; }
+    cancelEditingFilters();
+    refetchKeywords();
+    toast.success("Filtre resetate la valorile implicite");
+  };
+
   // ── Agency Name helpers ────────────────────────────
   function deriveAgencyName(title: string): string {
     const agencyPatterns = [
