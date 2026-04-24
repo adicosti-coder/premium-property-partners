@@ -66,9 +66,77 @@ interface ScraperLead {
   ai_insight?: any;
 }
 
+/**
+ * Native platform filter toggles. Each filter is a checkbox shown in the UI
+ * and mapped to a `inurl:` / Google operator hint that the scraper appends to
+ * the query (mirroring the in-platform UI like OLX „Privat", Publi24 „De la
+ * persoane fizice", imobiliare.ro „Publicate de proprietari").
+ *
+ * Stored per keyword in `scraper_search_keywords.owner_filters.toggles` as an
+ * array of filter ids that are ENABLED. Empty/missing = use platform default
+ * (all "owner-only" toggles enabled).
+ */
+interface PlatformFilterDef {
+  id: string;
+  label: string;
+  description?: string;
+  /** Google operator fragment appended when the toggle is ON. */
+  hint: string;
+  /** Whether this filter is on by default for "Doar Proprietari". */
+  defaultOn: boolean;
+}
+
+const PLATFORM_FILTERS: Record<string, PlatformFilterDef[]> = {
+  "OLX": [
+    { id: "private",       label: "Privat (Persoană fizică)", description: "search[private_business]=private", hint: "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private", defaultOn: true },
+    { id: "exclude_firma", label: 'Exclude „Firmă”',          description: "elimină rezultate cu Firma în URL/text", hint: '-inurl:business -"de la firma" -"de la companie"', defaultOn: true },
+  ],
+  "Storia.ro": [
+    { id: "private",        label: "Doar proprietari", description: "ownerTypeSingleSelect=PRIVATE", hint: "inurl:ownerTypeSingleSelect=PRIVATE", defaultOn: true },
+    { id: "exclude_agency", label: "Exclude agenții",  description: "elimină rezultate marcate agency", hint: "-inurl:ownerTypeSingleSelect=AGENCY -inurl:by=agency", defaultOn: true },
+  ],
+  "imobiliare.ro": [
+    { id: "owners",    label: "Publicate de proprietari", description: "/persoane-fizice/ sau /proprietari/", hint: "inurl:persoane-fizice OR inurl:proprietari", defaultOn: true },
+    { id: "no_agency", label: "Fără agenții",             description: "exclude /agentii/",                   hint: "-inurl:agentii -inurl:agency", defaultOn: true },
+    { id: "no_dev",    label: "Fără dezvoltatori",        description: "exclude /dezvoltatori/",              hint: "-inurl:dezvoltatori -inurl:developer", defaultOn: false },
+  ],
+  "Publi24": [
+    { id: "private",  label: "De la persoane fizice", description: "tip-anunt-persoane-fizice", hint: "inurl:tip-anunt-persoane-fizice OR inurl:proprietari", defaultOn: true },
+    { id: "no_firms", label: "Fără companii",         description: "exclude tip-anunt-firma",   hint: "-inurl:tip-anunt-firma -inurl:agentie", defaultOn: true },
+  ],
+  "BursaImobiliara.ro": [
+    { id: "private",   label: "Doar proprietari", description: "/proprietar/ sau /persoane-fizice/", hint: "inurl:proprietar OR inurl:persoane-fizice", defaultOn: true },
+    { id: "no_agency", label: "Fără agenții",     description: "exclude /agentie/",                  hint: "-inurl:agentie -inurl:agency", defaultOn: true },
+  ],
+  "Facebook Marketplace": [
+    { id: "owner_kw",  label: 'Caută „proprietar / persoană fizică”', description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: "no_agency", label: 'Exclude „agenție / comision”',         description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+  ],
+  "Grupuri Facebook": [
+    { id: "owner_kw",  label: 'Caută „proprietar / persoană fizică”', description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: "no_agency", label: 'Exclude „agenție / comision”',         description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+  ],
+  "General": [
+    { id: "owner_kw",  label: 'Caută „proprietar / persoană fizică”',     description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar")', defaultOn: true },
+    { id: "no_agency", label: 'Exclude „agenție / broker / comision”',    description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker', defaultOn: true },
+  ],
+};
+
+/** Unknown / custom platform → fall back to "General" toggles. */
+function getPlatformFilters(platform: string): PlatformFilterDef[] {
+  return PLATFORM_FILTERS[platform] ?? PLATFORM_FILTERS["General"];
+}
+
+/** Default toggle ids enabled for a platform. */
+function getDefaultEnabledFilterIds(platform: string): string[] {
+  return getPlatformFilters(platform).filter((f) => f.defaultOn).map((f) => f.id);
+}
+
 interface KeywordOwnerFilters {
+  /** Ids of toggles enabled for this keyword. */
+  toggles?: string[];
+  /** Free-text override (advanced). Empty / missing = no override. */
   text?: string;
-  url_hint?: string;
 }
 
 interface SearchKeyword {
@@ -79,30 +147,11 @@ interface SearchKeyword {
   owner_filters?: KeywordOwnerFilters | null;
 }
 
-/**
- * Default "Doar Proprietari / Privați / Persoane fizice" filters per platform.
- * Mirror of OWNER_TEXT_FILTER + OWNER_URL_FILTERS from scrape-prospects edge fn.
- * Shown as placeholder when a keyword row hasn't been customized yet.
- */
-const DEFAULT_OWNER_TEXT_FILTER =
-  '(proprietar OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar") -agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker';
-
-const PLATFORM_OWNER_URL_DEFAULTS: Record<string, string> = {
-  "OLX": "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private",
-  "Storia.ro": "inurl:ownerTypeSingleSelect=PRIVATE",
-  "imobiliare.ro": "inurl:persoane-fizice OR inurl:proprietari",
-  "Publi24": "inurl:tip-anunt-persoane-fizice OR inurl:proprietari",
-  "BursaImobiliara.ro": "inurl:proprietar OR inurl:persoane-fizice",
-  "Facebook Marketplace": "",
-  "Grupuri Facebook": "",
-  "General": "",
-};
-
-function getDefaultOwnerFilters(platform: string): KeywordOwnerFilters {
-  return {
-    text: DEFAULT_OWNER_TEXT_FILTER,
-    url_hint: PLATFORM_OWNER_URL_DEFAULTS[platform] ?? "",
-  };
+/** Returns the toggle ids currently active for a keyword (defaults if not customized). */
+function getActiveToggleIds(kw: Pick<SearchKeyword, "platform" | "owner_filters">): string[] {
+  const stored = kw.owner_filters?.toggles;
+  if (Array.isArray(stored)) return stored;
+  return getDefaultEnabledFilterIds(kw.platform);
 }
 
 interface StatusHistoryEntry {
@@ -307,8 +356,6 @@ const ScraperLeads = () => {
   const [editingKeywordId, setEditingKeywordId] = useState<string | null>(null);
   const [editingKeywordText, setEditingKeywordText] = useState("");
   const [filtersEditingId, setFiltersEditingId] = useState<string | null>(null);
-  const [filtersDraftText, setFiltersDraftText] = useState("");
-  const [filtersDraftUrl, setFiltersDraftUrl] = useState("");
   const [filtersSavingId, setFiltersSavingId] = useState<string | null>(null);
   const [editingAgencyName, setEditingAgencyName] = useState(false);
   const [agencyNameValue, setAgencyNameValue] = useState("");
@@ -930,35 +977,27 @@ const ScraperLeads = () => {
     toast.success("Cuvânt cheie actualizat");
   };
 
-  // ── Owner-only filters per keyword (Doar Proprietari / Privați / Persoane fizice)
-  const startEditingFilters = (kw: SearchKeyword) => {
-    const defaults = getDefaultOwnerFilters(kw.platform);
-    setFiltersEditingId(kw.id);
-    setFiltersDraftText(kw.owner_filters?.text ?? defaults.text ?? "");
-    setFiltersDraftUrl(kw.owner_filters?.url_hint ?? defaults.url_hint ?? "");
-  };
+  // ── Owner-only filter toggles per keyword ──────────
+  // Toggle a single platform filter for a keyword. Persists immediately so the
+  // UI feels like the native platform filter panels (OLX/Storia/imobiliare.ro).
+  const handleToggleOwnerFilter = async (kw: SearchKeyword, filterId: string) => {
+    const current = getActiveToggleIds(kw);
+    const next = current.includes(filterId)
+      ? current.filter((id) => id !== filterId)
+      : [...current, filterId];
 
-  const cancelEditingFilters = () => {
-    setFiltersEditingId(null);
-    setFiltersDraftText("");
-    setFiltersDraftUrl("");
-  };
-
-  const handleSaveOwnerFilters = async (id: string) => {
-    setFiltersSavingId(id);
-    const payload = {
-      text: filtersDraftText.trim(),
-      url_hint: filtersDraftUrl.trim(),
+    setFiltersSavingId(kw.id);
+    const payload: KeywordOwnerFilters = {
+      ...(kw.owner_filters ?? {}),
+      toggles: next,
     };
     const { error } = await supabase
       .from("scraper_search_keywords")
       .update({ owner_filters: payload } as any)
-      .eq("id", id);
+      .eq("id", kw.id);
     setFiltersSavingId(null);
-    if (error) { toast.error("Eroare la salvarea filtrelor"); return; }
-    cancelEditingFilters();
+    if (error) { toast.error("Eroare la salvarea filtrului"); return; }
     refetchKeywords();
-    toast.success("Filtre Proprietari actualizate");
   };
 
   const handleResetOwnerFilters = async (id: string) => {
@@ -969,9 +1008,12 @@ const ScraperLeads = () => {
       .eq("id", id);
     setFiltersSavingId(null);
     if (error) { toast.error("Eroare la resetare"); return; }
-    cancelEditingFilters();
     refetchKeywords();
     toast.success("Filtre resetate la valorile implicite");
+  };
+
+  const toggleFiltersExpanded = (id: string) => {
+    setFiltersEditingId(filtersEditingId === id ? null : id);
   };
 
   // ── Agency Name helpers ────────────────────────────
@@ -1868,14 +1910,15 @@ const ScraperLeads = () => {
                   {/* Keywords list */}
                   <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
                     {searchKeywords.map((kw) => {
-                      const defaults = getDefaultOwnerFilters(kw.platform);
-                      const hasCustomFilters =
-                        !!kw.owner_filters &&
-                        ((kw.owner_filters.text && kw.owner_filters.text.trim().length > 0) ||
-                         (kw.owner_filters.url_hint && kw.owner_filters.url_hint.trim().length > 0));
-                      const effectiveText = (kw.owner_filters?.text?.trim()) || defaults.text || "";
-                      const effectiveUrl = (kw.owner_filters?.url_hint?.trim()) || defaults.url_hint || "";
-                      const isEditingFilters = filtersEditingId === kw.id;
+                      const platformDefs = getPlatformFilters(kw.platform);
+                      const activeIds = getActiveToggleIds(kw);
+                      const defaultIds = getDefaultEnabledFilterIds(kw.platform);
+                      const isCustomized = !!kw.owner_filters?.toggles
+                        && (activeIds.length !== defaultIds.length
+                            || activeIds.some((id) => !defaultIds.includes(id))
+                            || defaultIds.some((id) => !activeIds.includes(id)));
+                      const isExpanded = filtersEditingId === kw.id;
+                      const activeCount = platformDefs.filter((f) => activeIds.includes(f.id)).length;
 
                       return (
                       <div key={kw.id} className={cn(
@@ -1921,16 +1964,18 @@ const ScraperLeads = () => {
                             variant="ghost"
                             className={cn(
                               "h-6 px-1.5 gap-1 text-[10px]",
-                              hasCustomFilters
+                              isCustomized
                                 ? "text-amber-600 dark:text-amber-400 hover:text-amber-500"
                                 : "text-muted-foreground hover:text-primary"
                             )}
-                            title="Editează filtrele Proprietari / Privați / Persoane fizice pentru această platformă"
-                            onClick={() => isEditingFilters ? cancelEditingFilters() : startEditingFilters(kw)}
+                            title="Editează filtrele platformei pentru această căutare"
+                            onClick={() => toggleFiltersExpanded(kw.id)}
                           >
                             <Filter className="w-3 h-3" />
                             <span className="hidden sm:inline">Filtre</span>
-                            {hasCustomFilters && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                            <span className="text-[9px] opacity-80">({activeCount}/{platformDefs.length})</span>
+                            {isCustomized && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                           </Button>
                           {editingKeywordId !== kw.id && (
                             <Button
@@ -1952,83 +1997,85 @@ const ScraperLeads = () => {
                           </Button>
                         </div>
 
-                        {/* Owner-only filters editor (Proprietari / Privați / Persoane fizice) */}
-                        {isEditingFilters ? (
+                        {/* Native platform filter toggles (Privat / Persoană fizică / Proprietari) */}
+                        {isExpanded && (
                           <div className="border-t border-border/60 px-3 py-2.5 space-y-2 bg-background/40">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-2">
                               <span className="text-[11px] font-medium flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                                 <Filter className="w-3 h-3" />
-                                Filtre „Doar Proprietari / Privați / Persoane fizice" — {kw.platform}
+                                Filtre {kw.platform} — selectează ce să includă căutarea
                               </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
-                                onClick={() => handleResetOwnerFilters(kw.id)}
-                                disabled={filtersSavingId === kw.id}
-                              >
-                                Resetează la implicit
-                              </Button>
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-muted-foreground mb-0.5 block">
-                                Filtru text (Google operators)
-                              </label>
-                              <Textarea
-                                value={filtersDraftText}
-                                onChange={(e) => setFiltersDraftText(e.target.value)}
-                                placeholder={defaults.text}
-                                className="text-[11px] font-mono min-h-[60px] leading-snug"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-muted-foreground mb-0.5 block">
-                                Filtru URL (inurl:…) — specific platformei
-                              </label>
-                              <Input
-                                value={filtersDraftUrl}
-                                onChange={(e) => setFiltersDraftUrl(e.target.value)}
-                                placeholder={defaults.url_hint || "(nu se aplică pentru această platformă)"}
-                                className="h-7 text-[11px] font-mono"
-                              />
-                            </div>
-                            <div className="flex items-center justify-end gap-1.5 pt-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-[11px]"
-                                onClick={cancelEditingFilters}
-                                disabled={filtersSavingId === kw.id}
-                              >
-                                Anulează
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="h-7 text-[11px] gap-1"
-                                onClick={() => handleSaveOwnerFilters(kw.id)}
-                                disabled={filtersSavingId === kw.id}
-                              >
-                                {filtersSavingId === kw.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                                Salvează filtre
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="border-t border-border/40 px-3 py-1.5 flex items-start gap-1.5 text-[10px] text-muted-foreground">
-                            <Filter className="w-3 h-3 mt-0.5 shrink-0 opacity-60" />
-                            <div className="flex-1 min-w-0 space-y-0.5">
-                              <div className="truncate font-mono" title={effectiveText}>
-                                <span className="opacity-60">text:</span> {effectiveText || "—"}
-                              </div>
-                              {effectiveUrl && (
-                                <div className="truncate font-mono" title={effectiveUrl}>
-                                  <span className="opacity-60">url:</span> {effectiveUrl}
-                                </div>
+                              {isCustomized && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                                  onClick={() => handleResetOwnerFilters(kw.id)}
+                                  disabled={filtersSavingId === kw.id}
+                                >
+                                  Resetează la implicit
+                                </Button>
                               )}
-                              <div className="text-[9px] opacity-70">
-                                {hasCustomFilters ? "✏️ filtre personalizate" : "ℹ️ filtre implicite pentru " + kw.platform}
-                              </div>
                             </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                              {platformDefs.map((flt) => {
+                                const checked = activeIds.includes(flt.id);
+                                return (
+                                  <label
+                                    key={flt.id}
+                                    className={cn(
+                                      "flex items-start gap-2 px-2 py-1.5 rounded-md border cursor-pointer transition-colors",
+                                      checked
+                                        ? "border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10"
+                                        : "border-border/60 bg-muted/20 hover:bg-muted/40"
+                                    )}
+                                  >
+                                    <Checkbox
+                                      checked={checked}
+                                      onCheckedChange={() => handleToggleOwnerFilter(kw, flt.id)}
+                                      disabled={filtersSavingId === kw.id}
+                                      className="mt-0.5"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-[11px] font-medium leading-tight">{flt.label}</div>
+                                      {flt.description && (
+                                        <div className="text-[9px] text-muted-foreground font-mono truncate" title={flt.hint}>
+                                          {flt.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <p className="text-[9px] text-muted-foreground/80 leading-snug">
+                              💡 Filtrele bifate sunt aplicate automat căutării pe {kw.platform}, exact ca în panoul nativ al platformei (ex. OLX: <em>Privat</em>, Publi24: <em>De la persoane fizice</em>, imobiliare.ro: <em>Publicate de proprietari</em>).
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Compact summary when collapsed */}
+                        {!isExpanded && (
+                          <div className="border-t border-border/40 px-3 py-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
+                            <Filter className="w-3 h-3 shrink-0 opacity-60" />
+                            {platformDefs.filter((f) => activeIds.includes(f.id)).length === 0 ? (
+                              <span className="italic">Niciun filtru activ — căutare neutră</span>
+                            ) : (
+                              platformDefs
+                                .filter((f) => activeIds.includes(f.id))
+                                .map((f) => (
+                                  <span
+                                    key={f.id}
+                                    className="px-1.5 py-0.5 rounded border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/5 text-[9px]"
+                                    title={f.hint}
+                                  >
+                                    ✓ {f.label}
+                                  </span>
+                                ))
+                            )}
+                            {isCustomized && (
+                              <span className="ml-auto text-[9px] text-amber-600 dark:text-amber-400">✏️ personalizat</span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2039,7 +2086,7 @@ const ScraperLeads = () => {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    💡 Dublu-click pe un cuvânt cheie sau apasă ✏️ pentru a-l edita. Apasă <Filter className="w-2.5 h-2.5 inline -mt-0.5" /> <strong>Filtre</strong> pentru a personaliza filtrele „Doar Proprietari / Privați / Persoane fizice" pentru fiecare platformă (text Google + parametri URL specifici). Dacă lași gol, scraper-ul folosește setările implicite per platformă.
+                    💡 Apasă <Filter className="w-2.5 h-2.5 inline -mt-0.5" /> <strong>Filtre</strong> lângă fiecare cuvânt cheie pentru a bifa/debifa filtrele native ale platformei (ex. OLX „Privat", Publi24 „De la persoane fizice", imobiliare.ro „Publicate de proprietari"). Modificările se salvează automat.
                   </p>
                 </CardContent>
               </Card>
