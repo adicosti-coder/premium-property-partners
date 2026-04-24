@@ -162,6 +162,53 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ── Mode: finalize ─ marks a preview batch as verified for a given keyword.
+    //    Stores a verification stamp inside scraper_search_keywords.owner_filters.last_preview_verified.
+    //    Read-only on listings; idempotent.
+    if (mode === "finalize") {
+      if (!keywordId) {
+        return new Response(
+          JSON.stringify({ success: false, error: "keyword_id required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const { data: existing, error: exErr } = await supabase
+        .from("scraper_search_keywords")
+        .select("owner_filters")
+        .eq("id", keywordId)
+        .maybeSingle();
+      if (exErr) {
+        return new Response(
+          JSON.stringify({ success: false, error: exErr.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const currentFilters = (existing?.owner_filters && typeof existing.owner_filters === "object")
+        ? existing.owner_filters as Record<string, unknown>
+        : {};
+      const verification = {
+        verified_at: new Date().toISOString(),
+        applied_hints: Array.isArray(body?.applied_hints) ? body.applied_hints : [],
+        final_query: typeof body?.final_query === "string" ? body.final_query : null,
+        stats: body?.stats ?? null,
+      };
+      const nextFilters = { ...currentFilters, last_preview_verified: verification };
+      const { error: upErr } = await supabase
+        .from("scraper_search_keywords")
+        .update({ owner_filters: nextFilters })
+        .eq("id", keywordId);
+      if (upErr) {
+        return new Response(
+          JSON.stringify({ success: false, error: upErr.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ success: true, mode, verification }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     if (!keywordId) {
       return new Response(
         JSON.stringify({ success: false, error: "keyword_id required" }),
