@@ -1649,7 +1649,15 @@ const ScraperLeads = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">{t.title}</h1>
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+                      {filterType === "proprietar"
+                        ? "Oportunități Direct de la Proprietari"
+                        : filterType === "agentie"
+                        ? "Lead-uri Agenții Imobiliare"
+                        : filterType === "dezvoltator"
+                        ? "Lead-uri Dezvoltatori"
+                        : t.title}
+                    </h1>
                     {(isScraping || recentScanPulse) && (
                       <Badge className={cn(
                         "text-[10px] px-2 py-0.5 gap-1",
@@ -1662,7 +1670,11 @@ const ScraperLeads = () => {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {filterType === "proprietar"
+                      ? "Lead-uri verificate de la persoane fizice. Agențiile și dezvoltatorii sunt filtrați automat ca să economisești timp."
+                      : t.subtitle}
+                  </p>
                 </div>
               </div>
             </div>
@@ -2269,7 +2281,21 @@ const ScraperLeads = () => {
           ) : viewMode === "analytics" ? (
             <ScraperAnalyticsDashboard leads={(leads || []) as any} />
           ) : filteredLeads.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">{t.noData}</div>
+            <div className="text-center py-20 px-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center text-3xl">
+                {filterType === "proprietar" ? "🏠" : "🔍"}
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {filterType === "proprietar"
+                  ? "Momentan nu sunt lead-uri noi de la proprietari"
+                  : "Niciun lead găsit"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {filterType === "proprietar"
+                  ? "Revenim imediat ce apar oferte noi de la persoane fizice. Între timp, poți rula un scan nou sau ajusta filtrele."
+                  : t.noData}
+              </p>
+            </div>
           ) : viewMode === "pipeline" ? (
             <>
               <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
