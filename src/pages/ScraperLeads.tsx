@@ -195,10 +195,33 @@ const CONVERSATION_LABELS = [
 // ── Source Colors ────────────────────────────────
 const sourceColors: Record<string, string> = {
   "OLX": "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  "OLX-Nou": "bg-orange-500/15 text-orange-300 border-orange-500/30",
-  "Storia": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "Storia.ro": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "imobiliare.ro": "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
   "Publi24": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  "BursaImobiliara.ro": "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  "Facebook Marketplace": "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
+  "Grupuri Facebook": "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  "General": "bg-slate-500/15 text-slate-400 border-slate-500/30",
 };
+
+/**
+ * Normalize raw `lead.source` values to the canonical platform labels used in
+ * PLATFORM_FILTERS / ScraperPreview. Keeps everything consistent across
+ * Scraper Leads chips, ScraperPreview badges and keyword filter toggles.
+ */
+function normalizePlatformLabel(rawSource: string | null | undefined): string {
+  const s = (rawSource || "").trim();
+  if (!s) return "General";
+  const lower = s.toLowerCase();
+  if (lower.startsWith("olx")) return "OLX";
+  if (lower.startsWith("storia")) return "Storia.ro";
+  if (lower.startsWith("imobiliare")) return "imobiliare.ro";
+  if (lower.startsWith("publi24")) return "Publi24";
+  if (lower.startsWith("bursa")) return "BursaImobiliara.ro";
+  if (lower.includes("marketplace")) return "Facebook Marketplace";
+  if (lower.includes("facebook") || lower.includes("grup")) return "Grupuri Facebook";
+  return "General";
+}
 
 // ── Premium Zone Keywords ────────────────────────
 const PREMIUM_KEYWORDS = [
