@@ -157,8 +157,15 @@ function detectPlatformFromQuery(query: string): string | null {
   return null;
 }
 
-/** Apply the global "Doar Proprietari" filter to a query, idempotent. */
-function applyOwnerOnlyFilter(platform: string, query: string): string {
+/** Apply the global "Doar Proprietari" filter to a query, idempotent.
+ *  Per-keyword overrides (from scraper_search_keywords.owner_filters) win
+ *  over the platform defaults so admins can tune them from the UI.
+ */
+function applyOwnerOnlyFilter(
+  platform: string,
+  query: string,
+  override?: { text?: string; url_hint?: string },
+): string {
   const lower = query.toLowerCase();
   // Idempotent: don't double-apply if already contains owner markers
   const alreadyHasOwner =
@@ -170,22 +177,37 @@ function applyOwnerOnlyFilter(platform: string, query: string): string {
 
   let result = query.trim();
 
-  // 1) Always add the negative+positive text filter (unless already present)
+  // 1) Text filter — use override if present, else the global default
+  const textFilter = (override?.text && override.text.trim().length > 0)
+    ? ` ${override.text.trim()}`
+    : OWNER_TEXT_FILTER;
   if (!alreadyHasOwner) {
-    result = `${result}${OWNER_TEXT_FILTER}`;
+    result = `${result}${textFilter}`;
   }
 
-  // 2) Add platform-specific URL hint if known
+  // 2) URL-hint filter — use override if present, else platform default
   const platformKey = OWNER_URL_FILTERS[platform]
     ? platform
     : detectPlatformFromQuery(query) ?? '';
-  const urlHint = OWNER_URL_FILTERS[platformKey];
+  const urlHint = (override?.url_hint && override.url_hint.trim().length > 0)
+    ? override.url_hint.trim()
+    : OWNER_URL_FILTERS[platformKey];
   if (urlHint && !lower.includes(urlHint.split(' ')[0].toLowerCase())) {
     result = `${result} (${urlHint})`;
   }
 
   return result;
 }
+
+/** Public defaults (mirrored from OWNER_URL_FILTERS / OWNER_TEXT_FILTER) so
+ *  the UI can preview what filter will be applied for a given platform. */
+export const PLATFORM_OWNER_FILTER_DEFAULTS: Record<string, { text: string; url_hint: string }> = {
+  'OLX': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['OLX'] },
+  'Storia.ro': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['Storia.ro'] },
+  'imobiliare.ro': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['imobiliare.ro'] },
+  'Publi24': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['Publi24'] },
+  'BursaImobiliara.ro': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['BursaImobiliara.ro'] },
+};
 
 /**
  * Remove diacritics from a string (ă→a, ș→s, ț→t, î→i, â→a).
@@ -198,11 +220,11 @@ function removeDiacritics(text: string): string {
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
  */
-function expandKeywordsWithoutDiacritics(
-  queries: { platform: string; query: string }[]
-): { platform: string; query: string }[] {
+function expandKeywordsWithoutDiacritics<T extends { platform: string; query: string }>(
+  queries: T[]
+): T[] {
   const seen = new Set<string>();
-  const expanded: { platform: string; query: string }[] = [];
+  const expanded: T[] = [];
 
   for (const q of queries) {
     const key = removeDiacritics(q.query).toLowerCase();
@@ -210,10 +232,10 @@ function expandKeywordsWithoutDiacritics(
       seen.add(key);
       const clean = removeDiacritics(q.query);
       // Always push diacritics-free version first (broadest match)
-      expanded.push({ platform: q.platform, query: clean });
+      expanded.push({ ...q, query: clean });
       // If original had diacritics, also keep it for exact-match ranking
       if (clean !== q.query) {
-        expanded.push({ platform: q.platform, query: q.query });
+        expanded.push({ ...q, query: q.query });
       }
     }
   }
@@ -339,16 +361,20 @@ Deno.serve(async (req) => {
     let blacklistedSkipped = 0;
 
     // Load keywords from DB, fallback to hardcoded defaults
-    let queries: { platform: string; query: string }[];
+    let queries: { platform: string; query: string; ownerFilters?: { text?: string; url_hint?: string } }[];
     if (customQuery) {
       queries = [{ platform: 'Custom', query: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
         .from('scraper_search_keywords')
-        .select('keyword, platform')
+        .select('keyword, platform, owner_filters')
         .eq('is_active', true);
       queries = (dbKeywords && dbKeywords.length > 0)
-        ? dbKeywords.map((k: any) => ({ platform: k.platform, query: k.keyword }))
+        ? dbKeywords.map((k: any) => ({
+            platform: k.platform,
+            query: k.keyword,
+            ownerFilters: (k.owner_filters && typeof k.owner_filters === 'object') ? k.owner_filters : undefined,
+          }))
         : DEFAULT_SEARCH_QUERIES;
     }
 
@@ -358,7 +384,7 @@ Deno.serve(async (req) => {
     // GLOBAL RULE: force "Doar Proprietari" filter on every single query
     queries = queries.map((q) => ({
       platform: q.platform,
-      query: applyOwnerOnlyFilter(q.platform, q.query),
+      query: applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
     }));
     console.log(`Expanded to ${queries.length} owner-only search queries`);
 
