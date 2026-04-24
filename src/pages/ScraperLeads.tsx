@@ -2443,6 +2443,15 @@ const ScraperLeads = () => {
                     >
                       <ChevronRight className="h-3 w-3" />
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-3 text-xs text-orange-500 border-orange-500/30 hover:bg-orange-500/10"
+                      onClick={(e) => { e.stopPropagation(); handleMarkAsAgency(lead); }}
+                      title="Marchează Agenție"
+                    >
+                      <Building2 className="h-3 w-3" />
+                    </Button>
                     {lead.phone && (
                       <Button
                         size="sm"
