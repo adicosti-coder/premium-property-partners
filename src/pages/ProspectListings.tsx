@@ -23,6 +23,7 @@ import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import SEOHead from "@/components/SEOHead";
+import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
 import type { User } from "@supabase/supabase-js";
@@ -889,8 +890,11 @@ const ProspectListings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <SEOHead title="Prospect Listings | Admin" description="AI-scored leads pipeline" />
+    <>
+      <Header />
+      <div className="min-h-screen bg-background p-4 md:p-6 pt-24 md:pt-28">
+        <SEOHead title="Prospect Listings | Admin" description="AI-scored leads pipeline" />
+
 
       {/* Debug banner — vizibil pe mobil pentru diagnoză */}
       <div className="max-w-[1600px] mx-auto mb-3 p-3 rounded-md border border-blue-300 bg-blue-50 dark:bg-blue-950/30 text-xs space-y-1">
@@ -1592,7 +1596,8 @@ const ProspectListings = () => {
           refetch();
         }}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
