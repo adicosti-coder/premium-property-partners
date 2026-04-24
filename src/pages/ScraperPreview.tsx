@@ -350,6 +350,62 @@ export default function ScraperPreview() {
     }
   }
 
+  /**
+   * "Finalizează ca ultim pas" — closes the preview session:
+   *   1. POSTs `mode: "finalize"` with `last_step: true` to mark the batch
+   *      as Processed on the server (stamp under owner_filters.last_preview_verified).
+   *   2. Saves the full preview log to localStorage under a `:log` key
+   *      (results, stats, applied hints) for later audit/debug.
+   *   3. Clears the live session cache so a fresh preview can be started.
+   */
+  async function finalizeAsLastStep() {
+    if (!data) return;
+    setFinalizing(true);
+    try {
+      const { error: fnErr } = await supabase.functions.invoke(
+        "scraper-preview-keyword",
+        {
+          body: {
+            mode: "finalize",
+            last_step: true,
+            keyword_id: data.keyword.id,
+            stats: data.stats,
+            applied_hints: data.applied_hints.map((h) => h.id),
+            final_query: data.final_query,
+          },
+        },
+      );
+      if (fnErr) throw fnErr;
+
+      // Persist a one-shot audit log entry locally
+      try {
+        const logKey = `scraper-preview:log:${data.keyword.id}:${Date.now()}`;
+        localStorage.setItem(logKey, JSON.stringify({
+          processed_at: new Date().toISOString(),
+          keyword: data.keyword,
+          stats: data.stats,
+          applied_hints: data.applied_hints,
+          final_query: data.final_query,
+          filtered_count: data.filtered_results.length,
+          removed_count: data.removed_by_filters.length,
+        }));
+      } catch { /* quota — ignore */ }
+
+      // Clear live session so the next visit starts fresh
+      if (sessionKey) {
+        try { localStorage.removeItem(sessionKey); } catch { /* ignore */ }
+      }
+
+      setFinalized(true);
+      toast.success("Batch marcat ca Procesat ✓ — log salvat, sesiune închisă");
+    } catch (e: any) {
+      setFinalized(true);
+      toast.warning("Marcat local ca ultim pas. Server: " + (e?.message || "indisponibil"));
+    } finally {
+      setFinalizing(false);
+    }
+  }
+
   function clearSession() {
     if (!sessionKey) return;
     localStorage.removeItem(sessionKey);
