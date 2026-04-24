@@ -46,7 +46,7 @@ export function AdminCommandPalette({
                 return (
                   <CommandItem
                     key={tab.value}
-                    value={`${tab.label} ${tab.keywords?.join(" ") ?? ""} ${group.label}`}
+                    value={`${tab.label} ${tab.keywords?.join(" ") ?? ""} ${group.label} ${tab.subgroup ?? ""}`}
                     onSelect={() => {
                       onOpenChange(false);
                       if (tab.externalRoute) {
