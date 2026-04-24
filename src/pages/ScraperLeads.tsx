@@ -1912,14 +1912,15 @@ const ScraperLeads = () => {
                   {/* Keywords list */}
                   <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
                     {searchKeywords.map((kw) => {
-                      const defaults = getDefaultOwnerFilters(kw.platform);
-                      const hasCustomFilters =
-                        !!kw.owner_filters &&
-                        ((kw.owner_filters.text && kw.owner_filters.text.trim().length > 0) ||
-                         (kw.owner_filters.url_hint && kw.owner_filters.url_hint.trim().length > 0));
-                      const effectiveText = (kw.owner_filters?.text?.trim()) || defaults.text || "";
-                      const effectiveUrl = (kw.owner_filters?.url_hint?.trim()) || defaults.url_hint || "";
-                      const isEditingFilters = filtersEditingId === kw.id;
+                      const platformDefs = getPlatformFilters(kw.platform);
+                      const activeIds = getActiveToggleIds(kw);
+                      const defaultIds = getDefaultEnabledFilterIds(kw.platform);
+                      const isCustomized = !!kw.owner_filters?.toggles
+                        && (activeIds.length !== defaultIds.length
+                            || activeIds.some((id) => !defaultIds.includes(id))
+                            || defaultIds.some((id) => !activeIds.includes(id)));
+                      const isExpanded = filtersEditingId === kw.id;
+                      const activeCount = platformDefs.filter((f) => activeIds.includes(f.id)).length;
 
                       return (
                       <div key={kw.id} className={cn(
@@ -1965,16 +1966,18 @@ const ScraperLeads = () => {
                             variant="ghost"
                             className={cn(
                               "h-6 px-1.5 gap-1 text-[10px]",
-                              hasCustomFilters
+                              isCustomized
                                 ? "text-amber-600 dark:text-amber-400 hover:text-amber-500"
                                 : "text-muted-foreground hover:text-primary"
                             )}
-                            title="Editează filtrele Proprietari / Privați / Persoane fizice pentru această platformă"
-                            onClick={() => isEditingFilters ? cancelEditingFilters() : startEditingFilters(kw)}
+                            title="Editează filtrele platformei pentru această căutare"
+                            onClick={() => toggleFiltersExpanded(kw.id)}
                           >
                             <Filter className="w-3 h-3" />
                             <span className="hidden sm:inline">Filtre</span>
-                            {hasCustomFilters && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                            <span className="text-[9px] opacity-80">({activeCount}/{platformDefs.length})</span>
+                            {isCustomized && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                           </Button>
                           {editingKeywordId !== kw.id && (
                             <Button
@@ -1996,83 +1999,85 @@ const ScraperLeads = () => {
                           </Button>
                         </div>
 
-                        {/* Owner-only filters editor (Proprietari / Privați / Persoane fizice) */}
-                        {isEditingFilters ? (
+                        {/* Native platform filter toggles (Privat / Persoană fizică / Proprietari) */}
+                        {isExpanded && (
                           <div className="border-t border-border/60 px-3 py-2.5 space-y-2 bg-background/40">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-2">
                               <span className="text-[11px] font-medium flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                                 <Filter className="w-3 h-3" />
-                                Filtre „Doar Proprietari / Privați / Persoane fizice" — {kw.platform}
+                                Filtre {kw.platform} — selectează ce să includă căutarea
                               </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
-                                onClick={() => handleResetOwnerFilters(kw.id)}
-                                disabled={filtersSavingId === kw.id}
-                              >
-                                Resetează la implicit
-                              </Button>
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-muted-foreground mb-0.5 block">
-                                Filtru text (Google operators)
-                              </label>
-                              <Textarea
-                                value={filtersDraftText}
-                                onChange={(e) => setFiltersDraftText(e.target.value)}
-                                placeholder={defaults.text}
-                                className="text-[11px] font-mono min-h-[60px] leading-snug"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-muted-foreground mb-0.5 block">
-                                Filtru URL (inurl:…) — specific platformei
-                              </label>
-                              <Input
-                                value={filtersDraftUrl}
-                                onChange={(e) => setFiltersDraftUrl(e.target.value)}
-                                placeholder={defaults.url_hint || "(nu se aplică pentru această platformă)"}
-                                className="h-7 text-[11px] font-mono"
-                              />
-                            </div>
-                            <div className="flex items-center justify-end gap-1.5 pt-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-[11px]"
-                                onClick={cancelEditingFilters}
-                                disabled={filtersSavingId === kw.id}
-                              >
-                                Anulează
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="h-7 text-[11px] gap-1"
-                                onClick={() => handleSaveOwnerFilters(kw.id)}
-                                disabled={filtersSavingId === kw.id}
-                              >
-                                {filtersSavingId === kw.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                                Salvează filtre
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="border-t border-border/40 px-3 py-1.5 flex items-start gap-1.5 text-[10px] text-muted-foreground">
-                            <Filter className="w-3 h-3 mt-0.5 shrink-0 opacity-60" />
-                            <div className="flex-1 min-w-0 space-y-0.5">
-                              <div className="truncate font-mono" title={effectiveText}>
-                                <span className="opacity-60">text:</span> {effectiveText || "—"}
-                              </div>
-                              {effectiveUrl && (
-                                <div className="truncate font-mono" title={effectiveUrl}>
-                                  <span className="opacity-60">url:</span> {effectiveUrl}
-                                </div>
+                              {isCustomized && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                                  onClick={() => handleResetOwnerFilters(kw.id)}
+                                  disabled={filtersSavingId === kw.id}
+                                >
+                                  Resetează la implicit
+                                </Button>
                               )}
-                              <div className="text-[9px] opacity-70">
-                                {hasCustomFilters ? "✏️ filtre personalizate" : "ℹ️ filtre implicite pentru " + kw.platform}
-                              </div>
                             </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                              {platformDefs.map((flt) => {
+                                const checked = activeIds.includes(flt.id);
+                                return (
+                                  <label
+                                    key={flt.id}
+                                    className={cn(
+                                      "flex items-start gap-2 px-2 py-1.5 rounded-md border cursor-pointer transition-colors",
+                                      checked
+                                        ? "border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10"
+                                        : "border-border/60 bg-muted/20 hover:bg-muted/40"
+                                    )}
+                                  >
+                                    <Checkbox
+                                      checked={checked}
+                                      onCheckedChange={() => handleToggleOwnerFilter(kw, flt.id)}
+                                      disabled={filtersSavingId === kw.id}
+                                      className="mt-0.5"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-[11px] font-medium leading-tight">{flt.label}</div>
+                                      {flt.description && (
+                                        <div className="text-[9px] text-muted-foreground font-mono truncate" title={flt.hint}>
+                                          {flt.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <p className="text-[9px] text-muted-foreground/80 leading-snug">
+                              💡 Filtrele bifate sunt aplicate automat căutării pe {kw.platform}, exact ca în panoul nativ al platformei (ex. OLX: <em>Privat</em>, Publi24: <em>De la persoane fizice</em>, imobiliare.ro: <em>Publicate de proprietari</em>).
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Compact summary when collapsed */}
+                        {!isExpanded && (
+                          <div className="border-t border-border/40 px-3 py-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground flex-wrap">
+                            <Filter className="w-3 h-3 shrink-0 opacity-60" />
+                            {platformDefs.filter((f) => activeIds.includes(f.id)).length === 0 ? (
+                              <span className="italic">Niciun filtru activ — căutare neutră</span>
+                            ) : (
+                              platformDefs
+                                .filter((f) => activeIds.includes(f.id))
+                                .map((f) => (
+                                  <span
+                                    key={f.id}
+                                    className="px-1.5 py-0.5 rounded border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/5 text-[9px]"
+                                    title={f.hint}
+                                  >
+                                    ✓ {f.label}
+                                  </span>
+                                ))
+                            )}
+                            {isCustomized && (
+                              <span className="ml-auto text-[9px] text-amber-600 dark:text-amber-400">✏️ personalizat</span>
+                            )}
                           </div>
                         )}
                       </div>
