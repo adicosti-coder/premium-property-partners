@@ -333,6 +333,7 @@ const ScraperLeads = () => {
   const [hotOnly, setHotOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [listingTab, setListingTab] = useState<"all" | "vanzare" | "inchiriere">("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"table" | "pipeline" | "analytics">(() => (localStorage.getItem("scraper:viewMode") as any) || "table");
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
@@ -536,6 +537,7 @@ const ScraperLeads = () => {
     if (!leads) return [];
     let result = leads as (ScraperLead & { _prospect_type: string })[];
     if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
+    if (platformFilter !== "all") result = result.filter((l) => (l.source || "").toLowerCase() === platformFilter.toLowerCase());
     if (filterType !== "all") result = result.filter((l) => l._prospect_type === filterType);
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
     // Smart filters
@@ -613,7 +615,7 @@ const ScraperLeads = () => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed]);
+  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -1677,7 +1679,46 @@ const ScraperLeads = () => {
             ))}
           </div>
 
-          {/* Category Filters (from Bot Prospectare) */}
+          {/* Platform Source Filters */}
+          {(() => {
+            const baseForPlatforms = listingTab === "all"
+              ? (leads || [])
+              : (leads || []).filter((l: any) => l.listing_type === listingTab);
+            const platformCounts: Record<string, number> = {};
+            baseForPlatforms.forEach((l: any) => {
+              const src = (l.source || "Altele").trim();
+              platformCounts[src] = (platformCounts[src] || 0) + 1;
+            });
+            const platforms = Object.entries(platformCounts).sort((a, b) => b[1] - a[1]);
+            if (platforms.length === 0) return null;
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap mb-4">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mr-1">Platformă:</span>
+                <button
+                  onClick={() => { setPlatformFilter("all"); setSelectedIds([]); }}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors flex items-center gap-1.5 ${platformFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground/40"}`}
+                >
+                  Toate
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${platformFilter === "all" ? "bg-primary-foreground/20" : "bg-muted"}`}>{baseForPlatforms.length}</span>
+                </button>
+                {platforms.map(([src, count]) => {
+                  const active = platformFilter === src;
+                  const colorCls = sourceColors[src];
+                  return (
+                    <button
+                      key={src}
+                      onClick={() => { setPlatformFilter(active ? "all" : src); setSelectedIds([]); }}
+                      className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors flex items-center gap-1.5 ${active ? "bg-primary text-primary-foreground border-primary" : colorCls ? colorCls + " hover:opacity-80" : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground/40"}`}
+                    >
+                      {src}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? "bg-primary-foreground/20" : "bg-background/60"}`}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           <div className="flex items-center gap-2 flex-wrap mb-4">
             <Button size="sm" variant={filterType === "all" ? "default" : "outline"} onClick={() => setFilterType("all")}>
               📋 Toate ({categoryCounts.all})
@@ -1834,13 +1875,14 @@ const ScraperLeads = () => {
           </div>
 
           {/* Active filters indicator */}
-          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || smartFilter !== 'all' || countActiveFilters(advancedFilters) > 0) && (
+          {(filterType !== 'all' || hotOnly || searchQuery || listingTab !== 'all' || platformFilter !== 'all' || smartFilter !== 'all' || countActiveFilters(advancedFilters) > 0) && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mb-4 flex-wrap">
               <Filter className="h-3 w-3 shrink-0" />
               <span className="flex items-center gap-1 flex-wrap">
                 Filtre active:
                 {hotOnly && <Badge variant="outline" className="ml-1 text-[10px]">🔥 Scor &gt; 80</Badge>}
                 {listingTab !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{listingTab === 'vanzare' ? 'Vânzare' : 'Închiriere'}</Badge>}
+                {platformFilter !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">📡 {platformFilter}</Badge>}
                 {filterType !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{filterType}</Badge>}
                 {searchQuery && <Badge variant="outline" className="ml-1 text-[10px]">"{searchQuery}"</Badge>}
                 {smartFilter !== 'all' && <Badge variant="outline" className="ml-1 text-[10px]">{SMART_FILTERS.find(s => s.value === smartFilter)?.label}</Badge>}
@@ -1848,7 +1890,7 @@ const ScraperLeads = () => {
               </span>
               <button
                 className="underline hover:text-foreground ml-1"
-                onClick={() => { setHotOnly(false); setListingTab("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); }}
+                onClick={() => { setHotOnly(false); setListingTab("all"); setPlatformFilter("all"); setFilterType("all"); setSearchQuery(""); setSmartFilter("all"); setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); }}
               >
                 Resetează
               </button>
