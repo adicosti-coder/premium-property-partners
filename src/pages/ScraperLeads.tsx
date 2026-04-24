@@ -66,9 +66,77 @@ interface ScraperLead {
   ai_insight?: any;
 }
 
+/**
+ * Native platform filter toggles. Each filter is a checkbox shown in the UI
+ * and mapped to a `inurl:` / Google operator hint that the scraper appends to
+ * the query (mirroring the in-platform UI like OLX „Privat", Publi24 „De la
+ * persoane fizice", imobiliare.ro „Publicate de proprietari").
+ *
+ * Stored per keyword in `scraper_search_keywords.owner_filters.toggles` as an
+ * array of filter ids that are ENABLED. Empty/missing = use platform default
+ * (all "owner-only" toggles enabled).
+ */
+interface PlatformFilterDef {
+  id: string;
+  label: string;
+  description?: string;
+  /** Google operator fragment appended when the toggle is ON. */
+  hint: string;
+  /** Whether this filter is on by default for "Doar Proprietari". */
+  defaultOn: boolean;
+}
+
+const PLATFORM_FILTERS: Record<string, PlatformFilterDef[]> = {
+  "OLX": [
+    { id: "private",   label: "Privat (Persoană fizică)", description: "search[private_business]=private", hint: "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private", defaultOn: true },
+    { id: "exclude_firma", label: "Exclude „Firmă"",        description: "elimină rezultate cu Firma în URL/text",  hint: '-inurl:business -"de la firma" -"de la companie"', defaultOn: true },
+  ],
+  "Storia.ro": [
+    { id: "private", label: "Doar proprietari", description: "ownerTypeSingleSelect=PRIVATE", hint: "inurl:ownerTypeSingleSelect=PRIVATE", defaultOn: true },
+    { id: "exclude_agency", label: "Exclude agenții",     description: "elimină rezultate marcate agency",        hint: "-inurl:ownerTypeSingleSelect=AGENCY -inurl:by=agency", defaultOn: true },
+  ],
+  "imobiliare.ro": [
+    { id: "owners",   label: "Publicate de proprietari", description: "/persoane-fizice/ sau /proprietari/", hint: "inurl:persoane-fizice OR inurl:proprietari", defaultOn: true },
+    { id: "no_agency", label: "Fără agenții",             description: "exclude /agentii/",                   hint: "-inurl:agentii -inurl:agency", defaultOn: true },
+    { id: "no_dev",    label: "Fără dezvoltatori",        description: "exclude /dezvoltatori/",              hint: "-inurl:dezvoltatori -inurl:developer", defaultOn: false },
+  ],
+  "Publi24": [
+    { id: "private",  label: "De la persoane fizice", description: "tip-anunt-persoane-fizice", hint: "inurl:tip-anunt-persoane-fizice OR inurl:proprietari", defaultOn: true },
+    { id: "no_firms", label: "Fără companii",          description: "exclude tip-anunt-firma",   hint: "-inurl:tip-anunt-firma -inurl:agentie", defaultOn: true },
+  ],
+  "BursaImobiliara.ro": [
+    { id: "private",  label: "Doar proprietari",  description: "/proprietar/ sau /persoane-fizice/", hint: "inurl:proprietar OR inurl:persoane-fizice", defaultOn: true },
+    { id: "no_agency", label: "Fără agenții",      description: "exclude /agentie/",                   hint: "-inurl:agentie -inurl:agency", defaultOn: true },
+  ],
+  "Facebook Marketplace": [
+    { id: "owner_kw", label: "Caută „proprietar / persoană fizică"", description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: "no_agency", label: "Exclude „agenție / comision"",       description: "operatori negativi",  hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+  ],
+  "Grupuri Facebook": [
+    { id: "owner_kw", label: "Caută „proprietar / persoană fizică"", description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: "no_agency", label: "Exclude „agenție / comision"",       description: "operatori negativi",  hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+  ],
+  "General": [
+    { id: "owner_kw", label: "Caută „proprietar / persoană fizică"", description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar")', defaultOn: true },
+    { id: "no_agency", label: "Exclude „agenție / broker / comision"", description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker', defaultOn: true },
+  ],
+};
+
+/** Unknown / custom platform → fall back to "General" toggles. */
+function getPlatformFilters(platform: string): PlatformFilterDef[] {
+  return PLATFORM_FILTERS[platform] ?? PLATFORM_FILTERS["General"];
+}
+
+/** Default toggle ids enabled for a platform. */
+function getDefaultEnabledFilterIds(platform: string): string[] {
+  return getPlatformFilters(platform).filter((f) => f.defaultOn).map((f) => f.id);
+}
+
 interface KeywordOwnerFilters {
+  /** Ids of toggles enabled for this keyword. */
+  toggles?: string[];
+  /** Free-text override (advanced). Empty / missing = no override. */
   text?: string;
-  url_hint?: string;
 }
 
 interface SearchKeyword {
@@ -79,30 +147,11 @@ interface SearchKeyword {
   owner_filters?: KeywordOwnerFilters | null;
 }
 
-/**
- * Default "Doar Proprietari / Privați / Persoane fizice" filters per platform.
- * Mirror of OWNER_TEXT_FILTER + OWNER_URL_FILTERS from scrape-prospects edge fn.
- * Shown as placeholder when a keyword row hasn't been customized yet.
- */
-const DEFAULT_OWNER_TEXT_FILTER =
-  '(proprietar OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar") -agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker';
-
-const PLATFORM_OWNER_URL_DEFAULTS: Record<string, string> = {
-  "OLX": "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private",
-  "Storia.ro": "inurl:ownerTypeSingleSelect=PRIVATE",
-  "imobiliare.ro": "inurl:persoane-fizice OR inurl:proprietari",
-  "Publi24": "inurl:tip-anunt-persoane-fizice OR inurl:proprietari",
-  "BursaImobiliara.ro": "inurl:proprietar OR inurl:persoane-fizice",
-  "Facebook Marketplace": "",
-  "Grupuri Facebook": "",
-  "General": "",
-};
-
-function getDefaultOwnerFilters(platform: string): KeywordOwnerFilters {
-  return {
-    text: DEFAULT_OWNER_TEXT_FILTER,
-    url_hint: PLATFORM_OWNER_URL_DEFAULTS[platform] ?? "",
-  };
+/** Returns the toggle ids currently active for a keyword (defaults if not customized). */
+function getActiveToggleIds(kw: Pick<SearchKeyword, "platform" | "owner_filters">): string[] {
+  const stored = kw.owner_filters?.toggles;
+  if (Array.isArray(stored)) return stored;
+  return getDefaultEnabledFilterIds(kw.platform);
 }
 
 interface StatusHistoryEntry {
