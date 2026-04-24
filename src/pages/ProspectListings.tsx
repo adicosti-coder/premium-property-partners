@@ -1314,14 +1314,20 @@ const ProspectListings = () => {
                               )}
                             </div>
                           )}
-                          <button
+                          <Button
                             type="button"
+                            size="sm"
+                            variant={p.isAgency ? "outline" : "secondary"}
                             onClick={() => handleToggleProspectType(p)}
-                            className="text-[10px] text-muted-foreground hover:text-primary underline mt-0.5"
-                            title="Corectează clasificarea (proprietar / agenție)"
+                            className={`mt-1.5 h-7 text-xs gap-1 ${
+                              p.isAgency
+                                ? "border-green-500 text-green-700 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950/30"
+                                : "border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
+                            }`}
+                            title="Schimbă clasificarea (proprietar / agenție)"
                           >
-                            {p.isAgency ? "→ marchează ca proprietar" : "→ marchează ca agenție"}
-                          </button>
+                            {p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}
+                          </Button>
                         </TableCell>
                         <TableCell>
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
