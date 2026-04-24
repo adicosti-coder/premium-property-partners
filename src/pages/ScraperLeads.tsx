@@ -418,6 +418,7 @@ const ScraperLeads = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [hideSnoozed, setHideSnoozed] = useState(true);
   const [hideSearchPages, setHideSearchPages] = useState(true);
+  const [hideAgencies, setHideAgencies] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Debounced search to reduce filter recalcs
