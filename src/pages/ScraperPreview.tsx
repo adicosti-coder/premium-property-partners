@@ -244,11 +244,14 @@ export default function ScraperPreview() {
     }
   }
 
-  function downloadCsv(rows: string[][], filename: string) {
+  function downloadCsv(rows: string[][], filename: string, opts?: { bom?: boolean }) {
     const csv = rows
       .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
       .join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const includeBom = opts?.bom !== false; // default = with BOM (Excel-friendly)
+    const blob = new Blob(includeBom ? ["\uFEFF" + csv] : [csv], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
