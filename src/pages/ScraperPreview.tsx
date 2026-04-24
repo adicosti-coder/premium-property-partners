@@ -16,7 +16,9 @@ import {
   ArrowLeft, ExternalLink, RefreshCw, ShieldCheck, ShieldAlert,
   Filter, CheckCircle2, AlertTriangle, Search, Eye, EyeOff,
   Download, GitCompare, Code2, CheckCheck, Highlighter,
+  ChevronLeft, ChevronRight, X, Server,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
