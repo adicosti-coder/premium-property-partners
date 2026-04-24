@@ -1679,7 +1679,46 @@ const ScraperLeads = () => {
             ))}
           </div>
 
-          {/* Category Filters (from Bot Prospectare) */}
+          {/* Platform Source Filters */}
+          {(() => {
+            const baseForPlatforms = listingTab === "all"
+              ? (leads || [])
+              : (leads || []).filter((l: any) => l.listing_type === listingTab);
+            const platformCounts: Record<string, number> = {};
+            baseForPlatforms.forEach((l: any) => {
+              const src = (l.source || "Altele").trim();
+              platformCounts[src] = (platformCounts[src] || 0) + 1;
+            });
+            const platforms = Object.entries(platformCounts).sort((a, b) => b[1] - a[1]);
+            if (platforms.length === 0) return null;
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap mb-4">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mr-1">Platformă:</span>
+                <button
+                  onClick={() => { setPlatformFilter("all"); setSelectedIds([]); }}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors flex items-center gap-1.5 ${platformFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground/40"}`}
+                >
+                  Toate
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${platformFilter === "all" ? "bg-primary-foreground/20" : "bg-muted"}`}>{baseForPlatforms.length}</span>
+                </button>
+                {platforms.map(([src, count]) => {
+                  const active = platformFilter === src;
+                  const colorCls = sourceColors[src];
+                  return (
+                    <button
+                      key={src}
+                      onClick={() => { setPlatformFilter(active ? "all" : src); setSelectedIds([]); }}
+                      className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors flex items-center gap-1.5 ${active ? "bg-primary text-primary-foreground border-primary" : colorCls ? colorCls + " hover:opacity-80" : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground/40"}`}
+                    >
+                      {src}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? "bg-primary-foreground/20" : "bg-background/60"}`}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           <div className="flex items-center gap-2 flex-wrap mb-4">
             <Button size="sm" variant={filterType === "all" ? "default" : "outline"} onClick={() => setFilterType("all")}>
               📋 Toate ({categoryCounts.all})
