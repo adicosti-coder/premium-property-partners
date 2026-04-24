@@ -320,7 +320,55 @@ export default function ScraperPreview() {
     toast.success("Sesiune ștearsă");
   }
 
-  useEffect(() => { runPreview(); /* eslint-disable-next-line */ }, [keywordId]);
+  useEffect(() => {
+    // Only auto-run if no cached session data for this kw
+    if (!keywordId) return;
+    try {
+      const raw = sessionKey ? localStorage.getItem(sessionKey) : null;
+      if (raw && JSON.parse(raw)?.data) return;
+    } catch { /* ignore */ }
+    runPreview();
+    // eslint-disable-next-line
+  }, [keywordId]);
+
+  // Apply quick reason/keyword filter
+  const reasonFilterLc = reasonFilter.trim().toLowerCase();
+  const matchesReasonFilter = (it: PreviewResult) => {
+    if (!reasonFilterLc) return true;
+    if (it.title.toLowerCase().includes(reasonFilterLc)) return true;
+    if (it.url.toLowerCase().includes(reasonFilterLc)) return true;
+    if (it.description?.toLowerCase().includes(reasonFilterLc)) return true;
+    return it.owner_signal.reasons.some((r) => r.toLowerCase().includes(reasonFilterLc));
+  };
+
+  const filteredVisible = useMemo(
+    () => (data?.filtered_results || []).filter(matchesReasonFilter),
+    // eslint-disable-next-line
+    [data, reasonFilterLc],
+  );
+  const removedVisible = useMemo(
+    () => (data?.removed_by_filters || []).filter(matchesReasonFilter),
+    // eslint-disable-next-line
+    [data, reasonFilterLc],
+  );
+
+  // Reset pagination when filter or data changes
+  useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data]);
+
+  const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / PAGE_SIZE));
+  const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / PAGE_SIZE));
+  const filteredPaged = filteredVisible.slice((pageFiltered - 1) * PAGE_SIZE, pageFiltered * PAGE_SIZE);
+  const removedPaged = removedVisible.slice((pageRemoved - 1) * PAGE_SIZE, pageRemoved * PAGE_SIZE);
+
+  // Collect distinct reasons across both lists for quick-pick chips
+  const distinctReasons = useMemo(() => {
+    if (!data) return [] as string[];
+    const set = new Set<string>();
+    [...data.filtered_results, ...data.removed_by_filters].forEach((it) => {
+      it.owner_signal.reasons.forEach((r) => set.add(r));
+    });
+    return [...set].slice(0, 12);
+  }, [data]);
 
   const stats = data?.stats;
   const ownerPct = useMemo(() => {
