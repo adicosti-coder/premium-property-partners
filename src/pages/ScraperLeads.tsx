@@ -560,7 +560,7 @@ const ScraperLeads = () => {
     if (!leads) return [];
     let result = leads as (ScraperLead & { _prospect_type: string })[];
     if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
-    if (platformFilter !== "all") result = result.filter((l) => (l.source || "").toLowerCase() === platformFilter.toLowerCase());
+    if (platformFilter !== "all") result = result.filter((l) => normalizePlatformLabel(l.source) === platformFilter);
     if (filterType !== "all") result = result.filter((l) => l._prospect_type === filterType);
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
     // Smart filters
