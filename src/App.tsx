@@ -90,6 +90,7 @@ const CatalogInvestitii = lazyWithRetry(() => import("./pages/CatalogInvestitii"
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const Unsubscribe = lazyWithRetry(() => import("./pages/Unsubscribe"));
 const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
+const ScraperPreview = lazyWithRetry(() => import("./pages/ScraperPreview"));
 const ProspectListings = lazyWithRetry(() => import("./pages/ProspectListings"));
 const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimisoara"));
 const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
@@ -239,6 +240,7 @@ const App = () => (
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
+                    <Route path="/admin/scraper-preview" element={<ScraperPreview />} />
                     <Route path="/admin/prospect-listings" element={<ProspectListings />} />
                     <Route path="/admin/call-dashboard" element={<CallDashboard />} />
                     <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
