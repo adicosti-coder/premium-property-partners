@@ -184,6 +184,8 @@ export function AppAdminSidebar({
                     );
                   })}
                 </SidebarMenu>
+                  </div>
+                ))}
               </SidebarGroupContent>
             </SidebarGroup>
           );
