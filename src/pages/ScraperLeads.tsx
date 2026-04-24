@@ -356,8 +356,6 @@ const ScraperLeads = () => {
   const [editingKeywordId, setEditingKeywordId] = useState<string | null>(null);
   const [editingKeywordText, setEditingKeywordText] = useState("");
   const [filtersEditingId, setFiltersEditingId] = useState<string | null>(null);
-  const [filtersDraftText, setFiltersDraftText] = useState("");
-  const [filtersDraftUrl, setFiltersDraftUrl] = useState("");
   const [filtersSavingId, setFiltersSavingId] = useState<string | null>(null);
   const [editingAgencyName, setEditingAgencyName] = useState(false);
   const [agencyNameValue, setAgencyNameValue] = useState("");
@@ -2088,7 +2086,7 @@ const ScraperLeads = () => {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    💡 Dublu-click pe un cuvânt cheie sau apasă ✏️ pentru a-l edita. Apasă <Filter className="w-2.5 h-2.5 inline -mt-0.5" /> <strong>Filtre</strong> pentru a personaliza filtrele „Doar Proprietari / Privați / Persoane fizice" pentru fiecare platformă (text Google + parametri URL specifici). Dacă lași gol, scraper-ul folosește setările implicite per platformă.
+                    💡 Apasă <Filter className="w-2.5 h-2.5 inline -mt-0.5" /> <strong>Filtre</strong> lângă fiecare cuvânt cheie pentru a bifa/debifa filtrele native ale platformei (ex. OLX „Privat", Publi24 „De la persoane fizice", imobiliare.ro „Publicate de proprietari"). Modificările se salvează automat.
                   </p>
                 </CardContent>
               </Card>
