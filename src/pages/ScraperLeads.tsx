@@ -561,12 +561,22 @@ const ScraperLeads = () => {
     let result = leads as (ScraperLead & { _prospect_type: string })[];
     if (listingTab !== "all") result = result.filter((l) => l.listing_type === listingTab);
     if (platformFilter !== "all") result = result.filter((l) => normalizePlatformLabel(l.source) === platformFilter);
-    if (filterType !== "all") result = result.filter((l) => l._prospect_type === filterType);
+    if (filterType === "proprietar") {
+      // Strict: exclude anything explicitly classified as agency/developer
+      result = result.filter((l) =>
+        l._prospect_type !== "agentie" &&
+        l._prospect_type !== "dezvoltator" &&
+        l.prospect_category !== "agentie" &&
+        l.prospect_category !== "dezvoltator"
+      );
+    } else if (filterType !== "all") {
+      result = result.filter((l) => l._prospect_type === filterType);
+    }
     if (hotOnly) result = result.filter((l) => l.lead_score > 80);
     // Smart filters
     if (smartFilter === "premium") result = result.filter((l) => isPremiumLead(l.title));
     if (smartFilter === "topROI") result = result.filter((l) => l.lead_score >= 90).sort((a, b) => b.lead_score - a.lead_score);
-    if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type === "proprietar");
+    if (smartFilter === "proprietari") result = result.filter((l) => l._prospect_type !== "agentie" && l._prospect_type !== "dezvoltator" && l.prospect_category !== "agentie" && l.prospect_category !== "dezvoltator");
     if (smartFilter === "vanzare") result = result.filter((l) => l.listing_type === "vanzare");
     if (smartFilter === "inchiriere") result = result.filter((l) => l.listing_type === "inchiriere");
     if (debouncedSearch) {
