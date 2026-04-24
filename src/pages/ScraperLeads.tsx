@@ -634,7 +634,7 @@ const ScraperLeads = () => {
         "dezvoltator", "developer",
         "imobiliare srl", "real estate srl",
       ];
-      const looksLikeAgency = (l: Lead) => {
+      const looksLikeAgency = (l: typeof result[number]) => {
         const blob = `${l.title || ""} ${l.url || ""}`.toLowerCase();
         return AGENCY_KEYWORDS.some((k) => blob.includes(k));
       };
