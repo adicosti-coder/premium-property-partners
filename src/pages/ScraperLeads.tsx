@@ -979,35 +979,27 @@ const ScraperLeads = () => {
     toast.success("Cuvânt cheie actualizat");
   };
 
-  // ── Owner-only filters per keyword (Doar Proprietari / Privați / Persoane fizice)
-  const startEditingFilters = (kw: SearchKeyword) => {
-    const defaults = getDefaultOwnerFilters(kw.platform);
-    setFiltersEditingId(kw.id);
-    setFiltersDraftText(kw.owner_filters?.text ?? defaults.text ?? "");
-    setFiltersDraftUrl(kw.owner_filters?.url_hint ?? defaults.url_hint ?? "");
-  };
+  // ── Owner-only filter toggles per keyword ──────────
+  // Toggle a single platform filter for a keyword. Persists immediately so the
+  // UI feels like the native platform filter panels (OLX/Storia/imobiliare.ro).
+  const handleToggleOwnerFilter = async (kw: SearchKeyword, filterId: string) => {
+    const current = getActiveToggleIds(kw);
+    const next = current.includes(filterId)
+      ? current.filter((id) => id !== filterId)
+      : [...current, filterId];
 
-  const cancelEditingFilters = () => {
-    setFiltersEditingId(null);
-    setFiltersDraftText("");
-    setFiltersDraftUrl("");
-  };
-
-  const handleSaveOwnerFilters = async (id: string) => {
-    setFiltersSavingId(id);
-    const payload = {
-      text: filtersDraftText.trim(),
-      url_hint: filtersDraftUrl.trim(),
+    setFiltersSavingId(kw.id);
+    const payload: KeywordOwnerFilters = {
+      ...(kw.owner_filters ?? {}),
+      toggles: next,
     };
     const { error } = await supabase
       .from("scraper_search_keywords")
       .update({ owner_filters: payload } as any)
-      .eq("id", id);
+      .eq("id", kw.id);
     setFiltersSavingId(null);
-    if (error) { toast.error("Eroare la salvarea filtrelor"); return; }
-    cancelEditingFilters();
+    if (error) { toast.error("Eroare la salvarea filtrului"); return; }
     refetchKeywords();
-    toast.success("Filtre Proprietari actualizate");
   };
 
   const handleResetOwnerFilters = async (id: string) => {
@@ -1018,9 +1010,12 @@ const ScraperLeads = () => {
       .eq("id", id);
     setFiltersSavingId(null);
     if (error) { toast.error("Eroare la resetare"); return; }
-    cancelEditingFilters();
     refetchKeywords();
     toast.success("Filtre resetate la valorile implicite");
+  };
+
+  const toggleFiltersExpanded = (id: string) => {
+    setFiltersEditingId(filtersEditingId === id ? null : id);
   };
 
   // ── Agency Name helpers ────────────────────────────
