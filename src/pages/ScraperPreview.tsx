@@ -279,7 +279,31 @@ export default function ScraperPreview() {
     push("after_filters", data.filtered_results);
     push("removed_by_filters", data.removed_by_filters);
     downloadCsv(rows, `scraper-preview-${data.keyword.platform}-${Date.now()}.csv`);
-    toast.success("CSV exportat");
+    toast.success("CSV exportat (cu BOM)");
+  }
+
+  function exportCsvNoBom() {
+    if (!data) return;
+    const rows: string[][] = [
+      ["section", "platform", "title", "url", "owner_signal", "reasons", "description"],
+    ];
+    const push = (section: string, items: PreviewResult[]) => {
+      for (const it of items) {
+        rows.push([
+          section, data.keyword.platform, it.title, it.url,
+          it.owner_signal.isOwner ? "Proprietar" : "Suspect/Necunoscut",
+          it.owner_signal.reasons.join(" | "), it.description,
+        ]);
+      }
+    };
+    push("after_filters", data.filtered_results);
+    push("removed_by_filters", data.removed_by_filters);
+    downloadCsv(
+      rows,
+      `scraper-preview-${data.keyword.platform}-${Date.now()}-nobom.csv`,
+      { bom: false },
+    );
+    toast.success("CSV exportat fără BOM (compatibil scripturi)");
   }
 
   function exportRemovedCsv() {
