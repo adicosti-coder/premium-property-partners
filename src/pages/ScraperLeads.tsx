@@ -1709,7 +1709,7 @@ const ScraperLeads = () => {
               : (leads || []).filter((l: any) => l.listing_type === listingTab);
             const platformCounts: Record<string, number> = {};
             baseForPlatforms.forEach((l: any) => {
-              const src = (l.source || "Altele").trim();
+              const src = normalizePlatformLabel(l.source);
               platformCounts[src] = (platformCounts[src] || 0) + 1;
             });
             const platforms = Object.entries(platformCounts).sort((a, b) => b[1] - a[1]);
