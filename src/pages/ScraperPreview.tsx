@@ -151,8 +151,17 @@ export default function ScraperPreview() {
 
   // Quick filter by reason / keyword in title/url/reasons
   const [reasonFilter, setReasonFilter] = useState("");
-  // Pagination
-  const PAGE_SIZE = 10;
+  // Pagination — page size is persisted in localStorage (admin preference).
+  const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+  const PAGE_SIZE_STORAGE_KEY = "scraper-preview:page-size";
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === "undefined") return 10;
+    const saved = Number(localStorage.getItem(PAGE_SIZE_STORAGE_KEY));
+    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 10;
+  });
+  useEffect(() => {
+    try { localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(pageSize)); } catch { /* ignore */ }
+  }, [pageSize]);
   const [pageFiltered, setPageFiltered] = useState(1);
   const [pageRemoved, setPageRemoved] = useState(1);
 
