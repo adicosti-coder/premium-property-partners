@@ -157,57 +157,88 @@ function detectPlatformFromQuery(query: string): string | null {
   return null;
 }
 
-/** Apply the global "Doar Proprietari" filter to a query, idempotent.
- *  Per-keyword overrides (from scraper_search_keywords.owner_filters) win
- *  over the platform defaults so admins can tune them from the UI.
+/**
+ * Native platform filter toggles. Mirror of `PLATFORM_FILTERS` in
+ * src/pages/ScraperLeads.tsx — keep them in sync. Each toggle id maps to a
+ * Google operator fragment that is appended to the query when the toggle is
+ * enabled for a given keyword.
  */
+type PlatformFilterDef = { id: string; hint: string; defaultOn: boolean };
+
+const PLATFORM_FILTER_TOGGLES: Record<string, PlatformFilterDef[]> = {
+  'OLX': [
+    { id: 'private',       hint: 'inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private', defaultOn: true },
+    { id: 'exclude_firma', hint: '-inurl:business -"de la firma" -"de la companie"', defaultOn: true },
+  ],
+  'Storia.ro': [
+    { id: 'private',        hint: 'inurl:ownerTypeSingleSelect=PRIVATE', defaultOn: true },
+    { id: 'exclude_agency', hint: '-inurl:ownerTypeSingleSelect=AGENCY -inurl:by=agency', defaultOn: true },
+  ],
+  'imobiliare.ro': [
+    { id: 'owners',    hint: 'inurl:persoane-fizice OR inurl:proprietari', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentii -inurl:agency', defaultOn: true },
+    { id: 'no_dev',    hint: '-inurl:dezvoltatori -inurl:developer', defaultOn: false },
+  ],
+  'Publi24': [
+    { id: 'private',  hint: 'inurl:tip-anunt-persoane-fizice OR inurl:proprietari', defaultOn: true },
+    { id: 'no_firms', hint: '-inurl:tip-anunt-firma -inurl:agentie', defaultOn: true },
+  ],
+  'BursaImobiliara.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency', defaultOn: true },
+  ],
+  'Facebook Marketplace': [
+    { id: 'owner_kw',  hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: 'no_agency', hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+  ],
+  'Grupuri Facebook': [
+    { id: 'owner_kw',  hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: 'no_agency', hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+  ],
+  'General': [
+    { id: 'owner_kw',  hint: '("proprietar" OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar")', defaultOn: true },
+    { id: 'no_agency', hint: '-agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker', defaultOn: true },
+  ],
+};
+
+function getToggleDefs(platform: string): PlatformFilterDef[] {
+  return PLATFORM_FILTER_TOGGLES[platform] ?? PLATFORM_FILTER_TOGGLES['General'];
+}
+
+/** Apply the per-keyword owner-only filter toggles, idempotent.
+ *  If `override.toggles` is provided we honor exactly that list (admin choice
+ *  from the UI). If not, we use the platform's `defaultOn` toggles. */
 function applyOwnerOnlyFilter(
   platform: string,
   query: string,
-  override?: { text?: string; url_hint?: string },
+  override?: { toggles?: string[]; text?: string; url_hint?: string },
 ): string {
   const lower = query.toLowerCase();
-  // Idempotent: don't double-apply if already contains owner markers
-  const alreadyHasOwner =
-    lower.includes('proprietar') ||
-    lower.includes('persoana fizica') ||
-    lower.includes('persoană fizică') ||
-    lower.includes('private_business=private') ||
-    lower.includes('ownertypesingleselect=private');
-
   let result = query.trim();
 
-  // 1) Text filter — use override if present, else the global default
-  const textFilter = (override?.text && override.text.trim().length > 0)
-    ? ` ${override.text.trim()}`
-    : OWNER_TEXT_FILTER;
-  if (!alreadyHasOwner) {
-    result = `${result}${textFilter}`;
+  const defs = getToggleDefs(platform);
+  const enabledIds: string[] = Array.isArray(override?.toggles)
+    ? override!.toggles!
+    : defs.filter((d) => d.defaultOn).map((d) => d.id);
+
+  for (const def of defs) {
+    if (!enabledIds.includes(def.id)) continue;
+    // Idempotent: skip if the hint's first significant token already appears.
+    const firstToken = def.hint.split(/\s+/)[0]?.toLowerCase() ?? '';
+    if (firstToken && lower.includes(firstToken)) continue;
+    result = `${result} ${def.hint}`;
   }
 
-  // 2) URL-hint filter — use override if present, else platform default
-  const platformKey = OWNER_URL_FILTERS[platform]
-    ? platform
-    : detectPlatformFromQuery(query) ?? '';
-  const urlHint = (override?.url_hint && override.url_hint.trim().length > 0)
-    ? override.url_hint.trim()
-    : OWNER_URL_FILTERS[platformKey];
-  if (urlHint && !lower.includes(urlHint.split(' ')[0].toLowerCase())) {
-    result = `${result} (${urlHint})`;
+  // Legacy free-text override (kept for backward compatibility).
+  if (override?.text && override.text.trim().length > 0) {
+    result = `${result} ${override.text.trim()}`;
+  }
+  if (override?.url_hint && override.url_hint.trim().length > 0) {
+    result = `${result} (${override.url_hint.trim()})`;
   }
 
   return result;
 }
-
-/** Public defaults (mirrored from OWNER_URL_FILTERS / OWNER_TEXT_FILTER) so
- *  the UI can preview what filter will be applied for a given platform. */
-export const PLATFORM_OWNER_FILTER_DEFAULTS: Record<string, { text: string; url_hint: string }> = {
-  'OLX': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['OLX'] },
-  'Storia.ro': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['Storia.ro'] },
-  'imobiliare.ro': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['imobiliare.ro'] },
-  'Publi24': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['Publi24'] },
-  'BursaImobiliara.ro': { text: OWNER_TEXT_FILTER.trim(), url_hint: OWNER_URL_FILTERS['BursaImobiliara.ro'] },
-};
 
 /**
  * Remove diacritics from a string (ă→a, ș→s, ț→t, î→i, â→a).
