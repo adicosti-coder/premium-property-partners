@@ -589,6 +589,10 @@ const ScraperLeads = () => {
       const now = Date.now();
       result = result.filter((l) => !l.snoozed_until || new Date(l.snoozed_until).getTime() <= now);
     }
+    // Hide search/listing pages (not individual ads) — show only real listings
+    if (hideSearchPages) {
+      result = result.filter((l) => !isSearchPageLead(l.url, l.title));
+    }
 
     // ── Advanced filters ──
     const af = appliedFilters;
