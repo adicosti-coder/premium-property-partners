@@ -362,7 +362,7 @@ export default function ScraperPreview() {
   );
 
   // Reset pagination when filter or data changes
-  useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data]);
+  useEffect(() => { setPageFiltered(1); setPageRemoved(1); }, [reasonFilterLc, data, pageSize]);
 
   const filteredPageCount = Math.max(1, Math.ceil(filteredVisible.length / pageSize));
   const removedPageCount = Math.max(1, Math.ceil(removedVisible.length / pageSize));
