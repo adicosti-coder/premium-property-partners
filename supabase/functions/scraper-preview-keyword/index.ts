@@ -120,8 +120,47 @@ Deno.serve(async (req) => {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* empty */ }
+    const mode: string = body?.mode || "preview";
     const keywordId: string | undefined = body?.keyword_id;
     const limit: number = Math.min(Math.max(Number(body?.limit) || 15, 1), 30);
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // ── Mode: queries-overview ─ returns final queries for ALL active keywords
+    //    (no Firecrawl calls — fast, used to preview the platform-by-platform plan).
+    if (mode === "queries-overview") {
+      const { data: rows, error: rowsErr } = await supabase
+        .from("scraper_search_keywords")
+        .select("id, keyword, platform, owner_filters, is_active")
+        .order("platform", { ascending: true });
+      if (rowsErr) {
+        return new Response(
+          JSON.stringify({ success: false, error: rowsErr.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const overview = (rows || []).map((r: any) => {
+        const overrides = (r.owner_filters && typeof r.owner_filters === "object")
+          ? r.owner_filters as { toggles?: string[] }
+          : undefined;
+        const { finalQuery, appliedHints } = applyOwnerOnlyFilter(r.platform, r.keyword, overrides);
+        return {
+          id: r.id,
+          platform: r.platform,
+          is_active: r.is_active,
+          neutral_query: r.keyword,
+          final_query: finalQuery,
+          applied_hints: appliedHints,
+        };
+      });
+      return new Response(
+        JSON.stringify({ success: true, mode, overview }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     if (!keywordId) {
       return new Response(
@@ -130,10 +169,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    // (supabase client already created above)
 
     const { data: kw, error: kwErr } = await supabase
       .from("scraper_search_keywords")
