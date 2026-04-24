@@ -16,7 +16,7 @@ import {
   ArrowLeft, ExternalLink, RefreshCw, ShieldCheck, ShieldAlert,
   Filter, CheckCircle2, AlertTriangle, Search, Eye, EyeOff,
   Download, GitCompare, Code2, CheckCheck, Highlighter,
-  ChevronLeft, ChevronRight, X, Server,
+  ChevronLeft, ChevronRight, X, Server, Ban, Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -999,6 +999,37 @@ function StatBox({
   );
 }
 
+/** Extract a Romanian-style phone number from arbitrary text. */
+function extractPhone(text: string): string | null {
+  if (!text) return null;
+  const re = /(\+?40|0040|0)[\s.\-/]?(\d[\s.\-/]?){8,9}\d/;
+  const m = text.match(re);
+  if (!m) return null;
+  const digits = m[0].replace(/[^\d+]/g, "");
+  return digits.length >= 9 ? digits : null;
+}
+
+/** Normalize to +40XXXXXXXXX. */
+function normalizeRoPhone(raw: string): string | null {
+  if (!raw) return null;
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  if (!cleaned) return null;
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("40")) return "+" + cleaned;
+  if (cleaned.startsWith("0")) return "+4" + cleaned;
+  return "+40" + cleaned;
+}
+
+/** Extract a clean domain from a URL. */
+function extractDomain(url: string): string | null {
+  try {
+    const u = new URL(url);
+    return u.hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
 function ResultList({
   items, emptyText, positive, negative, highlight, compact,
 }: {
@@ -1009,9 +1040,56 @@ function ResultList({
   highlight: boolean;
   compact?: boolean;
 }) {
+  const [blockingUrl, setBlockingUrl] = useState<string | null>(null);
+  const [blockedUrls, setBlockedUrls] = useState<Set<string>>(new Set());
+
+  const handleMarkAsAgency = async (item: PreviewResult) => {
+    const blob = `${item.title} ${item.description}`;
+    const rawPhone = extractPhone(blob);
+    const phone = rawPhone ? normalizeRoPhone(rawPhone) : null;
+    const domain = extractDomain(item.url);
+
+    if (!phone && !domain) {
+      toast.error("Nu am găsit nici telefon, nici domeniu de blocat.");
+      return;
+    }
+
+    setBlockingUrl(item.url);
+    try {
+      const rows: Array<{ phone_normalized?: string; domain?: string; reason: string; notes: string }> = [];
+      if (phone) {
+        rows.push({
+          phone_normalized: phone,
+          reason: "manual_preview",
+          notes: `Marcat manual din Preview Scraper: ${item.title.slice(0, 80)}`,
+        });
+      }
+      if (domain) {
+        rows.push({
+          domain,
+          reason: "manual_preview",
+          notes: `Marcat manual din Preview Scraper: ${item.url.slice(0, 120)}`,
+        });
+      }
+
+      const { error } = await supabase.from("agency_blocklist").insert(rows);
+      if (error) throw error;
+
+      setBlockedUrls((prev) => new Set(prev).add(item.url));
+      const parts = [phone ? `📱 ${phone}` : null, domain ? `🌐 ${domain}` : null].filter(Boolean).join(" · ");
+      toast.success(`Adăugat în blocklist: ${parts}`);
+    } catch (err: any) {
+      console.error("Block error:", err);
+      toast.error(err?.message || "Eroare la adăugarea în blocklist.");
+    } finally {
+      setBlockingUrl(null);
+    }
+  };
+
   if (items.length === 0) {
     return <p className="text-xs text-muted-foreground italic py-4 text-center">{emptyText}</p>;
   }
+
   return (
     <ul className="space-y-2">
       {items.map((it, idx) => (
@@ -1078,15 +1156,34 @@ function ResultList({
                 </div>
               )}
             </div>
-            <a
-              href={it.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-muted-foreground hover:text-primary"
-              title="Deschide anunțul"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            <div className="shrink-0 flex flex-col items-end gap-1.5">
+              <a
+                href={it.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary"
+                title="Deschide anunțul"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={blockingUrl === it.url || blockedUrls.has(it.url)}
+                onClick={() => handleMarkAsAgency(it)}
+                className="h-7 px-2 text-[10px] gap-1 border-red-500/40 text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400"
+                title="Adaugă telefon și domeniu în agency_blocklist"
+              >
+                {blockingUrl === it.url ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : blockedUrls.has(it.url) ? (
+                  <CheckCheck className="w-3 h-3" />
+                ) : (
+                  <Ban className="w-3 h-3" />
+                )}
+                {blockedUrls.has(it.url) ? "Blocat" : "Marchează agenție"}
+              </Button>
+            </div>
           </div>
         </li>
       ))}
