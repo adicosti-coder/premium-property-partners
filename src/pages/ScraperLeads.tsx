@@ -2299,8 +2299,8 @@ const ScraperLeads = () => {
                         <TableCell className="font-medium max-w-[220px]">
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-1.5 mb-0.5">
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[lead.source] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
-                                {lead.source ?? 'OLX'}
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[normalizePlatformLabel(lead.source)] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
+                                {normalizePlatformLabel(lead.source)}
                               </span>
                               <span className="text-[10px] text-muted-foreground">
                                 {getRelativeDate(lead.created_at)}
