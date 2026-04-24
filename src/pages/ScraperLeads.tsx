@@ -1867,64 +1867,173 @@ const ScraperLeads = () => {
 
                   {/* Keywords list */}
                   <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
-                    {searchKeywords.map((kw) => (
+                    {searchKeywords.map((kw) => {
+                      const defaults = getDefaultOwnerFilters(kw.platform);
+                      const hasCustomFilters =
+                        !!kw.owner_filters &&
+                        ((kw.owner_filters.text && kw.owner_filters.text.trim().length > 0) ||
+                         (kw.owner_filters.url_hint && kw.owner_filters.url_hint.trim().length > 0));
+                      const effectiveText = (kw.owner_filters?.text?.trim()) || defaults.text || "";
+                      const effectiveUrl = (kw.owner_filters?.url_hint?.trim()) || defaults.url_hint || "";
+                      const isEditingFilters = filtersEditingId === kw.id;
+
+                      return (
                       <div key={kw.id} className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors",
+                        "rounded-lg border text-sm transition-colors",
                         kw.is_active ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-60"
                       )}>
-                        <Switch
-                          checked={kw.is_active}
-                          onCheckedChange={() => handleToggleKeyword(kw.id, kw.is_active)}
-                          className="scale-75"
-                        />
-                        {editingKeywordId === kw.id ? (
-                          <div className="flex-1 flex items-center gap-1">
-                            <Input
-                              value={editingKeywordText}
-                              onChange={(e) => setEditingKeywordText(e.target.value)}
-                              className="h-6 text-xs font-mono flex-1"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleEditKeyword(kw.id, editingKeywordText);
-                                if (e.key === "Escape") setEditingKeywordId(null);
-                              }}
-                            />
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-500" onClick={() => handleEditKeyword(kw.id, editingKeywordText)}>
-                              <Check className="w-3 h-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground" onClick={() => setEditingKeywordId(null)}>
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <span
-                            className="flex-1 font-mono text-xs truncate cursor-pointer hover:text-primary transition-colors"
-                            onDoubleClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
-                          >
-                            {kw.keyword}
-                          </span>
-                        )}
-                        <Badge variant="outline" className="text-[10px] shrink-0">{kw.platform}</Badge>
-                        {editingKeywordId !== kw.id && (
+                        <div className="flex items-center gap-2 px-3 py-2">
+                          <Switch
+                            checked={kw.is_active}
+                            onCheckedChange={() => handleToggleKeyword(kw.id, kw.is_active)}
+                            className="scale-75"
+                          />
+                          {editingKeywordId === kw.id ? (
+                            <div className="flex-1 flex items-center gap-1">
+                              <Input
+                                value={editingKeywordText}
+                                onChange={(e) => setEditingKeywordText(e.target.value)}
+                                className="h-6 text-xs font-mono flex-1"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleEditKeyword(kw.id, editingKeywordText);
+                                  if (e.key === "Escape") setEditingKeywordId(null);
+                                }}
+                              />
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-emerald-500" onClick={() => handleEditKeyword(kw.id, editingKeywordText)}>
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground" onClick={() => setEditingKeywordId(null)}>
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <span
+                              className="flex-1 font-mono text-xs truncate cursor-pointer hover:text-primary transition-colors"
+                              onDoubleClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                            >
+                              {kw.keyword}
+                            </span>
+                          )}
+                          <Badge variant="outline" className="text-[10px] shrink-0">{kw.platform}</Badge>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-                            onClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                            className={cn(
+                              "h-6 px-1.5 gap-1 text-[10px]",
+                              hasCustomFilters
+                                ? "text-amber-600 dark:text-amber-400 hover:text-amber-500"
+                                : "text-muted-foreground hover:text-primary"
+                            )}
+                            title="Editează filtrele Proprietari / Privați / Persoane fizice pentru această platformă"
+                            onClick={() => isEditingFilters ? cancelEditingFilters() : startEditingFilters(kw)}
                           >
-                            <Pencil className="w-3 h-3" />
+                            <Filter className="w-3 h-3" />
+                            <span className="hidden sm:inline">Filtre</span>
+                            {hasCustomFilters && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                           </Button>
+                          {editingKeywordId !== kw.id && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                              onClick={() => { setEditingKeywordId(kw.id); setEditingKeywordText(kw.keyword); }}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                            onClick={() => handleDeleteKeyword(kw.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        {/* Owner-only filters editor (Proprietari / Privați / Persoane fizice) */}
+                        {isEditingFilters ? (
+                          <div className="border-t border-border/60 px-3 py-2.5 space-y-2 bg-background/40">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-medium flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                                <Filter className="w-3 h-3" />
+                                Filtre „Doar Proprietari / Privați / Persoane fizice" — {kw.platform}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                                onClick={() => handleResetOwnerFilters(kw.id)}
+                                disabled={filtersSavingId === kw.id}
+                              >
+                                Resetează la implicit
+                              </Button>
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-muted-foreground mb-0.5 block">
+                                Filtru text (Google operators)
+                              </label>
+                              <Textarea
+                                value={filtersDraftText}
+                                onChange={(e) => setFiltersDraftText(e.target.value)}
+                                placeholder={defaults.text}
+                                className="text-[11px] font-mono min-h-[60px] leading-snug"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-muted-foreground mb-0.5 block">
+                                Filtru URL (inurl:…) — specific platformei
+                              </label>
+                              <Input
+                                value={filtersDraftUrl}
+                                onChange={(e) => setFiltersDraftUrl(e.target.value)}
+                                placeholder={defaults.url_hint || "(nu se aplică pentru această platformă)"}
+                                className="h-7 text-[11px] font-mono"
+                              />
+                            </div>
+                            <div className="flex items-center justify-end gap-1.5 pt-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-[11px]"
+                                onClick={cancelEditingFilters}
+                                disabled={filtersSavingId === kw.id}
+                              >
+                                Anulează
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="h-7 text-[11px] gap-1"
+                                onClick={() => handleSaveOwnerFilters(kw.id)}
+                                disabled={filtersSavingId === kw.id}
+                              >
+                                {filtersSavingId === kw.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                Salvează filtre
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="border-t border-border/40 px-3 py-1.5 flex items-start gap-1.5 text-[10px] text-muted-foreground">
+                            <Filter className="w-3 h-3 mt-0.5 shrink-0 opacity-60" />
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                              <div className="truncate font-mono" title={effectiveText}>
+                                <span className="opacity-60">text:</span> {effectiveText || "—"}
+                              </div>
+                              {effectiveUrl && (
+                                <div className="truncate font-mono" title={effectiveUrl}>
+                                  <span className="opacity-60">url:</span> {effectiveUrl}
+                                </div>
+                              )}
+                              <div className="text-[9px] opacity-70">
+                                {hasCustomFilters ? "✏️ filtre personalizate" : "ℹ️ filtre implicite pentru " + kw.platform}
+                              </div>
+                            </div>
+                          </div>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
-                          onClick={() => handleDeleteKeyword(kw.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
                       </div>
-                    ))}
+                      );
+                    })}
                     {searchKeywords.length === 0 && (
                       <p className="text-xs text-muted-foreground text-center py-4">Niciun cuvânt cheie configurat.</p>
                     )}
