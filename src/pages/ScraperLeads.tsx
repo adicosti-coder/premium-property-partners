@@ -66,11 +66,43 @@ interface ScraperLead {
   ai_insight?: any;
 }
 
+interface KeywordOwnerFilters {
+  text?: string;
+  url_hint?: string;
+}
+
 interface SearchKeyword {
   id: string;
   keyword: string;
   platform: string;
   is_active: boolean;
+  owner_filters?: KeywordOwnerFilters | null;
+}
+
+/**
+ * Default "Doar Proprietari / Privați / Persoane fizice" filters per platform.
+ * Mirror of OWNER_TEXT_FILTER + OWNER_URL_FILTERS from scrape-prospects edge fn.
+ * Shown as placeholder when a keyword row hasn't been customized yet.
+ */
+const DEFAULT_OWNER_TEXT_FILTER =
+  '(proprietar OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar") -agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker';
+
+const PLATFORM_OWNER_URL_DEFAULTS: Record<string, string> = {
+  "OLX": "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private",
+  "Storia.ro": "inurl:ownerTypeSingleSelect=PRIVATE",
+  "imobiliare.ro": "inurl:persoane-fizice OR inurl:proprietari",
+  "Publi24": "inurl:tip-anunt-persoane-fizice OR inurl:proprietari",
+  "BursaImobiliara.ro": "inurl:proprietar OR inurl:persoane-fizice",
+  "Facebook Marketplace": "",
+  "Grupuri Facebook": "",
+  "General": "",
+};
+
+function getDefaultOwnerFilters(platform: string): KeywordOwnerFilters {
+  return {
+    text: DEFAULT_OWNER_TEXT_FILTER,
+    url_hint: PLATFORM_OWNER_URL_DEFAULTS[platform] ?? "",
+  };
 }
 
 interface StatusHistoryEntry {
