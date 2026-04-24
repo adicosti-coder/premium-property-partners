@@ -88,37 +88,37 @@ interface PlatformFilterDef {
 
 const PLATFORM_FILTERS: Record<string, PlatformFilterDef[]> = {
   "OLX": [
-    { id: "private",   label: "Privat (Persoană fizică)", description: "search[private_business]=private", hint: "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private", defaultOn: true },
-    { id: "exclude_firma", label: "Exclude „Firmă"",        description: "elimină rezultate cu Firma în URL/text",  hint: '-inurl:business -"de la firma" -"de la companie"', defaultOn: true },
+    { id: "private",       label: "Privat (Persoană fizică)", description: "search[private_business]=private", hint: "inurl:search%5Bprivate_business%5D=private OR inurl:search[private_business]=private", defaultOn: true },
+    { id: "exclude_firma", label: 'Exclude „Firmă”',          description: "elimină rezultate cu Firma în URL/text", hint: '-inurl:business -"de la firma" -"de la companie"', defaultOn: true },
   ],
   "Storia.ro": [
-    { id: "private", label: "Doar proprietari", description: "ownerTypeSingleSelect=PRIVATE", hint: "inurl:ownerTypeSingleSelect=PRIVATE", defaultOn: true },
-    { id: "exclude_agency", label: "Exclude agenții",     description: "elimină rezultate marcate agency",        hint: "-inurl:ownerTypeSingleSelect=AGENCY -inurl:by=agency", defaultOn: true },
+    { id: "private",        label: "Doar proprietari", description: "ownerTypeSingleSelect=PRIVATE", hint: "inurl:ownerTypeSingleSelect=PRIVATE", defaultOn: true },
+    { id: "exclude_agency", label: "Exclude agenții",  description: "elimină rezultate marcate agency", hint: "-inurl:ownerTypeSingleSelect=AGENCY -inurl:by=agency", defaultOn: true },
   ],
   "imobiliare.ro": [
-    { id: "owners",   label: "Publicate de proprietari", description: "/persoane-fizice/ sau /proprietari/", hint: "inurl:persoane-fizice OR inurl:proprietari", defaultOn: true },
+    { id: "owners",    label: "Publicate de proprietari", description: "/persoane-fizice/ sau /proprietari/", hint: "inurl:persoane-fizice OR inurl:proprietari", defaultOn: true },
     { id: "no_agency", label: "Fără agenții",             description: "exclude /agentii/",                   hint: "-inurl:agentii -inurl:agency", defaultOn: true },
     { id: "no_dev",    label: "Fără dezvoltatori",        description: "exclude /dezvoltatori/",              hint: "-inurl:dezvoltatori -inurl:developer", defaultOn: false },
   ],
   "Publi24": [
     { id: "private",  label: "De la persoane fizice", description: "tip-anunt-persoane-fizice", hint: "inurl:tip-anunt-persoane-fizice OR inurl:proprietari", defaultOn: true },
-    { id: "no_firms", label: "Fără companii",          description: "exclude tip-anunt-firma",   hint: "-inurl:tip-anunt-firma -inurl:agentie", defaultOn: true },
+    { id: "no_firms", label: "Fără companii",         description: "exclude tip-anunt-firma",   hint: "-inurl:tip-anunt-firma -inurl:agentie", defaultOn: true },
   ],
   "BursaImobiliara.ro": [
-    { id: "private",  label: "Doar proprietari",  description: "/proprietar/ sau /persoane-fizice/", hint: "inurl:proprietar OR inurl:persoane-fizice", defaultOn: true },
-    { id: "no_agency", label: "Fără agenții",      description: "exclude /agentie/",                   hint: "-inurl:agentie -inurl:agency", defaultOn: true },
+    { id: "private",   label: "Doar proprietari", description: "/proprietar/ sau /persoane-fizice/", hint: "inurl:proprietar OR inurl:persoane-fizice", defaultOn: true },
+    { id: "no_agency", label: "Fără agenții",     description: "exclude /agentie/",                  hint: "-inurl:agentie -inurl:agency", defaultOn: true },
   ],
   "Facebook Marketplace": [
-    { id: "owner_kw", label: "Caută „proprietar / persoană fizică"", description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
-    { id: "no_agency", label: "Exclude „agenție / comision"",       description: "operatori negativi",  hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+    { id: "owner_kw",  label: 'Caută „proprietar / persoană fizică”', description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: "no_agency", label: 'Exclude „agenție / comision”',         description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
   ],
   "Grupuri Facebook": [
-    { id: "owner_kw", label: "Caută „proprietar / persoană fizică"", description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
-    { id: "no_agency", label: "Exclude „agenție / comision"",       description: "operatori negativi",  hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
+    { id: "owner_kw",  label: 'Caută „proprietar / persoană fizică”', description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
+    { id: "no_agency", label: 'Exclude „agenție / comision”',         description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
   ],
   "General": [
-    { id: "owner_kw", label: "Caută „proprietar / persoană fizică"", description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar")', defaultOn: true },
-    { id: "no_agency", label: "Exclude „agenție / broker / comision"", description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker', defaultOn: true },
+    { id: "owner_kw",  label: 'Caută „proprietar / persoană fizică”',     description: "filtru text Google", hint: '("proprietar" OR "persoana fizica" OR "persoană fizică" OR "fara comision" OR "fără comision" OR "direct proprietar")', defaultOn: true },
+    { id: "no_agency", label: 'Exclude „agenție / broker / comision”',    description: "operatori negativi", hint: '-agentie -agenție -agency -"comision agentie" -"comision 2%" -"comision agenție" -broker', defaultOn: true },
   ],
 };
 
