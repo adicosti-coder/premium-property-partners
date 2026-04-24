@@ -220,11 +220,11 @@ function removeDiacritics(text: string): string {
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
  */
-function expandKeywordsWithoutDiacritics(
-  queries: { platform: string; query: string }[]
-): { platform: string; query: string }[] {
+function expandKeywordsWithoutDiacritics<T extends { platform: string; query: string }>(
+  queries: T[]
+): T[] {
   const seen = new Set<string>();
-  const expanded: { platform: string; query: string }[] = [];
+  const expanded: T[] = [];
 
   for (const q of queries) {
     const key = removeDiacritics(q.query).toLowerCase();
@@ -232,10 +232,10 @@ function expandKeywordsWithoutDiacritics(
       seen.add(key);
       const clean = removeDiacritics(q.query);
       // Always push diacritics-free version first (broadest match)
-      expanded.push({ platform: q.platform, query: clean });
+      expanded.push({ ...q, query: clean });
       // If original had diacritics, also keep it for exact-match ranking
       if (clean !== q.query) {
-        expanded.push({ platform: q.platform, query: q.query });
+        expanded.push({ ...q, query: q.query });
       }
     }
   }
