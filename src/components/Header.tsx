@@ -17,7 +17,6 @@ const ScanIcon = () => <svg width="16" height="16" className="w-4 h-4" fill="non
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useFavorites } from "@/hooks/useFavorites";
 // supabase imported dynamically below to keep vendor-supabase (~43KB) off critical path
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
@@ -35,7 +34,6 @@ const Header = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
   const { t, language } = useLanguage();
-  const { favorites } = useFavorites();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -287,22 +285,7 @@ const Header = () => {
                 : <>From acquisition to hotel revenue — <span className="font-bold text-foreground bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent animate-text-glow">1 complete system</span>, yield-oriented</>}
             </p>
           
-            {/* Favorites link */}
-            {favorites.length > 0 && (
-              <Link to="/favorite" aria-label={language === 'ro' ? `Favorite (${favorites.length})` : `Favorites (${favorites.length})`}>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="relative w-11 h-11 min-w-[44px] min-h-[44px] p-0 text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(0_80%_50%/0.3)]"
-                  aria-label={language === 'ro' ? `Favorite (${favorites.length})` : `Favorites (${favorites.length})`}
-                >
-                  <HeartIcon className="w-5 h-5 fill-red-500 text-red-500" />
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                    {favorites.length}
-                  </span>
-                </Button>
-              </Link>
-            )}
+            {/* Favorites link intentionally kept off the LCP header bundle; available in /favorite and property lists. */}
             {/* Notifications - hidden on mobile, visible md+ only for authenticated admins */}
             {/* Notifications + Animation toggle: render only after mobile menu interaction OR md+ viewport.
                 Avoids loading non-critical chunks on mobile LCP path. */}
