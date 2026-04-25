@@ -41,10 +41,9 @@
           imagesrcset="/images/hero-optimized-800w.webp 800w, /images/hero-cinematic-1600w.webp 1600w"
           imagesizes="100vw" />
 
-    <!-- Preload ONLY the latin Playfair font used by the H1 in the LCP shell.
-         Inter is loaded via @font-face (font-display:swap) — preloading all 3
-         fonts was costing ~70KB of bandwidth contention against the LCP image
-         and pushing FCP from ~1s to 2.3s. System fallback metrics are matched. -->
+    <!-- Preload only fonts visible in the LCP shell. Both use font-display:swap
+         and metric-matched fallbacks to avoid render blocking and CLS. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait.
@@ -55,7 +54,7 @@
       html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:'Inter','Inter Fallback',system-ui,-apple-system,sans-serif}
       :root,.light{--background:40 25% 96%;--foreground:222 47% 11%;--primary:45 90% 28%;--primary-foreground:0 0% 100%;--muted:40 20% 92%;--muted-foreground:222 30% 40%;--border:40 20% 80%;--card:0 0% 100%;--card-foreground:222 47% 11%;--radius:0.5rem}
       .dark{--background:222 47% 11%;--foreground:210 40% 98%;--primary:45 90% 38%;--primary-foreground:222 47% 11%;--muted:222 30% 20%;--muted-foreground:210 40% 70%;--border:222 30% 25%;--card:222 47% 14%;--card-foreground:210 40% 98%}
-      body{font-family:'NotoSans','Inter Fallback',system-ui,-apple-system,sans-serif;background:hsl(var(--background));color:hsl(var(--foreground));-webkit-font-smoothing:antialiased;min-height:100vh;line-height:inherit}
+      body{font-family:'Inter','Inter Fallback',system-ui,-apple-system,sans-serif;background:hsl(var(--background));color:hsl(var(--foreground));-webkit-font-smoothing:antialiased;min-height:100vh;line-height:inherit}
       h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}
       img,video{max-width:100%;height:auto;display:block}
       button{font-family:inherit;cursor:pointer;background:transparent;border:0;color:inherit}
@@ -132,6 +131,7 @@
     <style>
       @font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/PlayfairDisplay-SemiBold-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
       @font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/PlayfairDisplay-SemiBold-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+      @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/Inter-Regular.woff2') format('woff2')}
     </style>
     
     <meta name="geo.region" content="RO-TM" />

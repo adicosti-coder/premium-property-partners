@@ -13,6 +13,7 @@ import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { MapPin, TrendingUp, Home, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lazy, Suspense } from "react";
+import { CompareProvider } from "@/contexts/CompareContext";
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -114,9 +115,10 @@ const NeighborhoodDetail = () => {
             </p>
           </div>
 
-          {/* Real DB Properties */}
-          {(isLoading || properties.length > 0) && (
-            <div className="mb-12">
+          <CompareProvider>
+            {/* Real DB Properties */}
+            {(isLoading || properties.length > 0) && (
+              <div className="mb-12">
               <h2 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 Anunțuri active — verificate RealTrust
@@ -142,11 +144,11 @@ const NeighborhoodDetail = () => {
                     ))}
                 </div>
               )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* Static Listings */}
-          <div className="mb-12">
+            {/* Static Listings */}
+            <div className="mb-12">
             <h2 className="text-xl font-semibold text-foreground mb-6">
               {properties.length > 0
                 ? `Mai multe proprietăți în ${neighborhood.fullName}`
@@ -157,7 +159,9 @@ const NeighborhoodDetail = () => {
                 <NeighborhoodPropertyCard key={listing.id} listing={listing} />
               ))}
             </div>
-          </div>
+            </div>
+            <CompareDrawer />
+          </CompareProvider>
 
           {/* Investor Insight — internal link to pillar guide */}
           <Suspense fallback={null}>
@@ -224,7 +228,6 @@ const NeighborhoodDetail = () => {
         <GlobalConversionWidgets />
       </Suspense>
       <BackToTop />
-      <CompareDrawer />
     </div>
   );
 };

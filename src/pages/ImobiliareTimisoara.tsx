@@ -11,6 +11,7 @@ import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { lazy, Suspense } from "react";
+import { CompareProvider } from "@/contexts/CompareContext";
 
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
@@ -144,7 +145,8 @@ const ImobiliareTimisoara = () => {
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
               ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <CompareProvider>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...liveNeighborhoodProperties]
                     .sort((a, b) => {
                       const roiA = parseFloat(a.roi_percentage ?? "0") || 0;
@@ -155,6 +157,10 @@ const ImobiliareTimisoara = () => {
                       <RealPropertyCard key={property.id} property={property} />
                     ))}
                 </div>
+                <Suspense fallback={null}>
+                  <CompareDrawer />
+                </Suspense>
+              </CompareProvider>
               )}
             </section>
           )}
@@ -321,9 +327,6 @@ const ImobiliareTimisoara = () => {
       <Suspense fallback={null}>
         <Footer />
         <GlobalConversionWidgets />
-      </Suspense>
-      <Suspense fallback={null}>
-        <CompareDrawer />
       </Suspense>
       <BackToTop />
     </div>

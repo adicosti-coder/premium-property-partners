@@ -49,7 +49,7 @@ const Hero = () => {
       setShouldLoadVideo(false);
       return;
     }
-    const timer = setTimeout(() => setShouldLoadVideo(true), 500);
+    const timer = setTimeout(() => setShouldLoadVideo(true), 2500);
     return () => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
@@ -63,7 +63,6 @@ const Hero = () => {
     const load = async () => {
       if (triggered || cancelled) return;
       triggered = true;
-      events.forEach(e => document.removeEventListener(e, load as EventListener));
       try {
         const { supabase } = await import("@/lib/supabaseClient");
         const { data, error } = await (supabase
@@ -87,11 +86,16 @@ const Hero = () => {
       }
     };
 
-    events.forEach(e => document.addEventListener(e, load as EventListener, { once: true, passive: true }));
+    const trigger = () => {
+      events.forEach(e => document.removeEventListener(e, trigger as EventListener));
+      window.requestIdleCallback?.(() => load()) ?? window.setTimeout(load, 1);
+    };
+
+    events.forEach(e => document.addEventListener(e, trigger as EventListener, { once: true, passive: true }));
 
     return () => {
       cancelled = true;
-      events.forEach(e => document.removeEventListener(e, load as EventListener));
+      events.forEach(e => document.removeEventListener(e, trigger as EventListener));
     };
   }, [language]);
 
