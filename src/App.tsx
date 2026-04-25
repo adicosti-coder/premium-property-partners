@@ -7,9 +7,9 @@ import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import CookieConsent from "@/components/CookieConsent";
+const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
+const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
+const CookieConsent = lazy(() => import("@/components/CookieConsent"));
 
 // Handle dynamic import failures (stale cache) by reloading the page
 const handleDynamicImportError = (error: Error): never => {
@@ -163,11 +163,11 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
     <>
       {children}
       {ready && (
-        <>
+        <Suspense fallback={null}>
           <Toaster />
           <Sonner />
           <CookieConsent />
-        </>
+        </Suspense>
       )}
     </>
   );
