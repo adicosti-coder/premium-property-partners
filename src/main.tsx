@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
@@ -28,11 +29,20 @@ const mountApp = () => {
   const rootEl = document.getElementById("root");
   if (rootEl) {
     try {
-      createRoot(rootEl).render(
-        <HelmetProvider>
-          <App />
-        </HelmetProvider>
-      );
+      const root = createRoot(rootEl);
+      const renderApp = () => {
+        root.render(
+          <HelmetProvider>
+            <App />
+          </HelmetProvider>
+        );
+      };
+
+      if (rootEl.children.length > 0) {
+        startTransition(renderApp);
+      } else {
+        renderApp();
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       rootEl.innerHTML = '<div style="padding:2rem;color:red;font:16px monospace;"><h2>React mount error</h2><pre>' + msg + '</pre></div>';
