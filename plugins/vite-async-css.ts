@@ -17,7 +17,8 @@ export default function viteAsyncCss(): Plugin {
         .replace(
           /<link rel="stylesheet"(?:\s+crossorigin)?\s+href="([^"]+\.css)"\s*\/?>/g,
           (_match, href) =>
-            `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all'">` +
+            `<link rel="preload" as="style" href="${href}" fetchpriority="low">` +
+            `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all';this.onload=null">` +
             `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
         );
 
