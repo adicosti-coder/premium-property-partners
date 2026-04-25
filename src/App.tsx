@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
-import { CompareProvider } from "@/contexts/CompareContext";
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -182,7 +181,6 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
-              <CompareProvider>
               <ScrollToTop />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
@@ -264,7 +262,6 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </DeferredShell>
-              </CompareProvider>
               </FAQSchemaProvider>
             </ErrorBoundary>
           </BrowserRouter>
