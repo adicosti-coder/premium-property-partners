@@ -80,6 +80,11 @@
   # HTTP Strict Transport Security (HSTS)
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 
+  # Allow CDN/browser revalidation of the SPA shell without serving stale HTML for long periods.
+  <FilesMatch "^(index\.html)?$">
+    Header set Cache-Control "public, max-age=300, stale-while-revalidate=86400"
+  </FilesMatch>
+
   # Cross-Origin policies
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Cross-Origin-Resource-Policy "same-origin"
@@ -157,9 +162,9 @@ Options -Indexes
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 
-  # HTML must always revalidate (SPA shell)
+  # HTML shell: short cache at the edge/browser to reduce repeat-visit TTFB.
   <FilesMatch "\.html$">
-    Header set Cache-Control "public, max-age=0, must-revalidate"
+    Header set Cache-Control "public, max-age=300, stale-while-revalidate=86400"
   </FilesMatch>
 
   # Service worker must not be cached aggressively

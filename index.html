@@ -39,7 +39,7 @@
     <link rel="preload" as="image" type="image/webp" fetchpriority="high"
           href="/images/hero-optimized-800w.webp"
           imagesrcset="/images/hero-optimized-800w.webp 800w, /images/hero-cinematic-1600w.webp 1600w"
-          imagesizes="100vw" />
+          imagesizes="(max-width: 767px) 100vw, 100vw" />
 
     <!-- Preload only fonts visible in the LCP shell. Both use font-display:swap
          and metric-matched fallbacks to avoid render blocking and CLS. -->
@@ -165,7 +165,7 @@
            is layout-identical (CLS ≈ 0). Paints H1 + LCP image at ~400ms. -->
       <div id="app-shell-placeholder">
         <div class="ash-bg">
-          <img src="/images/hero-optimized-800w.webp" alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. ROI 9.4% net verificat." width="800" height="447" fetchpriority="high" decoding="async" />
+          <img src="/images/hero-optimized-800w.webp" srcset="/images/hero-optimized-800w.webp 800w, /images/hero-cinematic-1600w.webp 1600w" sizes="100vw" alt="RealTrust Imobiliare Timișoara — investiții premium, vânzări, închirieri și administrare proprietăți. ROI 9.4% net verificat." width="800" height="447" fetchpriority="high" decoding="async" />
         </div>
         <div class="ash-overlay"></div>
         <div class="ash-container">
