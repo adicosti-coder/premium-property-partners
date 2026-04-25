@@ -4,6 +4,7 @@
 @font-face {
   font-family: 'Playfair Display Fallback';
   src: local('Times New Roman');
+  font-display: swap;
   size-adjust: 110%;
   ascent-override: 95%;
   descent-override: 22%;
@@ -14,6 +15,7 @@
 @font-face {
   font-family: 'Inter Fallback';
   src: local('Arial');
+  font-display: swap;
   size-adjust: 107%;
   ascent-override: 90%;
   descent-override: 22%;
