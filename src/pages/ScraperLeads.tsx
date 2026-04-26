@@ -1154,7 +1154,7 @@ const ScraperLeads = () => {
   };
 
   // ── Import lead as draft listing ───────────────────
-  const importLeadAsListing = async (lead: ScraperLead, options?: { listingType?: string; activate?: boolean }) => {
+  const importLeadAsListing = async (lead: ScraperLead, options?: { listingType?: string; activate?: boolean; verification?: "standard" | "full" }) => {
     if (!lead.url) {
       toast.error("Anunțul nu are URL sursă pentru import");
       return;
@@ -1187,7 +1187,7 @@ const ScraperLeads = () => {
       const size = parseSurface(textBlob);
       const floor = parseFloor(textBlob);
       const yieldValue = getYield(lead);
-      const pricePerSqm = listingType === "vanzare" && lead.original_price && size ? Math.round(lead.original_price / size) : null;
+      const pricePerSqm = ["vanzare", "investitie"].includes(listingType) && lead.original_price && size ? Math.round(lead.original_price / size) : null;
       const description = buildImportedDescription(lead, cleanTitle, yieldValue);
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
@@ -1195,9 +1195,19 @@ const ScraperLeads = () => {
       const importedFeatures = [
         "importat-scraper",
         "necesită-verificare",
+        options?.verification === "full" ? "verificare-completă" : "verificare-standard",
+        lead.lead_score >= 90 ? "lead-premium" : null,
+        isPremiumLead(lead.title) ? "zonă-premium" : null,
+        lead.phone ? "contact-disponibil" : "verifică-telefon",
         `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
-      ];
+      ].filter(Boolean) as string[];
+      const tag = options?.activate ? "Importat scraper" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
+      const estimatedRevenue = listingType === "inchiriere" && lead.original_price
+        ? `${lead.original_price}€/lună chirie listată`
+        : lead.monthly_extra
+          ? `${lead.monthly_extra}€/lună extra estimat`
+          : null;
 
       const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: cleanTitle,
@@ -1208,12 +1218,12 @@ const ScraperLeads = () => {
         amenities: specs.amenities.length ? specs.amenities : null,
         amenities_en: specs.amenities.length ? specs.amenities : null,
         booking_url: lead.url,
-        tag: options?.activate ? "Importat scraper" : "Draft importat",
+        tag,
         is_active: Boolean(options?.activate),
         display_order: 999,
         status_operativ: listingType,
         listing_type: listingType,
-        capital_necesar: lead.original_price || null,
+        capital_necesar: ["vanzare", "investitie"].includes(listingType) ? lead.original_price || null : null,
         rooms,
         size,
         bedrooms: rooms ? Math.max(1, rooms - 1) : null,
@@ -1238,7 +1248,7 @@ const ScraperLeads = () => {
         comfort_level: specs.comfort_level,
         destination: "Rezidențial",
         price_per_sqm: pricePerSqm,
-        estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
+        estimated_revenue: estimatedRevenue,
         roi_percentage: yieldValue ? `${yieldValue}%` : null,
         contact_phone: lead.phone || null,
         contact_name: contactName !== "—" ? contactName : null,
@@ -2023,6 +2033,9 @@ const ScraperLeads = () => {
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead)}>Draft inteligent</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "vanzare" })}>Importă ca vânzare</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "inchiriere" })}>Importă ca închiriere</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", verification: "full" })}>Importă pentru investiție</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full" })}>Pregătește regim hotelier</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full" })}>Draft + verificare completă</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -2977,6 +2990,9 @@ const ScraperLeads = () => {
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", verification: "full" })}>Ca investiție</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full" })}>Regim hotelier</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full" })}>Verificare completă</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -3116,6 +3132,9 @@ const ScraperLeads = () => {
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", verification: "full" })}>Ca investiție</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full" })}>Regim hotelier</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full" })}>Verificare completă</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
