@@ -1848,10 +1848,14 @@ const ScraperLeads = () => {
           />
 
           {/* ── Export to Properties ───────────────── */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button className="flex-1 gap-2" onClick={() => importLeadAsListing(selectedLead)} disabled={importingLeadId === selectedLead.id}>
+              {importingLeadId === selectedLead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+              Importă Anunț
+            </Button>
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
               <ArrowRightCircle className="w-4 h-4" />
-              Exportă în Prospect Listings
+              Trimite în Prospectare
             </Button>
             <Button variant="outline" className="gap-2" onClick={() => downloadLeadAnalysisPdf(selectedLead)}>
               <FileText className="w-4 h-4" />
