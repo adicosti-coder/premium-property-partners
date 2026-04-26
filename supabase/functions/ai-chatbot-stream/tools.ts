@@ -487,11 +487,11 @@ export async function executeTool(
     case "check_availability":
       return await checkAvailability(args);
     case "calculate_roi":
-      return calculateROI(args);
+      return calculateROI(args as Parameters<typeof calculateROI>[0]);
     case "schedule_viewing":
-      return await scheduleViewing(args);
+      return await scheduleViewing(args as Parameters<typeof scheduleViewing>[0]);
     case "get_tourist_recommendations":
-      return await getTouristRecommendations(args);
+      return await getTouristRecommendations(args as Parameters<typeof getTouristRecommendations>[0]);
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
   }
