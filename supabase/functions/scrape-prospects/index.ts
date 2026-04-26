@@ -446,6 +446,40 @@ Deno.serve(async (req) => {
     }));
     console.log(`Expanded to ${queries.length} owner-only search queries`);
 
+    if (onlyNewSources || preserveAgencyFilter) {
+      const [{ data: scraperRows }, { data: archiveRows }, { data: prospectRows }, { data: blockRows }] = await Promise.all([
+        supabase.from('scraper_leads').select('url, phone'),
+        supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
+        supabase.from('prospect_listings').select('source_url, phone_normalized, contact_phone, prospect_type, is_active'),
+        supabase.from('agency_blocklist').select('phone_normalized, domain'),
+      ]);
+
+      for (const row of scraperRows || []) if (row.url) existingUrls.add(row.url);
+      for (const row of archiveRows || []) {
+        if (row.url) existingUrls.add(row.url);
+        if (row.prospect_category === 'agentie' || row.status === 'archived') {
+          const phone = normalizeRoPhone(row.phone);
+          const domain = extractUrlDomain(row.url);
+          if (phone) blockedPhones.add(phone);
+          if (domain) blockedDomains.add(domain);
+        }
+      }
+      for (const row of prospectRows || []) {
+        if (row.source_url) existingUrls.add(row.source_url);
+        if (row.prospect_type === 'agentie' || row.is_active === false) {
+          const phone = normalizeRoPhone(row.phone_normalized || row.contact_phone);
+          const domain = extractUrlDomain(row.source_url);
+          if (phone) blockedPhones.add(phone);
+          if (domain) blockedDomains.add(domain);
+        }
+      }
+      for (const row of blockRows || []) {
+        const phone = normalizeRoPhone(row.phone_normalized);
+        if (phone) blockedPhones.add(phone);
+        if (row.domain) blockedDomains.add(row.domain);
+      }
+    }
+
     // Process queries in parallel batches of 5 to avoid timeout
     const BATCH_SIZE = 5;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
