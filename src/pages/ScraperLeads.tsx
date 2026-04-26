@@ -362,7 +362,10 @@ function extractPhoneFromText(text?: string | null): string | null {
 
 function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" | "search_keyword" | "source" | "prospect_category" | "description" | "contact_name">): boolean {
   if (lead.prospect_category === "proprietar") return true;
-  const blob = `${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.search_keyword || ""} ${lead.source || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase();
+  // Do not count the original search keyword/source as an owner signal: generic
+  // platform searches can contain appended owner filters while the returned row
+  // itself is still a mixed search/category page.
+  const blob = `${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase();
   return OWNER_SIGNALS.some((signal) => blob.includes(signal));
 }
 
@@ -740,9 +743,11 @@ const ScraperLeads = () => {
       const now = Date.now();
       result = result.filter((l) => !l.snoozed_until || new Date(l.snoozed_until).getTime() <= now);
     }
-    // Hide search/listing pages (not individual ads) — show only real listings
+    // Hide search/listing pages (not individual ads) — show only real listings.
+    // Never allow generic platform result pages back in just because the query
+    // used to find them contained owner-only text.
     if (hideSearchPages) {
-      result = result.filter((l) => !isSearchPageLead(l.url, l.title) || hasOwnerSignal(l));
+      result = result.filter((l) => !isSearchPageLead(l.url, l.title));
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
@@ -764,7 +769,8 @@ const ScraperLeads = () => {
           l._prospect_type !== "dezvoltator" &&
           l.prospect_category !== "agentie" &&
           l.prospect_category !== "dezvoltator" &&
-          (hasOwnerSignal(l) || !looksLikeAgency(l))
+          hasOwnerSignal(l) &&
+          !looksLikeAgency(l)
       );
     }
 
