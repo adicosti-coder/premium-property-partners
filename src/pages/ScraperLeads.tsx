@@ -1244,12 +1244,14 @@ const ScraperLeads = () => {
     onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
   });
 
-  const handleScrape = async () => {
+  const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
     setIsScraping(true);
+    setActiveScanMode(mode);
     setRecentScanPulse(true);
     try {
+      const isRescan = mode === "rescan";
       const { data, error } = await supabase.functions.invoke("scrape-prospects", {
-        body: { max_results: 10 },
+        body: { max_results: isRescan ? 20 : 10, only_new_sources: isRescan, preserve_agency_filter: true },
       });
       if (error) throw error;
       const result = {
@@ -1265,7 +1267,7 @@ const ScraperLeads = () => {
         archived_skipped: result.archived_skipped,
         total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
       } as any);
-      toast.success(`Scanare completă! ${result.count} anunțuri noi găsite.`);
+      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} anunțuri noi găsite.`);
       // Force full data refresh
       await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
@@ -1273,9 +1275,10 @@ const ScraperLeads = () => {
       await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
       await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
     } catch (err: any) {
-      toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
+      toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
     } finally {
       setIsScraping(false);
+      setActiveScanMode(null);
       setTimeout(() => setRecentScanPulse(false), 5000);
     }
   };
