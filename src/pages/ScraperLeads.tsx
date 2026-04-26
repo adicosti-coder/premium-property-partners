@@ -610,7 +610,8 @@ const ScraperLeads = () => {
         tags: d.tags || [],
         _prospect_type: d.prospect_category || (hasOwnerSignal(d) ? "proprietar" : deriveProspectType(d.title)),
         _origin: "archive" as const,
-      })) as (ScraperLead & { _prospect_type: string })[];
+      }))
+        .filter((lead: any) => hasOwnerSignal(lead) && !hasAgencySignal(lead) && !isSearchPageLead(lead.url, lead.title)) as (ScraperLead & { _prospect_type: string })[];
 
       const [{ data: blocklistData }, { data: archivedAgencyData }] = await Promise.all([
         supabase.from("agency_blocklist").select("phone_normalized, domain"),
@@ -636,8 +637,9 @@ const ScraperLeads = () => {
         .limit(300);
       if (prospectError) throw prospectError;
 
-      const archiveUrls = new Set(archiveLeads.map((l) => l.url).filter(Boolean));
+      const archiveUrls = new Set([...(archiveData || []).map((l: any) => l.url), ...archiveLeads.map((l) => l.url)].filter(Boolean));
       const prospectLeads = ((prospectData || []) as any[])
+        .filter((p) => !isSearchPageLead(p.source_url, p.title))
         .filter((p) => hasOwnerSignal({
           title: p.title,
           url: p.source_url,
@@ -648,6 +650,7 @@ const ScraperLeads = () => {
           description: p.description,
           contact_name: p.contact_name,
         }))
+        .filter((p) => !hasAgencySignal({ title: p.title, url: p.source_url, admin_notes: p.admin_notes, description: p.description, contact_name: p.contact_name, agency_name: null }))
         .filter((p) => !archiveUrls.has(p.source_url))
         .filter((p) => !blockedPhones.has(normalizeRoPhone(p.phone_normalized || p.contact_phone) || extractPhoneFromText(`${p.admin_notes || ""} ${p.description || ""} ${p.title || ""}`) || ""))
         .filter((p) => !blockedDomains.has(extractLeadDomain(p.source_url) || ""))
