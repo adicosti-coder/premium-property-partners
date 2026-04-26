@@ -568,7 +568,7 @@ const ProspectListings = () => {
       }
       const isGenericSearch = isGenericSearchProspect(p) && !hasOwnerFilterSignal(p);
       const isAgency = detectIsAgency(p);
-      const phoneKey = p.phone_normalized || p.contact_phone || "";
+      const phoneKey = getProspectPhone(p) || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
       const suspicion = computeAgencySuspicion(p, phoneCount);
       return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion };
@@ -670,7 +670,7 @@ const ProspectListings = () => {
     return filtered
       .filter((p) => !p.isAgency)
       .filter((p) => !isImportedFromPlatformSearch(p) || hasOwnerFilterSignal(p))
-      .filter((p) => (p.phone_normalized || p.contact_phone))
+      .filter((p) => getProspectPhone(p))
       .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
       .slice(0, CAMPAIGN_LIMIT);
   }, [filtered]);
@@ -817,7 +817,8 @@ const ProspectListings = () => {
       toast({ title: "Nu este anunț apelabil", description: "Această intrare este o căutare generică de platformă, nu un anunț de proprietar.", variant: "destructive" });
       return;
     }
-    if (!p.phone_normalized && !p.contact_phone) {
+    const phone = getProspectPhone(p);
+    if (!phone) {
       toast({ title: "Lipsește telefon", description: "Acest prospect nu are număr de telefon.", variant: "destructive" });
       return;
     }
@@ -838,7 +839,7 @@ const ProspectListings = () => {
       if (data?.error) throw new Error(data.error);
       toast({
         title: "📞 Apel inițiat",
-        description: `Sun ${data?.to || p.contact_phone}. Sesiune: ${data?.session_id?.slice(0, 8)}...`,
+        description: `Sun ${data?.to || phone}. Sesiune: ${data?.session_id?.slice(0, 8)}...`,
       });
       refetch();
     } catch (e: any) {
