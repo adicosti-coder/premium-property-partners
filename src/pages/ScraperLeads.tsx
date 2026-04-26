@@ -64,6 +64,9 @@ interface ScraperLead {
   follow_up_at?: string | null;
   snoozed_until?: string | null;
   ai_insight?: any;
+  description?: string | null;
+  contact_name?: string | null;
+  _origin?: "archive" | "prospect";
 }
 
 /**
@@ -333,6 +336,34 @@ const QUICK_REPLY_CATEGORIES = [
 
 function cleanTitleStatic(title: string) {
   return title.replace(/🏢|🏰/g, "").replace(/\|/g, "").replace(/\s{2,}/g, " ").trim();
+}
+
+const OWNER_SIGNALS = [
+  "proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar",
+  "fara comision", "fără comision", "fara intermediar", "privat", "privati",
+  "privați", "persoana fizica", "persoană fizică", "persoane fizice",
+];
+
+const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
+
+function normalizeRoPhone(raw?: string | null): string | null {
+  if (!raw || raw.includes("...") || raw.includes("***")) return null;
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("0040")) digits = digits.slice(2);
+  if (digits.startsWith("40") && digits.length === 11) return /^407[2-8]\d{7}$/.test(digits) ? `+${digits}` : null;
+  if (digits.startsWith("0") && digits.length === 10) return /^07[2-8]\d{7}$/.test(digits) ? `+4${digits}` : null;
+  if (digits.startsWith("7") && digits.length === 9) return /^7[2-8]\d{7}$/.test(digits) ? `+40${digits}` : null;
+  return null;
+}
+
+function extractPhoneFromText(text?: string | null): string | null {
+  return text?.match(PHONE_PATTERN)?.map(normalizeRoPhone).find(Boolean) ?? null;
+}
+
+function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" | "search_keyword" | "source" | "prospect_category" | "description" | "contact_name">): boolean {
+  if (lead.prospect_category === "proprietar") return true;
+  const blob = `${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.search_keyword || ""} ${lead.source || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase();
+  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
 }
 
 /**
