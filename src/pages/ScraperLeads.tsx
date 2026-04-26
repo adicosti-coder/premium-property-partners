@@ -1191,13 +1191,22 @@ const ScraperLeads = () => {
       const description = buildImportedDescription(lead, cleanTitle, yieldValue);
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
+      const specs = extractImportedSpecs(textBlob);
+      const importedFeatures = [
+        "importat-scraper",
+        "necesită-verificare",
+        `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+        ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
+      ];
 
       const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: cleanTitle,
         location: inferLocation(lead),
         description_ro: description,
         description_en: description,
-        features: ["importat-scraper", "necesită-verificare", `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
+        features: importedFeatures,
+        amenities: specs.amenities.length ? specs.amenities : null,
+        amenities_en: specs.amenities.length ? specs.amenities : null,
         booking_url: lead.url,
         tag: options?.activate ? "Importat scraper" : "Draft importat",
         is_active: Boolean(options?.activate),
@@ -1211,6 +1220,23 @@ const ScraperLeads = () => {
         capacity: rooms ? Math.max(2, rooms * 2) : null,
         floor: floor !== null ? String(floor) : null,
         property_subtype: inferPropertySubtype(textBlob),
+        bathrooms: specs.bathrooms,
+        kitchens: specs.kitchens,
+        balconies: specs.balconies,
+        usable_area: size,
+        built_area: size,
+        terrace_area: specs.terrace_area,
+        total_building_floors: specs.total_building_floors,
+        year_built: specs.year_built,
+        renovation_year: specs.renovation_year,
+        has_elevator: specs.has_elevator,
+        has_ac: specs.has_ac,
+        has_cellar: specs.has_cellar,
+        parking: specs.parking,
+        furnished: specs.furnished,
+        orientation: specs.orientation,
+        comfort_level: specs.comfort_level,
+        destination: "Rezidențial",
         price_per_sqm: pricePerSqm,
         estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
         roi_percentage: yieldValue ? `${yieldValue}%` : null,
