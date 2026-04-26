@@ -706,7 +706,7 @@ const ScraperLeads = () => {
     }
     // Hide search/listing pages (not individual ads) — show only real listings
     if (hideSearchPages) {
-      result = result.filter((l) => !isSearchPageLead(l.url, l.title));
+      result = result.filter((l) => !isSearchPageLead(l.url, l.title) || hasOwnerSignal(l));
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
@@ -728,7 +728,7 @@ const ScraperLeads = () => {
           l._prospect_type !== "dezvoltator" &&
           l.prospect_category !== "agentie" &&
           l.prospect_category !== "dezvoltator" &&
-          !looksLikeAgency(l)
+          (hasOwnerSignal(l) || !looksLikeAgency(l))
       );
     }
 
