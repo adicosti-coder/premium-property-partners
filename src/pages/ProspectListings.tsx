@@ -229,7 +229,7 @@ const NOISE_URL_PATTERNS = [
 ];
 
 const DETAIL_URL_PATTERNS = [
-  "/d/oferta/", "/anunt/", "/anunturi/", "/oferta/", "/proprietate/", "/property/",
+  "/d/oferta/", "/anunt/", "/oferta/", "/proprietate/", "/property/",
 ];
 
 const GENERIC_SEARCH_TITLE_PATTERNS = [
@@ -242,7 +242,26 @@ const GENERIC_SEARCH_TITLE_PATTERNS = [
 export const OWNER_SIGNALS = [
   "proprietar", "direct-de-la-proprietar", "direct proprietar",
   "de la proprietar", "fara comision", "fără comision", "fara intermediar",
+  "privat", "privati", "privați", "persoana fizica", "persoană fizică", "persoane fizice",
 ];
+
+function hasOwnerFilterSignal(p: {
+  title?: string | null;
+  description?: string | null;
+  contact_name?: string | null;
+  prospect_type?: string | null;
+  source_url?: string | null;
+  search_keywords?: string[] | null;
+}): boolean {
+  if (p.prospect_type === "proprietar") return true;
+  const blob = `${p.source_url || ""} ${p.title || ""} ${p.description || ""} ${p.contact_name || ""} ${(p.search_keywords || []).join(" ")}`.toLowerCase();
+  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+}
+
+function isImportedFromPlatformSearch(p: { search_keywords?: string[] | null; source_url?: string | null }): boolean {
+  const url = (p.source_url || "").toLowerCase();
+  return (p.search_keywords?.length ?? 0) > 0 || NOISE_URL_PATTERNS.some((pat) => url.includes(pat));
+}
 
 function extractDomain(url?: string | null): string | null {
   if (!url) return null;
@@ -263,10 +282,11 @@ function isGenericSearchProspect(p: {
   const url = (p.source_url || "").toLowerCase();
   const title = (p.title || "").toLowerCase();
   const contact = (p.contact_name || "").trim();
-  const hasDetailUrl = DETAIL_URL_PATTERNS.some((pat) => url.includes(pat));
-  if (hasDetailUrl) return false;
 
   if (NOISE_URL_PATTERNS.some((pat) => url.includes(pat))) return true;
+
+  const hasDetailUrl = DETAIL_URL_PATTERNS.some((pat) => url.includes(pat));
+  if (hasDetailUrl) return false;
 
   const genericTitle = GENERIC_SEARCH_TITLE_PATTERNS.some((pat) => title.includes(pat));
   const noRealContact = !contact || contact === "—" || contact === "-";
