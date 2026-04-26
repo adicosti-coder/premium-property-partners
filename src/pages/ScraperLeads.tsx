@@ -505,6 +505,7 @@ const ScraperLeads = () => {
   const [hideSearchPages, setHideSearchPages] = useState(true);
   const [hideAgencies, setHideAgencies] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1041,7 +1042,76 @@ const ScraperLeads = () => {
     });
   };
 
-  // ── Export to Properties ──────────────────────────
+  // ── Import lead as draft listing ───────────────────
+  const importLeadAsListing = async (lead: ScraperLead) => {
+    if (!lead.url) {
+      toast.error("Anunțul nu are URL sursă pentru import");
+      return;
+    }
+
+    setImportingLeadId(lead.id);
+    try {
+      const { data: existing, error: existingError } = await supabase
+        .from("properties")
+        .select("id,name")
+        .eq("source_url", lead.url)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      if (existing) {
+        toast.info(`Anunțul este deja importat: ${existing.name}`);
+        return;
+      }
+
+      const listingType = deriveListingType(lead.title, lead.listing_type || "vanzare");
+      const cleanTitle = cleanTitleStatic(lead.title);
+      const description = [
+        lead.description || lead.admin_notes || "Anunț importat din scraping pentru verificare manuală.",
+        `Scor lead: ${lead.lead_score}.`,
+        getYield(lead) ? `Randament estimat: ${getYield(lead)}%/an.` : null,
+        lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
+        `Sursă: ${lead.url}`,
+      ].filter(Boolean).join("\n\n");
+
+      const { error } = await supabase.from("properties").insert({
+        name: cleanTitle,
+        location: "Timișoara",
+        description_ro: description,
+        description_en: description,
+        features: ["importat-scraper", "necesită-verificare"],
+        booking_url: lead.url,
+        tag: "Draft importat",
+        is_active: false,
+        display_order: 999,
+        status_operativ: listingType,
+        listing_type: listingType,
+        capital_necesar: listingType === "vanzare" ? lead.original_price || null : null,
+        estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
+        roi_percentage: getYield(lead) ? `${getYield(lead)}%` : null,
+        contact_phone: lead.phone || null,
+        contact_name: getLeadContactName(lead) !== "—" ? getLeadContactName(lead) : null,
+        source_url: lead.url,
+        source_platform: normalizePlatformLabel(lead.source),
+      } as any);
+
+      if (error) throw error;
+
+      if (lead._origin === "prospect") {
+        await supabase.from("prospect_listings" as any).update({ lifecycle_status: "converted" } as any).eq("id", lead.id);
+      } else {
+        await supabase.from("scraper_leads_archive_2026" as any).update({ status: "converted" } as any).eq("id", lead.id);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.success("Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
+    } catch (error: any) {
+      toast.error(`Eroare la import: ${error.message || "necunoscută"}`);
+    } finally {
+      setImportingLeadId(null);
+    }
+  };
+
+  // ── Export to Prospect Listings ────────────────────
   const exportToProperties = async (lead: ScraperLead) => {
     const { error } = await supabase.from("prospect_listings").insert({
       prospect_type: (lead as any)._prospect_type || "proprietar",
@@ -1778,10 +1848,14 @@ const ScraperLeads = () => {
           />
 
           {/* ── Export to Properties ───────────────── */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button className="flex-1 gap-2" onClick={() => importLeadAsListing(selectedLead)} disabled={importingLeadId === selectedLead.id}>
+              {importingLeadId === selectedLead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+              Importă Anunț
+            </Button>
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
               <ArrowRightCircle className="w-4 h-4" />
-              Exportă în Prospect Listings
+              Trimite în Prospectare
             </Button>
             <Button variant="outline" className="gap-2" onClick={() => downloadLeadAnalysisPdf(selectedLead)}>
               <FileText className="w-4 h-4" />
@@ -2626,7 +2700,7 @@ const ScraperLeads = () => {
                       </TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
                       <TableHead className="font-semibold text-center">Status</TableHead>
-                      <TableHead className="text-center w-32">Acțiuni</TableHead>
+                      <TableHead className="text-center w-40">Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -2707,6 +2781,16 @@ const ScraperLeads = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                              onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
+                              title="Importă anunț ca draft în Proprietăți"
+                              disabled={importingLeadId === lead.id}
+                            >
+                              {importingLeadId === lead.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -2820,9 +2904,19 @@ const ScraperLeads = () => {
                     <span className="text-emerald-500">+{formatPrice(lead.monthly_extra)}/lună</span>
                     <span className="text-amber-400">+{formatPrice(lead.extra_profit_3y)} 3Y</span>
                   </div>
-                  <div className="grid grid-cols-5 gap-1.5">
+                  <div className="grid grid-cols-6 gap-1.5">
                     <Button
                       size="sm"
+                      className="col-span-2 h-8 text-xs"
+                      onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
+                      disabled={importingLeadId === lead.id}
+                    >
+                      {importingLeadId === lead.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Database className="h-3 w-3 mr-1" />}
+                      Importă
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="col-span-2 h-8 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
