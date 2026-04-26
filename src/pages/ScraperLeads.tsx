@@ -736,6 +736,8 @@ const ScraperLeads = () => {
           neighborhood_slug: p.zone || null,
           description: p.description,
           contact_name: p.contact_name,
+          location: p.location,
+          zone: p.zone,
           _prospect_type: "proprietar",
           _origin: "prospect" as const,
         })) as (ScraperLead & { _prospect_type: string })[];
