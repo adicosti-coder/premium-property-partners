@@ -1508,7 +1508,7 @@ const ProspectListings = () => {
                             <a href={callablePhone ? `tel:${callablePhone}` : p.source_url} target={callablePhone ? undefined : "_blank"} rel={callablePhone ? undefined : "noopener noreferrer"} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline break-all">
                               <Phone className="h-3 w-3" />
                               {phoneInfo?.displayPhone || phone}
-                              {phoneInfo?.masked && <span className="text-[9px] text-muted-foreground">vizibil parțial</span>}
+                              {phoneInfo?.masked && <span className="hidden sm:inline text-[9px] text-muted-foreground">vizibil parțial</span>}
                               {phoneInfo && !phoneInfo.persisted && !phoneInfo.masked && (
                                 <span
                                   className="text-[9px] px-1 py-0 rounded bg-muted text-muted-foreground"
@@ -1548,7 +1548,8 @@ const ProspectListings = () => {
                             }`}
                             title="Schimbă clasificarea (proprietar / agenție)"
                           >
-                            {p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}
+                            <span className="sm:hidden">{p.isAgency ? "🏠 Prop." : "🏢 Ag."}</span>
+                            <span className="hidden sm:inline">{p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}</span>
                           </Button>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
@@ -1564,20 +1565,20 @@ const ProspectListings = () => {
                               variant={score > 80 ? "default" : "outline"}
                               onClick={() => handleCall(p)}
                               disabled={!callablePhone || callingId === p.id || callLocked}
-                              className="w-full text-[10px] sm:text-xs px-2"
+                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs"
                             >
                               {callingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Phone className="h-3 w-3 mr-1" />}
-                              📞 Apelează cu AI
+                              <span className="hidden sm:inline">Apelează cu AI</span>
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleAIScore(p.id)}
                               disabled={scoringId === p.id}
-                              className="w-full text-xs"
+                              className="w-9 sm:w-full px-2 text-xs"
                             >
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                              Re-scoring AI
+                              <span className="hidden sm:inline">Re-scoring AI</span>
                             </Button>
                             <div className="flex items-center gap-2 w-full justify-end">
                               <AuditLogViewer
