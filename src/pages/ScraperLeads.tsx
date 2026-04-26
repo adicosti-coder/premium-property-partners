@@ -2833,16 +2833,32 @@ const ScraperLeads = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
-                              onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
-                              title="Importă anunț ca draft în Proprietăți"
-                              disabled={importingLeadId === lead.id}
-                            >
-                              {importingLeadId === lead.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-                            </Button>
+                            {importedPropertyByUrl.has(lead.url) ? (
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground" title="Anunț deja importat" disabled>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Importă anunț ca draft în Proprietăți"
+                                    disabled={importingLeadId === lead.id}
+                                  >
+                                    {importingLeadId === lead.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
