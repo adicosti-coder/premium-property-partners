@@ -415,6 +415,52 @@ function inferPropertySubtype(text: string): string | null {
   return null;
 }
 
+function extractImportedSpecs(text: string) {
+  const normalized = removeDiacritics(text.toLowerCase());
+  const matchNumber = (patterns: RegExp[]) => patterns.map((pattern) => text.match(pattern)?.[1]).find(Boolean);
+  const balconies = matchNumber([/(?:balcon|balcoane)\D{0,12}(\d+)/i, /(\d+)\s*(?:balcon|balcoane)/i]);
+  const bathrooms = matchNumber([/(?:baie|bai|băi)\D{0,12}(\d+)/i, /(\d+)\s*(?:baie|bai|băi)/i]);
+  const kitchens = matchNumber([/(?:bucatarie|bucătărie|bucatarii|bucătării)\D{0,12}(\d+)/i, /(\d+)\s*(?:bucatarie|bucătărie|bucatarii|bucătării)/i]);
+  const totalFloors = matchNumber([/(?:bloc|imobil|cladire|clădire)\D{0,18}(?:p\+)?(\d+)\s*(?:etaje|etaj)/i, /(?:etajul|etaj)\s*\d+\s*(?:din|\/)\s*(\d+)/i]);
+  const yearBuilt = matchNumber([/(?:an constructie|anul constructiei|construit(?:a)? in|construit(?:ă)? în)\D{0,10}(19\d{2}|20\d{2})/i]);
+  const renovationYear = matchNumber([/(?:renovat(?:a)?|renovare)\D{0,10}(20\d{2}|19\d{2})/i]);
+
+  const hasElevator = /\b(lift|ascensor)\b/.test(normalized) ? true : null;
+  const hasAc = /\b(aer conditionat|aer condiționat|ac\b|clima|climatizare)\b/.test(normalized) ? true : null;
+  const hasCellar = /\b(boxa|pivnita|pivniță|beci)\b/.test(normalized) ? true : null;
+  const parking = /\b(parcare|loc de parcare|garaj)\b/.test(normalized) ? "Da" : null;
+  const furnished = /\b(mobilat|mobilata|mobilată|utilat|utilata|utilată)\b/.test(normalized) ? "Mobilat/utilat" : null;
+  const orientation = text.match(/orientare\s*[:\-]?\s*([A-Za-zĂÂÎȘȚăâîșț\- ]{3,24})/i)?.[1]?.trim() || null;
+  const comfortLevel = normalized.match(/confort\s*(lux|1|2|3|i|ii|iii)/)?.[1]?.replace("i", "1") || null;
+  const terrace = text.match(/(?:terasa|terasă)\D{0,12}(\d+(?:[.,]\d+)?)\s*(?:mp|m2)/i)?.[1]?.replace(",", ".");
+  const amenities = [
+    hasAc ? "Aer condiționat" : null,
+    hasElevator ? "Lift" : null,
+    parking ? "Parcare" : null,
+    hasCellar ? "Boxă" : null,
+    /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : null,
+    /incalzire in pardoseala|încălzire în pardoseală/.test(normalized) ? "Încălzire în pardoseală" : null,
+  ].filter(Boolean) as string[];
+
+  return {
+    balconies: balconies ? Number(balconies) : null,
+    bathrooms: bathrooms ? Number(bathrooms) : null,
+    kitchens: kitchens ? Number(kitchens) : null,
+    total_building_floors: totalFloors ? Number(totalFloors) : null,
+    year_built: yearBuilt ? Number(yearBuilt) : null,
+    renovation_year: renovationYear ? Number(renovationYear) : null,
+    has_elevator: hasElevator,
+    has_ac: hasAc,
+    has_cellar: hasCellar,
+    parking,
+    furnished,
+    orientation,
+    comfort_level: comfortLevel,
+    terrace_area: terrace ? Number(terrace) : null,
+    amenities,
+  };
+}
+
 function inferLocation(lead: ScraperLead): string {
   const source = [lead.location, lead.zone, lead.neighborhood_slug, lead.search_keyword, lead.title].filter(Boolean).join(" ");
   const normalized = removeDiacritics(source.toLowerCase());
@@ -439,6 +485,8 @@ function buildImportedDescription(lead: ScraperLead, cleanTitle: string, yieldVa
     lead.lead_score ? `Scor lead: ${lead.lead_score}.` : null,
     yieldValue ? `Randament estimat: ${yieldValue}%/an.` : null,
     lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
+    `Sursă import: ${normalizePlatformLabel(lead.source)}${lead.url ? ` · ${lead.url}` : ""}`,
+    "Notă internă: date importate automat din scraping; verifică pozele, prețul, contactul și specificațiile înainte de publicare.",
   ];
   return parts.filter(Boolean).join("\n\n");
 }
@@ -1143,13 +1191,22 @@ const ScraperLeads = () => {
       const description = buildImportedDescription(lead, cleanTitle, yieldValue);
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
+      const specs = extractImportedSpecs(textBlob);
+      const importedFeatures = [
+        "importat-scraper",
+        "necesită-verificare",
+        `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+        ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
+      ];
 
       const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: cleanTitle,
         location: inferLocation(lead),
         description_ro: description,
         description_en: description,
-        features: ["importat-scraper", "necesită-verificare", `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
+        features: importedFeatures,
+        amenities: specs.amenities.length ? specs.amenities : null,
+        amenities_en: specs.amenities.length ? specs.amenities : null,
         booking_url: lead.url,
         tag: options?.activate ? "Importat scraper" : "Draft importat",
         is_active: Boolean(options?.activate),
@@ -1163,6 +1220,23 @@ const ScraperLeads = () => {
         capacity: rooms ? Math.max(2, rooms * 2) : null,
         floor: floor !== null ? String(floor) : null,
         property_subtype: inferPropertySubtype(textBlob),
+        bathrooms: specs.bathrooms,
+        kitchens: specs.kitchens,
+        balconies: specs.balconies,
+        usable_area: size,
+        built_area: size,
+        terrace_area: specs.terrace_area,
+        total_building_floors: specs.total_building_floors,
+        year_built: specs.year_built,
+        renovation_year: specs.renovation_year,
+        has_elevator: specs.has_elevator,
+        has_ac: specs.has_ac,
+        has_cellar: specs.has_cellar,
+        parking: specs.parking,
+        furnished: specs.furnished,
+        orientation: specs.orientation,
+        comfort_level: specs.comfort_level,
+        destination: "Rezidențial",
         price_per_sqm: pricePerSqm,
         estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
         roi_percentage: yieldValue ? `${yieldValue}%` : null,
