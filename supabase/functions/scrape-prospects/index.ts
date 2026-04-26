@@ -279,27 +279,38 @@ const AGENCY_SIGNALS = [
   'imobiliare srl', 'real estate srl',
 ];
 
+const GENERIC_LISTING_TITLE_SIGNALS = [
+  'anunturi gratuite', 'anunturi imobiliare', 'anunturi olx', 'imobiliare olx',
+  'second hand si noi', 'apartamente de vanzare in', 'apartamente de vânzare în',
+  'apartamente noi de vanzare', 'apartamente noi de vânzare', 'apartamente de inchiriat',
+  'apartamente de închiriat', 'garsoniere de vanzare', 'garsoniere de vânzare',
+  'proprietati noi', 'proprietăți noi', 'pagina ', 'rezultate vanzare', 'rezultate vânzare',
+];
+
 function isGenericSearchPage(url: string | null | undefined, title: string | null | undefined): boolean {
   const u = String(url || '').toLowerCase().split('?')[0];
-  const t = String(title || '').toLowerCase();
+  const t = removeDiacritics(String(title || '').toLowerCase());
   const isIndividualAd =
     u.includes('/d/oferta/') ||
     /storia\.ro\/ro\/oferta\//.test(u) ||
     /imobiliare\.ro\/oferta-/.test(u) ||
     /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(String(url || ''));
   if (isIndividualAd) return false;
-  return u.includes('/q-') ||
-    u.includes('olx.ro/imobiliare') ||
+  return u.includes('/q-') || /\/q-[^/]+\/?$/.test(u) ||
+    /olx\.ro\/imobiliare(\/|$)/.test(u) ||
     /imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u) ||
     /storia\.ro\/ro\/rezultate\//.test(u) ||
-    t.includes('anunturi gratuite') ||
-    t.includes('anunturi imobiliare') ||
+    /imoradar24\.ro\/(apartamente|garsoniere|case|terenuri)-de-(vanzare|inchiriat)\//.test(u) ||
+    /renaissanceestate\.ro\/apartamente-de-vanzare\//.test(u) ||
+    (/\/(apartamente|garsoniere|case)-de-(vanzare|inchiriat)(\/|$)/.test(u) && !/\/anunt\//.test(u)) ||
+    GENERIC_LISTING_TITLE_SIGNALS.some((signal) => t.includes(removeDiacritics(signal.toLowerCase()))) ||
     t.endsWith('- olx.ro') ||
-    t.endsWith('• olx.ro');
+    t.endsWith('• olx.ro') ||
+    t.endsWith(' storia.ro');
 }
 
 function hasExplicitOwnerSignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
-  const blob = removeDiacritics(`${url || ''} ${title || ''} ${markdown || ''}`.toLowerCase());
+  const blob = removeDiacritics(`${title || ''} ${markdown || ''}`.toLowerCase());
   return OWNER_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
