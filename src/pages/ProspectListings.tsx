@@ -1580,7 +1580,7 @@ const ProspectListings = () => {
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
                               <span className="hidden sm:inline">Re-scoring AI</span>
                             </Button>
-                            <div className="flex items-center gap-2 w-full justify-end">
+                            <div className="hidden sm:flex items-center gap-2 w-full justify-end">
                               <AuditLogViewer
                                 entityType="prospect_listing"
                                 entityId={p.id}
