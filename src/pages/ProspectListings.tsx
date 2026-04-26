@@ -524,11 +524,12 @@ const ProspectListings = () => {
       } catch (e) {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
+      const isGenericSearch = isGenericSearchProspect(p);
       const isAgency = detectIsAgency(p);
       const phoneKey = p.phone_normalized || p.contact_phone || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
       const suspicion = computeAgencySuspicion(p, phoneCount);
-      return { ...p, geo, isAgency, phoneCount, suspicion };
+      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion };
     }),
     [prospects, phoneCounts]
   );
@@ -583,6 +584,8 @@ const ProspectListings = () => {
   }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
 
   const filtered = enriched.filter((p) => {
+    // Hide generic search/category pages completely; only actual ad detail pages belong here.
+    if (p.isGenericSearch) return false;
     // Owner / agency filter (default: hide agencies)
     if (prospectTypeFilter === "proprietar" && p.isAgency) return false;
     if (prospectTypeFilter === "agentie" && !p.isAgency) return false;
@@ -766,6 +769,10 @@ const ProspectListings = () => {
   };
 
   const handleCall = async (p: Prospect) => {
+    if (isGenericSearchProspect(p)) {
+      toast({ title: "Nu este anunț apelabil", description: "Această intrare este o căutare generică de platformă, nu un anunț de proprietar.", variant: "destructive" });
+      return;
+    }
     if (!p.phone_normalized && !p.contact_phone) {
       toast({ title: "Lipsește telefon", description: "Acest prospect nu are număr de telefon.", variant: "destructive" });
       return;
