@@ -522,10 +522,10 @@ Deno.serve(async (req) => {
 
             const resultDomain = extractUrlDomain(url);
             if (onlyNewSources && existingUrls.has(url)) {
-              archivedSkipped++;
+              duplicateSkipped++;
               continue;
             }
-            if (preserveAgencyFilter && resultDomain && blockedDomains.has(resultDomain)) {
+            if (preserveAgencyFilter && resultDomain && blockedDomains.has(resultDomain) && !whitelistedDomains.has(resultDomain)) {
               blacklistedSkipped++;
               continue;
             }
@@ -541,7 +541,7 @@ Deno.serve(async (req) => {
               await supabase.from('scraper_leads')
                 .update({ updated_at: new Date().toISOString() })
                 .eq('id', existing.id);
-              if (onlyNewSources) archivedSkipped++;
+              if (onlyNewSources) duplicateSkipped++;
               continue;
             }
 
@@ -585,7 +585,7 @@ Deno.serve(async (req) => {
             let skipBlacklist = false;
             if (extracted.contactPhone) {
               const normalizedPhone = normalizeRoPhone(extracted.contactPhone);
-              if (preserveAgencyFilter && normalizedPhone && blockedPhones.has(normalizedPhone)) {
+              if (preserveAgencyFilter && normalizedPhone && blockedPhones.has(normalizedPhone) && !whitelistedPhones.has(normalizedPhone)) {
                 skipBlacklist = true;
               }
               const { data: phoneData } = await supabase
