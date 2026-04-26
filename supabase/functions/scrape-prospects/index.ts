@@ -266,6 +266,36 @@ function extractUrlDomain(rawUrl: string | null | undefined): string | null {
   }
 }
 
+const OWNER_SIGNALS = [
+  'proprietar', 'direct proprietar', 'de la proprietar',
+  'fara comision', 'fără comision', 'fara intermediar',
+  'privat', 'privati', 'privați', 'persoana fizica', 'persoană fizică', 'persoane fizice',
+];
+
+function isGenericSearchPage(url: string | null | undefined, title: string | null | undefined): boolean {
+  const u = String(url || '').toLowerCase().split('?')[0];
+  const t = String(title || '').toLowerCase();
+  const isIndividualAd =
+    u.includes('/d/oferta/') ||
+    /storia\.ro\/ro\/oferta\//.test(u) ||
+    /imobiliare\.ro\/oferta-/.test(u) ||
+    /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(String(url || ''));
+  if (isIndividualAd) return false;
+  return u.includes('/q-') ||
+    u.includes('olx.ro/imobiliare') ||
+    /imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u) ||
+    /storia\.ro\/ro\/rezultate\//.test(u) ||
+    t.includes('anunturi gratuite') ||
+    t.includes('anunturi imobiliare') ||
+    t.endsWith('- olx.ro') ||
+    t.endsWith('• olx.ro');
+}
+
+function hasExplicitOwnerSignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
+  const blob = removeDiacritics(`${url || ''} ${title || ''} ${markdown || ''}`.toLowerCase());
+  return OWNER_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
@@ -520,6 +550,17 @@ Deno.serve(async (req) => {
             const url = result.url;
             if (!url) continue;
 
+            const markdown = result.markdown || result.description || '';
+            if (isGenericSearchPage(url, result.title || '')) {
+              archivedSkipped++;
+              continue;
+            }
+
+            if (!hasExplicitOwnerSignal(result.title || '', url, markdown)) {
+              archivedSkipped++;
+              continue;
+            }
+
             const resultDomain = extractUrlDomain(url);
             if (onlyNewSources && existingUrls.has(url)) {
               duplicateSkipped++;
@@ -545,7 +586,6 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            const markdown = result.markdown || result.description || '';
             const extracted = extractFromMarkdown(markdown, result.title || '', url);
 
             let price = extracted.price;
