@@ -189,6 +189,7 @@ function getVisibleProspectPhoneInfo(
   if (full) return { ...full, displayPhone: full.phone, masked: false };
 
   const sources: Array<[ProspectPhoneSource, string | null | undefined]> = [
+    ["contact_phone", p.contact_phone],
     ["admin_notes", p.admin_notes],
     ["description", p.description],
     ["title", p.title],
@@ -1378,11 +1379,11 @@ const ProspectListings = () => {
                   <TableRow>
                     <TableHead className="hidden md:table-cell w-16">AI Score</TableHead>
                     <TableHead className="hidden lg:table-cell w-20">Geo SEO</TableHead>
-                    <TableHead className="min-w-[150px] md:min-w-[280px]">Anunț</TableHead>
+                    <TableHead className="min-w-[108px] px-1 md:min-w-[280px] md:px-4">Anunț</TableHead>
                     <TableHead className="hidden sm:table-cell">Categorie</TableHead>
-                    <TableHead className="min-w-[132px]">Telefon Contact</TableHead>
+                    <TableHead className="min-w-[124px] px-1 md:px-4">Telefon Contact</TableHead>
                     <TableHead className="hidden md:table-cell">Status</TableHead>
-                    <TableHead className="text-right min-w-[118px]">Acțiuni</TableHead>
+                    <TableHead className="text-right min-w-[82px] px-1 md:min-w-[118px] md:px-4">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1418,7 +1419,7 @@ const ProspectListings = () => {
                           {p.geo.primary && <div className="text-[10px] text-muted-foreground truncate max-w-[80px]" title={p.geo.found.join(", ")}>{p.geo.primary}</div>}
                           {p.geo.found.length > 1 && <div className="text-[10px] text-muted-foreground">+{p.geo.found.length - 1}</div>}
                         </TableCell>
-                        <TableCell className="max-w-[150px] md:max-w-xs px-2 md:px-4">
+                        <TableCell className="max-w-[108px] md:max-w-xs px-1 md:px-4">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {(() => {
                               const s = getSourceStyle(p.source_platform);
