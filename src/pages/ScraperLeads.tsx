@@ -67,6 +67,8 @@ interface ScraperLead {
   ai_insight?: any;
   description?: string | null;
   contact_name?: string | null;
+  location?: string | null;
+  zone?: string | null;
   _origin?: "archive" | "prospect";
 }
 
@@ -402,6 +404,43 @@ function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_nam
   const blob = `${lead.admin_notes || ""}\n${lead.description || ""}`;
   const match = blob.match(/(?:publicat de|postat de|contact|proprietar|persoan[ăa])[:\s-]+([^\n|,]{3,48})/i);
   return match?.[1]?.trim() || "—";
+}
+
+function inferPropertySubtype(text: string): string | null {
+  const normalized = removeDiacritics(text.toLowerCase());
+  if (normalized.includes("garsonier") || normalized.includes("studio")) return "Garsonieră";
+  if (normalized.includes("casa") || normalized.includes("vila")) return "Casă / Vilă";
+  if (normalized.includes("teren")) return "Teren";
+  if (normalized.includes("apartament") || normalized.includes("camere")) return "Apartament";
+  return null;
+}
+
+function inferLocation(lead: ScraperLead): string {
+  const source = [lead.location, lead.zone, lead.neighborhood_slug, lead.search_keyword, lead.title].filter(Boolean).join(" ");
+  const normalized = removeDiacritics(source.toLowerCase());
+  const knownZones = [
+    ["Complex Studențesc", ["complex studentesc", "studentilor"]],
+    ["Circumvalațiunii", ["circumvalatiunii", "circumvalatiune"]],
+    ["Calea Aradului", ["aradului"]],
+    ["Calea Girocului", ["girocului"]],
+    ["Calea Șagului", ["sagului"]],
+    ["Calea Lipovei", ["lipovei"]],
+    ["Iulius Town", ["iulius", "openville"]],
+    ["Medicină", ["medicina", "umft"]],
+    ["Central", ["central", "centru", "unirii", "operei"]],
+  ] as const;
+  const zone = knownZones.find(([, signals]) => signals.some((signal) => normalized.includes(signal)))?.[0];
+  return zone ? `Timișoara, ${zone}` : "Timișoara";
+}
+
+function buildImportedDescription(lead: ScraperLead, cleanTitle: string): string {
+  const parts = [
+    lead.description || lead.admin_notes || cleanTitle,
+    lead.lead_score ? `Scor lead: ${lead.lead_score}.` : null,
+    getYield(lead) ? `Randament estimat: ${getYield(lead)}%/an.` : null,
+    lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
+  ];
+  return parts.filter(Boolean).join("\n\n");
 }
 
 /**
