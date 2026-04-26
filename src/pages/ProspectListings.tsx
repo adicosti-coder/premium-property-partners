@@ -109,6 +109,7 @@ interface Prospect {
 }
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
+const VISIBLE_PHONE_PATTERN = /(?:\+?40|0040|0)\s*[237]\d{2}(?:[\s().-]*(?:\d|x|X|\*|•|\.)){2,}/g;
 
 type ProspectPhoneSource = "phone_normalized" | "contact_phone" | "admin_notes" | "description" | "title";
 
@@ -116,6 +117,11 @@ interface ProspectPhoneInfo {
   phone: string;
   source: ProspectPhoneSource;
   persisted: boolean;
+}
+
+interface VisibleProspectPhoneInfo extends ProspectPhoneInfo {
+  displayPhone: string;
+  masked: boolean;
 }
 
 function normalizeRoPhone(raw?: string | null): string | null {
@@ -154,6 +160,45 @@ function getProspectPhoneInfo(
 
 function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">): string | null {
   return getProspectPhoneInfo(p)?.phone ?? null;
+}
+
+function cleanVisiblePhone(raw?: string | null): string | null {
+  if (!raw) return null;
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const digits = compact.replace(/\D/g, "");
+  if (digits.length < 4) return null;
+  if (!/[*.xX•]/.test(compact) && digits.length < 9) return null;
+  return compact.slice(0, 22);
+}
+
+function extractVisiblePhoneFromText(text?: string | null): string | null {
+  return text?.match(VISIBLE_PHONE_PATTERN)?.map(cleanVisiblePhone).find(Boolean) ?? null;
+}
+
+function extractContactNameFromText(p: Pick<Prospect, "contact_name" | "admin_notes" | "description">): string | null {
+  if (p.contact_name?.trim()) return p.contact_name.trim();
+  const blob = `${p.admin_notes || ""}\n${p.description || ""}`;
+  const match = blob.match(/(?:publicat de|postat de|contact|proprietar|persoan[ăa])[:\s-]+([^\n|,]{3,48})/i);
+  return match?.[1]?.trim() || null;
+}
+
+function getVisibleProspectPhoneInfo(
+  p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">
+): VisibleProspectPhoneInfo | null {
+  const full = getProspectPhoneInfo(p);
+  if (full) return { ...full, displayPhone: full.phone, masked: false };
+
+  const sources: Array<[ProspectPhoneSource, string | null | undefined]> = [
+    ["contact_phone", p.contact_phone],
+    ["admin_notes", p.admin_notes],
+    ["description", p.description],
+    ["title", p.title],
+  ];
+  for (const [source, value] of sources) {
+    const displayPhone = extractVisiblePhoneFromText(value);
+    if (displayPhone) return { phone: displayPhone, displayPhone, source, persisted: false, masked: true };
+  }
+  return null;
 }
 
 const sentimentEmoji: Record<string, string> = {
@@ -1332,13 +1377,13 @@ const ProspectListings = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">AI Score</TableHead>
-                    <TableHead className="w-20">Geo SEO</TableHead>
-                    <TableHead>Anunț</TableHead>
-                    <TableHead>Categorie</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Acțiuni</TableHead>
+                    <TableHead className="hidden md:table-cell w-16">AI Score</TableHead>
+                    <TableHead className="hidden lg:table-cell w-20">Geo SEO</TableHead>
+                    <TableHead className="min-w-[108px] px-1 md:min-w-[280px] md:px-4">Anunț</TableHead>
+                    <TableHead className="hidden sm:table-cell">Categorie</TableHead>
+                    <TableHead className="min-w-[124px] px-1 md:px-4">Telefon Contact</TableHead>
+                    <TableHead className="hidden md:table-cell">Status</TableHead>
+                    <TableHead className="text-right min-w-[82px] px-1 md:min-w-[118px] md:px-4">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1349,15 +1394,17 @@ const ProspectListings = () => {
                   ) : filtered.map((p) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
-                    const phoneInfo = getProspectPhoneInfo(p);
+                    const phoneInfo = getVisibleProspectPhoneInfo(p);
                     const phone = phoneInfo?.phone ?? null;
+                    const callablePhone = getProspectPhone(p);
+                    const contactName = extractContactNameFromText(p);
                     const sentiment = p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment;
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
                     const callLocked = isCallLocked(p);
                     return (
                       <TableRow key={p.id}>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className={`text-2xl font-bold ${scoreColor}`}>{score}</div>
                           {p.ai_scored_at && <div className="text-[10px] text-muted-foreground">AI ✓</div>}
                           {sentiment && (
@@ -1367,12 +1414,12 @@ const ProspectListings = () => {
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className={`text-sm font-semibold ${geoColor}`}>{p.geo.score}</div>
                           {p.geo.primary && <div className="text-[10px] text-muted-foreground truncate max-w-[80px]" title={p.geo.found.join(", ")}>{p.geo.primary}</div>}
                           {p.geo.found.length > 1 && <div className="text-[10px] text-muted-foreground">+{p.geo.found.length - 1}</div>}
                         </TableCell>
-                        <TableCell className="max-w-xs">
+                        <TableCell className="max-w-[108px] md:max-w-xs px-1 md:px-4">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {(() => {
                               const s = getSourceStyle(p.source_platform);
@@ -1410,7 +1457,7 @@ const ProspectListings = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {p.category && (
                             <Badge variant="outline" className="gap-1 text-xs">
                               {categoryIcons[p.category]}
@@ -1418,9 +1465,9 @@ const ProspectListings = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-2 md:px-4">
                           <div className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
-                            {p.contact_name || "—"}
+                            {contactName || (phoneInfo ? "Contact anunț" : "—")}
                             {p.isAgency && (
                               <button
                                 type="button"
@@ -1458,10 +1505,11 @@ const ProspectListings = () => {
                             )}
                           </div>
                           {phone ? (
-                            <a href={`tel:${phone}`} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline">
+                            <a href={callablePhone ? `tel:${callablePhone}` : p.source_url} target={callablePhone ? undefined : "_blank"} rel={callablePhone ? undefined : "noopener noreferrer"} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline break-all">
                               <Phone className="h-3 w-3" />
-                              {phone}
-                              {phoneInfo && !phoneInfo.persisted && (
+                              {phoneInfo?.displayPhone || phone}
+                              {phoneInfo?.masked && <span className="hidden sm:inline text-[9px] text-muted-foreground">vizibil parțial</span>}
+                              {phoneInfo && !phoneInfo.persisted && !phoneInfo.masked && (
                                 <span
                                   className="text-[9px] px-1 py-0 rounded bg-muted text-muted-foreground"
                                   title={`Telefon extras din ${phoneInfo.source === "admin_notes" ? "note" : phoneInfo.source === "description" ? "descriere" : "titlu"}`}
@@ -1493,45 +1541,46 @@ const ProspectListings = () => {
                             size="sm"
                             variant={p.isAgency ? "outline" : "secondary"}
                             onClick={() => handleToggleProspectType(p)}
-                            className={`mt-1.5 h-7 text-xs gap-1 ${
+                            className={`mt-1.5 h-7 text-[10px] sm:text-xs gap-1 px-2 ${
                               p.isAgency
                                 ? "border-green-500 text-green-700 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950/30"
                                 : "border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
                             }`}
                             title="Schimbă clasificarea (proprietar / agenție)"
                           >
-                            {p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}
+                            <span className="sm:hidden">{p.isAgency ? "🏠 Prop." : "🏢 Ag."}</span>
+                            <span className="hidden sm:inline">{p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}</span>
                           </Button>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
                             {p.lifecycle_status === "pending_credentials" ? "⏸ pending" : p.lifecycle_status}
                           </Badge>
                           {p.followup_sent_at && <div className="text-[10px] text-green-600 mt-1">WA ✓</div>}
                         </TableCell>
-                        <TableCell className="text-right space-y-1">
+                        <TableCell className="text-right space-y-1 px-2 md:px-4">
                           <div className="flex flex-col gap-1 items-end">
                             <Button
                               size="sm"
                               variant={score > 80 ? "default" : "outline"}
                               onClick={() => handleCall(p)}
-                              disabled={!phone || callingId === p.id || callLocked}
-                              className="w-full"
+                              disabled={!callablePhone || callingId === p.id || callLocked}
+                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs"
                             >
                               {callingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Phone className="h-3 w-3 mr-1" />}
-                              📞 Apelează cu AI
+                              <span className="hidden sm:inline">Apelează cu AI</span>
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleAIScore(p.id)}
                               disabled={scoringId === p.id}
-                              className="w-full text-xs"
+                              className="w-9 sm:w-full px-2 text-xs"
                             >
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                              Re-scoring AI
+                              <span className="hidden sm:inline">Re-scoring AI</span>
                             </Button>
-                            <div className="flex items-center gap-2 w-full justify-end">
+                            <div className="hidden sm:flex items-center gap-2 w-full justify-end">
                               <AuditLogViewer
                                 entityType="prospect_listing"
                                 entityId={p.id}
