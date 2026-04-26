@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
@@ -705,6 +706,27 @@ const ScraperLeads = () => {
     staleTime: 1000 * 60 * 2,
   });
 
+  const leadSourceUrls = useMemo(() => Array.from(new Set((leads || []).map((l) => l.url).filter(Boolean))), [leads]);
+  const { data: importedProperties = [] } = useQuery({
+    queryKey: ["scraper-imported-properties", leadSourceUrls.slice(0, 200).join("|")],
+    queryFn: async () => {
+      if (!leadSourceUrls.length) return [];
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id,name,source_url,listing_type,is_active")
+        .in("source_url", leadSourceUrls.slice(0, 200));
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: leadSourceUrls.length > 0,
+    staleTime: 1000 * 60 * 2,
+  });
+  const importedPropertyByUrl = useMemo(() => {
+    const map = new Map<string, any>();
+    importedProperties.forEach((property: any) => property.source_url && map.set(property.source_url, property));
+    return map;
+  }, [importedProperties]);
+
   // ── Realtime Alerts ────────────────────────────────
   useEffect(() => {
     const channel = supabase
@@ -1043,7 +1065,7 @@ const ScraperLeads = () => {
   };
 
   // ── Import lead as draft listing ───────────────────
-  const importLeadAsListing = async (lead: ScraperLead) => {
+  const importLeadAsListing = async (lead: ScraperLead, options?: { listingType?: string; activate?: boolean }) => {
     if (!lead.url) {
       toast.error("Anunțul nu are URL sursă pentru import");
       return;
@@ -1051,6 +1073,12 @@ const ScraperLeads = () => {
 
     setImportingLeadId(lead.id);
     try {
+      const knownExisting = importedPropertyByUrl.get(lead.url);
+      if (knownExisting) {
+        toast.info(`Anunțul este deja importat: ${knownExisting.name}`);
+        return;
+      }
+
       const { data: existing, error: existingError } = await supabase
         .from("properties")
         .select("id,name")
@@ -1063,8 +1091,11 @@ const ScraperLeads = () => {
         return;
       }
 
-      const listingType = deriveListingType(lead.title, lead.listing_type || "vanzare");
+      const listingType = options?.listingType || deriveListingType(lead.title, lead.listing_type || "vanzare");
       const cleanTitle = cleanTitleStatic(lead.title);
+      const rooms = parseRooms(lead.title);
+      const size = parseSurface(lead.title);
+      const pricePerSqm = listingType === "vanzare" && lead.original_price && size ? Math.round(lead.original_price / size) : null;
       const description = [
         lead.description || lead.admin_notes || "Anunț importat din scraping pentru verificare manuală.",
         `Scor lead: ${lead.lead_score}.`,
@@ -1078,14 +1109,17 @@ const ScraperLeads = () => {
         location: "Timișoara",
         description_ro: description,
         description_en: description,
-        features: ["importat-scraper", "necesită-verificare"],
+        features: ["importat-scraper", "necesită-verificare", `sursa-${normalizePlatformLabel(lead.source).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
         booking_url: lead.url,
-        tag: "Draft importat",
-        is_active: false,
+        tag: options?.activate ? "Importat scraper" : "Draft importat",
+        is_active: Boolean(options?.activate),
         display_order: 999,
         status_operativ: listingType,
         listing_type: listingType,
         capital_necesar: listingType === "vanzare" ? lead.original_price || null : null,
+        rooms,
+        size,
+        price_per_sqm: pricePerSqm,
         estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
         roi_percentage: getYield(lead) ? `${getYield(lead)}%` : null,
         contact_phone: lead.phone || null,
@@ -1103,7 +1137,8 @@ const ScraperLeads = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
-      toast.success("Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
+      queryClient.invalidateQueries({ queryKey: ["scraper-imported-properties"] });
+      toast.success(options?.activate ? "Anunț importat și activat în Proprietăți." : "Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
     } catch (error: any) {
       toast.error(`Eroare la import: ${error.message || "necunoscută"}`);
     } finally {
@@ -1849,10 +1884,27 @@ const ScraperLeads = () => {
 
           {/* ── Export to Properties ───────────────── */}
           <div className="flex gap-2 flex-wrap">
-            <Button className="flex-1 gap-2" onClick={() => importLeadAsListing(selectedLead)} disabled={importingLeadId === selectedLead.id}>
-              {importingLeadId === selectedLead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-              Importă Anunț
-            </Button>
+            {importedPropertyByUrl.has(selectedLead.url) ? (
+              <Button className="flex-1 gap-2" variant="secondary" disabled>
+                <Check className="w-4 h-4" /> Importat
+              </Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="flex-1 gap-2" disabled={importingLeadId === selectedLead.id}>
+                    {importingLeadId === selectedLead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                    Importă Anunț
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead)}>Draft inteligent</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "vanzare" })}>Importă ca vânzare</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "inchiriere" })}>Importă ca închiriere</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
               <ArrowRightCircle className="w-4 h-4" />
               Trimite în Prospectare
@@ -2781,16 +2833,32 @@ const ScraperLeads = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
-                              onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
-                              title="Importă anunț ca draft în Proprietăți"
-                              disabled={importingLeadId === lead.id}
-                            >
-                              {importingLeadId === lead.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-                            </Button>
+                            {importedPropertyByUrl.has(lead.url) ? (
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground" title="Anunț deja importat" disabled>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Importă anunț ca draft în Proprietăți"
+                                    disabled={importingLeadId === lead.id}
+                                  >
+                                    {importingLeadId === lead.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -2905,15 +2973,31 @@ const ScraperLeads = () => {
                     <span className="text-amber-400">+{formatPrice(lead.extra_profit_3y)} 3Y</span>
                   </div>
                   <div className="grid grid-cols-6 gap-1.5">
-                    <Button
-                      size="sm"
-                      className="col-span-2 h-8 text-xs"
-                      onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
-                      disabled={importingLeadId === lead.id}
-                    >
-                      {importingLeadId === lead.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Database className="h-3 w-3 mr-1" />}
-                      Importă
-                    </Button>
+                    {importedPropertyByUrl.has(lead.url) ? (
+                      <Button size="sm" variant="secondary" className="col-span-2 h-8 text-xs" disabled>
+                        <Check className="h-3 w-3 mr-1" /> Importat
+                      </Button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="col-span-2 h-8 text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={importingLeadId === lead.id}
+                          >
+                            {importingLeadId === lead.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Database className="h-3 w-3 mr-1" />}
+                            Importă
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
