@@ -351,6 +351,16 @@ const AGENCY_SIGNALS = [
   "imobiliare srl", "real estate srl",
 ];
 
+const GENERIC_LISTING_TITLE_SIGNALS = [
+  "anunturi gratuite", "anunturi imobiliare", "anunturi olx", "imobiliare olx",
+  "second hand si noi", "apartamente de vanzare in", "apartamente de vânzare în",
+  "apartamente 1 camera de", "apartamente 1 cameră de", "apartamente 2 camere de",
+  "apartamente 3 camere de", "apartamente 4 camere de",
+  "apartamente noi de vanzare", "apartamente noi de vânzare", "apartamente de inchiriat",
+  "apartamente de închiriat", "garsoniere de vanzare", "garsoniere de vânzare",
+  "proprietati noi", "proprietăți noi", "pagina ", "rezultate vanzare", "rezultate vânzare",
+];
+
 function removeDiacritics(text: string): string {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -399,7 +409,7 @@ function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_nam
  */
 function isSearchPageLead(url?: string | null, title?: string | null): boolean {
   const u = (url || "").toLowerCase().split("?")[0]; // strip query string
-  const t = (title || "").toLowerCase().trim();
+  const t = removeDiacritics((title || "").toLowerCase().trim());
   if (!u && !t) return false;
 
   // ── Allow-list: known individual-ad URL patterns ──
@@ -411,16 +421,23 @@ function isSearchPageLead(url?: string | null, title?: string | null): boolean {
   if (isIndividualAd) return false;
 
   // ── URL-based search/category page detection ──
-  if (u.includes("/q-")) return true;
-  if (u.includes("olx.ro/imobiliare")) return true; // OLX category root
+  if (u.includes("/q-") || /\/q-[^/]+\/?$/.test(u)) return true;
+  if (/olx\.ro\/imobiliare(\/|$)/.test(u)) return true; // OLX search/category pages
   if (/imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u)) return true;
   if (/storia\.ro\/ro\/rezultate\//.test(u)) return true;
+  if (/imoradar24\.ro\/(apartamente|garsoniere|case|terenuri)-de-(vanzare|inchiriat)\//.test(u)) return true;
+  if (/renaissanceestate\.ro\/apartamente-de-vanzare\//.test(u)) return true;
+  if (/\/(apartamente|garsoniere|case)-de-(vanzare|inchiriat)(\/|$)/.test(u) && !/\/anunt\//.test(u)) return true;
 
   // ── Title-based heuristics (OLX-style result pages) ──
-  if (t.includes("anunturi gratuite") || t.includes("anunturi imobiliare")) return true;
-  if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro")) return true;
+  if (GENERIC_LISTING_TITLE_SIGNALS.some((signal) => t.includes(removeDiacritics(signal.toLowerCase())))) return true;
+  if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro") || t.endsWith(" storia.ro")) return true;
 
   return false;
+}
+
+function isConfirmedPrivateOwnerLead(lead: ScraperLead): boolean {
+  return !isSearchPageLead(lead.url, lead.title) && hasOwnerSignal(lead) && !hasAgencySignal(lead);
 }
 
 function extractLeadDomain(url?: string | null): string | null {
@@ -611,7 +628,7 @@ const ScraperLeads = () => {
         _prospect_type: d.prospect_category || (hasOwnerSignal(d) ? "proprietar" : deriveProspectType(d.title)),
         _origin: "archive" as const,
       }))
-        .filter((lead: any) => hasOwnerSignal(lead) && !hasAgencySignal(lead) && !isSearchPageLead(lead.url, lead.title)) as (ScraperLead & { _prospect_type: string })[];
+        .filter((lead: any) => isConfirmedPrivateOwnerLead(lead)) as (ScraperLead & { _prospect_type: string })[];
 
       const [{ data: blocklistData }, { data: archivedAgencyData }] = await Promise.all([
         supabase.from("agency_blocklist").select("phone_normalized, domain"),
@@ -640,6 +657,7 @@ const ScraperLeads = () => {
       const archiveUrls = new Set([...(archiveData || []).map((l: any) => l.url), ...archiveLeads.map((l) => l.url)].filter(Boolean));
       const prospectLeads = ((prospectData || []) as any[])
         .filter((p) => !isSearchPageLead(p.source_url, p.title))
+        .filter((p) => p.prospect_type === "proprietar")
         .filter((p) => hasOwnerSignal({
           title: p.title,
           url: p.source_url,
@@ -770,14 +788,12 @@ const ScraperLeads = () => {
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
-      result = result.filter(
-        (l) =>
-          l._prospect_type !== "agentie" &&
-          l._prospect_type !== "dezvoltator" &&
-          l.prospect_category !== "agentie" &&
-          l.prospect_category !== "dezvoltator" &&
-          hasOwnerSignal(l) &&
-          !hasAgencySignal(l)
+      result = result.filter((l) =>
+        l._prospect_type !== "agentie" &&
+        l._prospect_type !== "dezvoltator" &&
+        l.prospect_category !== "agentie" &&
+        l.prospect_category !== "dezvoltator" &&
+        isConfirmedPrivateOwnerLead(l)
       );
     }
 
