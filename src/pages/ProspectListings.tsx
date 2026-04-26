@@ -1376,13 +1376,13 @@ const ProspectListings = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">AI Score</TableHead>
-                    <TableHead className="w-20">Geo SEO</TableHead>
-                    <TableHead>Anunț</TableHead>
-                    <TableHead>Categorie</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Acțiuni</TableHead>
+                    <TableHead className="hidden md:table-cell w-16">AI Score</TableHead>
+                    <TableHead className="hidden lg:table-cell w-20">Geo SEO</TableHead>
+                    <TableHead className="min-w-[150px] md:min-w-[280px]">Anunț</TableHead>
+                    <TableHead className="hidden sm:table-cell">Categorie</TableHead>
+                    <TableHead className="min-w-[132px]">Telefon Contact</TableHead>
+                    <TableHead className="hidden md:table-cell">Status</TableHead>
+                    <TableHead className="text-right min-w-[118px]">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1393,15 +1393,17 @@ const ProspectListings = () => {
                   ) : filtered.map((p) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
-                    const phoneInfo = getProspectPhoneInfo(p);
+                    const phoneInfo = getVisibleProspectPhoneInfo(p);
                     const phone = phoneInfo?.phone ?? null;
+                    const callablePhone = getProspectPhone(p);
+                    const contactName = extractContactNameFromText(p);
                     const sentiment = p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment;
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
                     const callLocked = isCallLocked(p);
                     return (
                       <TableRow key={p.id}>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className={`text-2xl font-bold ${scoreColor}`}>{score}</div>
                           {p.ai_scored_at && <div className="text-[10px] text-muted-foreground">AI ✓</div>}
                           {sentiment && (
@@ -1411,12 +1413,12 @@ const ProspectListings = () => {
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <div className={`text-sm font-semibold ${geoColor}`}>{p.geo.score}</div>
                           {p.geo.primary && <div className="text-[10px] text-muted-foreground truncate max-w-[80px]" title={p.geo.found.join(", ")}>{p.geo.primary}</div>}
                           {p.geo.found.length > 1 && <div className="text-[10px] text-muted-foreground">+{p.geo.found.length - 1}</div>}
                         </TableCell>
-                        <TableCell className="max-w-xs">
+                        <TableCell className="max-w-[150px] md:max-w-xs px-2 md:px-4">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {(() => {
                               const s = getSourceStyle(p.source_platform);
