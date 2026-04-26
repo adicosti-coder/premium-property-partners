@@ -505,6 +505,7 @@ const ScraperLeads = () => {
   const [hideSearchPages, setHideSearchPages] = useState(true);
   const [hideAgencies, setHideAgencies] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1041,7 +1042,76 @@ const ScraperLeads = () => {
     });
   };
 
-  // ── Export to Properties ──────────────────────────
+  // ── Import lead as draft listing ───────────────────
+  const importLeadAsListing = async (lead: ScraperLead) => {
+    if (!lead.url) {
+      toast.error("Anunțul nu are URL sursă pentru import");
+      return;
+    }
+
+    setImportingLeadId(lead.id);
+    try {
+      const { data: existing, error: existingError } = await supabase
+        .from("properties")
+        .select("id,name")
+        .eq("source_url", lead.url)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      if (existing) {
+        toast.info(`Anunțul este deja importat: ${existing.name}`);
+        return;
+      }
+
+      const listingType = deriveListingType(lead.title, lead.listing_type || "vanzare");
+      const cleanTitle = cleanTitleStatic(lead.title);
+      const description = [
+        lead.description || lead.admin_notes || "Anunț importat din scraping pentru verificare manuală.",
+        `Scor lead: ${lead.lead_score}.`,
+        getYield(lead) ? `Randament estimat: ${getYield(lead)}%/an.` : null,
+        lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
+        `Sursă: ${lead.url}`,
+      ].filter(Boolean).join("\n\n");
+
+      const { error } = await supabase.from("properties").insert({
+        name: cleanTitle,
+        location: "Timișoara",
+        description_ro: description,
+        description_en: description,
+        features: ["importat-scraper", "necesită-verificare"],
+        booking_url: lead.url,
+        tag: "Draft importat",
+        is_active: false,
+        display_order: 999,
+        status_operativ: listingType,
+        listing_type: listingType,
+        capital_necesar: listingType === "vanzare" ? lead.original_price || null : null,
+        estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
+        roi_percentage: getYield(lead) ? `${getYield(lead)}%` : null,
+        contact_phone: lead.phone || null,
+        contact_name: getLeadContactName(lead) !== "—" ? getLeadContactName(lead) : null,
+        source_url: lead.url,
+        source_platform: normalizePlatformLabel(lead.source),
+      } as any);
+
+      if (error) throw error;
+
+      if (lead._origin === "prospect") {
+        await supabase.from("prospect_listings" as any).update({ lifecycle_status: "converted" } as any).eq("id", lead.id);
+      } else {
+        await supabase.from("scraper_leads_archive_2026" as any).update({ status: "converted" } as any).eq("id", lead.id);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+      toast.success("Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
+    } catch (error: any) {
+      toast.error(`Eroare la import: ${error.message || "necunoscută"}`);
+    } finally {
+      setImportingLeadId(null);
+    }
+  };
+
+  // ── Export to Prospect Listings ────────────────────
   const exportToProperties = async (lead: ScraperLead) => {
     const { error } = await supabase.from("prospect_listings").insert({
       prospect_type: (lead as any)._prospect_type || "proprietar",
