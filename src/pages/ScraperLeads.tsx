@@ -1064,7 +1064,7 @@ const ScraperLeads = () => {
   };
 
   // ── Import lead as draft listing ───────────────────
-  const importLeadAsListing = async (lead: ScraperLead) => {
+  const importLeadAsListing = async (lead: ScraperLead, options?: { listingType?: string; activate?: boolean }) => {
     if (!lead.url) {
       toast.error("Anunțul nu are URL sursă pentru import");
       return;
@@ -1072,6 +1072,12 @@ const ScraperLeads = () => {
 
     setImportingLeadId(lead.id);
     try {
+      const knownExisting = importedPropertyByUrl.get(lead.url);
+      if (knownExisting) {
+        toast.info(`Anunțul este deja importat: ${knownExisting.name}`);
+        return;
+      }
+
       const { data: existing, error: existingError } = await supabase
         .from("properties")
         .select("id,name")
@@ -1084,8 +1090,11 @@ const ScraperLeads = () => {
         return;
       }
 
-      const listingType = deriveListingType(lead.title, lead.listing_type || "vanzare");
+      const listingType = options?.listingType || deriveListingType(lead.title, lead.listing_type || "vanzare");
       const cleanTitle = cleanTitleStatic(lead.title);
+      const rooms = parseRooms(lead.title);
+      const size = parseSurface(lead.title);
+      const pricePerSqm = listingType === "vanzare" && lead.original_price && size ? Math.round(lead.original_price / size) : null;
       const description = [
         lead.description || lead.admin_notes || "Anunț importat din scraping pentru verificare manuală.",
         `Scor lead: ${lead.lead_score}.`,
@@ -1099,14 +1108,17 @@ const ScraperLeads = () => {
         location: "Timișoara",
         description_ro: description,
         description_en: description,
-        features: ["importat-scraper", "necesită-verificare"],
+        features: ["importat-scraper", "necesită-verificare", `sursa-${normalizePlatformLabel(lead.source).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
         booking_url: lead.url,
-        tag: "Draft importat",
-        is_active: false,
+        tag: options?.activate ? "Importat scraper" : "Draft importat",
+        is_active: Boolean(options?.activate),
         display_order: 999,
         status_operativ: listingType,
         listing_type: listingType,
         capital_necesar: listingType === "vanzare" ? lead.original_price || null : null,
+        rooms,
+        size,
+        price_per_sqm: pricePerSqm,
         estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
         roi_percentage: getYield(lead) ? `${getYield(lead)}%` : null,
         contact_phone: lead.phone || null,
@@ -1124,7 +1136,8 @@ const ScraperLeads = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
-      toast.success("Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
+      queryClient.invalidateQueries({ queryKey: ["scraper-imported-properties"] });
+      toast.success(options?.activate ? "Anunț importat și activat în Proprietăți." : "Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
     } catch (error: any) {
       toast.error(`Eroare la import: ${error.message || "necunoscută"}`);
     } finally {
