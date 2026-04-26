@@ -2021,6 +2021,18 @@ const ScraperLeads = () => {
             </Card>
             <Card className="bg-card border-border">
               <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted">
+                  <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Surse Noi</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.duplicate_skipped ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground">duplicate ignorate</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-emerald-500/15">
                   <Sparkles className="w-4 h-4 text-emerald-500" />
                 </div>
