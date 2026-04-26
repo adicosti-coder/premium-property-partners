@@ -511,6 +511,16 @@ Deno.serve(async (req) => {
             const url = result.url;
             if (!url) continue;
 
+            const resultDomain = extractUrlDomain(url);
+            if (onlyNewSources && existingUrls.has(url)) {
+              archivedSkipped++;
+              continue;
+            }
+            if (preserveAgencyFilter && resultDomain && blockedDomains.has(resultDomain)) {
+              blacklistedSkipped++;
+              continue;
+            }
+
             // Dedup by URL in scraper_leads
             const { data: existing } = await supabase
               .from('scraper_leads')
@@ -522,6 +532,7 @@ Deno.serve(async (req) => {
               await supabase.from('scraper_leads')
                 .update({ updated_at: new Date().toISOString() })
                 .eq('id', existing.id);
+              if (onlyNewSources) archivedSkipped++;
               continue;
             }
 
@@ -564,6 +575,10 @@ Deno.serve(async (req) => {
             // Check phone blacklist
             let skipBlacklist = false;
             if (extracted.contactPhone) {
+              const normalizedPhone = normalizeRoPhone(extracted.contactPhone);
+              if (preserveAgencyFilter && normalizedPhone && blockedPhones.has(normalizedPhone)) {
+                skipBlacklist = true;
+              }
               const { data: phoneData } = await supabase
                 .from('phone_intelligence')
                 .select('is_blacklisted')
