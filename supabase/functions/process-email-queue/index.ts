@@ -54,7 +54,7 @@ function parseJwtClaims(token: string): Record<string, unknown> | null {
 
 // Move a message to the dead letter queue and log the reason.
 async function moveToDlq(
-  supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient<any>>,
   queue: string,
   msg: { msg_id: number; message: Record<string, unknown> },
   reason: string
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     )
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createClient<any>(supabaseUrl, supabaseServiceKey)
 
   // 1. Check rate-limit cooldown and read queue config
   const { data: state } = await supabase
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
       queue_name: queue,
       batch_size: batchSize,
       vt: 30,
-    })
+    }) as { data: Array<{ msg_id: number; read_ct: number; message: Record<string, unknown> }> | null; error: unknown }
 
     if (readError) {
       console.error('Failed to read email batch', { queue, error: readError })
