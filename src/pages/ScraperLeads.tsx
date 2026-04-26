@@ -351,6 +351,14 @@ const AGENCY_SIGNALS = [
   "imobiliare srl", "real estate srl",
 ];
 
+const GENERIC_LISTING_TITLE_SIGNALS = [
+  "anunturi gratuite", "anunturi imobiliare", "anunturi olx", "imobiliare olx",
+  "second hand si noi", "apartamente de vanzare in", "apartamente de vânzare în",
+  "apartamente noi de vanzare", "apartamente noi de vânzare", "apartamente de inchiriat",
+  "apartamente de închiriat", "garsoniere de vanzare", "garsoniere de vânzare",
+  "proprietati noi", "proprietăți noi", "pagina ", "rezultate vanzare", "rezultate vânzare",
+];
+
 function removeDiacritics(text: string): string {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -399,7 +407,7 @@ function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_nam
  */
 function isSearchPageLead(url?: string | null, title?: string | null): boolean {
   const u = (url || "").toLowerCase().split("?")[0]; // strip query string
-  const t = (title || "").toLowerCase().trim();
+  const t = removeDiacritics((title || "").toLowerCase().trim());
   if (!u && !t) return false;
 
   // ── Allow-list: known individual-ad URL patterns ──
@@ -411,16 +419,23 @@ function isSearchPageLead(url?: string | null, title?: string | null): boolean {
   if (isIndividualAd) return false;
 
   // ── URL-based search/category page detection ──
-  if (u.includes("/q-")) return true;
-  if (u.includes("olx.ro/imobiliare")) return true; // OLX category root
+  if (u.includes("/q-") || /\/q-[^/]+\/?$/.test(u)) return true;
+  if (/olx\.ro\/imobiliare(\/|$)/.test(u)) return true; // OLX search/category pages
   if (/imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u)) return true;
   if (/storia\.ro\/ro\/rezultate\//.test(u)) return true;
+  if (/imoradar24\.ro\/(apartamente|garsoniere|case|terenuri)-de-(vanzare|inchiriat)\//.test(u)) return true;
+  if (/renaissanceestate\.ro\/apartamente-de-vanzare\//.test(u)) return true;
+  if (/\/(apartamente|garsoniere|case)-de-(vanzare|inchiriat)(\/|$)/.test(u) && !/\/anunt\//.test(u)) return true;
 
   // ── Title-based heuristics (OLX-style result pages) ──
-  if (t.includes("anunturi gratuite") || t.includes("anunturi imobiliare")) return true;
-  if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro")) return true;
+  if (GENERIC_LISTING_TITLE_SIGNALS.some((signal) => t.includes(removeDiacritics(signal.toLowerCase())))) return true;
+  if (t.endsWith("- olx.ro") || t.endsWith("• olx.ro") || t.endsWith(" storia.ro")) return true;
 
   return false;
+}
+
+function isConfirmedPrivateOwnerLead(lead: ScraperLead): boolean {
+  return !isSearchPageLead(lead.url, lead.title) && hasOwnerSignal(lead) && !hasAgencySignal(lead);
 }
 
 function extractLeadDomain(url?: string | null): string | null {
