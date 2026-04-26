@@ -108,7 +108,7 @@ interface Prospect {
   auto_blacklist_reason: string | null;
 }
 
-const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
+const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
 const VISIBLE_PHONE_PATTERN = /(?:\+?40|0040|0)\s*[237]\d{2}(?:[\s().-]*(?:\d|x|X|\*|•|\.)){2,}/g;
 
 type ProspectPhoneSource = "phone_normalized" | "contact_phone" | "admin_notes" | "description" | "title";
@@ -129,14 +129,15 @@ function normalizeRoPhone(raw?: string | null): string | null {
   if (raw.includes("...") || raw.includes("***")) return null;
   let digits = raw.replace(/\D/g, "");
   if (digits.startsWith("0040")) digits = digits.slice(2);
-  if (digits.startsWith("40") && digits.length === 11) return /^407[2-8]\d{7}$/.test(digits) ? `+${digits}` : null;
-  if (digits.startsWith("0") && digits.length === 10) return /^07[2-8]\d{7}$/.test(digits) ? `+4${digits}` : null;
-  if (digits.startsWith("7") && digits.length === 9) return /^7[2-8]\d{7}$/.test(digits) ? `+40${digits}` : null;
+  if (digits.startsWith("40") && digits.length === 11) return /^40[237]\d{8}$/.test(digits) ? `+${digits}` : null;
+  if (digits.startsWith("0") && digits.length === 10) return /^0[237]\d{8}$/.test(digits) ? `+4${digits}` : null;
+  if (/^[237]\d{8}$/.test(digits)) return `+40${digits}`;
   return null;
 }
 
 function extractPhoneFromText(text?: string | null): string | null {
-  return text?.match(PHONE_PATTERN)?.map(normalizeRoPhone).find(Boolean) ?? null;
+  const matches = text?.match(PHONE_PATTERN) ?? [];
+  return matches.map(normalizeRoPhone).find(Boolean) ?? null;
 }
 
 function getProspectPhoneInfo(
@@ -151,7 +152,7 @@ function getProspectPhoneInfo(
   ];
 
   for (const [source, value, persisted] of sources) {
-    const phone = persisted ? normalizeRoPhone(value) : extractPhoneFromText(value);
+    const phone = persisted ? normalizeRoPhone(value) || extractPhoneFromText(value) : extractPhoneFromText(value);
     if (phone) return { phone, source, persisted };
   }
 
