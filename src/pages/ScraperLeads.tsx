@@ -1929,10 +1929,13 @@ const ScraperLeads = () => {
                   <BarChart3 className="w-4 h-4" /> Analiză
                 </Button>
               </div>
-              {/* Scanează acum */}
-              <Button onClick={handleScrape} disabled={isScraping} className="gap-1.5">
-                {isScraping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                {isScraping ? "Se scanează..." : "Scanează acum"}
+              <Button onClick={() => handleScrape("rescan")} disabled={isScraping} variant="outline" className="gap-1.5">
+                {isScraping && activeScanMode === "rescan" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                {isScraping && activeScanMode === "rescan" ? "Rescan..." : "Rescan"}
+              </Button>
+              <Button onClick={() => handleScrape("scan")} disabled={isScraping} className="gap-1.5">
+                {isScraping && activeScanMode === "scan" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                {isScraping && activeScanMode === "scan" ? "Se scanează..." : "Scanează acum"}
               </Button>
             </div>
           </div>
