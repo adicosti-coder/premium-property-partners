@@ -340,9 +340,20 @@ function cleanTitleStatic(title: string) {
 
 const OWNER_SIGNALS = [
   "proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar",
-  "fara comision", "fără comision", "fara intermediar", "privat", "privati",
+  "persoana privata", "persoană privată", "privat", "privati",
   "privați", "persoana fizica", "persoană fizică", "persoane fizice",
 ];
+
+const AGENCY_SIGNALS = [
+  "agentie", "agenție", "agency", "agent imobiliar", "consultant imobiliar",
+  "broker", "brokeraj", "reprezentant vanzari", "reprezentant vânzări",
+  "dezvoltator", "developer", "ansamblu rezidential", "ansamblu rezidențial",
+  "imobiliare srl", "real estate srl",
+];
+
+function removeDiacritics(text: string): string {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
 
@@ -365,8 +376,13 @@ function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" 
   // Do not count the original search keyword/source as an owner signal: generic
   // platform searches can contain appended owner filters while the returned row
   // itself is still a mixed search/category page.
-  const blob = `${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase();
-  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+  const blob = removeDiacritics(`${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase());
+  return OWNER_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
+}
+
+function hasAgencySignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" | "description" | "contact_name" | "agency_name">): boolean {
+  const blob = removeDiacritics(`${lead.title || ""} ${lead.url || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""} ${lead.agency_name || ""}`.toLowerCase());
+  return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
 function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_name" | "admin_notes" | "description">): string {
@@ -594,7 +610,8 @@ const ScraperLeads = () => {
         tags: d.tags || [],
         _prospect_type: d.prospect_category || (hasOwnerSignal(d) ? "proprietar" : deriveProspectType(d.title)),
         _origin: "archive" as const,
-      })) as (ScraperLead & { _prospect_type: string })[];
+      }))
+        .filter((lead: any) => hasOwnerSignal(lead) && !hasAgencySignal(lead) && !isSearchPageLead(lead.url, lead.title)) as (ScraperLead & { _prospect_type: string })[];
 
       const [{ data: blocklistData }, { data: archivedAgencyData }] = await Promise.all([
         supabase.from("agency_blocklist").select("phone_normalized, domain"),
@@ -620,8 +637,9 @@ const ScraperLeads = () => {
         .limit(300);
       if (prospectError) throw prospectError;
 
-      const archiveUrls = new Set(archiveLeads.map((l) => l.url).filter(Boolean));
+      const archiveUrls = new Set([...(archiveData || []).map((l: any) => l.url), ...archiveLeads.map((l) => l.url)].filter(Boolean));
       const prospectLeads = ((prospectData || []) as any[])
+        .filter((p) => !isSearchPageLead(p.source_url, p.title))
         .filter((p) => hasOwnerSignal({
           title: p.title,
           url: p.source_url,
@@ -632,6 +650,7 @@ const ScraperLeads = () => {
           description: p.description,
           contact_name: p.contact_name,
         }))
+        .filter((p) => !hasAgencySignal({ title: p.title, url: p.source_url, admin_notes: p.admin_notes, description: p.description, contact_name: p.contact_name, agency_name: null }))
         .filter((p) => !archiveUrls.has(p.source_url))
         .filter((p) => !blockedPhones.has(normalizeRoPhone(p.phone_normalized || p.contact_phone) || extractPhoneFromText(`${p.admin_notes || ""} ${p.description || ""} ${p.title || ""}`) || ""))
         .filter((p) => !blockedDomains.has(extractLeadDomain(p.source_url) || ""))
@@ -751,18 +770,6 @@ const ScraperLeads = () => {
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
-      // Keyword-level exclusions: anything that looks like agency/broker copy.
-      const AGENCY_KEYWORDS = [
-        "agentie", "agenție", "agency", "agent imobiliar",
-        "broker", "brokeraj",
-        "comision", "comision 0", "fara comision", "fără comision",
-        "dezvoltator", "developer",
-        "imobiliare srl", "real estate srl",
-      ];
-      const looksLikeAgency = (l: typeof result[number]) => {
-        const blob = `${l.title || ""} ${l.url || ""}`.toLowerCase();
-        return AGENCY_KEYWORDS.some((k) => blob.includes(k));
-      };
       result = result.filter(
         (l) =>
           l._prospect_type !== "agentie" &&
@@ -770,7 +777,7 @@ const ScraperLeads = () => {
           l.prospect_category !== "agentie" &&
           l.prospect_category !== "dezvoltator" &&
           hasOwnerSignal(l) &&
-          !looksLikeAgency(l)
+          !hasAgencySignal(l)
       );
     }
 

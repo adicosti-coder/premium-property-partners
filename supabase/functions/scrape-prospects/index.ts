@@ -268,8 +268,15 @@ function extractUrlDomain(rawUrl: string | null | undefined): string | null {
 
 const OWNER_SIGNALS = [
   'proprietar', 'direct proprietar', 'de la proprietar',
-  'fara comision', 'fără comision', 'fara intermediar',
+  'fara intermediar', 'persoana privata', 'persoană privată',
   'privat', 'privati', 'privați', 'persoana fizica', 'persoană fizică', 'persoane fizice',
+];
+
+const AGENCY_SIGNALS = [
+  'agentie', 'agenție', 'agency', 'agent imobiliar', 'consultant imobiliar',
+  'broker', 'brokeraj', 'reprezentant vanzari', 'reprezentant vânzări',
+  'dezvoltator', 'developer', 'ansamblu rezidential', 'ansamblu rezidențial',
+  'imobiliare srl', 'real estate srl',
 ];
 
 function isGenericSearchPage(url: string | null | undefined, title: string | null | undefined): boolean {
@@ -294,6 +301,11 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
 function hasExplicitOwnerSignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
   const blob = removeDiacritics(`${url || ''} ${title || ''} ${markdown || ''}`.toLowerCase());
   return OWNER_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
+}
+
+function hasAgencySignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
+  const blob = removeDiacritics(`${title || ''} ${url || ''} ${markdown || ''}`.toLowerCase());
+  return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
 /**
@@ -558,6 +570,11 @@ Deno.serve(async (req) => {
 
             if (!hasExplicitOwnerSignal(result.title || '', url, markdown)) {
               archivedSkipped++;
+              continue;
+            }
+
+            if (hasAgencySignal(result.title || '', url, markdown)) {
+              blacklistedSkipped++;
               continue;
             }
 
