@@ -414,9 +414,12 @@ Deno.serve(async (req) => {
     const errors: string[] = [];
     let blacklistedSkipped = 0;
     let archivedSkipped = 0;
+    let duplicateSkipped = 0;
     const existingUrls = new Set<string>();
     const blockedPhones = new Set<string>();
     const blockedDomains = new Set<string>();
+    const whitelistedPhones = new Set<string>();
+    const whitelistedDomains = new Set<string>();
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
@@ -447,11 +450,12 @@ Deno.serve(async (req) => {
     console.log(`Expanded to ${queries.length} owner-only search queries`);
 
     if (onlyNewSources || preserveAgencyFilter) {
-      const [{ data: scraperRows }, { data: archiveRows }, { data: prospectRows }, { data: blockRows }] = await Promise.all([
+      const [{ data: scraperRows }, { data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
         supabase.from('scraper_leads').select('url, phone'),
         supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
         supabase.from('prospect_listings').select('source_url, phone_normalized, contact_phone, prospect_type, is_active'),
         supabase.from('agency_blocklist').select('phone_normalized, domain'),
+        supabase.from('agency_whitelist').select('phone_normalized, domain'),
       ]);
 
       for (const row of scraperRows || []) if (row.url) existingUrls.add(row.url);
@@ -477,6 +481,11 @@ Deno.serve(async (req) => {
         const phone = normalizeRoPhone(row.phone_normalized);
         if (phone) blockedPhones.add(phone);
         if (row.domain) blockedDomains.add(row.domain);
+      }
+      for (const row of whitelistRows || []) {
+        const phone = normalizeRoPhone(row.phone_normalized);
+        if (phone) whitelistedPhones.add(phone);
+        if (row.domain) whitelistedDomains.add(row.domain);
       }
     }
 
