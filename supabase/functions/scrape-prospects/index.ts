@@ -641,6 +641,7 @@ Deno.serve(async (req) => {
         new_listings: results.length,
         count: results.length,
         blacklisted_skipped: blacklistedSkipped,
+        archived_skipped: archivedSkipped,
         listings: results,
         errors: errors.length > 0 ? errors : undefined,
       }),
