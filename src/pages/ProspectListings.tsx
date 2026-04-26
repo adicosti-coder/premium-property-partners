@@ -109,6 +109,7 @@ interface Prospect {
 }
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
+const VISIBLE_PHONE_PATTERN = /(?:\+?40|0040|0)\s*[237]\d{2}(?:[\s().-]*(?:\d|x|X|\*|•|\.)){2,}/g;
 
 type ProspectPhoneSource = "phone_normalized" | "contact_phone" | "admin_notes" | "description" | "title";
 
@@ -154,6 +155,44 @@ function getProspectPhoneInfo(
 
 function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">): string | null {
   return getProspectPhoneInfo(p)?.phone ?? null;
+}
+
+function cleanVisiblePhone(raw?: string | null): string | null {
+  if (!raw) return null;
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const digits = compact.replace(/\D/g, "");
+  if (digits.length < 4) return null;
+  if (!/[*.xX•]/.test(compact) && digits.length < 9) return null;
+  return compact.slice(0, 22);
+}
+
+function extractVisiblePhoneFromText(text?: string | null): string | null {
+  return text?.match(VISIBLE_PHONE_PATTERN)?.map(cleanVisiblePhone).find(Boolean) ?? null;
+}
+
+function extractContactNameFromText(p: Pick<Prospect, "contact_name" | "admin_notes" | "description">): string | null {
+  if (p.contact_name?.trim()) return p.contact_name.trim();
+  const blob = `${p.admin_notes || ""}\n${p.description || ""}`;
+  const match = blob.match(/(?:publicat de|postat de|contact|proprietar|persoan[ăa])[:\s-]+([^\n|,]{3,48})/i);
+  return match?.[1]?.trim() || null;
+}
+
+function getVisibleProspectPhoneInfo(
+  p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">
+): ProspectPhoneInfo | (Omit<ProspectPhoneInfo, "phone"> & { phone: string | null; displayPhone: string; masked: boolean }) | null {
+  const full = getProspectPhoneInfo(p);
+  if (full) return { ...full, displayPhone: full.phone, masked: false };
+
+  const sources: Array<[ProspectPhoneSource, string | null | undefined]> = [
+    ["admin_notes", p.admin_notes],
+    ["description", p.description],
+    ["title", p.title],
+  ];
+  for (const [source, value] of sources) {
+    const displayPhone = extractVisiblePhoneFromText(value);
+    if (displayPhone) return { phone: null, displayPhone, source, persisted: false, masked: true };
+  }
+  return null;
 }
 
 const sentimentEmoji: Record<string, string> = {
