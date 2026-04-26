@@ -2973,15 +2973,31 @@ const ScraperLeads = () => {
                     <span className="text-amber-400">+{formatPrice(lead.extra_profit_3y)} 3Y</span>
                   </div>
                   <div className="grid grid-cols-6 gap-1.5">
-                    <Button
-                      size="sm"
-                      className="col-span-2 h-8 text-xs"
-                      onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
-                      disabled={importingLeadId === lead.id}
-                    >
-                      {importingLeadId === lead.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Database className="h-3 w-3 mr-1" />}
-                      Importă
-                    </Button>
+                    {importedPropertyByUrl.has(lead.url) ? (
+                      <Button size="sm" variant="secondary" className="col-span-2 h-8 text-xs" disabled>
+                        <Check className="h-3 w-3 mr-1" /> Importat
+                      </Button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="col-span-2 h-8 text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={importingLeadId === lead.id}
+                          >
+                            {importingLeadId === lead.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Database className="h-3 w-3 mr-1" />}
+                            Importă
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
