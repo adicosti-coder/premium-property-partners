@@ -124,7 +124,7 @@ interface VisibleProspectPhoneInfo extends ProspectPhoneInfo {
   masked: boolean;
 }
 
-function normalizeRoPhone(raw?: string | null): string | null {
+export function normalizeRoPhone(raw?: string | null): string | null {
   if (!raw) return null;
   if (raw.includes("...") || raw.includes("***")) return null;
   let digits = raw.replace(/\D/g, "");
@@ -135,12 +135,12 @@ function normalizeRoPhone(raw?: string | null): string | null {
   return null;
 }
 
-function extractPhoneFromText(text?: string | null): string | null {
+export function extractPhoneFromText(text?: string | null): string | null {
   const matches = text?.match(PHONE_PATTERN) ?? [];
   return matches.map(normalizeRoPhone).find(Boolean) ?? null;
 }
 
-function getProspectPhoneInfo(
+export function getProspectPhoneInfo(
   p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">
 ): ProspectPhoneInfo | null {
   const sources: Array<[ProspectPhoneSource, string | null | undefined, boolean]> = [
@@ -159,7 +159,7 @@ function getProspectPhoneInfo(
   return null;
 }
 
-function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">): string | null {
+export function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">): string | null {
   return getProspectPhoneInfo(p)?.phone ?? null;
 }
 
