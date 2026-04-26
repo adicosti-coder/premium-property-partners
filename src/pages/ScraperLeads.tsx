@@ -626,7 +626,7 @@ const ScraperLeads = () => {
         _prospect_type: d.prospect_category || (hasOwnerSignal(d) ? "proprietar" : deriveProspectType(d.title)),
         _origin: "archive" as const,
       }))
-        .filter((lead: any) => hasOwnerSignal(lead) && !hasAgencySignal(lead) && !isSearchPageLead(lead.url, lead.title)) as (ScraperLead & { _prospect_type: string })[];
+        .filter((lead: any) => isConfirmedPrivateOwnerLead(lead)) as (ScraperLead & { _prospect_type: string })[];
 
       const [{ data: blocklistData }, { data: archivedAgencyData }] = await Promise.all([
         supabase.from("agency_blocklist").select("phone_normalized, domain"),
@@ -655,6 +655,7 @@ const ScraperLeads = () => {
       const archiveUrls = new Set([...(archiveData || []).map((l: any) => l.url), ...archiveLeads.map((l) => l.url)].filter(Boolean));
       const prospectLeads = ((prospectData || []) as any[])
         .filter((p) => !isSearchPageLead(p.source_url, p.title))
+        .filter((p) => p.prospect_type === "proprietar")
         .filter((p) => hasOwnerSignal({
           title: p.title,
           url: p.source_url,
@@ -785,14 +786,12 @@ const ScraperLeads = () => {
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
-      result = result.filter(
-        (l) =>
-          l._prospect_type !== "agentie" &&
-          l._prospect_type !== "dezvoltator" &&
-          l.prospect_category !== "agentie" &&
-          l.prospect_category !== "dezvoltator" &&
-          hasOwnerSignal(l) &&
-          !hasAgencySignal(l)
+      result = result.filter((l) =>
+        l._prospect_type !== "agentie" &&
+        l._prospect_type !== "dezvoltator" &&
+        l.prospect_category !== "agentie" &&
+        l.prospect_category !== "dezvoltator" &&
+        isConfirmedPrivateOwnerLead(l)
       );
     }
 
