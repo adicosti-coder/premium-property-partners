@@ -447,7 +447,7 @@ const ScraperLeads = () => {
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
   const [activeScanMode, setActiveScanMode] = useState<"scan" | "rescan" | null>(null);
-  const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
+  const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number; duplicate_skipped?: number; existing_sources_checked?: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
@@ -1258,6 +1258,8 @@ const ScraperLeads = () => {
         count: data?.new_listings || data?.count || 0,
         blacklisted_skipped: data?.blacklisted_skipped || 0,
         archived_skipped: data?.archived_skipped || 0,
+        duplicate_skipped: data?.duplicate_skipped || 0,
+        existing_sources_checked: data?.existing_sources_checked || 0,
       };
       setLastIngestResult(result);
       // Persist scan log
@@ -1267,13 +1269,14 @@ const ScraperLeads = () => {
         archived_skipped: result.archived_skipped,
         total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
       } as any);
-      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} anunțuri noi găsite.`);
+      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} noi · ${result.duplicate_skipped} duplicate · ${result.blacklisted_skipped} agenții blocate.`);
       // Force full data refresh
       await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
       await queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
       await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
       await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
+      await queryClient.invalidateQueries({ queryKey: ["scraper-search-keywords"] });
     } catch (err: any) {
       toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
     } finally {
@@ -2013,6 +2016,18 @@ const ScraperLeads = () => {
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Scut Anti-Spam</p>
                   <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? (lastScanLog as any)?.blacklisted_skipped ?? archivedCount}</p>
                   <p className="text-[10px] text-muted-foreground">lead-uri blocate</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted">
+                  <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Surse Noi</p>
+                  <p className="text-xl font-bold font-mono">{lastIngestResult?.duplicate_skipped ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground">duplicate ignorate</p>
                 </div>
               </CardContent>
             </Card>
