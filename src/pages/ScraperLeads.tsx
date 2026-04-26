@@ -592,6 +592,9 @@ const ScraperLeads = () => {
         _origin: "archive" as const,
       })) as (ScraperLead & { _prospect_type: string })[];
 
+      const blockedPhones = new Set(archiveLeads.filter((l) => l.prospect_category === "agentie" || l.status === "archived").map((l) => l.phone).filter(Boolean));
+      const blockedDomains = new Set(archiveLeads.filter((l) => l.prospect_category === "agentie" || l.status === "archived").map((l) => extractLeadDomain(l.url)).filter(Boolean));
+
       const { data: prospectData, error: prospectError } = await supabase
         .from("prospect_listings" as any)
         .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,scraped_at,created_at,search_keywords")
@@ -613,6 +616,8 @@ const ScraperLeads = () => {
           contact_name: p.contact_name,
         }))
         .filter((p) => !archiveUrls.has(p.source_url))
+        .filter((p) => !blockedPhones.has(normalizeRoPhone(p.phone_normalized || p.contact_phone) || extractPhoneFromText(`${p.admin_notes || ""} ${p.description || ""} ${p.title || ""}`) || ""))
+        .filter((p) => !blockedDomains.has(extractLeadDomain(p.source_url) || ""))
         .map((p) => ({
           id: p.id,
           title: p.title || "Anunț fără titlu",
