@@ -229,7 +229,7 @@ const NOISE_URL_PATTERNS = [
 ];
 
 const DETAIL_URL_PATTERNS = [
-  "/d/oferta/", "/anunt/", "/anunturi/", "/oferta/", "/proprietate/", "/property/",
+  "/d/oferta/", "/anunt/", "/oferta/", "/proprietate/", "/property/",
 ];
 
 const GENERIC_SEARCH_TITLE_PATTERNS = [
@@ -242,7 +242,26 @@ const GENERIC_SEARCH_TITLE_PATTERNS = [
 export const OWNER_SIGNALS = [
   "proprietar", "direct-de-la-proprietar", "direct proprietar",
   "de la proprietar", "fara comision", "fără comision", "fara intermediar",
+  "privat", "privati", "privați", "persoana fizica", "persoană fizică", "persoane fizice",
 ];
+
+function hasOwnerFilterSignal(p: {
+  title?: string | null;
+  description?: string | null;
+  contact_name?: string | null;
+  prospect_type?: string | null;
+  source_url?: string | null;
+  search_keywords?: string[] | null;
+}): boolean {
+  if (p.prospect_type === "proprietar") return true;
+  const blob = `${p.source_url || ""} ${p.title || ""} ${p.description || ""} ${p.contact_name || ""} ${(p.search_keywords || []).join(" ")}`.toLowerCase();
+  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+}
+
+function isImportedFromPlatformSearch(p: { search_keywords?: string[] | null; source_url?: string | null }): boolean {
+  const url = (p.source_url || "").toLowerCase();
+  return (p.search_keywords?.length ?? 0) > 0 || NOISE_URL_PATTERNS.some((pat) => url.includes(pat));
+}
 
 function extractDomain(url?: string | null): string | null {
   if (!url) return null;
@@ -263,10 +282,11 @@ function isGenericSearchProspect(p: {
   const url = (p.source_url || "").toLowerCase();
   const title = (p.title || "").toLowerCase();
   const contact = (p.contact_name || "").trim();
-  const hasDetailUrl = DETAIL_URL_PATTERNS.some((pat) => url.includes(pat));
-  if (hasDetailUrl) return false;
 
   if (NOISE_URL_PATTERNS.some((pat) => url.includes(pat))) return true;
+
+  const hasDetailUrl = DETAIL_URL_PATTERNS.some((pat) => url.includes(pat));
+  if (hasDetailUrl) return false;
 
   const genericTitle = GENERIC_SEARCH_TITLE_PATTERNS.some((pat) => title.includes(pat));
   const noRealContact = !contact || contact === "—" || contact === "-";
@@ -524,7 +544,7 @@ const ProspectListings = () => {
       } catch (e) {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
-      const isGenericSearch = isGenericSearchProspect(p);
+      const isGenericSearch = isGenericSearchProspect(p) && !hasOwnerFilterSignal(p);
       const isAgency = detectIsAgency(p);
       const phoneKey = p.phone_normalized || p.contact_phone || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
@@ -584,8 +604,9 @@ const ProspectListings = () => {
   }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
 
   const filtered = enriched.filter((p) => {
-    // Hide generic search/category pages completely; only actual ad detail pages belong here.
+    // Hide generic search/category pages; keep owner/private/person-physical results imported from platform searches.
     if (p.isGenericSearch) return false;
+    if (isImportedFromPlatformSearch(p) && !hasOwnerFilterSignal(p)) return false;
     // Owner / agency filter (default: hide agencies)
     if (prospectTypeFilter === "proprietar" && p.isAgency) return false;
     if (prospectTypeFilter === "agentie" && !p.isAgency) return false;
@@ -626,6 +647,7 @@ const ProspectListings = () => {
   const campaignTargets = useMemo(() => {
     return filtered
       .filter((p) => !p.isAgency)
+      .filter((p) => !isImportedFromPlatformSearch(p) || hasOwnerFilterSignal(p))
       .filter((p) => (p.phone_normalized || p.contact_phone))
       .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
       .slice(0, CAMPAIGN_LIMIT);

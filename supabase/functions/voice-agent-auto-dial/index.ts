@@ -92,15 +92,23 @@ const NOISE_URL_PATTERNS = [
   "/anunturi/imobiliare/de-vanzare/", "/anunturi/imobiliare/de-inchiriat/",
 ];
 
-const DETAIL_URL_PATTERNS = ["/d/oferta/", "/anunt/", "/anunturi/", "/oferta/", "/proprietate/", "/property/"];
+const DETAIL_URL_PATTERNS = ["/d/oferta/", "/anunt/", "/oferta/", "/proprietate/", "/property/"];
 const GENERIC_SEARCH_TITLE_PATTERNS = ["anunturi gratuite", "anunțuri gratuite", "olx.ro", "rezultate cautare", "rezultate căutare", "apartamente de vanzare", "apartamente de vânzare", "apartamente de inchiriat", "apartamente de închiriat", "imobiliare timisoara", "imobiliare timișoara", "cautare", "căutare"];
+const OWNER_SIGNALS = ["proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar", "fara comision", "fără comision", "fara intermediar", "privat", "privati", "privați", "persoana fizica", "persoană fizică", "persoane fizice"];
+
+function hasOwnerFilterSignal(prospect: any): boolean {
+  if (prospect?.prospect_type === "proprietar") return true;
+  const keywords = Array.isArray(prospect?.search_keywords) ? prospect.search_keywords.join(" ") : "";
+  const blob = `${prospect?.source_url || ""} ${prospect?.title || ""} ${prospect?.description || ""} ${prospect?.contact_name || ""} ${keywords}`.toLowerCase();
+  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+}
 
 function isGenericSearchProspect(prospect: any): boolean {
   const url = String(prospect?.source_url || "").toLowerCase();
   const title = String(prospect?.title || "").toLowerCase();
   const contact = String(prospect?.contact_name || "").trim();
-  if (DETAIL_URL_PATTERNS.some((pattern) => url.includes(pattern))) return false;
   if (NOISE_URL_PATTERNS.some((pattern) => url.includes(pattern))) return true;
+  if (DETAIL_URL_PATTERNS.some((pattern) => url.includes(pattern))) return false;
   const genericTitle = GENERIC_SEARCH_TITLE_PATTERNS.some((pattern) => title.includes(pattern));
   const noRealContact = !contact || contact === "—" || contact === "-";
   return genericTitle && noRealContact;
@@ -147,7 +155,7 @@ serve(async (req) => {
     const twilioReady = !!(LOVABLE_API_KEY && TWILIO_API_KEY && TWILIO_FROM_NUMBER);
 
     // Resolve prospect to call
-    const PROSPECT_COLS = "id, title, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url, retry_count";
+    const PROSPECT_COLS = "id, title, description, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url, search_keywords, retry_count";
     let prospect: any = null;
     if (triggeredId) {
       const { data } = await supabase
@@ -183,7 +191,7 @@ serve(async (req) => {
       return jsonResp({ skipped: "no eligible prospect" });
     }
 
-    if (isGenericSearchProspect(prospect)) {
+    if (isGenericSearchProspect(prospect) && !hasOwnerFilterSignal(prospect)) {
       await supabase.from("prospect_listings").update({
         prospect_type: "agentie",
         lifecycle_status: "failed",

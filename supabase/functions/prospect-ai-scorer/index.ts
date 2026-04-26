@@ -17,6 +17,19 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const OWNER_SIGNALS = [
+  "proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar",
+  "fara comision", "fără comision", "fara intermediar", "privat", "privati",
+  "privați", "persoana fizica", "persoană fizică", "persoane fizice",
+];
+
+function hasOwnerFilterSignal(prospect: any): boolean {
+  if (prospect?.prospect_type === "proprietar") return true;
+  const keywords = Array.isArray(prospect?.search_keywords) ? prospect.search_keywords.join(" ") : "";
+  const blob = `${prospect?.source_url || ""} ${prospect?.title || ""} ${prospect?.description || ""} ${prospect?.contact_name || ""} ${keywords}`.toLowerCase();
+  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -43,7 +56,7 @@ serve(async (req) => {
 
     const { data: prospect, error: fetchErr } = await supabase
       .from("prospect_listings")
-      .select("id, title, description, price, currency, location, zone, rooms, size, year_built, prospect_type, contact_name, ai_scored_at, source_platform")
+      .select("id, title, description, price, currency, location, zone, rooms, size, year_built, prospect_type, contact_name, ai_scored_at, source_platform, source_url, search_keywords")
       .eq("id", prospectId)
       .maybeSingle();
     if (fetchErr) throw fetchErr;
@@ -143,6 +156,9 @@ Returnează prin tool calling.`;
     }
 
     const leadScore = Math.max(0, Math.min(100, parseInt(parsed.lead_score) || 0));
+    const ownerSignal = hasOwnerFilterSignal(prospect);
+    const isOwnerDirect = ownerSignal || parsed.is_owner_direct === true;
+    const finalProspectType = isOwnerDirect ? "proprietar" : (prospect.prospect_type || null);
 
     const ownerSentiment = ["presat", "deschis", "agentie", "neutru"].includes(parsed.owner_sentiment)
       ? parsed.owner_sentiment : "neutru";
@@ -154,10 +170,12 @@ Returnează prin tool calling.`;
         lead_score: leadScore,
         score: leadScore, // mirror to legacy column
         category: parsed.category,
+        prospect_type: finalProspectType,
         owner_sentiment: ownerSentiment,
         urgency_level: urgencyLevel,
         ai_score_breakdown: {
-          is_owner_direct: parsed.is_owner_direct,
+          is_owner_direct: isOwnerDirect,
+          owner_filter_signal: ownerSignal,
           hotel_potential: parsed.hotel_potential,
           urgency_signals: parsed.urgency_signals || [],
           owner_sentiment: ownerSentiment,
