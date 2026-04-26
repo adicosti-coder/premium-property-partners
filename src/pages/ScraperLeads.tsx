@@ -366,6 +366,14 @@ function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" 
   return OWNER_SIGNALS.some((signal) => blob.includes(signal));
 }
 
+function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_name" | "admin_notes" | "description">): string {
+  if (lead.contact_name?.trim()) return lead.contact_name.trim();
+  if (lead.agency_name?.trim()) return lead.agency_name.trim();
+  const blob = `${lead.admin_notes || ""}\n${lead.description || ""}`;
+  const match = blob.match(/(?:publicat de|postat de|contact|proprietar|persoan[ăa])[:\s-]+([^\n|,]{3,48})/i);
+  return match?.[1]?.trim() || "—";
+}
+
 /**
  * Detects if a lead is a search/listing page (e.g. OLX category or query result page)
  * rather than an individual property ad. Used to hide noise from the leads table.
@@ -940,6 +948,31 @@ const ScraperLeads = () => {
     link.download = `scraper-leads-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     toast.success(`${filteredLeads.length} lead-uri exportate în CSV`);
+  };
+
+  const exportContactsCSV = () => {
+    const contactLeads = filteredLeads.filter((l) => l.phone || getLeadContactName(l) !== "—");
+    if (!contactLeads.length) {
+      toast.info("Nu există contacte de exportat în filtrarea curentă");
+      return;
+    }
+    const headers = ["Nume contact", "Telefon", "Titlu anunț", "Platformă", "Tip", "Status", "URL"];
+    const rows = contactLeads.map((l) => [
+      getLeadContactName(l),
+      l.phone || "",
+      cleanTitleStatic(l.title),
+      normalizePlatformLabel(l.source),
+      (l as any)._prospect_type || l.prospect_category || "proprietar",
+      l.status,
+      l.url,
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `scraper-contacte-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    toast.success(`${contactLeads.length} contacte exportate în CSV`);
   };
 
   // ── Compare Toggle ────────────────────────────────
@@ -1831,6 +1864,9 @@ const ScraperLeads = () => {
               <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1.5" disabled={!filteredLeads.length}>
                 <Download className="w-4 h-4" /> CSV
               </Button>
+              <Button size="sm" variant="outline" onClick={exportContactsCSV} className="gap-1.5" disabled={!filteredLeads.length}>
+                <Phone className="w-4 h-4" /> Contacte
+              </Button>
               {/* Compare Button */}
               {compareIds.length >= 2 && (
                 <Button size="sm" variant="secondary" onClick={() => setCompareOpen(true)} className="gap-1.5">
@@ -2519,11 +2555,9 @@ const ScraperLeads = () => {
                               </span>
                             </div>
                             <span className="truncate flex items-center gap-1">{isPremiumLead(lead.title) && <span title="Ansamblu Premium">✨</span>}{cleanTitleStatic(lead.title)}</span>
-                            {lead.phone && (
-                              <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
-                                <Phone className="w-3 h-3" /> {lead.phone}
-                              </span>
-                            )}
+                            <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                              <Phone className="w-3 h-3" /> {lead.phone || "Fără telefon"} · {getLeadContactName(lead)}
+                            </span>
                             <div className="flex gap-1 flex-wrap items-center">
                               <Select
                                 value={(lead as any)._prospect_type || "proprietar"}
@@ -2651,8 +2685,8 @@ const ScraperLeads = () => {
                   )}
                   onClick={() => { setSelectedLead(lead); setGeneratedMessage(""); }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${sourceColors[normalizePlatformLabel(lead.source)] ?? 'bg-gray-500/15 text-gray-400 border-gray-500/30'}`}>
                         {normalizePlatformLabel(lead.source)}
                       </span>
@@ -2660,7 +2694,7 @@ const ScraperLeads = () => {
                         {getRelativeDate(lead.created_at)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 shrink-0">
                       {getScoreBadge(lead.lead_score)}
                       <Select
                         value={lead.status}
@@ -2682,20 +2716,22 @@ const ScraperLeads = () => {
                   <p className="text-sm font-medium leading-snug line-clamp-2 mb-1">
                     {isPremiumLead(lead.title) && <span className="mr-1">✨</span>}{cleanTitleStatic(lead.title)}
                   </p>
-                  {lead.phone && (
-                    <p className="text-[10px] text-muted-foreground font-mono flex items-center gap-1 mb-2">
-                      <Phone className="w-3 h-3" /> {lead.phone}
-                    </p>
-                  )}
+                  <div className="mb-2 rounded-md bg-muted/40 px-2 py-1.5 text-[11px] leading-tight">
+                    <div className="flex items-center gap-1 text-foreground font-medium truncate">
+                      <Phone className="w-3 h-3 shrink-0" />
+                      {lead.phone ? <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="font-mono truncate">{lead.phone}</a> : <span className="text-muted-foreground">Fără telefon</span>}
+                    </div>
+                    <div className="mt-0.5 text-muted-foreground truncate">Contact: {getLeadContactName(lead)}</div>
+                  </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 flex-wrap">
                     <span className="font-medium text-foreground">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
                     <span className="text-emerald-500">+{formatPrice(lead.monthly_extra)}/lună</span>
                     <span className="text-amber-400">+{formatPrice(lead.extra_profit_3y)} 3Y</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-5 gap-1.5">
                     <Button
                       size="sm"
-                      className="flex-1 h-8 text-xs bg-green-600 hover:bg-green-500 text-white"
+                      className="col-span-2 h-8 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la anunțul '${cleanTitleStatic(lead.title)}'. Mai este disponibil?`;
