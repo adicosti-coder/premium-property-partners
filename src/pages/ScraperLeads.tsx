@@ -1144,7 +1144,7 @@ const ScraperLeads = () => {
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
 
-      const { error } = await supabase.from("properties").insert({
+      const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: cleanTitle,
         location: inferLocation(lead),
         description_ro: description,
@@ -1170,7 +1170,7 @@ const ScraperLeads = () => {
         contact_name: contactName !== "—" ? contactName : null,
         source_url: lead.url,
         source_platform: sourcePlatform,
-      } as any);
+      } as any).select("id,name").single();
 
       if (error) throw error;
 
@@ -1182,7 +1182,11 @@ const ScraperLeads = () => {
 
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       queryClient.invalidateQueries({ queryKey: ["scraper-imported-properties"] });
-      toast.success(options?.activate ? "Anunț importat și activat în Proprietăți." : "Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
+      toast.success(options?.activate ? "Anunț importat și activat în Proprietăți." : "Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.", {
+        description: insertedProperty?.name || cleanTitle,
+        duration: 8000,
+        action: { label: "Vezi proprietăți", onClick: () => navigate("/admin?tab=properties") },
+      });
     } catch (error: any) {
       toast.error(`Eroare la import: ${error.message || "necunoscută"}`);
     } finally {
