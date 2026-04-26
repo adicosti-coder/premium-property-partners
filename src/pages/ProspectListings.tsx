@@ -94,6 +94,7 @@ interface Prospect {
   prospect_type: string | null;
   lifecycle_status: string;
   call_summary: string | null;
+  admin_notes: string | null;
   ai_score_breakdown: any;
   ai_scored_at: string | null;
   voice_call_session_id: string | null;
@@ -105,6 +106,27 @@ interface Prospect {
   search_keywords: string[] | null;
   auto_blacklisted_at: string | null;
   auto_blacklist_reason: string | null;
+}
+
+const PHONE_PATTERN = /(?:\+?4?0|0)\s*7(?:[\s.-]*\d){8}\b/g;
+
+function normalizeRoPhone(raw?: string | null): string | null {
+  if (!raw) return null;
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  if (!cleaned || cleaned.includes("...")) return null;
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("40")) return `+${cleaned}`;
+  if (cleaned.startsWith("0")) return `+4${cleaned}`;
+  return cleaned.startsWith("7") && cleaned.length === 9 ? `+40${cleaned}` : cleaned;
+}
+
+function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes">): string | null {
+  const direct = normalizeRoPhone(p.phone_normalized || p.contact_phone);
+  if (direct) return direct;
+
+  const blob = `${p.description || ""} ${p.admin_notes || ""}`;
+  const match = blob.match(PHONE_PATTERN)?.find((value) => !value.includes("..."));
+  return normalizeRoPhone(match || null);
 }
 
 const sentimentEmoji: Record<string, string> = {
