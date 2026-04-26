@@ -705,6 +705,27 @@ const ScraperLeads = () => {
     staleTime: 1000 * 60 * 2,
   });
 
+  const leadSourceUrls = useMemo(() => Array.from(new Set((leads || []).map((l) => l.url).filter(Boolean))), [leads]);
+  const { data: importedProperties = [] } = useQuery({
+    queryKey: ["scraper-imported-properties", leadSourceUrls.slice(0, 200).join("|")],
+    queryFn: async () => {
+      if (!leadSourceUrls.length) return [];
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id,name,source_url,listing_type,is_active")
+        .in("source_url", leadSourceUrls.slice(0, 200));
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: leadSourceUrls.length > 0,
+    staleTime: 1000 * 60 * 2,
+  });
+  const importedPropertyByUrl = useMemo(() => {
+    const map = new Map<string, any>();
+    importedProperties.forEach((property: any) => property.source_url && map.set(property.source_url, property));
+    return map;
+  }, [importedProperties]);
+
   // ── Realtime Alerts ────────────────────────────────
   useEffect(() => {
     const channel = supabase
