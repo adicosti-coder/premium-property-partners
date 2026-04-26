@@ -1884,10 +1884,27 @@ const ScraperLeads = () => {
 
           {/* ── Export to Properties ───────────────── */}
           <div className="flex gap-2 flex-wrap">
-            <Button className="flex-1 gap-2" onClick={() => importLeadAsListing(selectedLead)} disabled={importingLeadId === selectedLead.id}>
-              {importingLeadId === selectedLead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-              Importă Anunț
-            </Button>
+            {importedPropertyByUrl.has(selectedLead.url) ? (
+              <Button className="flex-1 gap-2" variant="secondary" disabled>
+                <Check className="w-4 h-4" /> Importat
+              </Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="flex-1 gap-2" disabled={importingLeadId === selectedLead.id}>
+                    {importingLeadId === selectedLead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                    Importă Anunț
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead)}>Draft inteligent</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "vanzare" })}>Importă ca vânzare</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "inchiriere" })}>Importă ca închiriere</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <Button variant="outline" className="flex-1 gap-2" onClick={() => exportToProperties(selectedLead)}>
               <ArrowRightCircle className="w-4 h-4" />
               Trimite în Prospectare
