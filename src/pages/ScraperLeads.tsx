@@ -2700,7 +2700,7 @@ const ScraperLeads = () => {
                       </TableHead>
                       <TableHead className="font-semibold text-right">{t.price}</TableHead>
                       <TableHead className="font-semibold text-center">Status</TableHead>
-                      <TableHead className="text-center w-32">Acțiuni</TableHead>
+                      <TableHead className="text-center w-40">Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -2781,6 +2781,16 @@ const ScraperLeads = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                              onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
+                              title="Importă anunț ca draft în Proprietăți"
+                              disabled={importingLeadId === lead.id}
+                            >
+                              {importingLeadId === lead.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
