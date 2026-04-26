@@ -366,6 +366,14 @@ function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" 
   return OWNER_SIGNALS.some((signal) => blob.includes(signal));
 }
 
+function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_name" | "admin_notes" | "description">): string {
+  if (lead.contact_name?.trim()) return lead.contact_name.trim();
+  if (lead.agency_name?.trim()) return lead.agency_name.trim();
+  const blob = `${lead.admin_notes || ""}\n${lead.description || ""}`;
+  const match = blob.match(/(?:publicat de|postat de|contact|proprietar|persoan[ăa])[:\s-]+([^\n|,]{3,48})/i);
+  return match?.[1]?.trim() || "—";
+}
+
 /**
  * Detects if a lead is a search/listing page (e.g. OLX category or query result page)
  * rather than an individual property ad. Used to hide noise from the leads table.
@@ -940,6 +948,31 @@ const ScraperLeads = () => {
     link.download = `scraper-leads-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     toast.success(`${filteredLeads.length} lead-uri exportate în CSV`);
+  };
+
+  const exportContactsCSV = () => {
+    const contactLeads = filteredLeads.filter((l) => l.phone || getLeadContactName(l) !== "—");
+    if (!contactLeads.length) {
+      toast.info("Nu există contacte de exportat în filtrarea curentă");
+      return;
+    }
+    const headers = ["Nume contact", "Telefon", "Titlu anunț", "Platformă", "Tip", "Status", "URL"];
+    const rows = contactLeads.map((l) => [
+      getLeadContactName(l),
+      l.phone || "",
+      cleanTitleStatic(l.title),
+      normalizePlatformLabel(l.source),
+      (l as any)._prospect_type || l.prospect_category || "proprietar",
+      l.status,
+      l.url,
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `scraper-contacte-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    toast.success(`${contactLeads.length} contacte exportate în CSV`);
   };
 
   // ── Compare Toggle ────────────────────────────────
