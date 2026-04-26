@@ -1456,7 +1456,7 @@ const ProspectListings = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {p.category && (
                             <Badge variant="outline" className="gap-1 text-xs">
                               {categoryIcons[p.category]}
@@ -1464,9 +1464,9 @@ const ProspectListings = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-2 md:px-4">
                           <div className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
-                            {p.contact_name || "—"}
+                            {contactName || (phoneInfo ? "Contact anunț" : "—")}
                             {p.isAgency && (
                               <button
                                 type="button"
@@ -1504,10 +1504,11 @@ const ProspectListings = () => {
                             )}
                           </div>
                           {phone ? (
-                            <a href={`tel:${phone}`} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline">
+                            <a href={callablePhone ? `tel:${callablePhone}` : p.source_url} target={callablePhone ? undefined : "_blank"} rel={callablePhone ? undefined : "noopener noreferrer"} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline break-all">
                               <Phone className="h-3 w-3" />
-                              {phone}
-                              {phoneInfo && !phoneInfo.persisted && (
+                              {phoneInfo?.displayPhone || phone}
+                              {phoneInfo?.masked && <span className="text-[9px] text-muted-foreground">vizibil parțial</span>}
+                              {phoneInfo && !phoneInfo.persisted && !phoneInfo.masked && (
                                 <span
                                   className="text-[9px] px-1 py-0 rounded bg-muted text-muted-foreground"
                                   title={`Telefon extras din ${phoneInfo.source === "admin_notes" ? "note" : phoneInfo.source === "description" ? "descriere" : "titlu"}`}
@@ -1539,7 +1540,7 @@ const ProspectListings = () => {
                             size="sm"
                             variant={p.isAgency ? "outline" : "secondary"}
                             onClick={() => handleToggleProspectType(p)}
-                            className={`mt-1.5 h-7 text-xs gap-1 ${
+                            className={`mt-1.5 h-7 text-[10px] sm:text-xs gap-1 px-2 ${
                               p.isAgency
                                 ? "border-green-500 text-green-700 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950/30"
                                 : "border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
@@ -1549,20 +1550,20 @@ const ProspectListings = () => {
                             {p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}
                           </Button>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
                             {p.lifecycle_status === "pending_credentials" ? "⏸ pending" : p.lifecycle_status}
                           </Badge>
                           {p.followup_sent_at && <div className="text-[10px] text-green-600 mt-1">WA ✓</div>}
                         </TableCell>
-                        <TableCell className="text-right space-y-1">
+                        <TableCell className="text-right space-y-1 px-2 md:px-4">
                           <div className="flex flex-col gap-1 items-end">
                             <Button
                               size="sm"
                               variant={score > 80 ? "default" : "outline"}
                               onClick={() => handleCall(p)}
-                              disabled={!phone || callingId === p.id || callLocked}
-                              className="w-full"
+                              disabled={!callablePhone || callingId === p.id || callLocked}
+                              className="w-full text-[10px] sm:text-xs px-2"
                             >
                               {callingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Phone className="h-3 w-3 mr-1" />}
                               📞 Apelează cu AI
