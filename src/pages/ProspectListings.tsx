@@ -544,7 +544,7 @@ const ProspectListings = () => {
       } catch (e) {
         console.warn("[ProspectListings] geo match failed for", p.id, e);
       }
-      const isGenericSearch = isGenericSearchProspect(p);
+      const isGenericSearch = isGenericSearchProspect(p) && !hasOwnerFilterSignal(p);
       const isAgency = detectIsAgency(p);
       const phoneKey = p.phone_normalized || p.contact_phone || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
@@ -604,8 +604,9 @@ const ProspectListings = () => {
   }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
 
   const filtered = enriched.filter((p) => {
-    // Hide generic search/category pages completely; only actual ad detail pages belong here.
+    // Hide generic search/category pages; keep owner/private/person-physical results imported from platform searches.
     if (p.isGenericSearch) return false;
+    if (isImportedFromPlatformSearch(p) && !hasOwnerFilterSignal(p)) return false;
     // Owner / agency filter (default: hide agencies)
     if (prospectTypeFilter === "proprietar" && p.isAgency) return false;
     if (prospectTypeFilter === "agentie" && !p.isAgency) return false;
@@ -646,6 +647,7 @@ const ProspectListings = () => {
   const campaignTargets = useMemo(() => {
     return filtered
       .filter((p) => !p.isAgency)
+      .filter((p) => !isImportedFromPlatformSearch(p) || hasOwnerFilterSignal(p))
       .filter((p) => (p.phone_normalized || p.contact_phone))
       .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
       .slice(0, CAMPAIGN_LIMIT);
