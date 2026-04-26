@@ -1115,7 +1115,7 @@ const ScraperLeads = () => {
           .update({ prospect_category: "agentie", status: "archived" } as any)
           .eq("id", lead.id);
 
-    const mirrorUpdates: Promise<any>[] = [];
+    const mirrorUpdates: Array<PromiseLike<any>> = [];
     if (url) {
       mirrorUpdates.push(supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: "agentie", status: "archived" } as any).eq("url", url));
       mirrorUpdates.push(supabase.from("prospect_listings" as any).update({ prospect_type: "agentie", is_active: false, auto_blacklisted_at: new Date().toISOString(), auto_blacklist_reason: "Manual scraper-leads" } as any).eq("source_url", url));
