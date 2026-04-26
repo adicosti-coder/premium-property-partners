@@ -247,6 +247,25 @@ function removeDiacritics(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function normalizeRoPhone(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const cleaned = String(phone).replace(/[^0-9+]/g, '');
+  if (!cleaned) return null;
+  if (cleaned.startsWith('+')) return cleaned;
+  if (cleaned.startsWith('40')) return `+${cleaned}`;
+  if (cleaned.startsWith('0')) return `+4${cleaned}`;
+  return `+40${cleaned}`;
+}
+
+function extractUrlDomain(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null;
+  try {
+    return new URL(rawUrl).hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return String(rawUrl).toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '') || null;
+  }
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
@@ -381,15 +400,23 @@ Deno.serve(async (req) => {
     // Parse optional params
     let maxResults = 10;
     let customQuery: string | null = null;
+    let onlyNewSources = false;
+    let preserveAgencyFilter = true;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
       if (body?.custom_query) customQuery = body.custom_query;
+      onlyNewSources = body?.only_new_sources === true;
+      preserveAgencyFilter = body?.preserve_agency_filter !== false;
     } catch { /* no body */ }
 
     const results: any[] = [];
     const errors: string[] = [];
     let blacklistedSkipped = 0;
+    let archivedSkipped = 0;
+    const existingUrls = new Set<string>();
+    const blockedPhones = new Set<string>();
+    const blockedDomains = new Set<string>();
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
@@ -418,6 +445,40 @@ Deno.serve(async (req) => {
       query: applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
     }));
     console.log(`Expanded to ${queries.length} owner-only search queries`);
+
+    if (onlyNewSources || preserveAgencyFilter) {
+      const [{ data: scraperRows }, { data: archiveRows }, { data: prospectRows }, { data: blockRows }] = await Promise.all([
+        supabase.from('scraper_leads').select('url, phone'),
+        supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
+        supabase.from('prospect_listings').select('source_url, phone_normalized, contact_phone, prospect_type, is_active'),
+        supabase.from('agency_blocklist').select('phone_normalized, domain'),
+      ]);
+
+      for (const row of scraperRows || []) if (row.url) existingUrls.add(row.url);
+      for (const row of archiveRows || []) {
+        if (row.url) existingUrls.add(row.url);
+        if (row.prospect_category === 'agentie' || row.status === 'archived') {
+          const phone = normalizeRoPhone(row.phone);
+          const domain = extractUrlDomain(row.url);
+          if (phone) blockedPhones.add(phone);
+          if (domain) blockedDomains.add(domain);
+        }
+      }
+      for (const row of prospectRows || []) {
+        if (row.source_url) existingUrls.add(row.source_url);
+        if (row.prospect_type === 'agentie' || row.is_active === false) {
+          const phone = normalizeRoPhone(row.phone_normalized || row.contact_phone);
+          const domain = extractUrlDomain(row.source_url);
+          if (phone) blockedPhones.add(phone);
+          if (domain) blockedDomains.add(domain);
+        }
+      }
+      for (const row of blockRows || []) {
+        const phone = normalizeRoPhone(row.phone_normalized);
+        if (phone) blockedPhones.add(phone);
+        if (row.domain) blockedDomains.add(row.domain);
+      }
+    }
 
     // Process queries in parallel batches of 5 to avoid timeout
     const BATCH_SIZE = 5;
@@ -450,6 +511,16 @@ Deno.serve(async (req) => {
             const url = result.url;
             if (!url) continue;
 
+            const resultDomain = extractUrlDomain(url);
+            if (onlyNewSources && existingUrls.has(url)) {
+              archivedSkipped++;
+              continue;
+            }
+            if (preserveAgencyFilter && resultDomain && blockedDomains.has(resultDomain)) {
+              blacklistedSkipped++;
+              continue;
+            }
+
             // Dedup by URL in scraper_leads
             const { data: existing } = await supabase
               .from('scraper_leads')
@@ -461,6 +532,7 @@ Deno.serve(async (req) => {
               await supabase.from('scraper_leads')
                 .update({ updated_at: new Date().toISOString() })
                 .eq('id', existing.id);
+              if (onlyNewSources) archivedSkipped++;
               continue;
             }
 
@@ -503,6 +575,10 @@ Deno.serve(async (req) => {
             // Check phone blacklist
             let skipBlacklist = false;
             if (extracted.contactPhone) {
+              const normalizedPhone = normalizeRoPhone(extracted.contactPhone);
+              if (preserveAgencyFilter && normalizedPhone && blockedPhones.has(normalizedPhone)) {
+                skipBlacklist = true;
+              }
               const { data: phoneData } = await supabase
                 .from('phone_intelligence')
                 .select('is_blacklisted')
@@ -565,6 +641,7 @@ Deno.serve(async (req) => {
         new_listings: results.length,
         count: results.length,
         blacklisted_skipped: blacklistedSkipped,
+        archived_skipped: archivedSkipped,
         listings: results,
         errors: errors.length > 0 ? errors : undefined,
       }),

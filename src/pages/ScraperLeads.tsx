@@ -24,7 +24,7 @@ import {
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
   Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
-  ChevronDown, ChevronUp, Pencil, Building2, Check, X,
+  ChevronDown, ChevronUp, Pencil, Building2, Check, X, RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -446,6 +446,7 @@ const ScraperLeads = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
+  const [activeScanMode, setActiveScanMode] = useState<"scan" | "rescan" | null>(null);
   const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
@@ -592,8 +593,21 @@ const ScraperLeads = () => {
         _origin: "archive" as const,
       })) as (ScraperLead & { _prospect_type: string })[];
 
-      const blockedPhones = new Set(archiveLeads.filter((l) => l.prospect_category === "agentie" || l.status === "archived").map((l) => l.phone).filter(Boolean));
-      const blockedDomains = new Set(archiveLeads.filter((l) => l.prospect_category === "agentie" || l.status === "archived").map((l) => extractLeadDomain(l.url)).filter(Boolean));
+      const [{ data: blocklistData }, { data: archivedAgencyData }] = await Promise.all([
+        supabase.from("agency_blocklist").select("phone_normalized, domain"),
+        supabase
+          .from("scraper_leads_archive_2026" as any)
+          .select("phone, url")
+          .or("prospect_category.eq.agentie,status.eq.archived"),
+      ]);
+      const blockedPhones = new Set([
+        ...(blocklistData || []).map((r: any) => normalizeRoPhone(r.phone_normalized)).filter(Boolean),
+        ...(archivedAgencyData || []).map((l: any) => normalizeRoPhone(l.phone)).filter(Boolean),
+      ]);
+      const blockedDomains = new Set([
+        ...(blocklistData || []).map((r: any) => r.domain).filter(Boolean),
+        ...(archivedAgencyData || []).map((l: any) => extractLeadDomain(l.url)).filter(Boolean),
+      ]);
 
       const { data: prospectData, error: prospectError } = await supabase
         .from("prospect_listings" as any)
@@ -1230,12 +1244,14 @@ const ScraperLeads = () => {
     onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
   });
 
-  const handleScrape = async () => {
+  const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
     setIsScraping(true);
+    setActiveScanMode(mode);
     setRecentScanPulse(true);
     try {
+      const isRescan = mode === "rescan";
       const { data, error } = await supabase.functions.invoke("scrape-prospects", {
-        body: { max_results: 10 },
+        body: { max_results: isRescan ? 20 : 10, only_new_sources: isRescan, preserve_agency_filter: true },
       });
       if (error) throw error;
       const result = {
@@ -1251,7 +1267,7 @@ const ScraperLeads = () => {
         archived_skipped: result.archived_skipped,
         total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
       } as any);
-      toast.success(`Scanare completă! ${result.count} anunțuri noi găsite.`);
+      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} anunțuri noi găsite.`);
       // Force full data refresh
       await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
@@ -1259,9 +1275,10 @@ const ScraperLeads = () => {
       await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
       await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
     } catch (err: any) {
-      toast.error("Eroare scanare: " + (err.message || "Necunoscută"));
+      toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
     } finally {
       setIsScraping(false);
+      setActiveScanMode(null);
       setTimeout(() => setRecentScanPulse(false), 5000);
     }
   };
@@ -1912,10 +1929,13 @@ const ScraperLeads = () => {
                   <BarChart3 className="w-4 h-4" /> Analiză
                 </Button>
               </div>
-              {/* Scanează acum */}
-              <Button onClick={handleScrape} disabled={isScraping} className="gap-1.5">
-                {isScraping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                {isScraping ? "Se scanează..." : "Scanează acum"}
+              <Button onClick={() => handleScrape("rescan")} disabled={isScraping} variant="outline" className="gap-1.5">
+                {isScraping && activeScanMode === "rescan" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                {isScraping && activeScanMode === "rescan" ? "Rescan..." : "Rescan"}
+              </Button>
+              <Button onClick={() => handleScrape("scan")} disabled={isScraping} className="gap-1.5">
+                {isScraping && activeScanMode === "scan" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                {isScraping && activeScanMode === "scan" ? "Se scanează..." : "Scanează acum"}
               </Button>
             </div>
           </div>
