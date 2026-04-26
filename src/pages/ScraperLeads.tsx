@@ -404,6 +404,15 @@ function isSearchPageLead(url?: string | null, title?: string | null): boolean {
   return false;
 }
 
+function extractLeadDomain(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return url.replace(/^https?:\/\//i, "").split("/")[0].replace(/^www\./i, "").toLowerCase() || null;
+  }
+}
+
 function deriveListingType(title: string, dbType: string): string {
   const upper = (title || "").toUpperCase();
   if (upper.includes("INCHIRIERE") || upper.includes("ÎNCHIRIERE") || upper.includes("CHIRIE")) return "inchiriere";
