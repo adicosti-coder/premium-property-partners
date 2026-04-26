@@ -400,15 +400,23 @@ Deno.serve(async (req) => {
     // Parse optional params
     let maxResults = 10;
     let customQuery: string | null = null;
+    let onlyNewSources = false;
+    let preserveAgencyFilter = true;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
       if (body?.custom_query) customQuery = body.custom_query;
+      onlyNewSources = body?.only_new_sources === true;
+      preserveAgencyFilter = body?.preserve_agency_filter !== false;
     } catch { /* no body */ }
 
     const results: any[] = [];
     const errors: string[] = [];
     let blacklistedSkipped = 0;
+    let archivedSkipped = 0;
+    const existingUrls = new Set<string>();
+    const blockedPhones = new Set<string>();
+    const blockedDomains = new Set<string>();
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
