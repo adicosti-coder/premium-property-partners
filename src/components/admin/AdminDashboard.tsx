@@ -41,6 +41,18 @@ interface Property {
   name: string;
 }
 
+interface ProspectContact {
+  id: string;
+  title: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  phone_normalized: string | null;
+  source_platform: string;
+  lifecycle_status: string;
+  lead_score: number | null;
+  scraped_at: string | null;
+}
+
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
 const AdminDashboard = () => {
@@ -76,6 +88,25 @@ const AdminDashboard = () => {
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60,
   });
+
+  const { data: prospectContacts = [] } = useQuery({
+    queryKey: ["admin-dashboard-prospect-contacts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prospect_listings")
+        .select("id,title,contact_name,contact_phone,phone_normalized,source_platform,lifecycle_status,lead_score,scraped_at")
+        .eq("is_active", true)
+        .or("contact_phone.not.is.null,phone_normalized.not.is.null")
+        .order("scraped_at", { ascending: false, nullsFirst: false })
+        .limit(8);
+
+      if (error) throw error;
+      return (data || []) as ProspectContact[];
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
