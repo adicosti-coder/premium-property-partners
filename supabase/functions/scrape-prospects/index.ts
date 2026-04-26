@@ -282,6 +282,8 @@ const AGENCY_SIGNALS = [
 const GENERIC_LISTING_TITLE_SIGNALS = [
   'anunturi gratuite', 'anunturi imobiliare', 'anunturi olx', 'imobiliare olx',
   'second hand si noi', 'apartamente de vanzare in', 'apartamente de vânzare în',
+  'apartamente 1 camera de', 'apartamente 1 cameră de', 'apartamente 2 camere de',
+  'apartamente 3 camere de', 'apartamente 4 camere de',
   'apartamente noi de vanzare', 'apartamente noi de vânzare', 'apartamente de inchiriat',
   'apartamente de închiriat', 'garsoniere de vanzare', 'garsoniere de vânzare',
   'proprietati noi', 'proprietăți noi', 'pagina ', 'rezultate vanzare', 'rezultate vânzare',
