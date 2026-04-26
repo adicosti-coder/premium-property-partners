@@ -94,6 +94,7 @@ interface Prospect {
   prospect_type: string | null;
   lifecycle_status: string;
   call_summary: string | null;
+  admin_notes: string | null;
   ai_score_breakdown: any;
   ai_scored_at: string | null;
   voice_call_session_id: string | null;
@@ -105,6 +106,27 @@ interface Prospect {
   search_keywords: string[] | null;
   auto_blacklisted_at: string | null;
   auto_blacklist_reason: string | null;
+}
+
+const PHONE_PATTERN = /(?:\+?4?0|0)\s*7(?:[\s.-]*\d){8}\b/g;
+
+function normalizeRoPhone(raw?: string | null): string | null {
+  if (!raw) return null;
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  if (!cleaned || cleaned.includes("...")) return null;
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("40")) return `+${cleaned}`;
+  if (cleaned.startsWith("0")) return `+4${cleaned}`;
+  return cleaned.startsWith("7") && cleaned.length === 9 ? `+40${cleaned}` : cleaned;
+}
+
+function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes">): string | null {
+  const direct = normalizeRoPhone(p.phone_normalized || p.contact_phone);
+  if (direct) return direct;
+
+  const blob = `${p.description || ""} ${p.admin_notes || ""}`;
+  const match = blob.match(PHONE_PATTERN)?.find((value) => !value.includes("..."));
+  return normalizeRoPhone(match || null);
 }
 
 const sentimentEmoji: Record<string, string> = {
@@ -495,7 +517,7 @@ const ProspectListings = () => {
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
@@ -528,7 +550,7 @@ const ProspectListings = () => {
   const phoneCounts = useMemo(() => {
     const m = new Map<string, number>();
     prospects.forEach((p) => {
-      const key = p.phone_normalized || p.contact_phone;
+      const key = getProspectPhone(p);
       if (!key) return;
       m.set(key, (m.get(key) || 0) + 1);
     });
@@ -546,7 +568,7 @@ const ProspectListings = () => {
       }
       const isGenericSearch = isGenericSearchProspect(p) && !hasOwnerFilterSignal(p);
       const isAgency = detectIsAgency(p);
-      const phoneKey = p.phone_normalized || p.contact_phone || "";
+      const phoneKey = getProspectPhone(p) || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
       const suspicion = computeAgencySuspicion(p, phoneCount);
       return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion };
@@ -648,7 +670,7 @@ const ProspectListings = () => {
     return filtered
       .filter((p) => !p.isAgency)
       .filter((p) => !isImportedFromPlatformSearch(p) || hasOwnerFilterSignal(p))
-      .filter((p) => (p.phone_normalized || p.contact_phone))
+      .filter((p) => getProspectPhone(p))
       .filter((p) => !["calling", "interested", "rejected"].includes(p.lifecycle_status))
       .slice(0, CAMPAIGN_LIMIT);
   }, [filtered]);
@@ -795,7 +817,8 @@ const ProspectListings = () => {
       toast({ title: "Nu este anunț apelabil", description: "Această intrare este o căutare generică de platformă, nu un anunț de proprietar.", variant: "destructive" });
       return;
     }
-    if (!p.phone_normalized && !p.contact_phone) {
+    const phone = getProspectPhone(p);
+    if (!phone) {
       toast({ title: "Lipsește telefon", description: "Acest prospect nu are număr de telefon.", variant: "destructive" });
       return;
     }
@@ -816,7 +839,7 @@ const ProspectListings = () => {
       if (data?.error) throw new Error(data.error);
       toast({
         title: "📞 Apel inițiat",
-        description: `Sun ${data?.to || p.contact_phone}. Sesiune: ${data?.session_id?.slice(0, 8)}...`,
+        description: `Sun ${data?.to || phone}. Sesiune: ${data?.session_id?.slice(0, 8)}...`,
       });
       refetch();
     } catch (e: any) {
@@ -922,7 +945,7 @@ const ProspectListings = () => {
       p.urgency_level ?? p.ai_score_breakdown?.urgency_level ?? "",
       (p.title || "").replace(/"/g, '""'),
       p.category ?? "",
-      p.phone_normalized || p.contact_phone || "",
+      getProspectPhone(p) || "",
       (p.contact_name || "").replace(/"/g, '""'),
       p.location ?? "",
       p.zone ?? "",
@@ -1299,7 +1322,7 @@ const ProspectListings = () => {
                   ) : filtered.map((p) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
-                    const phone = p.phone_normalized || p.contact_phone;
+                    const phone = getProspectPhone(p);
                     const sentiment = p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment;
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
@@ -1407,7 +1430,8 @@ const ProspectListings = () => {
                             )}
                           </div>
                           {phone && (
-                            <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+                            <a href={`tel:${phone}`} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline">
+                              <Phone className="h-3 w-3" />
                               {phone}
                               {p.phoneCount > 1 && (
                                 <span
@@ -1421,7 +1445,7 @@ const ProspectListings = () => {
                                   ×{p.phoneCount}
                                 </span>
                               )}
-                            </div>
+                            </a>
                           )}
                           <Button
                             type="button"
