@@ -247,6 +247,25 @@ function removeDiacritics(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function normalizeRoPhone(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const cleaned = String(phone).replace(/[^0-9+]/g, '');
+  if (!cleaned) return null;
+  if (cleaned.startsWith('+')) return cleaned;
+  if (cleaned.startsWith('40')) return `+${cleaned}`;
+  if (cleaned.startsWith('0')) return `+4${cleaned}`;
+  return `+40${cleaned}`;
+}
+
+function extractUrlDomain(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null;
+  try {
+    return new URL(rawUrl).hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return String(rawUrl).toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '') || null;
+  }
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
