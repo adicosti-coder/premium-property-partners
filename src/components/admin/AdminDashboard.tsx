@@ -441,6 +441,54 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Phone className="w-5 h-5 text-primary" />
+            Contacte din anunțuri
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {prospectContacts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {prospectContacts.map((prospect) => {
+                const phone = prospect.contact_phone || prospect.phone_normalized;
+                return (
+                  <div key={prospect.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {prospect.contact_name || "Contact nespecificat"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {prospect.title || "Anunț fără titlu"}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                        {prospect.source_platform}
+                      </span>
+                    </div>
+                    {phone && (
+                      <a href={`tel:${phone}`} className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                        <Phone className="w-4 h-4" />
+                        {phone}
+                      </a>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>Status: {prospect.lifecycle_status}</span>
+                      <span>·</span>
+                      <span>Scor: {prospect.lead_score ?? "—"}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Nu există încă anunțuri active cu număr de contact.</p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
