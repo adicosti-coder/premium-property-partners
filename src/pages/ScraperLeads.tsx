@@ -340,9 +340,20 @@ function cleanTitleStatic(title: string) {
 
 const OWNER_SIGNALS = [
   "proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar",
-  "fara comision", "fără comision", "fara intermediar", "privat", "privati",
+  "persoana privata", "persoană privată", "privat", "privati",
   "privați", "persoana fizica", "persoană fizică", "persoane fizice",
 ];
+
+const AGENCY_SIGNALS = [
+  "agentie", "agenție", "agency", "agent imobiliar", "consultant imobiliar",
+  "broker", "brokeraj", "reprezentant vanzari", "reprezentant vânzări",
+  "dezvoltator", "developer", "ansamblu rezidential", "ansamblu rezidențial",
+  "imobiliare srl", "real estate srl",
+];
+
+function removeDiacritics(text: string): string {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
 
@@ -365,8 +376,13 @@ function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" 
   // Do not count the original search keyword/source as an owner signal: generic
   // platform searches can contain appended owner filters while the returned row
   // itself is still a mixed search/category page.
-  const blob = `${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase();
-  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+  const blob = removeDiacritics(`${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase());
+  return OWNER_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
+}
+
+function hasAgencySignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" | "description" | "contact_name" | "agency_name">): boolean {
+  const blob = removeDiacritics(`${lead.title || ""} ${lead.url || ""} ${lead.admin_notes || ""} ${lead.description || ""} ${lead.contact_name || ""} ${lead.agency_name || ""}`.toLowerCase());
+  return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
 function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_name" | "admin_notes" | "description">): string {
