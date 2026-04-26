@@ -119,6 +119,11 @@ interface ProspectPhoneInfo {
   persisted: boolean;
 }
 
+interface VisibleProspectPhoneInfo extends ProspectPhoneInfo {
+  displayPhone: string;
+  masked: boolean;
+}
+
 function normalizeRoPhone(raw?: string | null): string | null {
   if (!raw) return null;
   if (raw.includes("...") || raw.includes("***")) return null;
@@ -179,7 +184,7 @@ function extractContactNameFromText(p: Pick<Prospect, "contact_name" | "admin_no
 
 function getVisibleProspectPhoneInfo(
   p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">
-): ProspectPhoneInfo | (Omit<ProspectPhoneInfo, "phone"> & { phone: string | null; displayPhone: string; masked: boolean }) | null {
+): VisibleProspectPhoneInfo | null {
   const full = getProspectPhoneInfo(p);
   if (full) return { ...full, displayPhone: full.phone, masked: false };
 
@@ -190,7 +195,7 @@ function getVisibleProspectPhoneInfo(
   ];
   for (const [source, value] of sources) {
     const displayPhone = extractVisiblePhoneFromText(value);
-    if (displayPhone) return { phone: null, displayPhone, source, persisted: false, masked: true };
+    if (displayPhone) return { phone: displayPhone, displayPhone, source, persisted: false, masked: true };
   }
   return null;
 }
