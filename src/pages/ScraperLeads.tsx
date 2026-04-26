@@ -593,8 +593,21 @@ const ScraperLeads = () => {
         _origin: "archive" as const,
       })) as (ScraperLead & { _prospect_type: string })[];
 
-      const blockedPhones = new Set(archiveLeads.filter((l) => l.prospect_category === "agentie" || l.status === "archived").map((l) => l.phone).filter(Boolean));
-      const blockedDomains = new Set(archiveLeads.filter((l) => l.prospect_category === "agentie" || l.status === "archived").map((l) => extractLeadDomain(l.url)).filter(Boolean));
+      const [{ data: blocklistData }, { data: archivedAgencyData }] = await Promise.all([
+        supabase.from("agency_blocklist").select("phone_normalized, domain"),
+        supabase
+          .from("scraper_leads_archive_2026" as any)
+          .select("phone, url")
+          .or("prospect_category.eq.agentie,status.eq.archived"),
+      ]);
+      const blockedPhones = new Set([
+        ...(blocklistData || []).map((r: any) => normalizeRoPhone(r.phone_normalized)).filter(Boolean),
+        ...(archivedAgencyData || []).map((l: any) => normalizeRoPhone(l.phone)).filter(Boolean),
+      ]);
+      const blockedDomains = new Set([
+        ...(blocklistData || []).map((r: any) => r.domain).filter(Boolean),
+        ...(archivedAgencyData || []).map((l: any) => extractLeadDomain(l.url)).filter(Boolean),
+      ]);
 
       const { data: prospectData, error: prospectError } = await supabase
         .from("prospect_listings" as any)
