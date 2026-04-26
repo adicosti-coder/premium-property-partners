@@ -67,6 +67,8 @@ interface ScraperLead {
   ai_insight?: any;
   description?: string | null;
   contact_name?: string | null;
+  location?: string | null;
+  zone?: string | null;
   _origin?: "archive" | "prospect";
 }
 
@@ -404,6 +406,43 @@ function getLeadContactName(lead: Pick<ScraperLead, "contact_name" | "agency_nam
   return match?.[1]?.trim() || "—";
 }
 
+function inferPropertySubtype(text: string): string | null {
+  const normalized = removeDiacritics(text.toLowerCase());
+  if (normalized.includes("garsonier") || normalized.includes("studio")) return "Garsonieră";
+  if (normalized.includes("casa") || normalized.includes("vila")) return "Casă / Vilă";
+  if (normalized.includes("teren")) return "Teren";
+  if (normalized.includes("apartament") || normalized.includes("camere")) return "Apartament";
+  return null;
+}
+
+function inferLocation(lead: ScraperLead): string {
+  const source = [lead.location, lead.zone, lead.neighborhood_slug, lead.search_keyword, lead.title].filter(Boolean).join(" ");
+  const normalized = removeDiacritics(source.toLowerCase());
+  const knownZones = [
+    ["Complex Studențesc", ["complex studentesc", "studentilor"]],
+    ["Circumvalațiunii", ["circumvalatiunii", "circumvalatiune"]],
+    ["Calea Aradului", ["aradului"]],
+    ["Calea Girocului", ["girocului"]],
+    ["Calea Șagului", ["sagului"]],
+    ["Calea Lipovei", ["lipovei"]],
+    ["Iulius Town", ["iulius", "openville"]],
+    ["Medicină", ["medicina", "umft"]],
+    ["Central", ["central", "centru", "unirii", "operei"]],
+  ] as const;
+  const zone = knownZones.find(([, signals]) => signals.some((signal) => normalized.includes(signal)))?.[0];
+  return zone ? `Timișoara, ${zone}` : "Timișoara";
+}
+
+function buildImportedDescription(lead: ScraperLead, cleanTitle: string, yieldValue?: string | null): string {
+  const parts = [
+    lead.description || lead.admin_notes || cleanTitle,
+    lead.lead_score ? `Scor lead: ${lead.lead_score}.` : null,
+    yieldValue ? `Randament estimat: ${yieldValue}%/an.` : null,
+    lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
+  ];
+  return parts.filter(Boolean).join("\n\n");
+}
+
 /**
  * Detects if a lead is a search/listing page (e.g. OLX category or query result page)
  * rather than an individual property ad. Used to hide noise from the leads table.
@@ -697,6 +736,8 @@ const ScraperLeads = () => {
           neighborhood_slug: p.zone || null,
           description: p.description,
           contact_name: p.contact_name,
+          location: p.location,
+          zone: p.zone,
           _prospect_type: "proprietar",
           _origin: "prospect" as const,
         })) as (ScraperLead & { _prospect_type: string })[];
@@ -1093,40 +1134,43 @@ const ScraperLeads = () => {
 
       const listingType = options?.listingType || deriveListingType(lead.title, lead.listing_type || "vanzare");
       const cleanTitle = cleanTitleStatic(lead.title);
-      const rooms = parseRooms(lead.title);
-      const size = parseSurface(lead.title);
+      const textBlob = `${lead.title || ""}\n${lead.description || ""}\n${lead.admin_notes || ""}`;
+      const rooms = parseRooms(textBlob);
+      const size = parseSurface(textBlob);
+      const floor = parseFloor(textBlob);
+      const yieldValue = getYield(lead);
       const pricePerSqm = listingType === "vanzare" && lead.original_price && size ? Math.round(lead.original_price / size) : null;
-      const description = [
-        lead.description || lead.admin_notes || "Anunț importat din scraping pentru verificare manuală.",
-        `Scor lead: ${lead.lead_score}.`,
-        getYield(lead) ? `Randament estimat: ${getYield(lead)}%/an.` : null,
-        lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
-        `Sursă: ${lead.url}`,
-      ].filter(Boolean).join("\n\n");
+      const description = buildImportedDescription(lead, cleanTitle, yieldValue);
+      const sourcePlatform = normalizePlatformLabel(lead.source);
+      const contactName = getLeadContactName(lead);
 
-      const { error } = await supabase.from("properties").insert({
+      const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: cleanTitle,
-        location: "Timișoara",
+        location: inferLocation(lead),
         description_ro: description,
         description_en: description,
-        features: ["importat-scraper", "necesită-verificare", `sursa-${normalizePlatformLabel(lead.source).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
+        features: ["importat-scraper", "necesită-verificare", `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
         booking_url: lead.url,
         tag: options?.activate ? "Importat scraper" : "Draft importat",
         is_active: Boolean(options?.activate),
         display_order: 999,
         status_operativ: listingType,
         listing_type: listingType,
-        capital_necesar: listingType === "vanzare" ? lead.original_price || null : null,
+        capital_necesar: lead.original_price || null,
         rooms,
         size,
+        bedrooms: rooms ? Math.max(1, rooms - 1) : null,
+        capacity: rooms ? Math.max(2, rooms * 2) : null,
+        floor: floor !== null ? String(floor) : null,
+        property_subtype: inferPropertySubtype(textBlob),
         price_per_sqm: pricePerSqm,
         estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
-        roi_percentage: getYield(lead) ? `${getYield(lead)}%` : null,
+        roi_percentage: yieldValue ? `${yieldValue}%` : null,
         contact_phone: lead.phone || null,
-        contact_name: getLeadContactName(lead) !== "—" ? getLeadContactName(lead) : null,
+        contact_name: contactName !== "—" ? contactName : null,
         source_url: lead.url,
-        source_platform: normalizePlatformLabel(lead.source),
-      } as any);
+        source_platform: sourcePlatform,
+      } as any).select("id,name").single();
 
       if (error) throw error;
 
@@ -1138,7 +1182,11 @@ const ScraperLeads = () => {
 
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       queryClient.invalidateQueries({ queryKey: ["scraper-imported-properties"] });
-      toast.success(options?.activate ? "Anunț importat și activat în Proprietăți." : "Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.");
+      toast.success(options?.activate ? "Anunț importat și activat în Proprietăți." : "Anunț importat ca draft în Proprietăți. Verifică-l înainte de publicare.", {
+        description: insertedProperty?.name || cleanTitle,
+        duration: 8000,
+        action: { label: "Vezi proprietăți", onClick: () => navigate("/admin?tab=properties") },
+      });
     } catch (error: any) {
       toast.error(`Eroare la import: ${error.message || "necunoscută"}`);
     } finally {
