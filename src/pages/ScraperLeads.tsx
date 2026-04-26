@@ -64,6 +64,9 @@ interface ScraperLead {
   follow_up_at?: string | null;
   snoozed_until?: string | null;
   ai_insight?: any;
+  description?: string | null;
+  contact_name?: string | null;
+  _origin?: "archive" | "prospect";
 }
 
 /**
@@ -335,6 +338,34 @@ function cleanTitleStatic(title: string) {
   return title.replace(/🏢|🏰/g, "").replace(/\|/g, "").replace(/\s{2,}/g, " ").trim();
 }
 
+const OWNER_SIGNALS = [
+  "proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar",
+  "fara comision", "fără comision", "fara intermediar", "privat", "privati",
+  "privați", "persoana fizica", "persoană fizică", "persoane fizice",
+];
+
+const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
+
+function normalizeRoPhone(raw?: string | null): string | null {
+  if (!raw || raw.includes("...") || raw.includes("***")) return null;
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("0040")) digits = digits.slice(2);
+  if (digits.startsWith("40") && digits.length === 11) return /^407[2-8]\d{7}$/.test(digits) ? `+${digits}` : null;
+  if (digits.startsWith("0") && digits.length === 10) return /^07[2-8]\d{7}$/.test(digits) ? `+4${digits}` : null;
+  if (digits.startsWith("7") && digits.length === 9) return /^7[2-8]\d{7}$/.test(digits) ? `+40${digits}` : null;
+  return null;
+}
+
+function extractPhoneFromText(text?: string | null): string | null {
+  return text?.match(PHONE_PATTERN)?.map(normalizeRoPhone).find(Boolean) ?? null;
+}
+
+function hasOwnerSignal(lead: Pick<ScraperLead, "title" | "url" | "admin_notes" | "search_keyword" | "source" | "prospect_category" | "description" | "contact_name">): boolean {
+  if (lead.prospect_category === "proprietar") return true;
+  const blob = `${lead.url || ""} ${lead.title || ""} ${lead.admin_notes || ""} ${lead.search_keyword || ""} ${lead.source || ""} ${lead.description || ""} ${lead.contact_name || ""}`.toLowerCase();
+  return OWNER_SIGNALS.some((signal) => blob.includes(signal));
+}
+
 /**
  * Detects if a lead is a search/listing page (e.g. OLX category or query result page)
  * rather than an individual property ad. Used to hide noise from the leads table.
@@ -528,18 +559,71 @@ const ScraperLeads = () => {
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ["scraper-leads"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: archiveData, error } = await supabase
         .from("scraper_leads_archive_2026" as any)
         .select("*")
         .not("status", "eq", "archived")
         .order("lead_score", { ascending: false });
       if (error) throw error;
-      return (data || []).map((d: any) => ({
+
+      const archiveLeads = (archiveData || []).map((d: any) => ({
         ...d,
+        phone: normalizeRoPhone(d.phone) || extractPhoneFromText(`${d.admin_notes || ""} ${d.title || ""}`),
         listing_type: deriveListingType(d.title, d.listing_type),
         tags: d.tags || [],
-        _prospect_type: d.prospect_category || deriveProspectType(d.title),
+        _prospect_type: d.prospect_category || (hasOwnerSignal(d) ? "proprietar" : deriveProspectType(d.title)),
+        _origin: "archive" as const,
       })) as (ScraperLead & { _prospect_type: string })[];
+
+      const { data: prospectData, error: prospectError } = await supabase
+        .from("prospect_listings" as any)
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,scraped_at,created_at,search_keywords")
+        .eq("is_active", true)
+        .order("scraped_at", { ascending: false })
+        .limit(300);
+      if (prospectError) throw prospectError;
+
+      const archiveUrls = new Set(archiveLeads.map((l) => l.url).filter(Boolean));
+      const prospectLeads = ((prospectData || []) as any[])
+        .filter((p) => hasOwnerSignal({
+          title: p.title,
+          url: p.source_url,
+          admin_notes: p.admin_notes,
+          search_keyword: Array.isArray(p.search_keywords) ? p.search_keywords.join(" ") : null,
+          source: p.source_platform,
+          prospect_category: p.prospect_type,
+          description: p.description,
+          contact_name: p.contact_name,
+        }))
+        .filter((p) => !archiveUrls.has(p.source_url))
+        .map((p) => ({
+          id: p.id,
+          title: p.title || "Anunț fără titlu",
+          original_price: Number(p.price || 0),
+          extra_profit_3y: 0,
+          monthly_extra: 0,
+          lead_score: Number(p.lead_score ?? p.score ?? 0),
+          whatsapp_message: null,
+          url: p.source_url || "",
+          status: p.lifecycle_status || "new",
+          created_at: p.scraped_at || p.created_at,
+          updated_at: p.created_at,
+          listing_type: deriveListingType(`${p.title || ""} ${p.category || ""}`, p.category === "inchiriere" ? "inchiriere" : "vanzare"),
+          admin_notes: p.admin_notes,
+          tags: [],
+          source: p.source_platform || "General",
+          phone: normalizeRoPhone(p.phone_normalized || p.contact_phone) || extractPhoneFromText(`${p.admin_notes || ""} ${p.description || ""} ${p.title || ""}`),
+          prospect_category: p.prospect_type || "proprietar",
+          search_keyword: Array.isArray(p.search_keywords) ? p.search_keywords.join(", ") : null,
+          agency_name: null,
+          neighborhood_slug: p.zone || null,
+          description: p.description,
+          contact_name: p.contact_name,
+          _prospect_type: "proprietar",
+          _origin: "prospect" as const,
+        })) as (ScraperLead & { _prospect_type: string })[];
+
+      return [...archiveLeads, ...prospectLeads];
     },
     staleTime: 1000 * 60 * 2,
   });
@@ -622,7 +706,7 @@ const ScraperLeads = () => {
     }
     // Hide search/listing pages (not individual ads) — show only real listings
     if (hideSearchPages) {
-      result = result.filter((l) => !isSearchPageLead(l.url, l.title));
+      result = result.filter((l) => !isSearchPageLead(l.url, l.title) || hasOwnerSignal(l));
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
@@ -644,7 +728,7 @@ const ScraperLeads = () => {
           l._prospect_type !== "dezvoltator" &&
           l.prospect_category !== "agentie" &&
           l.prospect_category !== "dezvoltator" &&
-          !looksLikeAgency(l)
+          (hasOwnerSignal(l) || !looksLikeAgency(l))
       );
     }
 
