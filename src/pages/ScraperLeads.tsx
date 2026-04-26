@@ -447,7 +447,7 @@ const ScraperLeads = () => {
   const [filterType, setFilterType] = useState<string>("all");
   const [isScraping, setIsScraping] = useState(false);
   const [activeScanMode, setActiveScanMode] = useState<"scan" | "rescan" | null>(null);
-  const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number } | null>(null);
+  const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number; duplicate_skipped?: number; existing_sources_checked?: number } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
@@ -1258,6 +1258,8 @@ const ScraperLeads = () => {
         count: data?.new_listings || data?.count || 0,
         blacklisted_skipped: data?.blacklisted_skipped || 0,
         archived_skipped: data?.archived_skipped || 0,
+        duplicate_skipped: data?.duplicate_skipped || 0,
+        existing_sources_checked: data?.existing_sources_checked || 0,
       };
       setLastIngestResult(result);
       // Persist scan log
