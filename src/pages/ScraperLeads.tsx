@@ -2904,9 +2904,19 @@ const ScraperLeads = () => {
                     <span className="text-emerald-500">+{formatPrice(lead.monthly_extra)}/lună</span>
                     <span className="text-amber-400">+{formatPrice(lead.extra_profit_3y)} 3Y</span>
                   </div>
-                  <div className="grid grid-cols-5 gap-1.5">
+                  <div className="grid grid-cols-6 gap-1.5">
                     <Button
                       size="sm"
+                      className="col-span-2 h-8 text-xs"
+                      onClick={(e) => { e.stopPropagation(); importLeadAsListing(lead); }}
+                      disabled={importingLeadId === lead.id}
+                    >
+                      {importingLeadId === lead.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Database className="h-3 w-3 mr-1" />}
+                      Importă
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="col-span-2 h-8 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
