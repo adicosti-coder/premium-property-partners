@@ -433,11 +433,11 @@ function inferLocation(lead: ScraperLead): string {
   return zone ? `Timișoara, ${zone}` : "Timișoara";
 }
 
-function buildImportedDescription(lead: ScraperLead, cleanTitle: string): string {
+function buildImportedDescription(lead: ScraperLead, cleanTitle: string, yieldValue?: string | null): string {
   const parts = [
     lead.description || lead.admin_notes || cleanTitle,
     lead.lead_score ? `Scor lead: ${lead.lead_score}.` : null,
-    getYield(lead) ? `Randament estimat: ${getYield(lead)}%/an.` : null,
+    yieldValue ? `Randament estimat: ${yieldValue}%/an.` : null,
     lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
   ];
   return parts.filter(Boolean).join("\n\n");
