@@ -1053,9 +1053,7 @@ const ScraperLeads = () => {
   // ── Mark lead as Agency: blocklist (phone+domain) + archive ─────────
   const handleMarkAsAgency = async (lead: ScraperLead) => {
     const url = lead.url || "";
-    const domain = url
-      ? url.replace(/^https?:\/\//i, "").split("/")[0].replace(/^www\./i, "").toLowerCase() || null
-      : null;
+    const domain = extractLeadDomain(url);
     const phone = lead.phone || null;
 
     if (!phone && !domain) {
@@ -1106,11 +1104,26 @@ const ScraperLeads = () => {
       }
     }
 
-    // Update lead: prospect_category=agentie + archive
-    const { error: updErr } = await supabase
-      .from("scraper_leads_archive_2026" as any)
-      .update({ prospect_category: "agentie", status: "archived" } as any)
-      .eq("id", lead.id);
+    // Update lead in its real source, then mirror by URL/phone so it cannot reappear from the merged source.
+    const { error: updErr } = lead._origin === "prospect"
+      ? await supabase
+          .from("prospect_listings" as any)
+          .update({ prospect_type: "agentie", is_active: false, auto_blacklisted_at: new Date().toISOString(), auto_blacklist_reason: "Manual scraper-leads" } as any)
+          .eq("id", lead.id)
+      : await supabase
+          .from("scraper_leads_archive_2026" as any)
+          .update({ prospect_category: "agentie", status: "archived" } as any)
+          .eq("id", lead.id);
+
+    const mirrorUpdates: Promise<any>[] = [];
+    if (url) {
+      mirrorUpdates.push(supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: "agentie", status: "archived" } as any).eq("url", url));
+      mirrorUpdates.push(supabase.from("prospect_listings" as any).update({ prospect_type: "agentie", is_active: false, auto_blacklisted_at: new Date().toISOString(), auto_blacklist_reason: "Manual scraper-leads" } as any).eq("source_url", url));
+    }
+    if (phone) {
+      mirrorUpdates.push(supabase.from("prospect_listings" as any).update({ prospect_type: "agentie", is_active: false, auto_blacklisted_at: new Date().toISOString(), auto_blacklist_reason: "Manual scraper-leads" } as any).eq("phone_normalized", phone));
+    }
+    await Promise.allSettled(mirrorUpdates);
 
     if (updErr) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
@@ -1132,6 +1145,7 @@ const ScraperLeads = () => {
       toast.success(`🏢 Marcat agenție: ${added}. Lead arhivat.`);
     }
     queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
   };
   const handleArchive = async (leadId: string) => {
     queryClient.setQueryData(["scraper-leads"], (old: any) =>
