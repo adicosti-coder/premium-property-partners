@@ -430,6 +430,13 @@ function extractImportedSpecs(text: string) {
   const hasCellar = /\b(boxa|pivnita|pivniță|beci)\b/.test(normalized) ? true : null;
   const parking = /\b(parcare|loc de parcare|garaj)\b/.test(normalized) ? "Da" : null;
   const furnished = /\b(mobilat|mobilata|mobilată|utilat|utilata|utilată)\b/.test(normalized) ? "Mobilat/utilat" : null;
+  const constructionType = /\b(caramida|cărămidă|brick)\b/.test(normalized) ? "Cărămidă" : /\b(beton|bca)\b/.test(normalized) ? "Beton/BCA" : null;
+  const heatingType = /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : /termoficare|colterm/.test(normalized) ? "Termoficare" : null;
+  const propertyCondition = /\b(nou|noua|nouă|prima inchiriere|prima închiriere)\b/.test(normalized) ? "Nou / prima utilizare" : /\b(renovat|renovata|renovată)\b/.test(normalized) ? "Renovat" : null;
+  const compartimentare = /decomandat/.test(normalized) ? "Decomandat" : /semidecomandat/.test(normalized) ? "Semidecomandat" : /nedecomandat|open space/.test(normalized) ? "Nedecomandat / open-space" : null;
+  const monthlyMaintenance = text.match(/(?:intretinere|întreținere|cheltuieli)\D{0,16}(\d+(?:[.,]\d+)?)\s*(?:lei|ron|€|eur)/i)?.[1]?.replace(",", ".");
+  const energyClass = text.match(/(?:clasa energetica|clasă energetică|certificat energetic)\D{0,8}([A-G])/i)?.[1]?.toUpperCase() || null;
+  const viewType = /\b(vedere panoramica|vedere panoramică|panoramic)\b/.test(normalized) ? "Panoramică" : /\b(vedere parc|parc)\b/.test(normalized) ? "Parc" : null;
   const orientation = text.match(/orientare\s*[:\-]?\s*([A-Za-zĂÂÎȘȚăâîșț\- ]{3,24})/i)?.[1]?.trim() || null;
   const comfortLevel = normalized.match(/confort\s*(lux|1|2|3|i|ii|iii)/)?.[1]?.replace("i", "1") || null;
   const terrace = text.match(/(?:terasa|terasă)\D{0,12}(\d+(?:[.,]\d+)?)\s*(?:mp|m2)/i)?.[1]?.replace(",", ".");
@@ -457,6 +464,13 @@ function extractImportedSpecs(text: string) {
     orientation,
     comfort_level: comfortLevel,
     terrace_area: terrace ? Number(terrace) : null,
+    construction_type: constructionType,
+    heating_type: heatingType,
+    property_condition: propertyCondition,
+    compartimentare,
+    monthly_maintenance: monthlyMaintenance ? Number(monthlyMaintenance) : null,
+    energy_class: energyClass,
+    view_type: viewType,
     amenities,
   };
 }
@@ -1246,6 +1260,13 @@ const ScraperLeads = () => {
         furnished: specs.furnished,
         orientation: specs.orientation,
         comfort_level: specs.comfort_level,
+        construction_type: specs.construction_type,
+        heating_type: specs.heating_type,
+        property_condition: specs.property_condition,
+        compartimentare: specs.compartimentare,
+        monthly_maintenance: specs.monthly_maintenance,
+        energy_class: specs.energy_class,
+        view_type: specs.view_type,
         destination: "Rezidențial",
         price_per_sqm: pricePerSqm,
         estimated_revenue: estimatedRevenue,
