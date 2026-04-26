@@ -1349,7 +1349,8 @@ const ProspectListings = () => {
                   ) : filtered.map((p) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
-                    const phone = getProspectPhone(p);
+                    const phoneInfo = getProspectPhoneInfo(p);
+                    const phone = phoneInfo?.phone ?? null;
                     const sentiment = p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment;
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
@@ -1456,10 +1457,18 @@ const ProspectListings = () => {
                               </button>
                             )}
                           </div>
-                          {phone && (
+                          {phone ? (
                             <a href={`tel:${phone}`} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline">
                               <Phone className="h-3 w-3" />
                               {phone}
+                              {phoneInfo && !phoneInfo.persisted && (
+                                <span
+                                  className="text-[9px] px-1 py-0 rounded bg-muted text-muted-foreground"
+                                  title={`Telefon extras din ${phoneInfo.source === "admin_notes" ? "note" : phoneInfo.source === "description" ? "descriere" : "titlu"}`}
+                                >
+                                  extras
+                                </span>
+                              )}
                               {p.phoneCount > 1 && (
                                 <span
                                   className={`text-[9px] px-1 py-0 rounded ${
@@ -1473,6 +1482,11 @@ const ProspectListings = () => {
                                 </span>
                               )}
                             </a>
+                          ) : (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Fără telefon
+                            </div>
                           )}
                           <Button
                             type="button"
