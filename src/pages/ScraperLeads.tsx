@@ -1269,13 +1269,14 @@ const ScraperLeads = () => {
         archived_skipped: result.archived_skipped,
         total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
       } as any);
-      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} anunțuri noi găsite.`);
+      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} noi · ${result.duplicate_skipped} duplicate · ${result.blacklisted_skipped} agenții blocate.`);
       // Force full data refresh
       await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
       await queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
       await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
       await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
+      await queryClient.invalidateQueries({ queryKey: ["scraper-search-keywords"] });
     } catch (err: any) {
       toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
     } finally {
