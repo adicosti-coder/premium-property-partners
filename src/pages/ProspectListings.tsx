@@ -190,6 +190,7 @@ function getVisibleProspectPhoneInfo(
   if (full) return { ...full, displayPhone: full.phone, masked: false };
 
   const sources: Array<[ProspectPhoneSource, string | null | undefined]> = [
+    ["phone_normalized", p.phone_normalized],
     ["contact_phone", p.contact_phone],
     ["admin_notes", p.admin_notes],
     ["description", p.description],
