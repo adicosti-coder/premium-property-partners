@@ -1134,39 +1134,42 @@ const ScraperLeads = () => {
 
       const listingType = options?.listingType || deriveListingType(lead.title, lead.listing_type || "vanzare");
       const cleanTitle = cleanTitleStatic(lead.title);
-      const rooms = parseRooms(lead.title);
-      const size = parseSurface(lead.title);
+      const textBlob = `${lead.title || ""}\n${lead.description || ""}\n${lead.admin_notes || ""}`;
+      const rooms = parseRooms(textBlob);
+      const size = parseSurface(textBlob);
+      const floor = parseFloor(textBlob);
+      const yieldValue = getYield(lead);
       const pricePerSqm = listingType === "vanzare" && lead.original_price && size ? Math.round(lead.original_price / size) : null;
-      const description = [
-        lead.description || lead.admin_notes || "Anunț importat din scraping pentru verificare manuală.",
-        `Scor lead: ${lead.lead_score}.`,
-        getYield(lead) ? `Randament estimat: ${getYield(lead)}%/an.` : null,
-        lead.extra_profit_3y ? `Profit extra estimat 3 ani: ${lead.extra_profit_3y}€.` : null,
-        `Sursă: ${lead.url}`,
-      ].filter(Boolean).join("\n\n");
+      const description = buildImportedDescription(lead, cleanTitle, yieldValue);
+      const sourcePlatform = normalizePlatformLabel(lead.source);
+      const contactName = getLeadContactName(lead);
 
       const { error } = await supabase.from("properties").insert({
         name: cleanTitle,
-        location: "Timișoara",
+        location: inferLocation(lead),
         description_ro: description,
         description_en: description,
-        features: ["importat-scraper", "necesită-verificare", `sursa-${normalizePlatformLabel(lead.source).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
+        features: ["importat-scraper", "necesită-verificare", `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`],
         booking_url: lead.url,
         tag: options?.activate ? "Importat scraper" : "Draft importat",
         is_active: Boolean(options?.activate),
         display_order: 999,
         status_operativ: listingType,
         listing_type: listingType,
-        capital_necesar: listingType === "vanzare" ? lead.original_price || null : null,
+        capital_necesar: lead.original_price || null,
         rooms,
         size,
+        bedrooms: rooms ? Math.max(1, rooms - 1) : null,
+        capacity: rooms ? Math.max(2, rooms * 2) : null,
+        floor: floor !== null ? String(floor) : null,
+        property_subtype: inferPropertySubtype(textBlob),
         price_per_sqm: pricePerSqm,
         estimated_revenue: lead.monthly_extra ? `${lead.monthly_extra}€/lună extra estimat` : null,
-        roi_percentage: getYield(lead) ? `${getYield(lead)}%` : null,
+        roi_percentage: yieldValue ? `${yieldValue}%` : null,
         contact_phone: lead.phone || null,
-        contact_name: getLeadContactName(lead) !== "—" ? getLeadContactName(lead) : null,
+        contact_name: contactName !== "—" ? contactName : null,
         source_url: lead.url,
-        source_platform: normalizePlatformLabel(lead.source),
+        source_platform: sourcePlatform,
       } as any);
 
       if (error) throw error;
