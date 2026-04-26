@@ -108,25 +108,52 @@ interface Prospect {
   auto_blacklist_reason: string | null;
 }
 
-const PHONE_PATTERN = /(?:\+?4?0|0)\s*7(?:[\s.-]*\d){8}\b/g;
+const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*7[2-8](?:[\s().-]*\d){7}\b/g;
+
+type ProspectPhoneSource = "phone_normalized" | "contact_phone" | "admin_notes" | "description" | "title";
+
+interface ProspectPhoneInfo {
+  phone: string;
+  source: ProspectPhoneSource;
+  persisted: boolean;
+}
 
 function normalizeRoPhone(raw?: string | null): string | null {
   if (!raw) return null;
-  const cleaned = raw.replace(/[^\d+]/g, "");
-  if (!cleaned || cleaned.includes("...")) return null;
-  if (cleaned.startsWith("+")) return cleaned;
-  if (cleaned.startsWith("40")) return `+${cleaned}`;
-  if (cleaned.startsWith("0")) return `+4${cleaned}`;
-  return cleaned.startsWith("7") && cleaned.length === 9 ? `+40${cleaned}` : cleaned;
+  if (raw.includes("...") || raw.includes("***")) return null;
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("0040")) digits = digits.slice(2);
+  if (digits.startsWith("40") && digits.length === 11) return /^407[2-8]\d{7}$/.test(digits) ? `+${digits}` : null;
+  if (digits.startsWith("0") && digits.length === 10) return /^07[2-8]\d{7}$/.test(digits) ? `+4${digits}` : null;
+  if (digits.startsWith("7") && digits.length === 9) return /^7[2-8]\d{7}$/.test(digits) ? `+40${digits}` : null;
+  return null;
 }
 
-function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes">): string | null {
-  const direct = normalizeRoPhone(p.phone_normalized || p.contact_phone);
-  if (direct) return direct;
+function extractPhoneFromText(text?: string | null): string | null {
+  return text?.match(PHONE_PATTERN)?.map(normalizeRoPhone).find(Boolean) ?? null;
+}
 
-  const blob = `${p.description || ""} ${p.admin_notes || ""}`;
-  const match = blob.match(PHONE_PATTERN)?.find((value) => !value.includes("..."));
-  return normalizeRoPhone(match || null);
+function getProspectPhoneInfo(
+  p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">
+): ProspectPhoneInfo | null {
+  const sources: Array<[ProspectPhoneSource, string | null | undefined, boolean]> = [
+    ["phone_normalized", p.phone_normalized, true],
+    ["contact_phone", p.contact_phone, true],
+    ["admin_notes", p.admin_notes, false],
+    ["description", p.description, false],
+    ["title", p.title, false],
+  ];
+
+  for (const [source, value, persisted] of sources) {
+    const phone = persisted ? normalizeRoPhone(value) : extractPhoneFromText(value);
+    if (phone) return { phone, source, persisted };
+  }
+
+  return null;
+}
+
+function getProspectPhone(p: Pick<Prospect, "phone_normalized" | "contact_phone" | "description" | "admin_notes" | "title">): string | null {
+  return getProspectPhoneInfo(p)?.phone ?? null;
 }
 
 const sentimentEmoji: Record<string, string> = {
