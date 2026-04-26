@@ -770,18 +770,6 @@ const ScraperLeads = () => {
     }
     // Global rule: keep only owner / private-person leads (hide agencies & developers)
     if (hideAgencies) {
-      // Keyword-level exclusions: anything that looks like agency/broker copy.
-      const AGENCY_KEYWORDS = [
-        "agentie", "agenție", "agency", "agent imobiliar",
-        "broker", "brokeraj",
-        "comision", "comision 0", "fara comision", "fără comision",
-        "dezvoltator", "developer",
-        "imobiliare srl", "real estate srl",
-      ];
-      const looksLikeAgency = (l: typeof result[number]) => {
-        const blob = `${l.title || ""} ${l.url || ""}`.toLowerCase();
-        return AGENCY_KEYWORDS.some((k) => blob.includes(k));
-      };
       result = result.filter(
         (l) =>
           l._prospect_type !== "agentie" &&
@@ -789,7 +777,7 @@ const ScraperLeads = () => {
           l.prospect_category !== "agentie" &&
           l.prospect_category !== "dezvoltator" &&
           hasOwnerSignal(l) &&
-          !looksLikeAgency(l)
+          !hasAgencySignal(l)
       );
     }
 
