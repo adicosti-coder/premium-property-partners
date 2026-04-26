@@ -945,7 +945,7 @@ const ProspectListings = () => {
       p.urgency_level ?? p.ai_score_breakdown?.urgency_level ?? "",
       (p.title || "").replace(/"/g, '""'),
       p.category ?? "",
-      p.phone_normalized || p.contact_phone || "",
+      getProspectPhone(p) || "",
       (p.contact_name || "").replace(/"/g, '""'),
       p.location ?? "",
       p.zone ?? "",
@@ -1322,7 +1322,7 @@ const ProspectListings = () => {
                   ) : filtered.map((p) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
-                    const phone = p.phone_normalized || p.contact_phone;
+                    const phone = getProspectPhone(p);
                     const sentiment = p.owner_sentiment ?? p.ai_score_breakdown?.owner_sentiment;
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
@@ -1430,7 +1430,8 @@ const ProspectListings = () => {
                             )}
                           </div>
                           {phone && (
-                            <div className="text-xs text-muted-foreground font-mono flex items-center gap-1">
+                            <a href={`tel:${phone}`} className="text-xs text-primary font-mono flex items-center gap-1 hover:underline">
+                              <Phone className="h-3 w-3" />
                               {phone}
                               {p.phoneCount > 1 && (
                                 <span
@@ -1444,7 +1445,7 @@ const ProspectListings = () => {
                                   ×{p.phoneCount}
                                 </span>
                               )}
-                            </div>
+                            </a>
                           )}
                           <Button
                             type="button"
