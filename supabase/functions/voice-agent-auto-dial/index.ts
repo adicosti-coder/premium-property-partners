@@ -84,6 +84,28 @@ async function postToMakeWebhook(prospect: any, reason: string) {
   }
 }
 
+const NOISE_URL_PATTERNS = [
+  "/imobiliare/q-", "/imobiliare/timisoara/q-", "/imobiliare/apartamente",
+  "/ro/rezultate/", "/ro/companii/", "/oferte/q-",
+  "/vanzare-imobiliare/", "/vanzare-apartamente/", "/vanzare-penthouses/",
+  "/inchiriere-imobiliare/", "/inchirieri-apartamente",
+  "/anunturi/imobiliare/de-vanzare/", "/anunturi/imobiliare/de-inchiriat/",
+];
+
+const DETAIL_URL_PATTERNS = ["/d/oferta/", "/anunt/", "/anunturi/", "/oferta/", "/proprietate/", "/property/"];
+const GENERIC_SEARCH_TITLE_PATTERNS = ["anunturi gratuite", "anunțuri gratuite", "olx.ro", "rezultate cautare", "rezultate căutare", "apartamente de vanzare", "apartamente de vânzare", "apartamente de inchiriat", "apartamente de închiriat", "imobiliare timisoara", "imobiliare timișoara", "cautare", "căutare"];
+
+function isGenericSearchProspect(prospect: any): boolean {
+  const url = String(prospect?.source_url || "").toLowerCase();
+  const title = String(prospect?.title || "").toLowerCase();
+  const contact = String(prospect?.contact_name || "").trim();
+  if (DETAIL_URL_PATTERNS.some((pattern) => url.includes(pattern))) return false;
+  if (NOISE_URL_PATTERNS.some((pattern) => url.includes(pattern))) return true;
+  const genericTitle = GENERIC_SEARCH_TITLE_PATTERNS.some((pattern) => title.includes(pattern));
+  const noRealContact = !contact || contact === "—" || contact === "-";
+  return genericTitle && noRealContact;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -159,6 +181,16 @@ serve(async (req) => {
 
     if (!prospect) {
       return jsonResp({ skipped: "no eligible prospect" });
+    }
+
+    if (isGenericSearchProspect(prospect)) {
+      await supabase.from("prospect_listings").update({
+        prospect_type: "agentie",
+        lifecycle_status: "failed",
+        last_failure_reason: "generic_search_page_not_callable",
+        admin_notes: `Auto-dial blocat: intrare de tip căutare generică, nu anunț apelabil.`,
+      }).eq("id", prospect.id);
+      return jsonResp({ skipped: "generic_search_page_not_callable", prospect_id: prospect.id });
     }
 
     // ── If Twilio missing → mark pending_credentials, alert admins, fire MAKE webhook ──
