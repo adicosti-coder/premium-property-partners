@@ -2555,11 +2555,9 @@ const ScraperLeads = () => {
                               </span>
                             </div>
                             <span className="truncate flex items-center gap-1">{isPremiumLead(lead.title) && <span title="Ansamblu Premium">✨</span>}{cleanTitleStatic(lead.title)}</span>
-                            {lead.phone && (
-                              <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
-                                <Phone className="w-3 h-3" /> {lead.phone}
-                              </span>
-                            )}
+                            <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                              <Phone className="w-3 h-3" /> {lead.phone || "Fără telefon"} · {getLeadContactName(lead)}
+                            </span>
                             <div className="flex gap-1 flex-wrap items-center">
                               <Select
                                 value={(lead as any)._prospect_type || "proprietar"}
