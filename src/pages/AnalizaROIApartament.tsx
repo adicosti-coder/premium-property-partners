@@ -66,6 +66,8 @@ const AnalizaROIApartament = () => {
   const [occupancy, setOccupancy] = useState(75);
   const [annualGrowth, setAnnualGrowth] = useState(6);
 
+  useRegisterFAQs("analiza-roi-apartament", faqItems);
+
   const calculations = useMemo(() => {
     const classicAnnual = monthlyRent * 12;
     const hotelGross = nightlyRate * 365 * (occupancy / 100);
@@ -107,11 +109,24 @@ const AnalizaROIApartament = () => {
         url="https://www.realtrust.ro/analiza-roi-apartament"
         jsonLd={{
           "@context": "https://schema.org",
-          "@type": "FinancialProduct",
-          name: "Analiza ROI Apartament România",
-          description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
-          url: "https://www.realtrust.ro/analiza-roi-apartament",
-          provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
+          "@graph": [
+            {
+              "@type": "FinancialProduct",
+              name: "Analiza ROI Apartament România",
+              description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
+              url: "https://www.realtrust.ro/analiza-roi-apartament",
+              provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
+            },
+            {
+              "@type": "HowTo",
+              name: "Cum analizezi profitul unui apartament",
+              step: [
+                { "@type": "HowToStep", name: "Introdu prețul de achiziție" },
+                { "@type": "HowToStep", name: "Compară chiria clasică cu regimul hotelier" },
+                { "@type": "HowToStep", name: "Verifică evoluția prețului și complexele potrivite" },
+              ],
+            },
+          ],
         }}
       />
       <Header />
