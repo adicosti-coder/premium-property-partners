@@ -44,6 +44,7 @@ const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 import VerifiedReviewsBadges from "@/components/VerifiedReviewsBadges";
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
+const HomeRecommendedLinks = lazy(() => import("@/components/home/HomeRecommendedLinks"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -100,6 +101,7 @@ const TeaserSections = () => (
       <PreCalcMiniForm source="homepage_owners_teaser" />
       <DIYvsProfessional />
       <ROICaseStudySection />
+      <HomeRecommendedLinks />
       <section id="oaspeti-preview">
         <GuestsTeaser />
       </section>
