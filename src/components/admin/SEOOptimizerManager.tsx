@@ -35,6 +35,7 @@ const QUICK_URLS = [
   "https://www.realtrust.ro/imobiliare",
   "https://www.realtrust.ro/imobiliare-timisoara",
   "https://www.realtrust.ro/calculator-roi",
+  "https://www.realtrust.ro/analiza-roi-apartament",
   "https://www.realtrust.ro/piata-imobiliara-timisoara",
   // Cartiere prioritare (NeighborhoodDetail)
   "https://www.realtrust.ro/imobiliare-timisoara/isho",

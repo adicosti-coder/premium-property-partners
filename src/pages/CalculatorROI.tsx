@@ -118,6 +118,7 @@ const CalculatorROI = () => {
                 <p className="mt-2 text-muted-foreground">Compară rezultatul cu oportunitățile active sau trimite proprietatea pentru o estimare personalizată RealTrust.</p>
               </div>
               <div className="flex flex-wrap gap-3">
+                <Link to="/analiza-roi-apartament" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Analiza ROI Apartament</Link>
                 <Link to="/catalog-investitii" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Catalog Investiții</Link>
                 <Link to="/pentru-proprietari" className="inline-flex min-h-12 items-center rounded-md border border-input bg-background px-5 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground">Contact Proprietari</Link>
               </div>
