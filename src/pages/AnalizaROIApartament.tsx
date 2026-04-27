@@ -276,6 +276,20 @@ const AnalizaROIApartament = () => {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6 border-primary/20 bg-background">
+            <CardContent className="grid gap-6 p-6 md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-8 border-primary/20 bg-primary/10">
+                <span className="text-3xl font-bold text-primary">{calculations.investmentScore}</span>
+              </div>
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-primary"><Gauge className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scor investițional</span></div>
+                <h2 className="text-2xl font-bold text-foreground">Profil {calculations.scoreLabel} pentru investiție imobiliară</h2>
+                <p className="mt-2 text-muted-foreground">Scorul combină ROI net, ocupare estimată, aprecierea anuală și diferența față de chiria clasică pentru o decizie mai rapidă.</p>
+              </div>
+              <Button asChild variant="outline"><Link to="/evaluare-gratuita">Cere validare RealTrust</Link></Button>
+            </CardContent>
+          </Card>
         </section>
 
         <section className="border-y border-border bg-background py-14 md:py-20">
