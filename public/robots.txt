@@ -18,4 +18,4 @@ Disallow: /unsubscribe
 # Allow guest guides for SEO (unique per booking)
 Allow: /guide/
 
-Sitemap: https://www.realtrust.ro/sitemap.xml
+Sitemap: https://realtrust.ro/sitemap.xml

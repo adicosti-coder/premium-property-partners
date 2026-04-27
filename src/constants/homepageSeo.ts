@@ -26,6 +26,6 @@ export const HOMEPAGE_SEO = {
   },
 } as const;
 
-export const HOMEPAGE_CANONICAL = "https://www.realtrust.ro/";
+export const HOMEPAGE_CANONICAL = "https://realtrust.ro/";
 
 export type HomepageSeoLang = keyof typeof HOMEPAGE_SEO;
