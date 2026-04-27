@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowRight, Building2, Calculator, CheckCircle2, HelpCircle, Home, Landmark, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -50,6 +50,19 @@ const scenarioCards = [
   { title: "Conservator", occupancy: "62%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
   { title: "RealTrust standard", occupancy: "75%", adr: "68–82€", roi: "9.0–9.8%", note: "modelul de lucru recomandat pentru randament stabil" },
   { title: "Premium complex", occupancy: "80%+", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+];
+
+const investorChecklist = [
+  "Verifică randamentul net, nu doar chiria brută estimată",
+  "Compară cererea de închiriere clasică vs. regim hotelier în zonă",
+  "Include costurile de mobilare, mentenanță, taxe și perioade fără ocupare",
+  "Analizează lichiditatea complexului: acces, parcări, servicii și reputație",
+];
+
+const riskSignals = [
+  { title: "Preț peste media zonei", text: "Un discount mic la achiziție poate reduce ani întregi de profit net." },
+  { title: "Fără diferențiator pentru oaspeți", text: "Apartamentele greu de poziționat au ocupare mai volatilă și tarife mai mici." },
+  { title: "Costuri operaționale ignorate", text: "Curățenia, mentenanța și taxele trebuie scăzute înainte de a comunica ROI-ul." },
 ];
 
 const faqItems = [
@@ -248,6 +261,42 @@ const AnalizaROIApartament = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-background py-14 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+              <div>
+                <div className="mb-3 flex items-center gap-2 text-primary"><ClipboardCheck className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Due diligence investitor</span></div>
+                <h2 className="text-3xl font-bold text-foreground">Checklist înainte de achiziția unui apartament pentru profit</h2>
+                <p className="mt-3 text-muted-foreground">O analiză corectă nu se oprește la preț și chirie. Pentru randament investiții imobiliare sustenabil, modelăm venitul net, riscurile operaționale și potențialul de revânzare.</p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Button asChild><Link to="/catalog-investitii">Catalog Investiții <ArrowRight className="h-4 w-4" /></Link></Button>
+                  <Button asChild variant="outline"><Link to="/pentru-proprietari">Contact Proprietari</Link></Button>
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card className="border-primary/20 bg-primary/5 md:row-span-2">
+                  <CardContent className="p-6">
+                    <PieChart className="mb-4 h-8 w-8 text-primary" />
+                    <h3 className="text-xl font-semibold text-foreground">Ce verificăm în analiza RealTrust</h3>
+                    <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
+                      {investorChecklist.map((item) => <li key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{item}</span></li>)}
+                    </ul>
+                  </CardContent>
+                </Card>
+                {riskSignals.map((risk) => (
+                  <Card key={risk.title}>
+                    <CardContent className="p-5">
+                      <AlertTriangle className="mb-3 h-6 w-6 text-primary" />
+                      <h3 className="font-semibold text-foreground">{risk.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{risk.text}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
