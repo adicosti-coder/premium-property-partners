@@ -1242,6 +1242,8 @@ const ScraperLeads = () => {
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
       const specs = extractImportedSpecs(textBlob);
+      const hasRenovationSignal = specs.risk_flags.includes("necesită-renovare") || workflow === "renovation";
+      const hasLegalRisk = specs.risk_flags.includes("risc-juridic") || specs.risk_flags.includes("verifică-acte") || workflow === "legal-review";
       const needsMediaReview = workflow === "media-needed" || (!lead.description && !lead.admin_notes) || !size || !lead.phone;
       const isPriorityContact = workflow === "owner-contact" || (lead.lead_score >= 85 && Boolean(lead.phone));
       const internalChecklist = [
@@ -1250,6 +1252,9 @@ const ScraperLeads = () => {
         !rooms ? "completează-camere" : null,
         !lead.phone ? "găsește-telefon" : null,
         needsMediaReview ? "atașează-poze" : null,
+        hasLegalRisk ? "verifică-acte-proprietate" : null,
+        hasRenovationSignal ? "estimează-buget-renovare" : null,
+        specs.monthly_maintenance ? "confirmă-întreținere" : null,
         workflow === "seo-ready" ? "optimizează-seo" : null,
         workflow === "investment" ? "calculează-roi-final" : null,
         workflow === "hospitality" ? "verifică-regim-hotelier" : null,
@@ -1263,9 +1268,12 @@ const ScraperLeads = () => {
         lead.lead_score >= 90 ? "lead-premium" : null,
         isPremiumLead(lead.title) ? "zonă-premium" : null,
         isPriorityContact ? "contact-prioritar" : null,
+        hasLegalRisk ? "atenție-juridic" : null,
+        hasRenovationSignal ? "potențial-flip" : null,
         lead.phone ? "contact-disponibil" : "verifică-telefon",
         `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
+        ...specs.risk_flags,
       ].filter(Boolean) as string[];
       const tag = options?.activate ? "Importat scraper" : needsMediaReview ? "Necesită poze/verificare" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
       const estimatedRevenue = listingType === "inchiriere" && lead.original_price
