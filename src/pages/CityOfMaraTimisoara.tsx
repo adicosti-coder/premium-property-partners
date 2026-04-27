@@ -496,6 +496,24 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="riscuri-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><AlertTriangle className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Filtrare inteligentă</span></div>
+              <h2 id="riscuri-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Riscuri și capcane pe care merită să le eviți</h2>
+              <p className="mt-3 text-muted-foreground">Am adăugat și partea mai puțin confortabilă, dar utilă: ce poate părea bun la prima vedere și unde apar diferențele reale de performanță.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {riskSignals.map((item) => (
+                <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="cand-nu-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 max-w-3xl">
@@ -558,6 +576,21 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="finantare-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="finantare-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Pregătire financiară și de decizie</h2>
+            <p className="mt-3 text-muted-foreground">Secțiune utilă pentru lead-uri mai bune: ajută utilizatorul să înțeleagă diferența dintre bugetul afișat și bugetul cu adevărat pregătit pentru achiziție.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {financingReadiness.map((item) => (
+              <article key={item.title} className="rounded-lg border border-primary/20 bg-primary/5 p-6">
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="disponibilitati" className="bg-muted/40 py-12 md:py-16" aria-labelledby="formular-city-of-mara">
           <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
@@ -599,6 +632,14 @@ const CityOfMaraTimisoara = () => {
                 <h3 className="text-lg font-semibold text-foreground">Ca să primești un răspuns mai util</h3>
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   {callPrepChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="text-lg font-semibold text-foreground">Ce să verifici la vizionare</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {viewingChecklist.map((item) => (
                     <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
                   ))}
                 </div>
