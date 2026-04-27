@@ -578,7 +578,7 @@ function deriveProspectType(title: string): string {
   return "proprietar";
 }
 
-type ImportWorkflow = "smart" | "quick-review" | "owner-contact" | "investment" | "hospitality" | "media-needed" | "seo-ready" | "active";
+type ImportWorkflow = "smart" | "quick-review" | "owner-contact" | "investment" | "hospitality" | "media-needed" | "seo-ready" | "legal-review" | "renovation" | "active";
 
 interface ImportLeadOptions {
   listingType?: string;
@@ -595,6 +595,8 @@ const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
   hospitality: "Pregătire regim hotelier",
   "media-needed": "Necesită poze/verificare",
   "seo-ready": "Draft SEO-ready",
+  "legal-review": "Verificare juridică",
+  renovation: "Renovare / flip",
   active: "Import activ",
 };
 
