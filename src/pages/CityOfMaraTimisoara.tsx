@@ -183,6 +183,19 @@ const documentChecks = [
   { title: "Scenariu de exit", text: "Pentru investiție, analizăm cât de ușor se poate revinde unitatea peste 2–5 ani și ce profil de cumpărător ar intra natural pe ea." },
 ];
 
+const viewingQuestions = [
+  "Care este costul total real dacă includ parcare, mobilare și taxe?",
+  "Cât de repede s-ar putea închiria sau revinde această unitate față de altele similare?",
+  "Există limitări practice legate de etaj, orientare, zgomot sau compartimentare?",
+  "Ce variantă din shortlist are cel mai bun echilibru între preț, lichiditate și utilizare?",
+];
+
+const resaleSignals = [
+  { title: "Tipologie lichidă", text: "Apartamentele cu 2 camere bine compartimentate rămân de obicei cele mai ușor de repoziționat atât pentru locuire, cât și pentru investiție." },
+  { title: "Poziție ușor de explicat", text: "Unitățile cu orientare bună, lumină naturală și acces clar la parcare sunt mai simple de vândut fără discount agresiv." },
+  { title: "Produs gata de folosit", text: "Dacă apartamentul poate fi ocupat sau închiriat rapid, cumpărătorii percep mai ușor valoarea totală și decid mai repede." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
