@@ -1054,12 +1054,20 @@ const ScraperLeads = () => {
       .filter((lead) => lead.lead_score >= 80 && lead.url && !isSearchPageLead(lead.url, lead.title))
       .sort((a, b) => b.lead_score - a.lead_score)
       .slice(0, 5);
+    const needsVerification = unimported
+      .filter((lead) => lead.lead_score >= 65 && (!lead.phone || !lead.original_price || !parseSurface(`${lead.title || ""} ${lead.description || ""}`)))
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
+    const hospitalityCandidates = unimported
+      .filter((lead) => lead.lead_score >= 75 && (isPremiumLead(lead.title) || lead.listing_type === "inchiriere"))
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
     const readyToContact = filteredLeads
       .filter((lead) => lead.phone && ["new", "reviewed"].includes(lead.status) && lead.lead_score >= 75)
       .sort((a, b) => b.lead_score - a.lead_score)
       .slice(0, 5);
     const missingData = filteredLeads.filter((lead) => !lead.phone || !lead.original_price || !lead.url).length;
-    return { readyToImport, readyToContact, missingData, unimportedCount: unimported.length };
+    return { readyToImport, readyToContact, needsVerification, hospitalityCandidates, missingData, unimportedCount: unimported.length };
   }, [filteredLeads, importedPropertyByUrl]);
 
   const formatPrice = (price: number, suffix?: string) =>
