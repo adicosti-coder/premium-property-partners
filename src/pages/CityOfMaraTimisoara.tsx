@@ -183,6 +183,19 @@ const documentChecks = [
   { title: "Scenariu de exit", text: "Pentru investiție, analizăm cât de ușor se poate revinde unitatea peste 2–5 ani și ce profil de cumpărător ar intra natural pe ea." },
 ];
 
+const viewingQuestions = [
+  "Care este costul total real dacă includ parcare, mobilare și taxe?",
+  "Cât de repede s-ar putea închiria sau revinde această unitate față de altele similare?",
+  "Există limitări practice legate de etaj, orientare, zgomot sau compartimentare?",
+  "Ce variantă din shortlist are cel mai bun echilibru între preț, lichiditate și utilizare?",
+];
+
+const resaleSignals = [
+  { title: "Tipologie lichidă", text: "Apartamentele cu 2 camere bine compartimentate rămân de obicei cele mai ușor de repoziționat atât pentru locuire, cât și pentru investiție." },
+  { title: "Poziție ușor de explicat", text: "Unitățile cu orientare bună, lumină naturală și acces clar la parcare sunt mai simple de vândut fără discount agresiv." },
+  { title: "Produs gata de folosit", text: "Dacă apartamentul poate fi ocupat sau închiriat rapid, cumpărătorii percep mai ușor valoarea totală și decid mai repede." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -635,6 +648,23 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="revanzare-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="revanzare-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ce susține revânzarea mai bună în City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Util pentru cumpărători care vor flexibilitate pe termen mediu, nu doar o decizie bună pentru momentul actual.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {resaleSignals.map((item) => (
+                <article key={item.title} className="rounded-lg border border-primary/20 bg-primary/5 p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="disponibilitati" className="bg-muted/40 py-12 md:py-16" aria-labelledby="formular-city-of-mara">
           <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
@@ -684,6 +714,14 @@ const CityOfMaraTimisoara = () => {
                 <h3 className="text-lg font-semibold text-foreground">Ce să verifici la vizionare</h3>
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   {viewingChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-5">
+                <h3 className="text-lg font-semibold text-foreground">Întrebări bune la vizionare sau la call</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {viewingQuestions.map((item) => (
                     <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
                   ))}
                 </div>
