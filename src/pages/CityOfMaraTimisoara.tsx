@@ -145,6 +145,12 @@ const responseTrustSignals = [
   "context local și comparații relevante pentru Timișoara",
 ];
 
+const callPrepChecklist = [
+  "bugetul maxim și dacă ai nevoie de credit",
+  "dacă vrei locuire, investiție sau doar comparație",
+  "preferințe pentru etaj, parcare și termen de mutare",
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -570,6 +576,14 @@ const CityOfMaraTimisoara = () => {
                   ))}
                 </div>
               </div>
+              <div className="mt-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="text-lg font-semibold text-foreground">Ca să primești un răspuns mai util</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {callPrepChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
             </div>
             <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card p-5 shadow-sm md:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -611,6 +625,10 @@ const CityOfMaraTimisoara = () => {
               <div className="mt-4">
                 <Label htmlFor="city-mara-message">Detalii opționale</Label>
                 <Textarea id="city-mara-message" value={message} onChange={(event) => setMessage(event.target.value)} maxLength={800} rows={4} className="mt-2" placeholder="Buget, parcare, etaj preferat sau obiectiv investițional" />
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Cu cât contextul e mai clar, cu atât shortlist-ul va fi mai relevant.</span>
+                  <span>{message.length}/800</span>
+                </div>
               </div>
               <Button type="submit" size="lg" disabled={submitting} className="mt-5 w-full gap-2">
                 <Send className="h-4 w-4" /> {submitting ? "Se trimite..." : "Solicită lista actualizată"}
