@@ -79,6 +79,7 @@ const SEOOptimizerManager = () => {
   const [filterLang, setFilterLang] = useState<"all" | "ro" | "en">("all");
   const [minScore, setMinScore] = useState<number>(0);
   const [bulkRunning, setBulkRunning] = useState(false);
+  const [dualRunning, setDualRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
 
   const { data: history = [] } = useQuery({
@@ -107,6 +108,27 @@ const SEOOptimizerManager = () => {
       return true;
     });
   }, [history, filter, filterLang, minScore]);
+
+  const seoStats = useMemo(() => {
+    const latest = new Map<string, AuditRow>();
+    history.forEach((audit) => {
+      const key = `${audit.url}::${audit.language}`;
+      if (!latest.has(key)) latest.set(key, audit);
+    });
+    const audits = Array.from(latest.values());
+    const avgScore = audits.length
+      ? Math.round(audits.reduce((sum, a) => sum + (a.overall_score ?? 0), 0) / audits.length)
+      : 0;
+    const criticalIssues = audits.reduce(
+      (sum, a) => sum + (a.issues || []).filter((issue: any) => issue.severity === "critical").length,
+      0
+    );
+    const urgentAudits = audits
+      .filter((a) => (a.overall_score ?? 0) < 70 || (a.issues || []).some((issue: any) => issue.severity === "critical"))
+      .sort((a, b) => (a.overall_score ?? 0) - (b.overall_score ?? 0))
+      .slice(0, 5);
+    return { latestCount: audits.length, avgScore, criticalIssues, urgentAudits };
+  }, [history]);
 
   const auditMutation = useMutation({
     mutationFn: async ({ targetUrl, force }: { targetUrl: string; force: boolean }) => {
