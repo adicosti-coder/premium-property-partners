@@ -96,16 +96,16 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Închirieri apartamente studenți Bulevardul Vasile Pârvan</strong> — artera principală care traversează Complexul Studențesc Timișoara, oferind acces direct (sub 5 minute pe jos) la UVT — Universitatea de Vest, Politehnica Timișoara (UPT) și UMF „Victor Babeș". Apartamente cu 1, 2 și 3 camere mobilate, contracte 9–12 luni cu utilități incluse, internet de mare viteză și verificare proprietar pentru siguranța studenților și părinților.</p>
 
   <h3>Randament chirie Timișoara — comparație termen lung vs regim hotelier</h3>
-  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>ROI net verificat de 9.4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
+  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>ROI net verificat de 9.4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
 
   <h3>Evaluator ANEVAR Timișoara — evaluări oficiale acreditate</h3>
   <p>Pentru tranzacțiile bancare, succesiuni, partaje sau credite ipotecare colaborăm cu <strong>evaluator ANEVAR Timișoara</strong> acreditat (Asociația Națională a Evaluatorilor Autorizați din România). Rapoarte de evaluare oficiale acceptate de toate băncile (BCR, BRD, Raiffeisen, ING, Banca Transilvania), notari și instanțe — livrare 3–5 zile lucrătoare, prețuri transparente.</p>
 
   <h3>Piața imobiliară Timișoara — evoluție și analize trimestriale</h3>
-  <p>Monitorizăm continuu <strong>piața imobiliară Timișoara evoluție</strong>: rapoarte trimestriale pe micro-zone (ISHO, Complex Studențesc, Iosefin, Dumbrăvița, Giroc), date despre prețul mediu pe metru pătrat, randamentul chiriilor, viteza de tranzacționare și impactul proiectelor majore (Iulius Town, Openville, Parcul Industrial Timișoara). Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței imobiliare Timișoara</a>.</p>
+  <p>Monitorizăm continuu <strong>piața imobiliară Timișoara evoluție</strong>: rapoarte trimestriale pe micro-zone (ISHO, Complex Studențesc, Iosefin, Dumbrăvița, Giroc), date despre prețul mediu pe metru pătrat, randamentul chiriilor, viteza de tranzacționare și impactul proiectelor majore (Iulius Town, Openville, Parcul Industrial Timișoara). Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței imobiliare Timișoara</a>.</p>
 `;
 
-const BASE_URL = 'https://www.realtrust.ro';
+const BASE_URL = 'https://realtrust.ro';
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8';
 const PROTECTED_HEAD_PATTERNS = [
