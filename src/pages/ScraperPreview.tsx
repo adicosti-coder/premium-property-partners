@@ -98,6 +98,60 @@ function extractHighlightTerms(
 
 function escapeRegExp(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
+function inferPrice(text: string): number | null {
+  const match = text.match(/(\d{2,3}(?:[.,]\d{3})+|\d{5,6})\s*(?:€|eur)/i);
+  if (!match) return null;
+  const value = Number(match[1].replace(/[.,]/g, ""));
+  return Number.isFinite(value) ? value : null;
+}
+
+function isUsefulOwnerPreviewResult(item: PreviewResult): boolean {
+  const blob = `${item.title} ${item.description} ${item.url}`.toLowerCase();
+  if (item.owner_signal.isOwner) return true;
+  return /direct\s+proprietar|proprietar|persoan[aă]\s*fizic[aă]|f[aă]r[aă]\s+comision|comision\s*0|cf-individual/.test(blob);
+}
+
+function buildProspectRowFromPreview(item: PreviewResult, data: PreviewResponse) {
+  const blob = `${item.title} ${item.description}`;
+  const price = inferPrice(blob);
+  const rooms = blob.match(/\b([1-5])\s*(?:camere|camera|cam\.)\b/i)?.[1];
+  const zone = item.url.match(/timisoara\/([^/?#]+)(?:\/|$)/i)?.[1]?.replace(/-/g, " ") || null;
+  const isOwner = isUsefulOwnerPreviewResult(item);
+  const score = isOwner ? 88 : 72;
+
+  return {
+    source_platform: data.keyword.platform,
+    source_url: item.url,
+    title: item.title,
+    description: item.description,
+    price,
+    currency: "EUR",
+    location: "Timișoara",
+    zone,
+    rooms: rooms ? Number(rooms) : null,
+    features: [
+      isOwner ? "semnal-proprietar" : "verificare-manuala",
+      item.url.includes("locuinte-noi") ? "locuinta-noua" : null,
+      /f[aă]r[aă]\s+comision|comision\s*0/i.test(blob) ? "fara-comision" : null,
+      "import-preview-keyword",
+    ].filter(Boolean),
+    tags: ["preview-import", "imobiliare-ro", isOwner ? "proprietar" : "verificare", score >= 85 ? "prioritar" : null].filter(Boolean),
+    score,
+    lead_score: score,
+    score_breakdown: { source: "scraper-preview", keyword_id: data.keyword.id, owner_signal: item.owner_signal },
+    ai_score_breakdown: { imported_from_preview: true, neutral_query: data.neutral_query, final_query: data.final_query },
+    status: "new",
+    prospect_type: isOwner ? "proprietar" : "necunoscut",
+    category: "vanzare",
+    lifecycle_status: "new",
+    is_active: true,
+    search_keywords: [data.keyword.keyword],
+    admin_notes: "Importat din Preview Scraper: rezultat util din căutarea generică/neutră.",
+    scraped_at: new Date().toISOString(),
+    last_seen_at: new Date().toISOString(),
+  };
+}
+
 function HighlightedText({
   text, positive, negative, enabled,
 }: { text: string; positive: string[]; negative: string[]; enabled: boolean }) {
