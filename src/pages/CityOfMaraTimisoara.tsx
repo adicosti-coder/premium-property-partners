@@ -128,6 +128,12 @@ const finalObjectionsFaq = [
   { question: "Merită să cer comparație între mai multe unități înainte de ofertă?", answer: "Da. Diferențele de etaj, orientare, parcare și mobilare schimbă semnificativ costul total și potențialul de randament, chiar în același complex." },
 ];
 
+const notIdealFor = [
+  "cumpărători care caută strict cel mai mic preț/mp din Timișoara",
+  "profiluri care nu valorizează locația centrală și lichiditatea la revânzare",
+  "investitori care vor randament mare fără buget pentru mobilare sau parcare",
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -165,7 +171,7 @@ const CityOfMaraTimisoara = () => {
       },
       {
         "@type": "FAQPage",
-        mainEntity: faqItems.map((item) => ({
+        mainEntity: [...faqItems, ...finalObjectionsFaq].map((item) => ({
           "@type": "Question",
           name: item.question,
           acceptedAnswer: { "@type": "Answer", text: item.answer },
@@ -447,6 +453,22 @@ const CityOfMaraTimisoara = () => {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="cand-nu-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="cand-nu-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Când City of Mara poate să nu fie alegerea potrivită</h2>
+              <p className="mt-3 text-muted-foreground">Am adăugat și partea de transparență, ca să filtrăm mai bine lead-urile și să oferim un context credibil, nu doar argumente de vânzare.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-6">
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {notIdealFor.map((item) => (
+                  <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
