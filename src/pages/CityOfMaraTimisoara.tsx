@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowRight, BarChart3, Building2, CheckCircle2, FileText, Home, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -47,6 +47,18 @@ const priceEvolution = [
   { year: "2026", value: "2.050+ €/mp", note: "prime pentru unități mobilate și parcări" },
 ];
 
+const buyerChecklist = [
+  { icon: Calculator, title: "Buget total", text: "Verificăm prețul apartamentului, parcarea, mobilarea, taxele notariale și scenariul de credit înainte de ofertare." },
+  { icon: KeyRound, title: "Pregătire pentru închiriere", text: "Estimăm costul de mobilare, durata până la prima închiriere și diferența dintre chirie clasică și administrare hotelieră." },
+  { icon: ShieldCheck, title: "Due diligence", text: "Analizăm actele, poziția în complex, orientarea, etajul, vecinătățile și lichiditatea la revânzare." },
+];
+
+const faqItems = [
+  { question: "Merită cumpărate apartamente City of Mara pentru investiție?", answer: "Da, mai ales unitățile compacte cu parcare și compartimentare eficientă, deoarece zona Circumvalațiunii are acces rapid către Iulius Town, centru și hub-uri de business." },
+  { question: "Ce tip de apartament are randament mai bun în City of Mara?", answer: "În general, studiourile și apartamentele cu 2 camere au randament mai bun pentru chirie corporate sau regim hotelier, în timp ce apartamentele mai mari sunt mai potrivite pentru locuire și revânzare." },
+  { question: "Pot primi lista actualizată de disponibilități City of Mara?", answer: "Da. Completează formularul de pe pagină și trimitem opțiunile disponibile, prețurile actualizate, parcările și o estimare de randament pentru bugetul tău." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -81,6 +93,14 @@ const CityOfMaraTimisoara = () => {
         url: "https://www.realtrust.ro",
         telephone: "+40799069256",
         areaServed: "Timișoara",
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+        })),
       },
     ],
   };
@@ -247,6 +267,22 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="ghid-cumparator-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="ghid-cumparator-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ghid rapid pentru cumpărători City of Mara</h2>
+            <p className="mt-3 text-muted-foreground">Înainte de ofertă, verificăm dacă apartamentul se potrivește obiectivului tău: locuire, revânzare sau randament din închiriere.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {buyerChecklist.map((item) => (
+              <div key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <item.icon className="mb-4 h-7 w-7 text-primary" />
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section id="disponibilitati" className="bg-muted/40 py-12 md:py-16" aria-labelledby="formular-city-of-mara">
           <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
@@ -293,6 +329,23 @@ const CityOfMaraTimisoara = () => {
               </Button>
               <p className="mt-3 text-xs text-muted-foreground">Datele sunt folosite doar pentru contact și ofertare. Nu publicăm informațiile tale.</p>
             </form>
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="faq-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="faq-city-of-mara" className="text-3xl font-bold text-foreground">Întrebări frecvente despre apartamente City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Răspunsuri scurte pentru cumpărători interesați de vânzare apartamente noi City of Mara și investiții în zona centrală.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {faqItems.map((item) => (
+                <article key={item.question} className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="text-lg font-semibold text-foreground">{item.question}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.answer}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
