@@ -195,7 +195,7 @@ const CityOfMaraTimisoara = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = availabilitySchema.safeParse({ name, whatsapp, email, apartmentType, message });
+    const parsed = availabilitySchema.safeParse({ name, whatsapp, email, apartmentType, purchaseGoal, budgetRange, message });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Verifică datele introduse.");
       return;
@@ -206,8 +206,8 @@ const CityOfMaraTimisoara = () => {
       const cleanPhone = parsed.data.whatsapp.replace(/\s/g, "");
       const leadMessage = [
         `Solicitare disponibilități City of Mara — ${parsed.data.apartmentType}`,
-        `Obiectiv: ${purchaseGoal}`,
-        `Buget: ${budgetRange}`,
+        `Obiectiv: ${parsed.data.purchaseGoal}`,
+        `Buget: ${parsed.data.budgetRange}`,
         parsed.data.message ? `Mesaj: ${parsed.data.message}` : null,
       ].filter(Boolean).join("\n");
 
@@ -220,7 +220,7 @@ const CityOfMaraTimisoara = () => {
           property_area: 0,
           source: "city_of_mara_landing",
           message: leadMessage,
-          simulation_data: { apartmentType: parsed.data.apartmentType, purchaseGoal, budgetRange, page: "/complexe/city-of-mara" },
+          simulation_data: { apartmentType: parsed.data.apartmentType, purchaseGoal: parsed.data.purchaseGoal, budgetRange: parsed.data.budgetRange, page: "/complexe/city-of-mara" },
         },
       });
 
@@ -558,6 +558,14 @@ const CityOfMaraTimisoara = () => {
                 <h3 className="text-lg font-semibold text-foreground">Ce primești când ceri disponibilitățile</h3>
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   {deliverables.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-5">
+                <h3 className="text-lg font-semibold text-foreground">Cum răspundem</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {responseTrustSignals.map((item) => (
                     <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
                   ))}
                 </div>
