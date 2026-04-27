@@ -170,6 +170,19 @@ const riskSignals = [
   { title: "Decizie grăbită fără comparație", text: "În același buget, două apartamente din același complex pot avea rezultate foarte diferite în funcție de etaj, orientare și pregătirea pentru utilizare imediată." },
 ];
 
+const shortlistSignals = [
+  "apartamentul are parcare sau un plan clar pentru parcare în bugetul total",
+  "orientarea și lumina naturală susțin atât locuirea, cât și închirierea",
+  "compartimentarea permite mobilare eficientă fără compromisuri mari",
+  "prețul final rămâne competitiv și după costuri de lansare sau mutare",
+];
+
+const documentChecks = [
+  { title: "Acte și proprietate", text: "Verificăm rapid situația juridică, extrasul relevant, datele unității, parcarea și dacă descrierea comercială se potrivește cu realitatea contractuală." },
+  { title: "Costuri recurente", text: "E util să clarifici întreținerea estimată, costurile de exploatare și orice element care poate afecta confortul sau randamentul net." },
+  { title: "Scenariu de exit", text: "Pentru investiție, analizăm cât de ușor se poate revinde unitatea peste 2–5 ani și ce profil de cumpărător ar intra natural pe ea." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
