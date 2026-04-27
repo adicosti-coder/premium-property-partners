@@ -158,7 +158,7 @@ const neighborhoods = [
     <h3>Spații comerciale &amp; terenuri ISHO Fabric</h3>
     <p>Zona include și <strong>spații comerciale Timișoara</strong> de tip street retail în ISHO Galleria și pe Bulevardul Take Ionescu, plus <strong>terenuri de vânzare Timișoara</strong> intravilan în Fabric pentru dezvoltări mici. RealTrust intermediază închirieri și vânzări pentru investitori interesați de yield comercial 7–9% net.</p>
     <h3>Piața imobiliară Timișoara — context ISHO</h3>
-    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
+    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
   ` },
   { slug: 'iosefin', name: 'Iosefin', fullName: 'Iosefin', avgPrice: 1850, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Iosefin Timișoara?', a: 'Prețurile apartamentelor în Iosefin variază între 1.700 și 2.100 €/mp (medie 1.850 €/mp). Garsonierele se tranzacționează între 60.000 și 75.000 €.' },
@@ -177,7 +177,7 @@ const neighborhoods = [
     <h3>Puncte de interes lângă Iosefin</h3>
     <p><strong>Piața Iosefin</strong> (reper comercial, 2 min), <strong>Sinagoga din Iosefin</strong> (monument istoric, 5 min), Catedrala Romano-Catolică (3 min), malul Begăi (1 min), Piața Unirii (8 min pe jos), Gara de Nord (5 min), UVT (10 min cu tramvaiul de pe Bulevardul 16 Decembrie 1989), Iulius Town (10 min).</p>
     <h3>Apartamente de închiriat Iosefin Timișoara</h3>
-    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
+    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
   ` },
   { slug: 'dumbravita', name: 'Dumbrăvița', fullName: 'Dumbrăvița', avgPrice: 1680, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', a: 'Apartamente noi 1.680 €/mp, cu 15–20% sub media Timișoara. Case și vile între 180.000 și 380.000 €.' },
@@ -209,7 +209,7 @@ const neighborhoods = [
     <h3>Piața imobiliară Dumbrăvița — analiză 2026</h3>
     <p>Dumbrăvița a crescut cu ~6% în 2025, susținută de cererea familiilor tinere și a profesioniștilor IT relocați. Preț mediu apartamente noi: 1.680 €/mp (vs. 2.000+ €/mp în Centru). Comparativ cu Giroc (1.650 €/mp) și Moșnița Nouă (1.580 €/mp), Dumbrăvița oferă cea mai bună infrastructură și acces la aeroport.</p>
 
-    <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
+    <p>Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
   ` },
   { slug: 'giroc', name: 'Giroc', fullName: 'Giroc', avgPrice: 1620, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Giroc?', a: 'Apartamente 1.500–1.800 €/mp (medie 1.620 €/mp). Case 165.000–320.000 €. Terenuri intravilane 70–130 €/mp.' },
@@ -244,7 +244,7 @@ const neighborhoods = [
     <h3>Avantaje și dezavantaje Giroc</h3>
     <p><strong>Avantaje</strong>: liniște, spațiu verde abundent (lacul Giroc, parcuri), aer curat, taxe locale mai mici, școli bune. <strong>Dezavantaje</strong>: trafic aglomerat dimineața pe DJ595, distanță față de Centrul Vechi (10–25 min).</p>
 
-    <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
+    <p>Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
   ` },
 ];
 
