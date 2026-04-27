@@ -134,12 +134,17 @@ const notIdealFor = [
   "investitori care vor randament mare fără buget pentru mobilare sau parcare",
 ];
 
+const purchaseGoals = ["Investiție", "Locuire proprie", "Revânzare", "Încă compar opțiuni"];
+const budgetRanges = ["Sub 90.000€", "90.000–120.000€", "120.000–160.000€", "Peste 160.000€"];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("+40 ");
   const [email, setEmail] = useState("");
   const [apartmentType, setApartmentType] = useState("2 camere");
+  const [purchaseGoal, setPurchaseGoal] = useState("Investiție");
+  const [budgetRange, setBudgetRange] = useState("90.000–120.000€");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -193,6 +198,8 @@ const CityOfMaraTimisoara = () => {
       const cleanPhone = parsed.data.whatsapp.replace(/\s/g, "");
       const leadMessage = [
         `Solicitare disponibilități City of Mara — ${parsed.data.apartmentType}`,
+        `Obiectiv: ${purchaseGoal}`,
+        `Buget: ${budgetRange}`,
         parsed.data.message ? `Mesaj: ${parsed.data.message}` : null,
       ].filter(Boolean).join("\n");
 
@@ -205,7 +212,7 @@ const CityOfMaraTimisoara = () => {
           property_area: 0,
           source: "city_of_mara_landing",
           message: leadMessage,
-          simulation_data: { apartmentType: parsed.data.apartmentType, page: "/complexe/city-of-mara" },
+          simulation_data: { apartmentType: parsed.data.apartmentType, purchaseGoal, budgetRange, page: "/complexe/city-of-mara" },
         },
       });
 
@@ -571,6 +578,20 @@ const CityOfMaraTimisoara = () => {
                   </select>
                 </div>
               </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="city-mara-goal">Scop achiziție</Label>
+                  <select id="city-mara-goal" value={purchaseGoal} onChange={(event) => setPurchaseGoal(event.target.value)} className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    {purchaseGoals.map((item) => <option key={item} value={item}>{item}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="city-mara-budget">Buget orientativ</Label>
+                  <select id="city-mara-budget" value={budgetRange} onChange={(event) => setBudgetRange(event.target.value)} className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    {budgetRanges.map((item) => <option key={item} value={item}>{item}</option>)}
+                  </select>
+                </div>
+              </div>
               <div className="mt-4">
                 <Label htmlFor="city-mara-message">Detalii opționale</Label>
                 <Textarea id="city-mara-message" value={message} onChange={(event) => setMessage(event.target.value)} maxLength={800} rows={4} className="mt-2" placeholder="Buget, parcare, etaj preferat sau obiectiv investițional" />
@@ -578,6 +599,7 @@ const CityOfMaraTimisoara = () => {
               <Button type="submit" size="lg" disabled={submitting} className="mt-5 w-full gap-2">
                 <Send className="h-4 w-4" /> {submitting ? "Se trimite..." : "Solicită lista actualizată"}
               </Button>
+              <p className="mt-3 text-sm text-muted-foreground">Răspuns cu shortlist și observații utile, de regulă în aceeași zi lucrătoare.</p>
               <p className="mt-3 text-xs text-muted-foreground">Datele sunt folosite doar pentru contact și ofertare. Nu publicăm informațiile tale.</p>
             </form>
           </div>
