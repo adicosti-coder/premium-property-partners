@@ -490,6 +490,39 @@ function buildStaticRoutes(): PrerenderRoute[] {
     },
   });
 
+  // Analiza ROI Apartament
+  routes.push({
+    path: '/analiza-roi-apartament',
+    title: 'Analiza ROI Apartament | Randament investiții imobiliare',
+    description: 'Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe.',
+    h1: 'Analiza ROI Apartament pentru investiții profitabile în România',
+    canonical: `${BASE_URL}/analiza-roi-apartament`,
+    seoBody: `
+      <h2>Randament investiții imobiliare și analiză profit apartament România</h2>
+      <p>Pagina Analiza ROI Apartament oferă un calculator interactiv pentru investitori care vor să compare chiria clasică, administrarea în regim hotelier și aprecierea capitalului. Modelul folosește ocupare de 75%, deducere operațională de 27% și scenarii de randament pentru apartamente standard, RealTrust standard și complex premium.</p>
+      <h2>Complexe rezidențiale recomandate pentru ROI</h2>
+      <p>Analiza conectează direct investitorii cu <a href="${BASE_URL}/complexe" tabindex="-1">secțiunea Complexe</a>, inclusiv ISHO, City of Mara, Ateneo și Fructus Plaza — zone unde randamentul depinde de poziționare, cerere corporate, lichiditate și calitatea administrării.</p>
+    `,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FinancialProduct',
+        name: 'Analiza ROI Apartament România',
+        description: 'Calculator pentru randament investiții imobiliare, profit apartament și evoluția prețurilor în România.',
+        url: `${BASE_URL}/analiza-roi-apartament`,
+        provider: { '@type': 'RealEstateAgent', name: 'RealTrust & ApArt Hotel' },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          { '@type': 'Question', name: 'Cum se calculează randamentul unei investiții imobiliare?', acceptedAnswer: { '@type': 'Answer', text: 'Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției.' } },
+          { '@type': 'Question', name: 'De ce sunt importante complexele rezidențiale în analiza ROI?', acceptedAnswer: { '@type': 'Answer', text: 'Complexele noi au cerere mai bună, costuri previzibile și poziționare mai ușor de promovat către chiriași sau oaspeți premium.' } },
+        ],
+      },
+    ],
+  });
+
   // Piața imobiliară
   routes.push({
     path: '/piata-imobiliara-timisoara',
