@@ -523,6 +523,27 @@ function buildStaticRoutes(): PrerenderRoute[] {
     ],
   });
 
+  routes.push({
+    path: '/complexe/city-of-mara',
+    title: 'Apartamente City of Mara Timișoara | Vânzare apartamente noi',
+    description: 'Apartamente City of Mara Timișoara: investiții imobiliare Timișoara centru, randament estimat, tipuri de apartamente și disponibilități actualizate.',
+    h1: 'Apartamente City of Mara Timișoara pentru locuire premium și investiție',
+    canonical: `${BASE_URL}/complexe/city-of-mara`,
+    seoBody: `
+      <h2>Apartamente City of Mara — investiții imobiliare Timișoara centru</h2>
+      <p>City of Mara este un complex rezidențial central din Timișoara, potrivit pentru cumpărători care caută apartamente noi, parcare, acces rapid către Iulius Town și potențial de randament prin închiriere sau regim hotelier.</p>
+      <h2>Vânzare apartamente noi City of Mara</h2>
+      <p>RealTrust oferă consultanță pentru selecția unităților disponibile, analiză ROI, comparație cu ISHO, Ateneo și Fructus Plaza și solicitare rapidă a listei actualizate de disponibilități.</p>
+    `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ApartmentComplex',
+      name: 'City of Mara Timișoara',
+      url: `${BASE_URL}/complexe/city-of-mara`,
+      address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
+    },
+  });
+
   // Piața imobiliară
   routes.push({
     path: '/piata-imobiliara-timisoara',
