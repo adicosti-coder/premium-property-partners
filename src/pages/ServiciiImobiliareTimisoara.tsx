@@ -8,6 +8,8 @@ import { Building2, Shield, Star, TrendingUp, Hospital, Home, Briefcase, MapPin 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -16,6 +18,23 @@ const BASE_URL = "https://www.realtrust.ro";
 const ServiciiImobiliareTimisoara = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
+
+  const faqItems = [
+    {
+      question: isRo ? "Ce servicii imobiliare oferă RealTrust în Timișoara?" : "What real estate services does RealTrust offer in Timișoara?",
+      answer: isRo ? "RealTrust oferă vânzări, închirieri rezidențiale, evaluare gratuită, administrare în regim hotelier și consultanță pentru investiții imobiliare în Timișoara." : "RealTrust offers sales, residential rentals, free valuation, short-term rental management and real estate investment consulting in Timișoara.",
+    },
+    {
+      question: isRo ? "Cum pot accesa Catalogul de Investiții?" : "How can I access the Investment Catalog?",
+      answer: isRo ? "Catalogul de Investiții este disponibil din meniul principal și include oportunități verificate, analiză ROI și estimări pentru administrare profesională." : "The Investment Catalog is available from the main navigation and includes verified opportunities, ROI analysis and professional management estimates.",
+    },
+    {
+      question: isRo ? "Ce ROI pot obține prin administrare în regim hotelier?" : "What ROI can I get with short-term rental management?",
+      answer: isRo ? "Randamentul standard folosit de RealTrust este 9.4% net, calculat pe baza ocupării medii, costurilor operaționale și deducerii de management/taxe." : "RealTrust uses a 9.4% net yield benchmark, calculated from occupancy, operational costs and management/tax deductions.",
+    },
+  ];
+
+  useRegisterFAQs("servicii-imobiliare-timisoara", faqItems);
 
   const jsonLd = [
     {
@@ -220,6 +239,45 @@ const ServiciiImobiliareTimisoara = () => {
           </section>
 
           {/* CTA */}
+          <section className="max-w-4xl mx-auto mb-12 rounded-2xl border border-primary/20 bg-primary/5 p-8">
+            <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+              <div>
+                <h2 className="text-2xl font-serif font-semibold mb-3">
+                  {isRo ? "Următorul pas: catalog sau contact proprietari" : "Next step: catalog or owner contact"}
+                </h2>
+                <p className="text-muted-foreground">
+                  {isRo
+                    ? "Pentru investiții, pornește din catalogul cu oportunități verificate. Pentru administrarea unei proprietăți existente, trimite solicitarea către echipa de proprietari."
+                    : "For investments, start with the verified opportunity catalog. For an existing property, contact the owner onboarding team."}
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Link to="/catalog-investitii">
+                  <Button size="lg" className="w-full">{isRo ? "Catalog Investiții" : "Investment Catalog"}</Button>
+                </Link>
+                <Link to="/pentru-proprietari">
+                  <Button size="lg" variant="outline" className="w-full">{isRo ? "Contact Proprietari" : "Owner Contact"}</Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <section className="max-w-4xl mx-auto mb-12" itemScope itemType="https://schema.org/FAQPage">
+            <h2 className="text-2xl font-serif font-semibold text-center mb-6">
+              {isRo ? "Întrebări frecvente despre serviciile RealTrust" : "Frequently asked questions about RealTrust services"}
+            </h2>
+            <Accordion type="single" collapsible className="space-y-3">
+              {faqItems.map((item, index) => (
+                <AccordionItem key={item.question} value={`service-faq-${index}`} className="rounded-xl border bg-card px-5" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                  <AccordionTrigger className="text-left" itemProp="name">{item.question}</AccordionTrigger>
+                  <AccordionContent itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                    <span itemProp="text">{item.answer}</span>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
+
           <section className="max-w-3xl mx-auto text-center bg-card border rounded-2xl p-8">
             <Star className="w-10 h-10 text-amber-500 mx-auto mb-3" />
             <h2 className="text-2xl font-serif font-semibold mb-3">
