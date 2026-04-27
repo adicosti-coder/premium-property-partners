@@ -136,8 +136,10 @@ const ROICalculatorWidget = () => {
               {TIERS.map((tier) => (
                 <button
                   key={tier.value}
+                  type="button"
+                  aria-pressed={selectedTier === tier.value}
                   onClick={() => setSelectedTier(tier.value)}
-                  className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                  className={`flex-1 min-h-12 py-2.5 text-sm font-semibold transition-colors ${
                     selectedTier === tier.value
                       ? "bg-primary text-primary-foreground"
                       : "bg-card text-muted-foreground hover:bg-muted/50"
@@ -249,6 +251,8 @@ const ROICalculatorWidget = () => {
                   <Label htmlFor="roi-name">Nume</Label>
                   <Input
                     id="roi-name"
+                    type="text"
+                    autoComplete="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Numele tău"
@@ -260,6 +264,8 @@ const ROICalculatorWidget = () => {
                   <Input
                     id="roi-phone"
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="07XX XXX XXX"
@@ -271,6 +277,8 @@ const ROICalculatorWidget = () => {
                   <Input
                     id="roi-email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="email@exemplu.ro"
