@@ -643,6 +643,7 @@ const ScraperLeads = () => {
   const [hideAgencies, setHideAgencies] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
+  const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1047,6 +1048,20 @@ const ScraperLeads = () => {
     };
   }, [filteredLeads]);
 
+  const automationQueue = useMemo(() => {
+    const unimported = filteredLeads.filter((lead) => !importedPropertyByUrl.has(lead.url));
+    const readyToImport = unimported
+      .filter((lead) => lead.lead_score >= 80 && lead.url && !isSearchPageLead(lead.url, lead.title))
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
+    const readyToContact = filteredLeads
+      .filter((lead) => lead.phone && ["new", "reviewed"].includes(lead.status) && lead.lead_score >= 75)
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
+    const missingData = filteredLeads.filter((lead) => !lead.phone || !lead.original_price || !lead.url).length;
+    return { readyToImport, readyToContact, missingData, unimportedCount: unimported.length };
+  }, [filteredLeads, importedPropertyByUrl]);
+
   const formatPrice = (price: number, suffix?: string) =>
     price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
   const getPriceSuffix = (lead: ScraperLead) => lead.listing_type === "inchiriere" ? "/lună" : "";
@@ -1099,6 +1114,7 @@ const ScraperLeads = () => {
 
   // ── Inline Status Change (optimistic) ──────────────
   const handleStatusChange = async (leadId: string, newStatus: string) => {
+    const lead = leads?.find((l) => l.id === leadId) || selectedLead;
     // Optimistic update
     queryClient.setQueryData(["scraper-leads"], (old: any) =>
       Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, status: newStatus } : l) : old
@@ -1106,7 +1122,9 @@ const ScraperLeads = () => {
     if (selectedLead?.id === leadId)
       setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
 
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: newStatus } as any).eq("id", leadId);
+    const { error } = (lead as any)?._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ lifecycle_status: newStatus } as any).eq("id", leadId)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ status: newStatus } as any).eq("id", leadId);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la schimbarea statusului");
