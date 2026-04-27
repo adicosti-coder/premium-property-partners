@@ -107,6 +107,26 @@ const AdminDashboard = () => {
     refetchInterval: 1000 * 60,
   });
 
+  const { data: listingOps } = useQuery({
+    queryKey: ["admin-dashboard-listing-ops"],
+    queryFn: async () => {
+      const [draftsRes, activeSalesRes, activeRentalsRes, hotRes] = await Promise.all([
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "vanzare"),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "inchiriere"),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).gt("lead_score", 80),
+      ]);
+      return {
+        drafts: draftsRes.count ?? 0,
+        sales: activeSalesRes.count ?? 0,
+        rentals: activeRentalsRes.count ?? 0,
+        hotProspects: hotRes.count ?? 0,
+      };
+    },
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -403,6 +423,45 @@ const AdminDashboard = () => {
               {language === 'ro' ? 'Sync Detalii' : 'Sync Details'}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Home className="w-5 h-5 text-primary" />
+            Gestionare listări — scurtături rapide
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-4">
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/admin/properties")}>
+            <div className="text-left">
+              <div className="font-semibold">Drafturi</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.drafts ?? 0}</div>
+              <div className="text-xs text-muted-foreground">verifică și publică</div>
+            </div>
+          </Button>
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/scraper-leads")}>
+            <div className="text-left">
+              <div className="font-semibold">Oportunități AI</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.hotProspects ?? 0}</div>
+              <div className="text-xs text-muted-foreground">scor peste 80</div>
+            </div>
+          </Button>
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/admin/properties") }>
+            <div className="text-left">
+              <div className="font-semibold">Vânzări active</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.sales ?? 0}</div>
+              <div className="text-xs text-muted-foreground">portofoliu public</div>
+            </div>
+          </Button>
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/admin/properties") }>
+            <div className="text-left">
+              <div className="font-semibold">Închirieri active</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.rentals ?? 0}</div>
+              <div className="text-xs text-muted-foreground">listări lunare</div>
+            </div>
+          </Button>
         </CardContent>
       </Card>
 

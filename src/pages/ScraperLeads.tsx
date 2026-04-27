@@ -643,6 +643,7 @@ const ScraperLeads = () => {
   const [hideAgencies, setHideAgencies] = useState(true);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
+  const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1047,6 +1048,20 @@ const ScraperLeads = () => {
     };
   }, [filteredLeads]);
 
+  const automationQueue = useMemo(() => {
+    const unimported = filteredLeads.filter((lead) => !importedPropertyByUrl.has(lead.url));
+    const readyToImport = unimported
+      .filter((lead) => lead.lead_score >= 80 && lead.url && !isSearchPageLead(lead.url, lead.title))
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
+    const readyToContact = filteredLeads
+      .filter((lead) => lead.phone && ["new", "reviewed"].includes(lead.status) && lead.lead_score >= 75)
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
+    const missingData = filteredLeads.filter((lead) => !lead.phone || !lead.original_price || !lead.url).length;
+    return { readyToImport, readyToContact, missingData, unimportedCount: unimported.length };
+  }, [filteredLeads, importedPropertyByUrl]);
+
   const formatPrice = (price: number, suffix?: string) =>
     price?.toLocaleString("ro-RO", { maximumFractionDigits: 0 }) + " €" + (suffix || "");
   const getPriceSuffix = (lead: ScraperLead) => lead.listing_type === "inchiriere" ? "/lună" : "";
@@ -1099,6 +1114,7 @@ const ScraperLeads = () => {
 
   // ── Inline Status Change (optimistic) ──────────────
   const handleStatusChange = async (leadId: string, newStatus: string) => {
+    const lead = leads?.find((l) => l.id === leadId) || selectedLead;
     // Optimistic update
     queryClient.setQueryData(["scraper-leads"], (old: any) =>
       Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, status: newStatus } : l) : old
@@ -1106,7 +1122,9 @@ const ScraperLeads = () => {
     if (selectedLead?.id === leadId)
       setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : null);
 
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: newStatus } as any).eq("id", leadId);
+    const { error } = (lead as any)?._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ lifecycle_status: newStatus } as any).eq("id", leadId)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ status: newStatus } as any).eq("id", leadId);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la schimbarea statusului");
@@ -1127,7 +1145,9 @@ const ScraperLeads = () => {
       Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, tags: newTags } : l) : old
     );
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, tags: newTags } : null);
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ tags: newTags } as any).eq("id", leadId);
+    const { error } = lead._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ admin_notes: `${lead.admin_notes ? `${lead.admin_notes}\n` : ""}Etichete conversație: ${newTags.join(", ")}` } as any).eq("id", leadId)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ tags: newTags } as any).eq("id", leadId);
     if (error) {
       toast.error("Eroare la etichete");
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
@@ -1138,7 +1158,9 @@ const ScraperLeads = () => {
   // ── Save Notes ────────────────────────────────────
   const saveNotes = async () => {
     if (!selectedLead) return;
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id);
+    const { error } = selectedLead._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id);
     if (error) { toast.error("Eroare la salvare"); return; }
     toast.success("Note salvate");
     setSelectedLead((prev) => prev ? { ...prev, admin_notes: editNotes } : null);
@@ -1191,6 +1213,22 @@ const ScraperLeads = () => {
     link.download = `scraper-contacte-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     toast.success(`${contactLeads.length} contacte exportate în CSV`);
+  };
+
+  const bulkImportSmartDrafts = async () => {
+    const targets = automationQueue.readyToImport.slice(0, 5);
+    if (!targets.length) {
+      toast.info("Nu există lead-uri potrivite pentru import automat în filtrarea curentă");
+      return;
+    }
+    setBulkImportingSmart(true);
+    let imported = 0;
+    for (const lead of targets) {
+      await importLeadAsListing(lead, { workflow: lead.lead_score >= 90 ? "investment" : "smart", verification: "full" });
+      imported += 1;
+    }
+    setBulkImportingSmart(false);
+    toast.success(`${imported} lead-uri prioritare trimise în Proprietăți ca drafturi verificate`);
   };
 
   // ── Compare Toggle ────────────────────────────────
@@ -1584,8 +1622,10 @@ const ScraperLeads = () => {
       setSelectedLead((prev) => prev ? { ...prev, prospect_category: newCategory } : null);
     }
 
-    // Update lead's prospect_category
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: newCategory } as any).eq("id", lead.id);
+    // Update lead category in the actual source table.
+    const { error } = lead._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ prospect_type: newCategory } as any).eq("id", lead.id)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: newCategory } as any).eq("id", lead.id);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la schimbarea categoriei");
@@ -2573,6 +2613,43 @@ const ScraperLeads = () => {
             {renderStatCard("Clienți", pipelineStats.converted, <CheckCircle className="w-4 h-4 text-white" />, "bg-green-600")}
             {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
           </div>
+
+          <Card className="mb-4 border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" /> Flux automat proprietăți
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {automationQueue.readyToImport.length} gata de import · {automationQueue.readyToContact.length} gata de contact · {automationQueue.missingData} cu date incomplete
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={bulkImportSmartDrafts} disabled={bulkImportingSmart || automationQueue.readyToImport.length === 0} className="gap-1.5">
+                    {bulkImportingSmart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+                    Importă top {automationQueue.readyToImport.length} ca draft
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("pipeline"); }} className="gap-1.5">
+                    <Flame className="h-4 w-4" /> Vezi prioritare
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/admin/prospect-listings")} className="gap-1.5">
+                    <ArrowRightCircle className="h-4 w-4" /> Prospect Listings
+                  </Button>
+                </div>
+              </div>
+              {automationQueue.readyToImport.length > 0 && (
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                  {automationQueue.readyToImport.map((lead) => (
+                    <button key={`auto-${lead.id}`} onClick={() => setSelectedLead(lead)} className="min-w-[220px] rounded-md border bg-background p-2 text-left text-xs hover:border-primary/50">
+                      <span className="block truncate font-medium">{cleanTitleStatic(lead.title)}</span>
+                      <span className="text-muted-foreground">Scor {lead.lead_score} · {formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Hide search/listing pages toggle — keeps the table focused on individual ads */}
           <div className="flex items-center gap-2 text-xs px-1 mb-2 flex-wrap">
