@@ -25,12 +25,12 @@ function isValidUrl(value: unknown): boolean {
 
 const VALID_PROPERTY_TYPES = [
   "apartament", "casa", "studio", "penthouse", "vila",
-  "cerere_rapida", "Apartament",
+  "cerere_rapida", "Apartament", "city_of_mara",
 ];
 
 const VALID_SOURCES = [
   "calculator", "quick_form", "lead_capture_form",
-  "rental-calculator", "advanced-rental-calculator",
+  "rental-calculator", "advanced-rental-calculator", "city_of_mara_landing",
 ];
 
 const handler = async (req: Request): Promise<Response> => {
