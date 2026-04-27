@@ -19,11 +19,16 @@ import cityHero from "@/assets/apt-03.webp";
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
+const purchaseGoals = ["Investiție", "Locuire proprie", "Revânzare", "Încă compar opțiuni"] as const;
+const budgetRanges = ["Sub 90.000€", "90.000–120.000€", "120.000–160.000€", "Peste 160.000€"] as const;
+
 const availabilitySchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie completat.").max(100, "Numele este prea lung."),
   whatsapp: z.string().trim().refine((value) => isValidWhatsAppNumber(value), "Număr WhatsApp invalid."),
   email: z.string().trim().email("Email invalid.").max(255, "Emailul este prea lung.").optional().or(z.literal("")),
   apartmentType: z.string().trim().min(2).max(40),
+  purchaseGoal: z.enum(purchaseGoals),
+  budgetRange: z.enum(budgetRanges),
   message: z.string().trim().max(800, "Mesajul este prea lung.").optional(),
 });
 
@@ -134,8 +139,11 @@ const notIdealFor = [
   "investitori care vor randament mare fără buget pentru mobilare sau parcare",
 ];
 
-const purchaseGoals = ["Investiție", "Locuire proprie", "Revânzare", "Încă compar opțiuni"];
-const budgetRanges = ["Sub 90.000€", "90.000–120.000€", "120.000–160.000€", "Peste 160.000€"];
+const responseTrustSignals = [
+  "răspuns orientativ în aceeași zi lucrătoare",
+  "shortlist filtrat, nu listă generică",
+  "context local și comparații relevante pentru Timișoara",
+];
 
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
