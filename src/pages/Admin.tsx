@@ -160,6 +160,8 @@ const Admin = () => {
       const normalizedPathTab = normalizeAdminTab(adminTab);
       if (normalizedPathTab && activeTab !== normalizedPathTab) {
         setActiveTab(normalizedPathTab);
+      } else if (!normalizedPathTab) {
+        navigate("/admin", { replace: true });
       }
       return;
     }
@@ -170,7 +172,7 @@ const Admin = () => {
       next.set("tab", activeTab);
       setSearchParams(next, { replace: true });
     }
-  }, [activeTab, adminTab, searchParams, setSearchParams]);
+  }, [activeTab, adminTab, navigate, searchParams, setSearchParams]);
 
   // Sync URL → activeTab (browser back/forward)
   useEffect(() => {
@@ -188,6 +190,7 @@ const Admin = () => {
       navigate(tab.externalRoute);
       return;
     }
+    navigate(value === "dashboard" ? "/admin" : `/admin/${value}`);
     setActiveTab(value);
   }, [navigate]);
 
