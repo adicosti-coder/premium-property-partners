@@ -428,23 +428,33 @@ function extractImportedSpecs(text: string) {
   const hasElevator = /\b(lift|ascensor)\b/.test(normalized) ? true : null;
   const hasAc = /\b(aer conditionat|aer condiționat|ac\b|clima|climatizare)\b/.test(normalized) ? true : null;
   const hasCellar = /\b(boxa|pivnita|pivniță|beci)\b/.test(normalized) ? true : null;
+  const hasStorage = /\b(debara|spatiu depozitare|spațiu depozitare|storage)\b/.test(normalized) ? true : null;
   const parking = /\b(parcare|loc de parcare|garaj)\b/.test(normalized) ? "Da" : null;
   const furnished = /\b(mobilat|mobilata|mobilată|utilat|utilata|utilată)\b/.test(normalized) ? "Mobilat/utilat" : null;
   const constructionType = /\b(caramida|cărămidă|brick)\b/.test(normalized) ? "Cărămidă" : /\b(beton|bca)\b/.test(normalized) ? "Beton/BCA" : null;
-  const heatingType = /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : /termoficare|colterm/.test(normalized) ? "Termoficare" : null;
-  const propertyCondition = /\b(nou|noua|nouă|prima inchiriere|prima închiriere)\b/.test(normalized) ? "Nou / prima utilizare" : /\b(renovat|renovata|renovată)\b/.test(normalized) ? "Renovat" : null;
-  const compartimentare = /decomandat/.test(normalized) ? "Decomandat" : /semidecomandat/.test(normalized) ? "Semidecomandat" : /nedecomandat|open space/.test(normalized) ? "Nedecomandat / open-space" : null;
+  const heatingType = /incalzire in pardoseala|încălzire în pardoseală/.test(normalized) ? "Încălzire în pardoseală" : /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : /termoficare|colterm/.test(normalized) ? "Termoficare" : null;
+  const propertyCondition = /\b(la rosu|la roșu|nefinisat)\b/.test(normalized) ? "Necesită finisare" : /\b(nou|noua|nouă|prima inchiriere|prima închiriere)\b/.test(normalized) ? "Nou / prima utilizare" : /\b(renovat|renovata|renovată)\b/.test(normalized) ? "Renovat" : null;
+  const compartimentare = /semidecomandat/.test(normalized) ? "Semidecomandat" : /nedecomandat|open space/.test(normalized) ? "Nedecomandat / open-space" : /decomandat/.test(normalized) ? "Decomandat" : null;
   const monthlyMaintenance = text.match(/(?:intretinere|întreținere|cheltuieli)\D{0,16}(\d+(?:[.,]\d+)?)\s*(?:lei|ron|€|eur)/i)?.[1]?.replace(",", ".");
   const energyClass = text.match(/(?:clasa energetica|clasă energetică|certificat energetic)\D{0,8}([A-G])/i)?.[1]?.toUpperCase() || null;
-  const viewType = /\b(vedere panoramica|vedere panoramică|panoramic)\b/.test(normalized) ? "Panoramică" : /\b(vedere parc|parc)\b/.test(normalized) ? "Parc" : null;
+  const viewType = /\b(vedere panoramica|vedere panoramică|panoramic)\b/.test(normalized) ? "Panoramică" : /\b(vedere parc|parc)\b/.test(normalized) ? "Parc" : /\b(vedere oras|vedere oraș)\b/.test(normalized) ? "Urbană" : null;
   const orientation = text.match(/orientare\s*[:\-]?\s*([A-Za-zĂÂÎȘȚăâîșț\- ]{3,24})/i)?.[1]?.trim() || null;
   const comfortLevel = normalized.match(/confort\s*(lux|1|2|3|i|ii|iii)/)?.[1]?.replace("i", "1") || null;
   const terrace = text.match(/(?:terasa|terasă)\D{0,12}(\d+(?:[.,]\d+)?)\s*(?:mp|m2)/i)?.[1]?.replace(",", ".");
+  const intercomType = /\b(videointerfon|video interfon)\b/.test(normalized) ? "Videointerfon" : /\b(interfon)\b/.test(normalized) ? "Interfon" : null;
+  const riskFlags = [
+    /\b(licitatie|licitație|executare silita|executare silită)\b/.test(normalized) ? "risc-juridic" : null,
+    /\b(urgent|negociabil|accept credit|cash)\b/.test(normalized) ? "marjă-negociere" : null,
+    /\b(fara cf|fără cf|intabulare in curs|intabulare în curs)\b/.test(normalized) ? "verifică-acte" : null,
+    /\b(necesita renovare|necesită renovare|de renovat|la rosu|la roșu)\b/.test(normalized) ? "necesită-renovare" : null,
+  ].filter(Boolean) as string[];
   const amenities = [
     hasAc ? "Aer condiționat" : null,
     hasElevator ? "Lift" : null,
     parking ? "Parcare" : null,
     hasCellar ? "Boxă" : null,
+    hasStorage ? "Spațiu depozitare" : null,
+    intercomType,
     /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : null,
     /incalzire in pardoseala|încălzire în pardoseală/.test(normalized) ? "Încălzire în pardoseală" : null,
   ].filter(Boolean) as string[];
@@ -459,8 +469,10 @@ function extractImportedSpecs(text: string) {
     has_elevator: hasElevator,
     has_ac: hasAc,
     has_cellar: hasCellar,
+    has_storage: hasStorage,
     parking,
     furnished,
+    intercom_type: intercomType,
     orientation,
     comfort_level: comfortLevel,
     terrace_area: terrace ? Number(terrace) : null,
@@ -472,6 +484,7 @@ function extractImportedSpecs(text: string) {
     energy_class: energyClass,
     view_type: viewType,
     amenities,
+    risk_flags: riskFlags,
   };
 }
 
@@ -565,7 +578,7 @@ function deriveProspectType(title: string): string {
   return "proprietar";
 }
 
-type ImportWorkflow = "smart" | "quick-review" | "owner-contact" | "investment" | "hospitality" | "media-needed" | "seo-ready" | "active";
+type ImportWorkflow = "smart" | "quick-review" | "owner-contact" | "investment" | "hospitality" | "media-needed" | "seo-ready" | "legal-review" | "renovation" | "active";
 
 interface ImportLeadOptions {
   listingType?: string;
@@ -582,6 +595,8 @@ const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
   hospitality: "Pregătire regim hotelier",
   "media-needed": "Necesită poze/verificare",
   "seo-ready": "Draft SEO-ready",
+  "legal-review": "Verificare juridică",
+  renovation: "Renovare / flip",
   active: "Import activ",
 };
 
@@ -1227,6 +1242,8 @@ const ScraperLeads = () => {
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
       const specs = extractImportedSpecs(textBlob);
+      const hasRenovationSignal = specs.risk_flags.includes("necesită-renovare") || workflow === "renovation";
+      const hasLegalRisk = specs.risk_flags.includes("risc-juridic") || specs.risk_flags.includes("verifică-acte") || workflow === "legal-review";
       const needsMediaReview = workflow === "media-needed" || (!lead.description && !lead.admin_notes) || !size || !lead.phone;
       const isPriorityContact = workflow === "owner-contact" || (lead.lead_score >= 85 && Boolean(lead.phone));
       const internalChecklist = [
@@ -1235,6 +1252,9 @@ const ScraperLeads = () => {
         !rooms ? "completează-camere" : null,
         !lead.phone ? "găsește-telefon" : null,
         needsMediaReview ? "atașează-poze" : null,
+        hasLegalRisk ? "verifică-acte-proprietate" : null,
+        hasRenovationSignal ? "estimează-buget-renovare" : null,
+        specs.monthly_maintenance ? "confirmă-întreținere" : null,
         workflow === "seo-ready" ? "optimizează-seo" : null,
         workflow === "investment" ? "calculează-roi-final" : null,
         workflow === "hospitality" ? "verifică-regim-hotelier" : null,
@@ -1248,9 +1268,12 @@ const ScraperLeads = () => {
         lead.lead_score >= 90 ? "lead-premium" : null,
         isPremiumLead(lead.title) ? "zonă-premium" : null,
         isPriorityContact ? "contact-prioritar" : null,
+        hasLegalRisk ? "atenție-juridic" : null,
+        hasRenovationSignal ? "potențial-flip" : null,
         lead.phone ? "contact-disponibil" : "verifică-telefon",
         `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
+        ...specs.risk_flags,
       ].filter(Boolean) as string[];
       const tag = options?.activate ? "Importat scraper" : needsMediaReview ? "Necesită poze/verificare" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
       const estimatedRevenue = listingType === "inchiriere" && lead.original_price
@@ -1292,8 +1315,10 @@ const ScraperLeads = () => {
         has_elevator: specs.has_elevator,
         has_ac: specs.has_ac,
         has_cellar: specs.has_cellar,
+        has_storage: specs.has_storage,
         parking: specs.parking,
         furnished: specs.furnished,
+        intercom_type: specs.intercom_type,
         orientation: specs.orientation,
         comfort_level: specs.comfort_level,
         construction_type: specs.construction_type,
@@ -1310,11 +1335,13 @@ const ScraperLeads = () => {
         expert_insight_ro: [
           `Import: ${IMPORT_WORKFLOW_LABELS[workflow]}.`,
           `Prioritate: ${isPriorityContact ? "contact rapid" : lead.lead_score >= 70 ? "revizie comercială" : "verificare standard"}.`,
+          specs.risk_flags.length ? `Semnale detectate: ${specs.risk_flags.join(", ")}.` : null,
           internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
         ].filter(Boolean).join("\n"),
         expert_insight_en: [
           `Import workflow: ${IMPORT_WORKFLOW_LABELS[workflow]}.`,
           `Priority: ${isPriorityContact ? "fast owner contact" : lead.lead_score >= 70 ? "commercial review" : "standard review"}.`,
+          specs.risk_flags.length ? `Detected signals: ${specs.risk_flags.join(", ")}.` : null,
           internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
         ].filter(Boolean).join("\n"),
         contact_phone: lead.phone || null,
@@ -2106,6 +2133,8 @@ const ScraperLeads = () => {
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Pregătește regim hotelier</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full", workflow: "quick-review" })}>Draft + verificare completă</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "seo-ready", verification: "full" })}>Draft SEO-ready</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "legal-review", verification: "full" })}>Verificare juridică</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", workflow: "renovation", verification: "full" })}>Renovare / flip</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -3067,6 +3096,8 @@ const ScraperLeads = () => {
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Regim hotelier</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full", workflow: "quick-review" })}>Verificare completă</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "seo-ready", verification: "full" })}>SEO-ready</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "legal-review", verification: "full" })}>Verificare juridică</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", workflow: "renovation", verification: "full" })}>Renovare / flip</DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -3213,6 +3244,8 @@ const ScraperLeads = () => {
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Regim hotelier</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full", workflow: "quick-review" })}>Verificare completă</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "seo-ready", verification: "full" })}>SEO-ready</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "legal-review", verification: "full" })}>Verificare juridică</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", workflow: "renovation", verification: "full" })}>Renovare / flip</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                         </DropdownMenuContent>
