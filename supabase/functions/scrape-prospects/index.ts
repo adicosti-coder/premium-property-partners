@@ -321,6 +321,15 @@ function hasAgencySignal(title: string | null | undefined, url: string | null | 
   return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
+function hasOwnerFilterIntent(query: string | null | undefined, url: string | null | undefined): boolean {
+  const blob = removeDiacritics(`${query || ''} ${url || ''}`.toLowerCase());
+  return [
+    'proprietar', 'proprietari', 'persoana fizica', 'persoane fizice', 'persoana privata',
+    'private_business', 'ownerTypeSingleSelect=PRIVATE', 'tip-anunt-persoane-fizice',
+    'fara comision', 'direct proprietar',
+  ].some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
@@ -505,15 +514,13 @@ Deno.serve(async (req) => {
     console.log(`Expanded to ${queries.length} owner-only search queries`);
 
     if (onlyNewSources || preserveAgencyFilter) {
-      const [{ data: scraperRows }, { data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
-        supabase.from('scraper_leads').select('url, phone'),
+      const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
         supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
         supabase.from('prospect_listings').select('source_url, phone_normalized, contact_phone, prospect_type, is_active'),
         supabase.from('agency_blocklist').select('phone_normalized, domain'),
         supabase.from('agency_whitelist').select('phone_normalized, domain'),
       ]);
 
-      for (const row of scraperRows || []) if (row.url) existingUrls.add(row.url);
       for (const row of archiveRows || []) {
         if (row.url) existingUrls.add(row.url);
         if (row.prospect_category === 'agentie' || row.status === 'archived') {
@@ -581,7 +588,9 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            if (!hasExplicitOwnerSignal(result.title || '', url, markdown)) {
+            const explicitOwnerSignal = hasExplicitOwnerSignal(result.title || '', url, markdown);
+            const ownerFilterIntent = hasOwnerFilterIntent(query, url);
+            if (!explicitOwnerSignal && !ownerFilterIntent) {
               archivedSkipped++;
               continue;
             }
