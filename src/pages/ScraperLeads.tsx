@@ -2098,11 +2098,15 @@ const ScraperLeads = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead)}>Draft inteligent</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "owner-contact", verification: "full" })}>Contact proprietar prioritar</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "media-needed", verification: "full" })}>Necesită poze/verificare</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "vanzare" })}>Importă ca vânzare</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "inchiriere" })}>Importă ca închiriere</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", verification: "full" })}>Importă pentru investiție</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full" })}>Pregătește regim hotelier</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full" })}>Draft + verificare completă</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", verification: "full", workflow: "investment" })}>Importă pentru investiție</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Pregătește regim hotelier</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full", workflow: "quick-review" })}>Draft + verificare completă</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "seo-ready", verification: "full" })}>Draft SEO-ready</DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
