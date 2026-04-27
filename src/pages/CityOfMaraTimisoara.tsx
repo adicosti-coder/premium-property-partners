@@ -90,6 +90,19 @@ const acquisitionSteps = [
   { title: "3. Decizie asistată", text: "Primești comparație de cost total, randament și riscuri înainte de rezervare sau ofertă fermă." },
 ];
 
+const pricingDrivers = [
+  { title: "Etaj și orientare", text: "Unitățile luminoase, cu orientare bună și zgomot redus, tind să susțină mai bine prețul și revânzarea." },
+  { title: "Parcare și boxă", text: "În complexele centrale, locul de parcare poate influența puternic atât lichiditatea, cât și chiria obținută." },
+  { title: "Mobilare și stare", text: "Apartamentele pregătite pentru mutare sau închiriere reduc timpul până la monetizare și presiunea pe bugetul total." },
+];
+
+const costChecklist = [
+  "preț apartament + avans / structură credit",
+  "loc de parcare, boxă și costuri notariale",
+  "mobilare, electrocasnice și buget de lansare",
+  "randament net estimat după costuri reale",
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -326,6 +339,23 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="factori-pret-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="factori-pret-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ce influențează prețul în City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">În acest complex, diferențele de preț între apartamente aparent similare apar din câțiva factori foarte clari, pe care merită să-i vezi înainte de ofertă.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {pricingDrivers.map((item) => (
+                <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="bg-muted/40 py-12 md:py-16" aria-labelledby="scenarii-randament-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 max-w-3xl">
@@ -410,6 +440,14 @@ const CityOfMaraTimisoara = () => {
                   "Recomandare rapidă: cumpără, negociază sau așteaptă",
                 ].map((item) => <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>)}
               </div>
+              <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-5">
+                <h3 className="text-lg font-semibold text-foreground">Checklist cost total de achiziție</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {costChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
             </div>
             <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card p-5 shadow-sm md:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -474,6 +512,26 @@ const CityOfMaraTimisoara = () => {
               <Button asChild><Link to="/complexe">Vezi Complexe</Link></Button>
               <Button asChild variant="outline"><Link to="/catalog-investitii">Catalog Investiții</Link></Button>
             </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 pb-12 md:pb-16" aria-labelledby="resurse-city-of-mara">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Link to="/analiza-roi-apartament" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">
+              <Calculator className="h-6 w-6 text-primary" />
+              <h2 id="resurse-city-of-mara" className="mt-4 text-xl font-semibold text-foreground">Analiza ROI apartament</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Calculează rapid scenarii de randament pentru bugetul și tipul tău de apartament.</p>
+            </Link>
+            <Link to="/piata-imobiliara-timisoara" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">
+              <BarChart3 className="h-6 w-6 text-primary" />
+              <h3 className="mt-4 text-xl font-semibold text-foreground">Piața imobiliară Timișoara</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Vezi contextul local al prețurilor, cererii și principalelor zone de interes pentru investitori.</p>
+            </Link>
+            <Link to="/complexe" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">
+              <Building2 className="h-6 w-6 text-primary" />
+              <h3 className="mt-4 text-xl font-semibold text-foreground">Alte complexe premium</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Compară City of Mara cu alte ansambluri relevante din Timișoara înainte de decizia finală.</p>
+            </Link>
           </div>
         </section>
       </main>
