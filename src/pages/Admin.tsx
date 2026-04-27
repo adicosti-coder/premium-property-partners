@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import SEOHead from "@/components/SEOHead";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -66,8 +66,14 @@ import { useQuery } from "@tanstack/react-query";
 
 const SIDEBAR_OPEN_KEY = "admin:sidebar-open";
 
+const normalizeAdminTab = (value?: string | null) => {
+  if (!value) return null;
+  return findTab(value) ? value : null;
+};
+
 const Admin = () => {
   const navigate = useNavigate();
+  const { adminTab } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
@@ -75,7 +81,7 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [cmdOpen, setCmdOpen] = useState(false);
 
-  const initialTab = searchParams.get("tab") || "dashboard";
+  const initialTab = normalizeAdminTab(adminTab) || normalizeAdminTab(searchParams.get("tab")) || "dashboard";
   const [activeTab, setActiveTab] = useState(initialTab);
 
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
@@ -150,21 +156,31 @@ const Admin = () => {
 
   // Sync activeTab → URL
   useEffect(() => {
+    if (adminTab) {
+      const normalizedPathTab = normalizeAdminTab(adminTab);
+      if (normalizedPathTab && activeTab !== normalizedPathTab) {
+        setActiveTab(normalizedPathTab);
+      }
+      return;
+    }
+
     const current = searchParams.get("tab");
     if (current !== activeTab) {
       const next = new URLSearchParams(searchParams);
       next.set("tab", activeTab);
       setSearchParams(next, { replace: true });
     }
-  }, [activeTab, searchParams, setSearchParams]);
+  }, [activeTab, adminTab, searchParams, setSearchParams]);
 
   // Sync URL → activeTab (browser back/forward)
   useEffect(() => {
+    if (adminTab) return;
     const fromUrl = searchParams.get("tab");
-    if (fromUrl && fromUrl !== activeTab) {
-      setActiveTab(fromUrl);
+    const normalizedFromUrl = normalizeAdminTab(fromUrl);
+    if (normalizedFromUrl && normalizedFromUrl !== activeTab) {
+      setActiveTab(normalizedFromUrl);
     }
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [adminTab, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectTab = useCallback((value: string) => {
     const tab = findTab(value);
