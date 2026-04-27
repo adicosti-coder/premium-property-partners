@@ -8,7 +8,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle } from "lucide-react";
-import { Helmet } from "react-helmet-async";
 import { lazy, Suspense } from "react";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
