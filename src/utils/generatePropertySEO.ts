@@ -3,7 +3,7 @@
  * Used both by the React app (SEOHead) and the prerender plugin.
  */
 
-const BASE_URL = "https://www.realtrust.ro";
+const BASE_URL = "https://realtrust.ro";
 
 export interface PropertySEOInput {
   name: string;
