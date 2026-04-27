@@ -1188,7 +1188,7 @@ const ScraperLeads = () => {
   };
 
   // ── Import lead as draft listing ───────────────────
-  const importLeadAsListing = async (lead: ScraperLead, options?: { listingType?: string; activate?: boolean; verification?: "standard" | "full" }) => {
+  const importLeadAsListing = async (lead: ScraperLead, options?: ImportLeadOptions) => {
     if (!lead.url) {
       toast.error("Anunțul nu are URL sursă pentru import");
       return;
@@ -1214,6 +1214,7 @@ const ScraperLeads = () => {
         return;
       }
 
+      const workflow = options?.workflow || (options?.activate ? "active" : options?.verification === "full" ? "quick-review" : "smart");
       const listingType = options?.listingType || deriveListingType(lead.title, lead.listing_type || "vanzare");
       const cleanTitle = cleanTitleStatic(lead.title);
       const textBlob = `${lead.title || ""}\n${lead.description || ""}\n${lead.admin_notes || ""}`;
@@ -1226,17 +1227,32 @@ const ScraperLeads = () => {
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
       const specs = extractImportedSpecs(textBlob);
+      const needsMediaReview = workflow === "media-needed" || (!lead.description && !lead.admin_notes) || !size || !lead.phone;
+      const isPriorityContact = workflow === "owner-contact" || (lead.lead_score >= 85 && Boolean(lead.phone));
+      const internalChecklist = [
+        "verifică-preț",
+        !size ? "completează-suprafață" : null,
+        !rooms ? "completează-camere" : null,
+        !lead.phone ? "găsește-telefon" : null,
+        needsMediaReview ? "atașează-poze" : null,
+        workflow === "seo-ready" ? "optimizează-seo" : null,
+        workflow === "investment" ? "calculează-roi-final" : null,
+        workflow === "hospitality" ? "verifică-regim-hotelier" : null,
+      ].filter(Boolean) as string[];
       const importedFeatures = [
         "importat-scraper",
         "necesită-verificare",
         options?.verification === "full" ? "verificare-completă" : "verificare-standard",
+        `workflow-${workflow}`,
+        ...internalChecklist,
         lead.lead_score >= 90 ? "lead-premium" : null,
         isPremiumLead(lead.title) ? "zonă-premium" : null,
+        isPriorityContact ? "contact-prioritar" : null,
         lead.phone ? "contact-disponibil" : "verifică-telefon",
         `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
       ].filter(Boolean) as string[];
-      const tag = options?.activate ? "Importat scraper" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
+      const tag = options?.activate ? "Importat scraper" : needsMediaReview ? "Necesită poze/verificare" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
       const estimatedRevenue = listingType === "inchiriere" && lead.original_price
         ? `${lead.original_price}€/lună chirie listată`
         : lead.monthly_extra
