@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, Gauge, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, Target, TrendingUp, WalletCards } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, Gauge, HelpCircle, Home, Landmark, LineChart as LineChartIcon, MapPin, PieChart, Scale, Target, TrendingUp, WalletCards } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -62,6 +62,19 @@ const investmentLevers = [
   { icon: Target, title: "Poziționare în piață", text: "Fotografii, dotări și descriere calibrate pentru oaspeți business, city-break și relocări." },
   { icon: WalletCards, title: "Controlul costurilor", text: "Analiza include curățenie, mentenanță, taxe, comisioane și perioade cu ocupare redusă." },
   { icon: Clock3, title: "Viteză de recuperare", text: "Modelăm în câți ani se recuperează investiția prin venit net și apreciere de capital." },
+];
+
+const decisionRules = [
+  { label: "Cumpără", threshold: "82+", text: "ROI net competitiv, ocupare bună și potențial de apreciere peste media zonei." },
+  { label: "Negociază", threshold: "68–81", text: "Proprietatea poate funcționa, dar prețul, mobilarea sau costurile trebuie optimizate." },
+  { label: "Evită temporar", threshold: "sub 68", text: "Riscul operațional sau prețul de intrare pot bloca randamentul net." },
+];
+
+const zoneCriteria = [
+  "Distanță bună față de centru, business hub-uri, universități sau spitale",
+  "Acces la transport, parcare și servicii de zi cu zi",
+  "Complex cu reputație bună, administrare predictibilă și costuri transparente",
+  "Cerere mixtă: chiriași pe termen lung, oaspeți business și sejururi scurte",
 ];
 
 const relatedGuides = [
@@ -290,6 +303,40 @@ const AnalizaROIApartament = () => {
               <Button asChild variant="outline"><Link to="/evaluare-gratuita">Cere validare RealTrust</Link></Button>
             </CardContent>
           </Card>
+        </section>
+
+        <section className="bg-muted/40 py-14 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Scale className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Cadru de decizie</span></div>
+              <h2 className="text-3xl font-bold text-foreground">Cumpără, negociază sau evită?</h2>
+              <p className="mt-3 text-muted-foreground">Folosește scorul investițional ca filtru inițial, apoi validează zona, costurile și potențialul de administrare profesională.</p>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {decisionRules.map((rule) => (
+                <Card key={rule.label} className="border-border bg-card">
+                  <CardContent className="p-6">
+                    <p className="text-sm font-semibold text-primary">Scor {rule.threshold}</p>
+                    <h3 className="mt-2 text-2xl font-bold text-foreground">{rule.label}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{rule.text}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <Card className="mt-6 border-primary/20 bg-primary/5">
+              <CardContent className="p-6">
+                <div className="mb-4 flex items-center gap-2 text-primary"><MapPin className="h-5 w-5" /><h3 className="text-xl font-semibold text-foreground">Criterii de zonă cu impact direct în ROI</h3></div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {zoneCriteria.map((item) => (
+                    <div key={item} className="flex gap-3 rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
 
         <section className="border-y border-border bg-background py-14 md:py-20">
