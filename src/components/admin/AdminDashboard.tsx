@@ -107,6 +107,26 @@ const AdminDashboard = () => {
     refetchInterval: 1000 * 60,
   });
 
+  const { data: listingOps } = useQuery({
+    queryKey: ["admin-dashboard-listing-ops"],
+    queryFn: async () => {
+      const [draftsRes, activeSalesRes, activeRentalsRes, hotRes] = await Promise.all([
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "vanzare"),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "inchiriere"),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).gt("lead_score", 80),
+      ]);
+      return {
+        drafts: draftsRes.count ?? 0,
+        sales: activeSalesRes.count ?? 0,
+        rentals: activeRentalsRes.count ?? 0,
+        hotProspects: hotRes.count ?? 0,
+      };
+    },
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
