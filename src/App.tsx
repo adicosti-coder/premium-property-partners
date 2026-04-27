@@ -94,6 +94,7 @@ const ProspectListings = lazyWithRetry(() => import("./pages/ProspectListings"))
 const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimisoara"));
 const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
 const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
+const AnalizaROIApartament = lazyWithRetry(() => import("./pages/AnalizaROIApartament"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
@@ -233,6 +234,7 @@ const App = () => (
                     <Route path="/imobiliare-timisoara" element={<ImobiliareTimisoara />} />
                     <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
                     <Route path="/calculator-roi" element={<CalculatorROI />} />
+                    <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />

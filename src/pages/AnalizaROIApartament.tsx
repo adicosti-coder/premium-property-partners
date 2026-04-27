@@ -1,0 +1,233 @@
+import { lazy, Suspense, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { ArrowRight, Building2, Calculator, Home, Landmark, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
+import Header from "@/components/Header";
+import SEOHead from "@/components/SEOHead";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
+import BackToTop from "@/components/BackToTop";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+
+const Footer = lazy(() => import("@/components/Footer"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+
+const marketEvolution = [
+  { year: "2021", premium: 1600, central: 1450, metro: 1180 },
+  { year: "2022", premium: 1780, central: 1580, metro: 1300 },
+  { year: "2023", premium: 1950, central: 1710, metro: 1420 },
+  { year: "2024", premium: 2140, central: 1860, metro: 1550 },
+  { year: "2025", premium: 2320, central: 1990, metro: 1680 },
+  { year: "2026", premium: 2480, central: 2140, metro: 1810 },
+];
+
+const complexLinks = [
+  { name: "ISHO", href: "/complexe/isho", profile: "premium urban", yield: "8.8–10.2%" },
+  { name: "City of Mara", href: "/complexe/city-of-mara", profile: "central business", yield: "8.4–9.8%" },
+  { name: "Ateneo", href: "/complexe/ateneo", profile: "nou, lichiditate bună", yield: "8.0–9.6%" },
+  { name: "Fructus Plaza", href: "/complexe/fructus-plaza", profile: "ultracentral", yield: "9.0–10.5%" },
+];
+
+const AnalizaROIApartament = () => {
+  const [purchasePrice, setPurchasePrice] = useState(125000);
+  const [monthlyRent, setMonthlyRent] = useState(620);
+  const [nightlyRate, setNightlyRate] = useState(72);
+  const [occupancy, setOccupancy] = useState(75);
+  const [annualGrowth, setAnnualGrowth] = useState(6);
+
+  const calculations = useMemo(() => {
+    const classicAnnual = monthlyRent * 12;
+    const hotelGross = nightlyRate * 365 * (occupancy / 100);
+    const hotelNet = hotelGross * 0.73;
+    const classicRoi = (classicAnnual / purchasePrice) * 100;
+    const hotelRoi = (hotelNet / purchasePrice) * 100;
+    const appreciation = (purchasePrice * annualGrowth) / 100;
+    const totalReturn = hotelNet + appreciation;
+
+    const projection = Array.from({ length: 6 }, (_, index) => {
+      const year = 2026 + index;
+      const value = Math.round(purchasePrice * Math.pow(1 + annualGrowth / 100, index));
+      const netIncome = Math.round(hotelNet * Math.pow(1.025, index));
+      return { year: `${year}`, value, netIncome, total: value + netIncome };
+    });
+
+    return {
+      classicAnnual: Math.round(classicAnnual),
+      hotelNet: Math.round(hotelNet),
+      classicRoi: classicRoi.toFixed(1),
+      hotelRoi: hotelRoi.toFixed(1),
+      totalReturn: Math.round(totalReturn),
+      projection,
+      delta: Math.round(hotelNet - classicAnnual),
+    };
+  }, [annualGrowth, monthlyRent, nightlyRate, occupancy, purchasePrice]);
+
+  const comparisonData = [
+    { name: "Chirie clasică", value: calculations.classicAnnual, color: "hsl(var(--muted-foreground))" },
+    { name: "Regim hotelier", value: calculations.hotelNet, color: "hsl(var(--primary))" },
+    { name: "Randament total", value: calculations.totalReturn, color: "hsl(var(--accent))" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Analiza ROI Apartament | Randament investiții imobiliare"
+        description="Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe."
+        url="https://www.realtrust.ro/analiza-roi-apartament"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FinancialProduct",
+          name: "Analiza ROI Apartament România",
+          description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
+          url: "https://www.realtrust.ro/analiza-roi-apartament",
+          provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
+        }}
+      />
+      <Header />
+
+      <main className="pt-24 pb-16">
+        <section className="border-b border-border bg-gradient-to-b from-background to-muted/40">
+          <div className="container mx-auto px-4 py-10 md:py-16">
+            <PageBreadcrumb items={[{ label: "Analiza ROI Apartament" }]} className="mb-8" />
+            <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div>
+                <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+                  <TrendingUp className="h-4 w-4" /> Randament investiții imobiliare
+                </p>
+                <h1 className="text-4xl font-bold tracking-normal text-foreground md:text-5xl">
+                  Analiza ROI Apartament pentru investiții profitabile în România
+                </h1>
+                <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+                  Estimează profitul net al unui apartament, compară chiria clasică cu administrarea în regim hotelier și verifică evoluția prețurilor pe zone cu cerere ridicată.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Button asChild size="lg"><a href="#calculator">Calculează randamentul</a></Button>
+                  <Button asChild size="lg" variant="outline"><Link to="/complexe">Vezi Complexe <ArrowRight className="h-4 w-4" /></Link></Button>
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+                <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">ROI net verificat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
+                <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Ocupare medie modelată</p><p className="mt-1 text-3xl font-bold text-foreground">75%</p></CardContent></Card>
+                <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Costuri deduse automat</p><p className="mt-1 text-3xl font-bold text-foreground">27%</p></CardContent></Card>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="calculator" className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-8 max-w-3xl">
+            <div className="mb-3 flex items-center gap-2 text-primary"><Calculator className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Calculator interactiv</span></div>
+            <h2 className="text-3xl font-bold text-foreground">Analiză profit apartament România</h2>
+            <p className="mt-3 text-muted-foreground">Ajustează prețul, chiria, tariful pe noapte și ocuparea pentru a estima randamentul anual net.</p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <Card>
+              <CardContent className="space-y-6 p-6">
+                <div>
+                  <Label htmlFor="price">Preț achiziție</Label>
+                  <Input id="price" type="number" value={purchasePrice} onChange={(e) => setPurchasePrice(Number(e.target.value) || 0)} className="mt-2" />
+                  <Slider value={[purchasePrice]} min={60000} max={350000} step={5000} onValueChange={([value]) => setPurchasePrice(value)} className="mt-4" aria-label="Preț achiziție apartament" />
+                </div>
+                <div>
+                  <Label htmlFor="rent">Chirie clasică lunară</Label>
+                  <Input id="rent" type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(Number(e.target.value) || 0)} className="mt-2" />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label>Tarif/noapte</Label>
+                    <Slider value={[nightlyRate]} min={35} max={140} step={1} onValueChange={([value]) => setNightlyRate(value)} className="mt-4" aria-label="Tarif pe noapte" />
+                    <p className="mt-2 text-sm font-semibold text-primary">{nightlyRate} €/noapte</p>
+                  </div>
+                  <div>
+                    <Label>Ocupare</Label>
+                    <Slider value={[occupancy]} min={45} max={90} step={1} onValueChange={([value]) => setOccupancy(value)} className="mt-4" aria-label="Rată de ocupare" />
+                    <p className="mt-2 text-sm font-semibold text-primary">{occupancy}%</p>
+                  </div>
+                </div>
+                <div>
+                  <Label>Apreciere anuală preț</Label>
+                  <Slider value={[annualGrowth]} min={1} max={10} step={0.5} onValueChange={([value]) => setAnnualGrowth(value)} className="mt-4" aria-label="Apreciere anuală preț" />
+                  <p className="mt-2 text-sm font-semibold text-primary">{annualGrowth}%/an</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-6">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div><p className="text-sm text-muted-foreground">ROI chirie clasică</p><p className="text-3xl font-bold text-foreground">{calculations.classicRoi}%</p></div>
+                  <div><p className="text-sm text-muted-foreground">ROI net regim hotelier</p><p className="text-3xl font-bold text-primary">{calculations.hotelRoi}%</p></div>
+                  <div><p className="text-sm text-muted-foreground">Diferență anuală</p><p className="text-3xl font-bold text-foreground">+{calculations.delta.toLocaleString("ro-RO")}€</p></div>
+                </div>
+                <div className="mt-8 h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={comparisonData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${Number(value) / 1000}k€`} />
+                      <Tooltip formatter={(value: number) => [`${value.toLocaleString("ro-RO")} €/an`, ""]} contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))" }} />
+                      <Bar dataKey="value" radius={[8, 8, 0, 0]}>{comparisonData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        <section className="bg-muted/40 py-14 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 flex items-center gap-2 text-primary"><LineChartIcon className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Evoluție prețuri</span></div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card><CardContent className="p-6"><h2 className="mb-6 text-2xl font-bold text-foreground">Preț mediu €/mp pe segmente</h2><div className="h-80"><ResponsiveContainer width="100%" height="100%"><LineChart data={marketEvolution}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" /><YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${value}€`} /><Tooltip contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))" }} /><Line type="monotone" dataKey="premium" name="Premium" stroke="hsl(var(--primary))" strokeWidth={3} dot={false} /><Line type="monotone" dataKey="central" name="Central" stroke="hsl(var(--accent))" strokeWidth={3} dot={false} /><Line type="monotone" dataKey="metro" name="Metropolitan" stroke="hsl(var(--muted-foreground))" strokeWidth={3} dot={false} /></LineChart></ResponsiveContainer></div></CardContent></Card>
+              <Card><CardContent className="p-6"><h2 className="mb-6 text-2xl font-bold text-foreground">Proiecție valoare + venit net</h2><div className="h-80"><ResponsiveContainer width="100%" height="100%"><AreaChart data={calculations.projection}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" /><YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k€`} /><Tooltip formatter={(value: number) => [`${value.toLocaleString("ro-RO")} €`, ""]} contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))" }} /><Area type="monotone" dataKey="value" name="Valoare apartament" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.18)" /><Area type="monotone" dataKey="netIncome" name="Venit net anual" stroke="hsl(var(--accent))" fill="hsl(var(--accent) / 0.16)" /></AreaChart></ResponsiveContainer></div></CardContent></Card>
+            </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><Building2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Link-uri strategice</span></div><h2 className="text-3xl font-bold text-foreground">Complexe recomandate pentru analiză ROI</h2><p className="mt-3 text-muted-foreground">Compară potențialul de randament al apartamentelor din ansambluri cu cerere ridicată și poziționare bună pentru închiriere.</p></div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {complexLinks.map((item) => (
+              <Link key={item.name} to={item.href} className="group rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
+                <Home className="mb-4 h-7 w-7 text-primary" />
+                <h3 className="text-xl font-semibold text-foreground group-hover:text-primary">{item.name}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{item.profile}</p>
+                <p className="mt-4 text-sm font-semibold text-primary">ROI estimat {item.yield}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-8 rounded-lg border border-primary/20 bg-primary/5 p-6 md:flex md:items-center md:justify-between">
+            <div><Landmark className="mb-3 h-7 w-7 text-primary" /><h3 className="text-2xl font-bold text-foreground">Vrei o analiză pe o proprietate concretă?</h3><p className="mt-2 text-muted-foreground">Trimite apartamentul sau zona dorită și primești o estimare adaptată pieței locale.</p></div>
+            <div className="mt-5 flex flex-wrap gap-3 md:mt-0"><Button asChild><Link to="/complexe">Toate complexele</Link></Button><Button asChild variant="outline"><Link to="/evaluare-gratuita">Evaluare gratuită</Link></Button></div>
+          </div>
+        </section>
+      </main>
+
+      <Suspense fallback={null}>
+        <Footer />
+        <GlobalConversionWidgets />
+      </Suspense>
+      <BackToTop />
+    </div>
+  );
+};
+
+export default AnalizaROIApartament;
