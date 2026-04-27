@@ -299,6 +299,28 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="bg-muted/40 py-12 md:py-16" aria-labelledby="scenarii-randament-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Target className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scenarii de randament</span></div>
+              <h2 id="scenarii-randament-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Cum poate performa o investiție în City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Estimările sunt orientative și se calibrează după suprafață, etaj, parcare, mobilare și prețul de achiziție.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {yieldScenarios.map((item) => (
+                <article key={item.label} className="rounded-lg border border-primary/20 bg-card p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{item.label}</h3>
+                  <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-md bg-primary/5 p-3"><span className="block text-muted-foreground">Ocupare</span><strong className="text-primary">{item.occupancy}</strong></div>
+                    <div className="rounded-md bg-primary/5 p-3"><span className="block text-muted-foreground">Venit lunar</span><strong className="text-primary">{item.monthly}</strong></div>
+                  </div>
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="ghid-cumparator-city-of-mara">
           <div className="mb-8 max-w-3xl">
             <h2 id="ghid-cumparator-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ghid rapid pentru cumpărători City of Mara</h2>
