@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame } from "lucide-react";
+import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame, ClipboardList, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -110,17 +110,24 @@ const AdminDashboard = () => {
   const { data: listingOps } = useQuery({
     queryKey: ["admin-dashboard-listing-ops"],
     queryFn: async () => {
-      const [draftsRes, activeSalesRes, activeRentalsRes, hotRes] = await Promise.all([
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const [draftsRes, activeSalesRes, activeRentalsRes, hotRes, reviewRes, staleDraftsRes, newProspectsRes] = await Promise.all([
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false),
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "vanzare"),
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "inchiriere"),
         supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).gt("lead_score", 80),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).contains("features", ["necesită-verificare"]),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).lt("created_at", sevenDaysAgo),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).eq("lifecycle_status", "new"),
       ]);
       return {
         drafts: draftsRes.count ?? 0,
         sales: activeSalesRes.count ?? 0,
         rentals: activeRentalsRes.count ?? 0,
         hotProspects: hotRes.count ?? 0,
+        needsReview: reviewRes.count ?? 0,
+        staleDrafts: staleDraftsRes.count ?? 0,
+        newProspects: newProspectsRes.count ?? 0,
       };
     },
     staleTime: 60_000,
@@ -462,6 +469,33 @@ const AdminDashboard = () => {
               <div className="text-xs text-muted-foreground">listări lunare</div>
             </div>
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ClipboardList className="w-5 h-5 text-primary" />
+            Priorități operaționale
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          {[
+            { label: "Drafturi de verificat", value: listingOps?.needsReview ?? 0, hint: "importate automat", action: () => navigate("/admin?tab=properties") },
+            { label: "Drafturi vechi", value: listingOps?.staleDrafts ?? 0, hint: "peste 7 zile", action: () => navigate("/admin?tab=properties") },
+            { label: "Prospecți noi", value: listingOps?.newProspects ?? 0, hint: "neprelucrați", action: () => navigate("/scraper-leads") },
+          ].map((item) => (
+            <button key={item.label} onClick={item.action} className="rounded-lg border border-border bg-background p-4 text-left transition-colors hover:border-primary/50 hover:bg-card">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.hint}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-primary">{item.value}</p>
+            </button>
+          ))}
         </CardContent>
       </Card>
 

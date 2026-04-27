@@ -25,7 +25,7 @@ import {
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
   Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
-  ChevronDown, ChevronUp, Pencil, Building2, Check, X, RefreshCw,
+  ChevronDown, ChevronUp, Pencil, Building2, Check, X, RefreshCw, ClipboardList,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -1054,12 +1054,20 @@ const ScraperLeads = () => {
       .filter((lead) => lead.lead_score >= 80 && lead.url && !isSearchPageLead(lead.url, lead.title))
       .sort((a, b) => b.lead_score - a.lead_score)
       .slice(0, 5);
+    const needsVerification = unimported
+      .filter((lead) => lead.lead_score >= 65 && (!lead.phone || !lead.original_price || !parseSurface(`${lead.title || ""} ${lead.description || ""}`)))
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
+    const hospitalityCandidates = unimported
+      .filter((lead) => lead.lead_score >= 75 && (isPremiumLead(lead.title) || lead.listing_type === "inchiriere"))
+      .sort((a, b) => b.lead_score - a.lead_score)
+      .slice(0, 5);
     const readyToContact = filteredLeads
       .filter((lead) => lead.phone && ["new", "reviewed"].includes(lead.status) && lead.lead_score >= 75)
       .sort((a, b) => b.lead_score - a.lead_score)
       .slice(0, 5);
     const missingData = filteredLeads.filter((lead) => !lead.phone || !lead.original_price || !lead.url).length;
-    return { readyToImport, readyToContact, missingData, unimportedCount: unimported.length };
+    return { readyToImport, readyToContact, needsVerification, hospitalityCandidates, missingData, unimportedCount: unimported.length };
   }, [filteredLeads, importedPropertyByUrl]);
 
   const formatPrice = (price: number, suffix?: string) =>
@@ -1229,6 +1237,20 @@ const ScraperLeads = () => {
     }
     setBulkImportingSmart(false);
     toast.success(`${imported} lead-uri prioritare trimise în Proprietăți ca drafturi verificate`);
+  };
+
+  const copyAutomationBrief = () => {
+    const lines = [
+      "Brief operațional — Oportunități AI",
+      `Gata de import: ${automationQueue.readyToImport.length}`,
+      `Gata de contact: ${automationQueue.readyToContact.length}`,
+      `Necesită verificare: ${automationQueue.needsVerification.length}`,
+      `Candidați regim hotelier: ${automationQueue.hospitalityCandidates.length}`,
+      "",
+      ...automationQueue.readyToContact.map((lead, index) => `${index + 1}. ${cleanTitleStatic(lead.title)} · ${lead.phone || "fără telefon"} · scor ${lead.lead_score} · ${lead.url}`),
+    ].join("\n");
+    navigator.clipboard.writeText(lines);
+    toast.success("Brief-ul operațional a fost copiat");
   };
 
   // ── Compare Toggle ────────────────────────────────
@@ -2622,7 +2644,7 @@ const ScraperLeads = () => {
                     <Sparkles className="h-4 w-4 text-primary" /> Flux automat proprietăți
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {automationQueue.readyToImport.length} gata de import · {automationQueue.readyToContact.length} gata de contact · {automationQueue.missingData} cu date incomplete
+                    {automationQueue.readyToImport.length} gata de import · {automationQueue.readyToContact.length} gata de contact · {automationQueue.needsVerification.length} de verificat · {automationQueue.hospitalityCandidates.length} pentru regim hotelier
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -2632,6 +2654,9 @@ const ScraperLeads = () => {
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("pipeline"); }} className="gap-1.5">
                     <Flame className="h-4 w-4" /> Vezi prioritare
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={copyAutomationBrief} className="gap-1.5">
+                    <ClipboardList className="h-4 w-4" /> Brief
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => navigate("/admin/prospect-listings")} className="gap-1.5">
                     <ArrowRightCircle className="h-4 w-4" /> Prospect Listings
@@ -2648,6 +2673,20 @@ const ScraperLeads = () => {
                   ))}
                 </div>
               )}
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                <button onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Import inteligent</span>
+                  <span className="text-muted-foreground">{automationQueue.readyToImport.length} lead-uri cu scor mare și URL valid</span>
+                </button>
+                <button onClick={() => { setHideSnoozed(true); setViewMode("pipeline"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Contact prioritar</span>
+                  <span className="text-muted-foreground">{automationQueue.readyToContact.length} proprietari cu telefon disponibil</span>
+                </button>
+                <button onClick={() => { setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Curățare date</span>
+                  <span className="text-muted-foreground">{automationQueue.needsVerification.length} lead-uri fără telefon, preț sau suprafață</span>
+                </button>
+              </div>
             </CardContent>
           </Card>
 
