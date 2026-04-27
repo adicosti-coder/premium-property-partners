@@ -1307,6 +1307,16 @@ const ScraperLeads = () => {
         price_per_sqm: pricePerSqm,
         estimated_revenue: estimatedRevenue,
         roi_percentage: yieldValue ? `${yieldValue}%` : null,
+        expert_insight_ro: [
+          `Import: ${IMPORT_WORKFLOW_LABELS[workflow]}.`,
+          `Prioritate: ${isPriorityContact ? "contact rapid" : lead.lead_score >= 70 ? "revizie comercială" : "verificare standard"}.`,
+          internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
+        ].filter(Boolean).join("\n"),
+        expert_insight_en: [
+          `Import workflow: ${IMPORT_WORKFLOW_LABELS[workflow]}.`,
+          `Priority: ${isPriorityContact ? "fast owner contact" : lead.lead_score >= 70 ? "commercial review" : "standard review"}.`,
+          internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
+        ].filter(Boolean).join("\n"),
         contact_phone: lead.phone || null,
         contact_name: contactName !== "—" ? contactName : null,
         source_url: lead.url,
