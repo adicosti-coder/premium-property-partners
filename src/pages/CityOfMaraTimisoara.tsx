@@ -103,6 +103,19 @@ const costChecklist = [
   "randament net estimat după costuri reale",
 ];
 
+const negotiationSignals = [
+  { title: "Unitate listată de mai mult timp", text: "Poate crea spațiu pentru negociere, mai ales dacă proprietarul urmărește viteză de vânzare." },
+  { title: "Mobilare incompletă", text: "Prețul cerut poate părea bun, dar costul real crește dacă apartamentul nu este pregătit pentru utilizare imediată." },
+  { title: "Poziție inferioară în complex", text: "Parter, expunere zgomotoasă sau lipsa parcării pot influența atât prețul de intrare, cât și lichiditatea." },
+];
+
+const deliverables = [
+  "listă actualizată cu unități relevante pentru bugetul tău",
+  "filtrare după etaj, orientare, parcare și potențial de închiriere",
+  "estimare de cost total, nu doar preț de listare",
+  "recomandare scurtă: potrivit pentru locuire, chirie sau de evitat",
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -356,6 +369,21 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="negociere-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="negociere-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Semnale utile înainte să faci o ofertă</h2>
+            <p className="mt-3 text-muted-foreground">Nu toate apartamentele City of Mara trebuie tratate la fel. Am adăugat repere rapide care te ajută să separi o oportunitate reală de o unitate doar bine marketată.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {negotiationSignals.map((item) => (
+              <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="bg-muted/40 py-12 md:py-16" aria-labelledby="scenarii-randament-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 max-w-3xl">
@@ -444,6 +472,14 @@ const CityOfMaraTimisoara = () => {
                 <h3 className="text-lg font-semibold text-foreground">Checklist cost total de achiziție</h3>
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   {costChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="text-lg font-semibold text-foreground">Ce primești când ceri disponibilitățile</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {deliverables.map((item) => (
                     <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
                   ))}
                 </div>
