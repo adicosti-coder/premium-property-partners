@@ -321,6 +321,15 @@ function hasAgencySignal(title: string | null | undefined, url: string | null | 
   return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
+function hasOwnerFilterIntent(query: string | null | undefined, url: string | null | undefined): boolean {
+  const blob = removeDiacritics(`${query || ''} ${url || ''}`.toLowerCase());
+  return [
+    'proprietar', 'proprietari', 'persoana fizica', 'persoane fizice', 'persoana privata',
+    'private_business', 'ownerTypeSingleSelect=PRIVATE', 'tip-anunt-persoane-fizice',
+    'fara comision', 'direct proprietar',
+  ].some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
@@ -505,15 +514,13 @@ Deno.serve(async (req) => {
     console.log(`Expanded to ${queries.length} owner-only search queries`);
 
     if (onlyNewSources || preserveAgencyFilter) {
-      const [{ data: scraperRows }, { data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
-        supabase.from('scraper_leads').select('url, phone'),
+      const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
         supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
         supabase.from('prospect_listings').select('source_url, phone_normalized, contact_phone, prospect_type, is_active'),
         supabase.from('agency_blocklist').select('phone_normalized, domain'),
         supabase.from('agency_whitelist').select('phone_normalized, domain'),
       ]);
 
-      for (const row of scraperRows || []) if (row.url) existingUrls.add(row.url);
       for (const row of archiveRows || []) {
         if (row.url) existingUrls.add(row.url);
         if (row.prospect_category === 'agentie' || row.status === 'archived') {
@@ -581,7 +588,9 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            if (!hasExplicitOwnerSignal(result.title || '', url, markdown)) {
+            const explicitOwnerSignal = hasExplicitOwnerSignal(result.title || '', url, markdown);
+            const ownerFilterIntent = hasOwnerFilterIntent(query, url);
+            if (!explicitOwnerSignal && !ownerFilterIntent) {
               archivedSkipped++;
               continue;
             }
@@ -598,21 +607,6 @@ Deno.serve(async (req) => {
             }
             if (preserveAgencyFilter && resultDomain && blockedDomains.has(resultDomain) && !whitelistedDomains.has(resultDomain)) {
               blacklistedSkipped++;
-              continue;
-            }
-
-            // Dedup by URL in scraper_leads
-            const { data: existing } = await supabase
-              .from('scraper_leads')
-              .select('id')
-              .eq('url', url)
-              .maybeSingle();
-
-            if (existing) {
-              await supabase.from('scraper_leads')
-                .update({ updated_at: new Date().toISOString() })
-                .eq('id', existing.id);
-              if (onlyNewSources) duplicateSkipped++;
               continue;
             }
 
@@ -673,32 +667,60 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            // Derive listing_type
-            const listingType = isRental ? 'rent' : 'sale';
-
             const { data: inserted, error: insertErr } = await supabase
-              .from('scraper_leads')
-              .insert({
+              .from('prospect_listings')
+              .upsert({
+                source_platform: platform,
+                source_url: url,
                 title: extracted.title || result.title || 'Anunț fără titlu',
-                url,
-                source: platform,
-                original_price: price,
+                description: extracted.description || markdown.substring(0, 500) || null,
+                price,
+                currency: 'EUR',
+                location: extracted.location || 'Timișoara',
+                zone,
+                rooms: extracted.rooms,
+                size,
+                floor: extracted.floor,
+                year_built: extracted.yearBuilt,
+                features,
+                images: extracted.images,
+                contact_name: extracted.contactName,
+                contact_phone: extracted.contactPhone,
+                phone_normalized: normalizeRoPhone(extracted.contactPhone),
+                score,
                 lead_score: score,
-                monthly_extra: monthlyExtra,
-                extra_profit_3y: extraProfit3Y,
-                listing_type: listingType,
-                phone: extracted.contactPhone,
-                search_keyword: query,
+                score_breakdown: breakdown,
+                ai_score_breakdown: {
+                  source: 'scrape-prospects',
+                  owner_filter_intent: ownerFilterIntent,
+                  explicit_owner_signal: explicitOwnerSignal,
+                  estimated_monthly_extra: monthlyExtra,
+                  estimated_extra_profit_3y: extraProfit3Y,
+                },
                 status: 'new',
-              })
-              .select('id, title, lead_score')
-              .single();
+                prospect_type: 'proprietar',
+                category: isRental ? 'inchiriere' : 'vanzare',
+                lifecycle_status: 'new',
+                is_active: true,
+                search_keywords: [query],
+                tags: ['scrape-prospects', 'auto-import', explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari'].filter(Boolean),
+                admin_notes: explicitOwnerSignal
+                  ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                  : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
+                scraped_at: new Date().toISOString(),
+                last_seen_at: new Date().toISOString(),
+              }, { onConflict: 'source_url', ignoreDuplicates: true })
+              .select('id, title, lead_score, source_url')
+              .maybeSingle();
 
             if (insertErr) {
               console.error(`Insert error for ${url}:`, insertErr.message);
               errors.push(`${url}: ${insertErr.message}`);
-            } else {
+            } else if (inserted) {
               results.push(inserted);
+              existingUrls.add(url);
+            } else {
+              duplicateSkipped++;
             }
           }
         } catch (err: any) {
