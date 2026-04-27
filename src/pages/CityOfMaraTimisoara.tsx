@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowRight, BarChart3, Building2, CheckCircle2, FileText, Home, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -47,6 +47,18 @@ const priceEvolution = [
   { year: "2026", value: "2.050+ €/mp", note: "prime pentru unități mobilate și parcări" },
 ];
 
+const buyerChecklist = [
+  { icon: Calculator, title: "Buget total", text: "Verificăm prețul apartamentului, parcarea, mobilarea, taxele notariale și scenariul de credit înainte de ofertare." },
+  { icon: KeyRound, title: "Pregătire pentru închiriere", text: "Estimăm costul de mobilare, durata până la prima închiriere și diferența dintre chirie clasică și administrare hotelieră." },
+  { icon: ShieldCheck, title: "Due diligence", text: "Analizăm actele, poziția în complex, orientarea, etajul, vecinătățile și lichiditatea la revânzare." },
+];
+
+const faqItems = [
+  { question: "Merită cumpărate apartamente City of Mara pentru investiție?", answer: "Da, mai ales unitățile compacte cu parcare și compartimentare eficientă, deoarece zona Circumvalațiunii are acces rapid către Iulius Town, centru și hub-uri de business." },
+  { question: "Ce tip de apartament are randament mai bun în City of Mara?", answer: "În general, studiourile și apartamentele cu 2 camere au randament mai bun pentru chirie corporate sau regim hotelier, în timp ce apartamentele mai mari sunt mai potrivite pentru locuire și revânzare." },
+  { question: "Pot primi lista actualizată de disponibilități City of Mara?", answer: "Da. Completează formularul de pe pagină și trimitem opțiunile disponibile, prețurile actualizate, parcările și o estimare de randament pentru bugetul tău." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -81,6 +93,14 @@ const CityOfMaraTimisoara = () => {
         url: "https://www.realtrust.ro",
         telephone: "+40799069256",
         areaServed: "Timișoara",
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+        })),
       },
     ],
   };
