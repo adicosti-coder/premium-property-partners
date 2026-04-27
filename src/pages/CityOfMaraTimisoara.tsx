@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, Clock3, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, Clock3, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -149,6 +149,25 @@ const callPrepChecklist = [
   "bugetul maxim și dacă ai nevoie de credit",
   "dacă vrei locuire, investiție sau doar comparație",
   "preferințe pentru etaj, parcare și termen de mutare",
+];
+
+const financingReadiness = [
+  { title: "Avans și rezervă", text: "Nu te uita doar la avans. E util să păstrezi și un buffer pentru notar, mobilare, parcare și mici corecții după achiziție." },
+  { title: "Preaprobarea de credit", text: "Dacă finanțezi prin bancă, preaprobarea scurtează timpul de decizie și te ajută să negociezi mai clar în limita bugetului real." },
+  { title: "Calendar realist", text: "Pentru investiție, contează intervalul dintre achiziție și prima monetizare. Pentru locuire, contează data mutării și costul total până la cheie." },
+];
+
+const viewingChecklist = [
+  "nivelul real de zgomot la ore diferite și expunerea către trafic",
+  "lumina naturală, orientarea și distanța față de vecini",
+  "calitatea finisajelor, ușilor, băilor și spațiilor de depozitare",
+  "accesul concret la parcare, lift și zonele comune",
+];
+
+const riskSignals = [
+  { title: "Preț bun, cost total slab", text: "Unele unități par atractive doar prin prețul de intrare. Fără parcare, mobilare sau cu poziție mai slabă, costul total poate deveni mai puțin competitiv." },
+  { title: "Randament estimat fără scenariu real", text: "Un ROI credibil are nevoie de chirie probabilă, grad de ocupare, costuri operaționale și buget de lansare, nu doar de un procent orientativ." },
+  { title: "Decizie grăbită fără comparație", text: "În același buget, două apartamente din același complex pot avea rezultate foarte diferite în funcție de etaj, orientare și pregătirea pentru utilizare imediată." },
 ];
 
 const CityOfMaraTimisoara = () => {
