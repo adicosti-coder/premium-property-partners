@@ -1622,8 +1622,10 @@ const ScraperLeads = () => {
       setSelectedLead((prev) => prev ? { ...prev, prospect_category: newCategory } : null);
     }
 
-    // Update lead's prospect_category
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: newCategory } as any).eq("id", lead.id);
+    // Update lead category in the actual source table.
+    const { error } = lead._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ prospect_type: newCategory } as any).eq("id", lead.id)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ prospect_category: newCategory } as any).eq("id", lead.id);
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la schimbarea categoriei");
