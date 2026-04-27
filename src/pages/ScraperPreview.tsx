@@ -16,7 +16,7 @@ import {
   ArrowLeft, ExternalLink, RefreshCw, ShieldCheck, ShieldAlert,
   Filter, CheckCircle2, AlertTriangle, Search, Eye, EyeOff,
   Download, GitCompare, Code2, CheckCheck, Highlighter,
-  ChevronLeft, ChevronRight, X, Server, Ban, Loader2,
+  ChevronLeft, ChevronRight, X, Server, Ban, Loader2, UploadCloud,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -168,6 +168,8 @@ export default function ScraperPreview() {
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overview, setOverview] = useState<QueryOverviewRow[] | null>(null);
+  const [importingUrls, setImportingUrls] = useState<Set<string>>(new Set());
+  const [importedUrls, setImportedUrls] = useState<Set<string>>(new Set());
 
   // ── Session persistence (localStorage) ───────────────
   const sessionKey = keywordId ? `scraper-preview-session:${keywordId}` : null;
@@ -412,6 +414,46 @@ export default function ScraperPreview() {
     toast.success("Sesiune ștearsă");
   }
 
+  async function importPreviewItems(items: PreviewResult[], label = "anunțuri") {
+    if (!data || items.length === 0) return;
+    const unique = Array.from(new Map(items.filter((it) => it.url).map((it) => [it.url, it])).values());
+    setImportingUrls((prev) => new Set([...prev, ...unique.map((it) => it.url)]));
+    try {
+      const urls = unique.map((it) => it.url);
+      const { data: existing, error: checkError } = await supabase
+        .from("prospect_listings" as any)
+        .select("source_url")
+        .in("source_url", urls);
+      if (checkError) throw checkError;
+
+      const existingUrls = new Set((existing || []).map((row: any) => row.source_url));
+      const rows = unique
+        .filter((it) => !existingUrls.has(it.url))
+        .map((it) => buildProspectRowFromPreview(it, data));
+
+      if (rows.length === 0) {
+        setImportedUrls((prev) => new Set([...prev, ...urls]));
+        toast.info(`Toate cele ${unique.length} ${label} existau deja în Oportunități AI.`);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from("prospect_listings" as any).insert(rows as any);
+      if (insertError) throw insertError;
+
+      setImportedUrls((prev) => new Set([...prev, ...rows.map((row: any) => row.source_url)]));
+      toast.success(`Importate în Oportunități AI: ${rows.length} ${label}.`);
+    } catch (err: any) {
+      console.error("Preview import error:", err);
+      toast.error(err?.message || "Nu am putut importa anunțurile în Oportunități AI.");
+    } finally {
+      setImportingUrls((prev) => {
+        const next = new Set(prev);
+        unique.forEach((it) => next.delete(it.url));
+        return next;
+      });
+    }
+  }
+
   useEffect(() => {
     // Only auto-run if no cached session data for this kw
     if (!keywordId) return;
@@ -494,6 +536,11 @@ export default function ScraperPreview() {
     if (!data) return [];
     return [...data.filtered_results, ...data.removed_by_filters];
   }, [data]);
+
+  const usefulPreviewItems = useMemo<PreviewResult[]>(() => {
+    if (!data) return [];
+    return beforeList.filter((it) => isUsefulOwnerPreviewResult(it));
+  }, [data, beforeList]);
 
   return (
     <>
