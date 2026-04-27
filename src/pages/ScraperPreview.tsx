@@ -16,7 +16,7 @@ import {
   ArrowLeft, ExternalLink, RefreshCw, ShieldCheck, ShieldAlert,
   Filter, CheckCircle2, AlertTriangle, Search, Eye, EyeOff,
   Download, GitCompare, Code2, CheckCheck, Highlighter,
-  ChevronLeft, ChevronRight, X, Server, Ban, Loader2,
+  ChevronLeft, ChevronRight, X, Server, Ban, Loader2, UploadCloud,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -98,6 +98,60 @@ function extractHighlightTerms(
 
 function escapeRegExp(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
+function inferPrice(text: string): number | null {
+  const match = text.match(/(\d{2,3}(?:[.,]\d{3})+|\d{5,6})\s*(?:€|eur)/i);
+  if (!match) return null;
+  const value = Number(match[1].replace(/[.,]/g, ""));
+  return Number.isFinite(value) ? value : null;
+}
+
+function isUsefulOwnerPreviewResult(item: PreviewResult): boolean {
+  const blob = `${item.title} ${item.description} ${item.url}`.toLowerCase();
+  if (item.owner_signal.isOwner) return true;
+  return /direct\s+proprietar|proprietar|persoan[aă]\s*fizic[aă]|f[aă]r[aă]\s+comision|comision\s*0|cf-individual/.test(blob);
+}
+
+function buildProspectRowFromPreview(item: PreviewResult, data: PreviewResponse) {
+  const blob = `${item.title} ${item.description}`;
+  const price = inferPrice(blob);
+  const rooms = blob.match(/\b([1-5])\s*(?:camere|camera|cam\.)\b/i)?.[1];
+  const zone = item.url.match(/timisoara\/([^/?#]+)(?:\/|$)/i)?.[1]?.replace(/-/g, " ") || null;
+  const isOwner = isUsefulOwnerPreviewResult(item);
+  const score = isOwner ? 88 : 72;
+
+  return {
+    source_platform: data.keyword.platform,
+    source_url: item.url,
+    title: item.title,
+    description: item.description,
+    price,
+    currency: "EUR",
+    location: "Timișoara",
+    zone,
+    rooms: rooms ? Number(rooms) : null,
+    features: [
+      isOwner ? "semnal-proprietar" : "verificare-manuala",
+      item.url.includes("locuinte-noi") ? "locuinta-noua" : null,
+      /f[aă]r[aă]\s+comision|comision\s*0/i.test(blob) ? "fara-comision" : null,
+      "import-preview-keyword",
+    ].filter(Boolean),
+    tags: ["preview-import", "imobiliare-ro", isOwner ? "proprietar" : "verificare", score >= 85 ? "prioritar" : null].filter(Boolean),
+    score,
+    lead_score: score,
+    score_breakdown: { source: "scraper-preview", keyword_id: data.keyword.id, owner_signal: item.owner_signal },
+    ai_score_breakdown: { imported_from_preview: true, neutral_query: data.neutral_query, final_query: data.final_query },
+    status: "new",
+    prospect_type: isOwner ? "proprietar" : "necunoscut",
+    category: "vanzare",
+    lifecycle_status: "new",
+    is_active: true,
+    search_keywords: [data.keyword.keyword],
+    admin_notes: "Importat din Preview Scraper: rezultat util din căutarea generică/neutră.",
+    scraped_at: new Date().toISOString(),
+    last_seen_at: new Date().toISOString(),
+  };
+}
+
 function HighlightedText({
   text, positive, negative, enabled,
 }: { text: string; positive: string[]; negative: string[]; enabled: boolean }) {
@@ -168,6 +222,8 @@ export default function ScraperPreview() {
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overview, setOverview] = useState<QueryOverviewRow[] | null>(null);
+  const [importingUrls, setImportingUrls] = useState<Set<string>>(new Set());
+  const [importedUrls, setImportedUrls] = useState<Set<string>>(new Set());
 
   // ── Session persistence (localStorage) ───────────────
   const sessionKey = keywordId ? `scraper-preview-session:${keywordId}` : null;
@@ -412,6 +468,46 @@ export default function ScraperPreview() {
     toast.success("Sesiune ștearsă");
   }
 
+  async function importPreviewItems(items: PreviewResult[], label = "anunțuri") {
+    if (!data || items.length === 0) return;
+    const unique = Array.from(new Map(items.filter((it) => it.url).map((it) => [it.url, it])).values());
+    setImportingUrls((prev) => new Set([...prev, ...unique.map((it) => it.url)]));
+    try {
+      const urls = unique.map((it) => it.url);
+      const { data: existing, error: checkError } = await supabase
+        .from("prospect_listings" as any)
+        .select("source_url")
+        .in("source_url", urls);
+      if (checkError) throw checkError;
+
+      const existingUrls = new Set((existing || []).map((row: any) => row.source_url));
+      const rows = unique
+        .filter((it) => !existingUrls.has(it.url))
+        .map((it) => buildProspectRowFromPreview(it, data));
+
+      if (rows.length === 0) {
+        setImportedUrls((prev) => new Set([...prev, ...urls]));
+        toast.info(`Toate cele ${unique.length} ${label} existau deja în Oportunități AI.`);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from("prospect_listings" as any).insert(rows as any);
+      if (insertError) throw insertError;
+
+      setImportedUrls((prev) => new Set([...prev, ...rows.map((row: any) => row.source_url)]));
+      toast.success(`Importate în Oportunități AI: ${rows.length} ${label}.`);
+    } catch (err: any) {
+      console.error("Preview import error:", err);
+      toast.error(err?.message || "Nu am putut importa anunțurile în Oportunități AI.");
+    } finally {
+      setImportingUrls((prev) => {
+        const next = new Set(prev);
+        unique.forEach((it) => next.delete(it.url));
+        return next;
+      });
+    }
+  }
+
   useEffect(() => {
     // Only auto-run if no cached session data for this kw
     if (!keywordId) return;
@@ -495,6 +591,11 @@ export default function ScraperPreview() {
     return [...data.filtered_results, ...data.removed_by_filters];
   }, [data]);
 
+  const usefulPreviewItems = useMemo<PreviewResult[]>(() => {
+    if (!data) return [];
+    return beforeList.filter((it) => isUsefulOwnerPreviewResult(it));
+  }, [data, beforeList]);
+
   return (
     <>
       <Header />
@@ -548,6 +649,19 @@ export default function ScraperPreview() {
                     <Download className="w-3.5 h-3.5" /> Export CSV listă exclusă
                     <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
                       {data.removed_by_filters.length}
+                    </Badge>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="gap-1.5"
+                    onClick={() => importPreviewItems(usefulPreviewItems, "anunțuri utile")}
+                    disabled={usefulPreviewItems.length === 0 || usefulPreviewItems.some((it) => importingUrls.has(it.url))}
+                    title="Importă automat rezultatele cu semnal de proprietar/direct proprietar în Oportunități AI"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" /> Importă utile în Oportunități AI
+                    <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
+                      {usefulPreviewItems.length}
                     </Badge>
                   </Button>
                   <Button
@@ -852,6 +966,9 @@ export default function ScraperPreview() {
                     positive={highlightTerms.positive}
                     negative={highlightTerms.negative}
                     highlight={highlightOn}
+                    importingUrls={importingUrls}
+                    importedUrls={importedUrls}
+                    onImport={(item) => importPreviewItems([item], "anunț")}
                   />
                   <Pager
                     page={pageFiltered}
@@ -906,6 +1023,9 @@ export default function ScraperPreview() {
                       positive={highlightTerms.positive}
                       negative={highlightTerms.negative}
                       highlight={highlightOn}
+                      importingUrls={importingUrls}
+                      importedUrls={importedUrls}
+                      onImport={(item) => importPreviewItems([item], "anunț")}
                     />
                     <Pager
                       page={pageRemoved}
@@ -1031,7 +1151,7 @@ function extractDomain(url: string): string | null {
 }
 
 function ResultList({
-  items, emptyText, positive, negative, highlight, compact,
+  items, emptyText, positive, negative, highlight, compact, importingUrls, importedUrls, onImport,
 }: {
   items: PreviewResult[];
   emptyText: string;
@@ -1039,6 +1159,9 @@ function ResultList({
   negative: string[];
   highlight: boolean;
   compact?: boolean;
+  importingUrls?: Set<string>;
+  importedUrls?: Set<string>;
+  onImport?: (item: PreviewResult) => void;
 }) {
   const [blockingUrl, setBlockingUrl] = useState<string | null>(null);
   const [blockedUrls, setBlockedUrls] = useState<Set<string>>(new Set());
@@ -1196,6 +1319,25 @@ function ResultList({
               )}
             </div>
             <div className="shrink-0 flex flex-col items-end gap-1.5">
+              {onImport && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={importingUrls?.has(it.url) || importedUrls?.has(it.url)}
+                  onClick={() => onImport(it)}
+                  className="h-7 px-2 text-[10px] gap-1"
+                  title="Adaugă acest rezultat în Oportunități AI"
+                >
+                  {importingUrls?.has(it.url) ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : importedUrls?.has(it.url) ? (
+                    <CheckCheck className="w-3 h-3" />
+                  ) : (
+                    <UploadCloud className="w-3 h-3" />
+                  )}
+                  {importedUrls?.has(it.url) ? "Importat" : "Oportunități AI"}
+                </Button>
+              )}
               <a
                 href={it.url}
                 target="_blank"
