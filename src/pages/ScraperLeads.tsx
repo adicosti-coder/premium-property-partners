@@ -2644,7 +2644,7 @@ const ScraperLeads = () => {
                     <Sparkles className="h-4 w-4 text-primary" /> Flux automat proprietăți
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {automationQueue.readyToImport.length} gata de import · {automationQueue.readyToContact.length} gata de contact · {automationQueue.missingData} cu date incomplete
+                    {automationQueue.readyToImport.length} gata de import · {automationQueue.readyToContact.length} gata de contact · {automationQueue.needsVerification.length} de verificat · {automationQueue.hospitalityCandidates.length} pentru regim hotelier
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -2654,6 +2654,9 @@ const ScraperLeads = () => {
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("pipeline"); }} className="gap-1.5">
                     <Flame className="h-4 w-4" /> Vezi prioritare
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={copyAutomationBrief} className="gap-1.5">
+                    <ClipboardList className="h-4 w-4" /> Brief
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => navigate("/admin/prospect-listings")} className="gap-1.5">
                     <ArrowRightCircle className="h-4 w-4" /> Prospect Listings
@@ -2670,6 +2673,20 @@ const ScraperLeads = () => {
                   ))}
                 </div>
               )}
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                <button onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Import inteligent</span>
+                  <span className="text-muted-foreground">{automationQueue.readyToImport.length} lead-uri cu scor mare și URL valid</span>
+                </button>
+                <button onClick={() => { setHideSnoozed(true); setViewMode("pipeline"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Contact prioritar</span>
+                  <span className="text-muted-foreground">{automationQueue.readyToContact.length} proprietari cu telefon disponibil</span>
+                </button>
+                <button onClick={() => { setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Curățare date</span>
+                  <span className="text-muted-foreground">{automationQueue.needsVerification.length} lead-uri fără telefon, preț sau suprafață</span>
+                </button>
+              </div>
             </CardContent>
           </Card>
 
