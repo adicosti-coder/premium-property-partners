@@ -1521,13 +1521,35 @@ const ScraperLeads = () => {
     queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
     queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
   };
-  const handleArchive = async (leadId: string) => {
+  const handleArchive = async (lead: ScraperLead) => {
+    const leadId = lead.id;
+    const url = lead.url || "";
     queryClient.setQueryData(["scraper-leads"], (old: any) =>
       Array.isArray(old) ? old.filter((l: any) => l.id !== leadId) : old
     );
     if (selectedLead?.id === leadId) setSelectedLead(null);
 
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: "archived" } as any).eq("id", leadId);
+    const { error } = (lead as any)._origin === "prospect"
+      ? await supabase
+          .from("prospect_listings" as any)
+          .update({
+            is_active: false,
+            lifecycle_status: "rejected",
+            status: "archived",
+            admin_notes: `${lead.admin_notes ? `${lead.admin_notes}\n` : ""}Arhivat manual din Oportunități AI. Nu se reimportă automat.`,
+          } as any)
+          .eq("id", leadId)
+      : await supabase
+          .from("scraper_leads_archive_2026" as any)
+          .update({ status: "archived" } as any)
+          .eq("id", leadId);
+
+    if (!error && url) {
+      await Promise.allSettled([
+        supabase.from("scraper_leads_archive_2026" as any).update({ status: "archived" } as any).eq("url", url),
+        supabase.from("prospect_listings" as any).update({ is_active: false, lifecycle_status: "rejected", status: "archived" } as any).eq("source_url", url),
+      ]);
+    }
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la arhivare");
@@ -1536,6 +1558,7 @@ const ScraperLeads = () => {
     toast.success("Lead arhivat");
     queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
     queryClient.invalidateQueries({ queryKey: ["scraper-leads-archived"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
   };
 
   // ── Restore Lead from archive ────────────────────
