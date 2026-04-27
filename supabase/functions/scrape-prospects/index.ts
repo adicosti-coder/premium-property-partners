@@ -610,21 +610,6 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            // Dedup by URL in scraper_leads
-            const { data: existing } = await supabase
-              .from('scraper_leads')
-              .select('id')
-              .eq('url', url)
-              .maybeSingle();
-
-            if (existing) {
-              await supabase.from('scraper_leads')
-                .update({ updated_at: new Date().toISOString() })
-                .eq('id', existing.id);
-              if (onlyNewSources) duplicateSkipped++;
-              continue;
-            }
-
             const extracted = extractFromMarkdown(markdown, result.title || '', url);
 
             let price = extracted.price;
@@ -682,25 +667,50 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            // Derive listing_type
-            const listingType = isRental ? 'rent' : 'sale';
-
             const { data: inserted, error: insertErr } = await supabase
-              .from('scraper_leads')
+              .from('prospect_listings')
               .insert({
+                source_platform: platform,
+                source_url: url,
                 title: extracted.title || result.title || 'Anunț fără titlu',
-                url,
-                source: platform,
-                original_price: price,
+                description: extracted.description || markdown.substring(0, 500) || null,
+                price,
+                currency: 'EUR',
+                location: extracted.location || 'Timișoara',
+                zone,
+                rooms: extracted.rooms,
+                size,
+                floor: extracted.floor,
+                year_built: extracted.yearBuilt,
+                features,
+                images: extracted.images,
+                contact_name: extracted.contactName,
+                contact_phone: extracted.contactPhone,
+                phone_normalized: normalizeRoPhone(extracted.contactPhone),
+                score,
                 lead_score: score,
-                monthly_extra: monthlyExtra,
-                extra_profit_3y: extraProfit3Y,
-                listing_type: listingType,
-                phone: extracted.contactPhone,
-                search_keyword: query,
+                score_breakdown: breakdown,
+                ai_score_breakdown: {
+                  source: 'scrape-prospects',
+                  owner_filter_intent: ownerFilterIntent,
+                  explicit_owner_signal: explicitOwnerSignal,
+                  estimated_monthly_extra: monthlyExtra,
+                  estimated_extra_profit_3y: extraProfit3Y,
+                },
                 status: 'new',
+                prospect_type: 'proprietar',
+                category: isRental ? 'inchiriere' : 'vanzare',
+                lifecycle_status: 'new',
+                is_active: true,
+                search_keywords: [query],
+                tags: ['scrape-prospects', 'auto-import', explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari'].filter(Boolean),
+                admin_notes: explicitOwnerSignal
+                  ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                  : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
+                scraped_at: new Date().toISOString(),
+                last_seen_at: new Date().toISOString(),
               })
-              .select('id, title, lead_score')
+              .select('id, title, lead_score, source_url')
               .single();
 
             if (insertErr) {
