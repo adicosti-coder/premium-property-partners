@@ -426,6 +426,45 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Home className="w-5 h-5 text-primary" />
+            Gestionare listări — scurtături rapide
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-4">
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/admin/properties")}>
+            <div className="text-left">
+              <div className="font-semibold">Drafturi</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.drafts ?? 0}</div>
+              <div className="text-xs text-muted-foreground">verifică și publică</div>
+            </div>
+          </Button>
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/scraper-leads")}>
+            <div className="text-left">
+              <div className="font-semibold">Oportunități AI</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.hotProspects ?? 0}</div>
+              <div className="text-xs text-muted-foreground">scor peste 80</div>
+            </div>
+          </Button>
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/admin/properties") }>
+            <div className="text-left">
+              <div className="font-semibold">Vânzări active</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.sales ?? 0}</div>
+              <div className="text-xs text-muted-foreground">portofoliu public</div>
+            </div>
+          </Button>
+          <Button variant="outline" className="h-auto justify-start p-4" onClick={() => navigate("/admin/properties") }>
+            <div className="text-left">
+              <div className="font-semibold">Închirieri active</div>
+              <div className="text-2xl font-bold text-primary">{listingOps?.rentals ?? 0}</div>
+              <div className="text-xs text-muted-foreground">listări lunare</div>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* 🔥 Hot Prospects AI - Quick Access Card */}
       <Card className="border-2 border-destructive/30 bg-gradient-to-r from-destructive/5 via-amber-500/5 to-transparent">
         <CardContent className="pt-6">
