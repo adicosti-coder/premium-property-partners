@@ -243,6 +243,11 @@ const AnalizaROIApartament = () => {
                   <div><p className="text-sm text-muted-foreground">ROI net regim hotelier</p><p className="text-3xl font-bold text-primary">{calculations.hotelRoi}%</p></div>
                   <div><p className="text-sm text-muted-foreground">Diferență anuală</p><p className="text-3xl font-bold text-foreground">+{calculations.delta.toLocaleString("ro-RO")}€</p></div>
                 </div>
+                <div className="mt-5 grid gap-3 rounded-lg border border-primary/20 bg-background/80 p-4 sm:grid-cols-3">
+                  <div><p className="text-xs text-muted-foreground">Net lunar estimat</p><p className="text-lg font-semibold text-foreground">{calculations.monthlyHotelNet.toLocaleString("ro-RO")}€</p></div>
+                  <div><p className="text-xs text-muted-foreground">Recuperare capital</p><p className="text-lg font-semibold text-foreground">{calculations.paybackYears} ani</p></div>
+                  <div><p className="text-xs text-muted-foreground">Ocupare break-even</p><p className="text-lg font-semibold text-foreground">{calculations.breakevenOccupancy}%</p></div>
+                </div>
                 <div className="mt-8 h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={comparisonData}>
@@ -256,6 +261,37 @@ const AnalizaROIApartament = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-background py-14 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Target className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Optimizare randament</span></div>
+              <h2 className="text-3xl font-bold text-foreground">Ce influențează profitul net al apartamentului</h2>
+              <p className="mt-3 text-muted-foreground">Randamentul nu depinde doar de preț. Cele mai importante diferențe apar din poziționare, costuri reale și disciplină operațională.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {investmentLevers.map((item) => (
+                <Card key={item.title} className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <item.icon className="mb-4 h-8 w-8 text-primary" />
+                    <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{item.text}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-8 overflow-hidden rounded-lg border border-border bg-card">
+              <div className="grid grid-cols-4 border-b border-border bg-muted/40 text-sm font-semibold text-foreground">
+                <div className="p-4">Ocupare / ADR</div><div className="p-4">60€</div><div className="p-4">75€</div><div className="p-4">90€</div>
+              </div>
+              {sensitivityMatrix.map((row) => (
+                <div key={row.occupancy} className="grid grid-cols-4 border-b border-border last:border-b-0 text-sm">
+                  <div className="p-4 font-semibold text-foreground">{row.occupancy}</div><div className="p-4 text-muted-foreground">{row.adr60}</div><div className="p-4 text-primary font-semibold">{row.adr75}</div><div className="p-4 text-muted-foreground">{row.adr90}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
