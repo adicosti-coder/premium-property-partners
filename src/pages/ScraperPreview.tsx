@@ -653,6 +653,19 @@ export default function ScraperPreview() {
                   </Button>
                   <Button
                     size="sm"
+                    variant="default"
+                    className="gap-1.5"
+                    onClick={() => importPreviewItems(usefulPreviewItems, "anunțuri utile")}
+                    disabled={usefulPreviewItems.length === 0 || usefulPreviewItems.some((it) => importingUrls.has(it.url))}
+                    title="Importă automat rezultatele cu semnal de proprietar/direct proprietar în Oportunități AI"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" /> Importă utile în Oportunități AI
+                    <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">
+                      {usefulPreviewItems.length}
+                    </Badge>
+                  </Button>
+                  <Button
+                    size="sm"
                     variant={compareOn ? "default" : "outline"}
                     className="gap-1.5"
                     onClick={() => setCompareOn((v) => !v)}
@@ -953,6 +966,9 @@ export default function ScraperPreview() {
                     positive={highlightTerms.positive}
                     negative={highlightTerms.negative}
                     highlight={highlightOn}
+                    importingUrls={importingUrls}
+                    importedUrls={importedUrls}
+                    onImport={(item) => importPreviewItems([item], "anunț")}
                   />
                   <Pager
                     page={pageFiltered}
@@ -1007,6 +1023,9 @@ export default function ScraperPreview() {
                       positive={highlightTerms.positive}
                       negative={highlightTerms.negative}
                       highlight={highlightOn}
+                      importingUrls={importingUrls}
+                      importedUrls={importedUrls}
+                      onImport={(item) => importPreviewItems([item], "anunț")}
                     />
                     <Pager
                       page={pageRemoved}
