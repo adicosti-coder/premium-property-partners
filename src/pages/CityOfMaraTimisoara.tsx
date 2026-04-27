@@ -332,6 +332,23 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="faq-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="faq-city-of-mara" className="text-3xl font-bold text-foreground">Întrebări frecvente despre apartamente City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Răspunsuri scurte pentru cumpărători interesați de vânzare apartamente noi City of Mara și investiții în zona centrală.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {faqItems.map((item) => (
+                <article key={item.question} className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="text-lg font-semibold text-foreground">{item.question}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.answer}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="container mx-auto px-4 py-12 md:py-16">
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 md:flex md:items-center md:justify-between md:p-8">
             <div>
