@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
-import { Building2, Shield, Star, TrendingUp, Hospital, Home, Briefcase, MapPin } from "lucide-react";
+import { Building2, Shield, Star, TrendingUp, Hospital, Home, Briefcase, MapPin, Calculator, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -31,6 +31,10 @@ const ServiciiImobiliareTimisoara = () => {
     {
       question: isRo ? "Ce ROI pot obține prin administrare în regim hotelier?" : "What ROI can I get with short-term rental management?",
       answer: isRo ? "Randamentul standard folosit de RealTrust este 9.4% net, calculat pe baza ocupării medii, costurilor operaționale și deducerii de management/taxe." : "RealTrust uses a 9.4% net yield benchmark, calculated from occupancy, operational costs and management/tax deductions.",
+    },
+    {
+      question: isRo ? "Pot începe cu o evaluare înainte să listez proprietatea?" : "Can I start with a valuation before listing my property?",
+      answer: isRo ? "Da. Formularul de evaluare gratuită estimează poziționarea proprietății, scenariul de vânzare sau închiriere și potențialul de administrare în regim hotelier." : "Yes. The free valuation estimates positioning, sale or rental scenarios and short-term rental management potential.",
     },
   ];
 
@@ -130,6 +134,12 @@ const ServiciiImobiliareTimisoara = () => {
     { slug: "dumbravita", name: "Dumbrăvița" },
   ];
 
+  const recommendedResources = [
+    { to: "/investitii", icon: TrendingUp, label: isRo ? "Investiții imobiliare Timișoara" : "Timișoara real estate investments" },
+    { to: "/calculator-roi", icon: Calculator, label: isRo ? "Calculator ROI regim hotelier" : "Short-term rental ROI calculator" },
+    { to: "/blog/analiza-roi-timisoara-2026", icon: FileText, label: isRo ? "Analiză ROI Timișoara 2026" : "Timișoara ROI analysis 2026" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
@@ -218,6 +228,25 @@ const ServiciiImobiliareTimisoara = () => {
                   className="p-4 bg-card border rounded-xl text-center hover:border-primary/50 hover:bg-primary/5 transition-colors text-sm font-medium"
                 >
                   {n.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="max-w-4xl mx-auto mb-16">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-serif font-semibold">
+                {isRo ? "Recomandate pentru decizie rapidă" : "Recommended for faster decisions"}
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {isRo ? "Cele mai utile pagini pentru investitori și proprietari care compară vânzarea, închirierea și administrarea." : "Useful pages for investors and owners comparing sale, rental and management options."}
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {recommendedResources.map((resource) => (
+                <Link key={resource.to} to={resource.to} className="group flex items-center gap-3 rounded-xl border bg-card p-4 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5">
+                  <resource.icon className="h-5 w-5 shrink-0 text-primary" />
+                  <span className="group-hover:text-primary">{resource.label}</span>
                 </Link>
               ))}
             </div>

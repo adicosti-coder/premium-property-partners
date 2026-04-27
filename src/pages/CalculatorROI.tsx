@@ -8,7 +8,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle } from "lucide-react";
-import { Helmet } from "react-helmet-async";
 import { lazy, Suspense } from "react";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -62,24 +61,20 @@ const CalculatorROI = () => {
         title="Calculator ROI Regim Hotelier vs Chirie Clasică | RealTrust"
         description="Calculează randamentul apartamentului tău: regim hotelier vs chirie clasică. Compară veniturile lunare și ROI-ul anual cu management RealTrust."
         url="https://www.realtrust.ro/calculator-roi"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FinancialProduct",
+          name: "Calculator ROI Imobiliare Timișoara — Regim Hotelier vs Chirie Clasică",
+          description: "Calculator gratuit randament imobiliar: compară venitul lunar și ROI-ul anual între regim hotelier și chirie clasică. Include calcul cash flow și amortizare investiție.",
+          url: "https://www.realtrust.ro/calculator-roi",
+          provider: {
+            "@type": "RealEstateAgent",
+            name: "RealTrust",
+            areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
+          },
+          feesAndCommissionsSpecification: "Management 15-25% din venit brut",
+        }}
       />
-      <Helmet>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FinancialProduct",
-            name: "Calculator ROI Imobiliare Timișoara — Regim Hotelier vs Chirie Clasică",
-            description: "Calculator gratuit randament imobiliar: compară venitul lunar și ROI-ul anual între regim hotelier și chirie clasică. Include calcul cash flow și amortizare investiție.",
-            url: "https://www.realtrust.ro/calculator-roi",
-            provider: {
-              "@type": "RealEstateAgent",
-              name: "RealTrust",
-              areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
-            },
-            feesAndCommissionsSpecification: "Management 15-25% din venit brut",
-          })}
-        </script>
-      </Helmet>
       <Header />
 
       <main className="pt-24 pb-16">
@@ -115,6 +110,19 @@ const CalculatorROI = () => {
           <div id="calculator">
             <ROICalculatorWidget />
           </div>
+
+          <section className="mt-12 rounded-2xl border border-primary/20 bg-primary/5 p-6">
+            <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <h2 className="text-2xl font-serif font-semibold text-foreground">Următorul pas după calcul</h2>
+                <p className="mt-2 text-muted-foreground">Compară rezultatul cu oportunitățile active sau trimite proprietatea pentru o estimare personalizată RealTrust.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/catalog-investitii" className="inline-flex min-h-12 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Catalog Investiții</Link>
+                <Link to="/pentru-proprietari" className="inline-flex min-h-12 items-center rounded-md border border-input bg-background px-5 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground">Contact Proprietari</Link>
+              </div>
+            </div>
+          </section>
 
           {/* Variabile calculator — explicații */}
           <section className="mt-16 space-y-10">
@@ -206,11 +214,11 @@ const CalculatorROI = () => {
                 <HelpCircle className="w-5 h-5 text-primary" />
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Întrebări frecvente despre ROI imobiliar</h2>
               </div>
-              <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6">
+              <Accordion type="single" collapsible className="rounded-2xl border border-border bg-card px-6" itemScope itemType="https://schema.org/FAQPage">
                 {faqItems.map((item, idx) => (
-                  <AccordionItem key={idx} value={`faq-${idx}`} className="last:border-b-0">
-                    <AccordionTrigger className="text-left text-foreground">{item.question}</AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+                  <AccordionItem key={idx} value={`faq-${idx}`} className="last:border-b-0" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                    <AccordionTrigger className="text-left text-foreground" itemProp="name">{item.question}</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground" itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"><span itemProp="text">{item.answer}</span></AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>

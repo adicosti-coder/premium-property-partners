@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Calculator, FileText, Shield, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,30 @@ const fallbackRoiArticles = [
 export default function HomeRecommendedLinks() {
   const { language } = useLanguage();
   const isRo = language === "ro";
+
+  const strategicLinks = [
+    {
+      to: "/investitii",
+      icon: TrendingUp,
+      title: isRo ? "Pagina Investiții" : "Investment page",
+      text: isRo ? "Strategia RealTrust pentru investiții cu ROI net verificat de 9.4%." : "RealTrust strategy for verified-yield real estate investments.",
+      cta: isRo ? "Vezi investițiile" : "View investments",
+    },
+    {
+      to: "/catalog-investitii",
+      icon: Shield,
+      title: isRo ? "Catalog Investiții" : "Investment Catalog",
+      text: isRo ? "Oportunități filtrate după randament, zonă, risc și potențial de administrare." : "Opportunities filtered by yield, area, risk and management potential.",
+      cta: isRo ? "Deschide catalogul" : "Open catalog",
+    },
+    {
+      to: "/calculator-roi",
+      icon: Calculator,
+      title: isRo ? "Calculator ROI" : "ROI Calculator",
+      text: isRo ? "Compară chiria clasică cu regimul hotelier și estimează cash flow-ul net." : "Compare long-term rent with hotel-style management and estimate net cash flow.",
+      cta: isRo ? "Calculează ROI" : "Calculate ROI",
+    },
+  ];
 
   const { data: roiArticles = fallbackRoiArticles } = useQuery({
     queryKey: ["homepage-recommended-roi-articles"],
@@ -65,12 +89,32 @@ export default function HomeRecommendedLinks() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-6">
-              <TrendingUp className="mb-4 h-8 w-8 text-primary" />
-              <h3 className="mb-2 text-xl font-semibold text-foreground">{isRo ? "Pagina Investiții" : "Investment page"}</h3>
-              <p className="mb-5 text-sm text-muted-foreground">{isRo ? "Strategia RealTrust pentru investiții imobiliare cu ROI net verificat de 9.4%." : "RealTrust strategy for verified-yield real estate investments."}</p>
-              <Button asChild variant="secondary"><Link to="/investitii">{isRo ? "Vezi investițiile" : "View investments"}</Link></Button>
+          {strategicLinks.map((item) => (
+            <Card key={item.to} className="border-primary/20 bg-primary/5">
+              <CardContent className="p-6">
+                <item.icon className="mb-4 h-8 w-8 text-primary" />
+                <h3 className="mb-2 text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mb-5 text-sm text-muted-foreground">{item.text}</p>
+                <Button asChild variant="secondary"><Link to={item.to}>{item.cta}</Link></Button>
+              </CardContent>
+            </Card>
+          ))}
+
+          <Card className="border-border bg-card lg:col-span-3">
+            <CardContent className="grid gap-4 p-6 md:grid-cols-[1fr_auto] md:items-center">
+              <div className="flex gap-4">
+                <FileText className="mt-1 h-7 w-7 shrink-0 text-primary" />
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground">{isRo ? "Pentru proprietari: analiză și onboarding" : "For owners: analysis and onboarding"}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {isRo ? "Leagă evaluarea gratuită, serviciile imobiliare și contactul pentru proprietari într-un traseu clar de conversie." : "Connect free valuation, real estate services and owner contact into a clear conversion path."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline"><Link to="/servicii-imobiliare-timisoara">{isRo ? "Servicii" : "Services"}</Link></Button>
+                <Button asChild><Link to="/evaluare-gratuita">{isRo ? "Evaluare gratuită" : "Free valuation"}</Link></Button>
+              </div>
             </CardContent>
           </Card>
 
