@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowRight, Building2, Calculator, Home, Landmark, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
+import { ArrowRight, Building2, Calculator, CheckCircle2, HelpCircle, Home, Landmark, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -24,6 +24,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -42,6 +44,19 @@ const complexLinks = [
   { name: "City of Mara", href: "/complexe/city-of-mara", profile: "central business", yield: "8.4–9.8%" },
   { name: "Ateneo", href: "/complexe/ateneo", profile: "nou, lichiditate bună", yield: "8.0–9.6%" },
   { name: "Fructus Plaza", href: "/complexe/fructus-plaza", profile: "ultracentral", yield: "9.0–10.5%" },
+];
+
+const scenarioCards = [
+  { title: "Conservator", occupancy: "62%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
+  { title: "RealTrust standard", occupancy: "75%", adr: "68–82€", roi: "9.0–9.8%", note: "modelul de lucru recomandat pentru randament stabil" },
+  { title: "Premium complex", occupancy: "80%+", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+];
+
+const faqItems = [
+  { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale și o deducere standard de 27%." },
+  { question: "Ce înseamnă analiză profit apartament în România?", answer: "Este o estimare completă a profitului lunar și anual pentru un apartament, comparând chiria clasică, regimul hotelier, aprecierea prețului și lichiditatea zonei." },
+  { question: "De ce sunt importante complexele rezidențiale în analiza ROI?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
+  { question: "Pot folosi calculatorul pentru orice oraș din România?", answer: "Da, modelul funcționează pentru orice oraș dacă ajustezi prețul de achiziție, chiria, tariful pe noapte și ocuparea. Pentru Timișoara folosim repere operaționale verificate RealTrust." },
 ];
 
 const AnalizaROIApartament = () => {
