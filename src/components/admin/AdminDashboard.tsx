@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame } from "lucide-react";
+import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame, ClipboardList, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
@@ -110,17 +110,24 @@ const AdminDashboard = () => {
   const { data: listingOps } = useQuery({
     queryKey: ["admin-dashboard-listing-ops"],
     queryFn: async () => {
-      const [draftsRes, activeSalesRes, activeRentalsRes, hotRes] = await Promise.all([
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const [draftsRes, activeSalesRes, activeRentalsRes, hotRes, reviewRes, staleDraftsRes, newProspectsRes] = await Promise.all([
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false),
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "vanzare"),
         supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", true).eq("listing_type", "inchiriere"),
         supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).gt("lead_score", 80),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).contains("features", ["necesită-verificare"]),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("is_active", false).lt("created_at", sevenDaysAgo),
+        supabase.from("prospect_listings").select("*", { count: "exact", head: true }).eq("is_active", true).eq("lifecycle_status", "new"),
       ]);
       return {
         drafts: draftsRes.count ?? 0,
         sales: activeSalesRes.count ?? 0,
         rentals: activeRentalsRes.count ?? 0,
         hotProspects: hotRes.count ?? 0,
+        needsReview: reviewRes.count ?? 0,
+        staleDrafts: staleDraftsRes.count ?? 0,
+        newProspects: newProspectsRes.count ?? 0,
       };
     },
     staleTime: 60_000,
