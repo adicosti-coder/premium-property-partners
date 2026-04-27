@@ -1145,7 +1145,9 @@ const ScraperLeads = () => {
       Array.isArray(old) ? old.map((l: any) => l.id === leadId ? { ...l, tags: newTags } : l) : old
     );
     if (selectedLead?.id === leadId) setSelectedLead((prev) => prev ? { ...prev, tags: newTags } : null);
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ tags: newTags } as any).eq("id", leadId);
+    const { error } = lead._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ admin_notes: `${lead.admin_notes ? `${lead.admin_notes}\n` : ""}Etichete conversație: ${newTags.join(", ")}` } as any).eq("id", leadId)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ tags: newTags } as any).eq("id", leadId);
     if (error) {
       toast.error("Eroare la etichete");
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
@@ -1156,7 +1158,9 @@ const ScraperLeads = () => {
   // ── Save Notes ────────────────────────────────────
   const saveNotes = async () => {
     if (!selectedLead) return;
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id);
+    const { error } = selectedLead._origin === "prospect"
+      ? await supabase.from("prospect_listings" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id)
+      : await supabase.from("scraper_leads_archive_2026" as any).update({ admin_notes: editNotes } as any).eq("id", selectedLead.id);
     if (error) { toast.error("Eroare la salvare"); return; }
     toast.success("Note salvate");
     setSelectedLead((prev) => prev ? { ...prev, admin_notes: editNotes } : null);
@@ -1209,6 +1213,22 @@ const ScraperLeads = () => {
     link.download = `scraper-contacte-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     toast.success(`${contactLeads.length} contacte exportate în CSV`);
+  };
+
+  const bulkImportSmartDrafts = async () => {
+    const targets = automationQueue.readyToImport.slice(0, 5);
+    if (!targets.length) {
+      toast.info("Nu există lead-uri potrivite pentru import automat în filtrarea curentă");
+      return;
+    }
+    setBulkImportingSmart(true);
+    let imported = 0;
+    for (const lead of targets) {
+      await importLeadAsListing(lead, { workflow: lead.lead_score >= 90 ? "investment" : "smart", verification: "full" });
+      imported += 1;
+    }
+    setBulkImportingSmart(false);
+    toast.success(`${imported} lead-uri prioritare trimise în Proprietăți ca drafturi verificate`);
   };
 
   // ── Compare Toggle ────────────────────────────────
