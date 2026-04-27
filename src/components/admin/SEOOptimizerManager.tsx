@@ -603,6 +603,10 @@ const SEOOptimizerManager = () => {
                     <Copy className="w-3 h-3 mr-2" />
                     Copiază rezumat
                   </Button>
+                  <Button size="sm" variant="secondary" onClick={() => copyText(buildImplementationBrief(selectedAudit), "Brief implementare")}>
+                    <Lightbulb className="w-3 h-3 mr-2" />
+                    Brief implementare
+                  </Button>
                 </div>
               </div>
               <div className="text-right">
@@ -958,6 +962,10 @@ const SEOOptimizerManager = () => {
               <option value={80}>Scor ≥ 80</option>
               <option value={90}>Scor ≥ 90</option>
             </select>
+            <Button variant="outline" onClick={exportHistoryCSV} disabled={filteredHistory.length === 0}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
