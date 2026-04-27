@@ -167,6 +167,76 @@ const SEOOptimizerManager = () => {
     toast.success(`Bulk audit: ${success}/${QUICK_URLS.length} URL-uri analizate`);
   };
 
+  const runDualLanguageAudit = async () => {
+    setDualRunning(true);
+    let lastAudit: AuditRow | null = null;
+    try {
+      for (const lang of ["ro", "en"] as const) {
+        const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
+          body: { url, language: lang, forceRefresh: true },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        if (data?.audit) lastAudit = data.audit as AuditRow;
+      }
+      if (lastAudit) setSelectedAudit(lastAudit);
+      qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
+      toast.success("Audit RO + EN finalizat");
+    } catch (e: any) {
+      toast.error(e.message || "Eroare audit RO + EN");
+    } finally {
+      setDualRunning(false);
+    }
+  };
+
+  const buildImplementationBrief = (a: AuditRow): string => {
+    const topIssues = (a.issues || []).slice(0, 5).map((i: any) => `- [${i.severity}] ${i.issue}: ${i.fix}`).join("\n");
+    const topKeywords = [...(a.keyword_gaps || []), ...(a.local_geo_keywords || [])]
+      .slice(0, 8)
+      .map((k: any) => `- ${k.keyword || k}: ${k.where_to_add || k.suggested_placement || "adaugă natural în conținut"}`)
+      .join("\n");
+    const links = (a.raw_analysis?.recommended_internal_links || []).slice(0, 6).map((l: string) => `- ${l}`).join("\n");
+    return [
+      `Brief implementare SEO — ${a.url}`,
+      `Scor actual: ${a.overall_score ?? "—"}/100 · Local SEO: ${a.local_relevance_score ?? "—"}/100`,
+      "",
+      "1) Title / Meta",
+      `Title propus: ${a.suggested_title || "—"}`,
+      `Meta propusă: ${a.suggested_meta || "—"}`,
+      "",
+      "2) Probleme prioritare",
+      topIssues || "- Nu sunt probleme critice detectate.",
+      "",
+      "3) Keyword-uri de integrat",
+      topKeywords || "- Nu sunt keyword gaps majore.",
+      "",
+      "4) Link-uri interne recomandate",
+      links || "- Nu sunt link-uri interne recomandate de AI.",
+    ].join("\n");
+  };
+
+  const exportHistoryCSV = () => {
+    const header = ["url", "language", "score", "local_score", "issues", "critical_issues", "word_count", "created_at"].join(",");
+    const rows = filteredHistory.map((a) => [
+      a.url,
+      a.language,
+      a.overall_score ?? "",
+      a.local_relevance_score ?? "",
+      a.issues?.length ?? 0,
+      (a.issues || []).filter((issue: any) => issue.severity === "critical").length,
+      a.word_count ?? "",
+      a.created_at,
+    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
+    const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = `realtrust-seo-audituri-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(href);
+    toast.success("CSV exportat");
+  };
+
   const buildSummaryText = (a: AuditRow): string => {
     const lines: string[] = [];
     lines.push(`SEO Audit — ${a.url}`);
