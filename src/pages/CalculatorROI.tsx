@@ -60,13 +60,13 @@ const CalculatorROI = () => {
       <SEOHead
         title="Calculator ROI Regim Hotelier vs Chirie Clasică | RealTrust"
         description="Calculează randamentul apartamentului tău: regim hotelier vs chirie clasică. Compară veniturile lunare și ROI-ul anual cu management RealTrust."
-        url="https://www.realtrust.ro/calculator-roi"
+        url="https://realtrust.ro/calculator-roi"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "FinancialProduct",
           name: "Calculator ROI Imobiliare Timișoara — Regim Hotelier vs Chirie Clasică",
           description: "Calculator gratuit randament imobiliar: compară venitul lunar și ROI-ul anual între regim hotelier și chirie clasică. Include calcul cash flow și amortizare investiție.",
-          url: "https://www.realtrust.ro/calculator-roi",
+          url: "https://realtrust.ro/calculator-roi",
           provider: {
             "@type": "RealEstateAgent",
             name: "RealTrust",
