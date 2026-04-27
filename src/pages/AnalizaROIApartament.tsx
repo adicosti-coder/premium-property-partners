@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, Gauge, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, Target, TrendingUp, WalletCards } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, Gauge, HelpCircle, Home, Landmark, LineChart as LineChartIcon, MapPin, PieChart, Scale, Target, TrendingUp, WalletCards } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -62,6 +62,19 @@ const investmentLevers = [
   { icon: Target, title: "Poziționare în piață", text: "Fotografii, dotări și descriere calibrate pentru oaspeți business, city-break și relocări." },
   { icon: WalletCards, title: "Controlul costurilor", text: "Analiza include curățenie, mentenanță, taxe, comisioane și perioade cu ocupare redusă." },
   { icon: Clock3, title: "Viteză de recuperare", text: "Modelăm în câți ani se recuperează investiția prin venit net și apreciere de capital." },
+];
+
+const decisionRules = [
+  { label: "Cumpără", threshold: "82+", text: "ROI net competitiv, ocupare bună și potențial de apreciere peste media zonei." },
+  { label: "Negociază", threshold: "68–81", text: "Proprietatea poate funcționa, dar prețul, mobilarea sau costurile trebuie optimizate." },
+  { label: "Evită temporar", threshold: "sub 68", text: "Riscul operațional sau prețul de intrare pot bloca randamentul net." },
+];
+
+const zoneCriteria = [
+  "Distanță bună față de centru, business hub-uri, universități sau spitale",
+  "Acces la transport, parcare și servicii de zi cu zi",
+  "Complex cu reputație bună, administrare predictibilă și costuri transparente",
+  "Cerere mixtă: chiriași pe termen lung, oaspeți business și sejururi scurte",
 ];
 
 const relatedGuides = [
