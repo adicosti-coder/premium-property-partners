@@ -216,7 +216,26 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
-        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="tipuri-apartamente-city-of-mara">
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="proximitate-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Clock3 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Proximitate reală</span></div>
+              <h2 id="proximitate-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Repere care susțin cererea pentru apartamente City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Pentru cumpărători și investitori, timpul până la punctele-cheie din oraș influențează direct ocuparea, chiria și lichiditatea.</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              {proximityHighlights.map((item) => (
+                <div key={item.place} className="rounded-lg border border-border bg-card p-5">
+                  <p className="text-2xl font-bold text-primary">{item.time}</p>
+                  <h3 className="mt-3 text-base font-semibold text-foreground">{item.place}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-12 md:py-16" aria-labelledby="tipuri-apartamente-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
