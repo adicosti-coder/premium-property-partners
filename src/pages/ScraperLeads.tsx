@@ -1240,6 +1240,22 @@ const ScraperLeads = () => {
     toast.success(`${imported} lead-uri prioritare trimise în Proprietăți ca drafturi verificate`);
   };
 
+  const bulkImportHospitalityDrafts = async () => {
+    const targets = automationQueue.hospitalityCandidates.slice(0, 3);
+    if (!targets.length) {
+      toast.info("Nu există candidați potriviți pentru regim hotelier în filtrarea curentă");
+      return;
+    }
+    setBulkImportingHospitality(true);
+    let imported = 0;
+    for (const lead of targets) {
+      await importLeadAsListing(lead, { workflow: "hospitality", verification: "full", listingType: lead.listing_type === "inchiriere" ? "inchiriere" : "investitie" });
+      imported += 1;
+    }
+    setBulkImportingHospitality(false);
+    toast.success(`${imported} candidați pentru regim hotelier au fost trimiși ca drafturi`);
+  };
+
   const copyAutomationBrief = () => {
     const lines = [
       "Brief operațional — Oportunități AI",
