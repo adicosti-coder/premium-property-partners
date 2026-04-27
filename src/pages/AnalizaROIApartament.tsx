@@ -381,6 +381,23 @@ const AnalizaROIApartament = () => {
         </section>
 
         <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-10 rounded-lg border border-primary/20 bg-primary/5 p-6 md:p-8">
+            <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Continuă analiza cu ghidurile potrivite</h2>
+                <p className="mt-2 text-muted-foreground">Leagă estimarea ROI de paginile care ajută decizia: calculator, catalog și context de piață.</p>
+              </div>
+              <Button asChild size="lg"><Link to="/catalog-investitii">Catalog Investiții <ArrowRight className="h-4 w-4" /></Link></Button>
+            </div>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {relatedGuides.map((guide) => (
+                <Link key={guide.href} to={guide.href} className="rounded-lg border border-border bg-background p-4 transition-colors hover:border-primary/50">
+                  <span className="font-semibold text-foreground">{guide.label}</span>
+                  <p className="mt-2 text-sm text-muted-foreground">{guide.text}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
           <div className="mb-6 flex items-center gap-2 text-primary"><HelpCircle className="h-5 w-5" /><h2 className="text-3xl font-bold text-foreground">Întrebări frecvente</h2></div>
           <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-6" itemScope itemType="https://schema.org/FAQPage">
             {faqItems.map((item, index) => (
