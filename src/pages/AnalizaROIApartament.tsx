@@ -112,6 +112,8 @@ const AnalizaROIApartament = () => {
     const monthlyHotelNet = hotelNet / 12;
     const paybackYears = purchasePrice / Math.max(totalReturn, 1);
     const breakevenOccupancy = (classicAnnual / (nightlyRate * 365 * 0.73)) * 100;
+    const investmentScore = Math.min(98, Math.max(45, Math.round(hotelRoi * 6 + annualGrowth * 4 + (occupancy - 55) * 0.8)));
+    const scoreLabel = investmentScore >= 82 ? "foarte atractiv" : investmentScore >= 68 ? "solid" : "necesită verificări";
 
     const projection = Array.from({ length: 6 }, (_, index) => {
       const year = 2026 + index;
@@ -129,6 +131,8 @@ const AnalizaROIApartament = () => {
       monthlyHotelNet: Math.round(monthlyHotelNet),
       paybackYears: paybackYears.toFixed(1),
       breakevenOccupancy: Math.min(95, Math.max(25, breakevenOccupancy)).toFixed(0),
+      investmentScore,
+      scoreLabel,
       projection,
       delta: Math.round(hotelNet - classicAnnual),
     };
@@ -164,6 +168,14 @@ const AnalizaROIApartament = () => {
                 { "@type": "HowToStep", name: "Compară chiria clasică cu regimul hotelier" },
                 { "@type": "HowToStep", name: "Verifică evoluția prețului și complexele potrivite" },
               ],
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: faqItems.map((item) => ({
+                "@type": "Question",
+                name: item.question,
+                acceptedAnswer: { "@type": "Answer", text: item.answer },
+              })),
             },
           ],
         }}
