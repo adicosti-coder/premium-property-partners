@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, Clock3, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -57,6 +57,19 @@ const faqItems = [
   { question: "Merită cumpărate apartamente City of Mara pentru investiție?", answer: "Da, mai ales unitățile compacte cu parcare și compartimentare eficientă, deoarece zona Circumvalațiunii are acces rapid către Iulius Town, centru și hub-uri de business." },
   { question: "Ce tip de apartament are randament mai bun în City of Mara?", answer: "În general, studiourile și apartamentele cu 2 camere au randament mai bun pentru chirie corporate sau regim hotelier, în timp ce apartamentele mai mari sunt mai potrivite pentru locuire și revânzare." },
   { question: "Pot primi lista actualizată de disponibilități City of Mara?", answer: "Da. Completează formularul de pe pagină și trimitem opțiunile disponibile, prețurile actualizate, parcările și o estimare de randament pentru bugetul tău." },
+];
+
+const proximityHighlights = [
+  { place: "Iulius Town / Openville", time: "5–7 min", value: "cerere corporate și retail premium" },
+  { place: "Piața Unirii / Centru", time: "8–10 min", value: "atractiv pentru locuire și cazare urbană" },
+  { place: "Gara de Nord", time: "6–9 min", value: "acces bun pentru chiriași mobili" },
+  { place: "Business hubs nord", time: "7–12 min", value: "profil stabil de chiriași profesioniști" },
+];
+
+const yieldScenarios = [
+  { label: "Conservator", occupancy: "65%", monthly: "520–650€", detail: "chirie lungă sau corporate, risc operațional scăzut" },
+  { label: "Echilibrat", occupancy: "75%", monthly: "720–920€", detail: "mix chirie medie + perioade scurte, mobilare premium" },
+  { label: "Dinamic", occupancy: "82%", monthly: "950–1.250€", detail: "regim hotelier administrat profesional, calendar optimizat" },
 ];
 
 const CityOfMaraTimisoara = () => {
