@@ -1239,6 +1239,20 @@ const ScraperLeads = () => {
     toast.success(`${imported} lead-uri prioritare trimise în Proprietăți ca drafturi verificate`);
   };
 
+  const copyAutomationBrief = () => {
+    const lines = [
+      "Brief operațional — Oportunități AI",
+      `Gata de import: ${automationQueue.readyToImport.length}`,
+      `Gata de contact: ${automationQueue.readyToContact.length}`,
+      `Necesită verificare: ${automationQueue.needsVerification.length}`,
+      `Candidați regim hotelier: ${automationQueue.hospitalityCandidates.length}`,
+      "",
+      ...automationQueue.readyToContact.map((lead, index) => `${index + 1}. ${cleanTitleStatic(lead.title)} · ${lead.phone || "fără telefon"} · scor ${lead.lead_score} · ${lead.url}`),
+    ].join("\n");
+    navigator.clipboard.writeText(lines);
+    toast.success("Brief-ul operațional a fost copiat");
+  };
+
   // ── Compare Toggle ────────────────────────────────
   const toggleCompare = (id: string) => {
     setCompareIds((prev) => {
