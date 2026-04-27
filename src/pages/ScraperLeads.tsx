@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
@@ -564,6 +564,26 @@ function deriveProspectType(title: string): string {
   if (upper.includes("DEZVOLTATOR") || upper.includes("ANSAMBLU") || upper.includes("COMPLEX") || upper.includes("🏢")) return "dezvoltator";
   return "proprietar";
 }
+
+type ImportWorkflow = "smart" | "quick-review" | "owner-contact" | "investment" | "hospitality" | "media-needed" | "seo-ready" | "active";
+
+interface ImportLeadOptions {
+  listingType?: string;
+  activate?: boolean;
+  verification?: "standard" | "full";
+  workflow?: ImportWorkflow;
+}
+
+const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
+  smart: "Draft inteligent",
+  "quick-review": "Revizie rapidă",
+  "owner-contact": "Contact proprietar prioritar",
+  investment: "Analiză investiție",
+  hospitality: "Pregătire regim hotelier",
+  "media-needed": "Necesită poze/verificare",
+  "seo-ready": "Draft SEO-ready",
+  active: "Import activ",
+};
 
 const ScraperLeads = () => {
   const { language } = useLanguage();
@@ -1168,7 +1188,7 @@ const ScraperLeads = () => {
   };
 
   // ── Import lead as draft listing ───────────────────
-  const importLeadAsListing = async (lead: ScraperLead, options?: { listingType?: string; activate?: boolean; verification?: "standard" | "full" }) => {
+  const importLeadAsListing = async (lead: ScraperLead, options?: ImportLeadOptions) => {
     if (!lead.url) {
       toast.error("Anunțul nu are URL sursă pentru import");
       return;
@@ -1194,6 +1214,7 @@ const ScraperLeads = () => {
         return;
       }
 
+      const workflow = options?.workflow || (options?.activate ? "active" : options?.verification === "full" ? "quick-review" : "smart");
       const listingType = options?.listingType || deriveListingType(lead.title, lead.listing_type || "vanzare");
       const cleanTitle = cleanTitleStatic(lead.title);
       const textBlob = `${lead.title || ""}\n${lead.description || ""}\n${lead.admin_notes || ""}`;
@@ -1206,17 +1227,32 @@ const ScraperLeads = () => {
       const sourcePlatform = normalizePlatformLabel(lead.source);
       const contactName = getLeadContactName(lead);
       const specs = extractImportedSpecs(textBlob);
+      const needsMediaReview = workflow === "media-needed" || (!lead.description && !lead.admin_notes) || !size || !lead.phone;
+      const isPriorityContact = workflow === "owner-contact" || (lead.lead_score >= 85 && Boolean(lead.phone));
+      const internalChecklist = [
+        "verifică-preț",
+        !size ? "completează-suprafață" : null,
+        !rooms ? "completează-camere" : null,
+        !lead.phone ? "găsește-telefon" : null,
+        needsMediaReview ? "atașează-poze" : null,
+        workflow === "seo-ready" ? "optimizează-seo" : null,
+        workflow === "investment" ? "calculează-roi-final" : null,
+        workflow === "hospitality" ? "verifică-regim-hotelier" : null,
+      ].filter(Boolean) as string[];
       const importedFeatures = [
         "importat-scraper",
         "necesită-verificare",
         options?.verification === "full" ? "verificare-completă" : "verificare-standard",
+        `workflow-${workflow}`,
+        ...internalChecklist,
         lead.lead_score >= 90 ? "lead-premium" : null,
         isPremiumLead(lead.title) ? "zonă-premium" : null,
+        isPriorityContact ? "contact-prioritar" : null,
         lead.phone ? "contact-disponibil" : "verifică-telefon",
         `sursa-${sourcePlatform.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         ...specs.amenities.map((item) => item.toLowerCase().replace(/\s+/g, "-")),
       ].filter(Boolean) as string[];
-      const tag = options?.activate ? "Importat scraper" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
+      const tag = options?.activate ? "Importat scraper" : needsMediaReview ? "Necesită poze/verificare" : options?.verification === "full" ? "De verificat complet" : "Draft importat";
       const estimatedRevenue = listingType === "inchiriere" && lead.original_price
         ? `${lead.original_price}€/lună chirie listată`
         : lead.monthly_extra
@@ -1271,6 +1307,16 @@ const ScraperLeads = () => {
         price_per_sqm: pricePerSqm,
         estimated_revenue: estimatedRevenue,
         roi_percentage: yieldValue ? `${yieldValue}%` : null,
+        expert_insight_ro: [
+          `Import: ${IMPORT_WORKFLOW_LABELS[workflow]}.`,
+          `Prioritate: ${isPriorityContact ? "contact rapid" : lead.lead_score >= 70 ? "revizie comercială" : "verificare standard"}.`,
+          internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
+        ].filter(Boolean).join("\n"),
+        expert_insight_en: [
+          `Import workflow: ${IMPORT_WORKFLOW_LABELS[workflow]}.`,
+          `Priority: ${isPriorityContact ? "fast owner contact" : lead.lead_score >= 70 ? "commercial review" : "standard review"}.`,
+          internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
+        ].filter(Boolean).join("\n"),
         contact_phone: lead.phone || null,
         contact_name: contactName !== "—" ? contactName : null,
         source_url: lead.url,
@@ -2052,11 +2098,15 @@ const ScraperLeads = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead)}>Draft inteligent</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "owner-contact", verification: "full" })}>Contact proprietar prioritar</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "media-needed", verification: "full" })}>Necesită poze/verificare</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "vanzare" })}>Importă ca vânzare</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "inchiriere" })}>Importă ca închiriere</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", verification: "full" })}>Importă pentru investiție</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full" })}>Pregătește regim hotelier</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full" })}>Draft + verificare completă</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", verification: "full", workflow: "investment" })}>Importă pentru investiție</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Pregătește regim hotelier</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full", workflow: "quick-review" })}>Draft + verificare completă</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "seo-ready", verification: "full" })}>Draft SEO-ready</DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -3009,11 +3059,15 @@ const ScraperLeads = () => {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "owner-contact", verification: "full" })}>Contact prioritar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "media-needed", verification: "full" })}>Necesită poze</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", verification: "full" })}>Ca investiție</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full" })}>Regim hotelier</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full" })}>Verificare completă</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", verification: "full", workflow: "investment" })}>Ca investiție</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Regim hotelier</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full", workflow: "quick-review" })}>Verificare completă</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "seo-ready", verification: "full" })}>SEO-ready</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -3151,11 +3205,15 @@ const ScraperLeads = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead)}>Draft inteligent</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "owner-contact", verification: "full" })}>Contact prioritar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "media-needed", verification: "full" })}>Necesită poze</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "vanzare" })}>Ca vânzare</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "inchiriere" })}>Ca închiriere</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", verification: "full" })}>Ca investiție</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full" })}>Regim hotelier</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full" })}>Verificare completă</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", verification: "full", workflow: "investment" })}>Ca investiție</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Regim hotelier</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full", workflow: "quick-review" })}>Verificare completă</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "seo-ready", verification: "full" })}>SEO-ready</DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
