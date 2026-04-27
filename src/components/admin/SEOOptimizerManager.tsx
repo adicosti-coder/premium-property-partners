@@ -506,7 +506,46 @@ const SEOOptimizerManager = () => {
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
+            <Button
+              variant="secondary"
+              onClick={runDualLanguageAudit}
+              disabled={dualRunning || auditMutation.isPending || !url}
+              title="Analizează aceeași pagină în română și engleză"
+            >
+              {dualRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              RO+EN
+            </Button>
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="text-xs text-muted-foreground">Scor mediu ultimele audituri</div>
+              <div className={`text-2xl font-bold ${scoreColor(seoStats.avgScore)}`}>{seoStats.avgScore}<span className="text-sm text-muted-foreground">/100</span></div>
+            </div>
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="text-xs text-muted-foreground">Pagini urmărite</div>
+              <div className="text-2xl font-bold">{seoStats.latestCount}</div>
+            </div>
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="text-xs text-muted-foreground">Probleme critice</div>
+              <div className={`text-2xl font-bold ${seoStats.criticalIssues > 0 ? "text-red-600" : "text-green-600"}`}>{seoStats.criticalIssues}</div>
+            </div>
+          </div>
+
+          {seoStats.urgentAudits.length > 0 && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <div className="mb-2 flex items-center gap-2 font-semibold text-destructive">
+                <AlertTriangle className="h-4 w-4" /> Prioritate optimizare
+              </div>
+              <div className="space-y-1">
+                {seoStats.urgentAudits.map((audit) => (
+                  <button key={`${audit.id}-priority`} onClick={() => setSelectedAudit(audit)} className="block w-full truncate text-left text-xs hover:text-primary">
+                    {audit.overall_score ?? "—"}/100 · {audit.url}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2 items-center">
             {QUICK_URLS.map((u) => (
