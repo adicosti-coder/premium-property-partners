@@ -472,6 +472,33 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ClipboardList className="w-5 h-5 text-primary" />
+            Priorități operaționale
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          {[
+            { label: "Drafturi de verificat", value: listingOps?.needsReview ?? 0, hint: "importate automat", action: () => navigate("/admin?tab=properties") },
+            { label: "Drafturi vechi", value: listingOps?.staleDrafts ?? 0, hint: "peste 7 zile", action: () => navigate("/admin?tab=properties") },
+            { label: "Prospecți noi", value: listingOps?.newProspects ?? 0, hint: "neprelucrați", action: () => navigate("/scraper-leads") },
+          ].map((item) => (
+            <button key={item.label} onClick={item.action} className="rounded-lg border border-border bg-background p-4 text-left transition-colors hover:border-primary/50 hover:bg-card">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.hint}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-primary">{item.value}</p>
+            </button>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* 🔥 Hot Prospects AI - Quick Access Card */}
       <Card className="border-2 border-destructive/30 bg-gradient-to-r from-destructive/5 via-amber-500/5 to-transparent">
         <CardContent className="pt-6">
