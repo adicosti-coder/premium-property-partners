@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, Target, TrendingUp, WalletCards } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -50,6 +50,24 @@ const scenarioCards = [
   { title: "Conservator", occupancy: "62%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
   { title: "RealTrust standard", occupancy: "75%", adr: "68–82€", roi: "9.0–9.8%", note: "modelul de lucru recomandat pentru randament stabil" },
   { title: "Premium complex", occupancy: "80%+", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+];
+
+const sensitivityMatrix = [
+  { occupancy: "60%", adr60: "7.6%", adr75: "9.6%", adr90: "11.5%" },
+  { occupancy: "70%", adr60: "8.8%", adr75: "11.2%", adr90: "13.4%" },
+  { occupancy: "80%", adr60: "10.2%", adr75: "12.8%", adr90: "15.4%" },
+];
+
+const investmentLevers = [
+  { icon: Target, title: "Poziționare în piață", text: "Fotografii, dotări și descriere calibrate pentru oaspeți business, city-break și relocări." },
+  { icon: WalletCards, title: "Controlul costurilor", text: "Analiza include curățenie, mentenanță, taxe, comisioane și perioade cu ocupare redusă." },
+  { icon: Clock3, title: "Viteză de recuperare", text: "Modelăm în câți ani se recuperează investiția prin venit net și apreciere de capital." },
+];
+
+const relatedGuides = [
+  { label: "Calculator ROI", href: "/calculator-roi", text: "Compară rapid chiria clasică și regimul hotelier." },
+  { label: "Catalog Investiții", href: "/catalog-investitii", text: "Vezi oportunități filtrate după randament și risc." },
+  { label: "Piața imobiliară", href: "/piata-imobiliara-timisoara", text: "Urmărește tendințe locale, prețuri și cerere." },
 ];
 
 const investorChecklist = [
@@ -89,6 +107,9 @@ const AnalizaROIApartament = () => {
     const hotelRoi = (hotelNet / purchasePrice) * 100;
     const appreciation = (purchasePrice * annualGrowth) / 100;
     const totalReturn = hotelNet + appreciation;
+    const monthlyHotelNet = hotelNet / 12;
+    const paybackYears = purchasePrice / Math.max(totalReturn, 1);
+    const breakevenOccupancy = (classicAnnual / (nightlyRate * 365 * 0.73)) * 100;
 
     const projection = Array.from({ length: 6 }, (_, index) => {
       const year = 2026 + index;
@@ -103,6 +124,9 @@ const AnalizaROIApartament = () => {
       classicRoi: classicRoi.toFixed(1),
       hotelRoi: hotelRoi.toFixed(1),
       totalReturn: Math.round(totalReturn),
+      monthlyHotelNet: Math.round(monthlyHotelNet),
+      paybackYears: paybackYears.toFixed(1),
+      breakevenOccupancy: Math.min(95, Math.max(25, breakevenOccupancy)).toFixed(0),
       projection,
       delta: Math.round(hotelNet - classicAnnual),
     };
