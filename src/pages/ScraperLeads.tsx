@@ -2133,6 +2133,8 @@ const ScraperLeads = () => {
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Pregătește regim hotelier</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { verification: "full", workflow: "quick-review" })}>Draft + verificare completă</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "seo-ready", verification: "full" })}>Draft SEO-ready</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { workflow: "legal-review", verification: "full" })}>Verificare juridică</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { listingType: "investitie", workflow: "renovation", verification: "full" })}>Renovare / flip</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => importLeadAsListing(selectedLead, { activate: true })}>Importă și activează</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -3094,6 +3096,8 @@ const ScraperLeads = () => {
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Regim hotelier</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full", workflow: "quick-review" })}>Verificare completă</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "seo-ready", verification: "full" })}>SEO-ready</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "legal-review", verification: "full" })}>Verificare juridică</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", workflow: "renovation", verification: "full" })}>Renovare / flip</DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -3240,6 +3244,8 @@ const ScraperLeads = () => {
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "cazare", verification: "full", workflow: "hospitality" })}>Regim hotelier</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { verification: "full", workflow: "quick-review" })}>Verificare completă</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "seo-ready", verification: "full" })}>SEO-ready</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { workflow: "legal-review", verification: "full" })}>Verificare juridică</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => importLeadAsListing(lead, { listingType: "investitie", workflow: "renovation", verification: "full" })}>Renovare / flip</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => importLeadAsListing(lead, { activate: true })}>Importă și activează</DropdownMenuItem>
                         </DropdownMenuContent>
