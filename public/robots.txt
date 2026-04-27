@@ -1,21 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /scraper-leads
-Disallow: /portal-proprietar
-Disallow: /autentificare-proprietar
-Disallow: /auth
-Disallow: /reset-password
-Disallow: /profil
-Disallow: /setari
-Disallow: /favorite
-Disallow: /comunitate/trimite
-Disallow: /comunitate/editeaza/
-Disallow: /termeni-si-conditii
-Disallow: /politica-confidentialitate
-Disallow: /unsubscribe
-
-# Allow guest guides for SEO (unique per booking)
-Allow: /guide/
 
 Sitemap: https://realtrust.ro/sitemap.xml
