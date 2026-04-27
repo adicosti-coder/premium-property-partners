@@ -31,11 +31,11 @@ export default function HomeRecommendedLinks() {
       cta: isRo ? "Deschide catalogul" : "Open catalog",
     },
     {
-      to: "/calculator-roi",
+      to: "/analiza-roi-apartament",
       icon: Calculator,
-      title: isRo ? "Calculator ROI" : "ROI Calculator",
-      text: isRo ? "Compară chiria clasică cu regimul hotelier și estimează cash flow-ul net." : "Compare long-term rent with hotel-style management and estimate net cash flow.",
-      cta: isRo ? "Calculează ROI" : "Calculate ROI",
+      title: isRo ? "Analiza ROI Apartament" : "Apartment ROI Analysis",
+      text: isRo ? "Calculează randamentul, profitul net și evoluția prețului pentru un apartament." : "Estimate yield, net profit and price evolution for an apartment.",
+      cta: isRo ? "Analizează profitul" : "Analyze profit",
     },
   ];
 
