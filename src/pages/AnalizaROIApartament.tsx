@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowRight, Building2, Calculator, Home, Landmark, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
+import { ArrowRight, Building2, Calculator, CheckCircle2, HelpCircle, Home, Landmark, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -24,6 +24,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -44,12 +46,27 @@ const complexLinks = [
   { name: "Fructus Plaza", href: "/complexe/fructus-plaza", profile: "ultracentral", yield: "9.0–10.5%" },
 ];
 
+const scenarioCards = [
+  { title: "Conservator", occupancy: "62%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
+  { title: "RealTrust standard", occupancy: "75%", adr: "68–82€", roi: "9.0–9.8%", note: "modelul de lucru recomandat pentru randament stabil" },
+  { title: "Premium complex", occupancy: "80%+", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+];
+
+const faqItems = [
+  { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale și o deducere standard de 27%." },
+  { question: "Ce înseamnă analiză profit apartament în România?", answer: "Este o estimare completă a profitului lunar și anual pentru un apartament, comparând chiria clasică, regimul hotelier, aprecierea prețului și lichiditatea zonei." },
+  { question: "De ce sunt importante complexele rezidențiale în analiza ROI?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
+  { question: "Pot folosi calculatorul pentru orice oraș din România?", answer: "Da, modelul funcționează pentru orice oraș dacă ajustezi prețul de achiziție, chiria, tariful pe noapte și ocuparea. Pentru Timișoara folosim repere operaționale verificate RealTrust." },
+];
+
 const AnalizaROIApartament = () => {
   const [purchasePrice, setPurchasePrice] = useState(125000);
   const [monthlyRent, setMonthlyRent] = useState(620);
   const [nightlyRate, setNightlyRate] = useState(72);
   const [occupancy, setOccupancy] = useState(75);
   const [annualGrowth, setAnnualGrowth] = useState(6);
+
+  useRegisterFAQs("analiza-roi-apartament", faqItems);
 
   const calculations = useMemo(() => {
     const classicAnnual = monthlyRent * 12;
@@ -92,11 +109,24 @@ const AnalizaROIApartament = () => {
         url="https://www.realtrust.ro/analiza-roi-apartament"
         jsonLd={{
           "@context": "https://schema.org",
-          "@type": "FinancialProduct",
-          name: "Analiza ROI Apartament România",
-          description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
-          url: "https://www.realtrust.ro/analiza-roi-apartament",
-          provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
+          "@graph": [
+            {
+              "@type": "FinancialProduct",
+              name: "Analiza ROI Apartament România",
+              description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
+              url: "https://www.realtrust.ro/analiza-roi-apartament",
+              provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
+            },
+            {
+              "@type": "HowTo",
+              name: "Cum analizezi profitul unui apartament",
+              step: [
+                { "@type": "HowToStep", name: "Introdu prețul de achiziție" },
+                { "@type": "HowToStep", name: "Compară chiria clasică cu regimul hotelier" },
+                { "@type": "HowToStep", name: "Verifică evoluția prețului și complexele potrivite" },
+              ],
+            },
+          ],
         }}
       />
       <Header />
@@ -203,6 +233,26 @@ const AnalizaROIApartament = () => {
         </section>
 
         <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><CheckCircle2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scenarii de randament</span></div><h2 className="text-3xl font-bold text-foreground">Ce scenariu se potrivește apartamentului tău?</h2><p className="mt-3 text-muted-foreground">Folosește aceste repere pentru a interpreta rezultatul calculatorului și pentru a decide dacă merită o analiză detaliată.</p></div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {scenarioCards.map((scenario) => (
+              <Card key={scenario.title} className="border-border bg-card">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{scenario.title}</h3>
+                  <div className="mt-5 grid gap-3 text-sm">
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">Ocupare</span><span className="font-semibold text-foreground">{scenario.occupancy}</span></div>
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">Tarif/noapte</span><span className="font-semibold text-foreground">{scenario.adr}</span></div>
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">ROI net</span><span className="font-semibold text-primary">{scenario.roi}</span></div>
+                  </div>
+                  <p className="mt-5 text-sm text-muted-foreground">{scenario.note}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-muted/40 py-14 md:py-20">
+          <div className="container mx-auto px-4">
           <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><Building2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Link-uri strategice</span></div><h2 className="text-3xl font-bold text-foreground">Complexe recomandate pentru analiză ROI</h2><p className="mt-3 text-muted-foreground">Compară potențialul de randament al apartamentelor din ansambluri cu cerere ridicată și poziționare bună pentru închiriere.</p></div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {complexLinks.map((item) => (
@@ -218,6 +268,19 @@ const AnalizaROIApartament = () => {
             <div><Landmark className="mb-3 h-7 w-7 text-primary" /><h3 className="text-2xl font-bold text-foreground">Vrei o analiză pe o proprietate concretă?</h3><p className="mt-2 text-muted-foreground">Trimite apartamentul sau zona dorită și primești o estimare adaptată pieței locale.</p></div>
             <div className="mt-5 flex flex-wrap gap-3 md:mt-0"><Button asChild><Link to="/complexe">Toate complexele</Link></Button><Button asChild variant="outline"><Link to="/evaluare-gratuita">Evaluare gratuită</Link></Button></div>
           </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-6 flex items-center gap-2 text-primary"><HelpCircle className="h-5 w-5" /><h2 className="text-3xl font-bold text-foreground">Întrebări frecvente</h2></div>
+          <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-6" itemScope itemType="https://schema.org/FAQPage">
+            {faqItems.map((item, index) => (
+              <AccordionItem key={item.question} value={`faq-${index}`} className="last:border-b-0" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                <AccordionTrigger className="text-left text-foreground" itemProp="name">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground" itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"><span itemProp="text">{item.answer}</span></AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
       </main>
 
