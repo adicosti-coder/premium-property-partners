@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, Calculator, CheckCircle2, Clock3, FileText, Home, KeyRound, MapPin, MessageCircle, Send, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -57,6 +57,19 @@ const faqItems = [
   { question: "Merită cumpărate apartamente City of Mara pentru investiție?", answer: "Da, mai ales unitățile compacte cu parcare și compartimentare eficientă, deoarece zona Circumvalațiunii are acces rapid către Iulius Town, centru și hub-uri de business." },
   { question: "Ce tip de apartament are randament mai bun în City of Mara?", answer: "În general, studiourile și apartamentele cu 2 camere au randament mai bun pentru chirie corporate sau regim hotelier, în timp ce apartamentele mai mari sunt mai potrivite pentru locuire și revânzare." },
   { question: "Pot primi lista actualizată de disponibilități City of Mara?", answer: "Da. Completează formularul de pe pagină și trimitem opțiunile disponibile, prețurile actualizate, parcările și o estimare de randament pentru bugetul tău." },
+];
+
+const proximityHighlights = [
+  { place: "Iulius Town / Openville", time: "5–7 min", value: "cerere corporate și retail premium" },
+  { place: "Piața Unirii / Centru", time: "8–10 min", value: "atractiv pentru locuire și cazare urbană" },
+  { place: "Gara de Nord", time: "6–9 min", value: "acces bun pentru chiriași mobili" },
+  { place: "Business hubs nord", time: "7–12 min", value: "profil stabil de chiriași profesioniști" },
+];
+
+const yieldScenarios = [
+  { label: "Conservator", occupancy: "65%", monthly: "520–650€", detail: "chirie lungă sau corporate, risc operațional scăzut" },
+  { label: "Echilibrat", occupancy: "75%", monthly: "720–920€", detail: "mix chirie medie + perioade scurte, mobilare premium" },
+  { label: "Dinamic", occupancy: "82%", monthly: "950–1.250€", detail: "regim hotelier administrat profesional, calendar optimizat" },
 ];
 
 const CityOfMaraTimisoara = () => {
@@ -203,7 +216,26 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
-        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="tipuri-apartamente-city-of-mara">
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="proximitate-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Clock3 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Proximitate reală</span></div>
+              <h2 id="proximitate-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Repere care susțin cererea pentru apartamente City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Pentru cumpărători și investitori, timpul până la punctele-cheie din oraș influențează direct ocuparea, chiria și lichiditatea.</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              {proximityHighlights.map((item) => (
+                <div key={item.place} className="rounded-lg border border-border bg-card p-5">
+                  <p className="text-2xl font-bold text-primary">{item.time}</p>
+                  <h3 className="mt-3 text-base font-semibold text-foreground">{item.place}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-12 md:py-16" aria-labelledby="tipuri-apartamente-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
@@ -264,6 +296,28 @@ const CityOfMaraTimisoara = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </section>
+
+        <section className="bg-muted/40 py-12 md:py-16" aria-labelledby="scenarii-randament-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Target className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scenarii de randament</span></div>
+              <h2 id="scenarii-randament-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Cum poate performa o investiție în City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Estimările sunt orientative și se calibrează după suprafață, etaj, parcare, mobilare și prețul de achiziție.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {yieldScenarios.map((item) => (
+                <article key={item.label} className="rounded-lg border border-primary/20 bg-card p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{item.label}</h3>
+                  <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-md bg-primary/5 p-3"><span className="block text-muted-foreground">Ocupare</span><strong className="text-primary">{item.occupancy}</strong></div>
+                    <div className="rounded-md bg-primary/5 p-3"><span className="block text-muted-foreground">Venit lunar</span><strong className="text-primary">{item.monthly}</strong></div>
+                  </div>
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -367,12 +421,18 @@ const CityOfMaraTimisoara = () => {
       <button
         type="button"
         onClick={handleWhatsApp}
-        className="fixed bottom-5 right-4 z-50 inline-flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full bg-whatsapp px-4 text-whatsapp-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6 md:right-6"
+        className="fixed bottom-5 right-4 z-50 inline-flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full bg-whatsapp px-4 text-whatsapp-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:bottom-6 sm:right-6"
         aria-label="Solicită disponibilități City of Mara pe WhatsApp"
       >
         <MessageCircle className="h-6 w-6" />
         <span className="ml-2 hidden text-sm font-semibold sm:inline">WhatsApp</span>
       </button>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-lg sm:hidden">
+        <Button asChild className="min-h-[48px] w-full gap-2">
+          <a href="#disponibilitati"><FileText className="h-4 w-4" /> Cere lista City of Mara</a>
+        </Button>
+      </div>
 
       <Suspense fallback={null}>
         <Footer />
