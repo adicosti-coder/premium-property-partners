@@ -1151,7 +1151,7 @@ function extractDomain(url: string): string | null {
 }
 
 function ResultList({
-  items, emptyText, positive, negative, highlight, compact,
+  items, emptyText, positive, negative, highlight, compact, importingUrls, importedUrls, onImport,
 }: {
   items: PreviewResult[];
   emptyText: string;
@@ -1159,6 +1159,9 @@ function ResultList({
   negative: string[];
   highlight: boolean;
   compact?: boolean;
+  importingUrls?: Set<string>;
+  importedUrls?: Set<string>;
+  onImport?: (item: PreviewResult) => void;
 }) {
   const [blockingUrl, setBlockingUrl] = useState<string | null>(null);
   const [blockedUrls, setBlockedUrls] = useState<Set<string>>(new Set());
@@ -1316,6 +1319,25 @@ function ResultList({
               )}
             </div>
             <div className="shrink-0 flex flex-col items-end gap-1.5">
+              {onImport && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={importingUrls?.has(it.url) || importedUrls?.has(it.url)}
+                  onClick={() => onImport(it)}
+                  className="h-7 px-2 text-[10px] gap-1"
+                  title="Adaugă acest rezultat în Oportunități AI"
+                >
+                  {importingUrls?.has(it.url) ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : importedUrls?.has(it.url) ? (
+                    <CheckCheck className="w-3 h-3" />
+                  ) : (
+                    <UploadCloud className="w-3 h-3" />
+                  )}
+                  {importedUrls?.has(it.url) ? "Importat" : "Oportunități AI"}
+                </Button>
+              )}
               <a
                 href={it.url}
                 target="_blank"
