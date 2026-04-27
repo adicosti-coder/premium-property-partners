@@ -476,18 +476,23 @@ export default function ScraperPreview() {
       const urls = unique.map((it) => it.url);
       const { data: existing, error: checkError } = await supabase
         .from("prospect_listings" as any)
-        .select("source_url")
+        .select("source_url, is_active, status, lifecycle_status")
         .in("source_url", urls);
       if (checkError) throw checkError;
 
       const existingUrls = new Set((existing || []).map((row: any) => row.source_url));
+      const archivedUrls = new Set((existing || [])
+        .filter((row: any) => row.is_active === false || row.status === "archived" || row.lifecycle_status === "rejected")
+        .map((row: any) => row.source_url));
       const rows = unique
         .filter((it) => !existingUrls.has(it.url))
         .map((it) => buildProspectRowFromPreview(it, data));
 
       if (rows.length === 0) {
         setImportedUrls((prev) => new Set([...prev, ...urls]));
-        toast.info(`Toate cele ${unique.length} ${label} existau deja în Oportunități AI.`);
+        toast.info(archivedUrls.size > 0
+          ? `${archivedUrls.size} ${label} sunt arhivate și nu se reimportă.`
+          : `Toate cele ${unique.length} ${label} existau deja în Oportunități AI.`);
         return;
       }
 

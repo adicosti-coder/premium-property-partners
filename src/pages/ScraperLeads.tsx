@@ -1521,13 +1521,35 @@ const ScraperLeads = () => {
     queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
     queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
   };
-  const handleArchive = async (leadId: string) => {
+  const handleArchive = async (lead: ScraperLead) => {
+    const leadId = lead.id;
+    const url = lead.url || "";
     queryClient.setQueryData(["scraper-leads"], (old: any) =>
       Array.isArray(old) ? old.filter((l: any) => l.id !== leadId) : old
     );
     if (selectedLead?.id === leadId) setSelectedLead(null);
 
-    const { error } = await supabase.from("scraper_leads_archive_2026" as any).update({ status: "archived" } as any).eq("id", leadId);
+    const { error } = (lead as any)._origin === "prospect"
+      ? await supabase
+          .from("prospect_listings" as any)
+          .update({
+            is_active: false,
+            lifecycle_status: "rejected",
+            status: "archived",
+            admin_notes: `${lead.admin_notes ? `${lead.admin_notes}\n` : ""}Arhivat manual din Oportunități AI. Nu se reimportă automat.`,
+          } as any)
+          .eq("id", leadId)
+      : await supabase
+          .from("scraper_leads_archive_2026" as any)
+          .update({ status: "archived" } as any)
+          .eq("id", leadId);
+
+    if (!error && url) {
+      await Promise.allSettled([
+        supabase.from("scraper_leads_archive_2026" as any).update({ status: "archived" } as any).eq("url", url),
+        supabase.from("prospect_listings" as any).update({ is_active: false, lifecycle_status: "rejected", status: "archived" } as any).eq("source_url", url),
+      ]);
+    }
     if (error) {
       queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
       toast.error("Eroare la arhivare");
@@ -1536,6 +1558,7 @@ const ScraperLeads = () => {
     toast.success("Lead arhivat");
     queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
     queryClient.invalidateQueries({ queryKey: ["scraper-leads-archived"] });
+    queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
   };
 
   // ── Restore Lead from archive ────────────────────
@@ -1599,7 +1622,7 @@ const ScraperLeads = () => {
       if (prev) { setSelectedLead(prev as any); setGeneratedMessage(""); }
     },
     onWhatsApp: () => selectedLead && handleWhatsApp(selectedLead),
-    onArchive: () => selectedLead && handleArchive(selectedLead.id),
+    onArchive: () => selectedLead && handleArchive(selectedLead),
     onEscape: () => setSelectedLead(null),
     onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
   });
@@ -2162,7 +2185,7 @@ const ScraperLeads = () => {
                 Blacklist {selectedLead.phone}
               </Button>
             )}
-            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleArchive(selectedLead.id)}>
+            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleArchive(selectedLead)}>
               <Archive className="w-4 h-4" />
               Arhivează
             </Button>
@@ -3143,7 +3166,7 @@ const ScraperLeads = () => {
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                              onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                              onClick={(e) => { e.stopPropagation(); handleArchive(lead); }}
                               title="Arhivează"
                             >
                               <Archive className="h-3.5 w-3.5" />
@@ -3303,7 +3326,7 @@ const ScraperLeads = () => {
                       size="sm"
                       variant="outline"
                       className="h-8 px-3 text-xs"
-                      onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                      onClick={(e) => { e.stopPropagation(); handleArchive(lead); }}
                       title="Arhivează"
                     >
                       <Archive className="h-3 w-3" />
