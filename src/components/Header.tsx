@@ -19,9 +19,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 // supabase imported dynamically below to keep vendor-supabase (~43KB) off critical path
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
+import AnimationToggle from "./AnimationToggle";
 
 // Lazy-load non-critical header sub-components
-const AnimationToggle = lazy(() => import("./AnimationToggle"));
 const NotificationBell = lazy(() => import("./NotificationBell"));
 const PropertyCodeSearch = lazy(() => import("./PropertyCodeSearch"));
 // Tooltip removed — not used in Header, avoids loading vendor-ui-core eagerly
