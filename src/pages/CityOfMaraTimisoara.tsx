@@ -421,12 +421,18 @@ const CityOfMaraTimisoara = () => {
       <button
         type="button"
         onClick={handleWhatsApp}
-        className="fixed bottom-5 right-4 z-50 inline-flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full bg-whatsapp px-4 text-whatsapp-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6 md:right-6"
+        className="fixed bottom-5 right-4 z-50 inline-flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full bg-whatsapp px-4 text-whatsapp-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:bottom-6 sm:right-6"
         aria-label="Solicită disponibilități City of Mara pe WhatsApp"
       >
         <MessageCircle className="h-6 w-6" />
         <span className="ml-2 hidden text-sm font-semibold sm:inline">WhatsApp</span>
       </button>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-lg sm:hidden">
+        <Button asChild className="min-h-[48px] w-full gap-2">
+          <a href="#disponibilitati"><FileText className="h-4 w-4" /> Cere lista City of Mara</a>
+        </Button>
+      </div>
 
       <Suspense fallback={null}>
         <Footer />
