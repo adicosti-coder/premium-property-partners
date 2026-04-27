@@ -428,23 +428,33 @@ function extractImportedSpecs(text: string) {
   const hasElevator = /\b(lift|ascensor)\b/.test(normalized) ? true : null;
   const hasAc = /\b(aer conditionat|aer condiționat|ac\b|clima|climatizare)\b/.test(normalized) ? true : null;
   const hasCellar = /\b(boxa|pivnita|pivniță|beci)\b/.test(normalized) ? true : null;
+  const hasStorage = /\b(debara|spatiu depozitare|spațiu depozitare|storage)\b/.test(normalized) ? true : null;
   const parking = /\b(parcare|loc de parcare|garaj)\b/.test(normalized) ? "Da" : null;
   const furnished = /\b(mobilat|mobilata|mobilată|utilat|utilata|utilată)\b/.test(normalized) ? "Mobilat/utilat" : null;
   const constructionType = /\b(caramida|cărămidă|brick)\b/.test(normalized) ? "Cărămidă" : /\b(beton|bca)\b/.test(normalized) ? "Beton/BCA" : null;
-  const heatingType = /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : /termoficare|colterm/.test(normalized) ? "Termoficare" : null;
-  const propertyCondition = /\b(nou|noua|nouă|prima inchiriere|prima închiriere)\b/.test(normalized) ? "Nou / prima utilizare" : /\b(renovat|renovata|renovată)\b/.test(normalized) ? "Renovat" : null;
-  const compartimentare = /decomandat/.test(normalized) ? "Decomandat" : /semidecomandat/.test(normalized) ? "Semidecomandat" : /nedecomandat|open space/.test(normalized) ? "Nedecomandat / open-space" : null;
+  const heatingType = /incalzire in pardoseala|încălzire în pardoseală/.test(normalized) ? "Încălzire în pardoseală" : /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : /termoficare|colterm/.test(normalized) ? "Termoficare" : null;
+  const propertyCondition = /\b(la rosu|la roșu|nefinisat)\b/.test(normalized) ? "Necesită finisare" : /\b(nou|noua|nouă|prima inchiriere|prima închiriere)\b/.test(normalized) ? "Nou / prima utilizare" : /\b(renovat|renovata|renovată)\b/.test(normalized) ? "Renovat" : null;
+  const compartimentare = /semidecomandat/.test(normalized) ? "Semidecomandat" : /nedecomandat|open space/.test(normalized) ? "Nedecomandat / open-space" : /decomandat/.test(normalized) ? "Decomandat" : null;
   const monthlyMaintenance = text.match(/(?:intretinere|întreținere|cheltuieli)\D{0,16}(\d+(?:[.,]\d+)?)\s*(?:lei|ron|€|eur)/i)?.[1]?.replace(",", ".");
   const energyClass = text.match(/(?:clasa energetica|clasă energetică|certificat energetic)\D{0,8}([A-G])/i)?.[1]?.toUpperCase() || null;
-  const viewType = /\b(vedere panoramica|vedere panoramică|panoramic)\b/.test(normalized) ? "Panoramică" : /\b(vedere parc|parc)\b/.test(normalized) ? "Parc" : null;
+  const viewType = /\b(vedere panoramica|vedere panoramică|panoramic)\b/.test(normalized) ? "Panoramică" : /\b(vedere parc|parc)\b/.test(normalized) ? "Parc" : /\b(vedere oras|vedere oraș)\b/.test(normalized) ? "Urbană" : null;
   const orientation = text.match(/orientare\s*[:\-]?\s*([A-Za-zĂÂÎȘȚăâîșț\- ]{3,24})/i)?.[1]?.trim() || null;
   const comfortLevel = normalized.match(/confort\s*(lux|1|2|3|i|ii|iii)/)?.[1]?.replace("i", "1") || null;
   const terrace = text.match(/(?:terasa|terasă)\D{0,12}(\d+(?:[.,]\d+)?)\s*(?:mp|m2)/i)?.[1]?.replace(",", ".");
+  const intercomType = /\b(videointerfon|video interfon)\b/.test(normalized) ? "Videointerfon" : /\b(interfon)\b/.test(normalized) ? "Interfon" : null;
+  const riskFlags = [
+    /\b(licitatie|licitație|executare silita|executare silită)\b/.test(normalized) ? "risc-juridic" : null,
+    /\b(urgent|negociabil|accept credit|cash)\b/.test(normalized) ? "marjă-negociere" : null,
+    /\b(fara cf|fără cf|intabulare in curs|intabulare în curs)\b/.test(normalized) ? "verifică-acte" : null,
+    /\b(necesita renovare|necesită renovare|de renovat|la rosu|la roșu)\b/.test(normalized) ? "necesită-renovare" : null,
+  ].filter(Boolean) as string[];
   const amenities = [
     hasAc ? "Aer condiționat" : null,
     hasElevator ? "Lift" : null,
     parking ? "Parcare" : null,
     hasCellar ? "Boxă" : null,
+    hasStorage ? "Spațiu depozitare" : null,
+    intercomType,
     /centrala proprie|centrală proprie/.test(normalized) ? "Centrală proprie" : null,
     /incalzire in pardoseala|încălzire în pardoseală/.test(normalized) ? "Încălzire în pardoseală" : null,
   ].filter(Boolean) as string[];
@@ -459,8 +469,10 @@ function extractImportedSpecs(text: string) {
     has_elevator: hasElevator,
     has_ac: hasAc,
     has_cellar: hasCellar,
+    has_storage: hasStorage,
     parking,
     furnished,
+    intercom_type: intercomType,
     orientation,
     comfort_level: comfortLevel,
     terrace_area: terrace ? Number(terrace) : null,
@@ -472,6 +484,7 @@ function extractImportedSpecs(text: string) {
     energy_class: energyClass,
     view_type: viewType,
     amenities,
+    risk_flags: riskFlags,
   };
 }
 
