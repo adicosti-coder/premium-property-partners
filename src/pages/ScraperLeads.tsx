@@ -2614,6 +2614,43 @@ const ScraperLeads = () => {
             {renderStatCard("Scor mediu", pipelineStats.avgScore, <Star className="w-4 h-4 text-white" />, "bg-yellow-500")}
           </div>
 
+          <Card className="mb-4 border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" /> Flux automat proprietăți
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {automationQueue.readyToImport.length} gata de import · {automationQueue.readyToContact.length} gata de contact · {automationQueue.missingData} cu date incomplete
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" onClick={bulkImportSmartDrafts} disabled={bulkImportingSmart || automationQueue.readyToImport.length === 0} className="gap-1.5">
+                    {bulkImportingSmart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+                    Importă top {automationQueue.readyToImport.length} ca draft
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("pipeline"); }} className="gap-1.5">
+                    <Flame className="h-4 w-4" /> Vezi prioritare
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/admin/prospect-listings")} className="gap-1.5">
+                    <ArrowRightCircle className="h-4 w-4" /> Prospect Listings
+                  </Button>
+                </div>
+              </div>
+              {automationQueue.readyToImport.length > 0 && (
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                  {automationQueue.readyToImport.map((lead) => (
+                    <button key={`auto-${lead.id}`} onClick={() => setSelectedLead(lead)} className="min-w-[220px] rounded-md border bg-background p-2 text-left text-xs hover:border-primary/50">
+                      <span className="block truncate font-medium">{cleanTitleStatic(lead.title)}</span>
+                      <span className="text-muted-foreground">Scor {lead.lead_score} · {formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Hide search/listing pages toggle — keeps the table focused on individual ads */}
           <div className="flex items-center gap-2 text-xs px-1 mb-2 flex-wrap">
             <button
