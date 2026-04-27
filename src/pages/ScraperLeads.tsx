@@ -1622,7 +1622,7 @@ const ScraperLeads = () => {
       if (prev) { setSelectedLead(prev as any); setGeneratedMessage(""); }
     },
     onWhatsApp: () => selectedLead && handleWhatsApp(selectedLead),
-    onArchive: () => selectedLead && handleArchive(selectedLead.id),
+    onArchive: () => selectedLead && handleArchive(selectedLead),
     onEscape: () => setSelectedLead(null),
     onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
   });
@@ -2185,7 +2185,7 @@ const ScraperLeads = () => {
                 Blacklist {selectedLead.phone}
               </Button>
             )}
-            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleArchive(selectedLead.id)}>
+            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleArchive(selectedLead)}>
               <Archive className="w-4 h-4" />
               Arhivează
             </Button>
@@ -3166,7 +3166,7 @@ const ScraperLeads = () => {
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                              onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                              onClick={(e) => { e.stopPropagation(); handleArchive(lead); }}
                               title="Arhivează"
                             >
                               <Archive className="h-3.5 w-3.5" />
@@ -3326,7 +3326,7 @@ const ScraperLeads = () => {
                       size="sm"
                       variant="outline"
                       className="h-8 px-3 text-xs"
-                      onClick={(e) => { e.stopPropagation(); handleArchive(lead.id); }}
+                      onClick={(e) => { e.stopPropagation(); handleArchive(lead); }}
                       title="Arhivează"
                     >
                       <Archive className="h-3 w-3" />
