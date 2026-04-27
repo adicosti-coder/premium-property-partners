@@ -669,7 +669,7 @@ Deno.serve(async (req) => {
 
             const { data: inserted, error: insertErr } = await supabase
               .from('prospect_listings')
-              .insert({
+              .upsert({
                 source_platform: platform,
                 source_url: url,
                 title: extracted.title || result.title || 'Anunț fără titlu',
@@ -709,15 +709,18 @@ Deno.serve(async (req) => {
                   : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
-              })
+              }, { onConflict: 'source_url', ignoreDuplicates: true })
               .select('id, title, lead_score, source_url')
-              .single();
+              .maybeSingle();
 
             if (insertErr) {
               console.error(`Insert error for ${url}:`, insertErr.message);
               errors.push(`${url}: ${insertErr.message}`);
-            } else {
+            } else if (inserted) {
               results.push(inserted);
+              existingUrls.add(url);
+            } else {
+              duplicateSkipped++;
             }
           }
         } catch (err: any) {
