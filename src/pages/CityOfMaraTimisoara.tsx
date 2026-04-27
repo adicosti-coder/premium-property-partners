@@ -103,6 +103,31 @@ const costChecklist = [
   "randament net estimat după costuri reale",
 ];
 
+const negotiationSignals = [
+  { title: "Unitate listată de mai mult timp", text: "Poate crea spațiu pentru negociere, mai ales dacă proprietarul urmărește viteză de vânzare." },
+  { title: "Mobilare incompletă", text: "Prețul cerut poate părea bun, dar costul real crește dacă apartamentul nu este pregătit pentru utilizare imediată." },
+  { title: "Poziție inferioară în complex", text: "Parter, expunere zgomotoasă sau lipsa parcării pot influența atât prețul de intrare, cât și lichiditatea." },
+];
+
+const deliverables = [
+  "listă actualizată cu unități relevante pentru bugetul tău",
+  "filtrare după etaj, orientare, parcare și potențial de închiriere",
+  "estimare de cost total, nu doar preț de listare",
+  "recomandare scurtă: potrivit pentru locuire, chirie sau de evitat",
+];
+
+const suitabilityMatrix = [
+  { profile: "Investitor", bestFit: "studio / 2 camere", focus: "ocupare, lichiditate, randament net", note: "cele mai potrivite pentru cerere constantă și monetizare mai rapidă" },
+  { profile: "Locuire proprie", bestFit: "2 / 3 camere", focus: "compartimentare, lumină, confort urban", note: "utile pentru cumpărători care prioritizează accesul rapid spre centru și office" },
+  { profile: "Revânzare", bestFit: "2 camere / penthouse", focus: "adresă, poziție, prezentare", note: "interesează mai ales unitățile cu poziție bună și elemente premium clare" },
+];
+
+const finalObjectionsFaq = [
+  { question: "Se justifică prețul mai mare față de alte zone?", answer: "De obicei da, dacă unitatea are poziție bună, parcare și rămâne competitivă pentru chirie sau revânzare. Locația centrală susține diferența de preț mai bine decât zonele periferice." },
+  { question: "Ce tip de apartament se mișcă mai repede la revânzare?", answer: "În general, unitățile cu 2 camere bine compartimentate sunt cele mai lichide, pentru că atrag atât locuire proprie, cât și cumpărători-investitori." },
+  { question: "Merită să cer comparație între mai multe unități înainte de ofertă?", answer: "Da. Diferențele de etaj, orientare, parcare și mobilare schimbă semnificativ costul total și potențialul de randament, chiar în același complex." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -356,6 +381,21 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="negociere-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="negociere-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Semnale utile înainte să faci o ofertă</h2>
+            <p className="mt-3 text-muted-foreground">Nu toate apartamentele City of Mara trebuie tratate la fel. Am adăugat repere rapide care te ajută să separi o oportunitate reală de o unitate doar bine marketată.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {negotiationSignals.map((item) => (
+              <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="bg-muted/40 py-12 md:py-16" aria-labelledby="scenarii-randament-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 max-w-3xl">
@@ -410,6 +450,35 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="matrice-potrivire-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="matrice-potrivire-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Cum se potrivește City of Mara în funcție de obiectiv</h2>
+            <p className="mt-3 text-muted-foreground">Secțiune practică pentru utilizatori care nu caută doar informație generală, ci vor să știe rapid dacă un tip de apartament are sens pentru scopul lor real.</p>
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-border bg-card">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="bg-muted/60 text-foreground">
+                <tr>
+                  <th className="p-4 font-semibold">Profil</th>
+                  <th className="p-4 font-semibold">Tip recomandat</th>
+                  <th className="p-4 font-semibold">Ce urmărești</th>
+                  <th className="p-4 font-semibold">Observație</th>
+                </tr>
+              </thead>
+              <tbody>
+                {suitabilityMatrix.map((item) => (
+                  <tr key={item.profile} className="border-t border-border">
+                    <td className="p-4 font-semibold text-foreground">{item.profile}</td>
+                    <td className="p-4 text-muted-foreground">{item.bestFit}</td>
+                    <td className="p-4 text-muted-foreground">{item.focus}</td>
+                    <td className="p-4 text-muted-foreground">{item.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="proces-city-of-mara">
           <div className="container mx-auto px-4">
             <div className="mb-8 max-w-3xl">
@@ -444,6 +513,14 @@ const CityOfMaraTimisoara = () => {
                 <h3 className="text-lg font-semibold text-foreground">Checklist cost total de achiziție</h3>
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   {costChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="text-lg font-semibold text-foreground">Ce primești când ceri disponibilitățile</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {deliverables.map((item) => (
                     <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
                   ))}
                 </div>
@@ -493,6 +570,14 @@ const CityOfMaraTimisoara = () => {
             <div className="grid gap-4 md:grid-cols-3">
               {faqItems.map((item) => (
                 <article key={item.question} className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="text-lg font-semibold text-foreground">{item.question}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.answer}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {finalObjectionsFaq.map((item) => (
+                <article key={item.question} className="rounded-lg border border-primary/20 bg-primary/5 p-6">
                   <h3 className="text-lg font-semibold text-foreground">{item.question}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.answer}</p>
                 </article>
