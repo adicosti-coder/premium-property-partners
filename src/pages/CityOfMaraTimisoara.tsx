@@ -196,6 +196,25 @@ const resaleSignals = [
   { title: "Produs gata de folosit", text: "Dacă apartamentul poate fi ocupat sau închiriat rapid, cumpărătorii percep mai ușor valoarea totală și decid mai repede." },
 ];
 
+const microLocationSignals = [
+  { title: "Acces zilnic simplu", text: "Contează cât de repede ieși spre centru, office și zone comerciale fără fricțiune mare la orele aglomerate." },
+  { title: "Confort urban real", text: "Nu doar adresa vinde, ci și distanța practică până la cafenele, sală, supermarket și servicii utile pentru viața de zi cu zi." },
+  { title: "Percepție bună la închiriere", text: "Chiriașii premium reacționează bine la complexuri ușor de explicat și ușor de atins din reperele cunoscute ale orașului." },
+];
+
+const redFlagChecklist = [
+  "preț aparent bun, dar fără parcare sau cu cost suplimentar care schimbă total comparația",
+  "apartament care cere buget mare de amenajare înainte să poată fi locuit sau închiriat",
+  "poziție în complex greu de justificat la revânzare: zgomot, lumină slabă, vecinătăți incomode",
+  "randament calculat optimist, fără costuri recurente și fără perioade de neocupare",
+];
+
+const decisionTimeline = [
+  { title: "Înainte de vizionare", text: "Fixăm bugetul total și criteriile care nu sunt negociabile: parcare, etaj, lumină, termen de mutare sau monetizare." },
+  { title: "După shortlist", text: "Comparăm 2–4 unități pe cost total, lichiditate și risc, nu doar pe prețul de listare sau impresia de moment." },
+  { title: "Înainte de rezervare", text: "Verificăm dacă unitatea aleasă rămâne cea mai bună opțiune și după acte, costuri recurente și scenariul de exit." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -665,6 +684,21 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="micro-locatie-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="micro-locatie-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Detalii de micro-locație care schimbă decizia</h2>
+            <p className="mt-3 text-muted-foreground">Aici se face diferența dintre un apartament care arată bine în anunț și unul care rămâne bun și după folosire, închiriere sau revânzare.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {microLocationSignals.map((item) => (
+              <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="disponibilitati" className="bg-muted/40 py-12 md:py-16" aria-labelledby="formular-city-of-mara">
           <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
@@ -723,6 +757,25 @@ const CityOfMaraTimisoara = () => {
                 <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                   {viewingQuestions.map((item) => (
                     <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="text-lg font-semibold text-foreground">Red flags care merită filtrate devreme</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {redFlagChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-5">
+                <h3 className="text-lg font-semibold text-foreground">Plan scurt de decizie</h3>
+                <div className="mt-4 space-y-4">
+                  {decisionTimeline.map((item) => (
+                    <article key={item.title} className="rounded-md border border-primary/15 bg-background p-4">
+                      <h4 className="text-sm font-semibold text-foreground">{item.title}</h4>
+                      <p className="mt-2 text-sm text-muted-foreground">{item.text}</p>
+                    </article>
                   ))}
                 </div>
               </div>
