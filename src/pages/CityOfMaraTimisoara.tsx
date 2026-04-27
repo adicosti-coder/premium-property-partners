@@ -19,11 +19,16 @@ import cityHero from "@/assets/apt-03.webp";
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
+const purchaseGoals = ["Investiție", "Locuire proprie", "Revânzare", "Încă compar opțiuni"] as const;
+const budgetRanges = ["Sub 90.000€", "90.000–120.000€", "120.000–160.000€", "Peste 160.000€"] as const;
+
 const availabilitySchema = z.object({
   name: z.string().trim().min(2, "Numele trebuie completat.").max(100, "Numele este prea lung."),
   whatsapp: z.string().trim().refine((value) => isValidWhatsAppNumber(value), "Număr WhatsApp invalid."),
   email: z.string().trim().email("Email invalid.").max(255, "Emailul este prea lung.").optional().or(z.literal("")),
   apartmentType: z.string().trim().min(2).max(40),
+  purchaseGoal: z.enum(purchaseGoals),
+  budgetRange: z.enum(budgetRanges),
   message: z.string().trim().max(800, "Mesajul este prea lung.").optional(),
 });
 
@@ -134,8 +139,17 @@ const notIdealFor = [
   "investitori care vor randament mare fără buget pentru mobilare sau parcare",
 ];
 
-const purchaseGoals = ["Investiție", "Locuire proprie", "Revânzare", "Încă compar opțiuni"];
-const budgetRanges = ["Sub 90.000€", "90.000–120.000€", "120.000–160.000€", "Peste 160.000€"];
+const responseTrustSignals = [
+  "răspuns orientativ în aceeași zi lucrătoare",
+  "shortlist filtrat, nu listă generică",
+  "context local și comparații relevante pentru Timișoara",
+];
+
+const callPrepChecklist = [
+  "bugetul maxim și dacă ai nevoie de credit",
+  "dacă vrei locuire, investiție sau doar comparație",
+  "preferințe pentru etaj, parcare și termen de mutare",
+];
 
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
@@ -187,7 +201,7 @@ const CityOfMaraTimisoara = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = availabilitySchema.safeParse({ name, whatsapp, email, apartmentType, message });
+    const parsed = availabilitySchema.safeParse({ name, whatsapp, email, apartmentType, purchaseGoal, budgetRange, message });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Verifică datele introduse.");
       return;
@@ -198,8 +212,8 @@ const CityOfMaraTimisoara = () => {
       const cleanPhone = parsed.data.whatsapp.replace(/\s/g, "");
       const leadMessage = [
         `Solicitare disponibilități City of Mara — ${parsed.data.apartmentType}`,
-        `Obiectiv: ${purchaseGoal}`,
-        `Buget: ${budgetRange}`,
+        `Obiectiv: ${parsed.data.purchaseGoal}`,
+        `Buget: ${parsed.data.budgetRange}`,
         parsed.data.message ? `Mesaj: ${parsed.data.message}` : null,
       ].filter(Boolean).join("\n");
 
@@ -212,7 +226,7 @@ const CityOfMaraTimisoara = () => {
           property_area: 0,
           source: "city_of_mara_landing",
           message: leadMessage,
-          simulation_data: { apartmentType: parsed.data.apartmentType, purchaseGoal, budgetRange, page: "/complexe/city-of-mara" },
+          simulation_data: { apartmentType: parsed.data.apartmentType, purchaseGoal: parsed.data.purchaseGoal, budgetRange: parsed.data.budgetRange, page: "/complexe/city-of-mara" },
         },
       });
 
@@ -554,6 +568,22 @@ const CityOfMaraTimisoara = () => {
                   ))}
                 </div>
               </div>
+              <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-5">
+                <h3 className="text-lg font-semibold text-foreground">Cum răspundem</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {responseTrustSignals.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="text-lg font-semibold text-foreground">Ca să primești un răspuns mai util</h3>
+                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {callPrepChecklist.map((item) => (
+                    <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                  ))}
+                </div>
+              </div>
             </div>
             <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card p-5 shadow-sm md:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -595,6 +625,10 @@ const CityOfMaraTimisoara = () => {
               <div className="mt-4">
                 <Label htmlFor="city-mara-message">Detalii opționale</Label>
                 <Textarea id="city-mara-message" value={message} onChange={(event) => setMessage(event.target.value)} maxLength={800} rows={4} className="mt-2" placeholder="Buget, parcare, etaj preferat sau obiectiv investițional" />
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Cu cât contextul e mai clar, cu atât shortlist-ul va fi mai relevant.</span>
+                  <span>{message.length}/800</span>
+                </div>
               </div>
               <Button type="submit" size="lg" disabled={submitting} className="mt-5 w-full gap-2">
                 <Send className="h-4 w-4" /> {submitting ? "Se trimite..." : "Solicită lista actualizată"}
