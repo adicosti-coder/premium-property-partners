@@ -95,6 +95,7 @@ const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimiso
 const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
 const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
 const AnalizaROIApartament = lazyWithRetry(() => import("./pages/AnalizaROIApartament"));
+const CityOfMaraTimisoara = lazyWithRetry(() => import("./pages/CityOfMaraTimisoara"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
@@ -224,6 +225,7 @@ const App = () => (
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
+                    <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
                     <Route path="/cartier/:slug" element={<NeighborhoodCluster />} />
                     <Route path="/preturi" element={<Preturi />} />
