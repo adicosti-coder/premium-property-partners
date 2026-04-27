@@ -267,6 +267,22 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="ghid-cumparator-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="ghid-cumparator-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ghid rapid pentru cumpărători City of Mara</h2>
+            <p className="mt-3 text-muted-foreground">Înainte de ofertă, verificăm dacă apartamentul se potrivește obiectivului tău: locuire, revânzare sau randament din închiriere.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {buyerChecklist.map((item) => (
+              <div key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <item.icon className="mb-4 h-7 w-7 text-primary" />
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section id="disponibilitati" className="bg-muted/40 py-12 md:py-16" aria-labelledby="formular-city-of-mara">
           <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
