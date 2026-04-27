@@ -188,6 +188,7 @@ const App = () => (
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/:adminTab" element={<Admin />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/favorite" element={<Favorites />} />
                     <Route path="/oaspeti" element={<Guests />} />
